@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "vocode-test"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "vocode_test"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<=3.11"
+vocode = "^0.1.110"
+python-dotenv = "^1.0.0"
+elevenlabs = "^0.2.18"
+fastapi = "0.95.1"
+transformers = "^4.30.2"
+torch = "^2.0.1"
+accelerate = "^0.20.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
