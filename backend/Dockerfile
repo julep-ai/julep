@@ -12,7 +12,7 @@ RUN apt-get install -y ffmpeg
 WORKDIR /code
 COPY ./pyproject.toml /code/pyproject.toml
 COPY ./poetry.lock /code/poetry.lock
-RUN poetry install
+RUN poetry install --no-root --no-ansi --without dev
 COPY main.py /code/main.py
 COPY static /code/static
 
