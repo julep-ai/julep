@@ -11,7 +11,7 @@ from transformers import (
 
 class StopOnTokens(StoppingCriteria):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self._stop_token_ids = kwargs.get("stop_token_ids", [])
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs):
