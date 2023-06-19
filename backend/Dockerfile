@@ -1,5 +1,12 @@
 FROM python:3.10
 
+ENV POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_NO_INTERACTION=1
+
+# to run poetry directly as soon as it's installed
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
 # get portaudio and ffmpeg
 RUN apt-get update \
         && apt-get install libportaudio2 libportaudiocpp0 portaudio19-dev libasound-dev libsndfile1-dev curl gcc build-essential -y \
