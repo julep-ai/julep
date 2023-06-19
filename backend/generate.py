@@ -25,10 +25,6 @@ def _convert_input(input_: dict) -> str:
     return input_
 
 
-def _cut_prompt(text: str, prompt: str) -> str:
-    return text
-
-
 model_name = "julep-ai/samantha-13b-ds-03"
 model = LlamaForCausalLM.from_pretrained(
     model_name, 
@@ -40,13 +36,6 @@ tokenizer = LlamaTokenizer.from_pretrained(
     use_fast=False,
 )  # Fast version is buggy
 
-prompt = "\n".join([
-"""<|section|>situation
-I am talking to Diwank. I want to ask him about his food preferences.<|endsection|>""",
-"""<|section|>person (Diwank)
-Hey Samantha! What do you want to talk about?<|endsection|>""",
-"""<|section|>me (Samantha)""",
-]) + '\n'
 
 def generate(prompt, stopping_criteria: list[str] | None = None, **kwargs):
     stop_token_ids = []
@@ -72,15 +61,8 @@ def generate(prompt, stopping_criteria: list[str] | None = None, **kwargs):
     thread = Thread(target=model.generate, kwargs=generation_args)
     thread.start()
 
-    result = ""
-    for new_text in streamer:
-        result += new_text
+    for idx, new_text in enumerate(streamer):
+        if not idx:
+            continue
 
-    # outputs = model.generate(**inputs, stopping_criteria=stopping_criteria, **kwargs)
-    # result, *_ = tokenizer.batch_decode(outputs)
-
-    return _cut_prompt(result, prompt)
-
-
-output = generate(prompt, max_new_tokens=80)
-print(output)
+        yield new_text

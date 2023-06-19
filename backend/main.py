@@ -13,6 +13,7 @@ from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.agent import AgentConfig, AgentType
 from vocode.streaming.agent.base_agent import RespondAgent
 from dotenv import load_dotenv
+from .generate import generate
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
 class SamanthaAgent(RespondAgent[SamanthaConfig]):
     def __init__(
         self,
-        agent_config: ChatGPTAgentConfig,
+        agent_config: SamanthaConfig,
         logger: logging.Logger | None = None,
         openai_api_key: str | None = None,
     ):
@@ -47,8 +48,12 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             cut_off_response = self.get_cut_off_response()
             return cut_off_response, False
         self.logger.debug("LLM responding to human input")
-        #TODO: return the entire response from the model
-        # return text, False
+        
+        text = ""
+        for token in generate(human_input, max_new_tokens=80):
+            text += token
+
+        return text, False
 
     async def generate_response(
         self, 
@@ -64,7 +69,8 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return
         
         self.memory.append(self.get_memory_entry(human_input, ""))
-        #TODO: yield the response from LLM sentence by sentence
+        for token in generate(human_input, max_new_tokens=80):
+            yield token
 
 
 app = FastAPI(docs_url=None)
