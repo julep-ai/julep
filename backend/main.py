@@ -2,6 +2,7 @@ import os
 import logging
 from typing import AsyncGenerator
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from vocode.streaming.models.agent import ChatGPTAgentConfig
@@ -13,7 +14,7 @@ from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.agent import AgentConfig, AgentType
 from vocode.streaming.agent.base_agent import RespondAgent
 from dotenv import load_dotenv
-from .generate import generate
+#from generate import generate
 
 load_dotenv()
 
@@ -23,6 +24,10 @@ SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"] #"eu7pAsMtrspvm0ZVbiCr"
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
     pass
+
+# FIXME: uncomment the import above once the problem with huggingface token will be solved
+def generate(*args, **kwargs):
+	yield ""
 
 
 class SamanthaAgent(RespondAgent[SamanthaConfig]):
@@ -106,4 +111,9 @@ conversation_router = ConversationRouter(
 )
 
 app.include_router(conversation_router.get_router())
-app.mount("/", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+async def read_index():
+    return FileResponse('static/index.html')

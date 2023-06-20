@@ -20,11 +20,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/code/.venv/bin:$PATH"
 
+ENV HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN
+
+RUN pip install huggingface_hub
+RUN python -c "import os; from huggingface_hub.hf_api import HfFolder; HfFolder.save_token(os.environ['HUGGINGFACE_TOKEN'])"
+
 WORKDIR /code
 COPY ./pyproject.toml /code/pyproject.toml
 COPY ./poetry.lock /code/poetry.lock
 RUN poetry install --no-root --no-ansi
 COPY main.py /code/main.py
+COPY generate.py /code/generate.py
 COPY static /code/static
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]

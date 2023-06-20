@@ -8,9 +8,9 @@ services:
       context: backend
     env_file: .env
     environment:
-      PORT: "3000"
+      PORT: "5000"
     ports:
-      - '3000:3000'
+      - '5000:5000'
 
   ngrok:
     image: ngrok/ngrok:latest
