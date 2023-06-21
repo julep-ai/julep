@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "vocode-test"
+name = "samantha-backend"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "vocode_test"}]
+packages = [{include = "backend"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<=3.11"
