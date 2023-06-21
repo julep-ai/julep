@@ -11,6 +11,7 @@ from vocode.streaming.client_backend.conversation import ConversationRouter
 from vocode.streaming.models.message import BaseMessage
 from dotenv import load_dotenv
 from .logger import logger
+from .agent import SamanthaAgent, SamanthaConfig
 
 load_dotenv()
 
@@ -37,8 +38,8 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
 )
 
 conversation_router = ConversationRouter(
-    agent=ChatGPTAgent(
-        ChatGPTAgentConfig(
+    agent=SamanthaAgent(
+        SamanthaConfig(
             initial_message=BaseMessage(text="Hello!"),
             prompt_preamble="Have a pleasant conversation about life",
         )
