@@ -167,7 +167,6 @@ def wrap_iterator(iterator):
     for item in iterator:
         yield item
 
-# TODO: 
 def remove_stops(iterator, tokenizer, stop: list[str] = []):
 
     if not stop:
@@ -179,13 +178,14 @@ def remove_stops(iterator, tokenizer, stop: list[str] = []):
         for s in stop
     ])
 
-    # FIXME: streamer has no len, and got to only stream the allowed tokens
     for items in groupwise(wrap_iterator(iterator), look_ahead):
         joined = "".join(items).strip()
         if joined in stop:
             return
 
-        yield from it.filterfalse(lambda s: not s.strip(), items)
+        first, *_ = items
+        if first.strip():
+            yield first
 
 
 def generate(
