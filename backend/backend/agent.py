@@ -2,12 +2,10 @@ import logging
 from typing import AsyncGenerator
 from vocode.streaming.agent.base_agent import RespondAgent
 from vocode.streaming.models.agent import AgentConfig, AgentType
-#from .generate import generate
+from .generate import generate, sentence_stream
 
 
-# FIXME: uncomment the import above once the problem with huggingface token will be solved
-def generate(*args, **kwargs):
-	yield ""
+STOP_TOKENS = ["<|", "\n\n", "? ?", "person (", "???", "person(", "? person", ". person"]
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
@@ -37,11 +35,9 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             cut_off_response = self.get_cut_off_response()
             return cut_off_response, False
         self.logger.debug("LLM responding to human input")
-        
-        text = ""
-        for token in generate(human_input, max_new_tokens=80):
-            text += token
 
+        text = generate(human_input, stop=STOP_TOKENS, stream=False)
+        
         return text, False
 
     async def generate_response(
@@ -58,5 +54,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return
         
         self.memory.append(self.get_memory_entry(human_input, ""))
-        for token in generate(human_input, max_new_tokens=80):
-            yield token
+        for sent in sentence_stream(
+            generate(human_input, stop=STOP_TOKENS, stream=True)
+        ):
+            yield sent

@@ -31,5 +31,6 @@ COPY public /app/public
 COPY ./pyproject.toml /app/pyproject.toml
 COPY ./poetry.lock /app/poetry.lock
 RUN poetry install --no-root --no-ansi
+RUN poetry run python -m spacy download en_core_web_sm
 
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
