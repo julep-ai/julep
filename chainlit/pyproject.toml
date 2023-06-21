@@ -8,26 +8,24 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
 sentencepiece = "^0.1.99"
-accelerate = "^0.20.0"
-appdirs = "^1.4.4"
-loralib = "^0.1.1"
-bitsandbytes = "^0.39.0"
-datasets = "^2.12.0"
+accelerate = "^0.20.3"
+bitsandbytes = "^0.39.1"
+datasets = "^2.13.0"
 fire = "^0.5.0"
-transformers = ">=4.28.0"
-einops = "^0.6.1"
-python-dotenv = "^1.0.0"
-wandb = "^0.15.2"
+transformers = "^4.30.2"
 protobuf = "<3.21"
-torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230613%2Bcu121-cp310-cp310-linux_x86_64.whl"}
-peft = "^0.3.0"
+torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230620%2Bcu121-cp310-cp310-linux_x86_64.whl"}
 huggingface-hub = "^0.15.1"
 scipy = "^1.10.1"
-basaran = {git = "https://github.com/creatorrr/basaran.git"}
+chainlit = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
+# ipython = "^8.14.0"
+# ipykernel = "^6.22.0"
 ipython = "^8.14.0"
-ipykernel = "^6.22.0"
+ipykernel = "^6.23.2"
+jupyterlab = "^4.0.2"
+pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
 
 [build-system]
 requires = ["poetry-core"]
