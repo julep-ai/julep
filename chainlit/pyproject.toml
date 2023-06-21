@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "samantha"
+version = "0.1.0"
+description = ""
+authors = ["Diwank Tomer"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+sentencepiece = "^0.1.99"
+accelerate = "^0.20.0"
+appdirs = "^1.4.4"
+loralib = "^0.1.1"
+bitsandbytes = "^0.39.0"
+datasets = "^2.12.0"
+fire = "^0.5.0"
+transformers = ">=4.28.0"
+einops = "^0.6.1"
+python-dotenv = "^1.0.0"
+wandb = "^0.15.2"
+protobuf = "<3.21"
+torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230613%2Bcu121-cp310-cp310-linux_x86_64.whl"}
+peft = "^0.3.0"
+huggingface-hub = "^0.15.1"
+scipy = "^1.10.1"
+basaran = {git = "https://github.com/creatorrr/basaran.git"}
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.14.0"
+ipykernel = "^6.22.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
