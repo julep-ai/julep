@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "samantha"
+version = "0.1.0"
+description = "Samantha from 'Her'"
+authors = ["Diwank Singh Tomer <diwank.singh@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+suno-bark = { git = "git@github.com:suno-ai/bark.git" }
+whisper-jax = { git = "git@github.com:sanchit-gandhi/whisper-jax.git" }
+environs = "^9.5.0"
+turbo-chat = "^0.3.12"
+python-dotenv = "^1.0.0"
+sentencepiece = "^0.1.99"
+accelerate = "^0.18.0"
+torch = "^2.0.0"
+langchain = "^0.0.157"
+llama-index = "^0.6.0"
+openai = "^0.27.6"
+weaviate-client = "^3.16.2"
+pydantic = "^1.10.7"
+fastapi = ">=0.96.0,<0.97.0"
+redis = "^4.5.4"
+uvicorn = {extras = ["standard"], version ="^0.22.0"}
+gql = {extras = ["aiohttp"], version = "^3.4.0"}
+tenacity = "^8.2.2"
+pydash = "^7.0.2"
+numpy = "^1.24.3"
+bitsandbytes = "^0.38.1"
+scipy = "^1.10.1"
+jax = "^0.4.8"
+transformers = "^4.28.1"
+fschat = "^0.2.5"
+whispercpp = "^0.0.17"
+persist-queue = {extras = ["extra"], version = "^0.8.0"}
+torchaudio = "^2.0.1"
+onnxruntime = "^1.14.1"
+pyzmq = "^25.0.2"
+fire = "^0.5.0"
+textual = {extras = ["dev"], version = "^0.24.1"}
+elevenlabs = "^0.2.16"
+xmljson = "^0.2.1"
+datasets = "^2.12.0"
+python-redis-cache = "^2.1.2"
+holidays = "^0.26"
+peft = "^0.3.0"
+wandb = "^0.15.4"
+protobuf = "<3.21"
+names = "^0.3.0"
+pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.13.1"
+black = "^23.3.0"
+ruff = "^0.0.264"
+jupyterlab = "^4.0.2"
+ipywidgets = "^8.0.6"
+pytype = "^2023.4.27"
+poethepoet = "^0.20.0"
+pytest = "^7.3.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
