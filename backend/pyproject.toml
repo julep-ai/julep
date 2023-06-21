@@ -20,6 +20,7 @@ torchaudio = {version = "^2.1.0.dev20230619+cu121", source = "cu121"}
 sentencepiece = "^0.1.99"
 uvicorn = "0.21.1"
 huggingface-hub = "^0.15.1"
+spacy = {extras = ["cuda113"], version = "^3.5.3"}
 
 
 [[tool.poetry.source]]
