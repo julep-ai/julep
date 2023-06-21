@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "memory"
+version = "0.1.0"
+description = ""
+authors = ["Diwank Singh Tomer <diwank.singh@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.14.0"
+ipykernel = "^6.23.2"
+ipywidgets = "^8.0.6"
+jupyterlab = ">=4,<5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
