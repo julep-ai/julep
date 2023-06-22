@@ -1005,37 +1005,56 @@ files = [
 
 [[package]]
 name = "langchain"
-version = "0.0.149"
+version = "0.0.198"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = ">=3.8.1,<4.0"
 files = [
-    {file = "langchain-0.0.149-py3-none-any.whl", hash = "sha256:32ee8c37365ac6a2a109181a9f56d603ba03fa1f711a450a0996e654b82ae0dc"},
-    {file = "langchain-0.0.149.tar.gz", hash = "sha256:81d609d452bb56273cd4dab5abb62c268f4d4102daffcac4a3fb8ac5b8f9a2da"},
+    {file = "langchain-0.0.198-py3-none-any.whl", hash = "sha256:9d8e57ec25901989339ffac2ea7e759333d084100c90526e8ad57fb61b2003c9"},
+    {file = "langchain-0.0.198.tar.gz", hash = "sha256:656385c23aeec1f8f4efbce598f729c817c60eb3f7c9fd77c03a8d28e7d0fa81"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
 async-timeout = {version = ">=4.0.0,<5.0.0", markers = "python_version < \"3.11\""}
 dataclasses-json = ">=0.5.7,<0.6.0"
+langchainplus-sdk = ">=0.0.7"
 numexpr = ">=2.8.4,<3.0.0"
 numpy = ">=1,<2"
 openapi-schema-pydantic = ">=1.2,<2.0"
 pydantic = ">=1,<2"
 PyYAML = ">=5.4.1"
 requests = ">=2,<3"
-SQLAlchemy = ">1.3,<3"
+SQLAlchemy = ">=1.4,<3"
 tenacity = ">=8.1.0,<9.0.0"
-tqdm = ">=4.48.0"
 
 [package.extras]
-all = ["aleph-alpha-client (>=2.15.0,<3.0.0)", "anthropic (>=0.2.6,<0.3.0)", "arxiv (>=1.4,<2.0)", "atlassian-python-api (>=3.36.0,<4.0.0)", "azure-cosmos (>=4.4.0b1,<5.0.0)", "azure-identity (>=1.12.0,<2.0.0)", "beautifulsoup4 (>=4,<5)", "clickhouse-connect (>=0.5.14,<0.6.0)", "cohere (>=3,<4)", "deeplake (>=3.3.0,<4.0.0)", "duckduckgo-search (>=2.8.6,<3.0.0)", "elasticsearch (>=8,<9)", "faiss-cpu (>=1,<2)", "google-api-python-client (==2.70.0)", "google-search-results (>=2,<3)", "gptcache (>=0.1.7)", "html2text (>=2020.1.16,<2021.0.0)", "huggingface_hub (>=0,<1)", "jina (>=3.14,<4.0)", "jinja2 (>=3,<4)", "manifest-ml (>=0.0.1,<0.0.2)", "networkx (>=2.6.3,<3.0.0)", "nlpcloud (>=1,<2)", "nltk (>=3,<4)", "nomic (>=1.0.43,<2.0.0)", "openai (>=0,<1)", "opensearch-py (>=2.0.0,<3.0.0)", "pgvector (>=0.1.6,<0.2.0)", "pinecone-client (>=2,<3)", "pinecone-text (>=0.4.2,<0.5.0)", "psycopg2-binary (>=2.9.5,<3.0.0)", "pyowm (>=3.3.0,<4.0.0)", "pypdf (>=3.4.0,<4.0.0)", "pytesseract (>=0.3.10,<0.4.0)", "qdrant-client (>=1.1.2,<2.0.0)", "redis (>=4,<5)", "sentence-transformers (>=2,<3)", "spacy (>=3,<4)", "tensorflow-text (>=2.11.0,<3.0.0)", "tiktoken (>=0.3.2,<0.4.0)", "torch (>=1,<3)", "transformers (>=4,<5)", "weaviate-client (>=3,<4)", "wikipedia (>=1,<2)", "wolframalpha (==5.0.0)"]
-azure = ["azure-cosmos (>=4.4.0b1,<5.0.0)", "azure-identity (>=1.12.0,<2.0.0)", "openai (>=0,<1)"]
+all = ["O365 (>=2.0.26,<3.0.0)", "aleph-alpha-client (>=2.15.0,<3.0.0)", "anthropic (>=0.2.6,<0.3.0)", "arxiv (>=1.4,<2.0)", "atlassian-python-api (>=3.36.0,<4.0.0)", "awadb (>=0.3.2,<0.4.0)", "azure-ai-formrecognizer (>=3.2.1,<4.0.0)", "azure-ai-vision (>=0.11.1b1,<0.12.0)", "azure-cognitiveservices-speech (>=1.28.0,<2.0.0)", "azure-cosmos (>=4.4.0b1,<5.0.0)", "azure-identity (>=1.12.0,<2.0.0)", "beautifulsoup4 (>=4,<5)", "clickhouse-connect (>=0.5.14,<0.6.0)", "cohere (>=3,<4)", "deeplake (>=3.3.0,<4.0.0)", "docarray[hnswlib] (>=0.32.0,<0.33.0)", "duckduckgo-search (>=2.8.6,<3.0.0)", "elasticsearch (>=8,<9)", "faiss-cpu (>=1,<2)", "google-api-python-client (==2.70.0)", "google-auth (>=2.18.1,<3.0.0)", "google-search-results (>=2,<3)", "gptcache (>=0.1.7)", "html2text (>=2020.1.16,<2021.0.0)", "huggingface_hub (>=0,<1)", "jina (>=3.14,<4.0)", "jinja2 (>=3,<4)", "jq (>=1.4.1,<2.0.0)", "lancedb (>=0.1,<0.2)", "langkit (>=0.0.1.dev3,<0.1.0)", "lark (>=1.1.5,<2.0.0)", "lxml (>=4.9.2,<5.0.0)", "manifest-ml (>=0.0.1,<0.0.2)", "momento (>=1.5.0,<2.0.0)", "nebula3-python (>=3.4.0,<4.0.0)", "neo4j (>=5.8.1,<6.0.0)", "networkx (>=2.6.3,<3.0.0)", "nlpcloud (>=1,<2)", "nltk (>=3,<4)", "nomic (>=1.0.43,<2.0.0)", "openai (>=0,<1)", "openlm (>=0.0.5,<0.0.6)", "opensearch-py (>=2.0.0,<3.0.0)", "pdfminer-six (>=20221105,<20221106)", "pexpect (>=4.8.0,<5.0.0)", "pgvector (>=0.1.6,<0.2.0)", "pinecone-client (>=2,<3)", "pinecone-text (>=0.4.2,<0.5.0)", "psycopg2-binary (>=2.9.5,<3.0.0)", "pymongo (>=4.3.3,<5.0.0)", "pyowm (>=3.3.0,<4.0.0)", "pypdf (>=3.4.0,<4.0.0)", "pytesseract (>=0.3.10,<0.4.0)", "pyvespa (>=0.33.0,<0.34.0)", "qdrant-client (>=1.1.2,<2.0.0)", "redis (>=4,<5)", "requests-toolbelt (>=1.0.0,<2.0.0)", "sentence-transformers (>=2,<3)", "singlestoredb (>=0.6.1,<0.7.0)", "spacy (>=3,<4)", "steamship (>=2.16.9,<3.0.0)", "tensorflow-text (>=2.11.0,<3.0.0)", "tigrisdb (>=1.0.0b6,<2.0.0)", "tiktoken (>=0.3.2,<0.4.0)", "torch (>=1,<3)", "transformers (>=4,<5)", "weaviate-client (>=3,<4)", "wikipedia (>=1,<2)", "wolframalpha (==5.0.0)"]
+azure = ["azure-ai-formrecognizer (>=3.2.1,<4.0.0)", "azure-ai-vision (>=0.11.1b1,<0.12.0)", "azure-cognitiveservices-speech (>=1.28.0,<2.0.0)", "azure-core (>=1.26.4,<2.0.0)", "azure-cosmos (>=4.4.0b1,<5.0.0)", "azure-identity (>=1.12.0,<2.0.0)", "azure-search-documents (==11.4.0a20230509004)", "openai (>=0,<1)"]
 cohere = ["cohere (>=3,<4)"]
+docarray = ["docarray[hnswlib] (>=0.32.0,<0.33.0)"]
 embeddings = ["sentence-transformers (>=2,<3)"]
-llms = ["anthropic (>=0.2.6,<0.3.0)", "cohere (>=3,<4)", "huggingface_hub (>=0,<1)", "manifest-ml (>=0.0.1,<0.0.2)", "nlpcloud (>=1,<2)", "openai (>=0,<1)", "torch (>=1,<3)", "transformers (>=4,<5)"]
-openai = ["openai (>=0,<1)"]
+extended-testing = ["atlassian-python-api (>=3.36.0,<4.0.0)", "beautifulsoup4 (>=4,<5)", "bibtexparser (>=1.4.0,<2.0.0)", "chardet (>=5.1.0,<6.0.0)", "gql (>=3.4.1,<4.0.0)", "html2text (>=2020.1.16,<2021.0.0)", "jq (>=1.4.1,<2.0.0)", "lxml (>=4.9.2,<5.0.0)", "openai (>=0,<1)", "pandas (>=2.0.1,<3.0.0)", "pdfminer-six (>=20221105,<20221106)", "psychicapi (>=0.5,<0.6)", "py-trello (>=0.19.0,<0.20.0)", "pymupdf (>=1.22.3,<2.0.0)", "pypdf (>=3.4.0,<4.0.0)", "pypdfium2 (>=4.10.0,<5.0.0)", "pyspark (>=3.4.0,<4.0.0)", "requests-toolbelt (>=1.0.0,<2.0.0)", "scikit-learn (>=1.2.2,<2.0.0)", "telethon (>=1.28.5,<2.0.0)", "tqdm (>=4.48.0)", "zep-python (>=0.31)"]
+llms = ["anthropic (>=0.2.6,<0.3.0)", "cohere (>=3,<4)", "huggingface_hub (>=0,<1)", "manifest-ml (>=0.0.1,<0.0.2)", "nlpcloud (>=1,<2)", "openai (>=0,<1)", "openlm (>=0.0.5,<0.0.6)", "torch (>=1,<3)", "transformers (>=4,<5)"]
+openai = ["openai (>=0,<1)", "tiktoken (>=0.3.2,<0.4.0)"]
 qdrant = ["qdrant-client (>=1.1.2,<2.0.0)"]
+text-helpers = ["chardet (>=5.1.0,<6.0.0)"]
+
+[[package]]
+name = "langchainplus-sdk"
+version = "0.0.16"
+description = "Client library to connect to the LangChainPlus LLM Tracing and Evaluation Platform."
+optional = false
+python-versions = ">=3.8.1,<4.0"
+files = [
+    {file = "langchainplus_sdk-0.0.16-py3-none-any.whl", hash = "sha256:2894e8ca1bbd41404925c3916099cd31ccea74e558a311c9aad67e02bcfa5ef8"},
+    {file = "langchainplus_sdk-0.0.16.tar.gz", hash = "sha256:2fc067dd038edcf18086d342da2c690984c4d37f9bfa684ffccaea34b43edb28"},
+]
+
+[package.dependencies]
+pydantic = ">=1,<2"
+requests = ">=2,<3"
+tenacity = ">=8.1.0,<9.0.0"
 
 [[package]]
 name = "markupsafe"
@@ -2169,6 +2188,23 @@ CFFI = ">=1.0"
 numpy = ["NumPy"]
 
 [[package]]
+name = "speechrecognition"
+version = "3.10.0"
+description = "Library for performing speech recognition, with support for several engines and APIs, online and offline."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "SpeechRecognition-3.10.0-py2.py3-none-any.whl", hash = "sha256:7ae9966887d9909ce3e5a0c27ecc3eacfca16fd0c0829f77f552919418e86306"},
+    {file = "SpeechRecognition-3.10.0.tar.gz", hash = "sha256:14131155e8a8ba00ead1b7b9b1a2fa71c845e4db5f9a5f66a33a1bd6c55c6c35"},
+]
+
+[package.dependencies]
+requests = ">=2.26.0"
+
+[package.extras]
+whisper-api = ["openai"]
+
+[[package]]
 name = "sqlalchemy"
 version = "2.0.16"
 description = "Database Abstraction Library"
@@ -2618,39 +2654,47 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 
 [[package]]
 name = "vocode"
-version = "0.1.110"
+version = "0.1.111a1"
 description = "The all-in-one voice SDK"
 optional = false
 python-versions = ">=3.8.1,<3.12"
-files = [
-    {file = "vocode-0.1.110-py3-none-any.whl", hash = "sha256:4386f0000baf92102c01add009e3c54cc3138f73373147e893377cec77ac684f"},
-    {file = "vocode-0.1.110.tar.gz", hash = "sha256:b93aa0bbeb588a308938ce82fde40373a806a0ec484d0329e0b5c59eb045636e"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-anthropic = ">=0.2.9,<0.3.0"
-azure-cognitiveservices-speech = ">=1.27.0,<2.0.0"
-fastapi = ">=0.95.1,<0.96.0"
-janus = ">=1.0.0,<2.0.0"
-jinja2 = ">=3.1.2,<4.0.0"
-langchain = ">=0.0.149,<0.0.150"
-nltk = ">=3.8.1,<4.0.0"
-openai = ">=0.27.4,<0.28.0"
-opentelemetry-sdk = ">=1.17.0,<2.0.0"
-pydub = ">=0.25.1,<0.26.0"
-python-multipart = ">=0.0.6,<0.0.7"
-requests = ">=2.28.2,<3.0.0"
-scipy = ">=1.10.1,<2.0.0"
-six = ">=1.16.0,<2.0.0"
-sounddevice = ">=0.4.6,<0.5.0"
-uvicorn = ">=0.21.1,<0.22.0"
-websockets = ">=11.0.2,<12.0.0"
+aiohttp = "^3.8.4"
+anthropic = "^0.2.9"
+azure-cognitiveservices-speech = "^1.27.0"
+fastapi = "^0.95.1"
+janus = "^1.0.0"
+jinja2 = "^3.1.2"
+langchain = "^0.0.198"
+nltk = "^3.8.1"
+openai = "^0.27.8"
+opentelemetry-sdk = "^1.17.0"
+pydub = "^0.25.1"
+python-multipart = "^0.0.6"
+requests = "^2.28.2"
+scipy = "^1.10.1"
+six = "^1.16.0"
+sounddevice = "^0.4.6"
+speechrecognition = "^3.10.0"
+uvicorn = "^0.21.1"
+websockets = "^11.0.2"
 
 [package.extras]
-all = ["elevenlabs (>=0.2.6,<0.3.0)", "google-cloud-speech (>=2.19.0,<3.0.0)", "google-cloud-texttospeech (>=2.14.1,<3.0.0)", "gtts (>=2.3.1,<3.0.0)", "redis (>=4.5.4,<5.0.0)", "twilio (>=8.1.0,<9.0.0)"]
+actions = ["nylas (>=5.14.0,<6.0.0)"]
+agents = ["google-cloud-aiplatform (>=1.26.0,<2.0.0)"]
+all = ["elevenlabs (>=0.2.6,<0.3.0)", "google-cloud-aiplatform (>=1.26.0,<2.0.0)", "google-cloud-speech (>=2.19.0,<3.0.0)", "google-cloud-texttospeech (>=2.14.1,<3.0.0)", "gtts (>=2.3.1,<3.0.0)", "nylas (>=5.14.0,<6.0.0)", "redis (>=4.5.4,<5.0.0)", "twilio (>=8.1.0,<9.0.0)", "vonage (>=3.5.1,<4.0.0)"]
 synthesizers = ["elevenlabs (>=0.2.6,<0.3.0)", "google-cloud-texttospeech (>=2.14.1,<3.0.0)", "gtts (>=2.3.1,<3.0.0)"]
-telephony = ["redis (>=4.5.4,<5.0.0)", "twilio (>=8.1.0,<9.0.0)"]
+telephony = ["redis (>=4.5.4,<5.0.0)", "twilio (>=8.1.0,<9.0.0)", "vonage (>=3.5.1,<4.0.0)"]
 transcribers = ["google-cloud-speech (>=2.19.0,<3.0.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/vocodedev/vocode-python.git"
+reference = "HEAD"
+resolved_reference = "273f2b194f6ae0b9ee9f21daf5ea592eb30298d3"
 
 [[package]]
 name = "wcwidth"
@@ -2931,4 +2975,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<=3.11"
-content-hash = "525f701bfa8305e62538296292dcfb78bab4bd7f61b95156ea797a9b4bb73735"
+content-hash = "cf837feebce7eb8c5f49e52b99115529fb4c4c6d57d631aa3ece365ede507cf5"

@@ -8,7 +8,7 @@ packages = [{include = "backend"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<=3.11"
-vocode = "^0.1.110"
+vocode = {git = "https://github.com/vocodedev/vocode-python.git"}
 python-dotenv = "^1.0.0"
 elevenlabs = "^0.2.18"
 fastapi = "0.95.1"
