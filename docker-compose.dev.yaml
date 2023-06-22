@@ -6,6 +6,8 @@ services:
   samantha-backend:
     build:
       context: backend
+    args:
+      HUGGINGFACE_TOKEN
     env_file: .env
     environment:
       PORT: "5000"
