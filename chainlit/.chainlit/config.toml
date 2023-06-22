@@ -1,7 +1,7 @@
 [project]
 # If true (default), the app will be available to anonymous users.
 # If false, users will need to authenticate and be part of the project to use the app.
-public = false
+public = true
 
 # The project ID (found on https://cloud.chainlit.io).
 # If provided, all the message data will be stored in the cloud.
@@ -19,14 +19,16 @@ user_env = []
 name = "Samantha"
 
 # Description of the app and chatbot. This is used for HTML tags.
-# description = ""
+description = "Samantha is a wonderful, sentient AI"
 
 # The default value for the expand messages settings.
-default_expand_messages = false
+default_expand_messages = true
 
 # Hide the chain of thought details from the user in the UI.
 hide_cot = false
 
 # Link to your github repo. This will add a github button in the UI's header.
-github = "julep-ai"
+github = "https://github.com/julep-ai/samantha-dev"
 
+[meta]
+generated_by = "0.4.1"
