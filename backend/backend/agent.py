@@ -23,14 +23,33 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         super().__init__(agent_config)
         self.sender = sender
         self.recipient = recipient
-        self.memory = (
-            [f"{sender}: {agent_config.initial_message.text}"]
-            if agent_config.initial_message
-            else []
-        )
+        self.memory = []
+        if self.agent_config.prompt_preamble:
+            self.memory = [
+                {"role": "system", "content": self.agent_config.prompt_preamble}
+            ]
+
+        if agent_config.initial_message:
+            self.memory.append(
+                {
+                    "role": "assistant", 
+                    "name": AGENT_NAME,
+                    "content": agent_config.initial_message.text,
+                }
+            )
     
     def get_memory_entry(self, human_input, response):
-        return f"{self.recipient}: {human_input}\n{self.sender}: {response}"
+        result = [{"role": "user", "content": human_input}]
+        if response:
+            result.append(
+                {
+                    "role": "assistant", 
+                    "name": AGENT_NAME, 
+                    "content": response,
+                }
+            )
+        
+        return result
 
     async def respond(
         self, 
@@ -43,7 +62,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return cut_off_response, False
         self.logger.debug("LLM responding to human input")
 
-        text = generate(human_input, stop=STOP_TOKENS, stream=False)
+        text = generate(self.memory, stop=STOP_TOKENS, stream=False)
         
         return text, False
 
@@ -56,12 +75,12 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.logger.debug("Samantha LLM generating response to human input")
         if is_interrupt and self.agent_config.cut_off_response:
             cut_off_response = self.get_cut_off_response()
-            self.memory.append(self.get_memory_entry(human_input, cut_off_response))
+            self.memory.extend(self.get_memory_entry(human_input, cut_off_response))
             yield cut_off_response
             return
         
-        self.memory.append(self.get_memory_entry(human_input, ""))
+        self.memory.append(self.get_memory_entry(human_input, None))
         for sent in sentence_stream(
-            generate(human_input, stop=STOP_TOKENS, stream=True)
+            generate(self.memory, stop=STOP_TOKENS, stream=True)
         ):
             yield sent
