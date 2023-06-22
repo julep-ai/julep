@@ -213,7 +213,7 @@ def _to_prompt(
 model_id = "julep-ai/samantha-33b-0"
 tokenizer_id = "timdettmers/guanaco-65b-merged"
 model = AutoModelForCausalLM.from_pretrained(
-    model_id, 
+    model_id,
     torch_dtype=torch.bfloat16, 
     device_map="auto",
 )
