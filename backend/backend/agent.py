@@ -2,7 +2,7 @@ import logging
 from typing import AsyncGenerator
 from vocode.streaming.agent.base_agent import RespondAgent
 from vocode.streaming.models.agent import AgentConfig, AgentType
-from .generate import generate, sentence_stream
+from .generate import generate, sentence_stream, AGENT_NAME
 
 
 STOP_TOKENS = ["<|", "\n\n", "? ?", "person (", "???", "person(", "? person", ". person"]
@@ -17,10 +17,17 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self,
         agent_config: SamanthaConfig,
         logger: logging.Logger | None = None,
-        openai_api_key: str | None = None,
+        sender=AGENT_NAME,
+        recipient="Human",
     ):
         super().__init__(agent_config)
-        self.memory = []
+        self.sender = sender
+        self.recipient = recipient
+        self.memory = (
+            [f"{sender}: {agent_config.initial_message.text}"]
+            if agent_config.initial_message
+            else []
+        )
     
     def get_memory_entry(self, human_input, response):
         return f"{self.recipient}: {human_input}\n{self.sender}: {response}"
@@ -43,7 +50,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
     async def generate_response(
         self, 
         human_input, 
-        conversartion_id: str, 
+        conversation_id: str, 
         is_interrupt: bool = False,
     ) -> AsyncGenerator[str, None]:
         self.logger.debug("Samantha LLM generating response to human input")
