@@ -50,10 +50,10 @@ AGENT_NAME: str = "Samantha"
 # assistant_model = AutoModelForCausalLM.from_pretrained(assistant_model_id, torch_dtype=torch.bfloat16, device_map="auto")
 
 # Load model and tokenizer
-model_id = "julep-ai/samantha-33b-0"
-tokenizer_id = "timdettmers/guanaco-65b-merged"
-# model_id = "julep-ai/samantha-33b-ds-03"
-# tokenizer_id = "julep-ai/samantha-33b-ds-03"
+# model_id = "julep-ai/samantha-33b-0"
+# tokenizer_id = "timdettmers/guanaco-65b-merged"
+model_id = "julep-ai/samantha-33b-ds-03"
+tokenizer_id = "julep-ai/samantha-33b-ds-03"
 
 print("Loading model...")
 model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto")
@@ -151,39 +151,62 @@ def to_prompt(
 
 def groupwise(iterable, n):
     """Like itertools.pairwise but for n elements"""
-    if len(iterable) < n:
-        yield tuple(iterable)
-        return
-        
+
     accum = deque((), n)
+    count = 0
+    
     for element in iterable:
         accum.append(element)
+        count += 1
         
         if len(accum) == n:
             yield tuple(accum)
+
+    if count < n:
+        yield tuple(accum)
 
 
 def wrap_iterator(iterator):
     for item in iterator:
         yield item
 
+# TODO: Turn this into accepting regular expressions instead
 def remove_stops(iterator, tokenizer, stop: list[str] = []):
 
+    # If there's nothing to check yield everything as is
     if not stop:
         yield from iterator
         return
 
+    # We need to look ahead n number of tokens so that,
+    #   we can check if a stop sequence is coming up
+    #   and not yield starting part of the stop sequence.
+
+    # Look ahead by len of largest stop sequence
     look_ahead = max([
         len(tokenizer.encode(s, add_special_tokens=False))
         for s in stop
     ])
 
-    for items in groupwise(wrap_iterator(iterator), look_ahead):
+    # Group tokens into look_ahead groups
+    for items in groupwise(iterator, look_ahead):
+
+        # Check if group has a stop sequence
         joined = "".join(items).strip()
-        if joined in stop:
+        has_stop_sequence = {s: joined.endswith(s) for s in stop}
+
+        # If so, yield tokens minus stop sequence and return
+        if any(has_stop_sequence.values()):
+            # which stop sequence was found?
+            offending_sequence = next(s for s, is_bad in has_stop_sequence.items() if is_bad)
+
+            # remove that bit, yield and exit
+            yield joined.split(offending_sequence)[0]
             return
 
+        # Otherwise, keep yielding the first item in the group
         first, *_ = items
+        
         if first.strip():
             yield first
 
@@ -330,9 +353,9 @@ async def handler(message: str):
 
     # LLM settings
     llm_settings = dict(
-        max_new_tokens=40, 
+        max_new_tokens=80, 
         stop=["<|", "\n\n", "? ?", "person (", "???", "person(", "? person", ". person"],
-        temperature=1.2,
+        temperature=1.3,
     )
 
     # Generate streaming response
