@@ -9,7 +9,7 @@ STOP_TOKENS = ["<|", "\n\n", "? ?", "person (", "???", "person(", "? person", ".
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
-    pass
+    prompt_preamble: str
 
 
 class SamanthaAgent(RespondAgent[SamanthaConfig]):
