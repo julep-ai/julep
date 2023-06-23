@@ -24,7 +24,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         super().__init__(agent_config)
         self.sender = sender
         self.recipient = recipient
-        self.memory = []
+        self.memory = {}
         if self.agent_config.prompt_preamble:
             self.memory = [
                 ChatMLMessage(role="system", content=self.agent_config.prompt_preamble)
