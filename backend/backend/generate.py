@@ -1,23 +1,74 @@
-import torch
 import spacy
+from spacy.lang.en import English
 from collections import deque
-from typing import Optional, Literal, TypedDict
+import itertools as it
+import random
 from threading import Thread
+from typing import Literal, Optional, TypedDict
+
+import torch
 from transformers import (
-    StoppingCriteriaList,
-    StoppingCriteria,
-    TextIteratorStreamer,
     AutoModelForCausalLM,
     AutoTokenizer,
+    StoppingCriteria,
+    StoppingCriteriaList,
+    TextIteratorStreamer,
 )
-from spacy.lang.en import English
 
-#TODO: read from env var
-AGENT_NAME: str = "Samantha"
 
 spacy.prefer_gpu()
 nlp = English()
 
+
+###########
+## Types ##
+###########
+
+class ChatMLMessage(TypedDict):
+    name: Optional[str] = None
+    role: Literal["assistant", "system", "user"]
+    content: str
+
+ChatML = list[ChatMLMessage]
+
+# Example:
+# [
+#     {"role": "system", "name": "situation", "content": "I am talking to Diwank"},
+#     {"role": "assistant", "name": "Samantha", "content": "Hey Diwank"},
+#     {"role": "user", "name": "Diwank", "content": "Hey!"},
+# ]
+
+############
+## Consts ##
+############
+
+AGENT_NAME: str = "Samantha"
+
+
+###########
+## Model ##
+###########
+
+# assistant_model_id = "julep-ai/samantha-7b-ds-03"
+# assistant_model = AutoModelForCausalLM.from_pretrained(assistant_model_id, torch_dtype=torch.bfloat16, device_map="auto")
+
+# Load model and tokenizer
+model_id = "julep-ai/samantha-33b"
+tokenizer_id = "julep-ai/samantha-33b"
+
+print("Loading model...")
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto")
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_id, use_fast=False, clean_up_tokenization_spaces=True)
+
+# warmup
+model.generate(**tokenizer("Hello", return_tensors="pt").to(0), max_new_tokens=2)
+
+print("Model loaded")
+
+
+##############
+## Generate ##
+##############
 
 class StopSequenceCriteria(StoppingCriteria):
     def __init__(
@@ -57,26 +108,108 @@ class StopSequenceCriteria(StoppingCriteria):
         return False
 
 
-class ChatMLMessage(TypedDict):
-    name: Optional[str]
-    role: Literal["assistant", "system", "user"]
-    content: str
+def message_role_to_prefix(message: ChatMLMessage) -> str:
+    match message:
+        case {"role": "system", "name": name, **rest}:
+            return name
+        case {"role": "user", "name": name, **rest}:
+            return f"person ({name})" if name else "person"
+        case {"role": "assistant", "name": name, **rest}:
+            return f"me ({name})" if name else "me"
 
 
-ChatML = list[ChatMLMessage]
+def to_prompt(
+    messages: ChatML,
+    bos: str = "<|section|>",
+    eos: str = "<|endsection|>",
+    suffix: str = f"\n<|section|>me ({AGENT_NAME})\n",
+) -> str:
+    # Input format:
+    # [
+    #     {"role": "system", "name": "situation", "content": "I am talking to Diwank"},
+    #     {"role": "assistant", "name": "Samantha", "content": "Hey Diwank"},
+    #     {"role": "user", "name": "Diwank", "content": "Hey!"},
+    # ]
+    
+    # Output format:
+    #
+    # <|section|>situation
+    # I am talking to Diwank<|endsection|>
+    # <|section|>me (Samantha)
+    # Hey Diwank<|endsection|>
+    # <|section|>person (Diwank)
+    # Hey<|endsection|>
+    # <|section|>me (Samantha)\n
+    
+
+    prompt = "\n".join([
+        f"{bos}{message_role_to_prefix(message)}\n{message['content']}{eos}"
+        for message in messages
+    ])
+
+    return prompt + suffix
 
 
-class StopOnTokens(StoppingCriteria):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self._stop_token_ids = kwargs.get("stop_token_ids", [])
+def groupwise(iterable, n):
+    """Like itertools.pairwise but for n elements"""
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs):
-        for stop_id in self._stop_token_ids:
-            if input_ids[0][-1] == stop_id:
-                return True
-        return False
+    accum = deque((), n)
+    count = 0
+    
+    for element in iterable:
+        accum.append(element)
+        count += 1
+        
+        if len(accum) == n:
+            yield tuple(accum)
 
+    if count < n:
+        yield tuple(accum)
+
+
+def wrap_iterator(iterator):
+    for item in iterator:
+        yield item
+
+# TODO: Turn this into accepting regular expressions instead
+def remove_stops(iterator, tokenizer, stop: list[str] = []):
+
+    # If there's nothing to check yield everything as is
+    if not stop:
+        yield from iterator
+        return
+
+    # We need to look ahead n number of tokens so that,
+    #   we can check if a stop sequence is coming up
+    #   and not yield starting part of the stop sequence.
+
+    # Look ahead by len of largest stop sequence
+    look_ahead = max([
+        len(tokenizer.encode(s, add_special_tokens=False))
+        for s in stop
+    ])
+
+    # Group tokens into look_ahead groups
+    for items in groupwise(iterator, look_ahead):
+
+        # Check if group has a stop sequence
+        joined = "".join(items).strip()
+        has_stop_sequence = {s: joined.endswith(s) for s in stop}
+
+        # If so, yield tokens minus stop sequence and return
+        if any(has_stop_sequence.values()):
+            # which stop sequence was found?
+            offending_sequence = next(s for s, is_bad in has_stop_sequence.items() if is_bad)
+
+            # remove that bit, yield and exit
+            yield joined.split(offending_sequence)[0]
+            return
+
+        # Otherwise, keep yielding the first item in the group
+        first, *_ = items
+        
+        if first.strip():
+            yield first
 
 def sentence_stream(token_stream):
     # value containers
@@ -109,131 +242,17 @@ def sentence_stream(token_stream):
         yield collected  # We dont want to strip it just in case there's important whitespace left?
 
 
-def _groupwise(iterable, n):
-    """Like itertools.pairwise but for n elements"""
-    accum = deque((), n)
-    count = 0
-    
-    for element in iterable:
-        accum.append(element)
-        count += 1
-        
-        if len(accum) == n:
-            yield tuple(accum)
-
-    if count < n:
-        yield tuple(accum)
-
-
-def _wrap_iterator(iterator):
-    for item in iterator:
-        yield item
-
-
-def _remove_stops(iterator, tokenizer, stop: list[str] = []):
-     # If there's nothing to check yield everything as is
-    if not stop:
-        yield from iterator
-        return
-
-     # We need to look ahead n number of tokens so that,
-     #   we can check if a stop sequence is coming up
-     #   and not yield starting part of the stop sequence.
-
-     # Look ahead by len of largest stop sequence
-    look_ahead = max([
-        len(tokenizer.encode(s, add_special_tokens=False))
-        for s in stop
-    ])
-
-     # Group tokens into look_ahead groups
-    for items in _groupwise(iterator, look_ahead):
-
-        # Check if group has a stop sequence
-        joined = "".join(items).strip()
-        has_stop_sequence = {s: joined.endswith(s) for s in stop}
-
-        # If so, yield tokens minus stop sequence and return
-        if any(has_stop_sequence.values()):
-            # which stop sequence was found?
-            offending_sequence = next(s for s, is_bad in has_stop_sequence.items() if is_bad)
-
-            # remove that bit, yield and exit
-            yield joined.split(offending_sequence)[0]
-            return
-
-        # Otherwise, keep yielding the first item in the group
-        first, *_ = items
-
-        if first.strip():
-            yield first
-
-
-def _message_role_to_prefix(message: ChatMLMessage) -> str:
-    match message:
-        case {"role": "system", "name": name, **rest}:
-            return name
-        case {"role": "user", "name": name, **rest}:
-            return f"person ({name})" if name else "person"
-        case {"role": "assistant", "name": name, **rest}:
-            return f"me ({name})" if name else "me"
-
-
-def _to_prompt(
-    messages: ChatML,
-    bos: str = "<|section|>",
-    eos: str = "<|endsection|>",
-    suffix: str = f"\n<|section|>me ({AGENT_NAME})\n",
-) -> str:
-    """
-    Input format:
-    [
-        {"role": "system", "name": "situation", "content": "I am talking to Diwank"},
-        {"role": "assistant", "name": "Samantha", "content": "Hey Diwank"},
-        {"role": "user", "name": "Diwank", "content": "Hey!"},
-    ]
-    
-    Output format:
-    
-    <|section|>situation
-    I am talking to Diwank<|endsection|>
-    <|section|>me (Samantha)
-    Hey Diwank<|endsection|>
-    <|section|>person (Diwank)
-    Hey<|endsection|>
-    <|section|>me (Samantha)\n
-    """
-
-    prompt = "\n".join([
-        f"{bos}{_message_role_to_prefix(message)}\n{message['content']}{eos}"
-        for message in messages
-    ])
-
-    return prompt + suffix
-
-
-model_id = "julep-ai/samantha-33b-0"
-tokenizer_id = "timdettmers/guanaco-65b-merged"
-model = AutoModelForCausalLM.from_pretrained(
-    model_id,
-    torch_dtype=torch.bfloat16, 
-    device_map="auto",
-)
-tokenizer = AutoTokenizer.from_pretrained(
-    tokenizer_id, 
-    use_fast=False,
-)
-
-
 def generate(
     messages: ChatML,
     stop: list[str] = [],
     timeout: int = 15,
     stream: bool = False,
+    prompt_settings: dict = {},
     **kwargs
 ) -> TextIteratorStreamer | str:
+    
     # Prepare input
-    prompt = _to_prompt(messages)
+    prompt = to_prompt(messages, **prompt_settings)
     inputs = tokenizer(prompt, return_tensors="pt").to(0)
     input_length = len(inputs["input_ids"].squeeze().tolist())
 
@@ -250,11 +269,11 @@ def generate(
     # Generation parameters
     generation_kwargs = {
         # defaults
-        "max_new_tokens": 80, 
+        "max_new_tokens": 40, 
         "repetition_penalty": 1.02,
         "no_repeat_ngram_size": 4,
         "renormalize_logits": True,
-        "temperature": 1.3,
+        "temperature": 1.1,
         #
         # overrides
         **kwargs,
@@ -279,12 +298,7 @@ def generate(
         return result
     
     # If streaming, prepare streamer
-    streamer = TextIteratorStreamer(
-        tokenizer, 
-        skip_prompt=True, 
-        timeout=timeout, 
-        skip_special_tokens=False,
-    )
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, timeout=timeout, skip_special_tokens=False)
     generation_kwargs["streamer"] = streamer
 
     # and start generating in new thread
@@ -292,4 +306,34 @@ def generate(
     thread.start()
     
     # stop sequence filter
-    return _remove_stops(streamer, tokenizer, stop)
+    return remove_stops(streamer, tokenizer, stop)
+
+
+# LLM settings
+llm_settings = dict(
+    max_new_tokens=120, 
+    stop=["<|", "\n\n", "< |", "<end", "<section"],
+    temperature=1.2,
+)
+
+async def reply(message: str):
+
+    chatml = [
+        ChatMLMessage(name="situation", role="system", content="Samantha is talking to a person."),
+        ChatMLMessage(name="", role="user", content=message),
+    ]
+
+    # Generate streaming response
+    response_stream = generate(
+        chatml,
+        stream=True,
+        **llm_settings,
+    )
+    
+    # Print tokens and collect tokens to add to agent history
+    response = ""
+    for token in response_stream:
+        response += token
+        print(token, end=" ")
+    
+    print()
