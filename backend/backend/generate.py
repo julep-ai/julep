@@ -111,16 +111,18 @@ def sentence_stream(token_stream):
 
 def _groupwise(iterable, n):
     """Like itertools.pairwise but for n elements"""
-    if len(iterable) < n:
-        yield tuple(iterable)
-        return
-        
     accum = deque((), n)
+    count = 0
+    
     for element in iterable:
         accum.append(element)
+        count += 1
         
         if len(accum) == n:
             yield tuple(accum)
+
+    if count < n:
+        yield tuple(accum)
 
 
 def _wrap_iterator(iterator):
