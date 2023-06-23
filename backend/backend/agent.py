@@ -79,7 +79,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             yield cut_off_response
             return
         
-        self.memory.append(self.get_memory_entry(human_input, None))
+        self.memory.extend(self.get_memory_entry(human_input, None))
         for sent in sentence_stream(
             generate(self.memory, stop=STOP_TOKENS, stream=True)
         ):
