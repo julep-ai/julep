@@ -24,11 +24,9 @@ app = FastAPI(docs_url=None)
 
 class SamanthaStreamingConversation(StreamingConversation):
     def terminate(self):
-        res = super().terminate()
         if self.agent and hasattr(self.agent, "cleanup_memory"):
             self.agent.cleanup_memory(self.id)
-
-        return res
+        return super().terminate()
 
 
 class SamanthaConversationRouter(ConversationRouter):
@@ -65,7 +63,7 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
     api_key=os.environ["DEEPGRAM_API_KEY"],
 )
 
-conversation_router = SamanthaConversationRouter(
+conversation_router = ConversationRouter(
     agent=SamanthaAgent(
         SamanthaConfig(
             initial_message=BaseMessage(text="Hello!"),
