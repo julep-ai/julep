@@ -15,6 +15,13 @@ services:
       - '5000:5000'
     volumes:
       - user_cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   ngrok:
     image: ngrok/ngrok:latest
