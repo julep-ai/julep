@@ -68,6 +68,7 @@ conversation_router = ConversationRouter(
         SamanthaConfig(
             initial_message=BaseMessage(text="Hello!"),
             prompt_preamble="Samantha is talking to a person.",
+            allowed_idle_time_seconds=60,
         )
     ),
     synthesizer_thunk=synthesizer_thunk,
