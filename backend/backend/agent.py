@@ -6,7 +6,7 @@ from contextlib import suppress
 from .generate import generate, sentence_stream, AGENT_NAME, ChatMLMessage
 
 
-STOP_TOKENS = ["<|", "\n\n", "? ?", "person (", "???", "person(", "? person", ". person"]
+STOP_TOKENS = ["<|", "\n\n", "? ?", "person (", "???", "person(", "? person", ". person", "< |", "<end", "<section"]
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
