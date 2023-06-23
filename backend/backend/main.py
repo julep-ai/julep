@@ -6,6 +6,9 @@ from vocode.streaming.synthesizer.eleven_labs_synthesizer import ElevenLabsSynth
 from vocode.streaming.transcriber.deepgram_transcriber import DeepgramTranscriber, DeepgramTranscriberConfig
 from vocode.streaming.client_backend.conversation import ConversationRouter
 from vocode.streaming.models.message import BaseMessage
+from vocode.streaming.streaming_conversation import StreamingConversation
+from vocode.streaming.models.websocket import AudioConfigStartMessage
+from vocode.streaming.output_device.websocket_output_device import WebsocketOutputDevice
 from dotenv import load_dotenv
 from .logger import logger
 from .agent import SamanthaAgent, SamanthaConfig
@@ -17,6 +20,34 @@ SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"] #"eu7pAsMtrspvm0ZVbiCr"
 
 
 app = FastAPI(docs_url=None)
+
+
+class SamanthaStreamingConversation(StreamingConversation):
+    def terminate(self):
+        res = super().terminate()
+        if self.agent and hasattr(self.agent, "cleanup_memory"):
+            self.agent.cleanup_memory(self.id)
+
+        return res
+
+
+class SamanthaConversationRouter(ConversationRouter):
+    def get_conversation(
+        self,
+        output_device: WebsocketOutputDevice,
+        start_message: AudioConfigStartMessage,
+    ) -> SamanthaStreamingConversation:
+        transcriber = self.transcriber_thunk(start_message.input_audio_config)
+        synthesizer = self.synthesizer_thunk(start_message.output_audio_config)
+        synthesizer.synthesizer_config.should_encode_as_wav = True
+        return SamanthaStreamingConversation(
+            output_device=output_device,
+            transcriber=transcriber,
+            agent=self.agent,
+            synthesizer=synthesizer,
+            conversation_id=start_message.conversation_id,
+            logger=self.logger,
+        )
 
 
 synthesizer_thunk = lambda output_audio_config: ElevenLabsSynthesizer(
@@ -34,7 +65,7 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
     api_key=os.environ["DEEPGRAM_API_KEY"],
 )
 
-conversation_router = ConversationRouter(
+conversation_router = SamanthaConversationRouter(
     agent=SamanthaAgent(
         SamanthaConfig(
             initial_message=BaseMessage(text="Hello!"),

@@ -2,6 +2,7 @@ import logging
 from typing import AsyncGenerator, Optional
 from vocode.streaming.agent.base_agent import RespondAgent
 from vocode.streaming.models.agent import AgentConfig, AgentType, CutOffResponse
+from contextlib import suppress
 from .generate import generate, sentence_stream, AGENT_NAME, ChatMLMessage
 
 
@@ -107,3 +108,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
 
         mem.extend(self._make_memory_entry(human_input, " ".join(response)))
         self.memory[conversation_id] = mem
+
+    def cleanup_memory(self, conversation_id):
+        with suppress(KeyError):
+            del self.memory[conversation_id]
