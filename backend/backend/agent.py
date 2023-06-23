@@ -25,19 +25,6 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.sender = sender
         self.recipient = recipient
         self.memory = {}
-        if self.agent_config.prompt_preamble:
-            self.memory = [
-                ChatMLMessage(role="system", content=self.agent_config.prompt_preamble)
-            ]
-
-        if agent_config.initial_message:
-            self.memory.append(
-                ChatMLMessage(
-                    role="assistant", 
-                    name=AGENT_NAME,
-                    content=agent_config.initial_message.text,
-                )
-            )
     
     def _make_memory_entry(self, human_input, response):
         result = [{"role": "user", "content": human_input.strip()}]
