@@ -38,7 +38,7 @@ conversation_router = ConversationRouter(
     agent=SamanthaAgent(
         SamanthaConfig(
             initial_message=BaseMessage(text="Hello!"),
-            prompt_preamble="Have a pleasant conversation about life",
+            prompt_preamble="Samantha is talking to a person.",
         )
     ),
     synthesizer_thunk=synthesizer_thunk,

@@ -25,7 +25,7 @@ nlp = English()
 ###########
 
 class ChatMLMessage(TypedDict):
-    name: Optional[str] = None
+    name: Optional[str]
     role: Literal["assistant", "system", "user"]
     content: str
 
@@ -307,33 +307,3 @@ def generate(
     
     # stop sequence filter
     return remove_stops(streamer, tokenizer, stop)
-
-
-# LLM settings
-llm_settings = dict(
-    max_new_tokens=120, 
-    stop=["<|", "\n\n", "< |", "<end", "<section"],
-    temperature=1.2,
-)
-
-async def reply(message: str):
-
-    chatml = [
-        ChatMLMessage(name="situation", role="system", content="Samantha is talking to a person."),
-        ChatMLMessage(name="", role="user", content=message),
-    ]
-
-    # Generate streaming response
-    response_stream = generate(
-        chatml,
-        stream=True,
-        **llm_settings,
-    )
-    
-    # Print tokens and collect tokens to add to agent history
-    response = ""
-    for token in response_stream:
-        response += token
-        print(token, end=" ")
-    
-    print()
