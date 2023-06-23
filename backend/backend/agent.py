@@ -39,7 +39,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             )
     
     def get_memory_entry(self, human_input, response):
-        result = [{"role": "user", "content": human_input}]
+        result = [{"role": "user", "content": human_input.strip()}]
         if response:
             result.append(
                 {
