@@ -53,6 +53,9 @@ synthesizer_thunk = lambda output_audio_config: ElevenLabsSynthesizer(
         output_audio_config,
         voice_id=SAMANTHA_VOICE_ID,
         api_key=os.environ["ELEVENLABS_API_KEY"],
+        optimize_streaming_latency=3,
+        stability=0.5,
+        similarity_boost=0.75,
     )
 )
 
