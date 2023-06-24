@@ -105,6 +105,9 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
 
+        yield text
+        return
+
     def cleanup_memory(self, conversation_id):
         with suppress(KeyError):
             del self.memory[conversation_id]
