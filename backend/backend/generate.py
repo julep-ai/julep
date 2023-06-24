@@ -320,7 +320,7 @@ def generate(
     messages: ChatML,
     stop: list[str] = [],
     max_tokens: int = 80,
-    temperature: float = 0,
+    temperature: float = 1.0,
     model: str = "julep-ai/samantha-33b",
     session: Session = None,
     prompt_settings: dict = {},
