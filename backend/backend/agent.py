@@ -3,7 +3,7 @@ from typing import AsyncGenerator, Optional
 from vocode.streaming.agent.base_agent import RespondAgent
 from vocode.streaming.models.agent import AgentConfig, AgentType, CutOffResponse
 from contextlib import suppress
-from .generate import generate, sentence_stream, AGENT_NAME, ChatMLMessage
+from .generate import generate, AGENT_NAME, ChatMLMessage
 
 
 STOP_TOKENS = ["<|", "\n\n", "< |", "<\n|"]
@@ -56,7 +56,8 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         
         self.logger.debug("LLM responding to human input")
 
-        text = generate(mem, stop=STOP_TOKENS, stream=False)
+        response = generate(mem, stop=STOP_TOKENS)
+        text = response["choices"][0]["text"]
         mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
         
@@ -99,14 +100,9 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             yield cut_off_response
             return
 
-        response = []
-        for sent in sentence_stream(
-            generate(mem, stop=STOP_TOKENS, stream=True)
-        ):
-            response.append(sent)
-            yield sent
-
-        mem.extend(self._make_memory_entry(human_input, " ".join(response)))
+        response = generate(mem, stop=STOP_TOKENS)
+        text = response["choices"][0]["text"]
+        mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
 
     def cleanup_memory(self, conversation_id):
