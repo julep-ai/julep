@@ -119,8 +119,9 @@ def message_role_to_prefix(message: ChatMLMessage) -> str:
     match message:
         case {"role": "system", "name": name, **rest}:
             return name
-        case {"role": "user", "name": name, **rest}:
-            return f"person ({name})" if name else "person"
+        case {"role": "user", **rest}:
+            name = rest.get("name", "person")
+            return f"person ({name})"
         case {"role": "assistant", "name": name, **rest}:
             return f"me ({name})" if name else "me"
 
@@ -320,9 +321,12 @@ def generate(
     messages: ChatML,
     stop: list[str] = [],
     max_tokens: int = 80,
-    temperature: float = 1.0,
+    temperature: float = 0.7,
     model: str = "julep-ai/samantha-33b",
     session: Session = None,
+    frequency_penalty=0.8,
+    presence_penalty=0.8,
+    best_of=3,
     prompt_settings: dict = {},
 ) -> str:
     if session is None:
@@ -336,6 +340,9 @@ def generate(
             "max_tokens": max_tokens,
             "stop": stop,
             "temperature": temperature,
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "best_of": best_of,
         },
     )
     resp.raise_for_status()

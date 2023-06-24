@@ -56,7 +56,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         
         self.logger.debug("LLM responding to human input")
 
-        response = generate(mem, stop=STOP_TOKENS, temperature=0.1)
+        response = generate(mem, stop=STOP_TOKENS)
         text = response["choices"][0]["text"]
         mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
@@ -100,10 +100,11 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             yield cut_off_response
             return
 
-        response = generate(mem, stop=STOP_TOKENS, temperature=0.1)
+        response = generate(mem, stop=STOP_TOKENS)
         text = response["choices"][0]["text"]
         mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
+        self.logger.info(f"memory state: {self.memory}")
 
         yield text
         return
