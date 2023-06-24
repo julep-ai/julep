@@ -120,8 +120,8 @@ def message_role_to_prefix(message: ChatMLMessage) -> str:
         case {"role": "system", "name": name, **rest}:
             return name
         case {"role": "user", **rest}:
-            name = rest.get("name", "person")
-            return f"person ({name})"
+            name = rest.get("name", None)
+            return f"person ({name})" if name else "person"
         case {"role": "assistant", "name": name, **rest}:
             return f"me ({name})" if name else "me"
 
@@ -151,7 +151,7 @@ def to_prompt(
     
 
     prompt = "\n".join([
-        f"{bos}{message_role_to_prefix(message)}\n{message['content']}{eos}"
+        f"{bos}{message_role_to_prefix(message)}\n{message['content'].strip()}{eos}"
         for message in messages
     ])
 
@@ -324,19 +324,21 @@ def generate(
     temperature: float = 0.7,
     model: str = "julep-ai/samantha-33b",
     session: Session = None,
-    frequency_penalty=0.8,
-    presence_penalty=0.8,
-    best_of=3,
+    frequency_penalty=0.25,
+    presence_penalty=0.4,
+    best_of=2,
     prompt_settings: dict = {},
 ) -> str:
     if session is None:
         session = requests
 
+    prompt = to_prompt(messages, **prompt_settings).strip()
+    print("***", prompt)
     resp = session.post(
         COMPLETION_URL, 
         json={
             "model": model,
-            "prompt": to_prompt(messages, **prompt_settings),
+            "prompt": prompt,
             "max_tokens": max_tokens,
             "stop": stop,
             "temperature": temperature,
