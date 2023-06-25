@@ -147,6 +147,7 @@ relation_defs = """
     =>
     situation: String,
     summary: String? default null,
+    metadata: Json default {},
 }
 
 ###
@@ -169,11 +170,12 @@ relation_defs = """
 
 :create entries {
     session_id: Uuid,
-    timestamp: Float,
+    updated_at: Validity default [floor(now()), true],
     role: String,
     name: String? default null,
+    =>
     content: String,
-    character_id: Uuid,
+    character_id: Uuid? default null,
     sentiment: Float? default null,
 }
 
@@ -234,7 +236,8 @@ relation_defs = """
     parent_belief_id: Uuid? default null,
     valence: Float default 0,
     aspects: [(String, Float, String, String)] default [],
-    embedding: <F32; 768>,
+    belief_embedding: <F32; 768>,
+    details_embedding: <F32; 768>,
 }
 
 ###
@@ -243,9 +246,8 @@ relation_defs = """
     dim: 768,
     m: 50,
     dtype: F32,
-    fields: [embedding],
+    fields: [belief_embedding, details_embedding],
     distance: Cosine,
-    filter: !is_null(embedding),
     ef_construction: 20,
     extend_candidates: false,
     keep_pruned_connections: false,
