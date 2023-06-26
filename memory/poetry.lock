@@ -2857,12 +2857,12 @@ files = [
 
 [[package]]
 name = "torch"
-version = "2.1.0.dev20230623+cu121"
+version = "2.1.0.dev20230624+cu121"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "torch-2.1.0.dev20230623+cu121-cp310-cp310-linux_x86_64.whl", hash = "sha256:cfcd32810645ea3b6d1a2e5924f0f0e6d79fa86c275c7c3e494ef60ce785c628"},
+    {file = "torch-2.1.0.dev20230624+cu121-cp310-cp310-linux_x86_64.whl", hash = "sha256:7efd29328ed27dd3c1d5e966215cf4daa33231c617d6865d48f522059933637c"},
 ]
 
 [package.dependencies]
@@ -2880,7 +2880,7 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 
 [package.source]
 type = "url"
-url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230623%2Bcu121-cp310-cp310-linux_x86_64.whl"
+url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230624%2Bcu121-cp310-cp310-linux_x86_64.whl"
 
 [[package]]
 name = "tornado"
@@ -3320,4 +3320,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "8cc3cb5410f17ab8dc871c4d3af0f081f85a5ce900bc90be094fa8291a892b78"
+content-hash = "56fd433b4f4bd2d8d7d3c72d282dd21ee5d4c1f08dc79d44ceb2584190198977"
