@@ -1,6 +1,7 @@
 import os
 import requests
 from requests import Session
+
 # import spacy
 # from spacy.lang.en import English
 # from collections import deque
@@ -31,10 +32,12 @@ COMPLETION_URL = os.environ["COMPLETION_URL"]
 # ## Types ##
 # ###########
 
+
 class ChatMLMessage(TypedDict):
     name: Optional[str]
     role: Literal["assistant", "system", "user"]
     content: str
+
 
 ChatML = list[ChatMLMessage]
 
@@ -50,6 +53,7 @@ ChatML = list[ChatMLMessage]
 # ############
 
 AGENT_NAME: str = "Samantha"
+PERSON_NAME: str = "Diwank"
 
 
 # ###########
@@ -87,7 +91,7 @@ AGENT_NAME: str = "Samantha"
 #         **kwargs,
 #     ):
 #         super().__init__(*args, **kwargs)
-        
+
 #         self.stop = stop
 #         self.tokenizer = tokenizer
 #         self.input_length = input_length
@@ -101,10 +105,10 @@ AGENT_NAME: str = "Samantha"
 
 #         input_ids = input_ids.long().tolist()
 #         new_input_ids = [i[self.input_length:] for i in input_ids]
-        
+
 #         for text in self.stop:
 #             generated_so_far = ""
-            
+
 #             for input_id in new_input_ids:
 #                 decoded = self.tokenizer.decode(input_id, skip_special_tokens=False)
 #                 generated_so_far += decoded
@@ -138,7 +142,7 @@ def to_prompt(
     #     {"role": "assistant", "name": "Samantha", "content": "Hey Diwank"},
     #     {"role": "user", "name": "Diwank", "content": "Hey!"},
     # ]
-    
+
     # Output format:
     #
     # <|section|>situation
@@ -148,12 +152,13 @@ def to_prompt(
     # <|section|>person (Diwank)
     # Hey<|endsection|>
     # <|section|>me (Samantha)\n
-    
 
-    prompt = "\n".join([
-        f"{bos}{message_role_to_prefix(message)}\n{message['content'].strip()}{eos}"
-        for message in messages
-    ])
+    prompt = "\n".join(
+        [
+            f"{bos}{message_role_to_prefix(message)}\n{message['content'].strip()}{eos}"
+            for message in messages
+        ]
+    )
 
     return prompt + suffix
 
@@ -163,11 +168,11 @@ def to_prompt(
 
 #     accum = deque((), n)
 #     count = 0
-    
+
 #     for element in iterable:
 #         accum.append(element)
 #         count += 1
-        
+
 #         if len(accum) == n:
 #             yield tuple(accum)
 
@@ -215,7 +220,7 @@ def to_prompt(
 
 #         # Otherwise, keep yielding the first item in the group
 #         first, *_ = items
-        
+
 #         if first.strip():
 #             yield first
 
@@ -258,7 +263,7 @@ def to_prompt(
 #     prompt_settings: dict = {},
 #     **kwargs
 # ) -> TextIteratorStreamer | str:
-    
+
 #     # Prepare input
 #     prompt = to_prompt(messages, **prompt_settings)
 #     inputs = tokenizer(prompt, return_tensors="pt").to(0)
@@ -277,7 +282,7 @@ def to_prompt(
 #     # Generation parameters
 #     generation_kwargs = {
 #         # defaults
-#         "max_new_tokens": 40, 
+#         "max_new_tokens": 40,
 #         "repetition_penalty": 1.02,
 #         "no_repeat_ngram_size": 4,
 #         "renormalize_logits": True,
@@ -302,9 +307,9 @@ def to_prompt(
 #         # Remove the stop sequence at the end (needed)
 #         for s in stop:
 #             result = result.split(s)[0].strip()
-        
+
 #         return result
-    
+
 #     # If streaming, prepare streamer
 #     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, timeout=timeout, skip_special_tokens=False)
 #     generation_kwargs["streamer"] = streamer
@@ -312,7 +317,7 @@ def to_prompt(
 #     # and start generating in new thread
 #     thread = Thread(target=model.generate, kwargs=generation_kwargs)
 #     thread.start()
-    
+
 #     # stop sequence filter
 #     return remove_stops(streamer, tokenizer, stop)
 
@@ -320,12 +325,12 @@ def to_prompt(
 def generate(
     messages: ChatML,
     stop: list[str] = [],
-    max_tokens: int = 80,
-    temperature: float = 0.7,
+    max_tokens: int = 200,
+    temperature: float = 0.4,
     model: str = "julep-ai/samantha-33b",
     session: Session = None,
-    frequency_penalty=0.25,
-    presence_penalty=0.4,
+    frequency_penalty=0.5,
+    presence_penalty=0.2,
     best_of=2,
     prompt_settings: dict = {},
 ) -> str:
@@ -335,7 +340,7 @@ def generate(
     prompt = to_prompt(messages, **prompt_settings).strip()
     print("***", prompt)
     resp = session.post(
-        COMPLETION_URL, 
+        COMPLETION_URL,
         json={
             "model": model,
             "prompt": prompt,
