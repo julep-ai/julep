@@ -1,5 +1,4 @@
 import os
-from pytz import timezone
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
