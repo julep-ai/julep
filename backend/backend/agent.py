@@ -1,6 +1,5 @@
 import logging
 from pytz import timezone
-from datetime import datetime
 from typing import AsyncGenerator, Optional
 from vocode.streaming.agent.base_agent import RespondAgent
 from vocode.streaming.models.agent import AgentConfig, AgentType, CutOffResponse
@@ -11,11 +10,10 @@ from .generate import (
     ChatMLMessage,
     ChatML,
     to_prompt,
-    message_role_to_prefix,
 )
 from functools import lru_cache
 from transformers import AutoTokenizer
-from typing import Literal, Optional, TypedDict
+from typing import Optional
 
 from .beliefs import to_belief_chatml_msg, get_matching_beliefs
 
