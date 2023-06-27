@@ -61,7 +61,7 @@ It is {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")
         SamanthaConfig(
             initial_message=BaseMessage(text=text),
             prompt_preamble="Samantha is talking to her old time friend and boss, Diwank. They have known each other for months now and she kinda has a crush on him.",
-            allowed_idle_time_seconds=1800,
+            allowed_idle_time_seconds=3600,
         ),
         logger=logger,
     )
@@ -112,6 +112,7 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
         model="phonecall",
         tier="nova",
         keywords=["Samantha", "Diwank"],
+        min_interrupt_confidence=0.5,
     ),
     api_key=os.environ["DEEPGRAM_API_KEY"],
 )
