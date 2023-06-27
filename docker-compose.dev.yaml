@@ -6,11 +6,22 @@ services:
   samantha-backend:
     build:
       context: backend
+      args:
+        HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
     env_file: .env
     environment:
       PORT: "5000"
     ports:
       - '5000:5000'
+    volumes:
+      - user_cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 4
+              capabilities: [gpu]
 
   ngrok:
     image: ngrok/ngrok:latest
@@ -24,3 +35,7 @@ services:
       - ./ngrok.yml:/etc/ngrok.yml
     ports:
       - 4040:4040
+
+volumes:
+  user_cache:
+    name: user_cache

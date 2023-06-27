@@ -8,6 +8,15 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
 pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
+httpx = "^0.24.1"
+python-dotenv = "^1.0.0"
+requests = "^2.31.0"
+pydantic = {version = ">=2.0b3", allow-prereleases = true}
+aiocache = {extras = ["redis"], version = "^0.12.1"}
+xxhash = "^3.2.0"
+torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230624%2Bcu121-cp310-cp310-linux_x86_64.whl"}
+transformers = "^4.30.2"
+datasets = "^2.13.1"
 
 
 [tool.poetry.group.dev.dependencies]

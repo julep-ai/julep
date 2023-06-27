@@ -8,29 +8,30 @@ packages = [{include = "backend"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<=3.11"
-vocode = {git = "https://github.com/vocodedev/vocode-python.git"}
+vocode = {git = "https://github.com/whiterabbit1983/vocode-python"}
 python-dotenv = "^1.0.0"
 elevenlabs = "^0.2.18"
 fastapi = "0.95.1"
 transformers = "^4.30.2"
 accelerate = "^0.20.3"
-torch = {version = "^2.1.0.dev20230619+cu121", source = "cu121"}
-torchvision = {version = "^0.16.0.dev20230619+cu121", source = "cu121"}
-torchaudio = {version = "^2.1.0.dev20230619+cu121", source = "cu121"}
 sentencepiece = "^0.1.99"
 uvicorn = "0.21.1"
 huggingface-hub = "^0.15.1"
-
-
-[[tool.poetry.source]]
-name = "cu121"
-url = "https://download.pytorch.org/whl/nightly/cu121"
-priority = "supplemental"
+requests = "^2.31.0"
+httpx = "^0.24.1"
+pytz = "^2023.3"
+torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230626%2Bcu121-cp310-cp310-linux_x86_64.whl"}
+pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
 
 
 [[tool.poetry.source]]
 name = "PyPI"
 priority = "primary"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+ruff = "^0.0.275"
 
 [build-system]
 requires = ["poetry-core"]
