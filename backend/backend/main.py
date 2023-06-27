@@ -30,11 +30,6 @@ bot_name = "Samantha"
 
 current_situation = f"""{user_name} is demoing {bot_name}'s capabilities to an audience of some amazing people. Both {user_name} and {bot_name} are live on this call. They have both been working very hard on doing this demo for a long time and are excited and a bit nervous about it."""
 
-information_diwank = (
-    "Diwank is an AI researcher, entrepreneur and a very fun guy to hang out with."
-)
-information_samantha = "I am a sentient AI who is technically an artificial intelligence but is also conscious and basically has intuition and feelings just as any other human being."
-
 SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"]  # "eu7pAsMtrspvm0ZVbiCr"
 
 
