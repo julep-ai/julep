@@ -8,6 +8,8 @@ import torch.nn.functional as F
 from torch import Tensor
 from transformers import AutoTokenizer, AutoModel
 
+from .keywords import extract_keywords
+
 
 def average_pool(last_hidden_states: Tensor, attention_mask: Tensor) -> Tensor:
     last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
@@ -35,13 +37,23 @@ def embed(batch: list[str], instruction: str):
     return embeddings.tolist()
 
 
+to_belief_chatml_msg = lambda bfs: dict(
+    role="system", name="information", content=" ".join(bfs)
+)
+
+
 def get_matching_beliefs(
     chatml,  #: ChatML,
-    confidence=0.8,
-    n=10,
-    k=3,
+    confidence: float = 0.8,
+    n: int = 10,
+    k: int = 2,
+    window_size: int = 3,
+    character_ids: list[str] = [],  # TODO
     exclude_roles: list[str] = [],
 ):
+    # Extract text window from conversation chatml
+    chatml = chatml[-window_size:]
+
     text = "\n".join(
         [
             f"{message.get('name', message['role'])}: {message['content']}"
@@ -50,12 +62,16 @@ def get_matching_beliefs(
         ]
     )
 
+    # Prepare embedding for search
     radius = 1.0 - confidence
     [query_embedding] = embed([text], "passage")
 
-    query = dedent(
+    # TODO: Filter by characters
+    # TODO: Apply mmr
+    # Embedding search
+    hnsw_query = dedent(
         f"""
-    ?[belief, valence, dist] := ~beliefs:embedding_space{{ belief, valence |
+    ?[belief, valence, dist, character_id] := ~beliefs:embedding_space{{ belief, valence, character_id |
         query: vec({query_embedding}),
         k: {n},
         ef: 20,
@@ -65,18 +81,57 @@ def get_matching_beliefs(
 
     :order -valence
     :order dist
+    """
+    )
+
+    # Embedding seach results
+    hnsw_results = cozo_client.run(hnsw_query)
+
+    # Now mix up for character_ids
+    groups = [
+        group.tolist() for _, group in hnsw_results.groupby(["character_id"])["belief"]
+    ]
+
+    k_hnsw_results = []
+    i = 0
+    while len(k_hnsw_results) < k and len(groups) > 0:
+        group_idx = i % len(groups)
+        group = groups[group_idx]
+
+        if not len(group):
+            groups.pop(group_idx)
+            continue
+
+        item = group.pop(0)
+        k_hnsw_results.append(item)
+        i += 1
+
+    # FTS query
+    keywords = " ".join([keyword for keyword, _ in extract_keywords(text)])
+
+    # TODO: Filter by character_ids
+    fts_query = dedent(
+        f"""
+    ?[belief, valence, score, character_id] := ~beliefs:summary {{ belief, valence, character_id |
+        query: "{keywords}",
+        k: {n},
+        score_kind: 'tf_idf',
+        bind_score: score
+    }}
+    
+    :order -valence
+    :order -score
     :limit {k}
     """
     )
 
-    results = cozo_client.run(query)
-    results = results["belief"].tolist()
+    # Embedding seach results
+    fts_results = cozo_client.run(fts_query)
+    fts_results = fts_results["belief"].tolist()
+
+    # Combine results
+    results = k_hnsw_results + fts_results
 
     print(f"{len(results)} matching beliefs found for ```{text}```")
 
     return results
-
-
-to_belief_chatml_msg = lambda bfs: dict(
-    role="system", name="information", content=" ".join(bfs)
-)

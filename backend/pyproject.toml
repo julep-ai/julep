@@ -22,6 +22,9 @@ httpx = "^0.24.1"
 pytz = "^2023.3"
 torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230626%2Bcu121-cp310-cp310-linux_x86_64.whl"}
 pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
+keybert = "^0.7.0"
+keyphrase-vectorizers = "^0.0.11"
+pydantic = "<2"
 
 
 [[tool.poetry.source]]
