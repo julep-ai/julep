@@ -46,7 +46,7 @@ def init_agent(meta_data: Optional[dict] = None):
     bot_name = "Samantha"
     now = datetime.now(IST)
 
-    situation = meta_data.get("situation") 
+    situation = (meta_data or {}).get("situation") 
     if situation is None:
         situation = os.environ.get("SITUATION_PROMPT")
 
