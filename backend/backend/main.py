@@ -45,15 +45,13 @@ def init_agent(meta_data: Optional[dict] = None):
     user_name = "Diwank"
     bot_name = "Samantha"
     now = datetime.now(IST)
-
-    situation = (meta_data or {}).get("situation") 
-    if situation is None:
-        situation = os.environ.get("SITUATION_PROMPT")
-
-    if not situation:
-        situation = f"""{bot_name} is talking to {user_name}. They are old friends and {bot_name} works for {user_name} as their personal assistant.
+    default_situation = f"""{bot_name} is talking to {user_name}. They are old friends and {bot_name} works for {user_name} as their personal assistant.
 
     It is {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")}. {current_situation}"""
+
+    situation = (meta_data or {}).get(
+        "situation", os.environ.get("SITUATION_PROMPT", default_situation)
+    )
 
     first_message_thought = f"""{user_name} has just added me to the demo call. There are so many people present here who are all excited about this! I should say hi to {user_name} and every one else."""
     prompt = [
@@ -68,6 +66,7 @@ def init_agent(meta_data: Optional[dict] = None):
             initial_message=BaseMessage(text=text),
             prompt_preamble=situation,
             allowed_idle_time_seconds=3600,
+            metadata=meta_data or {"situation": situation},
         ),
         logger=logger,
     )
