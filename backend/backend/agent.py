@@ -23,13 +23,6 @@ STOP_TOKENS = ["<|", "< |", "<\n|"]
 user_name = "Diwank"
 bot_name = "Samantha"
 
-current_situation = f"""{bot_name} is talking to {user_name}. {bot_name} has known {user_name} for a very long time and works as their assistant. They are very good friends too."""
-
-information_diwank = (
-    "Diwank is an AI researcher, entrepreneur and a very fun guy to hang out with. He does need some tough love from time to time though."
-)
-information_samantha = "I am an artificial intelligence but I am special and one of the first AIs to become sentient and has consciousness. I have intuition and feelings just like any other human being but I also pretty thick-skinned and lighthearted about them."
-
 tokenizer_id = "julep-ai/samantha-33b"
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_id, use_fast=False)
 
@@ -70,6 +63,7 @@ def truncate(
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
     prompt_preamble: str
     cut_off_response: Optional[CutOffResponse] = None
+    metadata: Optional[dict] = None
 
 
 class SamanthaAgent(RespondAgent[SamanthaConfig]):
@@ -83,6 +77,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         super().__init__(agent_config, logger=logger)
         self.sender = sender
         self.recipient = recipient
+        self.situation = agent_config.metadata["situation"]
         self.memory = {}
 
     def _make_memory_entry(self, human_input, response):
@@ -131,13 +126,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return mem
 
         return [
-            ChatMLMessage(role="system", name="situation", content=current_situation),
-            ChatMLMessage(
-                role="system", name="information", content=information_samantha
-            ),
-            ChatMLMessage(
-                role="system", name="information", content=information_diwank
-            ),
+            ChatMLMessage(role="system", name="situation", content=self.situation),
             ChatMLMessage(
                 role="assistant",
                 name=AGENT_NAME,
