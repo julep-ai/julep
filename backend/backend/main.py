@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+import vocode.streaming.streaming_conversation
 from vocode.streaming.synthesizer.eleven_labs_synthesizer import (
     ElevenLabsSynthesizer,
     ElevenLabsSynthesizerConfig,
@@ -15,11 +16,14 @@ from vocode.streaming.client_backend.conversation import ConversationRouter
 from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.models.websocket import AudioConfigStartMessage
+from vocode.streaming.models.transcriber import TimeEndpointingConfig
 from vocode.streaming.output_device.websocket_output_device import WebsocketOutputDevice
 from dotenv import load_dotenv
 from .logger import logger
 from .agent import SamanthaAgent, SamanthaConfig, IST
 from .generate import generate, AGENT_NAME, ChatMLMessage
+
+vocode.streaming.streaming_conversation.ALLOWED_IDLE_TIME = 3600
 
 load_dotenv()
 
@@ -96,20 +100,30 @@ synthesizer_thunk = lambda output_audio_config: ElevenLabsSynthesizer(
         optimize_streaming_latency=1,  # Set by Diwank
         stability=0.375,  # Set by Diwank
         similarity_boost=1.0,  # Set by Diwank
-    )
+    ),
+    logger=logger,
 )
+
+
+ep_config = TimeEndpointingConfig(time_cutoff_seconds=0.1)
+
 
 transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
     DeepgramTranscriberConfig.from_input_audio_config(
         input_audio_config,
         mute_during_speech=True,
         language="en-US",
-        model="phonecall",
+        model="general",
         tier="nova",
-        keywords=["Samantha", "Diwank"],
-        min_interrupt_confidence=0.5,
+        keywords=["Samantha", "Diwank", "Pascal"],
+        min_interrupt_confidence=0.7,
+        endpointing_config=ep_config,
+        smart_format=True,
+        interim_results=True,
     ),
     api_key=os.environ["DEEPGRAM_API_KEY"],
+    logger=logger,
+    should_stream_interim=True,
 )
 
 conversation_router = ConversationRouter(
