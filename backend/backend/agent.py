@@ -1,6 +1,6 @@
 import logging
 from pytz import timezone
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, TypedDict
 from vocode.streaming.agent.base_agent import RespondAgent
 from vocode.streaming.models.agent import AgentConfig, AgentType, CutOffResponse
 from contextlib import suppress
@@ -10,6 +10,7 @@ from .generate import (
     ChatMLMessage,
     ChatML,
     to_prompt,
+    generate_with_memory,
 )
 from functools import lru_cache
 from transformers import AutoTokenizer
@@ -60,10 +61,15 @@ def truncate(
     return [c for _, c in sorted_kept]
 
 
+class SamanthaMetadata(TypedDict):
+    situation: str
+    email: str
+
+
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
     prompt_preamble: str
     cut_off_response: Optional[CutOffResponse] = None
-    metadata: Optional[dict] = None
+    metadata: Optional[SamanthaMetadata] = None
 
 
 class SamanthaAgent(RespondAgent[SamanthaConfig]):
@@ -78,6 +84,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.sender = sender
         self.recipient = recipient
         self.situation = agent_config.metadata["situation"]
+        self.email = agent_config.metadata["email"]
         self.memory = {}
 
     def _make_memory_entry(self, human_input, response):
@@ -134,6 +141,22 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             ),
         ]
 
+    async def _generate_response(
+        self,
+        human_input,
+        conversation_id: str,
+        is_interrupt: bool = False,
+    ):
+        self.logger.debug("Samantha LLM generating response to human input")
+        resp = await generate_with_memory(
+            human_input,
+            self.email,
+            conversation_id,
+            self.situation,
+        )
+
+        yield resp["assistant_output"]
+
     async def generate_response(
         self,
         human_input,
@@ -154,7 +177,9 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         try:
             # Add belief information
             belief = to_belief_chatml_msg(
-                get_matching_beliefs(mem + [dict(role="user", content=human_input)], 0.5)
+                get_matching_beliefs(
+                    mem + [dict(role="user", content=human_input)], 0.5
+                )
             )
 
         except BaseException as e:
