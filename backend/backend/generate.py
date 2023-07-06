@@ -1,7 +1,5 @@
 import os
 import httpx
-import requests
-from requests import Session
 
 # import spacy
 # from spacy.lang.en import English
@@ -328,36 +326,34 @@ def to_prompt(
 #     return remove_stops(streamer, tokenizer, stop)
 
 
-def generate(
+async def generate(
     messages: ChatML,
     stop: list[str] = [],
     max_tokens: int = 200,
     temperature: float = 0.2,
     model: str = "julep-ai/samantha-33b",
-    session: Session = None,
     frequency_penalty=0.5,
     presence_penalty=0.2,
     best_of=2,
     prompt_settings: dict = {},
-) -> str:
-    if session is None:
-        session = requests
-
+) -> dict:
     prompt = to_prompt(messages, **prompt_settings).strip()
     print("***", prompt)
-    resp = session.post(
-        COMPLETION_URL,
-        json={
-            "model": model,
-            "prompt": prompt,
-            "max_tokens": max_tokens,
-            "stop": stop,
-            "temperature": temperature,
-            "frequency_penalty": frequency_penalty,
-            "presence_penalty": presence_penalty,
-            "best_of": best_of,
-        },
-    )
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            COMPLETION_URL,
+            json={
+                "model": model,
+                "prompt": prompt,
+                "max_tokens": max_tokens,
+                "stop": stop,
+                "temperature": temperature,
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "best_of": best_of,
+            },
+        )
+
     resp.raise_for_status()
 
     return resp.json()

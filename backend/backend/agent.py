@@ -183,7 +183,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
 
         mem.extend(self._make_memory_entry(human_input, None))
         mem = truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
-        response = generate(mem, stop=STOP_TOKENS)
+        response = await generate(mem, stop=STOP_TOKENS)
         text = response["choices"][0]["text"]
         mem.extend(self._make_memory_entry(None, text))
         self.memory[conversation_id] = mem
