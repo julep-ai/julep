@@ -19,14 +19,11 @@ from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.models.websocket import AudioConfigStartMessage
 from vocode.streaming.models.transcriber import TimeEndpointingConfig
 from vocode.streaming.output_device.websocket_output_device import WebsocketOutputDevice
-from dotenv import load_dotenv
 from .logger import logger
 from .agent import SamanthaAgent, SamanthaConfig, IST
 from .generate import generate, AGENT_NAME, ChatMLMessage
 
 vocode.streaming.streaming_conversation.ALLOWED_IDLE_TIME = 3600
-
-load_dotenv()
 
 STOP_TOKENS = ["<|", "\n\n", "< |", "<\n|"]
 
