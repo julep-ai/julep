@@ -19,7 +19,7 @@ from typing import Optional
 from .beliefs import to_belief_chatml_msg, get_matching_beliefs
 
 IST = timezone("Asia/Kolkata")
-STOP_TOKENS = ["<|", "< |", "<\n|"]
+STOP_TOKENS = ["<"]
 
 bot_name = "Samantha"
 
@@ -152,7 +152,6 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         resp = await generate_with_memory(
             human_input,
             self.email,
-            self.name,
             conversation_id,
             self.situation,
         )
@@ -177,9 +176,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return
 
         # Add belief information
-        retrieved_beliefs = get_matching_beliefs(
-            mem + [dict(role="user", content=human_input)], 0.5
-        )
+        retrieved_beliefs = get_matching_beliefs(mem + [dict(role="user", content=human_input)], 0.5)
         if retrieved_beliefs:
             belief = to_belief_chatml_msg(retrieved_beliefs)
             mem.append(belief)

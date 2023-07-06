@@ -121,7 +121,7 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
         tier="nova",
         keywords=["Samantha", "Diwank", "Pascal", "Sulaimaan", "Ishita", "Dmitry", "Philip", "Julep", "Julep AI"],
         min_interrupt_confidence=0.7,
-        endpointing_config=ep_config,
+        # endpointing_config=ep_config,
         smart_format=True,
         interim_results=True,
     ),

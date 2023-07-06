@@ -134,4 +134,5 @@ def get_matching_beliefs(
 
     print(f"{len(results)} matching beliefs found for ```{text}```")
 
+    return []
     return results
