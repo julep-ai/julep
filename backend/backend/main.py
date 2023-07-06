@@ -25,7 +25,7 @@ from .generate import generate, AGENT_NAME, ChatMLMessage
 
 vocode.streaming.streaming_conversation.ALLOWED_IDLE_TIME = 3600
 
-STOP_TOKENS = ["<|", "\n\n", "< |", "<\n|"]
+STOP_TOKENS = ["<"]
 
 user_name = "Diwank"
 bot_name = "Samantha"
@@ -117,9 +117,9 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
         input_audio_config,
         mute_during_speech=True,
         language="en-US",
-        model="general",
+        model="phonecall",
         tier="nova",
-        keywords=["Samantha", "Diwank", "Pascal"],
+        keywords=["Samantha", "Diwank", "Pascal", "Sulaimaan", "Ishita", "Dmitry", "Philip", "Julep", "Julep AI"],
         min_interrupt_confidence=0.7,
         endpointing_config=ep_config,
         smart_format=True,
