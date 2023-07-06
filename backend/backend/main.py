@@ -42,6 +42,7 @@ app = FastAPI(docs_url=None)
 
 
 def init_agent(meta_data: Optional[dict] = None):
+    logger.debug(f"metadata: {meta_data}")
     user_name = "Diwank"
     bot_name = "Samantha"
     now = datetime.now(IST)
