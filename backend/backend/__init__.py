@@ -2,6 +2,10 @@ import asyncio
 import vocode.streaming.streaming_conversation
 import vocode.streaming.constants
 import vocode.streaming.streaming_conversation
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 async def _check_for_idle(self):
