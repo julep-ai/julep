@@ -40,6 +40,7 @@ app = FastAPI(docs_url=None)
 
 async def init_agent(meta_data: Optional[dict] = None):
     access_logger.debug(meta_data)
+    access_logger.handlers[0].flush()
     logger.debug(f"metadata: {meta_data}")
     user_name = "Diwank"
     bot_name = "Samantha"
