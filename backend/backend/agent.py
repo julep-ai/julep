@@ -176,9 +176,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
 
         # Add belief information
         belief = to_belief_chatml_msg(
-            get_matching_beliefs(
-                mem + [dict(role="user", content=human_input)], 0.5
-            )
+            get_matching_beliefs(mem + [dict(role="user", content=human_input)], 0.5)
         )
 
         mem.append(belief)
