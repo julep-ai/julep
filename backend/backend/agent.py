@@ -174,16 +174,12 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             yield cut_off_response
             return
 
-        try:
-            # Add belief information
-            belief = to_belief_chatml_msg(
-                get_matching_beliefs(
-                    mem + [dict(role="user", content=human_input)], 0.5
-                )
+        # Add belief information
+        belief = to_belief_chatml_msg(
+            get_matching_beliefs(
+                mem + [dict(role="user", content=human_input)], 0.5
             )
-
-        except BaseException as e:
-            print(e)
+        )
 
         mem.append(belief)
 
