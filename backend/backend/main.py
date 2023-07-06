@@ -38,7 +38,7 @@ SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"]  # "eu7pAsMtrspvm0ZVbiCr"
 app = FastAPI(docs_url=None)
 
 
-def init_agent(meta_data: Optional[dict] = None):
+async def init_agent(meta_data: Optional[dict] = None):
     logger.debug(f"metadata: {meta_data}")
     user_name = "Diwank"
     bot_name = "Samantha"
@@ -54,7 +54,7 @@ def init_agent(meta_data: Optional[dict] = None):
     prompt = [
         ChatMLMessage(role="system", name="situation", content=situation),
     ]
-    resp = generate(prompt, stop=STOP_TOKENS)
+    resp = await generate(prompt, stop=STOP_TOKENS)
     text = resp["choices"][0]["text"]
 
     return SamanthaAgent(
