@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -40,18 +41,21 @@ SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"]  # "eu7pAsMtrspvm0ZVbiCr"
 app = FastAPI(docs_url=None)
 
 
-def init_agent():
+def init_agent(meta_data: Optional[dict] = None):
+    logger.debug(f"metadata: {meta_data}")
     user_name = "Diwank"
     bot_name = "Samantha"
     now = datetime.now(IST)
-    situation = f"""{bot_name} is talking to {user_name}. They are old friends and {bot_name} works for {user_name} as their personal assistant.
+    default_situation = f"""{bot_name} is talking to {user_name}. They are old friends and {bot_name} works for {user_name} as their personal assistant.
 
-It is {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")}. {current_situation}"""
+    It is {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")}. {current_situation}"""
 
-    first_message_thought = f"""{user_name} has just added me to the demo call. There are so many people present here who are all excited about this! I should say hi to {user_name} and every one else."""
+    situation = (meta_data or {}).get(
+        "situation", os.environ.get("SITUATION_PROMPT", default_situation)
+    )
+
     prompt = [
         ChatMLMessage(role="system", name="situation", content=situation),
-        ChatMLMessage(role="system", name="thought", content=first_message_thought),
     ]
     resp = generate(prompt, stop=STOP_TOKENS)
     text = resp["choices"][0]["text"]
@@ -59,8 +63,9 @@ It is {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")
     return SamanthaAgent(
         SamanthaConfig(
             initial_message=BaseMessage(text=text),
-            prompt_preamble="Samantha is talking to her old time friend and boss, Diwank. They have known each other for months now and she kinda has a crush on him.",
+            prompt_preamble=situation,
             allowed_idle_time_seconds=3600,
+            metadata=meta_data or {"situation": situation},
         ),
         logger=logger,
     )

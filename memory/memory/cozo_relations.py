@@ -31,6 +31,7 @@ relation_defs = """
     expires_at: Float? default null,
     =>
     response: Json,
+    prompt: String,
     embedding: <F32; 768>
 }
 
@@ -42,9 +43,21 @@ relation_defs = """
     dtype: F32,
     fields: [embedding],
     distance: Cosine,
-    ef_construction: 20,
+    ef_construction: 200,
     extend_candidates: false,
     keep_pruned_connections: false,
+}
+
+###
+
+::lsh create lm_cache:prompt {
+    extractor: prompt,
+    tokenizer: Whitespace,
+    n_perm: 50,
+    target_threshold: 0.9,
+    n_gram: 10,
+    false_positive_weight: 1.0,
+    false_negative_weight: 1.0,
 }
 
 ###
@@ -64,7 +77,7 @@ relation_defs = """
     dtype: F32,
     fields: embedding,
     distance: Cosine,
-    ef_construction: 20,
+    ef_construction: 200,
     extend_candidates: false,
     keep_pruned_connections: false,
 }
@@ -118,9 +131,9 @@ relation_defs = """
 
 :create characters {
     character_id: Uuid,
-    updated_at: Validity default [floor(now()), true],
     name: String,
     is_human: Bool default false,
+    updated_at: Validity default [floor(now()), true],
     =>
     about: String default "",
     metadata: Json default {},
@@ -170,9 +183,9 @@ relation_defs = """
 
 :create entries {
     session_id: Uuid,
-    updated_at: Validity default [floor(now()), true],
     role: String,
     name: String? default null,
+    updated_at: Validity default [floor(now()), true],
     =>
     content: String,
     character_id: Uuid? default null,
@@ -184,10 +197,11 @@ relation_defs = """
 :create episodes {
     episode_id: Uuid,
     character_id: Uuid,
-    last_accessed_at: Validity default [floor(now()), true],
     summary: String,
+    last_accessed_at: Validity default [floor(now()), true],
     =>
     parent_episode: Uuid? default null,
+    aspects: [(String, Float, String, String)] default [],
     duration: Float default 0,
     embedding: <F32; 768>,
 }
@@ -201,7 +215,7 @@ relation_defs = """
     fields: [embedding],
     distance: Cosine,
     filter: !is_null(embedding),
-    ef_construction: 20,
+    ef_construction: 200,
     extend_candidates: false,
     keep_pruned_connections: false,
 }
@@ -229,8 +243,8 @@ relation_defs = """
 :create beliefs {
     belief_id: Uuid,
     character_id: Uuid,
-    last_accessed_at: Validity default [floor(now()), true],
     belief: String,
+    last_accessed_at: Validity default [floor(now()), true],
     =>
     details: String default "",
     parent_belief_id: Uuid? default null,
@@ -248,7 +262,7 @@ relation_defs = """
     dtype: F32,
     fields: [belief_embedding, details_embedding],
     distance: Cosine,
-    ef_construction: 20,
+    ef_construction: 200,
     extend_candidates: false,
     keep_pruned_connections: false,
 }
@@ -263,8 +277,8 @@ relation_defs = """
 
 """.split("###")
 
-def create_all():
+def create_all(echo: bool = False):
     for relation_def in relation_defs:
-        print(relation_def)
+        echo and print(relation_def)
         client.run(relation_def)
-        print("---")
+        echo and print("---")
