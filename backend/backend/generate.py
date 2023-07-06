@@ -11,6 +11,7 @@ from typing import Literal, Optional, TypedDict
 
 
 COMPLETION_URL = os.environ["COMPLETION_URL"]
+HTTP_TIMEOUT = httpx.Timeout(timeout=300.0)
 
 
 # import torch
@@ -339,7 +340,7 @@ async def generate(
 ) -> dict:
     prompt = to_prompt(messages, **prompt_settings).strip()
     print("***", prompt)
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
         resp = await client.post(
             COMPLETION_URL,
             json={
@@ -365,7 +366,7 @@ async def generate_with_memory(
     conversation_id: str,
     situation: str,
 ) -> AssistantOutput:
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
         resp = await client.post(
             COMPLETION_URL,
             json={
