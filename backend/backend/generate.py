@@ -1,4 +1,5 @@
 import os
+import httpx
 import requests
 from requests import Session
 
@@ -31,6 +32,11 @@ COMPLETION_URL = os.environ["COMPLETION_URL"]
 # ###########
 # ## Types ##
 # ###########
+
+
+class AssistantOutput(TypedDict):
+    session_id: str
+    assistant_output: str
 
 
 class ChatMLMessage(TypedDict):
@@ -352,6 +358,27 @@ def generate(
             "best_of": best_of,
         },
     )
+    resp.raise_for_status()
+
+    return resp.json()
+
+
+async def generate_with_memory(
+    user_input: str,
+    user_email: str,
+    conversation_id: str,
+    situation: str,
+) -> AssistantOutput:
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            COMPLETION_URL,
+            json={
+                "user_email": user_email,
+                "vocode_conversation_id": conversation_id,
+                "user_input": user_input,
+                "situation": situation,
+            },
+        )
     resp.raise_for_status()
 
     return resp.json()
