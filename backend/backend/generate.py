@@ -98,11 +98,11 @@ def to_prompt(
 async def generate(
     messages: ChatML,
     stop: list[str] = [],
-    max_tokens: int = 200,
-    temperature: float = 0.2,
+    max_tokens: int = 250,
+    temperature: float = 0.4,
     model: str = "julep-ai/samantha-33b",
-    frequency_penalty=0.5,
-    presence_penalty=0.2,
+    frequency_penalty=1.0,
+    presence_penalty=0.5,
     best_of=2,
     prompt_settings: dict = {},
 ) -> dict:
