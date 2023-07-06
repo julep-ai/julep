@@ -19,7 +19,7 @@ from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.models.websocket import AudioConfigStartMessage
 from vocode.streaming.models.transcriber import TimeEndpointingConfig
 from vocode.streaming.output_device.websocket_output_device import WebsocketOutputDevice
-from .logger import logger
+from .logger import logger, access_logger
 from .agent import SamanthaAgent, SamanthaConfig, IST
 from .generate import generate, AGENT_NAME, ChatMLMessage
 
@@ -39,6 +39,7 @@ app = FastAPI(docs_url=None)
 
 
 async def init_agent(meta_data: Optional[dict] = None):
+    access_logger.debug(meta_data)
     logger.debug(f"metadata: {meta_data}")
     user_name = "Diwank"
     bot_name = "Samantha"
