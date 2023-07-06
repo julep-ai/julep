@@ -54,10 +54,8 @@ def init_agent(meta_data: Optional[dict] = None):
         "situation", os.environ.get("SITUATION_PROMPT", default_situation)
     )
 
-    first_message_thought = f"""{user_name} has just added me to the demo call. There are so many people present here who are all excited about this! I should say hi to {user_name} and every one else."""
     prompt = [
         ChatMLMessage(role="system", name="situation", content=situation),
-        ChatMLMessage(role="system", name="thought", content=first_message_thought),
     ]
     resp = generate(prompt, stop=STOP_TOKENS)
     text = resp["choices"][0]["text"]
