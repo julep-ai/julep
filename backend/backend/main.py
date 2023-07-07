@@ -19,16 +19,13 @@ from vocode.streaming.streaming_conversation import StreamingConversation
 from vocode.streaming.models.websocket import AudioConfigStartMessage
 from vocode.streaming.models.transcriber import TimeEndpointingConfig
 from vocode.streaming.output_device.websocket_output_device import WebsocketOutputDevice
-from dotenv import load_dotenv
-from .logger import logger
+from .logger import logger, access_logger
 from .agent import SamanthaAgent, SamanthaConfig, IST
 from .generate import generate, AGENT_NAME, ChatMLMessage
 
 vocode.streaming.streaming_conversation.ALLOWED_IDLE_TIME = 3600
 
-load_dotenv()
-
-STOP_TOKENS = ["<|", "\n\n", "< |", "<\n|"]
+STOP_TOKENS = ["<"]
 
 user_name = "Diwank"
 bot_name = "Samantha"
@@ -41,7 +38,9 @@ SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"]  # "eu7pAsMtrspvm0ZVbiCr"
 app = FastAPI(docs_url=None)
 
 
-def init_agent(meta_data: Optional[dict] = None):
+async def init_agent(meta_data: Optional[dict] = None):
+    access_logger.debug(meta_data)
+    access_logger.handlers[0].flush()
     logger.debug(f"metadata: {meta_data}")
     user_name = "Diwank"
     bot_name = "Samantha"
@@ -57,7 +56,7 @@ def init_agent(meta_data: Optional[dict] = None):
     prompt = [
         ChatMLMessage(role="system", name="situation", content=situation),
     ]
-    resp = generate(prompt, stop=STOP_TOKENS)
+    resp = await generate(prompt, stop=STOP_TOKENS)
     text = resp["choices"][0]["text"]
 
     return SamanthaAgent(
@@ -118,11 +117,11 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
         input_audio_config,
         mute_during_speech=True,
         language="en-US",
-        model="general",
+        model="phonecall",
         tier="nova",
-        keywords=["Samantha", "Diwank", "Pascal"],
+        keywords=["Samantha", "Diwank", "Pascal", "Sulaimaan", "Ishita", "Dmitry", "Philip", "Julep", "Julep AI"],
         min_interrupt_confidence=0.7,
-        endpointing_config=ep_config,
+        # endpointing_config=ep_config,
         smart_format=True,
         interim_results=True,
     ),
