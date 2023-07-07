@@ -19,9 +19,8 @@ from typing import Optional
 from .beliefs import to_belief_chatml_msg, get_matching_beliefs
 
 IST = timezone("Asia/Kolkata")
-STOP_TOKENS = ["<|", "< |", "<\n|"]
+STOP_TOKENS = ["<"]
 
-user_name = "Diwank"
 bot_name = "Samantha"
 
 tokenizer_id = "julep-ai/samantha-33b"
@@ -64,6 +63,7 @@ def truncate(
 class SamanthaMetadata(TypedDict):
     situation: str
     email: str
+    name: str
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
@@ -85,6 +85,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.recipient = recipient
         self.situation = agent_config.metadata["situation"]
         self.email = agent_config.metadata["email"]
+        self.name = agent_config.metadata["name"]
         self.memory = {}
 
     def _make_memory_entry(self, human_input, response):
@@ -92,7 +93,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
 
         if human_input:
             result.append(
-                {"role": "user", "name": "Diwank", "content": human_input.strip()}
+                {"role": "user", "name": self.name, "content": human_input.strip()}
             )
 
         if response:
@@ -175,15 +176,14 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return
 
         # Add belief information
-        belief = to_belief_chatml_msg(
-            get_matching_beliefs(mem + [dict(role="user", content=human_input)], 0.5)
-        )
-
-        mem.append(belief)
+        retrieved_beliefs = get_matching_beliefs(mem + [dict(role="user", content=human_input)], 0.5)
+        if retrieved_beliefs:
+            belief = to_belief_chatml_msg(retrieved_beliefs)
+            mem.append(belief)
 
         mem.extend(self._make_memory_entry(human_input, None))
         mem = truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
-        response = generate(mem, stop=STOP_TOKENS)
+        response = await generate(mem, stop=STOP_TOKENS)
         text = response["choices"][0]["text"]
         mem.extend(self._make_memory_entry(None, text))
         self.memory[conversation_id] = mem
