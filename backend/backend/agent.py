@@ -32,7 +32,6 @@ def count_tokens(prompt: str):
     tokens = tokenizer.encode(prompt)
     return len(tokens)
 
-
 def truncate(
     chatml: ChatML, max_tokens: int = 1700, retain_if=lambda x: False
 ) -> ChatML:
@@ -64,6 +63,10 @@ class SamanthaMetadata(TypedDict):
     situation: str
     email: str
     name: str
+    temperature: float
+    max_tokens: int
+    frequency_penalty: float
+    presence_penalty: float
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
@@ -86,6 +89,10 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.situation = agent_config.metadata["situation"]
         self.email = agent_config.metadata["email"]
         self.name = agent_config.metadata["name"]
+        self.temperature = agent_config.metadata["temperature"]
+        self.max_tokens = agent_config.metadata["max_tokens"]
+        self.frequency_penalty = agent_config.metadata["frequency_penalty"]
+        self.presence_penalty = agent_config.metadata["presence_penalty"]
         self.memory = {}
 
     def _make_memory_entry(self, human_input, response):
@@ -183,7 +190,14 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
 
         mem.extend(self._make_memory_entry(human_input, None))
         mem = truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
-        response = await generate(mem, stop=STOP_TOKENS)
+        response = await generate(
+            mem,
+            top=STOP_TOKENS,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            frequency_penalty=self.frequency_penalty,
+            presence_penalty=self.presence_penalty,
+        )
         text = response["choices"][0]["text"]
         mem.extend(self._make_memory_entry(None, text))
         self.memory[conversation_id] = mem
