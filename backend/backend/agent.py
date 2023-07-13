@@ -19,7 +19,7 @@ from typing import Optional
 from .beliefs import to_belief_chatml_msg, get_matching_beliefs
 
 IST = timezone("Asia/Kolkata")
-STOP_TOKENS = ["<"]
+STOP_TOKENS = ["<", "</s>", "<s>"]
 
 bot_name = "Samantha"
 
@@ -130,7 +130,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
 
         self.logger.debug("LLM responding to human input")
         response = generate(mem, stop=STOP_TOKENS)
-        text = response["choices"][0]["text"]
+        text = response["choices"][0]["text"].replace('"', '')
         mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
 
@@ -198,7 +198,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
         )
-        text = response["choices"][0]["text"]
+        text = response["choices"][0]["text"].replace('"', '')
         mem.extend(self._make_memory_entry(None, text))
         self.memory[conversation_id] = mem
         self.logger.debug(f"+++ {self.memory}")
