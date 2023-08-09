@@ -23,42 +23,6 @@ STOP_TOKENS = ["<", "</s>", "<s>"]
 
 bot_name = "Samantha"
 
-tokenizer_id = "julep-ai/samantha-33b"
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_id, use_fast=False)
-
-
-@lru_cache
-def count_tokens(prompt: str):
-    tokens = tokenizer.encode(prompt)
-    return len(tokens)
-
-def truncate(
-    chatml: ChatML, max_tokens: int = 1700, retain_if=lambda x: False
-) -> ChatML:
-    chatml_with_idx = list(enumerate(chatml))
-    chatml_to_keep = [c for c in chatml_with_idx if retain_if(c[1])]
-    budget = (
-        max_tokens
-        - sum([count_tokens(to_prompt([c[1]], suffix="")) for c in chatml_to_keep])
-        - count_tokens("<|section|>me (Samantha)\n")
-    )
-
-    assert budget > 0, "retain_if messages exhaust tokens"
-
-    remaining = [c for c in chatml_with_idx if not retain_if(c[1])]
-    for i, c in reversed(remaining):
-        c_len = count_tokens(to_prompt([c], suffix=""))
-
-        if budget < c_len:
-            break
-
-        budget -= c_len
-        chatml_to_keep.append((i, c))
-
-    sorted_kept = sorted(chatml_to_keep, key=lambda x: x[0])
-    return [c for _, c in sorted_kept]
-
-
 class SamanthaMetadata(TypedDict):
     situation: str
     email: str
@@ -67,6 +31,7 @@ class SamanthaMetadata(TypedDict):
     max_tokens: int
     frequency_penalty: float
     presence_penalty: float
+    model: str
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
@@ -93,7 +58,40 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.max_tokens = agent_config.metadata["max_tokens"]
         self.frequency_penalty = agent_config.metadata["frequency_penalty"]
         self.presence_penalty = agent_config.metadata["presence_penalty"]
+        self.model = agent_config.metadata.get("model", "samantha-33b")
         self.memory = {}
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model, use_fast=False)
+
+    @lru_cache
+    def _count_tokens(prompt: str):
+        tokens = self.tokenizer.encode(prompt)
+        return len(tokens)
+
+    def _truncate(
+        chatml: ChatML, max_tokens: int = 1700, retain_if=lambda x: False
+    ) -> ChatML:
+        chatml_with_idx = list(enumerate(chatml))
+        chatml_to_keep = [c for c in chatml_with_idx if retain_if(c[1])]
+        budget = (
+            max_tokens
+            - sum([self._count_tokens(to_prompt([c[1]], suffix="")) for c in chatml_to_keep])
+            - self._count_tokens("<|section|>me (Samantha)\n")
+        )
+
+        assert budget > 0, "retain_if messages exhaust tokens"
+
+        remaining = [c for c in chatml_with_idx if not retain_if(c[1])]
+        for i, c in reversed(remaining):
+            c_len = self._count_tokens(to_prompt([c], suffix=""))
+
+            if budget < c_len:
+                break
+
+            budget -= c_len
+            chatml_to_keep.append((i, c))
+
+        sorted_kept = sorted(chatml_to_keep, key=lambda x: x[0])
+        return [c for _, c in sorted_kept]
 
     def _make_memory_entry(self, human_input, response):
         result = []
@@ -189,7 +187,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             mem.append(belief)
 
         mem.extend(self._make_memory_entry(human_input, None))
-        mem = truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
+        mem = self._truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
         response = await generate(
             mem,
             top=STOP_TOKENS,
