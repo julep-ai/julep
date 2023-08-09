@@ -105,12 +105,13 @@ async def generate(
     presence_penalty=0.5,
     best_of=2,
     prompt_settings: dict = {},
+    completion_url: str = COMPLETION_URL,
 ) -> dict:
     prompt = to_prompt(messages, **prompt_settings).strip()
     print("***", prompt)
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
         resp = await client.post(
-            COMPLETION_URL,
+            completion_url,
             json={
                 "model": model,
                 "prompt": prompt,
@@ -134,10 +135,11 @@ async def generate_with_memory(
     name: str,
     conversation_id: str,
     situation: str,
+    completion_url: str = COMPLETION_URL,
 ) -> AssistantOutput:
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
         resp = await client.post(
-            COMPLETION_URL,
+            completion_url,
             json={
                 "email": email,
                 "name": name,
