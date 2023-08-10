@@ -22,42 +22,7 @@ IST = timezone("Asia/Kolkata")
 STOP_TOKENS = ["<", "</s>", "<s>"]
 
 bot_name = "Samantha"
-
-tokenizer_id = "julep-ai/samantha-33b"
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_id, use_fast=False)
-
-
-@lru_cache
-def count_tokens(prompt: str):
-    tokens = tokenizer.encode(prompt)
-    return len(tokens)
-
-def truncate(
-    chatml: ChatML, max_tokens: int = 1700, retain_if=lambda x: False
-) -> ChatML:
-    chatml_with_idx = list(enumerate(chatml))
-    chatml_to_keep = [c for c in chatml_with_idx if retain_if(c[1])]
-    budget = (
-        max_tokens
-        - sum([count_tokens(to_prompt([c[1]], suffix="")) for c in chatml_to_keep])
-        - count_tokens("<|section|>me (Samantha)\n")
-    )
-
-    assert budget > 0, "retain_if messages exhaust tokens"
-
-    remaining = [c for c in chatml_with_idx if not retain_if(c[1])]
-    for i, c in reversed(remaining):
-        c_len = count_tokens(to_prompt([c], suffix=""))
-
-        if budget < c_len:
-            break
-
-        budget -= c_len
-        chatml_to_keep.append((i, c))
-
-    sorted_kept = sorted(chatml_to_keep, key=lambda x: x[0])
-    return [c for _, c in sorted_kept]
-
+samantha_33b = "julep-ai/samantha-33b"
 
 class SamanthaMetadata(TypedDict):
     situation: str
@@ -67,6 +32,7 @@ class SamanthaMetadata(TypedDict):
     max_tokens: int
     frequency_penalty: float
     presence_penalty: float
+    model: str
 
 
 class SamanthaConfig(AgentConfig, type=AgentType.LLM.value):
@@ -93,7 +59,44 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.max_tokens = agent_config.metadata["max_tokens"]
         self.frequency_penalty = agent_config.metadata["frequency_penalty"]
         self.presence_penalty = agent_config.metadata["presence_penalty"]
+        self.model = agent_config.metadata.get("model", samantha_33b)
         self.memory = {}
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model, use_fast=False)
+        self.bos = "<|section|>" if self.model == samantha_33b else "<|im_start|>"
+        self.eos = "<|endsection|>" if self.model == samantha_33b else "<|im_end|>"
+        self.completion_url = os.environ["COMPLETION_URL"] if self.model == samantha_33b else "" # TODO: fill out once deployed
+
+    @lru_cache
+    def _count_tokens(self, prompt: str):
+        tokens = self.tokenizer.encode(prompt)
+        return len(tokens)
+
+    def _truncate(
+        self,
+        chatml: ChatML, max_tokens: int = 1700, retain_if=lambda x: False
+    ) -> ChatML:
+        chatml_with_idx = list(enumerate(chatml))
+        chatml_to_keep = [c for c in chatml_with_idx if retain_if(c[1])]
+        budget = (
+            max_tokens
+            - sum([self._count_tokens(to_prompt([c[1]], suffix="", bos=self.bos, eos=self.eos)) for c in chatml_to_keep])
+            - self._count_tokens(f"{self.bos}me (Samantha)\n")
+        )
+
+        assert budget > 0, "retain_if messages exhaust tokens"
+
+        remaining = [c for c in chatml_with_idx if not retain_if(c[1])]
+        for i, c in reversed(remaining):
+            c_len = self._count_tokens(to_prompt([c], suffix="", bos=self.bos, eos=self.eos))
+
+            if budget < c_len:
+                break
+
+            budget -= c_len
+            chatml_to_keep.append((i, c))
+
+        sorted_kept = sorted(chatml_to_keep, key=lambda x: x[0])
+        return [c for _, c in sorted_kept]
 
     def _make_memory_entry(self, human_input, response):
         result = []
@@ -129,7 +132,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             return cut_off_response, False
 
         self.logger.debug("LLM responding to human input")
-        response = generate(mem, stop=STOP_TOKENS)
+        response = generate(mem, stop=STOP_TOKENS, completion_url=self.completion_url)
         text = response["choices"][0]["text"].replace('"', '')
         mem.extend(self._make_memory_entry(human_input, text))
         self.memory[conversation_id] = mem
@@ -158,9 +161,10 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         self.logger.debug("Samantha LLM generating response to human input")
         resp = await generate_with_memory(
             human_input,
-            self.email,
-            conversation_id,
-            self.situation,
+            email=self.email,
+            conversation_id=conversation_id,
+            situation=self.situation,
+            completion_url=self.completion_url,
         )
 
         yield resp["assistant_output"]
@@ -189,7 +193,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             mem.append(belief)
 
         mem.extend(self._make_memory_entry(human_input, None))
-        mem = truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
+        mem = self._truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
         response = await generate(
             mem,
             stop=STOP_TOKENS,
@@ -197,6 +201,8 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
             max_tokens=self.max_tokens,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
+            model=self.model,
+            completion_url=self.completion_url,
         )
         text = response["choices"][0]["text"].replace('"', '')
         mem.extend(self._make_memory_entry(None, text))
