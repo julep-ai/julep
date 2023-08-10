@@ -51,6 +51,11 @@ def get_matching_beliefs(
     character_ids: list[str] = [],  # TODO
     exclude_roles: list[str] = [],
 ):
+    # TODO: Hardcoded for now, Diwank's character id
+    diwank_character_id = "d5f6a824-efbd-4945-b267-d9cd12cada77"
+    # if diwank_character_id not in character_ids:
+    #     return []
+
     # Extract text window from conversation chatml
     chatml = chatml[-window_size:]
 
@@ -134,5 +139,4 @@ def get_matching_beliefs(
 
     print(f"{len(results)} matching beliefs found for ```{text}```")
 
-    return []
     return results

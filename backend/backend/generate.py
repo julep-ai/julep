@@ -99,15 +99,16 @@ async def generate(
     messages: ChatML,
     stop: list[str] = [],
     max_tokens: int = 250,
-    temperature: float = 0.4,
+    temperature: float = 0.45,
     model: str = "julep-ai/samantha-33b",
-    frequency_penalty=1.0,
-    presence_penalty=0.5,
+    frequency_penalty=1.25,
+    presence_penalty=0.75,
     best_of=2,
     prompt_settings: dict = {},
 ) -> dict:
-    prompt = to_prompt(messages, **prompt_settings).strip()
+    prompt = to_prompt(messages, **prompt_settings)
     print("***", prompt)
+
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
         resp = await client.post(
             COMPLETION_URL,

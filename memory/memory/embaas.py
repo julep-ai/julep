@@ -15,22 +15,27 @@ embaas_batch_cache = multi_cached(
     port=6379,
     namespace="embaas",
     serializer=PickleSerializer(),
-    ttl=0.3 * (365*24*60*60),  # 0.3 years
+    ttl=0.3 * (365 * 24 * 60 * 60),  # 0.3 years
     # aiocache_wait_for_write=False,
 )
 
 at = lambda ls, idx, default=None: ls[idx] if idx < len(ls) else default
-key_builder_single = lambda f, *args, **kwargs: kwargs.get("instruction", at(args, 1, "query")) + '_' + xxh64(kwargs.get("text", at(args, 0))).hexdigest()
+key_builder_single = (
+    lambda f, *args, **kwargs: kwargs.get("instruction", at(args, 1, "query"))
+    + "_"
+    + xxh64(kwargs.get("text", at(args, 0))).hexdigest()
+)
 
 embaas_cache = cached(
     key_builder=key_builder_single,
     cache=Cache.REDIS,
     port=6379,
     namespace="embaas_single",
-    ttl=0.3 * (365*24*60*60),  # 0.3 years
+    ttl=0.3 * (365 * 24 * 60 * 60),  # 0.3 years
     serializer=PickleSerializer(),
     # aiocache_wait_for_write=False,
 )
+
 
 # @embaas_batch_cache
 async def embed(
@@ -42,6 +47,7 @@ async def embed(
 ) -> dict[str, str]:
     if not api_key:
         import os
+
         api_env_key = "EMBAAS_API_KEY"
         api_key = os.getenv(api_env_key)
 
@@ -49,16 +55,13 @@ async def embed(
 
     if model.startswith("e5"):
         allowed_e5_instructions = ["query", "passage"]
-        
-        assert instruction in allowed_e5_instructions, (
-            f"`instruction` required for e5 models, must be one of {', '.join(allowed_e5_instructions)}"
-        )
-        
-    headers = {
-      'Content-Type': 'application/json',
-      'Authorization': f'Bearer {api_key}'
-    }
-    
+
+        assert (
+            instruction in allowed_e5_instructions
+        ), f"`instruction` required for e5 models, must be one of {', '.join(allowed_e5_instructions)}"
+
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+
     data = dict(
         texts=texts,
         model=model,
@@ -78,6 +81,7 @@ async def embed(
 
     data = sorted(data, key=itemgetter("index"))
     return {text: item["embedding"] for text, item in zip(texts, data)}
+
 
 # @embaas_cache
 async def embed_one(text: str, instruction: str) -> list[float]:

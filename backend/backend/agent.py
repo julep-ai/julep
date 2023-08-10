@@ -192,7 +192,7 @@ class SamanthaAgent(RespondAgent[SamanthaConfig]):
         mem = truncate(mem, retain_if=lambda msg: msg.get("name") == "situation")
         response = await generate(
             mem,
-            top=STOP_TOKENS,
+            stop=STOP_TOKENS,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             frequency_penalty=self.frequency_penalty,

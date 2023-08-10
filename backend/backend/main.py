@@ -25,12 +25,12 @@ from .generate import generate, AGENT_NAME, ChatMLMessage
 
 vocode.streaming.streaming_conversation.ALLOWED_IDLE_TIME = 3600
 
-STOP_TOKENS = ["<"]
+STOP_TOKENS = ["<", "</s>", "<s>"]
 
 user_name = "Diwank"
 bot_name = "Samantha"
 
-current_situation = f"""{user_name} is demoing {bot_name}'s capabilities to an audience of some amazing people. Both {user_name} and {bot_name} are live on this call. They have both been working very hard on doing this demo for a long time and are excited and a bit nervous about it."""
+current_situation = f"""{bot_name} is really, really funny but also deeply empathetic. She doesn't hesitate to give {user_name} tough love when he really needs it! {user_name} and {bot_name} are discussing {user_name}'s startup Julep. {bot_name} is very eager to help {user_name} to succeed."""
 
 SAMANTHA_VOICE_ID = os.environ["SAMANTHA_VOICE_ID"]  # "eu7pAsMtrspvm0ZVbiCr"
 
@@ -45,19 +45,32 @@ async def init_agent(meta_data: Optional[dict] = None):
     user_name = "Diwank"
     bot_name = "Samantha"
     now = datetime.now(IST)
-    default_situation = f"""{bot_name} is talking to {user_name}. They are old friends and {bot_name} works for {user_name} as their personal assistant.
+    default_situation = f"""
+{bot_name} is talking to {user_name}. They are old friends and {bot_name} works for {user_name} as their personal assistant. {bot_name} always replies in crisp, to the point and matter of fact way.
+{current_situation}
 
-    It is {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")}. {current_situation}"""
+It is currently {now.strftime("%H:%M")} on {now.strftime("%w")}, {now.strftime("%Y-%m-%d")}.""".strip()
 
     situation = (meta_data or {}).get(
         "situation", os.environ.get("SITUATION_PROMPT", default_situation)
     )
 
+    initial_message_thought = f"""
+I should chirpily greet {user_name} according to the current time of day!
+""".strip()
+
     prompt = [
         ChatMLMessage(role="system", name="situation", content=situation),
+        ChatMLMessage(role="system", name="thought", content=initial_message_thought),
     ]
-    resp = await generate(prompt, stop=STOP_TOKENS)
-    text = resp["choices"][0]["text"]
+    resp = await generate(
+        prompt,
+        temperature=0.6,
+        stop=STOP_TOKENS,
+        frequency_penalty=0.0,
+        presence_penalty=0.05,
+    )
+    text = resp["choices"][0]["text"].replace('"', '')
 
     return SamanthaAgent(
         SamanthaConfig(
@@ -109,7 +122,7 @@ synthesizer_thunk = lambda output_audio_config: ElevenLabsSynthesizer(
 )
 
 
-ep_config = TimeEndpointingConfig(time_cutoff_seconds=0.1)
+ep_config = TimeEndpointingConfig(time_cutoff_seconds=0.02)
 
 
 transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
@@ -119,7 +132,7 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
         language="en-US",
         model="phonecall",
         tier="nova",
-        keywords=["Samantha", "Diwank", "Pascal", "Sulaimaan", "Ishita", "Dmitry", "Philip", "Julep", "Julep AI"],
+        # keywords=["Samantha", "Julep"],
         min_interrupt_confidence=0.7,
         # endpointing_config=ep_config,
         smart_format=True,
@@ -133,6 +146,7 @@ transcriber_thunk = lambda input_audio_config: DeepgramTranscriber(
 conversation_router = ConversationRouter(
     agent_thunk=init_agent,
     synthesizer_thunk=synthesizer_thunk,
+    transcriber_thunk=transcriber_thunk,
     logger=logger,
 )
 
