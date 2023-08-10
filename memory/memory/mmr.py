@@ -24,7 +24,6 @@ def mmr(
     get_embedding: Callable[[T], list[float]] = lambda x: x,
     lambda_mult: float = 0.5,
 ) -> Iterable[T]:
-
     docs_len = len(docs)
 
     # Return as is if docs is an empty list
