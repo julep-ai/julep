@@ -25,6 +25,8 @@ pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
 keybert = "^0.7.0"
 keyphrase-vectorizers = "^0.0.11"
 pydantic = "<2"
+assemblyai = "^0.12.0"
+async-lru = "^2.0.3"
 
 
 [[tool.poetry.source]]

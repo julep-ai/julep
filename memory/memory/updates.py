@@ -1,13 +1,15 @@
 from textwrap import dedent
-from uuid import uuid4, UUID
+from uuid import UUID
 
 from .cozo import client
+
 
 def update_session_situation(
     session_id: UUID,
     situation: str,
 ):
-    query = dedent(f"""
+    query = dedent(
+        f"""
     ?[
         session_id,
         updated_at,
@@ -23,6 +25,7 @@ def update_session_situation(
         updated_at,
         situation,
     }}
-    """)
+    """
+    )
 
     return client.run(query)

@@ -14,13 +14,16 @@ requests = "^2.31.0"
 pydantic = "<2"
 aiocache = {extras = ["redis"], version = "^0.12.1"}
 xxhash = "^3.2.0"
-torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230624%2Bcu121-cp310-cp310-linux_x86_64.whl"}
+torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230705%2Bcu121-cp310-cp310-linux_x86_64.whl"}
 transformers = "^4.30.2"
 datasets = "^2.13.1"
 sentencepiece = "^0.1.99"
 scikit-learn = "^1.2.2"
 keybert = "^0.7.0"
 keyphrase-vectorizers = "^0.0.11"
+fastapi = "^0.99.1"
+openai = "^0.27.8"
+langchain = "^0.0.250"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -28,7 +31,15 @@ ipython = "^8.14.0"
 ipykernel = "^6.23.2"
 ipywidgets = "^8.0.6"
 jupyterlab = ">=4,<5"
+black = "^23.3.0"
+ruff = "^0.0.277"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+ignore = [
+    "E501",  # line too long
+    "E731",  # do not use lambda
+]
