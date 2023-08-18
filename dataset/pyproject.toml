@@ -55,6 +55,7 @@ lmproof = "^0.3.0"
 clean-text = "^0.6.0"
 unidecode = "^1.3.6"
 better-profanity = "^0.7.0"
+py7zr = "^0.20.6"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.13.1"
