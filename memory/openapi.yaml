@@ -1,0 +1,396 @@
+openapi: "3.0.0"
+info:
+  version: "1"
+  title: ""
+  description: ""
+paths:
+  /users/auth/signup:
+    post:
+      operationId: "Signup"
+      description: ""
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCreate"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/auth/login:
+    post:
+      operationId: "Login"
+      description: ""
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCreate"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "boolean"
+        401:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "boolean"
+  /characters:
+    get:
+      operationId: "GetAllCharacters"
+      description: ""
+      parameters: []
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Character"
+    post:
+      operationId: "CreateCharacter"
+      description: ""
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Character"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+  /characters/:character_id/chat:
+    post:
+      operationId: "ChatWithCharacter"
+      description: ""
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatData"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ChatML"
+  /sessions:
+    post:
+      operationId: "CreateSession"
+      description: ""
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Session"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+  /sessions/:session_id/chat:
+    post:
+      operationId: "SessionChat"
+      description: ""
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatData"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ChatML"
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: "apiKey"
+      in: "header"
+      name: "Authorization"
+  schemas:
+    Auth:
+      properties:
+        email:
+          nullable: false
+          type: "string"
+        password_hash:
+          nullable: false
+          type: "string"
+    AuthCreate:
+      properties:
+        email:
+          nullable: false
+          type: "string"
+        password:
+          nullable: false
+          type: "string"
+    User:
+      properties:
+        user_id:
+          nullable: false
+          type: "string"
+        created_at:
+          nullable: false
+          type: "number"
+        updated_at:
+          nullable: false
+          type: "number"
+        name:
+          nullable: false
+          type: "string"
+        about:
+          nullable: false
+          type: "string"
+        metadata:
+          nullable: false
+          $ref: "#/components/schemas/UserMetadata"
+    UserMetadata:
+      properties: {}
+    CharacterMetadata:
+      properties: {}
+    Character:
+      properties:
+        character_id:
+          nullable: false
+          type: "string"
+        model:
+          nullable: false
+          type: "string"
+        name:
+          nullable: false
+          type: "string"
+        about:
+          nullable: false
+          type: "string"
+        metadata:
+          nullable: false
+          $ref: "#/components/schemas/CharacterMetadata"
+        created_at:
+          nullable: false
+          type: "number"
+        updated_at:
+          nullable: false
+          type: "number"
+    Belief:
+      properties:
+        character_id:
+          nullable: false
+          type: "string"
+        user_id:
+          nullable: true
+          type: "string"
+        belief_id:
+          nullable: false
+          type: "string"
+        valence:
+          nullable: false
+          type: "number"
+        weight:
+          nullable: false
+          type: "number"
+        details:
+          nullable: false
+          type: "string"
+        parent_belief:
+          nullable: true
+          type: "string"
+        sentiments:
+          nullable: false
+          type: "array"
+          items:
+            type: "string"
+    Episode:
+      properties:
+        character_id:
+          nullable: false
+          type: "string"
+        episode_id:
+          nullable: false
+          type: "string"
+        user_id:
+          nullable: true
+          type: "string"
+        happened_at:
+          nullable: false
+          type: "number"
+        last_accessed_at:
+          nullable: false
+          type: "number"
+        summary:
+          nullable: false
+          type: "string"
+        parent_episode:
+          nullable: true
+          type: "string"
+        duration:
+          nullable: false
+          type: "number"
+        created_at:
+          nullable: false
+          type: "number"
+    Skill:
+      properties:
+        character_id:
+          nullable: false
+          type: "string"
+        skill_id:
+          nullable: false
+          type: "string"
+        created_at:
+          nullable: false
+          type: "number"
+        updated_at:
+          nullable: false
+          type: "number"
+        summary:
+          nullable: true
+          type: "string"
+        tags:
+          nullable: false
+          type: "array"
+          items:
+            type: "string"
+        type:
+          nullable: false
+          type: "string"
+        instructions:
+          nullable: true
+          type: "string"
+        persistent:
+          nullable: false
+          type: "boolean"
+        functions:
+          nullable: false
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Function"
+    Function:
+      properties:
+        name:
+          nullable: false
+          type: "string"
+        description:
+          nullable: true
+          type: "string"
+        params:
+          nullable: false
+          $ref: "#/components/schemas/FunctionParams"
+    FunctionParams:
+      properties: {}
+    SessionMetadata:
+      properties: {}
+    Session:
+      properties:
+        session_id:
+          nullable: false
+          type: "string"
+        character_id:
+          nullable: false
+          type: "string"
+        user_id:
+          nullable: true
+          type: "string"
+        updated_at:
+          nullable: false
+          type: "number"
+        situation:
+          nullable: true
+          type: "string"
+        summary:
+          nullable: true
+          type: "string"
+        metadata:
+          nullable: true
+          $ref: "#/components/schemas/SessionMetadata"
+    Entry:
+      properties:
+        session_id:
+          nullable: false
+          type: "string"
+        entry_id:
+          nullable: false
+          type: "string"
+        role:
+          nullable: false
+          type: "string"
+        name:
+          nullable: false
+          type: "string"
+        timestamp:
+          nullable: false
+          type: "number"
+        content:
+          nullable: false
+          type: "string"
+        valence:
+          nullable: true
+          type: "number"
+        sentiment:
+          nullable: true
+          type: "string"
+        visible:
+          nullable: false
+          type: "boolean"
+        level:
+          nullable: false
+          type: "integer"
+        span:
+          nullable: false
+          type: "number"
+    ChatML:
+      properties:
+        name:
+          nullable: true
+          type: "string"
+        role:
+          nullable: false
+          type: "string"
+        content:
+          nullable: false
+          type: "string"
+    OpenAIParams:
+      properties:
+        messages:
+          nullable: false
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ChatML"
+    ChatData:
+      properties:
+        params:
+          nullable: false
+          $ref: "#/components/schemas/OpenAIParams"
+        remember:
+          nullable: true
+          type: "boolean"
+        recall:
+          nullable: true
+          type: "boolean"
