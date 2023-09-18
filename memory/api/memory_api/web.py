@@ -2,6 +2,9 @@ import fire
 import uvicorn
 from fastapi import FastAPI
 from memory_api.routers import characters, sessions
+from memory_api.routers.characters.db import init as characters_db_init
+from memory_api.routers.sessions.db import init as sessions_db_init
+from memory_api.routers.users.db import init as users_db_init
 
 
 app = FastAPI()
@@ -22,4 +25,8 @@ def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, wor
 
 
 if __name__ == "__main__":
+    characters_db_init()
+    sessions_db_init()
+    users_db_init()
+
     fire.Fire(main)

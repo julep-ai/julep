@@ -8,6 +8,7 @@ class Character(BaseModel):
     metadata: dict
     created_at: int
     updated_at: int
+    model: str
 
 
 class ChatMessage(BaseModel):
