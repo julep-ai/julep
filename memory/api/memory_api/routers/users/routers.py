@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from memory_api.clients.cozo import client
 from .protocol import User
 
@@ -6,10 +6,10 @@ from .protocol import User
 router = APIRouter()
 
 
-@router.get("/users/{user_id}")
-def get_user(user_id: str) -> User:
+@router.get("/users/{email}")
+def get_user(email: str) -> User:
     query = f"""
-        input[user_id] <- [[to_uuid("{user_id}")]]
+        input[email] <- [[to_uuid("{email}")]]
 
         ?[
             user_id,
@@ -19,7 +19,7 @@ def get_user(user_id: str) -> User:
             metadata,
             updated_at,
             created_at,
-        ] := input[user_id],
+        ] := input[email],
             *users {{
                 user_id,
                 name,
@@ -33,15 +33,21 @@ def get_user(user_id: str) -> User:
 
     resp = client.run(query)
 
-    return User(
-        id=resp["user_id"][0],
-        name=resp["name"][0],
-        email=resp["email"][0],
-        about=resp["about"][0],
-        metadata=resp["metadata"][0],
-        created_at=resp["created_at"][0],
-        updated_at=resp["updated_at"][0],
-    )
+    try:
+        return User(
+            id=resp["user_id"][0],
+            name=resp["name"][0],
+            email=resp["email"][0],
+            about=resp["about"][0],
+            metadata=resp["metadata"][0],
+            created_at=resp["created_at"][0],
+            updated_at=resp["updated_at"][0],
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
 
 
 @router.post("/users/")
@@ -84,12 +90,18 @@ def create_user(user: User) -> User:
     
     resp = client.run(query)
 
-    return User(
-        id=resp["user_id"][0],
-        name=resp["name"][0],
-        email=resp["email"][0],
-        about=resp["about"][0],
-        metadata=resp["metadata"][0],
-        created_at=resp["created_at"][0],
-        updated_at=resp["updated_at"][0],
-    )
+    try:
+        return User(
+            id=resp["user_id"][0],
+            name=resp["name"][0],
+            email=resp["email"][0],
+            about=resp["about"][0],
+            metadata=resp["metadata"][0],
+            created_at=resp["created_at"][0],
+            updated_at=resp["updated_at"][0],
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User can not be created",
+        )
