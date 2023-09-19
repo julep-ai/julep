@@ -12,6 +12,7 @@ pycozo = {version = "^0.7.2", extras = ["embedded,requests,pandas"]}
 uvicorn = "^0.23.2"
 fire = "^0.5.0"
 environs = "^9.5.0"
+google-cloud-aiplatform = "^1.33.0"
 
 
 [build-system]
