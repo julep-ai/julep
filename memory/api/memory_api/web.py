@@ -7,6 +7,7 @@ from memory_api.routers import (
     embedder, 
     users, 
     entries,
+    models,
 )
 
 
@@ -16,6 +17,7 @@ app.include_router(sessions.router)
 app.include_router(embedder.router)
 app.include_router(users.router)
 app.include_router(entries.router)
+app.include_router(models.router)
 
 
 def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, workers=None, log_level="info"):
@@ -35,5 +37,6 @@ if __name__ == "__main__":
     sessions.db.init()
     users.db.init()
     entries.db.init()
+    models.db.init()
 
     fire.Fire(main)
