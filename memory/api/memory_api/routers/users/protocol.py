@@ -10,3 +10,8 @@ class User(BaseModel):
     metadata: dict = Field(default={})
     created_at: int
     updated_at: int = Field(default=time.time())
+
+
+class UserRequest(BaseModel):
+    user_id: str | None
+    email: str | None
