@@ -57,18 +57,9 @@ def get_user(request: UserRequest) -> User:
     else:
         raise InvalidUserQueryError("either user_id or email must be given")
 
-    resp = client.run(query)
-
     try:
-        return User(
-            id=resp["user_id"][0],
-            name=resp["name"][0],
-            email=resp["email"][0],
-            about=resp["about"][0],
-            metadata=resp["metadata"][0],
-            created_at=resp["created_at"][0],
-            updated_at=resp["updated_at"][0],
-        )
+        res = [row.to_dict() for _, row in client.run(query).iterrows()][0]
+        return User(**res)
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

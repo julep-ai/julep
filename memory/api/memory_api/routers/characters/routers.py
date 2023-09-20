@@ -31,18 +31,9 @@ def get_characters(request: CharacterRequest) -> Character:
             @ "NOW"
         }}, updated_at = to_int(validity)"""
 
-    resp = client.run(query)
-
     try:
-        return Character(
-            id=resp["character_id"][0],
-            name=resp["name"][0],
-            about=resp["about"][0],
-            metadata=resp["metadata"][0],
-            created_at=resp["created_at"][0],
-            updated_at=resp["updated_at"][0],
-            model=resp["model"][0]
-        )
+        res = [row.to_dict() for _, row in client.run(query).iterrows()][0]
+        return Character(**res)
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
