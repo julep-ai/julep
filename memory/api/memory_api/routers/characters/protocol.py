@@ -25,3 +25,7 @@ class ChatRequest(BaseModel):
     params: ChatParams
     remember: bool = False
     recall: bool = False
+
+
+class CharacterRequest(BaseModel):
+    character_id: str
