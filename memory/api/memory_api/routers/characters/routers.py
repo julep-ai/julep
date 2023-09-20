@@ -66,23 +66,7 @@ def create_character(character: Character) -> Character:
     }}
     """
 
-    resp = client.run(query)
-
-    try:
-        return Character(
-            id=resp["character_id"][0],
-            name=resp["name"][0],
-            about=resp["about"][0],
-            metadata=resp["metadata"][0],
-            created_at=resp["creared_at"][0],
-            updated_at=resp["updated_at"][0],
-            model=resp["model"][0],
-        )
-    except (IndexError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Character can not be created",
-        )
+    client.run(query)
 
 
 @router.post("/characters/{character_id}/chat")
