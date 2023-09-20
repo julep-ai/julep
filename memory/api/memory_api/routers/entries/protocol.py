@@ -10,7 +10,7 @@ class Entry(BaseModel):
     content: str
     token_count: int
     processed: bool
-    parent_id: str
+    parent_id: str | None
 
 
 class EntryRequest(BaseModel):
