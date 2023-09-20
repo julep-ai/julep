@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException, status
-from .protocol import Character, ChatRequest, ChatMessage
+from .protocol import Character, ChatRequest, ChatMessage, CharacterRequest
 from memory_api.clients.cozo import client
 
 
 router = APIRouter()
 
 
-@router.get("/characters/{character_id}")
-def get_characters(character_id: str) -> Character:
+@router.get("/characters/")
+def get_characters(request: CharacterRequest) -> Character:
     query = f"""
-    input[character_id] <- [[to_uuid("{character_id}")]]
+    input[character_id] <- [[to_uuid("{request.character_id}")]]
 
     ?[
         character_id,
@@ -53,40 +53,18 @@ def get_characters(character_id: str) -> Character:
 @router.post("/characters/")
 def create_character(character: Character) -> Character:
     query = f"""
-    {{
-        ?[character_id, name, about, metadata, model] <- [
-            ["{character.id}", "{character.name}", "{character.about}", {character.metadata}, "{character.model}"]
-        ]
-        
-        :put characters {{
-            character_id =>
-            name,
-            about,
-            metadata,
-            model,
-        }}
+    ?[character_id, name, about, metadata, model] <- [
+        ["{character.id}", "{character.name}", "{character.about}", {character.metadata}, "{character.model}"]
+    ]
+    
+    :put characters {{
+        character_id =>
+        name,
+        about,
+        metadata,
+        model,
     }}
-
-    {{
-        ?[
-            character_id,
-            name,
-            about,
-            metadata,
-            model,
-            updated_at,
-            created_at,
-        ] := *characters {{
-            character_id,
-            name,
-            about,
-            metadata,
-            model,
-            updated_at: validity,
-            created_at,
-            @ "NOW"
-        }}, updated_at = to_int(validity)
-    }}"""
+    """
 
     resp = client.run(query)
 
