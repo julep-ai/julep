@@ -6,6 +6,7 @@ class Session(BaseModel):
     character_id: str
     user_id: str
     updated_at: int
+    created_at: int
     situation: str
     summary: str
     metadata: dict
@@ -25,3 +26,7 @@ class ChatRequest(BaseModel):
     params: ChatParams
     remember: bool = False
     recall: bool = False
+
+
+class SessionsRequest(BaseModel):
+    session_id: str
