@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/users/")
-def get_user(request: UserRequest) -> User:
+async def get_user(request: UserRequest) -> User:
     if request.user_id is not None:
         query = f"""
             input[email] <- [[to_uuid("{request.user_id}")]]
@@ -68,7 +68,7 @@ def get_user(request: UserRequest) -> User:
 
 
 @router.post("/users/")
-def create_user(user: User):
+async def create_user(user: User):
     query = f"""
         ?[user_id, name, email, about, metadata] <- [
             ["{user.id}", "{user.name}", "{user.email}", "{user.about}", {user.metadata}]

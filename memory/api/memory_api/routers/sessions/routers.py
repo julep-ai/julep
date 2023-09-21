@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/sessions/")
-def create_session(request: Session):
+async def create_session(request: Session):
     query = f"""
         ?[session_id, character_id, user_id, situation, metadata] <- [[
         to_uuid("{request.id}"),
@@ -36,7 +36,7 @@ def create_session(request: Session):
 
 
 @router.get("/sessions/")
-def get_sessions(request: SessionsRequest) -> Session:
+async def get_sessions(request: SessionsRequest) -> Session:
     query = f"""
         input[session_id] <- [[
         to_uuid("{request.session_id}"),
@@ -76,7 +76,7 @@ def get_sessions(request: SessionsRequest) -> Session:
 
 
 @router.post("/sessions/chat")
-def session_chat(request: ChatRequest):
+async def session_chat(request: ChatRequest):
     entries: list[Entry] = []
     for m in request.params.messages:
         m.session_id = request.session_id

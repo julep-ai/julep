@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/characters/")
-def get_characters(request: CharacterRequest) -> Character:
+async def get_characters(request: CharacterRequest) -> Character:
     query = f"""
     input[character_id] <- [[to_uuid("{request.character_id}")]]
 
@@ -42,7 +42,7 @@ def get_characters(request: CharacterRequest) -> Character:
 
 
 @router.post("/characters/")
-def create_character(character: Character) -> Character:
+async def create_character(character: Character) -> Character:
     query = f"""
     ?[character_id, name, about, metadata, model] <- [
         ["{character.id}", "{character.name}", "{character.about}", {character.metadata}, "{character.model}"]
@@ -61,5 +61,5 @@ def create_character(character: Character) -> Character:
 
 
 @router.post("/characters/{character_id}/chat")
-def character_chat(character_id: str, request: ChatRequest) -> list[ChatMessage]:
+async def character_chat(character_id: str, request: ChatRequest) -> list[ChatMessage]:
     pass
