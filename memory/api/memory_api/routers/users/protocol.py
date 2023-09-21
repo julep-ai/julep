@@ -8,8 +8,8 @@ class User(BaseModel):
     email: str
     about: str = Field(default="")
     metadata: dict = Field(default={})
-    created_at: int
-    updated_at: int = Field(default=time.time())
+    created_at: float
+    updated_at: float
 
 
 class UserRequest(BaseModel):
