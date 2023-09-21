@@ -104,7 +104,7 @@ async def session_chat(request: ChatRequest):
     for entry in reversed(session_entries):
             tokens_count += entry.token_count
             if tokens_count > max_tokens_count:
-                continue
+                break
 
             if entry.role == "system" and entry.name == "thought":
                 if thoughts_count >= max_thoughts:
