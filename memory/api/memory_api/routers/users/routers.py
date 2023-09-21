@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from memory_api.clients.cozo import client
 from .protocol import User, UserRequest
-from exceptions import InvalidUserQueryError
+from .exceptions import InvalidUserQueryError
 
 
 router = APIRouter()
