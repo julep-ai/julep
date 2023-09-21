@@ -57,7 +57,7 @@ def predict_custom_trained_model_sample(
 
 
 @router.post("/embed/")
-def embed(input_: Instances) -> list:
+async def embed(input_: Instances) -> list:
     response = predict_custom_trained_model_sample(
         project=prediction_project,
         endpoint_id=prediction_endpoint_id,

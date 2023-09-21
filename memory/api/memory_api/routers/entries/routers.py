@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/entries/")
-def get_entries(request: EntryRequest) -> list[Entry]:
+async def get_entries(request: EntryRequest) -> list[Entry]:
     query = f"""
     input[session_id] <- [[
         to_uuid("{request.session_id}"),
@@ -42,5 +42,5 @@ def get_entries(request: EntryRequest) -> list[Entry]:
 
 
 @router.post("/entries/")
-def create_entries(request: EntriesRequest):
+async def create_entries(request: EntriesRequest):
     add_entries(request.entries)

@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/models/")
-def get_models(request: ModelRequest) -> Model:
+async def get_models(request: ModelRequest) -> Model:
     query = f"""
     input[model_name] <- [[
         "{request.model_name}",
@@ -39,7 +39,7 @@ def get_models(request: ModelRequest) -> Model:
 
 
 @router.post("/models/")
-def create_models(model: Model):
+async def create_models(model: Model):
     query = f"""
     ?[model_name, max_length, default_settings] <- [[
         "{model.model_name}",
