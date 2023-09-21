@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
-from .protocol import Session, ChatRequest, ChatMessage
+from fastapi.responses import JSONResponse
+from .protocol import Session, ChatRequest
 from memory_api.clients.cozo import client
+from memory_api.clients.openai import completion
+from memory_api.common.db.entries import add_entries
+from memory_api.common.protocol.entries import Entry
 from .protocol import SessionsRequest
+from .queries import context_window_query
 
 
 router = APIRouter()
@@ -70,6 +75,69 @@ def get_sessions(request: SessionsRequest) -> Session:
         )
 
 
-@router.post("/sessions/{session_id}/chat")
-def session_chat(session_id: str, request: ChatRequest) -> list[ChatMessage]:
-    pass
+@router.post("/sessions/chat")
+def session_chat(request: ChatRequest):
+    entries: list[Entry] = []
+    for m in request.params.messages:
+        m.session_id = request.session_id
+        entries.append(m)
+    
+    add_entries(entries)
+
+    resp = client.run(context_window_query.format(session_id=request.session_id))
+
+    try:
+        model_data = resp["model_data"][0]
+        session_entries: list[Entry] = resp["entries"][0]
+        character_name = resp["character_name"][0]
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    tokens_count = 0
+    thoughts_count = 0
+    max_thoughts = 2
+    new_session_entries: list[Entry] = []
+    max_tokens_count = model_data["max_length"] * 0.7
+    for entry in reversed(session_entries):
+            tokens_count += entry.token_count
+            if tokens_count > max_tokens_count:
+                continue
+
+            if entry.role == "system" and entry.name == "thought":
+                if thoughts_count >= max_thoughts:
+                    continue
+                else:
+                    thoughts_count += 1
+
+            new_session_entries.insert(0, entry)
+    
+    # generate response
+    default_settings = model_data["default_settings"]
+    response = completion.create(
+        model=model_data["model_name"],
+        messages=[
+            {"role": e.role, "name": e.name, "content": e.content} 
+            for e in new_session_entries
+        ],
+        max_tokens=default_settings["max_tokens"],
+        temperature=default_settings["temperature"],
+        repetition_penalty=default_settings["repetition_penalty"],
+    )
+
+    # add response as an entry
+    add_entries(
+        [
+            Entry(
+                session_id=request.session_id, 
+                role="assistant", 
+                name=character_name, 
+                content=response["choices"][0]["text"], 
+                token_count=response["usage"]["total_tokens"],
+            )
+        ]
+    )
+
+    return JSONResponse(response)

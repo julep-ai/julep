@@ -1,17 +1,10 @@
 from pydantic import BaseModel
-
-
-class Entry(BaseModel):
-    id: str
-    session_id: str
-    timestamp: int
-    role: str
-    name: str
-    content: str
-    token_count: int
-    processed: bool
-    parent_id: str | None
+from memory_api.common.protocol.entries import Entry
 
 
 class EntryRequest(BaseModel):
     session_id: str
+
+
+class EntriesRequest(BaseModel):
+    entries: list[Entry]

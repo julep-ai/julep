@@ -6,8 +6,8 @@ class Character(BaseModel):
     name: str
     about: str
     metadata: dict
-    created_at: int
-    updated_at: int
+    created_at: float
+    updated_at: float
     model: str
 
 

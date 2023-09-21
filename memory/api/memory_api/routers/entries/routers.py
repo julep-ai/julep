@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, status
-from .protocol import Entry, EntryRequest
+from fastapi import APIRouter
+from .protocol import Entry, EntryRequest, EntriesRequest
 from memory_api.clients.cozo import client
+from memory_api.common.db.entries import add_entries
 
 
 router = APIRouter()
@@ -10,7 +11,7 @@ router = APIRouter()
 def get_entries(request: EntryRequest) -> list[Entry]:
     query = f"""
     input[session_id] <- [[
-        to_uuid("53d9d19f-3118-4365-b07d-aae0a28f0659"),
+        to_uuid("{request.session_id}"),
     ]]
 
     ?[
@@ -41,23 +42,5 @@ def get_entries(request: EntryRequest) -> list[Entry]:
 
 
 @router.post("/entries/")
-def create_entries(entry: Entry):
-    query = f"""
-    ?[session_id, role, name, content, token_count] <- [[
-        to_uuid("{entry.session_id}"),
-        "{entry.role}",
-        "{entry.name}",
-        "{entry.content}",
-        {entry.token_count},
-    ]]
-
-    :put entries {{
-        session_id,
-        role,
-        name,
-        content,
-        token_count,
-    }}
-    """
-
-    client.run(query)
+def create_entries(request: EntriesRequest):
+    add_entries(request.entries)
