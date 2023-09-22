@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from .protocol import Entry, EntryRequest, EntriesRequest
+from pydantic import UUID4
+from .protocol import Entry, EntriesRequest
 from memory_api.clients.cozo import client
 from memory_api.common.db.entries import add_entries
 
@@ -7,11 +8,11 @@ from memory_api.common.db.entries import add_entries
 router = APIRouter()
 
 
-@router.get("/entries/")
-async def get_entries(request: EntryRequest) -> list[Entry]:
+@router.get("/entries/{session_id}")
+async def get_entries(session_id: UUID4) -> list[Entry]:
     query = f"""
     input[session_id] <- [[
-        to_uuid("{request.session_id}"),
+        to_uuid("{session_id}"),
     ]]
 
     ?[
@@ -42,5 +43,5 @@ async def get_entries(request: EntryRequest) -> list[Entry]:
 
 
 @router.post("/entries/")
-async def create_entries(request: EntriesRequest):
-    add_entries(request.entries)
+async def create_entries(request: EntriesRequest) -> list[Entry]:
+    return add_entries(request.entries, return_result=True)

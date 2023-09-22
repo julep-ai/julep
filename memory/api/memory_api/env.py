@@ -5,7 +5,7 @@ env = Env()
 env.read_env()
 
 
-cozo_host: str = env.str("COZO_HOST")
+cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
 cozo_auth: str = env.str("COZO_AUTH", default=None)
 prediction_project: str = env.str("PREDICTION_PROJECT")
 prediction_endpoint_id: str = env.str("PREDICTION_ENDPOINT_ID")

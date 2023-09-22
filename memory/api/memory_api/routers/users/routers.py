@@ -7,11 +7,11 @@ from .exceptions import InvalidUserQueryError
 router = APIRouter()
 
 
-@router.get("/users/")
+@router.post("/users/get")
 async def get_user(request: UserRequest) -> User:
     if request.user_id is not None:
         query = f"""
-            input[email] <- [[to_uuid("{request.user_id}")]]
+            input[user_id] <- [[to_uuid("{request.user_id}")]]
 
             ?[
                 user_id,
@@ -21,7 +21,7 @@ async def get_user(request: UserRequest) -> User:
                 metadata,
                 updated_at,
                 created_at,
-            ] := input[email],
+            ] := input[user_id],
                 *users {{
                     user_id,
                     name,
@@ -45,13 +45,14 @@ async def get_user(request: UserRequest) -> User:
                 updated_at,
                 created_at,
             ] := input[email],
-                *users:by_email {{
+                *users {{
                     user_id,
                     name,
                     email,
                     about,
                     metadata,
                     updated_at: validity,
+                    created_at,
                     @ "NOW"
                 }}, updated_at = to_int(validity)"""
     else:
@@ -67,8 +68,8 @@ async def get_user(request: UserRequest) -> User:
         )
 
 
-@router.post("/users/")
-async def create_user(user: User):
+@router.post("/users/create")
+async def create_user(user: User) -> User:
     query = f"""
         ?[user_id, name, email, about, metadata] <- [
             ["{user.id}", "{user.name}", "{user.email}", "{user.about}", {user.metadata}]
@@ -84,3 +85,29 @@ async def create_user(user: User):
     """
     
     client.run(query)
+
+    get_query = f"""
+        input[user_id] <- [[to_uuid("{user.id}")]]
+
+        ?[
+            user_id,
+            name,
+            email,
+            about,
+            metadata,
+            updated_at,
+            created_at,
+        ] := input[user_id],
+            *users {{
+                user_id,
+                name,
+                email,
+                about,
+                metadata,
+                updated_at: validity,
+                created_at,
+                @ "NOW"
+            }}, updated_at = to_int(validity)"""
+
+    res = [row.to_dict() for _, row in client.run(get_query).iterrows()][0]
+    return User(**res)

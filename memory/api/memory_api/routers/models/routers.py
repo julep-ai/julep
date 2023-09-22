@@ -6,7 +6,7 @@ from memory_api.clients.cozo import client
 router = APIRouter()
 
 
-@router.get("/models/")
+@router.post("/models/get")
 async def get_models(request: ModelRequest) -> Model:
     query = f"""
     input[model_name] <- [[
@@ -38,7 +38,7 @@ async def get_models(request: ModelRequest) -> Model:
         )
 
 
-@router.post("/models/")
+@router.post("/models/create")
 async def create_models(model: Model):
     query = f"""
     ?[model_name, max_length, default_settings] <- [[
