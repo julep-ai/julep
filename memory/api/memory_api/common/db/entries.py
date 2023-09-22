@@ -2,7 +2,7 @@ from ..protocol.entries import Entry
 from memory_api.clients.cozo import client
 
 
-def add_entries(entries: list[Entry]):
+def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None:
     entries_query = ",\n".join(
         [
             f'[to_uuid("{e.session_id}"), "{e.role}", "{e.name}", "{e.content}", {e.token_count}]' 
@@ -25,3 +25,41 @@ def add_entries(entries: list[Entry]):
     """
 
     client.run(query)
+
+    if return_result:
+        ids_query = ",\n".join(
+            [
+                f'[to_uuid("{e.session_id}")]' 
+                for e in entries
+            ]
+        )
+        query = f"""
+        input[session_id] <- [
+            {ids_query}
+        ]
+
+        ?[
+            session_id,
+            entry_id,
+            timestamp,
+            role,
+            name,
+            content,
+            token_count,
+            processed,
+            parent_id,
+        ] := input[session_id],
+            *entries{{
+                session_id,
+                entry_id,
+                timestamp,
+                role,
+                name,
+                content,
+                token_count,
+                processed,
+                parent_id,
+            }}
+        """
+
+        return [Entry(**row.to_dict()) for _, row in client.run(query).iterrows()]

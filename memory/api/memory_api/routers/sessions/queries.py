@@ -255,7 +255,7 @@ context_window_query = """
         model_data,
         entries,
         total_tokens,
-        character_name,
+        character_data,
     ] := *_t6 {
         model_data,
         user_data,
@@ -265,7 +265,6 @@ context_window_query = """
         situation,
         situation_timestamp,
     }, 
-    character_name = get(character_data, "name", "Me),
     about_content = concat(
         "About '", get(user_data, "name", "User"), "': ",
         get(user_data, "about"), "\n\n",

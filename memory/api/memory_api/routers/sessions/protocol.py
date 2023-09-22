@@ -1,16 +1,17 @@
-from pydantic import BaseModel
+from uuid import uuid4
+from pydantic import BaseModel, Field, UUID4
 from memory_api.common.protocol.entries import Entry
 
 
 class Session(BaseModel):
-    id: str
+    id: UUID4 = Field(default_factory=uuid4, alias="session_id")
     character_id: str
     user_id: str
-    updated_at: float
-    created_at: float
+    updated_at: float | None = None
+    created_at: float | None = None
     situation: str
-    summary: str
-    metadata: dict
+    summary: str | None = None
+    metadata: dict = Field(default={})
 
 
 class ChatParams(BaseModel):

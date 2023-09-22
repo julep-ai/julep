@@ -1,5 +1,7 @@
+import openai
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
+from pydantic import UUID4
 from .protocol import Session, ChatRequest
 from memory_api.clients.cozo import client
 from memory_api.clients.openai import completion
@@ -13,7 +15,7 @@ router = APIRouter()
 
 
 @router.post("/sessions/")
-async def create_session(request: Session):
+async def create_session(request: Session) -> Session:
     query = f"""
         ?[session_id, character_id, user_id, situation, metadata] <- [[
         to_uuid("{request.id}"),
@@ -34,12 +36,14 @@ async def create_session(request: Session):
 
     client.run(query)
 
+    return await get_sessions(request.id)
+
 
 @router.get("/sessions/")
-async def get_sessions(request: SessionsRequest) -> Session:
+async def get_sessions(session_id: UUID4) -> Session:
     query = f"""
         input[session_id] <- [[
-        to_uuid("{request.session_id}"),
+        to_uuid("{session_id}"),
     ]]
 
     ?[
@@ -84,16 +88,23 @@ async def session_chat(request: ChatRequest):
     
     add_entries(entries)
 
-    resp = client.run(context_window_query.format(session_id=request.session_id))
+    resp = client.run(context_window_query.replace("{session_id}", request.session_id))
+
+    try:
+        session_entries: list[Entry] = [
+            Entry(**{**e, "session_id": request.session_id}) 
+            for e in resp["entries"][0]
+        ]
+    except (IndexError, KeyError):
+        session_entries = []
 
     try:
         model_data = resp["model_data"][0]
-        session_entries: list[Entry] = resp["entries"][0]
-        character_name = resp["character_name"][0]
+        character_data = resp["character_data"][0]
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            detail="Character or model data not found",
         )
     
     tokens_count = 0
@@ -116,7 +127,8 @@ async def session_chat(request: ChatRequest):
     
     # generate response
     default_settings = model_data["default_settings"]
-    response = completion.create(
+
+    response = openai.ChatCompletion.create(
         model=model_data["model_name"],
         messages=[
             {"role": e.role, "name": e.name, "content": e.content} 
@@ -133,7 +145,7 @@ async def session_chat(request: ChatRequest):
             Entry(
                 session_id=request.session_id, 
                 role="assistant", 
-                name=character_name, 
+                name=character_data["name"], 
                 content=response["choices"][0]["text"], 
                 token_count=response["usage"]["total_tokens"],
             )

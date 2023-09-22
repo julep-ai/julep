@@ -1134,18 +1134,18 @@ pyasn1 = ">=0.4.6,<0.6.0"
 
 [[package]]
 name = "pycozo"
-version = "0.7.2"
+version = "0.7.5"
 description = "Python client for the Cozo database"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pycozo-0.7.2-py3-none-any.whl", hash = "sha256:e4bb95732d4388c632328d2a3bd2c95a8ddc01c5107c24feab3214d840026ff2"},
-    {file = "pycozo-0.7.2.tar.gz", hash = "sha256:efe189c77abdaa729f5b9ef6185e1081dd84208549fd2931cb8bd9a780b2ab3f"},
+    {file = "pycozo-0.7.5-py3-none-any.whl", hash = "sha256:28d6fa4afd7123ead4642e5b5805870dfb592895a363f29885329f64558eaa34"},
+    {file = "pycozo-0.7.5.tar.gz", hash = "sha256:3242d99de2ed263a3e1d539aa74ca4f388074edc0f58b3381deaeacc16f5c09c"},
 ]
 
 [package.extras]
 client = ["requests"]
-embedded = ["cozo-embedded (==0.7.2)"]
+embedded = ["cozo-embedded (==0.7.5)"]
 pandas = ["ipython", "pandas"]
 
 [[package]]
@@ -1634,4 +1634,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "1cfcc18a723930d12048406d9728360d46a53bf6e81f64a185057faa6a62c4b1"
+content-hash = "fdf13ff298672739fd3b4ee7c22d109774b76b79ab9cf0c189791f085926c04a"

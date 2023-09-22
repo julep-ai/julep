@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from pydantic import UUID4
 from .protocol import Character, ChatRequest, ChatMessage, CharacterRequest
 from memory_api.clients.cozo import client
 
@@ -6,10 +7,10 @@ from memory_api.clients.cozo import client
 router = APIRouter()
 
 
-@router.get("/characters/")
-async def get_characters(request: CharacterRequest) -> Character:
+@router.get("/characters/{character_id}")
+async def get_characters(character_id: UUID4) -> Character:
     query = f"""
-    input[character_id] <- [[to_uuid("{request.character_id}")]]
+    input[character_id] <- [[to_uuid("{character_id}")]]
 
     ?[
         character_id,
@@ -58,6 +59,8 @@ async def create_character(character: Character) -> Character:
     """
 
     client.run(query)
+
+    return await get_characters(character_id=character.id)
 
 
 @router.post("/characters/{character_id}/chat")

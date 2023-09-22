@@ -19,12 +19,14 @@ def init():
         processed: Bool default false,
         parent_id: Uuid? default null,
     }
-
+    """
+    idx_query1 = """
     ::index create entries:by_parent_id {
         parent_id,
         session_id,
     }
-
+    """
+    idx_query2 = """
     ::index create entries:by_processed {
         processed,
         session_id,
@@ -32,5 +34,7 @@ def init():
     """
     try:
         client.run(query)
+        client.run(idx_query1)
+        client.run(idx_query2)
     except Exception as e:
         logger.exception(e)
