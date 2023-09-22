@@ -39,7 +39,7 @@ async def create_session(request: Session) -> Session:
     return await get_sessions(request.id)
 
 
-@router.get("/sessions/")
+@router.get("/sessions/{session_id}")
 async def get_sessions(session_id: UUID4) -> Session:
     query = f"""
         input[session_id] <- [[
