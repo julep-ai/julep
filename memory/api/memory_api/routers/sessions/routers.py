@@ -114,7 +114,7 @@ async def session_chat(request: ChatRequest, background_tasks: BackgroundTasks):
         )
 
     summarization_threshold = model_data["max_length"] * summarization_ratio_threshold
-    if resp["total_tokens"] >= summarization_threshold:
+    if resp["total_tokens"][0] >= summarization_threshold:
         background_tasks.add_task(
             summarization, 
             request.session_id, 
