@@ -1,13 +1,14 @@
 import openai
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from .protocol import Session, ChatRequest
 from memory_api.clients.cozo import client
-from memory_api.clients.openai import completion
 from memory_api.common.db.entries import add_entries
 from memory_api.common.protocol.entries import Entry
-from .protocol import SessionsRequest
+from memory_api.env import summarization_ratio_threshold
+from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
+from memory_api.clients.worker.worker import add_summarization_task
 from .queries import context_window_query
 
 
@@ -79,8 +80,21 @@ async def get_sessions(session_id: UUID4) -> Session:
         )
 
 
+async def summarization(session_id: str, model_name: str, entries: list[ChatML]):
+    await add_summarization_task(
+        MemoryManagementTaskArgs(
+            session_id=session_id, 
+            model=model_name, 
+            dialog=[
+                ChatML(**{**e, "session_id": session_id}) 
+                for e in entries
+            ],
+        ),
+    )
+
+
 @router.post("/sessions/chat")
-async def session_chat(request: ChatRequest):
+async def session_chat(request: ChatRequest, background_tasks: BackgroundTasks):
     entries: list[Entry] = []
     for m in request.params.messages:
         m.session_id = request.session_id
@@ -91,14 +105,6 @@ async def session_chat(request: ChatRequest):
     resp = client.run(context_window_query.replace("{session_id}", request.session_id))
 
     try:
-        session_entries: list[Entry] = [
-            Entry(**{**e, "session_id": request.session_id}) 
-            for e in resp["entries"][0]
-        ]
-    except (IndexError, KeyError):
-        session_entries = []
-
-    try:
         model_data = resp["model_data"][0]
         character_data = resp["character_data"][0]
     except (IndexError, KeyError):
@@ -106,33 +112,28 @@ async def session_chat(request: ChatRequest):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Character or model data not found",
         )
-    
-    tokens_count = 0
-    thoughts_count = 0
-    max_thoughts = 2
-    new_session_entries: list[Entry] = []
-    max_tokens_count = model_data["max_length"] * 0.7
-    for entry in reversed(session_entries):
-            tokens_count += entry.token_count
-            if tokens_count > max_tokens_count:
-                break
 
-            if entry.role == "system" and entry.name == "thought":
-                if thoughts_count >= max_thoughts:
-                    continue
-                else:
-                    thoughts_count += 1
+    summarization_threshold = model_data["max_length"] * summarization_ratio_threshold
+    if resp["total_tokens"] >= summarization_threshold:
+        background_tasks.add_task(
+            summarization, 
+            request.session_id, 
+            model_data["model_name"], 
+            resp["entries"][0],
+        )
 
-            new_session_entries.insert(0, entry)
-    
     # generate response
     default_settings = model_data["default_settings"]
 
     response = openai.ChatCompletion.create(
         model=model_data["model_name"],
         messages=[
-            {"role": e.role, "name": e.name, "content": e.content} 
-            for e in new_session_entries
+            {
+                "role": e.get("role"), 
+                "name": e.get("name"), 
+                "content": e.get("content"),
+            } 
+            for e in resp["entries"][0]
         ],
         max_tokens=default_settings["max_tokens"],
         temperature=default_settings["temperature"],
