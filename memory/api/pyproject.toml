@@ -15,6 +15,7 @@ environs = "^9.5.0"
 google-cloud-aiplatform = "^1.33.0"
 pandas = "^2.1.0"
 openai = "^0.28.0"
+httpx = "^0.25.0"
 
 
 [build-system]
