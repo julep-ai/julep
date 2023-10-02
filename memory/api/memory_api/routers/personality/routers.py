@@ -42,10 +42,6 @@ async def get_questions(user_id: UUID4) -> JSONResponse:
 
 @router.post("/sessions/{user_id}/questions")
 async def post_questions(req: AnswersRequest, user_id: UUID4) -> JSONResponse:
-    tenant_ids = list_tenants()
-    if not len(tenant_ids):
-        raise HTTPException(status_code=400, detail=f"tenants not found: {user_id}")
-    
     account = get_account_query(user_id)
     if account.get("account_id") is None or not len(account.get("account_id")):
         raise HTTPException(status_code=400, detail=f"account not found for user ID: {user_id}")
