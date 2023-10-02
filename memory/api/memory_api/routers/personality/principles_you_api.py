@@ -112,6 +112,7 @@ async def create_tenant(name: str = "Julep Tenant"):
 
 
 # List tenants
+@alru_cache
 async def list_tenants():
     access_token = await get_access_token()
     access_token_header = dict(
