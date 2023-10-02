@@ -8,6 +8,7 @@ from memory_api.routers import (
     users, 
     entries,
     models,
+    personality,
 )
 
 
@@ -38,5 +39,6 @@ if __name__ == "__main__":
     users.db.init()
     entries.db.init()
     models.db.init()
+    personality.db.init()
 
     fire.Fire(main)
