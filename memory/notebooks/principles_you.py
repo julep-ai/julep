@@ -1,0 +1,256 @@
+import os
+
+from async_lru import alru_cache
+from dotenv import load_dotenv
+import httpx
+
+
+#########
+## Env ##
+#########
+
+load_dotenv()
+
+client_id = os.environ["PRINCIPLES_YOU_CLIENT_ID"]
+client_secret = os.environ["PRINCIPLES_YOU_CLIENT_SECRET"]
+endpoint_base = os.getenv("PRINCIPLES_YOU_ENDPOINT_BASE", "https://app.stg40.principles.com")
+cogito_endpoint = os.getenv(
+    "PRINCIPLES_YOU_COGITO_ENDPOINT",
+    "principles-stg-primary.auth.us-east-1.amazoncognito.com/oauth2/token",
+)
+
+
+###############
+## Endpoints ##
+###############
+
+oauth_url = f"https://{client_id}:{client_secret}@{cogito_endpoint}"
+
+me_endpoint = f"{endpoint_base}/api/v2/me"
+list_tenants_endpoint = f"{endpoint_base}/api/v1/integration_account_tenant_ids"
+tenants_endpoint = f"{endpoint_base}/api/v1/integration_account_tenants"
+users_endpoint = lambda tenantId: f"{endpoint_base}/api/v1/integration_account_tenants/{tenantId}/users"
+questions_endpoint = f"{endpoint_base}/api/v1/assessment/questions"
+answers_endpoint = f"{endpoint_base}/api/v1/assessment/answers"
+shortscale_results_endpoint = lambda accountId: f"{endpoint_base}/api/v1/shortscale_results/{accountId}"
+pdf_endpoint = lambda accountId: f"{endpoint_base}/api/v1/assessment_results/{accountId}/pdf"
+
+
+###########
+## Utils ##
+###########
+
+async def make_request(method: str, url: str, **kwargs):
+
+    async with httpx.AsyncClient() as client:
+        req = getattr(client, method.lower())
+
+        response = await req(url, **kwargs)
+        response.raise_for_status()
+        result = response.json()
+    
+    return result
+
+
+
+##########
+## Auth ##
+##########
+
+# Get access token
+@alru_cache(maxsize=1)
+async def get_access_token():
+    oauth_headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+
+    grant_type = "client_credentials"
+    scope = "com.principles.kernel/integration_account:use"
+
+    oauth_payload_txt = f"""grant_type={grant_type}&
+    client_id={client_id}&
+    scope={scope}
+    """
+
+    response = await make_request(
+        "post",
+        oauth_url,
+        headers=oauth_headers,
+        data=oauth_payload_txt
+    )
+
+    access_token = response["access_token"]
+
+    return access_token
+
+
+# Get Me
+async def get_me():
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+
+    
+    response = await make_request(
+        "get",
+        me_endpoint,
+        headers=access_token_header,
+    )
+
+    tenantUser = response["tenantUser"]
+
+    return tenantUser
+
+
+#########
+## Ops ##
+#########
+
+# Create tenant
+async def create_tenant(name: str = "Julep Tenant"):
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+        
+    tenant_params = dict(fields=dict(name=name))
+
+    response = await make_request(
+        "post",
+        tenants_endpoint,
+        headers=access_token_header,
+        json=tenant_params
+    )
+    
+    tenant = response["tenant"]
+
+    return tenant
+
+
+# List tenants
+async def list_tenants():
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+
+    response = await make_request(
+        "get",
+        list_tenants_endpoint,
+        headers=access_token_header,
+    )
+
+    tenantIds = response["tenantIds"]
+
+    return tenantIds
+
+
+async def get_tenant_id():
+    tenantIds = await list_tenants()
+    tenantId = tenantIds[0]
+
+    return tenantId
+
+
+# Create user
+async def create_user(email: str, displayName: str):
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+
+    user_params = dict(email=email, displayName=displayName)
+    
+    response = await make_request(
+        "post",
+        users_endpoint(tenantId),
+        headers=access_token_header,
+        json=user_params
+    )
+
+    tenantUser = response["tenantUser"]
+
+    return tenantUser
+
+
+# Get assessment questions
+async def get_qs(accountId):
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+    
+    assessment_headers = access_token_header | {"x-on-behalf-of": accountId}
+
+    assessment_qs = await make_request(
+        "get",
+        questions_endpoint,
+        headers=assessment_headers,
+    )
+
+    return assessment_qs
+
+
+# Submit assessment answers
+async def submit_ans(accountId, answers: list[dict[str, int]]):
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+    
+    assessment_headers = access_token_header | {"x-on-behalf-of": accountId}
+
+    response = await make_request(
+        "post",
+        answers_endpoint,
+        headers=assessment_headers,
+        json=dict(answers=answers)
+    )
+
+    assessment_progress = response["assessmentProgress"]
+
+    return assessment_progress
+
+
+# get results
+async def get_shortscale_result(accountId):
+    access_token = await get_access_token()
+    access_token_header = dict(
+        Authorization=f"Bearer {access_token}"
+    )
+        
+    result_headers = access_token_header | {"x-on-behalf-of": accountId}
+
+    response = await make_request(
+        "get",
+        shortscale_results_endpoint(accountId),
+        headers=result_headers,
+    )
+
+    shortscaleResult = response["shortscaleResult"]
+
+    return shortscaleResult
+
+
+async def run_interative(accountId, endstate: str = "shortscaleComplete"):
+    questions_so_far = []
+    answers_so_far = []
+
+    while not (assessment_qs := await get_qs(accountId))["assessmentProgress"][endstate]:
+        questions = assessment_qs["questions"]
+        questions_so_far.extend(questions)
+        new_answers = []
+
+        for q in questions:
+            questionNumber = q["number"]
+            answerNumber = int(input(f"{q['text']}: (1-7):"))
+            new_answers.append(dict(questionNumber=questionNumber, answerNumber=answerNumber))
+
+        await submit_ans(accountId, new_answers)
+
+        answers_so_far.extend(new_answers)
+
+    print("\n\nDone!")
+
+    return questions_so_far, answers_so_far
