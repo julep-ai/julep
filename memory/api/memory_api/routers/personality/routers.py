@@ -20,7 +20,7 @@ from .principles_you_api import (
 
 router = APIRouter()
 
-# TODO: cache tenant ID
+
 @router.get("/personality/{user_id}/questions")
 async def get_questions(user_id: UUID4) -> JSONResponse:
     tenant_ids = list_tenants()
