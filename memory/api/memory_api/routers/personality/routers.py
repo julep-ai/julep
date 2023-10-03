@@ -23,7 +23,7 @@ router = APIRouter()
 
 @router.get("/personality/{user_id}/questions")
 async def get_questions(user_id: UUID4) -> JSONResponse:
-    tenant_ids = list_tenants()
+    tenant_ids = await list_tenants()
     if not len(tenant_ids):
         raise HTTPException(status_code=400, detail=f"tenants not found: {user_id}")
 
@@ -47,7 +47,7 @@ async def post_questions(req: AnswersRequest, user_id: UUID4) -> JSONResponse:
         raise HTTPException(status_code=400, detail=f"account not found for user ID: {user_id}")
     
     account_id = account["account_id"][0]
-    resp = await submit_ans(account_id, req.model_dump(by_alias=True))
+    resp = await submit_ans(account_id, req.model_dump(by_alias=True)["answers"])
 
     if resp.get("assesmentComplete", False):
         results = await get_full_assesment_result(account_id)
