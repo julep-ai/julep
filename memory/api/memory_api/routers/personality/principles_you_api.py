@@ -47,7 +47,7 @@ async def make_request(method: str, url: str, **kwargs):
 ##########
 
 # Get access token
-@alru_cache(maxsize=1)
+@alru_cache(maxsize=1, ttl=3000)
 async def get_access_token():
     oauth_headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -112,7 +112,7 @@ async def create_tenant(name: str = "Julep Tenant"):
 
 
 # List tenants
-@alru_cache
+@alru_cache(maxsize=1)
 async def list_tenants():
     access_token = await get_access_token()
     access_token_header = dict(
