@@ -94,19 +94,7 @@ def save_results_query(user_id: UUID4, scores: dict, full_assesment: bool = Fals
 
 
 def get_user_data(user_id: UUID4) -> DataFrame:
-    """
-    :create users {
-        user_id: Uuid,
-        updated_at: Validity default [floor(now()), true],
-        =>
-        name: String,
-        email: String,
-        about: String default "",
-        metadata: Json default {},
-        created_at: Float default now(),
-    }
-    """
-    query = """
+    query = f"""
     input[user_id] <- [[
         to_uuid("{user_id}"),
     ]]

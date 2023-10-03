@@ -6,7 +6,7 @@ class Answer(BaseModel):
     answer_number: int = Field(..., alias="answerNumber")
 
     @field_validator("answer_number")
-    @staticmethod
+    @classmethod
     def check_answer(cls, answer_number: int) -> int:
         if 1 <= answer_number <= 7:
             return answer_number
