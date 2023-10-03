@@ -19,6 +19,7 @@ app.include_router(embedder.router)
 app.include_router(users.router)
 app.include_router(entries.router)
 app.include_router(models.router)
+app.include_router(personality.router)
 
 
 def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, workers=None, log_level="info"):
