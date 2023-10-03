@@ -36,6 +36,8 @@ async def get_questions(user_id: UUID4) -> JSONResponse:
         user = await create_user(user_data["email"][0], user_data["name"][0], tenant_ids[0])
         account_id = user["account"]["accountId"]
         create_account_query(user_id, account_id)
+    else:
+        account_id = account["account_id"][0]
 
     return JSONResponse(await get_qs(account_id))
 
