@@ -40,7 +40,7 @@ async def get_questions(user_id: UUID4) -> JSONResponse:
     return JSONResponse(await get_qs(account_id))
 
 
-@router.post("/sessions/{user_id}/questions")
+@router.post("/personality/{user_id}/questions")
 async def post_questions(req: AnswersRequest, user_id: UUID4) -> JSONResponse:
     account = get_account_query(user_id)
     if account.get("account_id") is None or not len(account.get("account_id")):
