@@ -1,4 +1,3 @@
-import json
 import logging
 from memory_api.clients.cozo import client
 from pydantic import UUID4
@@ -62,7 +61,7 @@ def save_results_query(user_id: UUID4, scores: dict, full_assesment: bool = Fals
     ] <- [[
         to_uuid("{user_id}"),
         {str(full_assesment).lower()},  # true if full assessment results
-        {json.dumps(scores)},  # json returned as result
+        {scores},  # json returned as result
     ]]
 
     ?[
