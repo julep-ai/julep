@@ -1,5 +1,6 @@
 import openai
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks
+from operator import itemgetter
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from .protocol import Session, ChatRequest
@@ -80,21 +81,8 @@ async def get_sessions(session_id: UUID4) -> Session:
         )
 
 
-async def summarization(session_id: str, model_name: str, entries: list[ChatML]):
-    await add_summarization_task(
-        MemoryManagementTaskArgs(
-            session_id=session_id, 
-            model=model_name, 
-            dialog=[
-                ChatML(**{**e, "session_id": session_id}) 
-                for e in entries
-            ],
-        ),
-    )
-
-
 @router.post("/sessions/chat")
-async def session_chat(request: ChatRequest, background_tasks: BackgroundTasks):
+async def session_chat(request: ChatRequest):
     entries: list[Entry] = []
     for m in request.params.messages:
         m.session_id = request.session_id
@@ -112,32 +100,40 @@ async def session_chat(request: ChatRequest, background_tasks: BackgroundTasks):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Character or model data not found",
         )
-
+    
+    entries = sorted(resp["entries"][0], key=itemgetter("timestamp"))
     summarization_threshold = model_data["max_length"] * summarization_ratio_threshold
+
     if resp["total_tokens"][0] >= summarization_threshold:
-        background_tasks.add_task(
-            summarization, 
-            request.session_id, 
-            model_data["model_name"], 
-            resp["entries"][0],
+        await add_summarization_task(
+            MemoryManagementTaskArgs(
+                session_id=request.session_id, 
+                model=model_data["model_name"], 
+                dialog=[
+                    ChatML(**{**e, "session_id": request.session_id}) 
+                    for e in entries
+                ],
+            ),
         )
 
     # generate response
     default_settings = model_data["default_settings"]
+    messages = [
+        {
+            "role": e.get("role"), 
+            "name": e.get("name"), 
+            "content": e.get("content"),
+        } 
+        for e in entries
+    ]
 
     response = openai.ChatCompletion.create(
         model=model_data["model_name"],
-        messages=[
-            {
-                "role": e.get("role"), 
-                "name": e.get("name"), 
-                "content": e.get("content"),
-            } 
-            for e in resp["entries"][0]
-        ],
+        messages=messages,
         max_tokens=default_settings["max_tokens"],
         temperature=default_settings["temperature"],
         repetition_penalty=default_settings["repetition_penalty"],
+        frequency_penalty=default_settings["frequency_penalty"],
     )
 
     # add response as an entry
