@@ -1,3 +1,4 @@
+import uuid
 import openai
 from operator import itemgetter
 from fastapi import APIRouter, HTTPException, status
@@ -11,6 +12,11 @@ from memory_api.env import summarization_ratio_threshold
 from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
 from memory_api.clients.worker.worker import add_summarization_task
 from .queries import context_window_query
+
+
+models_map = {
+    "samantha-1-alpha": "julep-ai/samantha-1-alpha",
+}
 
 
 router = APIRouter()
@@ -108,10 +114,16 @@ async def session_chat(request: ChatRequest):
         await add_summarization_task(
             MemoryManagementTaskArgs(
                 session_id=request.session_id, 
-                model=model_data["model_name"], 
+                model=models_map.get(model_data["model_name"], model_data["model_name"]), 
                 dialog=[
-                    ChatML(**{**e, "session_id": request.session_id}) 
-                    for e in entries
+                    ChatML(
+                        **{
+                            **e, 
+                            "session_id": request.session_id, 
+                            "entry_id": uuid.UUID(bytes=bytes(e.get("entry_id"))),
+                        },
+                    ) 
+                    for e in entries if e.get("role") != "system"
                 ],
             ),
         )
