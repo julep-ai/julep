@@ -9,8 +9,9 @@ async def add_summarization_task(data: MemoryManagementTaskArgs):
             name="memory_management.v1",
             args=data,
         )
+
         await client.post(
             f"{worker_url}/task",
             headers={"Content-Type": "json"},
-            json=data.model_dump_json(),
+            data=data.model_dump_json(),
         )
