@@ -1,6 +1,7 @@
 import fire
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from memory_api.routers import (
     characters, 
     sessions, 
@@ -13,6 +14,16 @@ from memory_api.routers import (
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    max_age=3600,
+)
+
 app.include_router(characters.router)
 app.include_router(sessions.router)
 app.include_router(embedder.router)
