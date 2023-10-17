@@ -63,8 +63,8 @@ async def post_questions(req: AnswersRequest, user_id: UUID4) -> JSONResponse:
         await add_principles_task(
             AddPrinciplesTaskArgs(
                 scores=results, 
-                full=assesment_complete, 
-                name=user_data.get("name"), 
+                full=shortscale_complete and not assesment_complete, 
+                name=user_data["name"][0], 
                 user_id=user_id,
             )
         )
