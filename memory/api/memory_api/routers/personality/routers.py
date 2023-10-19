@@ -16,6 +16,8 @@ from .principles_you_api import (
     get_shortscale_result,
     get_full_assesment_result,
 )
+from memory_api.clients.worker.worker import add_principles_task
+from memory_api.clients.worker.types import AddPrinciplesTaskArgs
 
 
 router = APIRouter()
@@ -51,14 +53,22 @@ async def post_questions(req: AnswersRequest, user_id: UUID4) -> JSONResponse:
     account_id = account["account_id"][0]
     resp = await submit_ans(account_id, req.model_dump(by_alias=True)["answers"])
 
-    if resp.get("assesmentComplete", False):
-        results = await get_full_assesment_result(account_id)
-        save_results_query(user_id, results, True)
+    shortscale_complete = resp.get("shortscaleComplete", False)
+    assesment_complete = resp.get("assesmentComplete", False)
+    if shortscale_complete or assesment_complete:
+        get_result = get_shortscale_result if shortscale_complete else get_full_assesment_result
+        results = await get_result(account_id)
+        save_results_query(user_id, results, False)
+        user_data = get_user_data(user_id)
+        await add_principles_task(
+            AddPrinciplesTaskArgs(
+                scores=results, 
+                full=shortscale_complete and not assesment_complete, 
+                name=user_data["name"][0], 
+                user_id=user_id,
+            )
+        )
+
         return JSONResponse(results)
-    
-    if resp.get("shortscaleComplete", False):
-        shortscale_results = await get_shortscale_result(account_id)
-        save_results_query(user_id, shortscale_results, False)
-        return JSONResponse(shortscale_results)
 
     return JSONResponse(resp)

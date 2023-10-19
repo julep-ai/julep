@@ -33,6 +33,19 @@ class BaseTaskArgs(BaseModel):
     ...
 
 
+class AddPrinciplesTaskArgs(BaseTaskArgs):
+    scores: dict[str, Any]
+    full: bool = False
+    name: Optional[str] = None
+    user_id: Optional[UUID] = None
+    character_id: Optional[UUID] = None
+
+
+class AddPrinciplesTask(BaseTask):
+    name: Literal["add_principles.v1"]
+    args: AddPrinciplesTaskArgs
+
+
 class MemoryManagementTaskArgs(BaseTaskArgs):
     session_id: UUID
     model: str
