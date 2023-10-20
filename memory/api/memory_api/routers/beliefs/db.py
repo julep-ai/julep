@@ -22,7 +22,7 @@ def init():
         processed: Bool default false,
         created_at: Float default now(),
         embedding: <F32; 384>,
-        fact_embedding: <F32; 1536>? default null,
+        fact_embedding: <F32; 1024>? default null,
     }
     """
     idx_query_1 = """
