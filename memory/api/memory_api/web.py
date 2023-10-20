@@ -11,6 +11,7 @@ from memory_api.routers import (
     models,
     personality,
     beliefs,
+    episodes,
 )
 
 
@@ -55,5 +56,6 @@ if __name__ == "__main__":
     models.db.init()
     personality.db.init()
     beliefs.db.init()
+    episodes.db.init()
 
     fire.Fire(main)
