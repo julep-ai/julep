@@ -10,6 +10,7 @@ from memory_api.routers import (
     entries,
     models,
     personality,
+    beliefs,
 )
 
 
@@ -31,6 +32,7 @@ app.include_router(users.router)
 app.include_router(entries.router)
 app.include_router(models.router)
 app.include_router(personality.router)
+app.include_router(beliefs.router)
 
 
 def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, workers=None, log_level="info"):
@@ -52,5 +54,6 @@ if __name__ == "__main__":
     entries.db.init()
     models.db.init()
     personality.db.init()
+    beliefs.db.init()
 
     fire.Fire(main)
