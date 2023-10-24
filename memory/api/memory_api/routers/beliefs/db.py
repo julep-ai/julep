@@ -82,9 +82,9 @@ def init():
         vec_idx_query_2, 
         fts_idx_query,
     ]
-
-    try:
-        for query in queries:
+    
+    for query in queries:
+        try:
             client.run(query)
-    except Exception as e:
-        logger.exception(e)
+        except Exception as e:
+            logger.exception(e)
