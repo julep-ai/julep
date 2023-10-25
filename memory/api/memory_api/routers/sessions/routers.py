@@ -134,9 +134,9 @@ async def session_chat(request: ChatRequest):
         {
             "role": e.get("role"), 
             "name": e.get("name"), 
-            "content": e.get("content"),
+            "content": e["content"] if not isinstance(e["content"], list) else "\n".join(e["content"]),
         } 
-        for e in entries
+        for e in entries if e.get("content")
     ]
 
     response = openai.ChatCompletion.create(
