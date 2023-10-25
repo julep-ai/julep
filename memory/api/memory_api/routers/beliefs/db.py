@@ -56,7 +56,7 @@ def init():
     """
     vec_idx_query_2 = """
     ::hnsw create beliefs:fact_embedding_space {
-        dim: 1536,
+        dim: 1024,
         m: 50,
         dtype: F32,
         fields: fact_embedding,
