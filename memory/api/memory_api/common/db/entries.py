@@ -3,12 +3,18 @@ from memory_api.clients.cozo import client
 
 
 def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None:
-    entries_query = ",\n".join(
-        [
-            f'[to_uuid("{e.session_id}"), "{e.role}", "{e.name}", "{e.content}", {e.token_count}]' 
-            for e in entries
-        ]
-    )
+    def _aux_content(e: Entry):
+        return e.content.replace('"', "'")
+
+    entries_lst = [
+        f'[to_uuid("{e.session_id}"), "{e.role}", "{e.name}", "{_aux_content(e)}", {e.token_count}]'
+        for e in entries if e.content
+    ]
+
+    if not len(entries_lst):
+        return
+
+    entries_query = ",\n".join(entries_lst)
 
     query = f"""
     ?[session_id, role, name, content, token_count] <- [
