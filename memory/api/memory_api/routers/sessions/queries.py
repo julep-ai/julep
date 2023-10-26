@@ -470,6 +470,7 @@ context_window_query_beliefs = """
     # Get all entries in session where parent == null (top nodes)
     # and filter out situation tags
     ?[
+        entry_id,
         timestamp,
         role,
         name,
@@ -478,6 +479,7 @@ context_window_query_beliefs = """
     ] := *_t1 {
         session_id,
     }, *entries {
+        entry_id,
         session_id,
         timestamp,
         role,
@@ -491,6 +493,7 @@ context_window_query_beliefs = """
 
     :sort timestamp
     :create _t5 {
+        entry_id,
         timestamp,
         role,
         name,
@@ -774,12 +777,14 @@ context_window_query_beliefs = """
         collect(data),
         sum(token_count),
     ] := *_t5 {
+        entry_id,
         timestamp,
         role,
         name,
         content,
         token_count,
     }, data = {
+        "entry_id": entry_id,
         "timestamp": timestamp,
         "role": role,
         "name": name,
@@ -818,12 +823,14 @@ context_window_query_beliefs = """
         collect(data),
         sum(token_count),
     ] := *_t5 {
+        entry_id,
         timestamp,
         role,
         name,
         content,
         token_count,
     }, data = {
+        "entry_id": entry_id,
         "timestamp": timestamp,
         "role": role,
         "name": name,
