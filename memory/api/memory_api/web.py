@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from pycozo.client import QueryException
 from memory_api.routers import (
     characters, 
     sessions, 
@@ -21,13 +22,25 @@ from memory_api.routers import (
 logger = logging.getLogger(__name__)
 
 
-def register_exception(app: FastAPI):
-    @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+def make_exception_handler(status: int):
+    async def _handler(request: Request, exc):
         exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
         logger.exception(exc)
-        content = {'status_code': 10422, 'message': exc_str, 'data': None}
-        return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        content = {'status_code': status, 'message': exc_str, 'data': None}
+        return JSONResponse(content=content, status_code=status)
+
+    return _handler
+
+
+def register_exceptions(app: FastAPI):
+    app.add_exception_handler(
+        RequestValidationError, 
+        make_exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY),
+    )
+    app.add_exception_handler(
+        QueryException, 
+        make_exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR),
+    )
 
 
 app = FastAPI()
@@ -41,7 +54,7 @@ app.add_middleware(
     max_age=3600,
 )
 
-register_exception(app)
+register_exceptions(app)
 
 app.include_router(characters.router)
 app.include_router(sessions.router)
