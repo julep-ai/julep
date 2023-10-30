@@ -303,13 +303,13 @@ context_window_query_beliefs = """
     # Goal of this block is to get:
     # - character_id, user_id from session_id
     # - get session.situation
-    # - also try to see if there's an entry with "situation" type
+    # - also try to see if there's an entry with 'situation' type
     # - return all this
     input[
         session_id,
         dialog_embedding,
     ] <- [[
-        to_uuid("{session_id}"),
+        to_uuid('{session_id}'),
         rand_vec(1024),
     ]]
     
@@ -329,7 +329,7 @@ context_window_query_beliefs = """
             user_id,
             situation,
             updated_at: validity,
-            @ "NOW"
+            @ 'NOW'
         }, updated_at = to_int(validity)
 
     ?[
@@ -353,7 +353,7 @@ context_window_query_beliefs = """
             role,
             content: latest_entry_situation,
             timestamp: latest_entry_timestamp,
-        }, role = "system", name = "situation"
+        }, role = 'system', name = 'situation'
     
     
     ?[
@@ -428,7 +428,7 @@ context_window_query_beliefs = """
             model_name,
             max_length,
             default_settings,
-            @ "NOW"
+            @ 'NOW'
         }
     
     :create _t3 {
@@ -489,7 +489,7 @@ context_window_query_beliefs = """
         parent_id,
     },
     parent_id = null,
-    (role != "system" && name != "situation")
+    (role != 'system' && name != 'situation')
 
     :sort timestamp
     :create _t5 {
@@ -514,9 +514,9 @@ context_window_query_beliefs = """
             name,
             content,
         },
-        role = "user" or role = "assistant",
+        role = 'user' or role = 'assistant',
         k = name ~ role,
-        turn = k ++ ": " ++ content ++ "\n",
+        turn = k ++ ' said ' ++ content ++ '\n',
 
     :sort -timestamp
     :limit 4 * 2
@@ -536,7 +536,7 @@ context_window_query_beliefs = """
     ] :=
         collected[rev_turns],
         turns = reverse(rev_turns),
-        dialog = concat(turns),
+        dialog = from_substrings(turns),
 
     :create _dialog {
         dialog,
@@ -579,8 +579,8 @@ context_window_query_beliefs = """
             valence,
             |
             # FIXME
-            query: situation,
-            k: 3 * 4,
+            query: situation ++ '\n\n' ++ regex_replace_all(dialog, "[^a-zA-Z0-9\\s]+", ""),
+            k: 3 * 4,  # 3 beliefs per user/character combo
             score_kind: 'tf_idf',
             bind_score: score,
         }
@@ -630,7 +630,7 @@ context_window_query_beliefs = """
             valence,
             |
             query: dialog_embedding,
-            k: 3 * 4,
+            k: 3 * 4,  # 3 beliefs per user/character combo
             ef: 100,
             bind_distance: dist,
             radius: 100000.0,
@@ -746,20 +746,20 @@ context_window_query_beliefs = """
         },
         prefix = cond(
             from_user && about_themselves,
-            user_name ++ " thinks about themselves that: ",
+            user_name ++ ' thinks about themselves that: ',
             from_user && !about_themselves,
-            user_name ++ " thinks about " ++ character_name ++ " that: ",
+            user_name ++ ' thinks about ' ++ character_name ++ ' that: ',
             !from_user && about_themselves,
-            character_name ++ " thinks about themselves that: ",
+            character_name ++ ' thinks about themselves that: ',
             !from_user && !about_themselves,
-            character_name ++ " thinks about " ++ user_name ++ " that: ",
+            character_name ++ ' thinks about ' ++ user_name ++ ' that: ',
         ),
-        statement = concat("- ", prefix, belief, "\n"),
+        statement = concat(': ', prefix, belief, '\n'),
         score = adjusted_score * adjusted_valence,
         # FIXME
         num_tokens = length(chars(unicode_normalize(
             statement,
-            "nfkd",     # https://en.wikipedia.org/wiki/Unicode_equivalence#Normal_forms
+            'nfkd',     # https://en.wikipedia.org/wiki/Unicode_equivalence#Normal_forms
         ))),
 
     :sort -score
@@ -784,12 +784,12 @@ context_window_query_beliefs = """
         content,
         token_count,
     }, data = {
-        "entry_id": entry_id,
-        "timestamp": timestamp,
-        "role": role,
-        "name": name,
-        "content": content,
-        "token_count": token_count,
+        'entry_id': entry_id,
+        'timestamp': timestamp,
+        'role': role,
+        'name': name,
+        'content': content,
+        'token_count': token_count,
     }
 
     # Add beliefs to entries
@@ -812,11 +812,11 @@ context_window_query_beliefs = """
         ],
         formatted = concat(statements),
         data = {
-            "timestamp": 0,
-            "role": "system",
-            "name": "information",
-            "content": formatted,
-            "token_count": num_tokens,
+            'timestamp': 0,
+            'role': 'system',
+            'name': 'information',
+            'content': formatted,
+            'token_count': num_tokens,
         }
 
     entry_list[
@@ -830,12 +830,12 @@ context_window_query_beliefs = """
         content,
         token_count,
     }, data = {
-        "entry_id": entry_id,
-        "timestamp": timestamp,
-        "role": role,
-        "name": name,
-        "content": content,
-        "token_count": token_count,
+        'entry_id': entry_id,
+        'timestamp': timestamp,
+        'role': role,
+        'name': name,
+        'content': content,
+        'token_count': token_count,
     }
 
     ?[
@@ -859,15 +859,15 @@ context_window_query_beliefs = """
         max_length,
         default_settings,
     }, entry_list[entries, total_tokens_float], user_data = {
-        "name": user_name,
-        "about": user_about,
+        'name': user_name,
+        'about': user_about,
     }, character_data = {
-        "name": character_name,
-        "about": character_about,
+        'name': character_name,
+        'about': character_about,
     }, model_data = {
-        "model_name": model_name,
-        "max_length": max_length,
-        "default_settings": default_settings,
+        'model_name': model_name,
+        'max_length': max_length,
+        'default_settings': default_settings,
     },
     total_tokens = to_int(total_tokens_float)
 
@@ -899,27 +899,27 @@ context_window_query_beliefs = """
         situation_timestamp,
     }, 
     about_content = concat(
-        "About '", get(user_data, "name", "User"), "': ",
-        get(user_data, "about"), ". ",
-        "About '", get(character_data, "name", "Me"), "': ",
-        get(character_data, "about")
+        'About "', get(user_data, 'name', 'User'), '": ',
+        get(user_data, 'about'), '\n\n',
+        'About "', get(character_data, 'name', 'Me'), '": ',
+        get(character_data, 'about')
     ),
     situation_tokens = to_int(length(situation) / 3.2),
     about_tokens = to_int(length(about_content) / 3.2),
     total_tokens = filtered_total_tokens + about_tokens + situation_tokens,
     entries = concat([
         {
-            "role": "system",
-            "name": "situation",
-            "content": situation,
-            "timestamp": situation_timestamp,
-            "token_count": situation_tokens,
+            'role': 'system',
+            'name': 'situation',
+            'content': situation,
+            'timestamp': situation_timestamp,
+            'token_count': situation_tokens,
         }, {
-            "role": "system",
-            "name": "information",
-            "content": about_content,
-            "timestamp": situation_timestamp,
-            "token_count": about_tokens,
+            'role': 'system',
+            'name': 'information',
+            'content': about_content,
+            'timestamp': situation_timestamp,
+            'token_count': about_tokens,
         }
     ], filtered_entries)
 }
