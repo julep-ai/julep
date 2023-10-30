@@ -900,7 +900,7 @@ context_window_query_beliefs = """
     }, 
     about_content = concat(
         "About '", get(user_data, "name", "User"), "': ",
-        get(user_data, "about"), "\n\n",
+        get(user_data, "about"), ". ",
         "About '", get(character_data, "name", "Me"), "': ",
         get(character_data, "about")
     ),
