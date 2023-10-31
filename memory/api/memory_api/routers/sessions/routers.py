@@ -11,7 +11,7 @@ from memory_api.common.protocol.entries import Entry
 from memory_api.env import summarization_ratio_threshold
 from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
 from memory_api.clients.worker.worker import add_summarization_task
-from .queries import context_window_query
+from .queries import context_window_query_beliefs
 
 
 models_map = {
@@ -96,7 +96,7 @@ async def session_chat(request: ChatRequest):
     
     add_entries(entries)
 
-    resp = client.run(context_window_query.replace("{session_id}", request.session_id))
+    resp = client.run(context_window_query_beliefs.replace("{session_id}", request.session_id))
 
     try:
         model_data = resp["model_data"][0]
@@ -134,9 +134,9 @@ async def session_chat(request: ChatRequest):
         {
             "role": e.get("role"), 
             "name": e.get("name"), 
-            "content": e.get("content"),
+            "content": e["content"] if not isinstance(e["content"], list) else "\n".join(e["content"]),
         } 
-        for e in entries
+        for e in entries if e.get("content")
     ]
 
     response = openai.ChatCompletion.create(
