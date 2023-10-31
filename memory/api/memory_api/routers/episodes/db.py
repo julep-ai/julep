@@ -7,43 +7,41 @@ logger = logging.getLogger(__name__)
 
 def init():
     query = """
-    :create beliefs {
+    :create episodes {
         referrent_is_user: Bool,
         referrent_id: Uuid,
         subject_is_user: Bool? default null,
         subject_id: Uuid? default null,
-        belief_id: Uuid,
+        episode_id: Uuid,
+        last_accessed_at: Validity default [floor(now()), true],
         =>
-        belief: String,
-        valence: Float default 0.0,
-        source_episode: Uuid? default null,
-        parent_belief: Uuid? default null,
+        summary: String,
+        parent_episode: Uuid? default null,
+        happened_at: Float default now(),
+        duration: Float default 0,
+        importance: Float default 0.5,
         sentiment: String default "neutral",
-        processed: Bool default false,
+        sentiment_strength: Float default 0.33334,
         created_at: Float default now(),
         embedding: <F32; 384>,
-        fact_embedding: <F32; 1024>? default null,
+        fact_embedding: <F32; 1536>? default null,
     }
     """
     idx_query_1 = """
-    ::index create beliefs:by_belief_id {
-        belief_id,
-        belief,
-        valence,
+    ::index create episodes:by_episode_id {
+        episode_id,
+        summary,
+        parent_episode,
+        happened_at,
+        duration,
+        importance,
         sentiment,
+        sentiment_strength,
+        created_at,
     }
     """
     idx_query_2 = """
-    ::index create beliefs:by_parent_belief {
-        parent_belief,
-        belief_id,
-        belief,
-        valence,
-        sentiment,
-    }
-    """
-    vec_idx_query_1 = """
-    ::hnsw create beliefs:embedding_space {
+    ::hnsw create episodes:embedding_space {
         dim: 384,
         m: 50,
         dtype: F32,
@@ -54,22 +52,22 @@ def init():
         keep_pruned_connections: false,
     }
     """
-    vec_idx_query_2 = """
-    ::hnsw create beliefs:fact_embedding_space {
-        dim: 1024,
+    vec_idx_query_1 = """
+    ::hnsw create episodes:fact_embedding_space {
+        dim: 1536,
         m: 50,
         dtype: F32,
         fields: fact_embedding,
-        filter: !is_null(fact_embedding),
         distance: Cosine,
+        filter: !is_null(fact_embedding),
         ef_construction: 20,
         extend_candidates: false,
         keep_pruned_connections: false,
     }
     """
     fts_idx_query = """
-    ::fts create beliefs:summary {
-        extractor: belief,
+    ::fts create episodes:summary {
+        extractor: summary,
         tokenizer: Simple,
         filters: [AsciiFolding, AlphaNumOnly, Lowercase, Stemmer('english'), Stopwords('en')],
     }
@@ -79,12 +77,11 @@ def init():
         idx_query_1, 
         idx_query_2, 
         vec_idx_query_1, 
-        vec_idx_query_2, 
         fts_idx_query,
     ]
-    
-    for query in queries:
-        try:
+
+    try:
+        for query in queries:
             client.run(query)
-        except Exception as e:
-            logger.exception(e)
+    except Exception as e:
+        logger.exception(e)
