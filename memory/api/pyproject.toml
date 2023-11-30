@@ -17,6 +17,7 @@ pandas = "^2.1.0"
 openai = "^0.28.0"
 httpx = "^0.25.0"
 async-lru = "^2.0.4"
+sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
 
 
 [tool.poetry.group.dev.dependencies]
