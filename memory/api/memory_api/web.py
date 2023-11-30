@@ -1,6 +1,7 @@
 import fire
 import uvicorn
 import logging
+import sentry_sdk
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,13 @@ from memory_api.routers import (
     personality,
     beliefs,
     episodes,
+)
+from .env import sentry_dsn
+
+
+sentry_sdk.init(
+    dsn=sentry_dsn,
+    enable_tracing=True,
 )
 
 

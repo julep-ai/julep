@@ -24,3 +24,5 @@ cogito_endpoint: str = env.str(
     "PRINCIPLES_YOU_COGITO_ENDPOINT",
     default="principles-stg-primary.auth.us-east-1.amazoncognito.com/oauth2/token",
 )
+
+sentry_dsn: str = env.str("SENTRY_DSN")
