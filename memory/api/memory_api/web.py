@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from pycozo.client import QueryException
 from memory_api.routers import (
-    characters, 
+    agents, 
     sessions, 
     embedder, 
     users, 
@@ -64,7 +64,7 @@ app.add_middleware(
 
 register_exceptions(app)
 
-app.include_router(characters.router)
+app.include_router(agents.router)
 app.include_router(sessions.router)
 app.include_router(embedder.router)
 app.include_router(users.router)
@@ -87,7 +87,7 @@ def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, wor
 
 
 if __name__ == "__main__":
-    characters.db.init()
+    agents.db.init()
     sessions.db.init()
     users.db.init()
     entries.db.init()
