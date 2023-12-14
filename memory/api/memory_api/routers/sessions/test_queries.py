@@ -1,7 +1,7 @@
 import pytest
 from pycozo.client import Client
 from memory_api.routers import (
-    characters, 
+    agents, 
     sessions, 
     users, 
     entries,
@@ -29,7 +29,7 @@ client = Client()
 
 @pytest.fixture
 def init_db(monkeypatch):
-    monkeypatch.setattr(characters.db, "client", client)
+    monkeypatch.setattr(agents.db, "client", client)
     monkeypatch.setattr(sessions.db, "client", client)
     monkeypatch.setattr(users.db, "client", client)
     monkeypatch.setattr(entries.db, "client", client)
@@ -38,7 +38,7 @@ def init_db(monkeypatch):
     monkeypatch.setattr(beliefs.db, "client", client)
     monkeypatch.setattr(episodes.db, "client", client)
 
-    characters.db.init()
+    agents.db.init()
     sessions.db.init()
     users.db.init()
     entries.db.init()
