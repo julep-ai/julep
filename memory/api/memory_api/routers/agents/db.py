@@ -7,14 +7,13 @@ logger = logging.getLogger(__name__)
 
 def init():
     query = """
-    :create characters {
-        character_id: Uuid,
+    :create agents {
+        agent_id: Uuid,
         updated_at: Validity default [floor(now()), true],
         =>
         name: String,
-        about: String default "",
+        about: String,
         metadata: Json default {},
-        model: String? default null,
         created_at: Float default now(),
     }
     """
