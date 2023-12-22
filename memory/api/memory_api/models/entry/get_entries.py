@@ -6,22 +6,16 @@ get_entries_query = """
     ?[
         session_id,
         entry_id,
-        timestamp,
         role,
         name,
         content,
         token_count,
-        processed,
-        parent_id,
     ] := input[session_id],
         *entries{{
             session_id,
             entry_id,
-            timestamp,
             role,
             name,
             content,
             token_count,
-            processed,
-            parent_id,
         }}"""

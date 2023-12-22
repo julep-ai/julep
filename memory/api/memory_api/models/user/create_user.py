@@ -1,12 +1,11 @@
 create_user_query = """
-    ?[user_id, name, email, about, metadata] <- [
-        ["{user_id}", "{name}", "{email}", "{about}", {{}}]
+    ?[user_id, name, about, created_at] <- [
+        ["{user_id}", "{name}", "{about}", now()]
     ]
     
     :put users {{
         user_id =>
         name,
-        email,
         about,
-        metadata,
+        created_at,
     }}"""

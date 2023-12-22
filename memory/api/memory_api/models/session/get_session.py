@@ -1,26 +1,27 @@
 get_session_query = """
-        input[session_id] <- [[
+    input[session_id] <- [[
         to_uuid("{session_id}"),
     ]]
 
     ?[
-        character_id,
+        agent_id,
         user_id,
         session_id,
-        updated_at,
         situation,
         summary,
-        metadata,
+        updated_at,
         created_at,
     ] := input[session_id],
         *sessions{{
-            character_id,
-            user_id,
             session_id,
             situation,
             summary,
-            metadata,
-            updated_at: validity,
             created_at,
+            updated_at: validity,
             @ "NOW"
+        }},
+        *session_lookup{{
+            agent_id,
+            user_id,
+            session_id,
         }}, updated_at = to_int(validity)"""
