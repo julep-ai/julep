@@ -1,6 +1,7 @@
 # Data dirs
 cozo-data/
 cozo-*
+cozo.db/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
