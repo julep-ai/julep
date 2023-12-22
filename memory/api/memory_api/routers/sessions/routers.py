@@ -19,7 +19,10 @@ from memory_api.common.protocol.entries import Entry
 from memory_api.env import summarization_ratio_threshold
 from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
 from memory_api.clients.worker.worker import add_summarization_task
-from .queries import context_window_query_beliefs
+from memory_api.models.session.get_session import get_session_query
+from memory_api.models.session.create_session import create_session_query
+from memory_api.models.session.list_sessions import list_sessions_query
+from memory_api.models.session.context_window import context_window_query_beliefs
 
 
 models_map = {
@@ -32,36 +35,13 @@ router = APIRouter()
 
 @router.get("/sessions/{session_id}")
 async def get_session(session_id: UUID4) -> Session:
-    query = f"""
-        input[session_id] <- [[
-        to_uuid("{session_id}"),
-    ]]
-
-    ?[
-        character_id,
-        user_id,
-        session_id,
-        updated_at,
-        situation,
-        summary,
-        metadata,
-        created_at,
-    ] := input[session_id],
-        *sessions{{
-            character_id,
-            user_id,
-            session_id,
-            situation,
-            summary,
-            metadata,
-            updated_at: validity,
-            created_at,
-            @ "NOW"
-        }}, updated_at = to_int(validity)
-    """
-
     try:
-        res = [row.to_dict() for _, row in client.run(query).iterrows()][0]
+        res = [
+            row.to_dict() 
+            for _, row in client.run(
+                get_session_query.format(session_id=session_id),
+            ).iterrows()
+        ][0]
         return Session(**res)
     except (IndexError, KeyError):
         raise HTTPException(
@@ -72,59 +52,28 @@ async def get_session(session_id: UUID4) -> Session:
 
 @router.post("/sessions/", status_code=HTTP_201_CREATED)
 async def create_session(request: CreateSessionRequest) -> Session:
-    query = f"""
-        ?[session_id, agent_id, user_id, situation, metadata] <- [[
-        to_uuid("{request.id}"),
-        to_uuid("{request.agent_id}"),
-        to_uuid("{request.user_id}"),
-        "{request.situation}",
-        {{}},
-    ]]
-
-    :put sessions {{
-        agent_id,
-        user_id,
-        session_id,
-        situation,
-        metadata,
-    }}
-    """
-
-    client.run(query)
+    client.run(
+        create_session_query.format(
+            id=request.id,
+            agent_id=request.agent_id,
+            user_id=request.user_id,
+            situation=request.situation,
+        ),
+    )
 
     return await get_session(request.id)
 
 
 @router.get("/sessions/")
 async def list_sessions(limit: int = 100, offset: int = 0) -> list[Session]:
-    query = f"""
-    ?[
-        agent_id,
-        user_id,
-        session_id,
-        updated_at,
-        situation,
-        summary,
-        metadata,
-        created_at,
-    ] := *sessions{{
-        agent_id,
-        user_id,
-        session_id,
-        situation,
-        summary,
-        metadata,
-        updated_at: validity,
-        created_at,
-        @ "NOW"
-    }}
-
-    :limit {limit}
-    :offset {offset}
-    """
-
     return [
-        Session(**row.to_dict()) for _, row in client.run(query).iterrows()
+        Session(**row.to_dict()) 
+        for _, row in client.run(
+            list_sessions_query.format(
+                limit=limit, 
+                offset=offset,
+            ),
+        ).iterrows()
     ]
 
 
@@ -171,7 +120,7 @@ async def session_chat(session_id: UUID4, request: ChatRequest):
     
     add_entries(entries)
 
-    resp = client.run(context_window_query_beliefs.replace("{session_id}", session_id))
+    resp = client.run(context_window_query_beliefs.format(session_id=session_id))
 
     try:
         model_data = resp["model_data"][0]

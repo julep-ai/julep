@@ -8,35 +8,17 @@ from .protocol import (
     UpdateAgentRequest,
 )
 from memory_api.clients.cozo import client
+from memory_api.models.agent.create_agent import create_agent_query
+from memory_api.models.agent.get_agent import get_agent_query
+from memory_api.models.agent.list_agents import list_agents_query
 
 
 router = APIRouter()
 
 
 async def get_agent(agent_id: UUID4) -> Agent:
-    query = f"""
-    input[character_id] <- [[to_uuid("{agent_id}")]]
-
-    ?[
-        character_id,
-        name,
-        about,
-        metadata,
-        updated_at,
-        created_at,
-    ] := input[character_id],
-        *agents {{
-            character_id,
-            name,
-            about,
-            metadata,
-            updated_at: validity,
-            created_at,
-            @ "NOW"
-        }}, updated_at = to_int(validity)"""
-
     try:
-        res = [row.to_dict() for _, row in client.run(query).iterrows()][0]
+        res = [row.to_dict() for _, row in client.run(get_agent_query.format(agent_id=agent_id)).iterrows()][0]
         return Agent(**res)
     except (IndexError, KeyError):
         raise HTTPException(
@@ -80,49 +62,19 @@ async def update_agent(agent_id: UUID4, request: UpdateAgentRequest) -> Agent:
 
 @router.post("/agents", status_code=HTTP_201_CREATED)
 async def create_agent(agent: CreateAgentRequest) -> Agent:
-    query = f"""
-    ?[character_id, name, about, metadata] <- [
-        ["{agent.id}", "{agent.name}", "{agent.about}", {{}}]
-    ]
-    
-    :put agents {{
-        agent_id =>
-        name,
-        about,
-        metadata,
-    }}
-    """
-
-    client.run(query)
+    client.run(
+        create_agent_query.format(agent_id=agent.id, name=agent.name, about=agent.about),
+    )
 
     return await get_agent(agent_id=agent.id)
 
 
 @router.get("/agents")
 async def list_agents(limit: int = 100, offset: int = 0) -> list[Agent]:
-    query = f"""
-    ?[
-        agent_id,
-        name,
-        about,
-        metadata,
-        updated_at,
-        created_at,
-    ] := *agents {{
-            agent_id,
-            name,
-            about,
-            metadata,
-            updated_at: validity,
-            created_at,
-            @ "NOW"
-        }}, updated_at = to_int(validity)
-    
-    :limit {limit}
-    :offset {offset}
-    """
-
-    return [Agent(**row.to_dict()) for _, row in client.run(query).iterrows()]
+    return [
+        Agent(**row.to_dict()) 
+        for _, row in client.run(list_agents_query.format(limit=limit, offset=offset)).iterrows()
+    ]
 
 
 @router.get("/agents/{agent_id}/memories")
