@@ -1,305 +1,5 @@
-context_window_query = """
-{
-    # Goal of this block is to get:
-    # - character_id, user_id from session_id
-    # - get session.situation
-    # - also try to see if there's an entry with "situation" type
-    # - return all this
-    input[session_id] <- [[
-        to_uuid("{session_id}"),
-    ]]
-    
-    session[
-        character_id,
-        session_id,
-        user_id,
-        situation,
-        updated_at,
-    ] := input[session_id],
-        *sessions{
-            character_id,
-            user_id,
-            situation,
-            updated_at: validity,
-            @ "NOW"
-        }, updated_at = to_int(validity)
-
-    ?[
-        latest_entry_situation,
-        latest_entry_timestamp,
-        character_id,
-        session_id,
-        user_id,
-        situation,
-    ] := session[
-            character_id,
-            session_id,
-            user_id,
-            situation,
-            updated_at,
-        ],
-        *entries {
-            name,
-            role,
-            content: latest_entry_situation,
-            timestamp: latest_entry_timestamp,
-        }, role = "system", name = "situation"
-    
-    
-    ?[
-        latest_entry_situation,
-        latest_entry_timestamp,
-        character_id,
-        session_id,
-        user_id,
-        situation,
-    ] := session[
-            character_id,
-            session_id,
-            user_id,
-            situation,
-            updated_at,
-        ],
-        latest_entry_situation = null,
-        latest_entry_timestamp = updated_at,
-    
-    :sort -latest_entry_timestamp
-    :limit 1
-
-    # Tables created inside these blocks are temporary and discarded after query ends
-    :create _t1 {
-        latest_entry_situation,
-        latest_entry_timestamp,
-        character_id,
-        session_id,
-        user_id,
-        situation,
-    }
-}
-
-{
-    # In this block, we pick between session.situation and latest situation entry if any
-    ?[situation, situation_timestamp] := *_t1 {
-        latest_entry_situation: situation,
-        latest_entry_timestamp: situation_timestamp,
-        situation: _,
-    }, situation != null
-
-    ?[situation, situation_timestamp] := *_t1 {
-        latest_entry_situation: _,
-        latest_entry_timestamp: situation_timestamp,
-        situation,
-    }
-
-    :limit 1
-    :create _t2 {
-        situation,
-        situation_timestamp,
-    }
-}
-
-{
-    # In this block, we get model settings based on character.model
-    ?[
-        model_name,
-        max_length,
-        default_settings,
-    ] := *_t1{
-            character_id,
-        },
-        *characters {
-            character_id,
-            model: model_name,
-        },
-        *models {
-            model_name,
-            max_length,
-            default_settings,
-            @ "NOW"
-        }
-    
-    :create _t3 {
-        model_name,
-        max_length,
-        default_settings,
-    }
-}
-
-{
-    # In this, get user.name, user.about, character.name, character.about
-    ?[
-        user_name,
-        user_about,
-        character_name,
-        character_about,
-    ] := *_t1 {
-        character_id,
-        user_id,
-    }, *users {
-        user_id,
-        name: user_name,
-        about: user_about,
-    }, *characters {
-        character_id,
-        name: character_name,
-        about: character_about,
-    }
-        
-    :create _t4 {
-        user_name,
-        user_about,
-        character_name,
-        character_about,
-    }
-}
-
-{
-    # Get all entries in session where parent == null (top nodes)
-    # and filter out situation tags
-    ?[
-        entry_id,
-        timestamp,
-        role,
-        name,
-        content,
-        token_count,
-    ] := *_t1 {
-        session_id,
-    }, *entries {
-        session_id,
-        entry_id,
-        timestamp,
-        role,
-        name,
-        content,
-        token_count,
-        parent_id,
-    },
-    parent_id = null,
-    (role != "system" && name != "situation")
-
-    :sort timestamp
-    :create _t5 {
-        entry_id,
-        timestamp,
-        role,
-        name,
-        content,
-        token_count,
-    }
-}
-
-{
-    # Collect entries together as array of jsons
-    entry_list[
-        collect(data),
-        sum(token_count),
-    ] := *_t5 {
-        entry_id,
-        timestamp,
-        role,
-        name,
-        content,
-        token_count,
-    }, data = {
-        "entry_id": entry_id,
-        "timestamp": timestamp,
-        "role": role,
-        "name": name,
-        "content": content,
-        "token_count": token_count,
-    }
-    
-    ?[
-        model_data,
-        user_data,
-        character_data,
-        entries,
-        total_tokens,
-        situation,
-        situation_timestamp,
-    ] := *_t2 {
-        situation,
-        situation_timestamp,
-    }, *_t4 {
-        user_name,
-        user_about,
-        character_name,
-        character_about,
-    }, *_t3 {
-        model_name,
-        max_length,
-        default_settings,
-    }, entry_list[entries, total_tokens_float], user_data = {
-        "name": user_name,
-        "about": user_about,
-    }, character_data = {
-        "name": character_name,
-        "about": character_about,
-    }, model_data = {
-        "model_name": model_name,
-        "max_length": max_length,
-        "default_settings": default_settings,
-    },
-    total_tokens = to_int(total_tokens_float)
-
-    :create _t6 {
-        model_data,
-        user_data,
-        character_data,
-        entries,
-        total_tokens,
-        situation,
-        situation_timestamp,
-    }
-}
-
-{
-    # Add situation and about info sections on top
-    ?[
-        model_data,
-        entries,
-        total_tokens,
-        character_data,
-    ] := *_t6 {
-        model_data,
-        user_data,
-        character_data,
-        entries: filtered_entries,
-        total_tokens: filtered_total_tokens,
-        situation,
-        situation_timestamp,
-    }, 
-    about_content = concat(
-        "About '", get(user_data, "name", "User"), "': ",
-        get(user_data, "about"), ". ",
-        "About '", get(character_data, "name", "Me"), "': ",
-        get(character_data, "about")
-    ),
-    situation_tokens = to_int(length(situation) / 3.2),
-    about_tokens = to_int(length(about_content) / 3.2),
-    total_tokens = filtered_total_tokens + about_tokens + situation_tokens,
-    entries = concat([
-        {
-            "role": "system",
-            "name": "situation",
-            "content": situation,
-            "timestamp": situation_timestamp,
-            "token_count": situation_tokens,
-        }, {
-            "role": "system",
-            "name": "information",
-            "content": about_content,
-            "timestamp": situation_timestamp,
-            "token_count": about_tokens,
-        }
-    ], filtered_entries)
-}
-"""
-
-
 context_window_query_beliefs = """
-{
+{{
     # Goal of this block is to get:
     # - character_id, user_id from session_id
     # - get session.situation
@@ -324,13 +24,13 @@ context_window_query_beliefs = """
             session_id,
             dialog_embedding,
         ],
-        *sessions{
+        *sessions{{
             character_id,
             user_id,
             situation,
             updated_at: validity,
             @ 'NOW'
-        }, updated_at = to_int(validity)
+        }}, updated_at = to_int(validity)
 
     ?[
         latest_entry_situation,
@@ -348,12 +48,12 @@ context_window_query_beliefs = """
             updated_at,
             dialog_embedding,
         ],
-        *entries {
+        *entries {{
             name,
             role,
             content: latest_entry_situation,
             timestamp: latest_entry_timestamp,
-        }, role = 'system', name = 'situation'
+        }}, role = 'system', name = 'situation'
     
     
     ?[
@@ -379,7 +79,7 @@ context_window_query_beliefs = """
     :limit 1
 
     # Tables created inside these blocks are temporary and discarded after query ends
-    :create _t1 {
+    :create _t1 {{
         latest_entry_situation,
         latest_entry_timestamp,
         character_id,
@@ -387,86 +87,86 @@ context_window_query_beliefs = """
         user_id,
         situation,
         dialog_embedding,
-    }
-}
+    }}
+}}
 
-{
+{{
     # In this block, we pick between session.situation and latest situation entry if any
-    ?[situation, situation_timestamp] := *_t1 {
+    ?[situation, situation_timestamp] := *_t1 {{
         latest_entry_situation: situation,
         latest_entry_timestamp: situation_timestamp,
         situation: _,
-    }, situation != null
+    }}, situation != null
 
-    ?[situation, situation_timestamp] := *_t1 {
+    ?[situation, situation_timestamp] := *_t1 {{
         latest_entry_situation: _,
         latest_entry_timestamp: situation_timestamp,
         situation,
-    }
+    }}
 
     :limit 1
-    :create _t2 {
+    :create _t2 {{
         situation,
         situation_timestamp,
-    }
-}
+    }}
+}}
 
-{
+{{
     # In this block, we get model settings based on character.model
     ?[
         model_name,
         max_length,
         default_settings,
-    ] := *_t1{
+    ] := *_t1{{
             character_id,
-        },
-        *characters {
+        }},
+        *characters {{
             character_id,
             model: model_name,
-        },
-        *models {
+        }},
+        *models {{
             model_name,
             max_length,
             default_settings,
             @ 'NOW'
-        }
+        }}
     
-    :create _t3 {
+    :create _t3 {{
         model_name,
         max_length,
         default_settings,
-    }
-}
+    }}
+}}
 
-{
+{{
     # In this, get user.name, user.about, character.name, character.about
     ?[
         user_name,
         user_about,
         character_name,
         character_about,
-    ] := *_t1 {
+    ] := *_t1 {{
         character_id,
         user_id,
-    }, *users {
+    }}, *users {{
         user_id,
         name: user_name,
         about: user_about,
-    }, *characters {
+    }}, *characters {{
         character_id,
         name: character_name,
         about: character_about,
-    }
+    }}
         
-    :create _t4 {
+    :create _t4 {{
         user_name,
         user_about,
         character_name,
         character_about,
-    }
-}
+    }}
+}}
 
-{
+{{
     # Get all entries in session where parent == null (top nodes)
     # and filter out situation tags
     ?[
@@ -476,9 +176,9 @@ context_window_query_beliefs = """
         name,
         content,
         token_count,
-    ] := *_t1 {
+    ] := *_t1 {{
         session_id,
-    }, *entries {
+    }}, *entries {{
         entry_id,
         session_id,
         timestamp,
@@ -487,49 +187,49 @@ context_window_query_beliefs = """
         content,
         token_count,
         parent_id,
-    },
+    }},
     parent_id = null,
     (role != 'system' && name != 'situation')
 
     :sort timestamp
-    :create _t5 {
+    :create _t5 {{
         entry_id,
         timestamp,
         role,
         name,
         content,
         token_count,
-    }
-}
+    }}
+}}
 
-{
+{{
     # Get dialog (up to last 4 turns) for searching beliefs
     ?[
         timestamp,
         turn,
     ] :=
-        *_t5 {
+        *_t5 {{
             timestamp,
             role,
             name,
             content,
-        },
+        }},
         role = 'user' or role = 'assistant',
         k = name ~ role,
         turn = k ++ ' said ' ++ content ++ '\n',
 
     :sort -timestamp
     :limit 4 * 2
-    :create _last_4_turns {
+    :create _last_4_turns {{
         turn,
         timestamp,
-    }
-}
+    }}
+}}
 
-{
+{{
     collected[
         collect(turn),
-    ] := *_last_4_turns { turn }
+    ] := *_last_4_turns {{ turn }}
 
     ?[
         dialog,
@@ -538,12 +238,12 @@ context_window_query_beliefs = """
         turns = reverse(rev_turns),
         dialog = from_substrings(turns),
 
-    :create _dialog {
+    :create _dialog {{
         dialog,
-    }
-}
+    }}
+}}
 
-{
+{{
     # Search relevant beliefs by fts
     ?[
         referrent_is_user,
@@ -555,21 +255,21 @@ context_window_query_beliefs = """
         valence,
         score,
     ] :=
-        *_t1 {
+        *_t1 {{
             character_id,
             user_id,
             situation,
-        },
-        *_dialog {
+        }},
+        *_dialog {{
             dialog,
-        },
+        }},
         referrent_id = character_id
         or referrent_id = user_id
         or subject_id = character_id
         or subject_id = user_id
         or subject_id = null
         ,
-        ~beliefs:summary {
+        ~beliefs:summary {{
             referrent_is_user,
             referrent_id,
             subject_is_user,
@@ -583,9 +283,9 @@ context_window_query_beliefs = """
             k: 3 * 4,  # 3 beliefs per user/character combo
             score_kind: 'tf_idf',
             bind_score: score,
-        }
+        }}
     
-    :create _beliefs_fts {
+    :create _beliefs_fts {{
         referrent_is_user,
         referrent_id,
         subject_is_user,
@@ -594,10 +294,10 @@ context_window_query_beliefs = """
         belief,
         valence,
         score,
-    }
-}
+    }}
+}}
 
-{
+{{
     # Search relevant beliefs by hnsw
     ?[
         referrent_is_user,
@@ -609,18 +309,18 @@ context_window_query_beliefs = """
         valence,
         score,
     ] :=
-        *_t1 {
+        *_t1 {{
             character_id,
             user_id,
             dialog_embedding,
-        },
+        }},
         referrent_id = character_id
         or referrent_id = user_id
         or subject_id = character_id
         or subject_id = user_id
         or subject_id = null
         ,
-        ~beliefs:fact_embedding_space {
+        ~beliefs:fact_embedding_space {{
             referrent_is_user,
             referrent_id,
             subject_is_user,
@@ -634,10 +334,10 @@ context_window_query_beliefs = """
             ef: 100,
             bind_distance: dist,
             radius: 100000.0,
-        },
+        }},
         score = 1.0 - dist
     
-    :create _beliefs_hnsw {
+    :create _beliefs_hnsw {{
         referrent_is_user,
         referrent_id,
         subject_is_user,
@@ -646,10 +346,10 @@ context_window_query_beliefs = """
         belief,
         valence,
         score,
-    }
-}
+    }}
+}}
     
-{
+{{
     beliefs[
         referrent_is_user,
         referrent_id,
@@ -660,7 +360,7 @@ context_window_query_beliefs = """
         valence,
         score,
     ] :=
-        *_beliefs_fts {
+        *_beliefs_fts {{
             referrent_is_user,
             referrent_id,
             subject_is_user,
@@ -669,8 +369,8 @@ context_window_query_beliefs = """
             belief,
             valence,
             score,
-        },
-        *_beliefs_hnsw {
+        }},
+        *_beliefs_hnsw {{
             referrent_is_user,
             referrent_id,
             subject_is_user,
@@ -679,7 +379,7 @@ context_window_query_beliefs = """
             belief,
             valence,
             score,
-        }
+        }}
 
     z[
         min(score),
@@ -740,10 +440,10 @@ context_window_query_beliefs = """
             adjusted_score,
             adjusted_valence,
         ],
-        *_t4 {
+        *_t4 {{
             character_name,
             user_name,
-        },
+        }},
         prefix = cond(
             from_user && about_themselves,
             user_name ++ ' thinks about themselves that: ',
@@ -764,43 +464,43 @@ context_window_query_beliefs = """
 
     :sort -score
     :limit 3
-    :create _t6 {
+    :create _t6 {{
         statement,
         score,
         num_tokens,
-    }
-}
+    }}
+}}
 
-{
+{{
     # Collect entries together as array of jsons
     entry_list[
         collect(data),
         sum(token_count),
-    ] := *_t5 {
+    ] := *_t5 {{
         entry_id,
         timestamp,
         role,
         name,
         content,
         token_count,
-    }, data = {
+    }}, data = {{
         'entry_id': entry_id,
         'timestamp': timestamp,
         'role': role,
         'name': name,
         'content': content,
         'token_count': token_count,
-    }
+    }}
 
     # Add beliefs to entries
     belief_info[
         collect(statement),
         sum(num_tokens),
     ] :=
-        *_t6 {
+        *_t6 {{
             statement,
             num_tokens,
-        }
+        }}
 
     entry_list[
         collect(data),
@@ -811,32 +511,32 @@ context_window_query_beliefs = """
             num_tokens,
         ],
         formatted = concat(statements),
-        data = {
+        data = {{
             'timestamp': 0,
             'role': 'system',
             'name': 'information',
             'content': formatted,
             'token_count': num_tokens,
-        }
+        }}
 
     entry_list[
         collect(data),
         sum(token_count),
-    ] := *_t5 {
+    ] := *_t5 {{
         entry_id,
         timestamp,
         role,
         name,
         content,
         token_count,
-    }, data = {
+    }}, data = {{
         'entry_id': entry_id,
         'timestamp': timestamp,
         'role': role,
         'name': name,
         'content': content,
         'token_count': token_count,
-    }
+    }}
 
     ?[
         model_data,
@@ -846,32 +546,32 @@ context_window_query_beliefs = """
         total_tokens,
         situation,
         situation_timestamp,
-    ] := *_t2 {
+    ] := *_t2 {{
         situation,
         situation_timestamp,
-    }, *_t4 {
+    }}, *_t4 {{
         user_name,
         user_about,
         character_name,
         character_about,
-    }, *_t3 {
+    }}, *_t3 {{
         model_name,
         max_length,
         default_settings,
-    }, entry_list[entries, total_tokens_float], user_data = {
+    }}, entry_list[entries, total_tokens_float], user_data = {{
         'name': user_name,
         'about': user_about,
-    }, character_data = {
+    }}, character_data = {{
         'name': character_name,
         'about': character_about,
-    }, model_data = {
+    }}, model_data = {{
         'model_name': model_name,
         'max_length': max_length,
         'default_settings': default_settings,
-    },
+    }},
     total_tokens = to_int(total_tokens_float)
 
-    :create _t7 {
+    :create _t7 {{
         model_data,
         user_data,
         character_data,
@@ -879,17 +579,17 @@ context_window_query_beliefs = """
         total_tokens,
         situation,
         situation_timestamp,
-    }
-}
+    }}
+}}
 
-{
+{{
     # Add situation and about info sections on top
     ?[
         model_data,
         entries,
         total_tokens,
         character_data,
-    ] := *_t7 {
+    ] := *_t7 {{
         model_data,
         user_data,
         character_data,
@@ -897,7 +597,7 @@ context_window_query_beliefs = """
         total_tokens: filtered_total_tokens,
         situation,
         situation_timestamp,
-    }, 
+    }}, 
     about_content = concat(
         'About "', get(user_data, 'name', 'User'), '": ',
         get(user_data, 'about'), '\n\n',
@@ -908,19 +608,19 @@ context_window_query_beliefs = """
     about_tokens = to_int(length(about_content) / 3.2),
     total_tokens = filtered_total_tokens + about_tokens + situation_tokens,
     entries = concat([
-        {
+        {{
             'role': 'system',
             'name': 'situation',
             'content': situation,
             'timestamp': situation_timestamp,
             'token_count': situation_tokens,
-        }, {
+        }}, {{
             'role': 'system',
             'name': 'information',
             'content': about_content,
             'timestamp': situation_timestamp,
             'token_count': about_tokens,
-        }
+        }}
     ], filtered_entries)
-}
+}}
 """

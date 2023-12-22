@@ -2,6 +2,9 @@ from pydantic import UUID4
 from fastapi import APIRouter, HTTPException, status
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from memory_api.clients.cozo import client
+from memory_api.models.user.create_user import create_user_query
+from memory_api.models.user.get_user import get_user_query
+from memory_api.models.user.list_users import list_users_query
 from .protocol import User, CreateUserRequest, UpdateUserRequest
 
 
@@ -23,10 +26,10 @@ async def delete_user(user_id: UUID4):
 async def update_user(user_id: UUID4, request: UpdateUserRequest):
     try:
         client.update(
-            "users", 
+            "users",
             {
-                "user_id": user_id, 
-                "about": request.about, 
+                "user_id": user_id,
+                "about": request.about,
             }
         )
         #TODO: add additional info update
@@ -39,75 +42,34 @@ async def update_user(user_id: UUID4, request: UpdateUserRequest):
 
 @router.post("/users", status_code=HTTP_201_CREATED)
 async def create_user(request: CreateUserRequest) -> User:
-    create_query = f"""
-        ?[user_id, name, email, about, metadata] <- [
-            ["{request.id}", "{request.name}", "{request.email}", "{request.about}", {{}}]
-        ]
-        
-        :put users {{
-            user_id =>
-            name,
-            email,
-            about,
-            metadata,
-        }}
-    """
-    
-    client.run(create_query)
-
-    get_query = f"""
-        input[user_id] <- [[to_uuid("{request.id}")]]
-
-        ?[
-            user_id,
-            name,
-            email,
-            about,
-            metadata,
-            updated_at,
-            created_at,
-        ] := input[user_id],
-            *users {{
-                user_id,
-                name,
-                email,
-                about,
-                metadata,
-                updated_at: validity,
-                created_at,
-                @ "NOW"
-            }}, updated_at = to_int(validity)"""
+    client.run(
+        create_user_query.format(
+            id=request.id,
+            name=request.name,
+            email=request.email,
+            about=request.about,
+        ),
+    )
 
     #TODO: add additional info
-    res = [row.to_dict() for _, row in client.run(get_query).iterrows()][0]
+    res = [
+        row.to_dict()
+        for _, row in client.run(
+            get_user_query.format(id=request.id),
+        ).iterrows()
+    ][0]
     return User(**res)
 
 
 @router.get("/users")
 async def list_users(limit: int = 100, offset: int = 0) -> list[User]:
-    query = f"""
-    ?[
-        user_id,
-        name,
-        email,
-        about,
-        metadata,
-        updated_at,
-        created_at,
-    ] := *users {{
-            user_id,
-            name,
-            email,
-            about,
-            metadata,
-            updated_at: validity,
-            created_at,
-            @ "NOW"
-        }}, updated_at = to_int(validity)
-    
-    :limit {limit}
-    :offset {offset}
-    """
-
     #TODO: add additional info
-    return [User(**row.to_dict()) for _, row in client.run(query).iterrows()]
+    return [
+        User(**row.to_dict())
+        for _, row in client.run(
+            list_users_query.format(
+                limit=limit,
+                offset=offset,
+            ),
+        ).iterrows()
+    ]
