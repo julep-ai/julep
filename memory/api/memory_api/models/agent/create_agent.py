@@ -1,11 +1,11 @@
 create_agent_query = """
-    ?[character_id, name, about, metadata] <- [
-        ["{agent_id}", "{name}", "{about}", {{}}]
+    ?[agent_id, name, about, created_at] <- [
+        ["{agent_id}", "{name}", "{about}", now()]
     ]
     
     :put agents {{
         agent_id =>
         name,
         about,
-        metadata,
+        created_at,
     }}"""
