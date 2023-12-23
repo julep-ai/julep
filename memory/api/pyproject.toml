@@ -23,6 +23,7 @@ sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 ipython = "^8.18.1"
+black = "^23.12.1"
 
 [build-system]
 requires = ["poetry-core"]
