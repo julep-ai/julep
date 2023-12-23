@@ -14,15 +14,15 @@ from .protocol import (
     ChatMessage,
 )
 from memory_api.clients.cozo import client
-from memory_api.common.db.entries import add_entries
 from memory_api.common.protocol.entries import Entry
 from memory_api.env import summarization_ratio_threshold
 from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
 from memory_api.clients.worker.worker import add_summarization_task
+from memory_api.models.entry.add_entries import add_entries
 from memory_api.models.session.get_session import get_session_query
 from memory_api.models.session.create_session import create_session_query
 from memory_api.models.session.list_sessions import list_sessions_query
-from memory_api.models.session.context_window import context_window_query_beliefs
+from memory_api.models.session.old_context_window import context_window_query_beliefs
 
 
 models_map = {
@@ -121,7 +121,7 @@ async def session_chat(session_id: UUID4, request: ChatRequest):
 
     add_entries(entries)
 
-    resp = client.run(context_window_query_beliefs.format(session_id=session_id))
+    resp = client.run(context_window_query_beliefs(session_id=session_id))
 
     try:
         model_data = resp["model_data"][0]

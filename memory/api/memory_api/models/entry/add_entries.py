@@ -1,13 +1,16 @@
-from ..protocol.entries import Entry
+from memory_api.common.protocol.entries import Entry
 from memory_api.clients.cozo import client
 
 
 def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None:
     def _aux_content(e: Entry):
         return e.content.replace('"', "'")
+    
+    def _aux_tokens_count(e: Entry):
+        return e.token_count if e.token_count else len(e.content) // 3.5
 
     entries_lst = [
-        f'[to_uuid("{e.session_id}"), "{e.role}", "{e.name}", "{_aux_content(e)}", {e.token_count}]'
+        f'[to_uuid("{e.session_id}"), "{e.source}", "{e.role}", "{e.name}", "{_aux_content(e)}", {_aux_tokens_count(e)}, "{e.tokenizer}"]'
         for e in entries
         if e.content
     ]
@@ -18,16 +21,19 @@ def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None
     entries_query = ",\n".join(entries_lst)
 
     query = f"""
-    ?[session_id, role, name, content, token_count] <- [
+    ?[session_id, source, role, name, content, token_count, tokenizer] <- [
         {entries_query}
-    ]
+    ], created_at = now()
 
     :put entries {{
         session_id,
+        source,
         role,
-        name,
+        name =>
         content,
         token_count,
+        tokenizer,
+        created_at,
     }}
     """
 
@@ -43,24 +49,24 @@ def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None
         ?[
             session_id,
             entry_id,
-            timestamp,
+            source,
             role,
             name,
             content,
             token_count,
-            processed,
-            parent_id,
+            tokenizer,
+            created_at,
         ] := input[session_id],
             *entries{{
                 session_id,
                 entry_id,
-                timestamp,
+                source,
                 role,
                 name,
                 content,
                 token_count,
-                processed,
-                parent_id,
+                tokenizer,
+                created_at,
             }}
         """
 

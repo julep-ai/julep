@@ -6,7 +6,7 @@ from operator import itemgetter
 from fastapi import HTTPException, status
 from pydantic import UUID4
 from memory_api.clients.cozo import client
-from memory_api.common.db.entries import add_entries
+from memory_api.models.entry.add_entries import add_entries
 from memory_api.common.protocol.entries import Entry
 from memory_api.env import summarization_ratio_threshold
 from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML

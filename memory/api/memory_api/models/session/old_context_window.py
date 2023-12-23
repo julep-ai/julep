@@ -1,4 +1,4 @@
-def context_window_query_beliefs(session_id): 
+def context_window_query_beliefs(session_id):
     return f"""
 {{
     # Goal of this block is to get:
