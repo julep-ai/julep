@@ -1,4 +1,4 @@
-def list_sessions_query(limit, offset): 
+def list_sessions_query(limit, offset):
     return f"""
     ?[
         agent_id,
