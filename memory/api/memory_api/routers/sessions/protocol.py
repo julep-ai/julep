@@ -22,7 +22,7 @@ class ToolType(str, Enum):
 
 
 class ResponseFormatType(str, Enum):
-    text = "text", 
+    text = ("text",)
     json_object = "json_object"
 
 

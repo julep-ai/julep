@@ -73,10 +73,10 @@ def init():
     }
     """
     queries = [
-        query, 
-        idx_query_1, 
-        idx_query_2, 
-        vec_idx_query_1, 
+        query,
+        idx_query_1,
+        idx_query_2,
+        vec_idx_query_1,
         fts_idx_query,
     ]
 

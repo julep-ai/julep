@@ -18,7 +18,12 @@ router = APIRouter()
 
 async def get_agent(agent_id: UUID4) -> Agent:
     try:
-        res = [row.to_dict() for _, row in client.run(get_agent_query.format(agent_id=agent_id)).iterrows()][0]
+        res = [
+            row.to_dict()
+            for _, row in client.run(
+                get_agent_query.format(agent_id=agent_id)
+            ).iterrows()
+        ][0]
         return Agent(**res)
     except (IndexError, KeyError):
         raise HTTPException(
@@ -51,7 +56,7 @@ async def update_agent(agent_id: UUID4, request: UpdateAgentRequest) -> Agent:
                 #     {"type": t.type_, "definition": t.definition}
                 #     for t in request.tools
                 # },
-            }
+            },
         )
     except (IndexError, KeyError):
         raise HTTPException(
@@ -63,7 +68,9 @@ async def update_agent(agent_id: UUID4, request: UpdateAgentRequest) -> Agent:
 @router.post("/agents", status_code=HTTP_201_CREATED)
 async def create_agent(agent: CreateAgentRequest) -> Agent:
     client.run(
-        create_agent_query.format(agent_id=agent.id, name=agent.name, about=agent.about),
+        create_agent_query.format(
+            agent_id=agent.id, name=agent.name, about=agent.about
+        ),
     )
 
     return await get_agent(agent_id=agent.id)
@@ -73,7 +80,9 @@ async def create_agent(agent: CreateAgentRequest) -> Agent:
 async def list_agents(limit: int = 100, offset: int = 0) -> list[Agent]:
     return [
         Agent(**row.to_dict())
-        for _, row in client.run(list_agents_query.format(limit=limit, offset=offset)).iterrows()
+        for _, row in client.run(
+            list_agents_query.format(limit=limit, offset=offset)
+        ).iterrows()
     ]
 
 

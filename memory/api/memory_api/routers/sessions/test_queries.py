@@ -1,9 +1,9 @@
 import pytest
 from pycozo.client import Client
 from memory_api.routers import (
-    agents, 
-    sessions, 
-    users, 
+    agents,
+    sessions,
+    users,
     entries,
     models,
     personality,
@@ -134,7 +134,9 @@ def test_context_window_session_does_not_exist(insert_data):
 
 
 def test_context_window_session_exists_no_entries(insert_data):
-    res = client.run(context_window_query_beliefs.replace("{session_id}", insert_data["session_id"]))
+    res = client.run(
+        context_window_query_beliefs.replace("{session_id}", insert_data["session_id"])
+    )
     """
     [
         {'content': 'you an AI assistant talking to people about life', 'name': 'situation', 'role': 'system', 'timestamp': 1698754343, 'token_count': 15}, 

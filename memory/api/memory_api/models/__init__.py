@@ -3,6 +3,7 @@ from .entry.schema import init as entry_init
 from .session.schema import init as session_init
 from .user.schema import init as user_init
 
+
 def init():
     agent_init()
     entry_init()

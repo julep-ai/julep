@@ -27,7 +27,7 @@ def init():
         content: String,
         vector: <F32; 768>,
     }"""
-    
+
     try:
         for query in [users, additional_info]:
             client.run(query)

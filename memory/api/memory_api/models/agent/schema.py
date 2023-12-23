@@ -14,6 +14,7 @@ create_agents_relation_query = """
 }
 """
 
+
 def init():
     sep = "\n}\n\n{\n"
     joined_queries = sep.join([create_agents_relation_query])

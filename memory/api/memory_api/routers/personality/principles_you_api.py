@@ -18,17 +18,26 @@ oauth_url = f"https://{client_id}:{client_secret}@{cogito_endpoint}"
 me_endpoint = f"{endpoint_base}/api/v2/me"
 list_tenants_endpoint = f"{endpoint_base}/api/v1/integration_account_tenant_ids"
 tenants_endpoint = f"{endpoint_base}/api/v1/integration_account_tenants"
-users_endpoint = lambda tenant_id: f"{endpoint_base}/api/v1/integration_account_tenants/{tenant_id}/users"
+users_endpoint = (
+    lambda tenant_id: f"{endpoint_base}/api/v1/integration_account_tenants/{tenant_id}/users"
+)
 questions_endpoint = f"{endpoint_base}/api/v1/assessment/questions"
 answers_endpoint = f"{endpoint_base}/api/v1/assessment/answers"
-shortscale_results_endpoint = lambda accountId: f"{endpoint_base}/api/v1/shortscale_results/{accountId}"
-full_results_endpoint = lambda accountId: f"{endpoint_base}/api/v2/assesment_results/{accountId}"
-pdf_endpoint = lambda accountId: f"{endpoint_base}/api/v1/assessment_results/{accountId}/pdf"
+shortscale_results_endpoint = (
+    lambda accountId: f"{endpoint_base}/api/v1/shortscale_results/{accountId}"
+)
+full_results_endpoint = (
+    lambda accountId: f"{endpoint_base}/api/v2/assesment_results/{accountId}"
+)
+pdf_endpoint = (
+    lambda accountId: f"{endpoint_base}/api/v1/assessment_results/{accountId}/pdf"
+)
 
 
 ###########
 ## Utils ##
 ###########
+
 
 async def make_request(method: str, url: str, **kwargs):
     async with httpx.AsyncClient() as client:
@@ -37,14 +46,14 @@ async def make_request(method: str, url: str, **kwargs):
         response = await req(url, **kwargs)
         response.raise_for_status()
         result = response.json()
-    
-    return result
 
+    return result
 
 
 ##########
 ## Auth ##
 ##########
+
 
 # Get access token
 @alru_cache(maxsize=1, ttl=3000)
@@ -62,10 +71,7 @@ async def get_access_token():
     """
 
     response = await make_request(
-        "post",
-        oauth_url,
-        headers=oauth_headers,
-        data=oauth_payload_txt
+        "post", oauth_url, headers=oauth_headers, data=oauth_payload_txt
     )
 
     access_token = response["access_token"]
@@ -76,9 +82,7 @@ async def get_access_token():
 # Get Me
 async def get_me():
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
     response = await make_request(
         "get",
         me_endpoint,
@@ -93,18 +97,14 @@ async def get_me():
 ## Ops ##
 #########
 
+
 # Create tenant
 async def create_tenant(name: str = "Julep Tenant"):
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
     tenant_params = dict(fields=dict(name=name))
     response = await make_request(
-        "post",
-        tenants_endpoint,
-        headers=access_token_header,
-        json=tenant_params
+        "post", tenants_endpoint, headers=access_token_header, json=tenant_params
     )
     tenant = response["tenant"]
 
@@ -115,9 +115,7 @@ async def create_tenant(name: str = "Julep Tenant"):
 @alru_cache(maxsize=1)
 async def list_tenants():
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
     response = await make_request(
         "get",
         list_tenants_endpoint,
@@ -138,17 +136,12 @@ async def get_tenant_id():
 # Create user
 async def create_user(email: str, display_name: str, tenant_id: str):
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
 
     user_params = dict(email=email, displayName=display_name)
-    
+
     response = await make_request(
-        "post",
-        users_endpoint(tenant_id),
-        headers=access_token_header,
-        json=user_params
+        "post", users_endpoint(tenant_id), headers=access_token_header, json=user_params
     )
 
     tenantUser = response["tenantUser"]
@@ -159,10 +152,8 @@ async def create_user(email: str, display_name: str, tenant_id: str):
 # Get assessment questions
 async def get_qs(account_id):
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
-    
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
+
     assessment_headers = access_token_header | {"x-on-behalf-of": account_id}
 
     assessment_qs = await make_request(
@@ -177,17 +168,12 @@ async def get_qs(account_id):
 # Submit assessment answers
 async def submit_ans(account_id, answers: list[dict[str, int]]):
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
-    
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
+
     assessment_headers = access_token_header | {"x-on-behalf-of": account_id}
 
     response = await make_request(
-        "post",
-        answers_endpoint,
-        headers=assessment_headers,
-        json=dict(answers=answers)
+        "post", answers_endpoint, headers=assessment_headers, json=dict(answers=answers)
     )
 
     assessment_progress = response["assessmentProgress"]
@@ -198,10 +184,8 @@ async def submit_ans(account_id, answers: list[dict[str, int]]):
 # get results
 async def get_shortscale_result(account_id):
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
-        
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
+
     result_headers = access_token_header | {"x-on-behalf-of": account_id}
 
     response = await make_request(
@@ -215,10 +199,8 @@ async def get_shortscale_result(account_id):
 
 async def get_full_assesment_result(account_id):
     access_token = await get_access_token()
-    access_token_header = dict(
-        Authorization=f"Bearer {access_token}"
-    )
-        
+    access_token_header = dict(Authorization=f"Bearer {access_token}")
+
     result_headers = access_token_header | {"x-on-behalf-of": account_id}
 
     response = await make_request(
@@ -234,7 +216,9 @@ async def run_interative(account_id, endstate: str = "shortscaleComplete"):
     questions_so_far = []
     answers_so_far = []
 
-    while not (assessment_qs := await get_qs(account_id))["assessmentProgress"][endstate]:
+    while not (assessment_qs := await get_qs(account_id))["assessmentProgress"][
+        endstate
+    ]:
         questions = assessment_qs["questions"]
         questions_so_far.extend(questions)
         new_answers = []
@@ -242,7 +226,9 @@ async def run_interative(account_id, endstate: str = "shortscaleComplete"):
         for q in questions:
             questionNumber = q["number"]
             answerNumber = int(input(f"{q['text']}: (1-7):"))
-            new_answers.append(dict(questionNumber=questionNumber, answerNumber=answerNumber))
+            new_answers.append(
+                dict(questionNumber=questionNumber, answerNumber=answerNumber)
+            )
 
         await submit_ans(account_id, new_answers)
 
