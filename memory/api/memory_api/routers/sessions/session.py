@@ -33,7 +33,9 @@ class BaseSession:
         session_data = await self.get_session_data()
 
         # Assemble context
-        init_context, final_settings = await self.forward(session_data, new_input, settings)
+        init_context, final_settings = await self.forward(
+            session_data, new_input, settings
+        )
 
         # Generate response
         response = await self.generate(init_context, final_settings)
@@ -47,16 +49,19 @@ class BaseSession:
 
         return response, backward_pass
 
-  
-    async def forward(self, session_data, new_input, settings) -> Tuple[ChatML, Settings]:
+    async def forward(
+        self, session_data, new_input, settings
+    ) -> Tuple[ChatML, Settings]:
         entries: list[Entry] = []
         for m in new_input:
             m.session_id = self.session_id
             entries.append(m)
-        
+
         add_entries(entries)
 
-        resp = client.run(context_window_query_beliefs.replace("{session_id}", self.session_id))
+        resp = client.run(
+            context_window_query_beliefs.replace("{session_id}", self.session_id)
+        )
 
         try:
             model_data = resp["model_data"][0]
@@ -66,24 +71,29 @@ class BaseSession:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Character or model data not found",
             )
-        
+
         entries = sorted(resp["entries"][0], key=itemgetter("timestamp"))
-        summarization_threshold = model_data["max_length"] * summarization_ratio_threshold
+        summarization_threshold = (
+            model_data["max_length"] * summarization_ratio_threshold
+        )
 
         if resp["total_tokens"][0] >= summarization_threshold:
             await add_summarization_task(
                 MemoryManagementTaskArgs(
-                    session_id=self.session_id, 
-                    model=models_map.get(model_data["model_name"], model_data["model_name"]), 
+                    session_id=self.session_id,
+                    model=models_map.get(
+                        model_data["model_name"], model_data["model_name"]
+                    ),
                     dialog=[
                         ChatML(
                             **{
-                                **e, 
-                                "session_id": self.session_id, 
+                                **e,
+                                "session_id": self.session_id,
                                 "entry_id": uuid.UUID(bytes=bytes(e.get("entry_id"))),
                             },
-                        ) 
-                        for e in entries if e.get("role") != "system"
+                        )
+                        for e in entries
+                        if e.get("role") != "system"
                     ],
                 ),
             )
@@ -92,11 +102,14 @@ class BaseSession:
         default_settings = model_data["default_settings"]
         messages = [
             {
-                "role": e.get("role"), 
-                "name": e.get("name"), 
-                "content": e["content"] if not isinstance(e["content"], list) else "\n".join(e["content"]),
-            } 
-            for e in entries if e.get("content")
+                "role": e.get("role"),
+                "name": e.get("name"),
+                "content": e["content"]
+                if not isinstance(e["content"], list)
+                else "\n".join(e["content"]),
+            }
+            for e in entries
+            if e.get("content")
         ]
 
         return messages, default_settings
@@ -115,10 +128,10 @@ class BaseSession:
         add_entries(
             [
                 Entry(
-                    session_id=self.session_id, 
-                    role="assistant", 
-                    name=final_settings["name"], 
-                    content=response["choices"][0]["text"], 
+                    session_id=self.session_id,
+                    role="assistant",
+                    name=final_settings["name"],
+                    content=response["choices"][0]["text"],
                     token_count=response["usage"]["total_tokens"],
                 )
             ]
@@ -136,8 +149,10 @@ class RecursiveSummarizationSession(PlainCompletionSession):
     async def _query_summary_messages(self) -> ChatML:
         """Get messages leaf nodes on summary tree from cozo"""
         ...
-    
-    async def forward(self, session_data, new_input, settings) -> Tuple[ChatML, Settings]:
+
+    async def forward(
+        self, session_data, new_input, settings
+    ) -> Tuple[ChatML, Settings]:
         # Don't call super: we dont want normal messages anyway
 
         # Settings dont change
@@ -145,6 +160,6 @@ class RecursiveSummarizationSession(PlainCompletionSession):
 
         context = await self._query_summary_messages()
         return context, final_settings
-  
+
     async def backward(self, session_data, new_input, response) -> None:
         pass

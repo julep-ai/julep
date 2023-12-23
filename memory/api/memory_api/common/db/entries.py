@@ -8,7 +8,8 @@ def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None
 
     entries_lst = [
         f'[to_uuid("{e.session_id}"), "{e.role}", "{e.name}", "{_aux_content(e)}", {e.token_count}]'
-        for e in entries if e.content
+        for e in entries
+        if e.content
     ]
 
     if not len(entries_lst):
@@ -33,12 +34,7 @@ def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None
     client.run(query)
 
     if return_result:
-        ids_query = ",\n".join(
-            [
-                f'[to_uuid("{e.session_id}")]' 
-                for e in entries
-            ]
-        )
+        ids_query = ",\n".join([f'[to_uuid("{e.session_id}")]' for e in entries])
         query = f"""
         input[session_id] <- [
             {ids_query}

@@ -30,9 +30,9 @@ async def update_user(user_id: UUID4, request: UpdateUserRequest):
             {
                 "user_id": user_id,
                 "about": request.about,
-            }
+            },
         )
-        #TODO: add additional info update
+        # TODO: add additional info update
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -51,7 +51,7 @@ async def create_user(request: CreateUserRequest) -> User:
         ),
     )
 
-    #TODO: add additional info
+    # TODO: add additional info
     res = [
         row.to_dict()
         for _, row in client.run(
@@ -63,7 +63,7 @@ async def create_user(request: CreateUserRequest) -> User:
 
 @router.get("/users")
 async def list_users(limit: int = 100, offset: int = 0) -> list[User]:
-    #TODO: add additional info
+    # TODO: add additional info
     return [
         User(**row.to_dict())
         for _, row in client.run(

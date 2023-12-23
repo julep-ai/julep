@@ -102,12 +102,16 @@ async def update_session(session_id: UUID4, request: UpdateSessionRequest) -> Se
 
 
 @router.get("/sessions/{session_id}/suggestions")
-async def get_suggestions(session_id: UUID4, limit: int = 100, offset: int = 0) -> list[Suggestion]:
+async def get_suggestions(
+    session_id: UUID4, limit: int = 100, offset: int = 0
+) -> list[Suggestion]:
     pass
 
 
 @router.get("/sessions/{session_id}/history")
-async def get_history(session_id: UUID4, limit: int = 100, offset: int = 0) -> list[ChatMessage]:
+async def get_history(
+    session_id: UUID4, limit: int = 100, offset: int = 0
+) -> list[ChatMessage]:
     pass
 
 
@@ -138,7 +142,9 @@ async def session_chat(session_id: UUID4, request: ChatRequest):
         await add_summarization_task(
             MemoryManagementTaskArgs(
                 session_id=session_id,
-                model=models_map.get(model_data["model_name"], model_data["model_name"]),
+                model=models_map.get(
+                    model_data["model_name"], model_data["model_name"]
+                ),
                 dialog=[
                     ChatML(
                         **{
@@ -147,7 +153,8 @@ async def session_chat(session_id: UUID4, request: ChatRequest):
                             "entry_id": uuid.UUID(bytes=bytes(e.get("entry_id"))),
                         },
                     )
-                    for e in entries if e.get("role") != "system"
+                    for e in entries
+                    if e.get("role") != "system"
                 ],
             ),
         )
@@ -158,9 +165,12 @@ async def session_chat(session_id: UUID4, request: ChatRequest):
         {
             "role": e.get("role"),
             "name": e.get("name"),
-            "content": e["content"] if not isinstance(e["content"], list) else "\n".join(e["content"]),
+            "content": e["content"]
+            if not isinstance(e["content"], list)
+            else "\n".join(e["content"]),
         }
-        for e in entries if e.get("content")
+        for e in entries
+        if e.get("content")
     ]
 
     response = openai.ChatCompletion.create(

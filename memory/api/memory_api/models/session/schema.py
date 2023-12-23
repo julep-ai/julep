@@ -23,12 +23,15 @@ create_session_lookup_relation_query = """
 }
 """
 
+
 def init():
     sep = "\n}\n\n{\n"
-    joined_queries = sep.join([
-        create_sessions_relation_query,
-        create_session_lookup_relation_query,
-    ])
+    joined_queries = sep.join(
+        [
+            create_sessions_relation_query,
+            create_session_lookup_relation_query,
+        ]
+    )
 
     query = f"{{ {joined_queries} }}"
 
