@@ -20,4 +20,8 @@ list_sessions_query = """
             agent_id,
             user_id,
             session_id,
-        }}, updated_at = to_int(validity)"""
+        }}, updated_at = to_int(validity)
+
+    :limit {limit}
+    :offset {offset}
+"""
