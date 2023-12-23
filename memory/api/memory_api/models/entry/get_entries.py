@@ -10,6 +10,7 @@ get_entries_query = """
         name,
         content,
         token_count,
+        created_at,
     ] := input[session_id],
         *entries{{
             session_id,
@@ -18,4 +19,10 @@ get_entries_query = """
             name,
             content,
             token_count,
-        }}"""
+            created_at,
+        }}
+
+:sort -created_at
+:limit {limit}
+:offset {offset}
+"""
