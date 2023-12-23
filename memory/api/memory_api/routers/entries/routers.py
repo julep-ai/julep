@@ -10,11 +10,15 @@ router = APIRouter()
 
 
 @router.get("/entries/{session_id}")
-async def get_entries(session_id: UUID4) -> list[Entry]:
+async def get_entries(session_id: UUID4, limit: int = 100, offset: int = 0) -> list[Entry]:
     return [
         Entry(**row.to_dict())
         for _, row in client.run(
-            get_entries_query.format(session_id=session_id),
+            get_entries_query(
+                session_id=session_id, 
+                limit=limit, 
+                offset=offset,
+            ), 
         ).iterrows()
     ]
 

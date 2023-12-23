@@ -1,4 +1,5 @@
-create_user_query = """
+def create_user_query(user_id, name, about):
+    return f"""
     ?[user_id, name, about, created_at] <- [
         ["{user_id}", "{name}", "{about}", now()]
     ]

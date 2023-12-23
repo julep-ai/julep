@@ -39,7 +39,7 @@ async def get_session(session_id: UUID4) -> Session:
         res = [
             row.to_dict()
             for _, row in client.run(
-                get_session_query.format(session_id=session_id),
+                get_session_query(session_id=session_id),
             ).iterrows()
         ][0]
         return Session(**res)
@@ -53,7 +53,7 @@ async def get_session(session_id: UUID4) -> Session:
 @router.post("/sessions/", status_code=HTTP_201_CREATED)
 async def create_session(request: CreateSessionRequest) -> Session:
     client.run(
-        create_session_query.format(
+        create_session_query(
             id=request.id,
             agent_id=request.agent_id,
             user_id=request.user_id,
@@ -69,10 +69,7 @@ async def list_sessions(limit: int = 100, offset: int = 0) -> list[Session]:
     return [
         Session(**row.to_dict())
         for _, row in client.run(
-            list_sessions_query.format(
-                limit=limit,
-                offset=offset,
-            ),
+            list_sessions_query(limit, offset),
         ).iterrows()
     ]
 

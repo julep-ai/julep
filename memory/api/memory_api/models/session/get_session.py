@@ -1,4 +1,5 @@
-get_session_query = """
+def get_session_query(session_id): 
+    return f"""
     input[session_id] <- [[
         to_uuid("{session_id}"),
     ]]

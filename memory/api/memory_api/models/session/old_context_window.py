@@ -1,4 +1,5 @@
-context_window_query_beliefs = """
+def context_window_query_beliefs(session_id): 
+    return f"""
 {{
     # Goal of this block is to get:
     # - character_id, user_id from session_id

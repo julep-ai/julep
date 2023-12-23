@@ -1,4 +1,5 @@
-list_sessions_query = """
+def list_sessions_query(limit, offset): 
+    return f"""
     ?[
         agent_id,
         user_id,

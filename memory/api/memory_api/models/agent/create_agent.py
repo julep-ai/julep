@@ -1,11 +1,12 @@
-create_agent_query = """
-    ?[agent_id, name, about, created_at] <- [
-        ["{agent_id}", "{name}", "{about}", now()]
-    ]
-    
-    :put agents {{
-        agent_id =>
-        name,
-        about,
-        created_at,
-    }}"""
+def create_agent_query(agent_id, name, about):
+    return f"""
+        ?[agent_id, name, about, created_at] <- [
+            ["{agent_id}", "{name}", "{about}", now()]
+        ]
+        
+        :put agents {{
+            agent_id =>
+            name,
+            about,
+            created_at,
+        }}"""
