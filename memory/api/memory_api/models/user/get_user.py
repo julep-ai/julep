@@ -1,4 +1,5 @@
-get_user_query = """
+def get_user_query(id):
+    return f"""
     input[user_id] <- [[to_uuid("{id}")]]
 
     ?[

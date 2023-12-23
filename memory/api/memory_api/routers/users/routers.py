@@ -43,10 +43,9 @@ async def update_user(user_id: UUID4, request: UpdateUserRequest):
 @router.post("/users", status_code=HTTP_201_CREATED)
 async def create_user(request: CreateUserRequest) -> User:
     client.run(
-        create_user_query.format(
+        create_user_query(
             id=request.id,
             name=request.name,
-            email=request.email,
             about=request.about,
         ),
     )
@@ -55,7 +54,7 @@ async def create_user(request: CreateUserRequest) -> User:
     res = [
         row.to_dict()
         for _, row in client.run(
-            get_user_query.format(id=request.id),
+            get_user_query(id=request.id),
         ).iterrows()
     ][0]
     return User(**res)
@@ -67,7 +66,7 @@ async def list_users(limit: int = 100, offset: int = 0) -> list[User]:
     return [
         User(**row.to_dict())
         for _, row in client.run(
-            list_users_query.format(
+            list_users_query(
                 limit=limit,
                 offset=offset,
             ),

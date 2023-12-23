@@ -1,4 +1,5 @@
-list_users_query = """
+def list_users_query(limit, offset):
+    return f"""
     ?[
         user_id,
         name,

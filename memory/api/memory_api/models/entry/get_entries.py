@@ -1,7 +1,8 @@
-get_entries_query = """
-    input[session_id] <- [[
-        to_uuid("{session_id}"),
-    ]]
+def get_entries_query(session_id, limit, offset):
+    return f"""
+        input[session_id] <- [[
+            to_uuid("{session_id}"),
+        ]]
 
     ?[
         session_id,

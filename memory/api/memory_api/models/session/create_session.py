@@ -1,4 +1,5 @@
-create_session_query = """\
+def create_session_query(id, agent_id, user_id, situation):
+    return f"""
 {{
     # Create a new session
     input[session_id, agent_id, user_id, situation] <- [[
