@@ -1,9 +1,18 @@
-def create_session_query(id, agent_id, user_id, situation):
+from uuid import UUID
+
+
+def create_session_query(
+    session_id: UUID, agent_id: UUID, user_id: UUID, situation: str
+):
+    session_id = str(session_id)
+    agent_id = str(agent_id)
+    user_id = str(user_id)
+
     return f"""
 {{
     # Create a new session
     input[session_id, agent_id, user_id, situation] <- [[
-        to_uuid("{id}"),
+        to_uuid("{session_id}"),
         to_uuid("{agent_id}"),
         to_uuid("{user_id}"),
         "{situation}",
@@ -26,7 +35,7 @@ def create_session_query(id, agent_id, user_id, situation):
 {{
     # Create a new session lookup
     input[session_id, agent_id, user_id, situation] <- [[
-        to_uuid("{id}"),
+        to_uuid("{session_id}"),
         to_uuid("{agent_id}"),
         to_uuid("{user_id}"),
         "{situation}",
