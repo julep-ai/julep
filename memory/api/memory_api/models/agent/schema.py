@@ -1,6 +1,4 @@
 import logging
-from memory_api.clients.cozo import client
-
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +13,7 @@ create_agents_relation_query = """
 """
 
 
-def init():
+def init(client):
     sep = "\n}\n\n{\n"
     joined_queries = sep.join([create_agents_relation_query])
     query = f"{{ {joined_queries} }}"

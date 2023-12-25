@@ -1,6 +1,11 @@
-def get_user_query(id):
+from uuid import UUID
+
+
+def get_user_query(user_id: UUID):
+    user_id = str(user_id)
+
     return f"""
-    input[user_id] <- [[to_uuid("{id}")]]
+    input[user_id] <- [[to_uuid("{user_id}")]]
 
     ?[
         user_id,
