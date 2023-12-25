@@ -48,13 +48,6 @@ class BaseSession:
     async def forward(
         self, session_data, new_input, settings
     ) -> Tuple[ChatML, Settings]:
-        entries: list[Entry] = []
-        for m in new_input:
-            m.session_id = self.session_id
-            entries.append(m)
-
-        add_entries(entries)
-
         # role, name, content, token_count, created_at
         entries = client.run(
             naive_context_window_query(self.session_id)
@@ -68,14 +61,14 @@ class BaseSession:
                 if not isinstance(e["content"], list)
                 else "\n".join(e["content"]),
             }
-            for e in entries
+            for e in new_input + entries
             if e.get("content")
         ]
 
         return messages, settings
 
     async def generate(self, init_context, final_settings) -> ChatML:
-        response = openai.ChatCompletion.create(
+        return openai.ChatCompletion.create(
             model=final_settings["model_name"],
             messages=init_context,
             max_tokens=final_settings["max_tokens"],
@@ -84,21 +77,22 @@ class BaseSession:
             frequency_penalty=final_settings["frequency_penalty"],
         )
 
-        # add response as an entry
-        add_entries(
-            [
-                Entry(
-                    session_id=self.session_id,
-                    role="assistant",
-                    name=final_settings["name"],
-                    content=response["choices"][0]["text"],
-                    token_count=response["usage"]["total_tokens"],
-                )
-            ]
-        )
-
     async def backward(self, session_data, new_input, response, final_settings) -> None:
-        pass
+        entries: list[Entry] = []
+        for m in new_input:
+            m.session_id = self.session_id
+            entries.append(m)
+
+        entries.append(
+            Entry(
+                session_id=self.session_id,
+                role="assistant",
+                name=final_settings["name"],
+                content=response["choices"][0]["text"],
+                token_count=response["usage"]["total_tokens"],
+            )
+        )
+        add_entries(entries)
 
 
 class PlainCompletionSession(BaseSession):
