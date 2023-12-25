@@ -1,4 +1,9 @@
-def get_session_query(session_id):
+from uuid import UUID
+
+
+def get_session_query(session_id: UUID):
+    session_id = str(session_id)
+
     return f"""
     input[session_id] <- [[
         to_uuid("{session_id}"),
