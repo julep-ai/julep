@@ -1,17 +1,12 @@
 from typing import Tuple
-import uuid
 import openai
 from dataclasses import dataclass
-from operator import itemgetter
-from fastapi import HTTPException, status
 from pydantic import UUID4
 from memory_api.clients.cozo import client
 from memory_api.models.entry.add_entries import add_entries
 from memory_api.common.protocol.entries import Entry
-from memory_api.env import summarization_ratio_threshold
-from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
-from memory_api.clients.worker.worker import add_summarization_task
-from .queries import context_window_query_beliefs
+from memory_api.clients.worker.types import ChatML
+from memory_api.models.entry.naive_context_window import naive_context_window_query
 
 
 models_map = {
@@ -24,6 +19,7 @@ class BaseSession:
     session_id: UUID4
 
     async def get_session_data(self):
+        # TODO: ?
         pass
 
     async def run(self, new_input, settings) -> Tuple[Response, BackgroundTask]:
@@ -41,8 +37,8 @@ class BaseSession:
         response = await self.generate(init_context, final_settings)
 
         # Save response to session
-        if final_settings.get("remember"):
-            await self.add_to_session(new_input, response)
+        # if final_settings.get("remember"):
+        #     await self.add_to_session(new_input, response)
 
         # Return response and the backward pass as a background task (dont await here)
         backward_pass = self.backward(session_data, new_input, response, final_settings)
@@ -59,47 +55,11 @@ class BaseSession:
 
         add_entries(entries)
 
-        resp = client.run(
-            context_window_query_beliefs.replace("{session_id}", self.session_id)
+        # role, name, content, token_count, created_at
+        entries = client.run(
+            naive_context_window_query(self.session_id)
         )
 
-        try:
-            model_data = resp["model_data"][0]
-            agent_data = resp["character_data"][0]
-        except (IndexError, KeyError):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Character or model data not found",
-            )
-
-        entries = sorted(resp["entries"][0], key=itemgetter("timestamp"))
-        summarization_threshold = (
-            model_data["max_length"] * summarization_ratio_threshold
-        )
-
-        if resp["total_tokens"][0] >= summarization_threshold:
-            await add_summarization_task(
-                MemoryManagementTaskArgs(
-                    session_id=self.session_id,
-                    model=models_map.get(
-                        model_data["model_name"], model_data["model_name"]
-                    ),
-                    dialog=[
-                        ChatML(
-                            **{
-                                **e,
-                                "session_id": self.session_id,
-                                "entry_id": uuid.UUID(bytes=bytes(e.get("entry_id"))),
-                            },
-                        )
-                        for e in entries
-                        if e.get("role") != "system"
-                    ],
-                ),
-            )
-
-        # generate response
-        default_settings = model_data["default_settings"]
         messages = [
             {
                 "role": e.get("role"),
@@ -112,7 +72,7 @@ class BaseSession:
             if e.get("content")
         ]
 
-        return messages, default_settings
+        return messages, settings
 
     async def generate(self, init_context, final_settings) -> ChatML:
         response = openai.ChatCompletion.create(
