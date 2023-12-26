@@ -1,35 +1,33 @@
-from memory_api.common.protocol.entries import Entry
-from memory_api.clients.cozo import client
+from ...common.protocol.entries import Entry
 
+parenthesize = lambda s: f"({s})"
 
-def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None:
+def add_entries_query(entries: list[Entry]) -> str:
     def _aux_content(e: Entry):
         return e.content.replace('"', "'")
-    
-    def _aux_tokens_count(e: Entry):
-        return e.token_count if e.token_count else len(e.content) // 3.5
 
     entries_lst = [
-        f'[to_uuid("{e.session_id}"), "{e.source}", "{e.role}", "{e.name}", "{_aux_content(e)}", {_aux_tokens_count(e)}, "{e.tokenizer}"]'
+        f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", {parenthesize(e.name) if e.name else "null"}, "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}", now()]'
         for e in entries
         if e.content
     ]
 
     if not len(entries_lst):
-        return
+        return "?[] <- [[]]"
 
     entries_query = ",\n".join(entries_lst)
 
     query = f"""
-    ?[session_id, source, role, name, content, token_count, tokenizer] <- [
+    ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at] <- [
         {entries_query}
-    ], created_at = now()
+    ]
 
     :put entries {{
+        entry_id,
         session_id,
         source,
         role,
-        name =>
+        name, =>
         content,
         token_count,
         tokenizer,
@@ -37,37 +35,4 @@ def add_entries(entries: list[Entry], return_result=False) -> list[Entry] | None
     }}
     """
 
-    client.run(query)
-
-    if return_result:
-        ids_query = ",\n".join([f'[to_uuid("{e.session_id}")]' for e in entries])
-        query = f"""
-        input[session_id] <- [
-            {ids_query}
-        ]
-
-        ?[
-            session_id,
-            entry_id,
-            source,
-            role,
-            name,
-            content,
-            token_count,
-            tokenizer,
-            created_at,
-        ] := input[session_id],
-            *entries{{
-                session_id,
-                entry_id,
-                source,
-                role,
-                name,
-                content,
-                token_count,
-                tokenizer,
-                created_at,
-            }}
-        """
-
-        return [Entry(**row.to_dict()) for _, row in client.run(query).iterrows()]
+    return query
