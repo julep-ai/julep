@@ -1,7 +1,9 @@
-# Phase 1
+from uuid import UUID
 
 
-def naive_context_window_query(session_id):
+def naive_context_window_query(session_id: UUID):
+    session_id = str(session_id)
+
     return f"""
 # In this query, we are going to collect all session entries for a `session_id`.
 # - filter(source=="api_request" or source=="api_response")

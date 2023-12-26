@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 fastapi = "^0.103.1"
-pycozo = {version = "^0.7.5", extras = ["embedded,requests,pandas"]}
+pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.23.2"
 fire = "^0.5.0"
 environs = "^9.5.0"
@@ -18,10 +18,10 @@ openai = "^0.28.0"
 httpx = "^0.25.0"
 async-lru = "^2.0.4"
 sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
+ward = "^0.68.0b0"
 
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
 ipython = "^8.18.1"
 black = "^23.12.1"
 
