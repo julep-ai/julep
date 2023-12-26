@@ -1,4 +1,4 @@
-from memory_api.clients.cozo import client
+from ..clients.cozo import client
 
 from .agent.schema import init as agent_init
 from .entry.schema import init as entry_init
