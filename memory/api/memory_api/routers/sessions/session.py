@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Callable
 import openai
 from dataclasses import dataclass
 from pydantic import UUID4
@@ -7,6 +7,7 @@ from memory_api.models.entry.add_entries import add_entries
 from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
 from memory_api.models.entry.naive_context_window import naive_context_window_query
+from memory_api.models.session.session_data import get_session_data
 
 
 models_map = {
@@ -18,15 +19,11 @@ models_map = {
 class BaseSession:
     session_id: UUID4
 
-    async def get_session_data(self):
-        # TODO: ?
-        pass
-
-    async def run(self, new_input, settings) -> Tuple[Response, BackgroundTask]:
+    async def run(self, new_input, settings) -> Tuple[ChatML, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
-        session_data = await self.get_session_data()
+        session_data = await get_session_data(self.session_id)
 
         # Assemble context
         init_context, final_settings = await self.forward(

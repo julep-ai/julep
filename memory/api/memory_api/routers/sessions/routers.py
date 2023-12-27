@@ -1,8 +1,5 @@
-import uuid
-import openai
-from operator import itemgetter
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from .protocol import (
@@ -14,15 +11,10 @@ from .protocol import (
     ChatMessage,
 )
 from memory_api.clients.cozo import client
-from memory_api.common.protocol.entries import Entry
-from memory_api.env import summarization_ratio_threshold
-from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
-from memory_api.clients.worker.worker import add_summarization_task
-from memory_api.models.entry.add_entries import add_entries
 from memory_api.models.session.get_session import get_session_query
 from memory_api.models.session.create_session import create_session_query
 from memory_api.models.session.list_sessions import list_sessions_query
-from memory_api.models.session.old_context_window import context_window_query_beliefs
+from .session import RecursiveSummarizationSession
 
 
 models_map = {
@@ -113,83 +105,10 @@ async def get_history(
 
 
 @router.post("/sessions/{session_id}/chat")
-async def session_chat(session_id: UUID4, request: ChatRequest):
-    entries: list[Entry] = []
-    for m in request.params.messages:
-        m.session_id = session_id
-        entries.append(m)
+async def session_chat(session_id: UUID4, request: ChatRequest, background_tasks: BackgroundTasks):
+    session = RecursiveSummarizationSession(session_id)
+    response, bg_task = await session.run(request.params.messages, settings)
 
-    add_entries(entries)
-
-    resp = client.run(context_window_query_beliefs(session_id=session_id))
-
-    try:
-        model_data = resp["model_data"][0]
-        character_data = resp["character_data"][0]
-    except (IndexError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Character or model data not found",
-        )
-
-    entries = sorted(resp["entries"][0], key=itemgetter("timestamp"))
-    summarization_threshold = model_data["max_length"] * summarization_ratio_threshold
-
-    if resp["total_tokens"][0] >= summarization_threshold:
-        await add_summarization_task(
-            MemoryManagementTaskArgs(
-                session_id=session_id,
-                model=models_map.get(
-                    model_data["model_name"], model_data["model_name"]
-                ),
-                dialog=[
-                    ChatML(
-                        **{
-                            **e,
-                            "session_id": session_id,
-                            "entry_id": uuid.UUID(bytes=bytes(e.get("entry_id"))),
-                        },
-                    )
-                    for e in entries
-                    if e.get("role") != "system"
-                ],
-            ),
-        )
-
-    # generate response
-    default_settings = model_data["default_settings"]
-    messages = [
-        {
-            "role": e.get("role"),
-            "name": e.get("name"),
-            "content": e["content"]
-            if not isinstance(e["content"], list)
-            else "\n".join(e["content"]),
-        }
-        for e in entries
-        if e.get("content")
-    ]
-
-    response = openai.ChatCompletion.create(
-        model=model_data["model_name"],
-        messages=messages,
-        max_tokens=default_settings["max_tokens"],
-        temperature=default_settings["temperature"],
-        repetition_penalty=default_settings["repetition_penalty"],
-        frequency_penalty=default_settings["frequency_penalty"],
-    )
-
-    # add response as an entry
-    add_entries(
-        [
-            Entry(
-                session_id=session_id,
-                role="assistant",
-                name=character_data["name"],
-                content=response["choices"][0]["text"],
-                token_count=response["usage"]["total_tokens"],
-            )
-        ]
-    )
+    background_tasks.add_task(bg_task)
 
     return JSONResponse(response)
