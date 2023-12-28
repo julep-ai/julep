@@ -1,0 +1,27 @@
+name: embedder
+
+resources:
+  cloud: gcp
+  accelerators: L4:1
+  use_spot: True
+  spot_recovery: FAILOVER
+  cpus: 2+
+  disk_size: 50
+  ports: 8082
+
+service:
+  readiness_probe:
+    path: /health
+    initial_delay_seconds: 600
+
+  replica_policy: # All required for autoscaling
+    min_replicas: 0
+    max_replicas: 3
+    qps_upper_threshold: 10
+    qps_lower_threshold: 2
+
+envs:
+  MODEL: BAAI/llm-embedder
+
+run: |
+  docker run --gpus all -p 8082:80 --pull always ghcr.io/huggingface/text-embeddings-inference:0.6 --model-id $MODEL
