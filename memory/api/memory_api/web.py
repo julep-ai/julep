@@ -16,9 +16,9 @@ from memory_api.routers import (
     models,
     personality,
     beliefs,
-    episodes,
 )
-from .env import sentry_dsn
+from memory_api.models import init as init_models
+from memory_api.env import sentry_dsn
 
 
 sentry_sdk.init(
@@ -94,13 +94,6 @@ def main(
 
 
 if __name__ == "__main__":
-    agents.db.init()
-    sessions.db.init()
-    users.db.init()
-    entries.db.init()
-    models.db.init()
-    personality.db.init()
-    beliefs.db.init()
-    episodes.db.init()
+    init_models()
 
     fire.Fire(main)

@@ -3,17 +3,12 @@ import openai
 from dataclasses import dataclass
 from pydantic import UUID4
 from memory_api.clients.cozo import client
-from memory_api.models.entry.add_entries import add_entries
+from memory_api.models.entry.add_entries import add_entries_query
 from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
 from memory_api.models.entry.naive_context_window import naive_context_window_query
 from memory_api.models.session.session_data import get_session_data
 from .protocol import Settings
-
-
-models_map = {
-    "samantha-1-alpha": "julep-ai/samantha-1-alpha",
-}
 
 
 @dataclass
@@ -24,7 +19,7 @@ class BaseSession:
         # TODO: implement locking at some point
 
         # Get session data
-        session_data = await get_session_data(self.session_id)
+        session_data = get_session_data(self.session_id)
 
         # Assemble context
         init_context, final_settings = await self.forward(
@@ -44,35 +39,52 @@ class BaseSession:
         return response, backward_pass
 
     async def forward(
-        self, session_data, new_input, settings
+        self, session_data, new_input: list[Entry], settings
     ) -> Tuple[ChatML, Settings]:
         # role, name, content, token_count, created_at
-        entries = client.run(
-            naive_context_window_query(self.session_id)
-        )
+        entries = [
+            {
+                "role": row["role"],
+                "name": row["name"],
+                "content": row["content"],
+            } 
+            for _, row in client.run(
+                naive_context_window_query(self.session_id),
+            ).iterrows()
+        ]
 
         messages = [
             {
-                "role": e.get("role"),
-                "name": e.get("name"),
-                "content": e["content"]
-                if not isinstance(e["content"], list)
-                else "\n".join(e["content"]),
+                "role": e.role,
+                "name": e.name,
+                "content": e.content
+                if not isinstance(e.content, list)
+                else "\n".join(e.content),
             }
             for e in new_input + entries
-            if e.get("content")
+            if e.content
         ]
 
         return messages, settings
 
-    async def generate(self, init_context, final_settings) -> ChatML:
+    async def generate(self, init_context, settings: Settings) -> ChatML:
+        # TODO: how to use response_format ?
+        
         return openai.ChatCompletion.create(
-            model=final_settings["model_name"],
+            model=settings.model,
             messages=init_context,
-            max_tokens=final_settings["max_tokens"],
-            temperature=final_settings["temperature"],
-            repetition_penalty=final_settings["repetition_penalty"],
-            frequency_penalty=final_settings["frequency_penalty"],
+            max_tokens=settings.max_tokens,
+            stop=settings.stop,
+            temperature=settings.temperature,
+            frequency_penalty=settings.frequency_penalty,
+            repetition_penalty=settings.repetition_penalty,
+            best_of=1,
+            top_p=settings.top_p,
+            top_k=1,
+            length_penalty=settings.length_penalty,
+            # logit_bias=settings.logit_bias,
+            presence_penalty=settings.presence_penalty,
+            stream=settings.stream,
         )
 
     async def backward(self, session_data, new_input, response, final_settings) -> None:
@@ -90,7 +102,7 @@ class BaseSession:
                 token_count=response["usage"]["total_tokens"],
             )
         )
-        add_entries(entries)
+        client.run(add_entries_query(entries))
 
 
 class PlainCompletionSession(BaseSession):

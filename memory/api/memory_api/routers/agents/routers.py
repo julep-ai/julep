@@ -1,4 +1,5 @@
 from typing import Any
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from pydantic import UUID4
@@ -30,10 +31,10 @@ async def get_agent(agent_id: UUID4) -> Agent:
         )
 
 
-@router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED)
-async def delete_agent(agent_id: UUID4) -> Agent:
+@router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
+async def delete_agent(agent_id: UUID4):
     try:
-        client.rm("agents", {"agent_id": agent_id})
+        client.rm("agents", {"agent_id": str(agent_id)})
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -41,19 +42,14 @@ async def delete_agent(agent_id: UUID4) -> Agent:
         )
 
 
-@router.put("/agents/{agent_id}")
-async def update_agent(agent_id: UUID4, request: UpdateAgentRequest) -> Agent:
+@router.put("/agents/{agent_id}", tags=["agents"])
+async def update_agent(agent_id: UUID4, request: UpdateAgentRequest):
     try:
         client.update(
             "agents",
             {
-                "agent_id": agent_id,
+                "agent_id": str(agent_id),
                 "about": request.about,
-                # "instructions": request.instructions,
-                # "tools": {
-                #     {"type": t.type_, "definition": t.definition}
-                #     for t in request.tools
-                # },
             },
         )
     except (IndexError, KeyError):
@@ -63,7 +59,7 @@ async def update_agent(agent_id: UUID4, request: UpdateAgentRequest) -> Agent:
         )
 
 
-@router.post("/agents", status_code=HTTP_201_CREATED)
+@router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(agent: CreateAgentRequest) -> Agent:
     client.run(
         create_agent_query(agent_id=agent.id, name=agent.name, about=agent.about),
@@ -72,7 +68,7 @@ async def create_agent(agent: CreateAgentRequest) -> Agent:
     return await get_agent(agent_id=agent.id)
 
 
-@router.get("/agents")
+@router.get("/agents", tags=["agents"])
 async def list_agents(limit: int = 100, offset: int = 0) -> list[Agent]:
     return [
         Agent(**row.to_dict())
@@ -82,7 +78,7 @@ async def list_agents(limit: int = 100, offset: int = 0) -> list[Agent]:
     ]
 
 
-@router.get("/agents/{agent_id}/memories")
+@router.get("/agents/{agent_id}/memories", tags=["agents"])
 async def list_memories(agent_id: UUID4) -> list[Any]:
     # TODO: implement later
     return []
