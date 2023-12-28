@@ -4,6 +4,26 @@ from pydantic import BaseModel, Field, UUID4
 from memory_api.common.protocol.entries import Entry
 
 
+class ResponseFormatType(str, Enum):
+    text = ("text",)
+    json_object = "json_object"
+
+
+class Settings(BaseModel):
+    frequency_penalty: float | None = Field(default=0)
+    length_penalty: float | None = Field(default=1.0)
+    logit_bias: float | None = None
+    max_tokens: int
+    presence_penalty: float | None = Field(default=0)
+    repetition_penalty: float | None = Field(default=1)
+    response_format: ResponseFormatType
+    seed: int | None = Field(default=0)
+    stop: list[str] | None = None
+    stream: bool = Field(default=False)
+    temperature: float | None = Field(default=1)
+    top_p: float | None = Field(default=1)
+
+
 class Target(str, Enum):
     user = "user"
     agent = "agent"
@@ -19,11 +39,6 @@ class MessageRole(str, Enum):
 class ToolType(str, Enum):
     function = "function"
     webhook = "webhook"
-
-
-class ResponseFormatType(str, Enum):
-    text = ("text",)
-    json_object = "json_object"
 
 
 class ToolChoiceType(str, Enum):
