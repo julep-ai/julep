@@ -26,9 +26,16 @@ envs:
   HUGGING_FACE_HUB_TOKEN: "SET_MANUALLY"
   HF_TOKEN: "SET_MANUALLY"
 
+file_mounts:
+  /hf-cache:
+    name: julep-sky-vllm-hf-cache
+    store: gcs
+    persistent: true
+    mode: MOUNT
+
 run: |
   docker run --runtime nvidia --gpus all \
-    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -v /hf-cache:/root/.cache/huggingface \
     --env "HF_TOKEN=$HF_TOKEN" \
     --env "HUGGING_FACE_HUB_TOKEN=$HUGGING_FACE_HUB_TOKEN" \
     -p 8082:80 --pull always --shm-size 1g \
