@@ -8,6 +8,7 @@ from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
 from memory_api.models.entry.naive_context_window import naive_context_window_query
 from memory_api.models.session.session_data import get_session_data
+from .protocol import Settings
 
 
 models_map = {
