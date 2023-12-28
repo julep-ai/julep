@@ -10,6 +10,7 @@ class ResponseFormatType(str, Enum):
 
 
 class Settings(BaseModel):
+    model: str
     frequency_penalty: float | None = Field(default=0)
     length_penalty: float | None = Field(default=1.0)
     logit_bias: float | None = None
@@ -20,7 +21,7 @@ class Settings(BaseModel):
     seed: int | None = Field(default=0)
     stop: list[str] | None = None
     stream: bool = Field(default=False)
-    temperature: float | None = Field(default=1)
+    temperature: float | None = Field(default=0.7)
     top_p: float | None = Field(default=1)
 
 
@@ -68,13 +69,10 @@ class Session(BaseModel):
     metadata: dict = Field(default={})
 
 
-class ChatParams(BaseModel):
-    messages: list[Entry]
-
-
 class ChatRequest(BaseModel):
     session_id: str
-    params: ChatParams
+    messages: list[Entry]
+    settings: Settings
     remember: bool = False
     recall: bool = False
 

@@ -8,7 +8,7 @@ class Tool(BaseModel):
 
 
 class CreateAgentRequest(BaseModel):
-    id: UUID4 = Field(default_factory=uuid4, alias="character_id")
+    id: UUID4 = Field(default_factory=uuid4, alias="agent_id")
     name: str
     about: str
     # instructions: list[str] | None = None
@@ -22,7 +22,7 @@ class UpdateAgentRequest(BaseModel):
 
 
 class Agent(BaseModel):
-    id: UUID4 = Field(default_factory=uuid4, alias="character_id")
+    id: UUID4 = Field(default_factory=uuid4, alias="agent_id")
     name: str
     about: str
     # instructions: list[str] | None = None

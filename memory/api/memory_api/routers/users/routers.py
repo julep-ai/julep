@@ -11,10 +11,10 @@ from .protocol import User, CreateUserRequest, UpdateUserRequest
 router = APIRouter()
 
 
-@router.delete("/users/{user_id}", status_code=HTTP_202_ACCEPTED)
+@router.delete("/users/{user_id}", status_code=HTTP_202_ACCEPTED, tags=["users"])
 async def delete_user(user_id: UUID4):
     try:
-        client.rm("users", {"user_id": user_id})
+        client.rm("users", {"user_id": str(user_id)})
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -22,13 +22,13 @@ async def delete_user(user_id: UUID4):
         )
 
 
-@router.put("/users/{user_id}")
+@router.put("/users/{user_id}", tags=["users"])
 async def update_user(user_id: UUID4, request: UpdateUserRequest):
     try:
         client.update(
             "users",
             {
-                "user_id": user_id,
+                "user_id": str(user_id),
                 "about": request.about,
             },
         )
@@ -40,11 +40,11 @@ async def update_user(user_id: UUID4, request: UpdateUserRequest):
         )
 
 
-@router.post("/users", status_code=HTTP_201_CREATED)
+@router.post("/users", status_code=HTTP_201_CREATED, tags=["users"])
 async def create_user(request: CreateUserRequest) -> User:
     client.run(
         create_user_query(
-            id=request.id,
+            user_id=request.id,
             name=request.name,
             about=request.about,
         ),
@@ -54,13 +54,13 @@ async def create_user(request: CreateUserRequest) -> User:
     res = [
         row.to_dict()
         for _, row in client.run(
-            get_user_query(id=request.id),
+            get_user_query(user_id=request.id),
         ).iterrows()
     ][0]
     return User(**res)
 
 
-@router.get("/users")
+@router.get("/users", tags=["users"])
 async def list_users(limit: int = 100, offset: int = 0) -> list[User]:
     # TODO: add additional info
     return [
