@@ -6,6 +6,7 @@ resources:
   use_spot: true
   cpus: 2+
   disk_size: 50
+  disk_tier: high
   ports: 8082
 
 service:
@@ -16,15 +17,21 @@ service:
   replica_policy: # All required for autoscaling
     min_replicas: 1
     max_replicas: 3
-    qps_upper_threshold: 20
-    qps_lower_threshold: 10
+    target_qps_per_replica: 10
 
 envs:
   MODEL: BAAI/llm-embedder
 
+file_mounts:
+  /hf-cache:
+    name: julep-sky-embedder-hf-cache
+    store: gcs
+    persistent: true
+    mode: MOUNT
+
 run: |
   docker run --runtime nvidia --gpus all \
-    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -v /hf-cache:/root/.cache/huggingface \
     -p 8082:80 --pull always --shm-size 1g \
     ghcr.io/huggingface/text-embeddings-inference:0.6 \
       --model-id $MODEL
