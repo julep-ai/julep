@@ -1,0 +1,55 @@
+apiVersion: temporal.io/v1beta1
+kind: TemporalCluster
+metadata:
+  name: prod
+  namespace: temporal
+spec:
+  version: 1.21.2
+  numHistoryShards: 1
+  jobTtlSecondsAfterFinished: 300
+  persistence:
+    defaultStore:
+      sql:
+        user: postgres
+        pluginName: postgres
+        databaseName: temporal
+        connectAddr: julep-temporal.stackgres.svc.cluster.local:5432
+        connectProtocol: tcp
+      passwordSecretRef:
+        name: temporal-db
+        key: password
+    visibilityStore:
+      sql:
+        user: postgres
+        pluginName: postgres
+        databaseName: temporal_visibility
+        connectAddr: julep-temporal.stackgres.svc.cluster.local:5432
+        connectProtocol: tcp
+      passwordSecretRef:
+        name: temporal-db
+        key: password
+  mTLS:
+    provider: cert-manager
+    internode:
+      enabled: true
+    frontend:
+      enabled: true
+    certificatesDuration:
+      rootCACertificate: 2h
+      intermediateCAsCertificates: 1h30m
+      clientCertificates: 1h
+      frontendCertificate: 1h
+      internodeCertificate: 1h
+    refreshInterval: 5m
+  ui:
+    enabled: true
+    ingress:
+      hosts:
+        - temporal.julep.ai
+
+  admintools:
+    enabled: true
+  metrics:
+    enabled: true
+    prometheus:
+      listenPort: 9090
