@@ -1,0 +1,422 @@
+﻿﻿GitHub - timoschick/dino: This repository contains the code for "Generating Datasets with Pretrained Language Models".
+https://github.com/timoschick/dino
+
+GitHub - wangpf3/Commonsense-Path-Generator
+https://github.com/wangpf3/Commonsense-Path-Generator
+
+crows_pairs · Datasets at Hugging Face
+https://huggingface.co/datasets/crows_pairs/viewer/crows_pairs/test?row=0
+
+declare-lab/InstructEvalImpact · Datasets at Hugging Face
+https://huggingface.co/datasets/declare-lab/InstructEvalImpact
+
+declare-lab/flan-mini · Datasets at Hugging Face
+https://huggingface.co/datasets/declare-lab/flan-mini
+
+rewoo/planner_instruction_tuning_2k · Datasets at Hugging Face
+https://huggingface.co/datasets/rewoo/planner_instruction_tuning_2k/viewer/rewoo--planner_instruction_tuning_2k/train?row=0
+
+History of Psychology | Noba
+https://nobaproject.com/modules/history-of-psychology
+
+codeparrot/apps · Datasets at Hugging Face
+https://huggingface.co/datasets/codeparrot/apps
+
+deepmind/code_contests · Datasets at Hugging Face
+https://huggingface.co/datasets/deepmind/code_contests
+
+code_search_net · Datasets at Hugging Face
+https://huggingface.co/datasets/code_search_net
+
+stingning/ultrachat · Datasets at Hugging Face
+https://huggingface.co/datasets/stingning/ultrachat
+
+daveshap/REMO_Framework: Rolling Episodic Memory Organizer (REMO) for autonomous AI systems
+https://github.com/daveshap/REMO_Framework
+
+csrsi17
+http://www.isle.org/~langley/papers/icarus.csr17.pdf
+
+griffin/chain_of_density · Datasets at Hugging Face
+https://huggingface.co/datasets/griffin/chain_of_density/viewer/annotated/train
+
+[2309.02427] Cognitive Architectures for Language Agents
+https://arxiv.org/abs/2309.02427
+
+[2301.04589] Memory Augmented Large Language Models are Computationally Universal
+https://arxiv.org/abs/2301.04589
+
+Togelius: As A Large Language Model, I
+http://togelius.blogspot.com/2023/09/as-large-language-model-i.html
+
+[2309.11495] Chain-of-Verification Reduces Hallucination in Large Language Models
+https://arxiv.org/abs/2309.11495
+
+Potential degredation in sampling/too repetitive · Issue #712 · vllm-project/vllm
+https://github.com/vllm-project/vllm/issues/712
+
+openchat/ochat/config/model_config.py at master · imoneoi/openchat
+https://github.com/imoneoi/openchat/blob/master/ochat/config/model_config.py#L28-L87
+
+openchat/ochat/experimental/verify_dataset.ipynb at master · imoneoi/openchat
+https://github.com/imoneoi/openchat/blob/master/ochat/experimental/verify_dataset.ipynb
+
+Potential degredation in sampling/too repetitive · Issue #712 · vllm-project/vllm
+https://github.com/vllm-project/vllm/issues/712#issuecomment-1690937623
+
+openchat/ochat/config/model_config.py at master · imoneoi/openchat
+https://github.com/imoneoi/openchat/blob/master/ochat/config/model_config.py#L107
+
+openchat/ochat/data/generate_dataset.py at master · imoneoi/openchat
+https://github.com/imoneoi/openchat/blob/master/ochat/data/generate_dataset.py
+
+[2308.15022] Recursively Summarizing Enables Long-Term Dialogue Memory in Large Language Models
+https://arxiv.org/abs/2308.15022
+
+Sync.com - 2023-03-23 16.54.25 Blazing Talents Garnet Group
+https://ln5.sync.com/dl/7364e9770/ffc3vgz7-rnya96pk-3b6jkdg6-evcyyyg3?sync_id=14164507210004
+
+shahules786/orca-best · Datasets at Hugging Face
+https://huggingface.co/datasets/shahules786/orca-best
+
+The Colbert Questionert
+https://thecolbertquestionert.com/
+
+90 Podcast Interview Questions to Hook Your Listeners - Resound
+https://www.resound.fm/blog/podcast-interview-questions
+
+77 TV Host Interview Questions and Answers
+https://globalguideline.com/interview/questions/TV_Host/51254/amp
+
+65 Funny Interview Questions (With Sample Answers) | Indeed.com
+https://www.indeed.com/career-advice/interviewing/funny-interview-questions
+
+36 Interview Questions That Are Actually Fun To Answer
+https://www.fastcompany.com/3056142/36-interview-questions-that-are-actually-fun-to-answer
+
+Microsoft Word - Workbook E - Indepth Interviews.doc
+https://www.wallacefoundation.org/knowledge-center/documents/workbook-e-indepth-interviews.pdf
+
+Frontiers | A Generalizability Analysis of the Meaning in Life Questionnaire for Chinese Adolescents
+https://www.frontiersin.org/articles/10.3389/fpsyg.2021.687589/full
+
+Sources of Meaning and Meaning in Life Questionnaire (SoMe): Psychometric Properties and Sociodemographic Findings in a Large Brazilian Sample - ScienceDirect
+https://www.sciencedirect.com/science/article/pii/S200747191370961X
+
+(PDF) Questionnaires, in-depth interviews and focus groups
+https://www.researchgate.net/publication/42795848_Questionnaires_in-depth_interviews_and_focus_groups
+
+How it’s Made: TextFX is a suite of AI tools made in collaboration with Lupe Fiasco — Google for Developers Blog - News about Web, Mobile, AI and Cloud
+https://developers.googleblog.com/2023/08/how-its-made-lupe-fiasco-text-fx.html?m=1
+
+joonspk-research/generative_agents: Generative Agents: Interactive Simulacra of Human Behavior
+https://github.com/joonspk-research/generative_agents
+
+EgoAlpha/prompt-in-context-learning: Awesome resources for in-context learning and prompt engineering: Mastery of the LLMs such as ChatGPT, GPT-3, and FlanT5, with up-to-date and cutting-edge updates.
+https://github.com/EgoAlpha/prompt-in-context-learning
+
+discus-labs/discus: Generate and enrich datasets on-demand to fine-tune LLMs. Discord: https://discord.gg/t6ADqBKrdZ
+https://github.com/discus-labs/discus
+
+tiedong/goat · Datasets at Hugging Face
+https://huggingface.co/datasets/tiedong/goat
+
+diwank/scenario_instructor · Datasets at Hugging Face
+https://huggingface.co/datasets/diwank/scenario_instructor
+
+stacked-summaries/stacked-samsum-1024 · Datasets at Hugging Face
+https://huggingface.co/datasets/stacked-summaries/stacked-samsum-1024/viewer/default/train?row=1
+
+Jellywibble/dalio_handwritten-conversations · Datasets at Hugging Face
+https://huggingface.co/datasets/Jellywibble/dalio_handwritten-conversations/viewer/default/train?row=0
+
+microsoft/Promptist · Hugging Face
+https://huggingface.co/microsoft/Promptist
+
+allenai/peer_read · Datasets at Hugging Face
+https://huggingface.co/datasets/allenai/peer_read
+
+declare-lab/RECCON: This repository contains the dataset and the PyTorch implementations of the models from the paper Recognizing Emotion Cause in Conversations.
+https://github.com/declare-lab/RECCON
+
+Co Write With Llama2 - a Hugging Face Space by chansung
+https://huggingface.co/spaces/chansung/co-write-with-llama2
+
+Wordcraft Writers Workshop
+https://wordcraft-writers-workshop.appspot.com/
+
+AI Explorables | PAIR
+https://pair.withgoogle.com/explorables/
+
+[2303.12647] A Word is Worth a Thousand Pictures: Prompts as AI Design Material
+https://arxiv.org/abs/2303.12647
+
+[2303.12253] The Prompt Artists
+https://arxiv.org/abs/2303.12253
+
+Programming with a Programming Language: Challenges and Opportunities for Designing Developer Tools for Prompt Programming – Google Research
+https://research.google/pubs/pub52262/
+
+Google's latest experiments in Labs
+https://labs.google/
+
+Five of the Best Books about Studying Poetry – Interesting Literature
+https://interestingliterature.com/2016/05/five-of-the-best-books-about-studying-poetry/amp/
+
+A Poetry Criticism Reader | University of Iowa Press - The University of Iowa
+https://uipress.uiowa.edu/books/poetry-criticism-reader
+
+Poetry Criticism Books
+https://www.goodreads.com/shelf/show/poetry-criticism
+
+(3) What is a good book on poetry analysis? - Quora
+https://www.quora.com/What-is-a-good-book-on-poetry-analysis
+
+52 ways of looking at a poem pdf - Google Search
+https://www.google.com/search?q=52+ways+of+looking+at+a+poem+pdf&rlz=1CDGOYI_enIN935IN935&oq=52+ways+of+looking+at+a+poem+pdf&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIKCAEQABiGAxiKBTIKCAIQABiGAxiKBTIKCAMQABiGAxiKBdIBCDY3NTFqMGo0qAIAsAIA&hl=en-US&sourceid=chrome-mobile&ie=UTF-8
+
+Reddit - Dive into anything
+https://www.reddit.com/r/LateShow/comments/98djqv/favorite_interviews_with_colbert_interviewee/
+
+Best Episodes - Stephen Colbert Blog
+https://colbertsuperpac.com/best-episodes/
+
+The Brain | Noba
+https://nobaproject.com/modules/the-brain
+
+Evolutionary Theories in Psychology | Noba
+https://nobaproject.com/modules/evolutionary-theories-in-psychology
+
+The Nature-Nurture Question | Noba
+https://nobaproject.com/modules/the-nature-nurture-question
+
+The Nervous System | Noba
+https://nobaproject.com/modules/the-nervous-system
+
+Neurons | Noba
+https://nobaproject.com/modules/neurons
+
+The Psychology of Human Sexuality | Noba
+https://nobaproject.com/modules/the-psychology-of-human-sexuality
+
+Human Sexual Anatomy and Physiology | Noba
+https://nobaproject.com/modules/human-sexual-anatomy-and-physiology
+
+The Brain and Nervous System | Noba
+https://nobaproject.com/modules/the-brain-and-nervous-system
+
+Biochemistry of Love | Noba
+https://nobaproject.com/modules/biochemistry-of-love
+
+Hormones & Behavior | Noba
+https://nobaproject.com/modules/hormones-behavior
+
+Attention | Noba
+https://nobaproject.com/modules/attention
+
+Categories and Concepts | Noba
+https://nobaproject.com/modules/categories-and-concepts
+
+Consciousness | Noba
+https://nobaproject.com/modules/consciousness
+
+Language and Language Use | Noba
+https://nobaproject.com/modules/language-and-language-use
+
+Theory of Mind | Noba
+https://nobaproject.com/modules/theory-of-mind
+
+The Unconscious | Noba
+https://nobaproject.com/modules/the-unconscious
+
+Judgment and Decision Making | Noba
+https://nobaproject.com/modules/judgment-and-decision-making
+
+Intelligence | Noba
+https://nobaproject.com/modules/intelligence
+
+States of Consciousness | Noba
+https://nobaproject.com/modules/states-of-consciousness
+
+Aging | Noba
+https://nobaproject.com/modules/aging
+
+Attachment Through the Life Course | Noba
+https://nobaproject.com/modules/attachment-through-the-life-course
+
+Cognitive Development in Childhood | Noba
+https://nobaproject.com/modules/cognitive-development-in-childhood
+
+The Developing Parent | Noba
+https://nobaproject.com/modules/the-developing-parent
+
+Emerging Adulthood | Noba
+https://nobaproject.com/modules/emerging-adulthood
+
+Social and Personality Development in Childhood | Noba
+https://nobaproject.com/modules/social-and-personality-development-in-childhood
+
+Adolescent Development | Noba
+https://nobaproject.com/modules/adolescent-development
+
+Affective Neuroscience | Noba
+https://nobaproject.com/modules/affective-neuroscience
+
+Culture and Emotion | Noba
+https://nobaproject.com/modules/culture-and-emotion
+
+Drive States | Noba
+https://nobaproject.com/modules/drive-states
+
+Emotional Intelligence | Noba
+https://nobaproject.com/modules/emotional-intelligence
+
+Functions of Emotions | Noba
+https://nobaproject.com/modules/functions-of-emotions
+
+Knowledge Emotions: Feelings that Foster Learning, Exploring, and R... | Noba
+https://nobaproject.com/modules/knowledge-emotions-feelings-that-foster-learning-exploring-and-reflecting
+
+Motives and Goals | Noba
+https://nobaproject.com/modules/motives-and-goals
+
+Emotion Experience and Well-Being | Noba
+https://nobaproject.com/modules/emotion-experience-and-well-being
+
+Self-Efficacy | Noba
+https://nobaproject.com/modules/self-efficacy
+
+Conditioning and Learning | Noba
+https://nobaproject.com/modules/conditioning-and-learning
+
+Factors Influencing Learning | Noba
+https://nobaproject.com/modules/factors-influencing-learning
+
+Memory (Encoding, Storage, Retrieval) | Noba
+https://nobaproject.com/modules/memory-encoding-storage-retrieval
+
+Creativity | Noba
+https://nobaproject.com/modules/creativity
+
+Gender | Noba
+https://nobaproject.com/modules/gender
+
+Personality Assessment | Noba
+https://nobaproject.com/modules/personality-assessment
+
+Personality Stability and Change | Noba
+https://nobaproject.com/modules/personality-stability-and-change
+
+Personality Traits | Noba
+https://nobaproject.com/modules/personality-traits
+
+The Psychodynamic Perspective | Noba
+https://nobaproject.com/modules/the-psychodynamic-perspective
+
+Self and Identity | Noba
+https://nobaproject.com/modules/self-and-identity
+
+Self-Regulation and Conscientiousness | Noba
+https://nobaproject.com/modules/self-regulation-and-conscientiousness
+
+Intellectual Abilities, Interests, and Mastery | Noba
+https://nobaproject.com/modules/intellectual-abilities-interests-and-mastery
+
+History of Mental Illness | Noba
+https://nobaproject.com/modules/history-of-mental-illness
+
+Mood Disorders | Noba
+https://nobaproject.com/modules/mood-disorders
+
+Personality Disorders | Noba
+https://nobaproject.com/modules/personality-disorders
+
+Hearing | Noba
+https://nobaproject.com/modules/hearing
+
+Multi-Modal Perception | Noba
+https://nobaproject.com/modules/multi-modal-perception
+
+Time and Culture | Noba
+https://nobaproject.com/modules/time-and-culture
+
+Touch and Pain | Noba
+https://nobaproject.com/modules/touch-and-pain
+
+Vision | Noba
+https://nobaproject.com/modules/vision
+
+Taste and Smell | Noba
+https://nobaproject.com/modules/taste-and-smell
+
+Sensation and Perception | Noba
+https://nobaproject.com/modules/sensation-and-perception
+
+Aggression and Violence | Noba
+https://nobaproject.com/modules/aggression-and-violence
+
+Attraction and Beauty | Noba
+https://nobaproject.com/modules/attraction-and-beauty
+
+Conformity and Obedience | Noba
+https://nobaproject.com/modules/conformity-and-obedience
+
+Helping and Prosocial Behavior | Noba
+https://nobaproject.com/modules/helping-and-prosocial-behavior
+
+Love, Friendship, and Social Support | Noba
+https://nobaproject.com/modules/love-friendship-and-social-support
+
+Persuasion: So Easily Fooled | Noba
+https://nobaproject.com/modules/persuasion-so-easily-fooled
+
+Prejudice, Discrimination, and Stereotyping | Noba
+https://nobaproject.com/modules/prejudice-discrimination-and-stereotyping
+
+Social Cognition and Attitudes | Noba
+https://nobaproject.com/modules/social-cognition-and-attitudes
+
+Social Neuroscience | Noba
+https://nobaproject.com/modules/social-neuroscience
+
+Positive Relationships | Noba
+https://nobaproject.com/modules/positive-relationships
+
+Industrial/Organizational (I/O) Psychology | Noba
+https://nobaproject.com/modules/industrial-organizational-i-o-psychology
+
+Cooperation | Noba
+https://nobaproject.com/modules/cooperation
+
+The Psychology of Groups | Noba
+https://nobaproject.com/modules/the-psychology-of-groups
+
+Research Methods in Social Psychology | Noba
+https://nobaproject.com/modules/research-methods-in-social-psychology
+
+Social Comparison | Noba
+https://nobaproject.com/modules/social-comparison
+
+Relationships and Well-being | Noba
+https://nobaproject.com/modules/relationships-and-well-being
+
+Psychology of Racism | Noba
+https://nobaproject.com/modules/psychology-of-racism
+
+Culture | Noba
+https://nobaproject.com/modules/culture
+
+The Family | Noba
+https://nobaproject.com/modules/the-family
+
+Happiness: The Science of Subjective Well-Being | Noba
+https://nobaproject.com/modules/happiness-the-science-of-subjective-well-being
+
+The Healthy Life | Noba
+https://nobaproject.com/modules/the-healthy-life
+
+Optimal Levels of Happiness | Noba
+https://nobaproject.com/modules/optimal-levels-of-happiness
+
+Positive Psychology | Noba
+https://nobaproject.com/modules/positive-psychology
