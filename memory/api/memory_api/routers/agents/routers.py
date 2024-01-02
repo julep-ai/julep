@@ -1,5 +1,4 @@
 from typing import Any
-from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from pydantic import UUID4
