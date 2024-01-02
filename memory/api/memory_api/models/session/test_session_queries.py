@@ -1,7 +1,7 @@
 # Tests for session queries
 from pycozo import Client
 from uuid import uuid4
-from ward import skip, test
+from ward import test
 
 from ..agent.create_agent import create_agent_query
 from ..agent.schema import init as init_agent
