@@ -1,0 +1,47 @@
+name: samantha-1-turbo-vllm
+
+resources:
+  cloud: gcp
+  accelerators: ["A100:1", "A100-40:1", "A100-80:1", "L4:1"]
+  use_spot: true
+  cpus: 2+
+  disk_size: 256
+  disk_tier: high
+  ports: 8082
+
+service:
+  readiness_probe:
+    path: /v1/models
+    post_data: { "model_name": "julep-ai/samantha-1-turbo" }
+    initial_delay_seconds: 1200
+
+  replica_policy: # All required for autoscaling
+    min_replicas: 1
+    max_replicas: 5
+    target_qps_per_replica: 10
+
+envs:
+  MODEL_NAME: julep-ai/samantha-1-turbo
+  TOKENIZER: julep-ai/samantha-1-turbo
+  HUGGING_FACE_HUB_TOKEN: "SET_MANUALLY"
+  HF_TOKEN: "SET_MANUALLY"
+
+# file_mounts:
+#   /hf-cache:
+#     name: julep-sky-vllm-hf-cache
+#     store: gcs
+#     persistent: true
+#     mode: MOUNT
+
+run: |
+  docker run --runtime nvidia --gpus all \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    --env "HF_TOKEN=$HF_TOKEN" \
+    --env "HUGGING_FACE_HUB_TOKEN=$HUGGING_FACE_HUB_TOKEN" \
+    -p 8082:80 --pull always --shm-size 1g \
+    vllm/vllm-openai:latest \
+        --trust-remote-code --load-format auto \
+        --seed 42 --block-size 8 \
+        --model $MODEL_NAME \
+        --tensor-parallel-size $SKYPILOT_NUM_GPUS_PER_NODE \
+        --tokenizer $TOKENIZER
