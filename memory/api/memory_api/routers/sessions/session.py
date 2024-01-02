@@ -47,7 +47,7 @@ class BaseSession:
                 "role": row["role"],
                 "name": row["name"],
                 "content": row["content"],
-            } 
+            }
             for _, row in client.run(
                 naive_context_window_query(self.session_id),
             ).iterrows()
@@ -69,7 +69,7 @@ class BaseSession:
 
     async def generate(self, init_context, settings: Settings) -> ChatML:
         # TODO: how to use response_format ?
-        
+
         return openai.ChatCompletion.create(
             model=settings.model,
             messages=init_context,

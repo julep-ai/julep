@@ -37,6 +37,7 @@ def _():
 
     client.run(query)
 
+
 @test("get entries")
 def _():
     client = cozo_client()
@@ -61,6 +62,7 @@ def _():
     result = client.run(query)
 
     assert len(result["entry_id"]) == 1
+
 
 @test("naive context window")
 def _():

@@ -3,6 +3,7 @@ from uuid import UUID
 from ...clients.cozo import client
 from ...common.protocol.sessions import SessionData
 
+
 def session_data_query(session_id: UUID):
     session_id = str(session_id)
 
@@ -45,8 +46,8 @@ def session_data_query(session_id: UUID):
         }}
     """
 
-def get_session_data(session_id: UUID, client=client) -> SessionData | None:
 
+def get_session_data(session_id: UUID, client=client) -> SessionData | None:
     query = session_data_query(session_id)
     result = client.run(query)
     if result.empty:

@@ -61,7 +61,9 @@ async def list_sessions(limit: int = 100, offset: int = 0) -> list[Session]:
     ]
 
 
-@router.delete("/sessions/{session_id}", status_code=HTTP_202_ACCEPTED, tags=["sessions"])
+@router.delete(
+    "/sessions/{session_id}", status_code=HTTP_202_ACCEPTED, tags=["sessions"]
+)
 async def delete_session(session_id: UUID4):
     try:
         client.rm("sessions", {"session_id": str(session_id)})
@@ -106,7 +108,9 @@ async def get_history(
 
 
 @router.post("/sessions/{session_id}/chat", tags=["sessions"])
-async def session_chat(session_id: UUID4, request: ChatRequest, background_tasks: BackgroundTasks):
+async def session_chat(
+    session_id: UUID4, request: ChatRequest, background_tasks: BackgroundTasks
+):
     session = PlainCompletionSession(session_id)
     response, bg_task = await session.run(request.messages, request.settings)
 
