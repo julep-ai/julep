@@ -31,7 +31,6 @@ def _():
     session_id = uuid4()
     agent_id = uuid4()
     user_id = uuid4()
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -40,7 +39,7 @@ def _():
         situation="test session about",
     )
 
-    result = client.run(query)
+    client.run(query)
 
 
 @test("get session not exists")
@@ -63,7 +62,6 @@ def _():
     session_id = uuid4()
     agent_id = uuid4()
     user_id = uuid4()
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -113,7 +111,6 @@ def _():
     )
 
     # Create a session
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -163,7 +160,6 @@ def _():
     )
 
     # Create a session
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -186,7 +182,6 @@ def _():
 @test("list sessions")
 def _():
     client = cozo_client()
-    session_id = uuid4()
 
     query = list_sessions_query()
 
