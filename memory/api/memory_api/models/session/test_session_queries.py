@@ -95,18 +95,22 @@ def _():
     user_id = uuid4()
 
     # Create a user
-    client.run(create_user_query(
-        user_id=user_id,
-        about="test user about",
-        name="test user name",
-    ))
+    client.run(
+        create_user_query(
+            user_id=user_id,
+            about="test user about",
+            name="test user name",
+        )
+    )
 
     # Create an agent
-    client.run(create_agent_query(
-        agent_id=agent_id,
-        about="test agent about",
-        name="test agent name",
-    ))
+    client.run(
+        create_agent_query(
+            agent_id=agent_id,
+            about="test agent about",
+            name="test agent name",
+        )
+    )
 
     # Create a session
     situation = "test situation"
@@ -141,18 +145,22 @@ def _():
     user_id = uuid4()
 
     # Create a user
-    client.run(create_user_query(
-        user_id=user_id,
-        about="test user about",
-        name="test user name",
-    ))
+    client.run(
+        create_user_query(
+            user_id=user_id,
+            about="test user about",
+            name="test user name",
+        )
+    )
 
     # Create an agent
-    client.run(create_agent_query(
-        agent_id=agent_id,
-        about="test agent about",
-        name="test agent name",
-    ))
+    client.run(
+        create_agent_query(
+            agent_id=agent_id,
+            about="test agent about",
+            name="test agent name",
+        )
+    )
 
     # Create a session
     situation = "test situation"

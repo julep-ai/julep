@@ -2,6 +2,7 @@ from ...common.protocol.entries import Entry
 
 parenthesize = lambda s: f"({s})"
 
+
 def add_entries_query(entries: list[Entry]) -> str:
     def _aux_content(e: Entry):
         return e.content.replace('"', "'")
