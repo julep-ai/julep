@@ -67,6 +67,7 @@ def _():
     result = client.run(query)
 
     assert len(result["agent_id"]) == 1
+    assert "temperature" in result["default_settings"][0]
 
 
 @test("list agents")
