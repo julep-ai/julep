@@ -2,6 +2,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+
 class SessionData(BaseModel):
     agent_id: UUID
     user_id: UUID

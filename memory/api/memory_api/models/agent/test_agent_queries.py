@@ -30,7 +30,7 @@ def _():
         about="test agent about",
     )
 
-    result = client.run(query)
+    client.run(query)
 
 
 @test("get agent not exists")
@@ -72,7 +72,6 @@ def _():
 @test("list agents")
 def _():
     client = cozo_client()
-    agent_id = uuid4()
 
     query = list_agents_query()
 

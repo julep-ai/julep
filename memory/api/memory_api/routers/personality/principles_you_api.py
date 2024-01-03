@@ -1,4 +1,3 @@
-import os
 import httpx
 from async_lru import alru_cache
 from memory_api.env import (
