@@ -22,6 +22,8 @@ def session_data_query(session_id: UUID):
         created_at,
         user_about,
         agent_about,
+        model,
+        default_settings,
     ] := input[session_id],
         *sessions{{
             session_id,
@@ -43,6 +45,24 @@ def session_data_query(session_id: UUID):
         *agents{{
             agent_id,
             about: agent_about,
+            model,
+        }},
+        *agent_default_settings {{
+            agent_id,
+            frequency_penalty,
+            presence_penalty,
+            length_penalty,
+            repetition_penalty,
+            top_p,
+            temperature,
+        }},
+        default_settings = {{
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "length_penalty": length_penalty,
+            "repetition_penalty": repetition_penalty,
+            "top_p": top_p,
+            "temperature": temperature,
         }}
     """
 
