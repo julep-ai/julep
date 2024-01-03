@@ -512,7 +512,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChatInputData"
+                "$ref": "#/components/schemas/ChatInput"
               }
             }
           }
