@@ -30,7 +30,7 @@ def _():
         about="test user about",
     )
 
-    result = client.run(query)
+    client.run(query)
 
 
 @test("get user not exists")
@@ -72,7 +72,6 @@ def _():
 @test("list users")
 def _():
     client = cozo_client()
-    user_id = uuid4()
 
     query = list_users_query()
 

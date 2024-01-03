@@ -1,7 +1,6 @@
 import logging
 from pydantic import UUID4
 from memory_api.clients.cozo import client
-from .protocol import UserInformation
 
 
 logger = logging.getLogger(__name__)
@@ -60,3 +59,4 @@ def get_user_data(user_id: UUID4):
             }}, updated_at = to_int(validity)"""
 
     res = [row.to_dict() for _, row in client.run(get_query).iterrows()][0]
+    return res

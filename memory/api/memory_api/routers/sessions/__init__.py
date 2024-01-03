@@ -1,2 +1,1 @@
-from .routers import router
-from . import db
+from .routers import router  # noqa: F401

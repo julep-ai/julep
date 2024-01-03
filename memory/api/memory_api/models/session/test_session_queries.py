@@ -1,7 +1,7 @@
 # Tests for session queries
 from pycozo import Client
 from uuid import uuid4
-from ward import skip, test
+from ward import test
 
 from ..agent.create_agent import create_agent_query
 from ..agent.schema import init as init_agent
@@ -31,7 +31,6 @@ def _():
     session_id = uuid4()
     agent_id = uuid4()
     user_id = uuid4()
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -40,7 +39,7 @@ def _():
         situation="test session about",
     )
 
-    result = client.run(query)
+    client.run(query)
 
 
 @test("get session not exists")
@@ -63,7 +62,6 @@ def _():
     session_id = uuid4()
     agent_id = uuid4()
     user_id = uuid4()
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -95,21 +93,24 @@ def _():
     user_id = uuid4()
 
     # Create a user
-    client.run(create_user_query(
-        user_id=user_id,
-        about="test user about",
-        name="test user name",
-    ))
+    client.run(
+        create_user_query(
+            user_id=user_id,
+            about="test user about",
+            name="test user name",
+        )
+    )
 
     # Create an agent
-    client.run(create_agent_query(
-        agent_id=agent_id,
-        about="test agent about",
-        name="test agent name",
-    ))
+    client.run(
+        create_agent_query(
+            agent_id=agent_id,
+            about="test agent about",
+            name="test agent name",
+        )
+    )
 
     # Create a session
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -141,21 +142,24 @@ def _():
     user_id = uuid4()
 
     # Create a user
-    client.run(create_user_query(
-        user_id=user_id,
-        about="test user about",
-        name="test user name",
-    ))
+    client.run(
+        create_user_query(
+            user_id=user_id,
+            about="test user about",
+            name="test user name",
+        )
+    )
 
     # Create an agent
-    client.run(create_agent_query(
-        agent_id=agent_id,
-        about="test agent about",
-        name="test agent name",
-    ))
+    client.run(
+        create_agent_query(
+            agent_id=agent_id,
+            about="test agent about",
+            name="test agent name",
+        )
+    )
 
     # Create a session
-    situation = "test situation"
 
     query = create_session_query(
         session_id=session_id,
@@ -178,7 +182,6 @@ def _():
 @test("list sessions")
 def _():
     client = cozo_client()
-    session_id = uuid4()
 
     query = list_sessions_query()
 
