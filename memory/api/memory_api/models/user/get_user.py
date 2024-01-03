@@ -12,10 +12,12 @@ def get_user_query(user_id: UUID):
         name,
         about,
         created_at,
+        updated_at,
     ] := input[user_id],
         *users {{
             user_id,
             name,
             about,
             created_at,
+            updated_at,
         }}"""
