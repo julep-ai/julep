@@ -2,15 +2,17 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from pydantic import UUID4
-from .protocol import (
-    Agent,
-    CreateAgentRequest,
-    UpdateAgentRequest,
-)
+
 from memory_api.clients.cozo import client
 from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.get_agent import get_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
+
+from ...common.protocols.agents import (
+    Agent,
+    CreateAgentRequest,
+    UpdateAgentRequest,
+)
 
 
 router = APIRouter()

@@ -8,7 +8,7 @@ def add_entries_query(entries: list[Entry]) -> str:
         return e.content.replace('"', "'")
 
     entries_lst = [
-        f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", {parenthesize(e.name) if e.name else "null"}, "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}", now()]'
+        f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", {parenthesize(e.name) if e.name else "null"}, "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}"]'
         for e in entries
         if e.content
     ]
@@ -19,11 +19,11 @@ def add_entries_query(entries: list[Entry]) -> str:
     entries_query = ",\n".join(entries_lst)
 
     query = f"""
-    ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at] <- [
+    ?[entry_id, session_id, source, role, name, content, token_count, tokenizer] <- [
         {entries_query}
     ]
 
-    :put entries {{
+    :insert entries {{
         entry_id,
         session_id,
         source,
@@ -32,8 +32,8 @@ def add_entries_query(entries: list[Entry]) -> str:
         content,
         token_count,
         tokenizer,
-        created_at,
     }}
+    :returning
     """
 
     return query
