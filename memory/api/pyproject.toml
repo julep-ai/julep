@@ -26,6 +26,7 @@ temporalio = "^1.4.0"
 ipython = "^8.18.1"
 black = "^23.12.1"
 ruff = "^0.1.9"
+datamodel-code-generator = "^0.25.2"
 
 [build-system]
 requires = ["poetry-core"]
