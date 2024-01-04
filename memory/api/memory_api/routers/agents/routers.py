@@ -58,11 +58,12 @@ async def update_agent(agent_id: UUID4, request: UpdateAgentRequest):
 
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(agent: CreateAgentRequest) -> Agent:
+    agent_id = uuid4()
     client.run(
-        create_agent_query(agent_id=uuid4(), name=agent.name, about=agent.about),
+        create_agent_query(agent_id=agent_id, name=agent.name, about=agent.about),
     )
 
-    return await get_agent(agent_id=agent.id)
+    return await get_agent(agent_id=agent_id)
 
 
 @router.get("/agents", tags=["agents"])

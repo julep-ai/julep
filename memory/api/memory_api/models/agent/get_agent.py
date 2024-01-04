@@ -6,7 +6,7 @@ def get_agent_query(agent_id: UUID):
         input[agent_id] <- [[to_uuid("{agent_id}")]]
 
         ?[
-            agent_id,
+            id,
             model,
             name,
             about,
@@ -15,7 +15,7 @@ def get_agent_query(agent_id: UUID):
             default_settings,
         ] := input[agent_id],
             *agents {{
-                agent_id,
+                agent_id: id,
                 model,
                 name,
                 about,
