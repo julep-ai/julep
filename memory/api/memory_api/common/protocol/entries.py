@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, computed_field
 
-EntrySource = Literal["api_request", "api_response"]
+EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
 Role = Literal["user", "assistant", "system"]
 Tokenizer = Literal["character_count"]
 

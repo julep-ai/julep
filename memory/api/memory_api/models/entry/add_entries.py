@@ -19,21 +19,21 @@ def add_entries_query(entries: list[Entry]) -> str:
     entries_query = ",\n".join(entries_lst)
 
     query = f"""
-    ?[entry_id, session_id, source, role, name, content, token_count, tokenizer] <- [
-        {entries_query}
-    ]
+        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer] <- [
+            {entries_query}
+        ]
 
-    :insert entries {{
-        entry_id,
-        session_id,
-        source,
-        role,
-        name, =>
-        content,
-        token_count,
-        tokenizer,
-    }}
-    :returning
+        :insert entries {{
+            entry_id,
+            session_id,
+            source,
+            role,
+            name, =>
+            content,
+            token_count,
+            tokenizer,
+        }}
+        :returning
     """
 
     return query

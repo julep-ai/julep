@@ -49,8 +49,15 @@ def _():
         content="test entry content",
     )
 
+    internal_entry = Entry(
+        session_id=session_id,
+        role="user",
+        content="test entry content",
+        source="internal"
+    )
+
     query = add_entries_query(
-        entries=[test_entry],
+        entries=[test_entry, internal_entry],
     )
 
     client.run(query)

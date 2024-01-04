@@ -15,4 +15,6 @@ def list_users_query(limit: int = 100, offset: int = 0):
         }}
     
     :limit {limit}
-    :offset {offset}"""
+    :offset {offset}
+    :sort -created_at
+    """
