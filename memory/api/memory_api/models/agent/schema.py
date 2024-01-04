@@ -6,11 +6,11 @@ create_agents_relation_query = """
 :create agents {
     agent_id: Uuid,
     =>
-    model: String,
     name: String,
     about: String,
-    created_at: Float,
-    updated_at: Float,
+    model: String default 'julep-ai/samantha-1-turbo',
+    created_at: Float default now(),
+    updated_at: Float default now(),
 }
 """
 
@@ -18,12 +18,12 @@ create_model_settings_relation_query = """
 :create agent_default_settings {
     agent_id: Uuid,
     =>
-    frequency_penalty: Float,
-    presence_penalty: Float,
-    length_penalty: Float,
-    repetition_penalty: Float,
-    top_p: Float,
-    temperature: Float,
+    frequency_penalty: Float default 0.0,
+    presence_penalty: Float default 0.0,
+    length_penalty: Float default 1.0,
+    repetition_penalty: Float default 1.0,
+    top_p: Float default 0.95,
+    temperature: Float default 0.7,
 }
 """
 

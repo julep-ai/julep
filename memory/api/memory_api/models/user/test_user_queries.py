@@ -87,13 +87,7 @@ def _():
         about="updated user about",
     )
 
-    client.run(update_query)
-
-    query = get_user_query(
-        user_id=user_id,
-    )
-
-    result = client.run(query)
+    result = client.run(update_query)
     data = result.iloc[0].to_dict()
 
     assert data["updated_at"] > data["created_at"]

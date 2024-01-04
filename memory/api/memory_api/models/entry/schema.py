@@ -9,12 +9,12 @@ create_entries_relation_query = """
     entry_id: Uuid default random_uuid_v4(),
     source: String,
     role: String,
-    name: String?,
+    name: String? default null,
     =>
     content: String,
     token_count: Int,
     tokenizer: String,
-    created_at: Float,
+    created_at: Float default now(),
 }
 """
 

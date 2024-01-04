@@ -6,6 +6,7 @@ from ward import test
 from .create_agent import create_agent_query
 from .get_agent import get_agent_query
 from .list_agents import list_agents_query
+from .update_agent import update_agent_query
 from .schema import init
 
 
@@ -68,6 +69,31 @@ def _():
 
     assert len(result["agent_id"]) == 1
     assert "temperature" in result["default_settings"][0]
+
+
+@test("update agent")
+def _():
+    client = cozo_client()
+    agent_id = uuid4()
+
+    create_query = create_agent_query(
+        agent_id=agent_id,
+        name="test agent",
+        about="test agent about",
+    )
+
+    client.run(create_query)
+
+    update_query = update_agent_query(
+        agent_id=agent_id,
+        name="updated agent",
+        about="updated agent about",
+    )
+
+    result = client.run(update_query)
+    data = result.iloc[0].to_dict()
+
+    assert data["updated_at"] > data["created_at"]
 
 
 @test("list agents")
