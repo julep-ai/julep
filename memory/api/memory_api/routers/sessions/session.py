@@ -8,6 +8,7 @@ from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
 from memory_api.models.entry.naive_context_window import naive_context_window_query
 from memory_api.models.session.session_data import get_session_data
+from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
 
@@ -15,7 +16,7 @@ from .protocol import Settings
 class BaseSession:
     session_id: UUID4
 
-    async def run(self, new_input, settings) -> Tuple[ChatML, Callable]:
+    async def run(self, new_input, settings: Settings) -> Tuple[ChatML, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -39,7 +40,7 @@ class BaseSession:
         return response, backward_pass
 
     async def forward(
-        self, session_data, new_input: list[Entry], settings
+        self, session_data: SessionData | None, new_input: list[Entry], settings: Settings
     ) -> Tuple[ChatML, Settings]:
         # role, name, content, token_count, created_at
         entries = [
@@ -64,6 +65,8 @@ class BaseSession:
             for e in new_input + entries
             if e.content
         ]
+        if session_data is not None:
+            settings.model = session_data.model
 
         return messages, settings
 
