@@ -9,48 +9,29 @@ def create_session_query(
     user_id = str(user_id)
 
     return f"""
-{{
-    # Create a new session
-    input[session_id, agent_id, user_id, situation] <- [[
-        to_uuid("{session_id}"),
-        to_uuid("{agent_id}"),
-        to_uuid("{user_id}"),
-        "{situation}",
-    ]]
+    {{
+        # Create a new session lookup
+        ?[session_id, agent_id, user_id] <- [[
+            to_uuid("{session_id}"),
+            to_uuid("{agent_id}"),
+            to_uuid("{user_id}"),
+        ]]
 
-    ?[session_id, situation, summary, created_at] := input[
-        session_id,
-        _,
-        _,
-        situation,
-    ], summary = null, created_at = now()
+        :insert session_lookup {{
+            agent_id,
+            user_id,
+            session_id,
+        }}
+    }} {{
+        # Create a new session
+        ?[session_id, situation] <- [[
+            to_uuid("{session_id}"),
+            "{situation}",
+        ]]
 
-    :put sessions {{
-        session_id,
-        situation,
-        summary,
-        created_at,
-    }}
-}}
-{{
-    # Create a new session lookup
-    input[session_id, agent_id, user_id, situation] <- [[
-        to_uuid("{session_id}"),
-        to_uuid("{agent_id}"),
-        to_uuid("{user_id}"),
-        "{situation}",
-    ]]
-
-    ?[agent_id, user_id, session_id] := input[
-        session_id,
-        agent_id,
-        user_id,
-        _,
-    ]
-
-    :put session_lookup {{
-        agent_id,
-        user_id,
-        session_id,
-    }}
-}}"""
+        :insert sessions {{
+            session_id,
+            situation,
+        }}
+        :returning
+     }}"""

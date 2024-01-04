@@ -9,8 +9,8 @@ create_users_relation_query = """
     =>
     name: String,
     about: String,
-    created_at: Float,
-    updated_at: Float,
+    created_at: Float default now(),
+    updated_at: Float default now(),
 }
 """
 

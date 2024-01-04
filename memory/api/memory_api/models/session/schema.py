@@ -9,8 +9,8 @@ create_sessions_relation_query = """
     updated_at: Validity default [floor(now()), true],
     =>
     situation: String,
-    summary: String?,
-    created_at: Float,
+    summary: String? default null,
+    created_at: Float default now(),
 }
 """
 
