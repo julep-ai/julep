@@ -1,3 +1,4 @@
+from uuid import uuid4
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -40,16 +41,17 @@ async def get_session(session_id: UUID4) -> Session:
 
 @router.post("/sessions/", status_code=HTTP_201_CREATED, tags=["sessions"])
 async def create_session(request: CreateSessionRequest) -> Session:
+    session_id = uuid4()
     client.run(
         create_session_query(
-            session_id=request.id,
+            session_id=session_id,
             agent_id=request.agent_id,
             user_id=request.user_id,
             situation=request.situation,
         ),
     )
 
-    return await get_session(request.id)
+    return await get_session(session_id)
 
 
 @router.get("/sessions/", tags=["sessions"])

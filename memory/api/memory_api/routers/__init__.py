@@ -1,5 +1,5 @@
 import openai
-from .env import generation_auth_token, generation_url
+from ..env import generation_auth_token, generation_url
 
 
 openai.api_key = generation_auth_token
