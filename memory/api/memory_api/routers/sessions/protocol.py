@@ -1,10 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, Field
-
-
-class ResponseFormatType(str, Enum):
-    text = ("text",)
-    json_object = "json_object"
+from memory_api.autogen.openapi_model import ResponseFormat
 
 
 class Settings(BaseModel):
@@ -15,7 +11,7 @@ class Settings(BaseModel):
     max_tokens: int
     presence_penalty: float | None = Field(default=0)
     repetition_penalty: float | None = Field(default=1)
-    response_format: ResponseFormatType
+    response_format: ResponseFormat | None
     seed: int | None = Field(default=0)
     stop: list[str] | None = None
     stream: bool = Field(default=False)
