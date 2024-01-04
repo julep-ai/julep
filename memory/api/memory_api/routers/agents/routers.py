@@ -1,3 +1,4 @@
+from uuid import uuid4
 from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
@@ -7,12 +8,7 @@ from memory_api.clients.cozo import client
 from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.get_agent import get_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
-
-from ...common.protocols.agents import (
-    Agent,
-    CreateAgentRequest,
-    UpdateAgentRequest,
-)
+from memory_api.autogen.openapi_model import Agent, CreateAgentRequest, UpdateAgentRequest
 
 
 router = APIRouter()
@@ -63,7 +59,7 @@ async def update_agent(agent_id: UUID4, request: UpdateAgentRequest):
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(agent: CreateAgentRequest) -> Agent:
     client.run(
-        create_agent_query(agent_id=agent.id, name=agent.name, about=agent.about),
+        create_agent_query(agent_id=uuid4(), name=agent.name, about=agent.about),
     )
 
     return await get_agent(agent_id=agent.id)
