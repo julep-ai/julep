@@ -1,6 +1,6 @@
 from ...common.protocol.entries import Entry
 
-parenthesize = lambda s: f"({s})"
+parenthesize = lambda s: f'"({s})"'
 
 
 def add_entries_query(entries: list[Entry]) -> str:

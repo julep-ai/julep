@@ -114,8 +114,12 @@ async def get_history(
 async def session_chat(
     session_id: UUID4, request: ChatInput, background_tasks: BackgroundTasks
 ):
+    async def run_task(task):
+        await task
+
     session = PlainCompletionSession(session_id)
     settings = Settings(
+        model="",
         frequency_penalty=request.frequency_penalty,
         length_penalty=request.length_penalty,
         logit_bias=request.logit_bias,
@@ -131,6 +135,6 @@ async def session_chat(
     )
     response, bg_task = await session.run(request.messages, settings)
 
-    background_tasks.add_task(bg_task)
+    background_tasks.add_task(run_task, bg_task)
 
     return JSONResponse(response)

@@ -8,6 +8,7 @@ from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
 from memory_api.models.entry.naive_context_window import naive_context_window_query
 from memory_api.models.session.session_data import get_session_data
+from memory_api.autogen.openapi_model import InputChatMLMessage
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
@@ -44,11 +45,14 @@ class BaseSession:
     ) -> Tuple[ChatML, Settings]:
         # role, name, content, token_count, created_at
         entries = [
-            {
-                "role": row["role"],
-                "name": row["name"],
-                "content": row["content"],
-            }
+            Entry(
+                **{
+                    "role": row["role"],
+                    "name": row["name"],
+                    "content": row["content"],
+                    "session_id": self.session_id,
+                }
+            )
             for _, row in client.run(
                 naive_context_window_query(self.session_id),
             ).iterrows()
@@ -90,18 +94,27 @@ class BaseSession:
             stream=settings.stream,
         )
 
-    async def backward(self, session_data, new_input, response, final_settings) -> None:
+    async def backward(self, session_data, new_input: list[InputChatMLMessage], response, final_settings) -> None:
         entries: list[Entry] = []
         for m in new_input:
-            m.session_id = self.session_id
-            entries.append(m)
+            entries.append(
+                Entry(
+                    session_id=self.session_id,
+                    role=m.role,
+                    content=m.content,
+                    name=m.name,
+                )
+            )
 
+        message = response["choices"][0]["message"]
+
+        # TODO: get assistant's name
         entries.append(
             Entry(
                 session_id=self.session_id,
-                role="assistant",
-                name=final_settings["name"],
-                content=response["choices"][0]["text"],
+                role=message["role"],
+                # name=final_settings["name"],
+                content=message["content"],
                 token_count=response["usage"]["total_tokens"],
             )
         )
