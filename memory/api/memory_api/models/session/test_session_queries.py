@@ -9,6 +9,7 @@ from ..user.create_user import create_user_query
 from ..user.schema import init as init_user
 
 from .create_session import create_session_query
+from .delete_session import delete_session_query
 from .get_session import get_session_query
 from .list_sessions import list_sessions_query
 from .session_data import get_session_data, session_data_query
@@ -128,6 +129,64 @@ def _():
     result = client.run(query)
 
     assert len(result["user_about"]) == 1
+
+
+
+@test("delete session")
+def _():
+    # Setup client for user and agent
+    client = cozo_client()
+    init_agent(client)
+    init_user(client)
+
+    session_id = uuid4()
+    agent_id = uuid4()
+    user_id = uuid4()
+
+    # Create a user
+    client.run(
+        create_user_query(
+            user_id=user_id,
+            about="test user about",
+            name="test user name",
+        )
+    )
+
+    # Create an agent
+    client.run(
+        create_agent_query(
+            agent_id=agent_id,
+            about="test agent about",
+            name="test agent name",
+        )
+    )
+
+    # Create a session
+    query = create_session_query(
+        session_id=session_id,
+        user_id=user_id,
+        agent_id=agent_id,
+        situation="test session about",
+    )
+
+    client.run(query)
+
+    # Delete the session
+    query = delete_session_query(
+        session_id=session_id,
+    )
+
+    client.run(query)
+
+    # Check that the session is deleted
+    query = get_session_query(
+        session_id=session_id,
+    )
+
+    result = client.run(query)
+
+    assert len(result["session_id"]) == 0
+
 
 
 @test("get session data using get_session_data")
