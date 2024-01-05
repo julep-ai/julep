@@ -8,17 +8,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from pycozo.client import QueryException
 from memory_api.routers import (
-    characters, 
-    sessions, 
-    embedder, 
-    users, 
+    agents,
+    sessions,
+    embedder,
+    users,
     entries,
     models,
     personality,
     beliefs,
-    episodes,
 )
-from .env import sentry_dsn
+from memory_api.models import init as init_models
+from memory_api.env import sentry_dsn
 
 
 sentry_sdk.init(
@@ -32,9 +32,9 @@ logger = logging.getLogger(__name__)
 
 def make_exception_handler(status: int):
     async def _handler(request: Request, exc):
-        exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+        exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
         logger.exception(exc)
-        content = {'status_code': status, 'message': exc_str, 'data': None}
+        content = {"status_code": status, "message": exc_str, "data": None}
         return JSONResponse(content=content, status_code=status)
 
     return _handler
@@ -42,11 +42,11 @@ def make_exception_handler(status: int):
 
 def register_exceptions(app: FastAPI):
     app.add_exception_handler(
-        RequestValidationError, 
+        RequestValidationError,
         make_exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY),
     )
     app.add_exception_handler(
-        QueryException, 
+        QueryException,
         make_exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR),
     )
 
@@ -64,7 +64,7 @@ app.add_middleware(
 
 register_exceptions(app)
 
-app.include_router(characters.router)
+app.include_router(agents.router)
 app.include_router(sessions.router)
 app.include_router(embedder.router)
 app.include_router(users.router)
@@ -74,7 +74,14 @@ app.include_router(personality.router)
 app.include_router(beliefs.router)
 
 
-def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, workers=None, log_level="info"):
+def main(
+    host="127.0.0.1",
+    port="8000",
+    backlog=4096,
+    timeout_keep_alive=30,
+    workers=None,
+    log_level="info",
+):
     uvicorn.run(
         "web:app",
         host=host,
@@ -87,13 +94,6 @@ def main(host="127.0.0.1", port="8000", backlog=4096, timeout_keep_alive=30, wor
 
 
 if __name__ == "__main__":
-    characters.db.init()
-    sessions.db.init()
-    users.db.init()
-    entries.db.init()
-    models.db.init()
-    personality.db.init()
-    beliefs.db.init()
-    episodes.db.init()
+    init_models()
 
     fire.Fire(main)

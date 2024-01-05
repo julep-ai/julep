@@ -1,84 +1,36 @@
-import uuid
-import openai
-from operator import itemgetter
-from fastapi import APIRouter, HTTPException, status
+from uuid import uuid4
+from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
-from .protocol import Session, ChatRequest
 from memory_api.clients.cozo import client
-from memory_api.common.db.entries import add_entries
-from memory_api.common.protocol.entries import Entry
-from memory_api.env import summarization_ratio_threshold
-from memory_api.clients.worker.types import MemoryManagementTaskArgs, ChatML
-from memory_api.clients.worker.worker import add_summarization_task
-from .queries import context_window_query_beliefs
-
-
-models_map = {
-    "samantha-1-alpha": "julep-ai/samantha-1-alpha",
-}
+from memory_api.models.session.get_session import get_session_query
+from memory_api.models.session.create_session import create_session_query
+from memory_api.models.session.list_sessions import list_sessions_query
+from memory_api.autogen.openapi_model import (
+    CreateSessionRequest, 
+    UpdateSessionRequest, 
+    Session, 
+    ChatInput, 
+    Suggestion, 
+    ChatMLMessage,
+)
+from .protocol import Settings
+from .session import PlainCompletionSession
 
 
 router = APIRouter()
 
 
-@router.post("/sessions/")
-async def create_session(request: Session) -> Session:
-    query = f"""
-        ?[session_id, character_id, user_id, situation, metadata] <- [[
-        to_uuid("{request.id}"),
-        to_uuid("{request.character_id}"),
-        to_uuid("{request.user_id}"),
-        "{request.situation}",
-        {request.metadata},
-    ]]
-
-    :put sessions {{
-        character_id,
-        user_id,
-        session_id,
-        situation,
-        metadata,
-    }}
-    """
-
-    client.run(query)
-
-    return await get_sessions(request.id)
-
-
-@router.get("/sessions/{session_id}")
-async def get_sessions(session_id: UUID4) -> Session:
-    query = f"""
-        input[session_id] <- [[
-        to_uuid("{session_id}"),
-    ]]
-
-    ?[
-        character_id,
-        user_id,
-        session_id,
-        updated_at,
-        situation,
-        summary,
-        metadata,
-        created_at,
-    ] := input[session_id],
-        *sessions{{
-            character_id,
-            user_id,
-            session_id,
-            situation,
-            summary,
-            metadata,
-            updated_at: validity,
-            created_at,
-            @ "NOW"
-        }}, updated_at = to_int(validity)
-    """
-
+@router.get("/sessions/{session_id}", tags=["sessions"])
+async def get_session(session_id: UUID4) -> Session:
     try:
-        res = [row.to_dict() for _, row in client.run(query).iterrows()][0]
+        res = [
+            row.to_dict()
+            for _, row in client.run(
+                get_session_query(session_id=session_id),
+            ).iterrows()
+        ][0]
         return Session(**res)
     except (IndexError, KeyError):
         raise HTTPException(
@@ -87,78 +39,102 @@ async def get_sessions(session_id: UUID4) -> Session:
         )
 
 
-@router.post("/sessions/chat")
-async def session_chat(request: ChatRequest):
-    entries: list[Entry] = []
-    for m in request.params.messages:
-        m.session_id = request.session_id
-        entries.append(m)
-    
-    add_entries(entries)
+@router.post("/sessions/", status_code=HTTP_201_CREATED, tags=["sessions"])
+async def create_session(request: CreateSessionRequest) -> Session:
+    session_id = uuid4()
+    client.run(
+        create_session_query(
+            session_id=session_id,
+            agent_id=request.agent_id,
+            user_id=request.user_id,
+            situation=request.situation,
+        ),
+    )
 
-    resp = client.run(context_window_query_beliefs.replace("{session_id}", request.session_id))
+    return await get_session(session_id)
 
+
+@router.get("/sessions/", tags=["sessions"])
+async def list_sessions(limit: int = 100, offset: int = 0) -> list[Session]:
+    return [
+        Session(**row.to_dict())
+        for _, row in client.run(
+            list_sessions_query(limit, offset),
+        ).iterrows()
+    ]
+
+
+@router.delete(
+    "/sessions/{session_id}", status_code=HTTP_202_ACCEPTED, tags=["sessions"]
+)
+async def delete_session(session_id: UUID4):
     try:
-        model_data = resp["model_data"][0]
-        character_data = resp["character_data"][0]
+        client.rm("sessions", {"session_id": str(session_id)})
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Character or model data not found",
-        )
-    
-    entries = sorted(resp["entries"][0], key=itemgetter("timestamp"))
-    summarization_threshold = model_data["max_length"] * summarization_ratio_threshold
-
-    if resp["total_tokens"][0] >= summarization_threshold:
-        await add_summarization_task(
-            MemoryManagementTaskArgs(
-                session_id=request.session_id, 
-                model=models_map.get(model_data["model_name"], model_data["model_name"]), 
-                dialog=[
-                    ChatML(
-                        **{
-                            **e, 
-                            "session_id": request.session_id, 
-                            "entry_id": uuid.UUID(bytes=bytes(e.get("entry_id"))),
-                        },
-                    ) 
-                    for e in entries if e.get("role") != "system"
-                ],
-            ),
+            detail="Session not found",
         )
 
-    # generate response
-    default_settings = model_data["default_settings"]
-    messages = [
-        {
-            "role": e.get("role"), 
-            "name": e.get("name"), 
-            "content": e["content"] if not isinstance(e["content"], list) else "\n".join(e["content"]),
-        } 
-        for e in entries if e.get("content")
-    ]
 
-    response = openai.ChatCompletion.create(
-        model=model_data["model_name"],
-        messages=messages,
-        max_tokens=default_settings["max_tokens"],
-        temperature=default_settings["temperature"],
-        repetition_penalty=default_settings["repetition_penalty"],
-        frequency_penalty=default_settings["frequency_penalty"],
-    )
+@router.put("/sessions/{session_id}", tags=["sessions"])
+async def update_session(session_id: UUID4, request: UpdateSessionRequest) -> Session:
+    try:
+        client.update(
+            "sessions",
+            {
+                "session_id": str(session_id),
+                "situation": request.situation,
+            },
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found",
+        )
 
-    # add response as an entry
-    add_entries(
-        [
-            Entry(
-                session_id=request.session_id, 
-                role="assistant", 
-                name=character_data["name"], 
-                content=response["choices"][0]["text"], 
-                token_count=response["usage"]["total_tokens"],
-            )
-        ]
+    return await get_session(session_id)
+
+
+@router.get("/sessions/{session_id}/suggestions", tags=["sessions"])
+async def get_suggestions(
+    session_id: UUID4, limit: int = 100, offset: int = 0
+) -> list[Suggestion]:
+    return []
+
+
+@router.get("/sessions/{session_id}/history", tags=["sessions"])
+async def get_history(
+    session_id: UUID4, limit: int = 100, offset: int = 0
+) -> list[ChatMLMessage]:
+    return []
+
+
+@router.post("/sessions/{session_id}/chat", tags=["sessions"])
+async def session_chat(
+    session_id: UUID4, request: ChatInput, background_tasks: BackgroundTasks
+):
+    async def run_task(task):
+        await task
+
+    session = PlainCompletionSession(session_id)
+    settings = Settings(
+        model="",
+        frequency_penalty=request.frequency_penalty,
+        length_penalty=request.length_penalty,
+        logit_bias=request.logit_bias,
+        max_tokens=request.max_tokens,
+        presence_penalty=request.presence_penalty,
+        repetition_penalty=request.repetition_penalty,
+        response_format=request.response_format,
+        seed=request.seed,
+        stop=request.stop,
+        stream=request.stream,
+        temperature=request.temperature,
+        top_p=request.top_p,
     )
+    response, bg_task = await session.run(request.messages, settings)
+
+    background_tasks.add_task(run_task, bg_task)
 
     return JSONResponse(response)
