@@ -48,11 +48,13 @@ def get_account_query(user_id: UUID4) -> DataFrame:
         @ "NOW"
     }}
     """
-    
+
     return client.run(query)
 
 
-def save_results_query(user_id: UUID4, scores: dict, full_assesment: bool = False) -> DataFrame:
+def save_results_query(
+    user_id: UUID4, scores: dict, full_assesment: bool = False
+) -> DataFrame:
     query = f"""
     input[
         user_id,
@@ -88,7 +90,7 @@ def save_results_query(user_id: UUID4, scores: dict, full_assesment: bool = Fals
         processed_at,
     }}
     """
-    
+
     return client.run(query)
 
 

@@ -1,7 +1,7 @@
 import httpx
 from memory_api.env import worker_url
 from .types import (
-    MemoryManagementTaskArgs, 
+    MemoryManagementTaskArgs,
     MemoryManagementTask,
     AddPrinciplesTask,
     AddPrinciplesTaskArgs,

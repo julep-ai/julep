@@ -1,14 +1,31 @@
-import time
-from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Literal
+from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field, computed_field
+from memory_api.autogen.openapi_model import Role
+
+EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
+Tokenizer = Literal["character_count"]
 
 
 class Entry(BaseModel):
-    id: str | None = Field(None, alias="entry_id")
-    session_id: str
-    timestamp: float = Field(default_factory=time.time)
-    role: str
+    id: UUID = Field(alias="entry_id", default_factory=uuid4)
+    session_id: UUID
+    source: EntrySource = Field(default="api_request")
+    role: Role
     name: str | None = None
     content: str
-    token_count: int = Field(default=0)
-    processed: bool = Field(default=False)
-    parent_id: str | None = None
+    tokenizer: str = Field(default="character_count")
+    created_at: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
+
+    @computed_field
+    @property
+    def token_count(self) -> int:
+        if self.tokenizer == "character_count":
+            return int(len(self.content) // 3.5)
+
+        raise NotImplementedError(f"Unknown tokenizer: {self.tokenizer}")
+
+    class Config:
+        use_enum_values = True  # <--

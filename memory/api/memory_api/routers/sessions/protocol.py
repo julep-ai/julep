@@ -1,29 +1,19 @@
-from uuid import uuid4
-from pydantic import BaseModel, Field, UUID4
-from memory_api.common.protocol.entries import Entry
+from enum import Enum
+from pydantic import BaseModel, Field
+from memory_api.autogen.openapi_model import ResponseFormat
 
 
-class Session(BaseModel):
-    id: UUID4 = Field(default_factory=uuid4, alias="session_id")
-    character_id: str
-    user_id: str
-    updated_at: float | None = None
-    created_at: float | None = None
-    situation: str
-    summary: str | None = None
-    metadata: dict = Field(default={})
-
-
-class ChatParams(BaseModel):
-    messages: list[Entry]
-
-
-class ChatRequest(BaseModel):
-    session_id: str
-    params: ChatParams
-    remember: bool = False
-    recall: bool = False
-
-
-class SessionsRequest(BaseModel):
-    session_id: str
+class Settings(BaseModel):
+    model: str
+    frequency_penalty: float | None = Field(default=0)
+    length_penalty: float | None = Field(default=1.0)
+    logit_bias: float | None = None
+    max_tokens: int
+    presence_penalty: float | None = Field(default=0)
+    repetition_penalty: float | None = Field(default=1)
+    response_format: ResponseFormat | None
+    seed: int | None = Field(default=0)
+    stop: list[str] | None = None
+    stream: bool = Field(default=False)
+    temperature: float | None = Field(default=0.7)
+    top_p: float | None = Field(default=1)

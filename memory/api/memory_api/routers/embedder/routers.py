@@ -9,7 +9,7 @@ from google.protobuf import json_format
 from google.protobuf.struct_pb2 import Value
 
 from memory_api.env import (
-    prediction_project, 
+    prediction_project,
     prediction_endpoint_id,
     prediction_location,
     prediction_api_endpoint,
