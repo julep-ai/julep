@@ -3,14 +3,14 @@ def list_sessions_query(limit: int = 100, offset: int = 0):
         ?[
             agent_id,
             user_id,
-            session_id,
+            id,
             situation,
             summary,
             updated_at,
             created_at,
         ] :=
             *sessions{{
-                session_id,
+                session_id: id,
                 situation,
                 summary,
                 created_at,

@@ -8,14 +8,14 @@ def get_user_query(user_id: UUID):
     input[user_id] <- [[to_uuid("{user_id}")]]
 
     ?[
-        user_id,
+        id,
         name,
         about,
         created_at,
         updated_at,
     ] := input[user_id],
         *users {{
-            user_id,
+            user_id: id,
             name,
             about,
             created_at,

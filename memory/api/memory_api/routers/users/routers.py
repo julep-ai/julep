@@ -1,3 +1,4 @@
+from uuid import uuid4
 from pydantic import UUID4
 from fastapi import APIRouter, HTTPException, status
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
@@ -5,7 +6,7 @@ from memory_api.clients.cozo import client
 from memory_api.models.user.create_user import create_user_query
 from memory_api.models.user.get_user import get_user_query
 from memory_api.models.user.list_users import list_users_query
-from .protocol import User, CreateUserRequest, UpdateUserRequest
+from memory_api.autogen.openapi_model import User, CreateUserRequest, UpdateUserRequest
 
 
 router = APIRouter()
@@ -42,9 +43,10 @@ async def update_user(user_id: UUID4, request: UpdateUserRequest):
 
 @router.post("/users", status_code=HTTP_201_CREATED, tags=["users"])
 async def create_user(request: CreateUserRequest) -> User:
+    user_id = uuid4()
     client.run(
         create_user_query(
-            user_id=request.id,
+            user_id=user_id,
             name=request.name,
             about=request.about,
         ),
@@ -54,7 +56,7 @@ async def create_user(request: CreateUserRequest) -> User:
     res = [
         row.to_dict()
         for _, row in client.run(
-            get_user_query(user_id=request.id),
+            get_user_query(user_id=user_id),
         ).iterrows()
     ][0]
     return User(**res)

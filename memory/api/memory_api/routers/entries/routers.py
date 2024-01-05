@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from pydantic import UUID4
-from .protocol import Entry, EntriesRequest
+from .protocol import EntriesRequest
 from memory_api.clients.cozo import client
+from memory_api.common.protocol.entries import Entry
 from memory_api.models.entry.add_entries import add_entries_query
 from memory_api.models.entry.get_entries import get_entries_query
 

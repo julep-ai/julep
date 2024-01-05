@@ -8,6 +8,8 @@ from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
 from memory_api.models.entry.naive_context_window import naive_context_window_query
 from memory_api.models.session.session_data import get_session_data
+from memory_api.autogen.openapi_model import InputChatMLMessage
+from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
 
@@ -15,7 +17,7 @@ from .protocol import Settings
 class BaseSession:
     session_id: UUID4
 
-    async def run(self, new_input, settings) -> Tuple[ChatML, Callable]:
+    async def run(self, new_input, settings: Settings) -> Tuple[ChatML, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -39,15 +41,18 @@ class BaseSession:
         return response, backward_pass
 
     async def forward(
-        self, session_data, new_input: list[Entry], settings
+        self, session_data: SessionData | None, new_input: list[Entry], settings: Settings
     ) -> Tuple[ChatML, Settings]:
         # role, name, content, token_count, created_at
         entries = [
-            {
-                "role": row["role"],
-                "name": row["name"],
-                "content": row["content"],
-            }
+            Entry(
+                **{
+                    "role": row["role"],
+                    "name": row["name"],
+                    "content": row["content"],
+                    "session_id": self.session_id,
+                }
+            )
             for _, row in client.run(
                 naive_context_window_query(self.session_id),
             ).iterrows()
@@ -64,6 +69,8 @@ class BaseSession:
             for e in new_input + entries
             if e.content
         ]
+        if session_data is not None:
+            settings.model = session_data.model
 
         return messages, settings
 
@@ -87,18 +94,27 @@ class BaseSession:
             stream=settings.stream,
         )
 
-    async def backward(self, session_data, new_input, response, final_settings) -> None:
+    async def backward(self, session_data, new_input: list[InputChatMLMessage], response, final_settings) -> None:
         entries: list[Entry] = []
         for m in new_input:
-            m.session_id = self.session_id
-            entries.append(m)
+            entries.append(
+                Entry(
+                    session_id=self.session_id,
+                    role=m.role,
+                    content=m.content,
+                    name=m.name,
+                )
+            )
 
+        message = response["choices"][0]["message"]
+
+        # TODO: get assistant's name
         entries.append(
             Entry(
                 session_id=self.session_id,
-                role="assistant",
-                name=final_settings["name"],
-                content=response["choices"][0]["text"],
+                role=message["role"],
+                # name=final_settings["name"],
+                content=message["content"],
                 token_count=response["usage"]["total_tokens"],
             )
         )
