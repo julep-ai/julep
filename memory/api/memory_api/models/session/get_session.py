@@ -12,14 +12,14 @@ def get_session_query(session_id: UUID):
     ?[
         agent_id,
         user_id,
-        session_id,
+        id,
         situation,
         summary,
         updated_at,
         created_at,
     ] := input[session_id],
         *sessions{{
-            session_id,
+            session_id: id,
             situation,
             summary,
             created_at,

@@ -1,19 +1,21 @@
+from uuid import uuid4
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
-from .protocol import (
-    CreateSessionRequest,
-    UpdateSessionRequest,
-    Session,
-    ChatRequest,
-    Suggestion,
-    ChatMessage,
-)
 from memory_api.clients.cozo import client
 from memory_api.models.session.get_session import get_session_query
 from memory_api.models.session.create_session import create_session_query
 from memory_api.models.session.list_sessions import list_sessions_query
+from memory_api.autogen.openapi_model import (
+    CreateSessionRequest, 
+    UpdateSessionRequest, 
+    Session, 
+    ChatInput, 
+    Suggestion, 
+    ChatMLMessage,
+)
+from .protocol import Settings
 from .session import PlainCompletionSession
 
 
@@ -39,16 +41,17 @@ async def get_session(session_id: UUID4) -> Session:
 
 @router.post("/sessions/", status_code=HTTP_201_CREATED, tags=["sessions"])
 async def create_session(request: CreateSessionRequest) -> Session:
+    session_id = uuid4()
     client.run(
         create_session_query(
-            session_id=request.id,
+            session_id=session_id,
             agent_id=request.agent_id,
             user_id=request.user_id,
             situation=request.situation,
         ),
     )
 
-    return await get_session(request.id)
+    return await get_session(session_id)
 
 
 @router.get("/sessions/", tags=["sessions"])
@@ -103,17 +106,35 @@ async def get_suggestions(
 @router.get("/sessions/{session_id}/history", tags=["sessions"])
 async def get_history(
     session_id: UUID4, limit: int = 100, offset: int = 0
-) -> list[ChatMessage]:
+) -> list[ChatMLMessage]:
     return []
 
 
 @router.post("/sessions/{session_id}/chat", tags=["sessions"])
 async def session_chat(
-    session_id: UUID4, request: ChatRequest, background_tasks: BackgroundTasks
+    session_id: UUID4, request: ChatInput, background_tasks: BackgroundTasks
 ):
-    session = PlainCompletionSession(session_id)
-    response, bg_task = await session.run(request.messages, request.settings)
+    async def run_task(task):
+        await task
 
-    background_tasks.add_task(bg_task)
+    session = PlainCompletionSession(session_id)
+    settings = Settings(
+        model="",
+        frequency_penalty=request.frequency_penalty,
+        length_penalty=request.length_penalty,
+        logit_bias=request.logit_bias,
+        max_tokens=request.max_tokens,
+        presence_penalty=request.presence_penalty,
+        repetition_penalty=request.repetition_penalty,
+        response_format=request.response_format,
+        seed=request.seed,
+        stop=request.stop,
+        stream=request.stream,
+        temperature=request.temperature,
+        top_p=request.top_p,
+    )
+    response, bg_task = await session.run(request.messages, settings)
+
+    background_tasks.add_task(run_task, bg_task)
 
     return JSONResponse(response)
