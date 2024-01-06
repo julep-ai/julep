@@ -1,3 +1,4 @@
+from datetime import datetime
 from ...common.protocol.entries import Entry
 
 parenthesize = lambda s: f'"({s})"'
@@ -8,7 +9,7 @@ def add_entries_query(entries: list[Entry]) -> str:
         return e.content.replace('"', "'")
 
     entries_lst = [
-        f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", {parenthesize(e.name) if e.name else "null"}, "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}"]'
+        f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", {parenthesize(e.name) if e.name else "null"}, "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}", {datetime.utcnow().timestamp()}]'
         for e in entries
         if e.content
     ]
@@ -19,7 +20,7 @@ def add_entries_query(entries: list[Entry]) -> str:
     entries_query = ",\n".join(entries_lst)
 
     query = f"""
-        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer] <- [
+        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at] <- [
             {entries_query}
         ]
 
@@ -32,6 +33,7 @@ def add_entries_query(entries: list[Entry]) -> str:
             content,
             token_count,
             tokenizer,
+            created_at,
         }}
         :returning
     """
