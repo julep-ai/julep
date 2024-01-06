@@ -29,5 +29,5 @@ def get_session_query(session_id: UUID):
         *session_lookup{{
             agent_id,
             user_id,
-            session_id,
+            session_id: id,
         }}, updated_at = to_int(validity)"""
