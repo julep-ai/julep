@@ -66,7 +66,7 @@ class BaseSession:
                 if not isinstance(e.content, list)
                 else "\n".join(e.content),
             }
-            for e in new_input + entries
+            for e in entries + new_input
             if e.content
         ]
         if session_data is not None:
