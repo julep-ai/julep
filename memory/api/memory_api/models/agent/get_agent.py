@@ -13,7 +13,7 @@ def get_agent_query(agent_id: UUID):
             created_at,
             updated_at,
             default_settings,
-        ] := input[agent_id],
+        ] := input[id],
             *agents {{
                 agent_id: id,
                 model,

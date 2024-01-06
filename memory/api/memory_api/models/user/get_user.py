@@ -13,7 +13,7 @@ def get_user_query(user_id: UUID):
         about,
         created_at,
         updated_at,
-    ] := input[user_id],
+    ] := input[id],
         *users {{
             user_id: id,
             name,

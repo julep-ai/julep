@@ -17,7 +17,7 @@ def get_session_query(session_id: UUID):
         summary,
         updated_at,
         created_at,
-    ] := input[session_id],
+    ] := input[id],
         *sessions{{
             session_id: id,
             situation,
