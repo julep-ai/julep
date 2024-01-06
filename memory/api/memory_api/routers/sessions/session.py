@@ -44,19 +44,23 @@ class BaseSession:
         self, session_data: SessionData | None, new_input: list[Entry], settings: Settings
     ) -> Tuple[ChatML, Settings]:
         # role, name, content, token_count, created_at
-        entries = [
-            Entry(
-                **{
-                    "role": row["role"],
-                    "name": row["name"],
-                    "content": row["content"],
-                    "session_id": self.session_id,
-                }
-            )
-            for _, row in client.run(
-                naive_context_window_query(self.session_id),
-            ).iterrows()
-        ]
+        entries = sorted(
+            [
+                Entry(
+                    **{
+                        "role": row["role"],
+                        "name": row["name"],
+                        "content": row["content"],
+                        "session_id": self.session_id,
+                        "created_at": row["created_at"],
+                    }
+                )
+                for _, row in client.run(
+                    naive_context_window_query(self.session_id),
+                ).iterrows()
+            ],
+            key=lambda x: x.created_at
+        )
 
         messages = [
             {
