@@ -94,6 +94,6 @@ def main(
 
 
 if __name__ == "__main__":
-    init_models()
+    # init_models()
 
     fire.Fire(main)
