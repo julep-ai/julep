@@ -116,5 +116,5 @@ def down(client):
         remove_session_lookup_relation_query,
         remove_users_relation_query,
     ]
-    for q in down_queries:
+    for q in reversed(down_queries):
         client.run(q)
