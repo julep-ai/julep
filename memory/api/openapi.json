@@ -54,8 +54,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Session",
-                  "description": "The created session object"
+                  "$ref": "#/components/schemas/ResourceCreatedResponse"
                 }
               }
             },
@@ -64,7 +63,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -128,7 +127,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -155,7 +154,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/ResourceCreatedResponse"
                 }
               }
             },
@@ -164,7 +163,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -225,7 +224,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -252,7 +251,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Agent"
+                  "$ref": "#/components/schemas/ResourceCreatedResponse"
                 }
               }
             },
@@ -261,7 +260,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -324,7 +323,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -350,7 +349,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -366,7 +365,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -390,7 +389,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Session"
+                  "$ref": "#/components/schemas/ResourceUpdatedResponse"
                 }
               }
             }
@@ -398,7 +397,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -469,7 +468,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -540,7 +539,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -610,7 +609,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -692,7 +691,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -729,7 +728,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -745,7 +744,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -769,7 +768,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
+                  "$ref": "#/components/schemas/ResourceUpdatedResponse"
                 }
               }
             }
@@ -777,7 +776,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -814,7 +813,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -830,7 +829,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -854,7 +853,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Agent"
+                  "$ref": "#/components/schemas/ResourceUpdatedResponse"
                 }
               }
             }
@@ -862,7 +861,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -927,7 +926,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -962,15 +961,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "status"
-                  ]
+                  "$ref": "#/components/schemas/ResourceCreatedResponse"
                 }
               }
             }
@@ -978,7 +969,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -1032,7 +1023,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -1067,15 +1058,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "status"
-                  ]
+                  "$ref": "#/components/schemas/ResourceCreatedResponse"
                 }
               }
             }
@@ -1083,7 +1066,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -1121,7 +1104,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -1159,7 +1142,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       }
@@ -1179,7 +1162,7 @@
         },
         "security": [
           {
-            "http1": []
+            "api-key": []
           }
         ]
       },
@@ -1203,6 +1186,181 @@
           "required": true
         }
       ]
+    },
+    "/agents/{agent_id}/tools": {
+      "get": {
+        "summary": "Get tools of the agent",
+        "description": "Sorted (created_at descending)",
+        "operationId": "GetAgentTools",
+        "tags": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-04/schema#",
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Tool"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "agent_id",
+          "description": "",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "Create tool for the agent",
+        "description": "",
+        "operationId": "CreateAgentTool",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateToolRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceCreatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ]
+      }
+    },
+    "/agents/{agent_id}/tools/{tool_id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "agent_id",
+          "description": "",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        },
+        {
+          "in": "path",
+          "name": "tool_id",
+          "description": "",
+          "schema": {
+            "type": "string"
+          },
+          "required": true
+        }
+      ],
+      "delete": {
+        "summary": "Delete tool by id",
+        "description": "",
+        "operationId": "DeleteAgentTool",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {}
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update agent tool definition",
+        "description": "",
+        "operationId": "UpdateAgentTool",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateToolRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceUpdatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1255,7 +1413,7 @@
           "instructions": {
             "type": "array",
             "items": {
-              "type": "string",
+              "$ref": "#/components/schemas/Instruction",
               "description": "Instruction for the agent"
             },
             "description": "List of instructions for the agent"
@@ -1269,14 +1427,6 @@
             "type": "string",
             "format": "date-time",
             "description": "Agent updated at (RFC-3339 format)"
-          },
-          "tools": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Tool",
-              "description": "Description and parameters of tool"
-            },
-            "description": "A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for."
           },
           "id": {
             "type": "string",
@@ -1308,7 +1458,6 @@
       },
       "FunctionDef": {
         "type": "object",
-        "deprecated": true,
         "properties": {
           "description": {
             "type": "string",
@@ -1346,11 +1495,17 @@
               }
             ],
             "description": "Function definition and parameters"
+          },
+          "id": {
+            "type": "string",
+            "description": "Tool ID",
+            "format": "uuid"
           }
         },
         "required": [
           "type",
-          "definition"
+          "definition",
+          "id"
         ]
       },
       "Session": {
@@ -1459,7 +1614,7 @@
           "instructions": {
             "type": "array",
             "items": {
-              "type": "string",
+              "$ref": "#/components/schemas/Instruction",
               "description": "Instruction"
             },
             "description": "List of instructions for the agent"
@@ -1467,7 +1622,7 @@
           "tools": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Tool"
+              "$ref": "#/components/schemas/CreateToolRequest"
             },
             "description": "A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for."
           },
@@ -1521,17 +1676,10 @@
           "instructions": {
             "type": "array",
             "items": {
-              "type": "string",
+              "$ref": "#/components/schemas/Instruction",
               "description": "Instruction"
             },
             "description": "List of instructions for the agent"
-          },
-          "tools": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Tool"
-            },
-            "description": "List of tools available to this agent"
           },
           "name": {
             "type": "string",
@@ -2232,14 +2380,110 @@
             "default": true
           }
         }
+      },
+      "Instruction": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "enum": [
+              "function",
+              "webhook"
+            ],
+            "description": "Content of the instruction"
+          },
+          "important": {
+            "type": "boolean",
+            "description": "Whether this instruction should be marked as important (only up to 3 instructions per agent can be marked important)",
+            "default": false
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "CreateToolRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "function",
+              "webhook"
+            ],
+            "description": "Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)"
+          },
+          "definition": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FunctionDef"
+              }
+            ],
+            "description": "Function definition and parameters"
+          }
+        },
+        "required": [
+          "type",
+          "definition"
+        ]
+      },
+      "UpdateToolRequest": {
+        "type": "object",
+        "properties": {
+          "definition": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FunctionDef"
+              }
+            ],
+            "description": "Function definition and parameters"
+          }
+        },
+        "required": [
+          "definition"
+        ]
+      },
+      "ResourceCreatedResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "created_at"
+        ]
+      },
+      "ResourceUpdatedResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "updated_at"
+        ]
       }
     },
     "securitySchemes": {
-      "http1": {
+      "api-key": {
         "type": "apiKey",
         "scheme": "basic",
         "description": "API Key Authentication",
-        "name": "Julep API Key",
+        "name": "Authorization",
         "in": "header"
       }
     },
@@ -2285,7 +2529,15 @@
         }
       },
       "memory_id": {
-        "in": "query",
+        "in": "path",
+        "required": false,
+        "description": "",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "tool_id": {
+        "in": "path",
         "required": false,
         "description": "",
         "schema": {
@@ -2296,7 +2548,7 @@
   },
   "security": [
     {
-      "http1": []
+      "api-key": []
     }
   ]
 }
