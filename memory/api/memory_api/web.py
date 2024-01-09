@@ -2,7 +2,7 @@ import fire
 import uvicorn
 import logging
 import sentry_sdk
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -18,6 +18,7 @@ from memory_api.routers import (
     beliefs,
 )
 from memory_api.env import sentry_dsn
+from memory_api.dependencies.auth import get_api_key
 
 
 sentry_sdk.init(
@@ -50,7 +51,7 @@ def register_exceptions(app: FastAPI):
     )
 
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(get_api_key)])
 
 app.add_middleware(
     CORSMiddleware,
