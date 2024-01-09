@@ -1,6 +1,6 @@
 # /usr/bin/env python3
 
-MIGRATION_ID = "additional_information"
+MIGRATION_ID = "additional_info"
 CREATED_AT = 1704728076.129496
 
 
@@ -12,9 +12,9 @@ def run(client, *queries):
     client.run(query)
 
 
-agent_additional_information_table = dict(
+agent_additional_info_table = dict(
     up="""
-    :create agent_additional_information {
+    :create agent_additional_info {
         agent_id: Uuid,
         additional_info_id: Uuid
         =>
@@ -22,13 +22,13 @@ agent_additional_information_table = dict(
     }
     """,
     down="""
-    ::remove agent_additional_information
+    ::remove agent_additional_info
     """,
 )
 
-user_additional_information_table = dict(
+user_additional_info_table = dict(
     up="""
-    :create user_additional_information {
+    :create user_additional_info {
         user_id: Uuid,
         additional_info_id: Uuid
         =>
@@ -36,7 +36,7 @@ user_additional_information_table = dict(
     }
     """,
     down="""
-    ::remove user_additional_information
+    ::remove user_additional_info
     """,
 )
 
@@ -91,8 +91,8 @@ information_snippets_fts_index = dict(
 )
 
 queries_to_run = [
-    agent_additional_information_table,
-    user_additional_information_table,
+    agent_additional_info_table,
+    user_additional_info_table,
     information_snippets_table,
     information_snippets_hnsw_index,
     information_snippets_fts_index,
