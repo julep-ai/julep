@@ -1,27 +1,27 @@
 # Tests for session queries
-from pycozo import Client
 from uuid import uuid4
+
+from cozo_migrate.api import init, apply
+from pycozo import Client
 from ward import test
 
 from ..agent.create_agent import create_agent_query
-from ..agent.schema import init as init_agent
 from ..user.create_user import create_user_query
-from ..user.schema import init as init_user
 
 from .create_session import create_session_query
 from .delete_session import delete_session_query
 from .get_session import get_session_query
 from .list_sessions import list_sessions_query
 from .session_data import get_session_data, session_data_query
-from .schema import init
 
 
-def cozo_client():
+def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
     client = Client()
 
     init(client)
+    apply(client, migrations_dir=migrations_dir, all_=True)
 
     return client
 
@@ -86,8 +86,6 @@ def _():
 def _():
     # Setup client for user and agent
     client = cozo_client()
-    init_agent(client)
-    init_user(client)
 
     session_id = uuid4()
     agent_id = uuid4()
@@ -131,13 +129,10 @@ def _():
     assert len(result["user_about"]) == 1
 
 
-
 @test("delete session")
 def _():
     # Setup client for user and agent
     client = cozo_client()
-    init_agent(client)
-    init_user(client)
 
     session_id = uuid4()
     agent_id = uuid4()
@@ -188,13 +183,10 @@ def _():
     assert len(result["session_id"]) == 0
 
 
-
 @test("get session data using get_session_data")
 def _():
     # Setup client for user and agent
     client = cozo_client()
-    init_agent(client)
-    init_user(client)
 
     session_id = uuid4()
     agent_id = uuid4()
