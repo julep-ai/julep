@@ -1,11 +1,13 @@
 from uuid import UUID
 
 
-def get_session_query(session_id: UUID):
+def get_session_query(developer_id: UUID, session_id: UUID):
     session_id = str(session_id)
+    developer_id = str(developer_id)
 
     return f"""
-    input[session_id] <- [[
+    input[developer_id, session_id] <- [[
+        to_uuid("{developer_id}"),
         to_uuid("{session_id}"),
     ]]
 
@@ -17,8 +19,9 @@ def get_session_query(session_id: UUID):
         summary,
         updated_at,
         created_at,
-    ] := input[id],
+    ] := input[developer_id, id],
         *sessions{{
+            developer_id,
             session_id: id,
             situation,
             summary,

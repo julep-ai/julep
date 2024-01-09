@@ -1,7 +1,7 @@
 from uuid import UUID
 
 
-def delete_agent_query(agent_id: UUID):
+def delete_agent_query(developer_id: UUID, agent_id: UUID):
     return f"""
     {{
         # Delete default agent settings
@@ -12,9 +12,10 @@ def delete_agent_query(agent_id: UUID):
         }}
     }} {{
         # Delete the agent
-        ?[agent_id] <- [["{agent_id}"]]
+        ?[agent_id, developer_id] <- [["{agent_id}", "{developer_id}"]]
 
         :delete agents {{
+            developer_id,
             agent_id
         }}
     }}"""

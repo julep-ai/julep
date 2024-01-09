@@ -94,6 +94,7 @@ def up(client):
     )
 
 
+
 def down(client):
     remove_agents_relation_query = """
     ::remove agents
