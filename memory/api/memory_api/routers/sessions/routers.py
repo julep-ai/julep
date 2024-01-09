@@ -59,9 +59,11 @@ async def create_session(
             situation=request.situation,
         ),
     )
-    session = Session(**[row.to_dict() for _, row in resp.iterrows()][0])
 
-    return ResourceCreatedResponse(id=session.id, created_at=session.created_at)
+    return ResourceCreatedResponse(
+        id=resp["session_id"][0], 
+        created_at=resp["created_at"][0],
+    )
 
 
 @router.get("/sessions/", tags=["sessions"])
@@ -104,9 +106,11 @@ async def update_session(
                 "situation": request.situation,
             },
         )
-        session = Session(**[row.to_dict() for _, row in resp.iterrows()][0])
 
-        return ResourceUpdatedResponse(id=session.id, updated_at=session.updated_at)
+        return ResourceUpdatedResponse(
+            id=resp["session_id"][0], 
+            updated_at=resp["updated_at"][0],
+        )
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
