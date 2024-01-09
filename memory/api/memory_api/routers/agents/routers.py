@@ -16,6 +16,7 @@ from memory_api.autogen.openapi_model import (
     UpdateAgentRequest,
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
+    AgentDefaultSettings,
 )
 
 
@@ -46,13 +47,15 @@ async def update_agent(
                 x_developer_id,
                 request.name,
                 request.about,
-                request.model,
-                request.default_settings.model_dump(),
+                request.model or "julep-ai/samantha-1-turbo",
+                (request.default_settings or AgentDefaultSettings()).model_dump(),
             )
         )
-        agent = Agent(**[row.to_dict() for _, row in resp.iterrows()][0])
 
-        return ResourceUpdatedResponse(id=agent.id, updated_at=agent.updated_at)
+        return ResourceUpdatedResponse(
+            id=resp["agent_id"][0], 
+            updated_at=resp["updated_at"][0],
+        )
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -73,9 +76,11 @@ async def create_agent(
             about=agent.about,
         ),
     )
-    new_agent = Agent(**[row.to_dict() for _, row in resp.iterrows()][0])
-
-    return ResourceCreatedResponse(id=new_agent.id, created_at=new_agent.created_at)
+    
+    return ResourceCreatedResponse(
+        id=resp["agent_id"][0], 
+        created_at=resp["created_at"][0],
+    )
 
 
 @router.get("/agents", tags=["agents"])

@@ -52,8 +52,11 @@ async def update_user(
                 about=request.about,
             )
         )
-        user = User(**[row.to_dict() for _, row in resp.iterrows()][0])
-        return ResourceUpdatedResponse(id=user.id, updated_at=user.updated_at)
+
+        return ResourceUpdatedResponse(
+            id=resp["user_id"][0], 
+            updated_at=resp["updated_at"][0],
+        )
         # TODO: add additional info update
     except (IndexError, KeyError):
         raise HTTPException(
@@ -77,9 +80,10 @@ async def create_user(
     )
 
     # TODO: add additional info
-    user = User(**[row.to_dict() for _, row in resp.iterrows()][0])
-
-    return ResourceCreatedResponse(id=user.id, created_at=user.created_at)
+    return ResourceCreatedResponse(
+        id=resp["user_id"][0], 
+        created_at=resp["created_at"][0],
+    )
 
 
 @router.get("/users", tags=["users"])
