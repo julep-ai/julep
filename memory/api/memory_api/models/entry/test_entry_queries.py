@@ -1,21 +1,23 @@
 # Tests for entry queries
-from pycozo import Client
 from uuid import uuid4
+
+from cozo_migrate.api import init, apply
+from pycozo import Client
 from ward import test
 
 from ...common.protocol.entries import Entry
 from .add_entries import add_entries_query
 from .get_entries import get_entries_query
 from .naive_context_window import naive_context_window_query
-from .schema import init
 
 
-def cozo_client():
+def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
     client = Client()
 
     init(client)
+    apply(client, migrations_dir=migrations_dir, all_=True)
 
     return client
 
@@ -53,7 +55,7 @@ def _():
         session_id=session_id,
         role="user",
         content="test entry content",
-        source="internal"
+        source="internal",
     )
 
     query = add_entries_query(

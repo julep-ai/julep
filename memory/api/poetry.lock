@@ -441,13 +441,13 @@ files = [
 
 [[package]]
 name = "cozo-migrate"
-version = "0.1.3"
+version = "0.2.0"
 description = "A simple utility for migrations for cozo db"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "cozo_migrate-0.1.3-py3-none-any.whl", hash = "sha256:6daf06e71ebdf82305f84ebf0554f52a9b9884bb9824915a156dee95a9213170"},
-    {file = "cozo_migrate-0.1.3.tar.gz", hash = "sha256:9dd5f7f7e44131c58eb1f23fdfb4c78e856abc42ca4aae1adcb61746f7c4cd05"},
+    {file = "cozo_migrate-0.2.0-py3-none-any.whl", hash = "sha256:90e8254f2634b4b7e2427cc9614b6ca7b500417052c4adab3e4fd6e71db9f89c"},
+    {file = "cozo_migrate-0.2.0.tar.gz", hash = "sha256:1b5527c771a9a8600eadcdfa039fe487a1a3bba4d8842a2fdab64d69e3274eb7"},
 ]
 
 [package.dependencies]
@@ -2674,4 +2674,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "bc39b193637dc6994ba84ca442f8df32dcf7dbb654b0b1fd3aa0a0ac1ce19f70"
+content-hash = "9e46f641e661462e765aef03d3af20266ba6601773c32ca74eb55673dd755d21"
