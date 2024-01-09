@@ -1,7 +1,16 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "init"
 CREATED_AT = 1704699172.673636
+
+
+def run(client, *queries):
+    joiner = "}\n\n{"
+
+    query = joiner.join(queries)
+    query = f"{{\n{query}\n}}"
+    client.run(query)
+
 
 def up(client):
     create_agents_relation_query = """
@@ -73,16 +82,17 @@ def up(client):
         updated_at: Float default now(),
     }
     """
-    up_queries = [
+
+    run(
+        client,
         create_agents_relation_query,
         create_model_settings_relation_query,
         create_entries_relation_query,
         create_sessions_relation_query,
         create_session_lookup_relation_query,
         create_users_relation_query,
-    ]
-    for q in up_queries:
-        client.run(q)
+    )
+
 
 def down(client):
     remove_agents_relation_query = """
@@ -108,13 +118,13 @@ def down(client):
     remove_users_relation_query = """
     ::remove users
     """
-    down_queries = [
-        remove_agents_relation_query,
-        remove_model_settings_relation_query,
-        remove_entries_relation_query,
-        remove_sessions_relation_query,
-        remove_session_lookup_relation_query,
+
+    run(
+        client,
         remove_users_relation_query,
-    ]
-    for q in reversed(down_queries):
-        client.run(q)
+        remove_session_lookup_relation_query,
+        remove_sessions_relation_query,
+        remove_entries_relation_query,
+        remove_model_settings_relation_query,
+        remove_agents_relation_query,
+    )
