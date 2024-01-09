@@ -1,6 +1,8 @@
 # Tests for agent queries
-from pycozo import Client
 from uuid import uuid4
+
+from cozo_migrate.api import init, apply
+from pycozo import Client
 from ward import test
 
 from .create_agent import create_agent_query
@@ -8,15 +10,15 @@ from .delete_agent import delete_agent_query
 from .get_agent import get_agent_query
 from .list_agents import list_agents_query
 from .update_agent import update_agent_query
-from .schema import init
 
 
-def cozo_client():
+def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
     client = Client()
 
     init(client)
+    apply(client, migrations_dir=migrations_dir, all_=True)
 
     return client
 
