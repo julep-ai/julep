@@ -1,22 +1,21 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "developers"
 CREATED_AT = 1704699595.546072
 
-def up(client):
-    # TODO: add other fields to developers
-    create_developers_relation_query = """
-    :create developers {
-        developer_id: Uuid,
-        =>
-        name: String,
-    }
-    """
 
+def run(client, *queries):
+    joiner = "}\n\n{"
+
+    query = joiner.join(queries)
+    query = f"{{\n{query}\n}}"
+    client.run(query)
+
+
+def up(client):
     update_agents_relation_query = """
     ?[agent_id, name, about, model, created_at, updated_at, developer_id] := *agents{
-        agent_id
-        =>
+        agent_id,
         name,
         about,
         model,
@@ -37,10 +36,9 @@ def up(client):
     """
 
     update_sessions_relation_query = """
-    ?[session_id, updated_at, situation, summary, created_at] := *sessions{
+    ?[developer_id, session_id, updated_at, situation, summary, created_at] := *sessions{
         session_id,
-        updated_at
-        =>
+        updated_at,
         situation,
         summary,
         created_at,
@@ -59,9 +57,8 @@ def up(client):
 
     update_users_relation_query = """
     ?[user_id, name, about, created_at, updated_at, developer_id] := *users{
-        user_id
-        =>
-        name, 
+        user_id,
+        name,
         about, 
         created_at, 
         updated_at,
@@ -78,20 +75,18 @@ def up(client):
     }
     """
 
-    up_queries = [
-        create_developers_relation_query,
+    run(
+        client,
         update_agents_relation_query,
         update_sessions_relation_query,
         update_users_relation_query,
-    ]
-    for q in up_queries:
-        client.run(q)
+    )
+
 
 def down(client):
     update_agents_relation_query = """
     ?[agent_id, name, about, model, created_at, updated_at] := *agents{
-        agent_id
-        =>
+        agent_id,
         name,
         about,
         model,
@@ -113,8 +108,7 @@ def down(client):
     update_sessions_relation_query = """
     ?[session_id, updated_at, situation, summary, created_at] := *sessions{
         session_id,
-        updated_at
-        =>
+        updated_at,
         situation,
         summary,
         created_at,
@@ -132,9 +126,8 @@ def down(client):
 
     update_users_relation_query = """
     ?[user_id, name, about, created_at, updated_at] := *users{
-        user_id
-        =>
-        name, 
+        user_id,
+        name,
         about, 
         created_at, 
         updated_at,
@@ -150,15 +143,9 @@ def down(client):
     }
     """
 
-    remove_developers_relation_query = """
-    ::remove developers
-    """
-
-    down_queries = [
-        update_agents_relation_query,
-        update_sessions_relation_query,
+    run(
+        client,
         update_users_relation_query,
-        remove_developers_relation_query,
-    ]
-    for q in down_queries:
-        client.run(q)
+        update_sessions_relation_query,
+        update_agents_relation_query,
+    )
