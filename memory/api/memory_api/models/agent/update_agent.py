@@ -6,6 +6,7 @@ from ...common.utils.cozo import cozo_process_mutate_data
 
 def update_agent_query(
     agent_id: UUID,
+    developer_id: UUID,
     name: str,
     about: str,
     model: str = "julep-ai/samantha-1-turbo",
@@ -16,11 +17,12 @@ def update_agent_query(
 
     update_query = f"""
         # update the agent
-        ?[agent_id, name, about, model, updated_at] <- [
-            [to_uuid("{agent_id}"), "{name}", "{about}", "{model}", now()]
+        ?[agent_id, developer_id, name, about, model, updated_at] <- [
+            [to_uuid("{agent_id}"), to_uuid("{developer_id}"), "{name}", "{about}", "{model}", now()]
         ]
 
         :update agents {{
+            developer_id,
             agent_id =>
             name,
             about,

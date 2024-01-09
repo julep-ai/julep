@@ -16,12 +16,13 @@ from .protocol import Settings
 @dataclass
 class BaseSession:
     session_id: UUID4
+    developer_id: UUID4
 
     async def run(self, new_input, settings: Settings) -> Tuple[ChatML, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
-        session_data = get_session_data(self.session_id)
+        session_data = get_session_data(self.developer_id, self.session_id)
 
         # Assemble context
         init_context, final_settings = await self.forward(
