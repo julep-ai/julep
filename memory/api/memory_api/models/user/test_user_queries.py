@@ -1,21 +1,23 @@
 # Tests for user queries
-from pycozo import Client
 from uuid import uuid4
+
+from cozo_migrate.api import init, apply
+from pycozo import Client
 from ward import raises, test
 
 from .create_user import create_user_query
 from .get_user import get_user_query
 from .list_users import list_users_query
 from .update_user import update_user_query
-from .schema import init
 
 
-def cozo_client():
+def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
     client = Client()
 
     init(client)
+    apply(client, migrations_dir=migrations_dir, all_=True)
 
     return client
 
