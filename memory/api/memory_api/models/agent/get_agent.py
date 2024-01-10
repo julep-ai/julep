@@ -3,7 +3,7 @@ from uuid import UUID
 
 def get_agent_query(developer_id: UUID, agent_id: UUID):
     return f"""
-        input[agent_id] <- [[to_uuid("{agent_id}"), to_uuid("{developer_id}")]]
+        input[agent_id, developer_id] <- [[to_uuid("{agent_id}"), to_uuid("{developer_id}")]]
 
         ?[
             id,
@@ -24,7 +24,7 @@ def get_agent_query(developer_id: UUID, agent_id: UUID):
                 updated_at,
             }},
             *agent_default_settings {{
-                agent_id,
+                agent_id: id,
                 frequency_penalty,
                 presence_penalty,
                 length_penalty,

@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from cozo_migrate.api import init, apply
 from pycozo import Client
-from ward import test
+from ward import test, skip
 
 from .create_agent import create_agent_query
 from .delete_agent import delete_agent_query
@@ -27,9 +27,11 @@ def cozo_client(migrations_dir: str = "./migrations"):
 def _():
     client = cozo_client()
     agent_id = uuid4()
+    developer_id = uuid4()
 
     query = create_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
         name="test agent",
         about="test agent about",
     )
@@ -41,23 +43,27 @@ def _():
 def _():
     client = cozo_client()
     agent_id = uuid4()
+    developer_id = uuid4()
 
     query = get_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
     )
 
     result = client.run(query)
 
-    assert len(result["agent_id"]) == 0
+    assert len(result["id"]) == 0
 
 
 @test("get agent exists")
 def _():
     client = cozo_client()
     agent_id = uuid4()
+    developer_id = uuid4()
 
     query = create_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
         name="test agent",
         about="test agent about",
         default_settings={"temperature": 1.5},
@@ -67,11 +73,12 @@ def _():
 
     query = get_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
     )
 
     result = client.run(query)
 
-    assert len(result["agent_id"]) == 1
+    assert len(result["id"]) == 1
     assert "temperature" in result["default_settings"][0]
     assert result["default_settings"][0]["temperature"] == 1.5
 
@@ -80,10 +87,12 @@ def _():
 def _():
     client = cozo_client()
     agent_id = uuid4()
+    developer_id = uuid4()
 
     # Create the agent
     query = create_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
         name="test agent",
         about="test agent about",
     )
@@ -93,6 +102,7 @@ def _():
     # Delete the agent
     query = delete_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
     )
 
     client.run(query)
@@ -100,20 +110,23 @@ def _():
     # Check that the agent is deleted
     query = get_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
     )
 
     result = client.run(query)
 
-    assert len(result["agent_id"]) == 0
+    assert len(result["id"]) == 0
 
 
 @test("update agent")
 def _():
     client = cozo_client()
     agent_id = uuid4()
+    developer_id = uuid4()
 
     create_query = create_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
         name="test agent",
         about="test agent about",
     )
@@ -122,6 +135,7 @@ def _():
 
     update_query = update_agent_query(
         agent_id=agent_id,
+        developer_id=developer_id,
         name="updated agent",
         about="updated agent about",
         default_settings={"temperature": 1.5},
@@ -136,9 +150,12 @@ def _():
 @test("list agents")
 def _():
     client = cozo_client()
+    developer_id = uuid4()
 
-    query = list_agents_query()
+    query = list_agents_query(
+        developer_id=developer_id,
+    )
 
     result = client.run(query)
 
-    assert len(result["agent_id"]) == 0
+    assert len(result["id"]) == 0
