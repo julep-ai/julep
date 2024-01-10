@@ -8,7 +8,7 @@ def session_data_query(developer_id: UUID, session_id: UUID):
     session_id = str(session_id)
 
     return f"""
-    input[session_id] <- [[
+    input[developer_id, session_id] <- [[
         to_uuid("{developer_id}"),
         to_uuid("{session_id}"),
     ]]
