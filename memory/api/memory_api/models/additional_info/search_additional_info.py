@@ -19,7 +19,7 @@ def search_additional_info_snippets_by_embedding_query(
             query_embedding,
         ] <- [[
             to_uuid("{owner_id}"),
-            {json.dumps(query_embedding)},
+            vec({json.dumps(query_embedding)}),
         ]]
 
         candidate[
@@ -47,6 +47,7 @@ def search_additional_info_snippets_by_embedding_query(
                 snippet |
                 query: query_embedding,
                 k: {k},
+                ef: 128,
                 radius: {radius},
                 bind_distance: distance,
                 bind_vector: vector,
