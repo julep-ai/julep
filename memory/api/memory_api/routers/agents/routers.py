@@ -9,10 +9,18 @@ from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
 from memory_api.models.agent.delete_agent import delete_agent_query
 from memory_api.models.agent.update_agent import update_agent_query
-from memory_api.models.additional_info.create_additional_info import create_additional_info_query
-from memory_api.models.additional_info.list_additional_info import list_additional_info_snippets_by_owner_query
-from memory_api.models.additional_info.delete_additional_info import delete_additional_info_by_id_query
-from memory_api.models.additional_info.get_additional_info import get_additional_info_snippets_by_id_query
+from memory_api.models.additional_info.create_additional_info import (
+    create_additional_info_query,
+)
+from memory_api.models.additional_info.list_additional_info import (
+    list_additional_info_snippets_by_owner_query,
+)
+from memory_api.models.additional_info.delete_additional_info import (
+    delete_additional_info_by_id_query,
+)
+from memory_api.models.additional_info.get_additional_info import (
+    get_additional_info_snippets_by_id_query,
+)
 from memory_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -100,7 +108,9 @@ async def list_agents(
 
 
 @router.post("/agents/{agent_id}/additional_info", tags=["agents"])
-async def create_additional_info(agent_id: UUID4, request: CreateAdditionalInfoRequest) -> ResourceCreatedResponse:
+async def create_additional_info(
+    agent_id: UUID4, request: CreateAdditionalInfoRequest
+) -> ResourceCreatedResponse:
     additional_info_id = uuid4()
     resp = client.run(
         create_additional_info_query(
@@ -119,7 +129,9 @@ async def create_additional_info(agent_id: UUID4, request: CreateAdditionalInfoR
 
 
 @router.get("/agents/{agent_id}/additional_info", tags=["agents"])
-async def list_additional_info(agent_id: UUID4, limit: int = 100, offset: int = 0) -> list[AdditionalInfo]:
+async def list_additional_info(
+    agent_id: UUID4, limit: int = 100, offset: int = 0
+) -> list[AdditionalInfo]:
     resp = client.run(
         list_additional_info_snippets_by_owner_query(
             owner_type="agent",
@@ -129,15 +141,17 @@ async def list_additional_info(agent_id: UUID4, limit: int = 100, offset: int = 
 
     return [
         AdditionalInfo(
-            id=row["additional_info_id"], 
-            title=row["title"], 
+            id=row["additional_info_id"],
+            title=row["title"],
             content=row["snippet"],
         )
         for _, row in resp.iterrows()
     ]
 
 
-@router.delete("/agents/{agent_id}/additional_info/{additional_info_id}", tags=["agents"])
+@router.delete(
+    "/agents/{agent_id}/additional_info/{additional_info_id}", tags=["agents"]
+)
 async def delete_additional_info(agent_id: UUID4, additional_info_id: UUID4):
     resp = client.run(
         get_additional_info_snippets_by_id_query(
