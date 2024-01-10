@@ -1582,11 +1582,13 @@
         "properties": {
           "user_id": {
             "type": "string",
-            "description": "User ID of user to associate with this session"
+            "description": "User ID of user to associate with this session",
+            "format": "uuid"
           },
           "agent_id": {
             "type": "string",
-            "description": "Agent ID of agent to associate with this session"
+            "description": "Agent ID of agent to associate with this session",
+            "format": "uuid"
           },
           "situation": {
             "type": "string",
@@ -2340,7 +2342,8 @@
           },
           "id": {
             "type": "string",
-            "description": "ID of additional info doc"
+            "description": "ID of additional info doc",
+            "format": "uuid"
           }
         },
         "required": [
