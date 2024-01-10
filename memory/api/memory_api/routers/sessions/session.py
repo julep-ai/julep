@@ -41,7 +41,10 @@ class BaseSession:
         return response, backward_pass
 
     async def forward(
-        self, session_data: SessionData | None, new_input: list[Entry], settings: Settings
+        self,
+        session_data: SessionData | None,
+        new_input: list[Entry],
+        settings: Settings,
     ) -> Tuple[ChatML, Settings]:
         # role, name, content, token_count, created_at
         entries = sorted(
@@ -59,7 +62,7 @@ class BaseSession:
                     naive_context_window_query(self.session_id),
                 ).iterrows()
             ],
-            key=lambda x: x.created_at
+            key=lambda x: x.created_at,
         )
 
         messages = [
@@ -98,7 +101,13 @@ class BaseSession:
             stream=settings.stream,
         )
 
-    async def backward(self, session_data, new_input: list[InputChatMLMessage], response, final_settings) -> None:
+    async def backward(
+        self,
+        session_data,
+        new_input: list[InputChatMLMessage],
+        response,
+        final_settings,
+    ) -> None:
         entries: list[Entry] = []
         for m in new_input:
             entries.append(

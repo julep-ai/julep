@@ -8,7 +8,11 @@ from memory_api.clients.cozo import client
 from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.get_agent import get_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
-from memory_api.autogen.openapi_model import Agent, CreateAgentRequest, UpdateAgentRequest
+from memory_api.autogen.openapi_model import (
+    Agent,
+    CreateAgentRequest,
+    UpdateAgentRequest,
+)
 
 
 router = APIRouter()

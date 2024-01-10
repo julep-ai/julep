@@ -28,7 +28,19 @@ black = "^23.12.1"
 ruff = "^0.1.9"
 datamodel-code-generator = "^0.25.2"
 cozo-migrate = "^0.2.0"
+poethepoet = "^0.24.4"
+pytype = "^2024.1.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+prettify = "black ."
+lint = "ruff **/*.py --fix --unsafe-fixes"
+typecheck = "pytype memory_api"
+check = [
+    "prettify",
+    "lint",
+    "typecheck",
+]
