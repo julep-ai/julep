@@ -7,10 +7,18 @@ from memory_api.clients.cozo import client
 from memory_api.models.user.create_user import create_user_query
 from memory_api.models.user.list_users import list_users_query
 from memory_api.models.user.update_user import update_user_query
-from memory_api.models.additional_info.create_additional_info import create_additional_info_query
-from memory_api.models.additional_info.list_additional_info import list_additional_info_snippets_by_owner_query
-from memory_api.models.additional_info.delete_additional_info import delete_additional_info_by_id_query
-from memory_api.models.additional_info.get_additional_info import get_additional_info_snippets_by_id_query
+from memory_api.models.additional_info.create_additional_info import (
+    create_additional_info_query,
+)
+from memory_api.models.additional_info.list_additional_info import (
+    list_additional_info_snippets_by_owner_query,
+)
+from memory_api.models.additional_info.delete_additional_info import (
+    delete_additional_info_by_id_query,
+)
+from memory_api.models.additional_info.get_additional_info import (
+    get_additional_info_snippets_by_id_query,
+)
 from memory_api.autogen.openapi_model import (
     User,
     CreateUserRequest,
@@ -104,15 +112,19 @@ async def list_users(
 
 
 @router.post("/users/{user_id}/additional_info", tags=["users"])
-async def create_additional_info(user_id: UUID4, request: CreateAdditionalInfoRequest) -> ResourceCreatedResponse:
+async def create_additional_info(
+    user_id: UUID4, request: CreateAdditionalInfoRequest
+) -> ResourceCreatedResponse:
     additional_info_id = uuid4()
-    resp = client.run(create_additional_info_query(
-        owner_type="user",
-        owner_id=user_id,
-        id=additional_info_id,
-        title=request.title,
-        content=request.content,
-    ))
+    resp = client.run(
+        create_additional_info_query(
+            owner_type="user",
+            owner_id=user_id,
+            id=additional_info_id,
+            title=request.title,
+            content=request.content,
+        )
+    )
 
     return ResourceCreatedResponse(
         id=resp["additional_info_id"][0],
@@ -121,7 +133,9 @@ async def create_additional_info(user_id: UUID4, request: CreateAdditionalInfoRe
 
 
 @router.get("/users/{user_id}/additional_info", tags=["users"])
-async def list_additional_info(user_id: UUID4, limit: int = 100, offset: int = 0) -> list[AdditionalInfo]:
+async def list_additional_info(
+    user_id: UUID4, limit: int = 100, offset: int = 0
+) -> list[AdditionalInfo]:
     resp = client.run(
         list_additional_info_snippets_by_owner_query(
             owner_type="user",
@@ -131,8 +145,8 @@ async def list_additional_info(user_id: UUID4, limit: int = 100, offset: int = 0
 
     return [
         AdditionalInfo(
-            id=row["additional_info_id"], 
-            title=row["title"], 
+            id=row["additional_info_id"],
+            title=row["title"],
             content=row["snippet"],
         )
         for _, row in resp.iterrows()
