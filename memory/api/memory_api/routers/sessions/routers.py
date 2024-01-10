@@ -8,11 +8,11 @@ from memory_api.models.session.get_session import get_session_query
 from memory_api.models.session.create_session import create_session_query
 from memory_api.models.session.list_sessions import list_sessions_query
 from memory_api.autogen.openapi_model import (
-    CreateSessionRequest, 
-    UpdateSessionRequest, 
-    Session, 
-    ChatInput, 
-    Suggestion, 
+    CreateSessionRequest,
+    UpdateSessionRequest,
+    Session,
+    ChatInput,
+    Suggestion,
     ChatMLMessage,
 )
 from .protocol import Settings

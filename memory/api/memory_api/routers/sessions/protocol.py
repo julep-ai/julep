@@ -1,4 +1,3 @@
-from enum import Enum
 from pydantic import BaseModel, Field
 from memory_api.autogen.openapi_model import ResponseFormat
 

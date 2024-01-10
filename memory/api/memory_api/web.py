@@ -17,7 +17,6 @@ from memory_api.routers import (
     personality,
     beliefs,
 )
-from memory_api.models import init as init_models
 from memory_api.env import sentry_dsn
 
 
