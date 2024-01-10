@@ -34,7 +34,7 @@ def _():
         )
 
         result = client.run(query)
-        assert len(result) == 1, "Only 1 snippet should have been created"
+        assert result["created_at"][0]
 
 
 @test("get additional info")

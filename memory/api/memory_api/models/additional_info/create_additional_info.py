@@ -43,17 +43,20 @@ def create_additional_info_query(
         ]]
 
         :insert {owner_type}_additional_info {{
-            {owner_type}_id, additional_info_id
+            {owner_type}_id, additional_info_id, created_at
         }}
     }} {{
         # create the snippets
-        input[{snippet_cols}] <- {json.dumps(snippet_rows)}
-        ?[{snippet_cols}, created_at] :=
-            input[{snippet_cols}],
-            created_at = {created_at}
+        ?[{snippet_cols}] <- {json.dumps(snippet_rows)}
 
         :insert information_snippets {{
             {snippet_cols}
         }}
-        :returning
+    }} {{
+        # return the additional info
+        ?[{owner_type}_id, additional_info_id, created_at] <- [[
+            to_uuid("{owner_id}"),
+            to_uuid("{id}"),
+            {created_at},
+        ]]
     }}"""
