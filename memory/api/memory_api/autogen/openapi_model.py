@@ -85,10 +85,10 @@ class Session(BaseModel):
 
 
 class CreateSessionRequest(BaseModel):
-    user_id: str = Field(
+    user_id: UUID = Field(
         ..., description="User ID of user to associate with this session"
     )
-    agent_id: str = Field(
+    agent_id: UUID = Field(
         ..., description="Agent ID of agent to associate with this session"
     )
     situation: Optional[str] = Field(
@@ -377,7 +377,7 @@ class AdditionalInfo(BaseModel):
         ..., description="Title describing what this bit of information contains"
     )
     content: str = Field(..., description="Information content")
-    id: str = Field(..., description="ID of additional info doc")
+    id: UUID = Field(..., description="ID of additional info doc")
 
 
 class CreateAdditionalInfoRequest(BaseModel):
