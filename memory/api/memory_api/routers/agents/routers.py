@@ -113,7 +113,7 @@ async def create_additional_info(agent_id: UUID4, request: CreateAdditionalInfoR
     )
 
     return ResourceCreatedResponse(
-        id=resp["agent_id"][0],
+        id=resp["additional_info_id"][0],
         created_at=resp["created_at"][0],
     )
 
@@ -128,13 +128,17 @@ async def list_additional_info(agent_id: UUID4, limit: int = 100, offset: int = 
     )
 
     return [
-        AdditionalInfo(**row.to_dict())
+        AdditionalInfo(
+            id=row["additional_info_id"], 
+            title=row["title"], 
+            content=row["snippet"],
+        )
         for _, row in resp.iterrows()
     ]
 
 
 @router.delete("/agents/{agent_id}/additional_info/{additional_info_id}", tags=["agents"])
-async def delete_additional_info(agent_id: UUID4, additional_info_id: UUID4) -> list[AdditionalInfo]:
+async def delete_additional_info(agent_id: UUID4, additional_info_id: UUID4):
     resp = client.run(
         get_additional_info_snippets_by_id_query(
             owner_type="agent",
@@ -150,6 +154,7 @@ async def delete_additional_info(agent_id: UUID4, additional_info_id: UUID4) -> 
     client.run(
         delete_additional_info_by_id_query(
             owner_type="agent",
+            owner_id=agent_id,
             additional_info_id=additional_info_id,
         )
     )
