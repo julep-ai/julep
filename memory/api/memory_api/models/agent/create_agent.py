@@ -6,6 +6,7 @@ from ...common.utils.cozo import cozo_process_mutate_data
 
 def create_agent_query(
     agent_id: UUID,
+    developer_id: UUID,
     name: str,
     about: str,
     model: str = "julep-ai/samantha-1-turbo",
@@ -31,11 +32,12 @@ def create_agent_query(
         }}
     }} {{
         # create the agent
-        ?[agent_id, model, name, about] <- [
-            ["{agent_id}", "{model}", "{name}", "{about}"]
+        ?[agent_id, developer_id, model, name, about] <- [
+            ["{agent_id}", "{developer_id}", "{model}", "{name}", "{about}"]
         ]
 
         :insert agents {{
+            developer_id,
             agent_id =>
             model,
             name,

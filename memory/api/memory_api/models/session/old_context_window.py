@@ -1,4 +1,4 @@
-def context_window_query_beliefs(session_id):
+def context_window_query_beliefs(developer_id, session_id):
     return f"""
 {{
     # Goal of this block is to get:
@@ -10,6 +10,7 @@ def context_window_query_beliefs(session_id):
         session_id,
         dialog_embedding,
     ] <- [[
+        to_uuid('{developer_id}'),
         to_uuid('{session_id}'),
         rand_vec(1024),
     ]]
@@ -22,10 +23,12 @@ def context_window_query_beliefs(session_id):
         updated_at,
         dialog_embedding,
     ] := input[
+            developer_id,
             session_id,
             dialog_embedding,
         ],
         *sessions{{
+            developer_id,
             character_id,
             user_id,
             situation,

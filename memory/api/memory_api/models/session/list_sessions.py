@@ -1,5 +1,12 @@
-def list_sessions_query(limit: int = 100, offset: int = 0):
+from uuid import UUID
+
+
+def list_sessions_query(developer_id: UUID, limit: int = 100, offset: int = 0):
     return f"""
+        input[developer_id] <- [[
+            to_uuid("{developer_id}"),
+        ]]
+
         ?[
             agent_id,
             user_id,
@@ -9,7 +16,9 @@ def list_sessions_query(limit: int = 100, offset: int = 0):
             updated_at,
             created_at,
         ] :=
+            input[developer_id],
             *sessions{{
+                developer_id,
                 session_id: id,
                 situation,
                 summary,

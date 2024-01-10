@@ -1,9 +1,9 @@
 from uuid import UUID
 
 
-def get_agent_query(agent_id: UUID):
+def get_agent_query(developer_id: UUID, agent_id: UUID):
     return f"""
-        input[agent_id] <- [[to_uuid("{agent_id}")]]
+        input[agent_id] <- [[to_uuid("{agent_id}"), to_uuid("{developer_id}")]]
 
         ?[
             id,
@@ -13,8 +13,9 @@ def get_agent_query(agent_id: UUID):
             created_at,
             updated_at,
             default_settings,
-        ] := input[id],
+        ] := input[id, developer_id],
             *agents {{
+                developer_id,
                 agent_id: id,
                 model,
                 name,

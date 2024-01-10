@@ -4,11 +4,12 @@ from ...clients.cozo import client
 from ...common.protocol.sessions import SessionData
 
 
-def session_data_query(session_id: UUID):
+def session_data_query(developer_id: UUID, session_id: UUID):
     session_id = str(session_id)
 
     return f"""
-    input[session_id] <- [[
+    input[developer_id, session_id] <- [[
+        to_uuid("{developer_id}"),
         to_uuid("{session_id}"),
     ]]
 
@@ -24,8 +25,9 @@ def session_data_query(session_id: UUID):
         agent_about,
         model,
         default_settings,
-    ] := input[session_id],
+    ] := input[developer_id, session_id],
         *sessions{{
+            developer_id,
             session_id,
             situation,
             summary,
@@ -67,8 +69,10 @@ def session_data_query(session_id: UUID):
     """
 
 
-def get_session_data(session_id: UUID, client=client) -> SessionData | None:
-    query = session_data_query(session_id)
+def get_session_data(
+    developer_id: UUID, session_id: UUID, client=client
+) -> SessionData | None:
+    query = session_data_query(developer_id, session_id)
     result = client.run(query)
     if result.empty:
         return None
