@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from cozo_migrate.api import init, apply
 from pycozo import Client
-from ward import test
+from ward import test, skip
 
 from ...common.protocol.entries import Entry
 from .add_entries import add_entries_query
