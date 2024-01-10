@@ -26,9 +26,11 @@ def cozo_client(migrations_dir: str = "./migrations"):
 def _():
     client = cozo_client()
     user_id = uuid4()
+    developer_id = uuid4()
 
     query = create_user_query(
         user_id=user_id,
+        developer_id=developer_id,
         name="test user",
         about="test user about",
     )
@@ -40,9 +42,11 @@ def _():
 def _():
     client = cozo_client()
     user_id = uuid4()
+    developer_id = uuid4()
 
     query = create_user_query(
         user_id=user_id,
+        developer_id=developer_id,
         name="test user",
         about="test user about",
     )
@@ -58,9 +62,11 @@ def _():
 def _():
     client = cozo_client()
     user_id = uuid4()
+    developer_id = uuid4()
 
     query = update_user_query(
         user_id=user_id,
+        developer_id=developer_id,
         name="test user",
         about="test user about",
     )
@@ -74,9 +80,11 @@ def _():
 def _():
     client = cozo_client()
     user_id = uuid4()
+    developer_id = uuid4()
 
     create_query = create_user_query(
         user_id=user_id,
+        developer_id=developer_id,
         name="test user",
         about="test user about",
     )
@@ -85,6 +93,7 @@ def _():
 
     update_query = update_user_query(
         user_id=user_id,
+        developer_id=developer_id,
         name="updated user",
         about="updated user about",
     )
@@ -99,23 +108,27 @@ def _():
 def _():
     client = cozo_client()
     user_id = uuid4()
+    developer_id = uuid4()
 
     query = get_user_query(
         user_id=user_id,
+        developer_id=developer_id,
     )
 
     result = client.run(query)
 
-    assert len(result["user_id"]) == 0
+    assert len(result["id"]) == 0
 
 
 @test("get user exists")
 def _():
     client = cozo_client()
     user_id = uuid4()
+    developer_id = uuid4()
 
     query = create_user_query(
         user_id=user_id,
+        developer_id=developer_id,
         name="test user",
         about="test user about",
     )
@@ -124,19 +137,23 @@ def _():
 
     query = get_user_query(
         user_id=user_id,
+        developer_id=developer_id,
     )
 
     result = client.run(query)
 
-    assert len(result["user_id"]) == 1
+    assert len(result["id"]) == 1
 
 
 @test("list users")
 def _():
     client = cozo_client()
+    developer_id = uuid4()
 
-    query = list_users_query()
+    query = list_users_query(
+        developer_id=developer_id,
+    )
 
     result = client.run(query)
 
-    assert len(result["user_id"]) == 0
+    assert len(result["id"]) == 0
