@@ -397,13 +397,8 @@ class MemoryAccessOptions(BaseModel):
     )
 
 
-class Content(Enum):
-    function = "function"
-    webhook = "webhook"
-
-
 class Instruction(BaseModel):
-    content: Content = Field(..., description="Content of the instruction")
+    content: str = Field(..., description="Content of the instruction")
     important: Optional[bool] = Field(
         False,
         description="Whether this instruction should be marked as important (only up to 3 instructions per agent can be marked important)",
