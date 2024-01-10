@@ -54,7 +54,7 @@ async def update_user(
         )
 
         return ResourceUpdatedResponse(
-            id=resp["user_id"][0], 
+            id=resp["user_id"][0],
             updated_at=resp["updated_at"][0],
         )
         # TODO: add additional info update
@@ -81,7 +81,7 @@ async def create_user(
 
     # TODO: add additional info
     return ResourceCreatedResponse(
-        id=resp["user_id"][0], 
+        id=resp["user_id"][0],
         created_at=resp["created_at"][0],
     )
 
