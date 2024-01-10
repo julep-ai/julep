@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from cozo_migrate.api import init, apply
 from pycozo import Client
-from ward import raises, test, skip
+from ward import raises, test
 
 from .create_user import create_user_query
 from .get_user import get_user_query

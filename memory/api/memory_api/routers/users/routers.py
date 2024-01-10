@@ -5,7 +5,6 @@ from fastapi import APIRouter, HTTPException, status, Header
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from memory_api.clients.cozo import client
 from memory_api.models.user.create_user import create_user_query
-from memory_api.models.user.get_user import get_user_query
 from memory_api.models.user.list_users import list_users_query
 from memory_api.models.user.update_user import update_user_query
 from memory_api.autogen.openapi_model import (

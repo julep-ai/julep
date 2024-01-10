@@ -20,7 +20,7 @@ def create_additional_info_query(
     snippet_cols, snippet_rows = [], []
 
     for snippet_idx, snippet in enumerate(snippets):
-        snippet_cols, single_row = cozo_process_mutate_data(
+        snippet_cols, new_snippet_rows = cozo_process_mutate_data(
             dict(
                 additional_info_id=id,
                 snippet_idx=snippet_idx,
@@ -29,9 +29,7 @@ def create_additional_info_query(
             )
         )
 
-        snippet_rows.append(single_row)
-
-    snippet_cols_str = ", ".join(snippet_cols)
+        snippet_rows += new_snippet_rows
 
     return f"""
     {{
@@ -46,10 +44,10 @@ def create_additional_info_query(
         }}
     }} {{
         # create the snippets
-        ?[{snippet_cols_str}] <- {json.dumps(snippet_rows)}
+        ?[{snippet_cols}] <- {json.dumps(snippet_rows)}
 
         :insert information_snippets {{
-            {snippet_cols_str}
+            {snippet_cols}
         }}
         :returning
     }}"""
