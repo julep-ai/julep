@@ -3,6 +3,7 @@ from typing import Callable, Literal
 from uuid import UUID
 
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...common.utils.datetime import utcnow
 
 
 def create_additional_info_query(
@@ -15,6 +16,7 @@ def create_additional_info_query(
 ):
     owner_id = str(owner_id)
     id = str(id)
+    created_at: float = utcnow().timestamp()
 
     snippets = split_fn(content)
     snippet_cols, snippet_rows = [], []
@@ -34,13 +36,14 @@ def create_additional_info_query(
     return f"""
     {{
         # Create the additional info
-        ?[{owner_type}_id, additional_info_id] <- [[
+        ?[{owner_type}_id, additional_info_id, created_at] <- [[
             to_uuid("{owner_id}"),
             to_uuid("{id}"),
+            {created_at},
         ]]
 
         :insert {owner_type}_additional_info {{
-            {owner_type}_id, additional_info_id
+            {owner_type}_id, additional_info_id, created_at
         }}
     }} {{
         # create the snippets
@@ -49,5 +52,11 @@ def create_additional_info_query(
         :insert information_snippets {{
             {snippet_cols}
         }}
-        :returning
+    }} {{
+        # return the additional info
+        ?[{owner_type}_id, additional_info_id, created_at] <- [[
+            to_uuid("{owner_id}"),
+            to_uuid("{id}"),
+            {created_at},
+        ]]
     }}"""
