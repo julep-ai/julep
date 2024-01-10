@@ -36,3 +36,6 @@ sentry_dsn: str = env.str("SENTRY_DSN", default=None)
 # Temporal
 temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue")
+
+# auth
+api_key: str = env.str("API_KEY")

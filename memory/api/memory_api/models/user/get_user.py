@@ -1,11 +1,12 @@
 from uuid import UUID
 
 
-def get_user_query(user_id: UUID):
+def get_user_query(developer_id: UUID, user_id: UUID):
     user_id = str(user_id)
+    developer_id = str(developer_id)
 
     return f"""
-    input[user_id] <- [[to_uuid("{user_id}")]]
+    input[developer_id, user_id] <- [[to_uuid("{developer_id}"), to_uuid("{user_id}")]]
 
     ?[
         id,
@@ -13,9 +14,10 @@ def get_user_query(user_id: UUID):
         about,
         created_at,
         updated_at,
-    ] := input[id],
+    ] := input[developer_id, id],
         *users {{
             user_id: id,
+            developer_id,
             name,
             about,
             created_at,
