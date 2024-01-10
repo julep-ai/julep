@@ -61,7 +61,7 @@ async def create_session(
     )
 
     return ResourceCreatedResponse(
-        id=resp["session_id"][0], 
+        id=resp["session_id"][0],
         created_at=resp["created_at"][0],
     )
 
@@ -108,7 +108,7 @@ async def update_session(
         )
 
         return ResourceUpdatedResponse(
-            id=resp["session_id"][0], 
+            id=resp["session_id"][0],
             updated_at=resp["updated_at"][0],
         )
     except (IndexError, KeyError):

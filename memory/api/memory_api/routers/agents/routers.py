@@ -53,7 +53,7 @@ async def update_agent(
         )
 
         return ResourceUpdatedResponse(
-            id=resp["agent_id"][0], 
+            id=resp["agent_id"][0],
             updated_at=resp["updated_at"][0],
         )
     except (IndexError, KeyError):
@@ -76,9 +76,9 @@ async def create_agent(
             about=agent.about,
         ),
     )
-    
+
     return ResourceCreatedResponse(
-        id=resp["agent_id"][0], 
+        id=resp["agent_id"][0],
         created_at=resp["created_at"][0],
     )
 

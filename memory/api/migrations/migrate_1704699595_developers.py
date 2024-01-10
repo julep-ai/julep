@@ -83,7 +83,6 @@ def up(client):
     )
 
 
-
 def down(client):
     update_agents_relation_query = """
     ?[agent_id, name, about, model, created_at, updated_at] := *agents{
