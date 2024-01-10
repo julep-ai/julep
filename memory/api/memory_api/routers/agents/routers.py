@@ -73,22 +73,40 @@ async def update_agent(
 
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(
-    agent: CreateAgentRequest, x_developer_id: Annotated[UUID4, Header()]
+    request: CreateAgentRequest, x_developer_id: Annotated[UUID4, Header()]
 ) -> ResourceCreatedResponse:
-    agent_id = uuid4()
     resp = client.run(
         create_agent_query(
-            agent_id=agent_id,
+            agent_id=uuid4(),
             developer_id=x_developer_id,
-            name=agent.name,
-            about=agent.about,
+            name=request.name,
+            about=request.about,
         ),
     )
 
-    return ResourceCreatedResponse(
-        id=resp["agent_id"][0],
+    new_agent_id = resp["agent_id"][0]
+    res = ResourceCreatedResponse(
+        id=new_agent_id,
         created_at=resp["created_at"][0],
     )
+
+    if request.additional_info:
+        client.run(
+            "\n".join(
+                [
+                    create_additional_info_query(
+                        owner_type="agent",
+                        owner_id=new_agent_id,
+                        id=uuid4(),
+                        title=info.title,
+                        content=info.content,
+                    )
+                    for info in request.additional_info
+                ]
+            )
+        )
+
+    return res
 
 
 @router.get("/agents", tags=["agents"])

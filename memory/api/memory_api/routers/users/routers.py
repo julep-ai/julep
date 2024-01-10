@@ -77,21 +77,38 @@ async def update_user(
 async def create_user(
     request: CreateUserRequest, x_developer_id: Annotated[UUID4, Header()]
 ) -> ResourceCreatedResponse:
-    user_id = uuid4()
     resp = client.run(
         create_user_query(
             developer_id=x_developer_id,
-            user_id=user_id,
+            user_id=uuid4(),
             name=request.name,
             about=request.about,
         ),
     )
 
-    # TODO: add additional info
-    return ResourceCreatedResponse(
-        id=resp["user_id"][0],
+    new_user_id = resp["user_id"][0]
+    res = ResourceCreatedResponse(
+        id=new_user_id,
         created_at=resp["created_at"][0],
     )
+
+    if request.additional_information:
+        client.run(
+            "\n".join(
+                [
+                    create_additional_info_query(
+                        owner_type="user",
+                        owner_id=new_user_id,
+                        id=uuid4(),
+                        title=info.title,
+                        content=info.content,
+                    )
+                    for info in request.additional_information
+                ]
+            )
+        )
+
+    return res
 
 
 @router.get("/users", tags=["users"])
