@@ -5,6 +5,8 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
+from ...autogen.openapi_model import Instruction
+
 from .create_agent import create_agent_query
 from .delete_agent import delete_agent_query
 from .get_agent import get_agent_query
@@ -34,6 +36,27 @@ def _():
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
+    )
+
+    client.run(query)
+
+
+@test("create agent with instructions")
+def _():
+    client = cozo_client()
+    agent_id = uuid4()
+    developer_id = uuid4()
+
+    query = create_agent_query(
+        agent_id=agent_id,
+        developer_id=developer_id,
+        name="test agent",
+        about="test agent about",
+        instructions=[
+            Instruction(
+                content="test instruction",
+            )
+        ],
     )
 
     client.run(query)

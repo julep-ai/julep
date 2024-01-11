@@ -44,3 +44,4 @@ check = [
     "lint",
     "typecheck",
 ]
+test = "ward"
