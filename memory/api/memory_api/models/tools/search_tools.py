@@ -1,5 +1,4 @@
 import json
-from typing import Literal
 from uuid import UUID
 
 

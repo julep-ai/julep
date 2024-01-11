@@ -1,5 +1,4 @@
 import json
-from typing import Callable, Literal
 from uuid import uuid4, UUID
 
 from ...autogen.openapi_model import FunctionDef
