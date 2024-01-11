@@ -9,7 +9,7 @@ def create_instructions_query(
     agent_id: UUID,
     instructions: list[Instruction] = [],
 ):
-    instructions = [i.dict() for i in instructions]
+    instructions = [i.model_dump() for i in instructions]
 
     instruction_cols, instruction_rows = "", []
 
