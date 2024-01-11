@@ -5,6 +5,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from pydantic import UUID4
 
 from memory_api.clients.cozo import client
+from memory_api.clients.embed import embed
 from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
 from memory_api.models.agent.delete_agent import delete_agent_query
@@ -21,6 +22,9 @@ from memory_api.models.additional_info.delete_additional_info import (
 from memory_api.models.additional_info.get_additional_info import (
     get_additional_info_snippets_by_id_query,
 )
+from memory_api.models.additional_info.embed_additional_info import (
+    embed_additional_info_snippets_query,
+)
 from memory_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -34,6 +38,7 @@ from memory_api.autogen.openapi_model import (
 
 
 router = APIRouter()
+snippet_embed_instruction = "Encode this passage for retrieval: "
 
 
 @router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
@@ -145,10 +150,29 @@ async def create_additional_info(
         )
     )
 
-    return ResourceCreatedResponse(
-        id=resp["additional_info_id"][0],
+    additional_info_id = resp["additional_info_id"][0]
+    res = ResourceCreatedResponse(
+        id=additional_info_id,
         created_at=resp["created_at"][0],
     )
+
+    indices, snippets = list(zip(*enumerate(request.content.split("\n\n"))))
+    embeddings = await embed(
+        [
+            snippet_embed_instruction + request.title + "\n\n" + snippet
+            for snippet in snippets
+        ]
+    )
+
+    client.run(
+        embed_additional_info_snippets_query(
+            additional_info_id=additional_info_id,
+            snippet_indices=indices,
+            embeddings=embeddings,
+        )
+    )
+
+    return res
 
 
 @router.get("/agents/{agent_id}/additional_info", tags=["agents"])
