@@ -19,6 +19,7 @@ def get_additional_info_snippets_by_id_query(
             snippet,
             snippet_idx,
             created_at,
+            embed_instruction,
         ] := input[additional_info_id],
             *{owner_type}_additional_info {{
                 {owner_type}_id,
@@ -30,5 +31,6 @@ def get_additional_info_snippets_by_id_query(
                 snippet_idx,
                 title,
                 snippet,
+                embed_instruction,
             }}
     }}"""

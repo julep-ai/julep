@@ -9,6 +9,7 @@ from .create_additional_info import create_additional_info_query
 from .delete_additional_info import delete_additional_info_by_id_query
 from .get_additional_info import get_additional_info_snippets_by_id_query
 from .list_additional_info import list_additional_info_snippets_by_owner_query
+from .embed_additional_info import embed_additional_info_snippets_query
 from .search_additional_info import search_additional_info_snippets_by_embedding_query
 
 
@@ -134,3 +135,42 @@ def _():
 
     result = client.run(query)
     assert len(result) == 1, "Only 1 should have been found"
+
+
+@test("embed additional info")
+def _():
+    client = cozo_client()
+
+    owner_type = "user"
+    owner_id = uuid4()
+    id = uuid4()
+
+    snippets = [
+        "Hello World",
+        "Hello Banana",
+        "Hello Apple",
+    ]
+
+    create_query = create_additional_info_query(
+        owner_type,
+        owner_id,
+        id,
+        title="Hi",
+        content="\n\n".join(snippets),
+        split_fn=lambda x: x.split("\n\n"),
+    )
+
+    client.run(create_query)
+
+    ### Add embedding to the snippet
+    snippet_indices = [*range(len(snippets))]
+
+    embeddings = [[1.0] * 768 for _ in snippets]
+
+    query = embed_additional_info_snippets_query(
+        id,
+        snippet_indices,
+        embeddings,
+    )
+
+    client.run(query)
