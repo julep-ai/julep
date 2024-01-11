@@ -53,7 +53,9 @@ async def update_agent(
             update_agent_query(
                 agent_id=agent_id,
                 developer_id=x_developer_id,
-                default_settings=(request.default_settings or AgentDefaultSettings()).model_dump(),
+                default_settings=(
+                    request.default_settings or AgentDefaultSettings()
+                ).model_dump(),
                 name=request.name,
                 about=request.about,
                 model=request.model or "julep-ai/samantha-1-turbo",
