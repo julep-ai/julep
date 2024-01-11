@@ -1,7 +1,10 @@
 import json
 from uuid import UUID
 
+from ...autogen.openapi_model import Instruction
 from ...common.utils.cozo import cozo_process_mutate_data
+
+from ..instructions.create_instructions import create_instructions_query
 
 
 def create_agent_query(
@@ -9,6 +12,7 @@ def create_agent_query(
     developer_id: UUID,
     name: str,
     about: str,
+    instructions: list[Instruction] = [],
     model: str = "julep-ai/samantha-1-turbo",
     default_settings: dict = {},
 ):
@@ -22,16 +26,17 @@ def create_agent_query(
         }
     )
 
-    return f"""
-    {{
-        # Create default agent settings
+    # Create default agent settings
+    default_settings_query = f"""
         ?[{settings_cols}] <- {json.dumps(settings_vals)}
 
         :insert agent_default_settings {{
             {settings_cols}
         }}
-    }} {{
-        # create the agent
+    """
+
+    # create the agent
+    agent_query = f"""
         ?[agent_id, developer_id, model, name, about] <- [
             ["{agent_id}", "{developer_id}", "{model}", "{name}", "{about}"]
         ]
@@ -44,4 +49,17 @@ def create_agent_query(
             about,
         }}
         :returning
-    }}"""
+    """
+
+    queries = [
+        default_settings_query,
+        agent_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
+
+    if instructions:
+        query += "\n\n" + create_instructions_query(agent_id, instructions)
+
+    return query
