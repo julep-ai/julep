@@ -3,6 +3,7 @@ from uuid import UUID
 
 def get_entries_query(session_id: UUID, limit: int = 100, offset: int = 0):
     return f"""
+    {{
         input[session_id] <- [[
             to_uuid("{session_id}"),
         ]]
@@ -32,4 +33,4 @@ def get_entries_query(session_id: UUID, limit: int = 100, offset: int = 0):
         :sort created_at
         :limit {limit}
         :offset {offset}
-    """
+    }}"""

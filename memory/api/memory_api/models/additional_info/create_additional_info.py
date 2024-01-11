@@ -19,7 +19,7 @@ def create_additional_info_query(
     created_at: float = utcnow().timestamp()
 
     snippets = split_fn(content)
-    snippet_cols, snippet_rows = [], []
+    snippet_cols, snippet_rows = "", []
 
     for snippet_idx, snippet in enumerate(snippets):
         snippet_cols, new_snippet_rows = cozo_process_mutate_data(
