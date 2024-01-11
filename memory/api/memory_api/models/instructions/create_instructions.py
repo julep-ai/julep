@@ -10,7 +10,7 @@ def create_instructions_query(
     instructions: list[Instruction] = [],
 ):
     agent_id = str(agent_id)
-    instructions = [i.dict() for i in instructions]
+    instructions = [i.model_dump() for i in instructions]
 
     instruction_cols, instruction_rows = "", []
 

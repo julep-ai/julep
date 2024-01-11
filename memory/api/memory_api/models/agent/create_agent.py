@@ -60,6 +60,6 @@ def create_agent_query(
     query = f"{{ {query} }}"
 
     if instructions:
-        query += "\n\n" + create_instructions_query(agent_id, instructions)
+        query = create_instructions_query(agent_id, instructions) + "\n\n" + query
 
     return query
