@@ -9,6 +9,7 @@ def create_instructions_query(
     agent_id: UUID,
     instructions: list[Instruction] = [],
 ):
+    agent_id = str(agent_id)
     instructions = [i.dict() for i in instructions]
 
     instruction_cols, instruction_rows = "", []
@@ -32,6 +33,7 @@ def create_instructions_query(
         :insert agent_instructions {{
             {instruction_cols}
         }}
+        :returning
     }}"""
 
     return instruction_query
