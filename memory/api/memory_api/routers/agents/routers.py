@@ -51,12 +51,12 @@ async def update_agent(
     try:
         resp = client.run(
             update_agent_query(
-                agent_id,
-                x_developer_id,
-                request.name,
-                request.about,
-                request.model or "julep-ai/samantha-1-turbo",
-                (request.default_settings or AgentDefaultSettings()).model_dump(),
+                agent_id=agent_id,
+                developer_id=x_developer_id,
+                default_settings=(request.default_settings or AgentDefaultSettings()).model_dump(),
+                name=request.name,
+                about=request.about,
+                model=request.model or "julep-ai/samantha-1-turbo",
             )
         )
 
@@ -81,6 +81,9 @@ async def create_agent(
             developer_id=x_developer_id,
             name=request.name,
             about=request.about,
+            instructions=request.instructions,
+            model=request.model,
+            default_settings=request.default_settings.model_dump(),
         ),
     )
 
