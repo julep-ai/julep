@@ -9,6 +9,7 @@ def list_additional_info_snippets_by_owner_query(
     owner_id = str(owner_id)
 
     return f"""
+    {{
         input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
 
         ?[
@@ -30,4 +31,4 @@ def list_additional_info_snippets_by_owner_query(
                 title,
                 snippet,
             }}
-    """
+    }}"""

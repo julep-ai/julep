@@ -20,6 +20,7 @@ def add_entries_query(entries: list[Entry]) -> str:
     entries_query = ",\n".join(entries_lst)
 
     query = f"""
+    {{
         ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at] <- [
             {entries_query}
         ]
@@ -36,6 +37,7 @@ def add_entries_query(entries: list[Entry]) -> str:
             created_at,
         }}
         :returning
+    }}
     """
 
     return query

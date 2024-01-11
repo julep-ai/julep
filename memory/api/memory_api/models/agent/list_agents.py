@@ -3,6 +3,7 @@ from uuid import UUID
 
 def list_agents_query(developer_id: UUID, limit: int = 100, offset: int = 0):
     return f"""
+    {{
         input[developer_id] <- [[to_uuid("{developer_id}")]]
 
         ?[
@@ -26,4 +27,4 @@ def list_agents_query(developer_id: UUID, limit: int = 100, offset: int = 0):
         :limit {limit}
         :offset {offset}
         :sort -created_at
-    """
+    }}"""

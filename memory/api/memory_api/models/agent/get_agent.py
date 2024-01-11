@@ -3,6 +3,7 @@ from uuid import UUID
 
 def get_agent_query(developer_id: UUID, agent_id: UUID):
     return f"""
+    {{
         input[agent_id, developer_id] <- [[to_uuid("{agent_id}"), to_uuid("{developer_id}")]]
 
         ?[
@@ -40,4 +41,5 @@ def get_agent_query(developer_id: UUID, agent_id: UUID):
                 "top_p": top_p,
                 "temperature": temperature,
             }}
+    }}
     """

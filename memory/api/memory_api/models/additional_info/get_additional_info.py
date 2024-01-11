@@ -9,6 +9,7 @@ def get_additional_info_snippets_by_id_query(
     additional_info_id = str(additional_info_id)
 
     return f"""
+    {{
         input[additional_info_id] <- [[to_uuid("{additional_info_id}")]]
 
         ?[
@@ -30,4 +31,4 @@ def get_additional_info_snippets_by_id_query(
                 title,
                 snippet,
             }}
-    """
+    }}"""

@@ -14,6 +14,7 @@ def search_additional_info_snippets_by_embedding_query(
     radius: float = 1.0 - confidence
 
     return f"""
+    {{
         input[
             {owner_type}_id,
             query_embedding,
@@ -54,4 +55,4 @@ def search_additional_info_snippets_by_embedding_query(
             }}
 
         :sort distance
-    """
+    }}"""
