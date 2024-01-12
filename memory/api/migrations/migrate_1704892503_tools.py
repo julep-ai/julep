@@ -54,8 +54,8 @@ agent_functions_table = dict(
     :create agent_functions {
         agent_id: Uuid,
         tool_id: Uuid,
-        name: String,
         =>
+        name: String,
         description: String,
         parameters: Json,
         embed_instruction: String default 'Transform this tool description for retrieval: ',
