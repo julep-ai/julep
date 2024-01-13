@@ -23,9 +23,9 @@ def proc_mem_context_query(
         == VECTOR_SIZE
     )
 
-    1.0 - tools_confidence
+    tools_radius: float = 1.0 - tools_confidence
     instructions_radius: float = 1.0 - instructions_confidence
-    1.0 - docs_confidence
+    docs_radius: float = 1.0 - docs_confidence
 
     return f"""
     {{
@@ -108,7 +108,7 @@ def proc_mem_context_query(
         # Save in temp table
         :create _preamble {{
             role: String,
-            name: String,
+            name: String?,
             content: String,
             token_count: Int,
             created_at: Float,
@@ -162,7 +162,143 @@ def proc_mem_context_query(
         # Save in temp table
         :create _instructions {{
             role: String,
-            name: String,
+            name: String?,
+            content: String,
+            token_count: Int,
+            created_at: Float,
+            index: Int,
+        }}
+    }} {{
+        # Collect all tools
+        last_index[max(index)] := *_instructions{{index}}
+
+        # Search for tools
+        ?[role, name, content, token_count, created_at, index] :=
+            last_index[idx],
+            *_input{{agent_id, tool_query}},
+            ~agent_functions:embedding_space {{
+                agent_id,
+                name: fn_name,
+                description,
+                parameters,
+                updated_at: created_at |
+                query: tool_query,
+                k: {k_tools},
+                ef: 128,
+                radius: {tools_radius},
+                bind_distance: distance,
+            }},
+
+            role = "system",
+            name = "functions",
+            fn_data = {{
+                "name": fn_name,
+                "description": description,
+                "parameters": parameters
+            }},
+            content = dump_json(fn_data),
+            num_chars = length(content),
+            token_count = to_int(num_chars / 3.5),
+            index = idx + 1
+
+        # Save in temp table
+        :create _tools {{
+            role: String,
+            name: String?,
+            content: String,
+            token_count: Int,
+            created_at: Float,
+            index: Int,
+        }}
+    }} {{
+        # Collect additional_info docs
+        last_index[max(index)] := *_tools{{index}}
+
+        # Search for agent docs
+        ?[role, name, content, token_count, created_at, index] :=
+            last_index[idx],
+            *_input{{agent_id, doc_query}},
+            *agent_additional_info {{
+                agent_id,
+                additional_info_id,
+                created_at,
+            }},
+            ~information_snippets:embedding_space {{
+                additional_info_id,
+                snippet_idx,
+                title,
+                snippet |
+                query: doc_query,
+                k: {k_docs},
+                ef: 128,
+                radius: {docs_radius},
+                bind_distance: distance,
+            }},
+            role = "system",
+            name = "information",
+            content = concat(title, ':\n...', snippet),
+            num_chars = length(content),
+            token_count = to_int(num_chars / 3.5),
+            index = idx + 1 + snippet_idx
+
+        # Search for user docs
+        ?[role, name, content, token_count, created_at, index] :=
+            last_index[idx],
+            *_input{{user_id, doc_query}},
+            *user_additional_info {{
+                user_id,
+                additional_info_id,
+                created_at,
+            }},
+            ~information_snippets:embedding_space {{
+                additional_info_id,
+                snippet_idx,
+                title,
+                snippet |
+                query: doc_query,
+                k: {k_docs},
+                ef: 128,
+                radius: {docs_radius},
+                bind_distance: distance,
+            }},
+            role = "system",
+            name = "information",
+            content = concat(title, ':\n...', snippet),
+            num_chars = length(content),
+            token_count = to_int(num_chars / 3.5),
+            index = idx + 1 + snippet_idx
+
+        # Save in temp table
+        :create _additional_info {{
+            role: String,
+            name: String?,
+            content: String,
+            token_count: Int,
+            created_at: Float,
+            index: Int,
+        }}
+    }} {{
+        # Collect all entries
+        last_index[max(index)] := *_additional_info{{index}}
+        ?[role, name, content, token_count, created_at, index] :=
+            last_index[idx],
+            *_input{{session_id}},
+            *entries{{
+                session_id,
+                source,
+                role,
+                name,
+                content,
+                token_count,
+                created_at,
+            }},
+            index = idx + 1,
+            source == "api_request" || source == "api_response",
+
+        # Save in temp table
+        :create _entries {{
+            role: String,
+            name: String?,
             content: String,
             token_count: Int,
             created_at: Float,
@@ -180,6 +316,21 @@ def proc_mem_context_query(
                 role, name, content, token_count, created_at, index
             }},
 
-        :sort index
+        ?[role, name, content, token_count, created_at, index] :=
+            *_tools{{
+                role, name, content, token_count, created_at, index
+            }},
+
+        ?[role, name, content, token_count, created_at, index] :=
+            *_additional_info{{
+                role, name, content, token_count, created_at, index
+            }},
+
+        ?[role, name, content, token_count, created_at, index] :=
+            *_entries{{
+                role, name, content, token_count, created_at, index
+            }},
+
+        :sort index, created_at
     }}
     """
