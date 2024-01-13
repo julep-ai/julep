@@ -20,6 +20,7 @@ async-lru = "^2.0.4"
 sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
 ward = "^0.68.0b0"
 temporalio = "^1.4.0"
+pydantic = "^2.5.3"
 
 
 [tool.poetry.group.dev.dependencies]

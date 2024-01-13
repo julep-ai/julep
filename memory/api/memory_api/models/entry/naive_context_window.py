@@ -26,6 +26,6 @@ def naive_context_window_query(session_id: UUID):
             }},
             source == "api_request" || source == "api_response",
 
-        :sort -created_at
+        :sort created_at
     }}
     """
