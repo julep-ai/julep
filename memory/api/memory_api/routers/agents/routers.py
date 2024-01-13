@@ -31,6 +31,11 @@ from memory_api.models.tools.embed_tools import embed_functions_query
 from memory_api.models.tools.list_tools import list_functions_by_agent_query
 from memory_api.models.tools.get_tools import get_function_by_id_query
 from memory_api.models.tools.delete_tools import delete_function_by_id_query
+from memory_api.models.instructions.create_instructions import create_instructions_query
+from memory_api.models.instructions.embed_instructions import embed_instructions_query
+from memory_api.models.instructions.delete_instructions import (
+    delete_instructions_by_agent_query,
+)
 from memory_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -43,12 +48,14 @@ from memory_api.autogen.openapi_model import (
     CreateToolRequest,
     Tool,
     FunctionDef,
+    Instruction,
 )
 
 
 router = APIRouter()
 snippet_embed_instruction = "Encode this passage for retrieval: "
 function_embed_instruction = "Transform this tool description for retrieval: "
+instruction_embed_instruction = "Embed this historical text chunk for retrieval: "
 
 
 @router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
@@ -77,10 +84,39 @@ async def update_agent(
             )
         )
 
-        return ResourceUpdatedResponse(
-            id=resp["agent_id"][0],
+        updated_agent_id = resp["agent_id"][0]
+        res = ResourceUpdatedResponse(
+            id=updated_agent_id,
             updated_at=resp["updated_at"][0],
         )
+
+        if request.instructions:
+            indices, instructions = list(zip(*enumerate(request.instructions)))
+            embeddings = await embed(
+                [
+                    instruction_embed_instruction + instruction
+                    for instruction in instructions
+                ]
+            )
+            query = "\n".join(
+                [
+                    delete_instructions_by_agent_query(agent_id=updated_agent_id),
+                    create_instructions_query(
+                        agent_id=updated_agent_id,
+                        instructions=[
+                            Instruction(content=i) for i in request.instructions
+                        ],
+                    ),
+                    embed_instructions_query(
+                        agent_id=updated_agent_id,
+                        instruction_indices=indices,
+                        embeddings=embeddings,
+                    ),
+                ]
+            )
+            client.run(query)
+
+        return res
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -125,6 +161,22 @@ async def create_agent(
                     )
                     for info in request.additional_info
                 ]
+            )
+        )
+
+    if request.instructions:
+        indices, instructions = list(zip(*enumerate(request.instructions)))
+        embeddings = await embed(
+            [
+                instruction_embed_instruction + instruction.content
+                for instruction in instructions
+            ]
+        )
+        client.run(
+            embed_instructions_query(
+                agent_id=new_agent_id,
+                instruction_indices=indices,
+                embeddings=embeddings,
             )
         )
 
