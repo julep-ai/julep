@@ -48,7 +48,6 @@ from memory_api.autogen.openapi_model import (
     CreateToolRequest,
     Tool,
     FunctionDef,
-    Instruction,
 )
 
 
@@ -94,7 +93,7 @@ async def update_agent(
             indices, instructions = list(zip(*enumerate(request.instructions)))
             embeddings = await embed(
                 [
-                    instruction_embed_instruction + instruction
+                    instruction_embed_instruction + instruction.content
                     for instruction in instructions
                 ]
             )
@@ -103,9 +102,7 @@ async def update_agent(
                     delete_instructions_by_agent_query(agent_id=updated_agent_id),
                     create_instructions_query(
                         agent_id=updated_agent_id,
-                        instructions=[
-                            Instruction(content=i) for i in request.instructions
-                        ],
+                        instructions=request.instructions,
                     ),
                     embed_instructions_query(
                         agent_id=updated_agent_id,
