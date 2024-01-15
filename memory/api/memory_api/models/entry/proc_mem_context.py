@@ -116,11 +116,9 @@ def proc_mem_context_query(
         }}
     }} {{
         # Collect all instructions
-        last_index[max(index)] := *_preamble{{index}}
 
         # Keep all important ones
         ?[role, name, content, token_count, created_at, index] :=
-            last_index[idx],
             *_input{{agent_id}},
             *agent_instructions {{
                 agent_id,
@@ -134,11 +132,10 @@ def proc_mem_context_query(
             name = "instruction",
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = idx + 1 + instruction_idx
+            index = 3 + (instruction_idx * 0.01)
 
         # Search for rest of instructions
         ?[role, name, content, token_count, created_at, index] :=
-            last_index[idx],
             *_input{{agent_id, instruction_query}},
             ~agent_instructions:embedding_space {{
                 agent_id,
@@ -149,7 +146,7 @@ def proc_mem_context_query(
                 query: instruction_query,
                 k: {k_instructions},
                 ef: 128,
-                radius: {instructions_radius},
+                radius: {instructions_radius:.2f},
                 bind_distance: distance,
                 filter: important == false,
             }},
@@ -157,7 +154,7 @@ def proc_mem_context_query(
             name = "instruction",
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = idx + 1 + instruction_idx
+            index = 3 + (instruction_idx * 0.01)
 
         # Save in temp table
         :create _instructions {{
@@ -170,11 +167,9 @@ def proc_mem_context_query(
         }}
     }} {{
         # Collect all tools
-        last_index[max(index)] := *_instructions{{index}}
 
         # Search for tools
         ?[role, name, content, token_count, created_at, index] :=
-            last_index[idx],
             *_input{{agent_id, tool_query}},
             ~agent_functions:embedding_space {{
                 agent_id,
@@ -185,7 +180,7 @@ def proc_mem_context_query(
                 query: tool_query,
                 k: {k_tools},
                 ef: 128,
-                radius: {tools_radius},
+                radius: {tools_radius:.2f},
                 bind_distance: distance,
             }},
 
@@ -199,7 +194,7 @@ def proc_mem_context_query(
             content = dump_json(fn_data),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = idx + 1
+            index = 4
 
         # Save in temp table
         :create _tools {{
@@ -212,11 +207,9 @@ def proc_mem_context_query(
         }}
     }} {{
         # Collect additional_info docs
-        last_index[max(index)] := *_tools{{index}}
 
         # Search for agent docs
         ?[role, name, content, token_count, created_at, index] :=
-            last_index[idx],
             *_input{{agent_id, doc_query}},
             *agent_additional_info {{
                 agent_id,
@@ -231,7 +224,7 @@ def proc_mem_context_query(
                 query: doc_query,
                 k: {k_docs},
                 ef: 128,
-                radius: {docs_radius},
+                radius: {docs_radius:.2f},
                 bind_distance: distance,
             }},
             role = "system",
@@ -239,11 +232,10 @@ def proc_mem_context_query(
             content = concat(title, ':\n...', snippet),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = idx + 1 + snippet_idx
+            index = 5 + (snippet_idx * 0.01)
 
         # Search for user docs
         ?[role, name, content, token_count, created_at, index] :=
-            last_index[idx],
             *_input{{user_id, doc_query}},
             *user_additional_info {{
                 user_id,
@@ -258,7 +250,7 @@ def proc_mem_context_query(
                 query: doc_query,
                 k: {k_docs},
                 ef: 128,
-                radius: {docs_radius},
+                radius: {docs_radius:.2f},
                 bind_distance: distance,
             }},
             role = "system",
@@ -266,7 +258,7 @@ def proc_mem_context_query(
             content = concat(title, ':\n...', snippet),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = idx + 1 + snippet_idx
+            index = 5 + (snippet_idx * 0.01)
 
         # Save in temp table
         :create _additional_info {{
@@ -279,9 +271,7 @@ def proc_mem_context_query(
         }}
     }} {{
         # Collect all entries
-        last_index[max(index)] := *_additional_info{{index}}
         ?[role, name, content, token_count, created_at, index] :=
-            last_index[idx],
             *_input{{session_id}},
             *entries{{
                 session_id,
@@ -292,7 +282,7 @@ def proc_mem_context_query(
                 token_count,
                 created_at,
             }},
-            index = idx + 1,
+            index = 6,
             source == "api_request" || source == "api_response",
 
         # Save in temp table
