@@ -76,7 +76,8 @@ class BaseSession:
                     instruction_query_instruction,
                     doc_query_instruction,
                 ]
-            ]
+            ],
+            join_inputs=False,
         )
 
         entries: list[Entry] = []
