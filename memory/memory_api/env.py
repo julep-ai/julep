@@ -39,3 +39,8 @@ temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue"
 
 # auth
 api_key: str = env.str("API_KEY")
+
+# embedding service URL
+embedding_service_url: str = env.str(
+    "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8082/embed"
+)
