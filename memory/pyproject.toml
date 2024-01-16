@@ -1,45 +1,47 @@
 [tool.poetry]
-name = "memory"
+name = "memory-api"
 version = "0.1.0"
 description = ""
-authors = ["Diwank Singh Tomer <diwank.singh@gmail.com>"]
+authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
-pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.2"}
-httpx = "^0.24.1"
-python-dotenv = "^1.0.0"
-requests = "^2.31.0"
-pydantic = "<2"
-aiocache = {extras = ["redis"], version = "^0.12.1"}
-xxhash = "^3.2.0"
-torch = {url = "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230705%2Bcu121-cp310-cp310-linux_x86_64.whl"}
-transformers = "^4.30.2"
-datasets = "^2.13.1"
-sentencepiece = "^0.1.99"
-scikit-learn = "^1.2.2"
-keybert = "^0.7.0"
-keyphrase-vectorizers = "^0.0.11"
-fastapi = "^0.99.1"
-openai = "^0.27.8"
-langchain = "^0.0.250"
+python = "^3.11"
+fastapi = "^0.103.1"
+pycozo = {extras = ["embedded"], version = "^0.7.6"}
+uvicorn = "^0.23.2"
+fire = "^0.5.0"
+environs = "^9.5.0"
+google-cloud-aiplatform = "^1.33.0"
+pandas = "^2.1.0"
+openai = "^0.28.0"
+httpx = "^0.25.0"
+async-lru = "^2.0.4"
+sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
+ward = "^0.68.0b0"
+temporalio = "^1.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.14.0"
-ipykernel = "^6.23.2"
-ipywidgets = "^8.0.6"
-jupyterlab = ">=4,<5"
-black = "^23.3.0"
-ruff = "^0.0.277"
+ipython = "^8.18.1"
+black = "^23.12.1"
+ruff = "^0.1.9"
+datamodel-code-generator = "^0.25.2"
+cozo-migrate = "^0.2.0"
+poethepoet = "^0.24.4"
+pytype = "^2024.1.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.ruff]
-ignore = [
-    "E501",  # line too long
-    "E731",  # do not use lambda
+[tool.poe.tasks]
+prettify = "black ."
+lint = "ruff **/*.py --fix --unsafe-fixes"
+typecheck = "pytype memory_api"
+check = [
+    "prettify",
+    "lint",
+    "typecheck",
 ]
+test = "ward"
