@@ -6,9 +6,9 @@ groups:
         version: 0.7.2
         output:
           location: local-file-system
-          path: ../generated/typescript
+          path: ../sdks/js/src/client
       - name: fernapi/fern-python-sdk
         version: 0.7.2
         output:
           location: local-file-system
-          path: ../generated/python
+          path: ../sdks/python/julep_ai/client
