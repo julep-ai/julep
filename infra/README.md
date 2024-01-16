@@ -1,5 +1,16 @@
 ## Kubernetes
 
+### instructions
+
+- `gcloud auth login`
+- `gcloud container clusters get-credentials julep-cluster-1 --region us-central1`
+
+**To verify that kubectl was correctly setup**
+- `kubectl get ns`
+
+**To connect to apisix dashboard**
+- `kubectl port-forward service/apisix-dashboard -n ingress-apisix 8080:80`
+
 ### cluster
 
 - created cluster using google cloud console
