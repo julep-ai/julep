@@ -1,0 +1,19 @@
+{
+  "name": "@julep/sdk",
+  "version": "0.1.0",
+  "description": "Julep is a platform for creating agents with long-term memory",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "keywords": [
+    "julep-ai",
+    "julep",
+    "agents",
+    "llms",
+    "memory",
+    "ai"
+  ],
+  "author": "developers@julep.ai",
+  "license": "ISC"
+}
