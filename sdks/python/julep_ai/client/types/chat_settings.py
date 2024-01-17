@@ -20,7 +20,9 @@ class ChatSettings(pydantic.BaseModel):
     length_penalty: typing.Optional[float] = pydantic.Field(
         description="(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated."
     )
-    logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]] = pydantic.Field(
+    logit_bias: typing.Optional[
+        typing.Dict[str, typing.Optional[int]]
+    ] = pydantic.Field(
         description=(
             "Modify the likelihood of specified tokens appearing in the completion.\n"
             "\n"
@@ -70,11 +72,19 @@ class ChatSettings(pydantic.BaseModel):
     )
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:

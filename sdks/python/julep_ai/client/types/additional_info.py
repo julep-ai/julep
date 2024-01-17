@@ -12,16 +12,26 @@ except ImportError:
 
 
 class AdditionalInfo(pydantic.BaseModel):
-    title: str = pydantic.Field(description="Title describing what this bit of information contains")
+    title: str = pydantic.Field(
+        description="Title describing what this bit of information contains"
+    )
     content: str = pydantic.Field(description="Information content")
     id: str = pydantic.Field(description="ID of additional info doc")
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:

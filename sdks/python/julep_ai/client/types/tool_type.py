@@ -14,7 +14,11 @@ class ToolType(str, enum.Enum):
     FUNCTION = "function"
     WEBHOOK = "webhook"
 
-    def visit(self, function: typing.Callable[[], T_Result], webhook: typing.Callable[[], T_Result]) -> T_Result:
+    def visit(
+        self,
+        function: typing.Callable[[], T_Result],
+        webhook: typing.Callable[[], T_Result],
+    ) -> T_Result:
         if self is ToolType.FUNCTION:
             return function()
         if self is ToolType.WEBHOOK:

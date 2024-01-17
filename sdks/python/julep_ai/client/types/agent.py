@@ -19,8 +19,12 @@ class Agent(pydantic.BaseModel):
     instructions: typing.Optional[typing.List[Instruction]] = pydantic.Field(
         description="List of instructions for the agent"
     )
-    created_at: typing.Optional[dt.datetime] = pydantic.Field(description="Agent created at (RFC-3339 format)")
-    updated_at: typing.Optional[dt.datetime] = pydantic.Field(description="Agent updated at (RFC-3339 format)")
+    created_at: typing.Optional[dt.datetime] = pydantic.Field(
+        description="Agent created at (RFC-3339 format)"
+    )
+    updated_at: typing.Optional[dt.datetime] = pydantic.Field(
+        description="Agent updated at (RFC-3339 format)"
+    )
     id: str = pydantic.Field(description="Agent id (UUID)")
     default_settings: typing.Optional[AgentDefaultSettings] = pydantic.Field(
         description="Default settings for all sessions created by this agent"
@@ -28,11 +32,19 @@ class Agent(pydantic.BaseModel):
     model: str = pydantic.Field(description="The model to use with this agent")
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:

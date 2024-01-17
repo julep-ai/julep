@@ -14,7 +14,11 @@ class ChatSettingsResponseFormatType(str, enum.Enum):
     TEXT = "text"
     JSON_OBJECT = "json_object"
 
-    def visit(self, text: typing.Callable[[], T_Result], json_object: typing.Callable[[], T_Result]) -> T_Result:
+    def visit(
+        self,
+        text: typing.Callable[[], T_Result],
+        json_object: typing.Callable[[], T_Result],
+    ) -> T_Result:
         if self is ChatSettingsResponseFormatType.TEXT:
             return text()
         if self is ChatSettingsResponseFormatType.JSON_OBJECT:

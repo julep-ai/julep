@@ -16,16 +16,28 @@ class CompletionUsage(pydantic.BaseModel):
     Usage statistics for the completion request.
     """
 
-    completion_tokens: int = pydantic.Field(description="Number of tokens in the generated completion.")
+    completion_tokens: int = pydantic.Field(
+        description="Number of tokens in the generated completion."
+    )
     prompt_tokens: int = pydantic.Field(description="Number of tokens in the prompt.")
-    total_tokens: int = pydantic.Field(description="Total number of tokens used in the request (prompt + completion).")
+    total_tokens: int = pydantic.Field(
+        description="Total number of tokens used in the request (prompt + completion)."
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:

@@ -15,21 +15,41 @@ except ImportError:
 
 class Episode(pydantic.BaseModel):
     type: typing_extensions.Literal["episode"]
-    subject: typing.Optional[str] = pydantic.Field(description="(Optional) ID of the subject user")
+    subject: typing.Optional[str] = pydantic.Field(
+        description="(Optional) ID of the subject user"
+    )
     content: str = pydantic.Field(description="Content of the memory")
-    weight: float = pydantic.Field(description="Weight (importance) of the memory on a scale of 0-100")
-    created_at: dt.datetime = pydantic.Field(description="Episode created at (RFC-3339 format)")
-    last_accessed_at: dt.datetime = pydantic.Field(description="Episode last accessed at (RFC-3339 format)")
-    happened_at: dt.datetime = pydantic.Field(description="Episode happened at (RFC-3339 format)")
-    duration: typing.Optional[float] = pydantic.Field(description="Duration of the episode (in seconds)")
+    weight: float = pydantic.Field(
+        description="Weight (importance) of the memory on a scale of 0-100"
+    )
+    created_at: dt.datetime = pydantic.Field(
+        description="Episode created at (RFC-3339 format)"
+    )
+    last_accessed_at: dt.datetime = pydantic.Field(
+        description="Episode last accessed at (RFC-3339 format)"
+    )
+    happened_at: dt.datetime = pydantic.Field(
+        description="Episode happened at (RFC-3339 format)"
+    )
+    duration: typing.Optional[float] = pydantic.Field(
+        description="Duration of the episode (in seconds)"
+    )
     id: str = pydantic.Field(description="Episode id (UUID)")
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:
