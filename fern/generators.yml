@@ -4,11 +4,21 @@ groups:
     generators:
       - name: fernapi/fern-typescript-node-sdk
         version: 0.7.2
+        config:
+          namespaceExport: JulepApi
+          includeCredentialsOnCrossOriginRequests: true
+          outputSourceFiles: true
+          allowCustomFetcher: true
+          defaultTimeoutInSeconds: 300  # 5 minutes
         output:
           location: local-file-system
-          path: ../sdks/js/src/client
+          path: ../sdks/js/src/api
       - name: fernapi/fern-python-sdk
         version: 0.7.2
+        config:
+          timeout_in_seconds: 300  # 5 minutes
+          client_class_name: JulepApi
+          skip_formatting: false
         output:
           location: local-file-system
-          path: ../sdks/python/julep_ai/client
+          path: ../sdks/python/julep_ai/api
