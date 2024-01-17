@@ -68,6 +68,13 @@ class AsyncClient:
         *args,
         **kwargs
     ):
+        assert (
+            api_key is not None
+        ), "api_key must be provided or set as env var JULEP_API_KEY"
+        assert (
+            base_url is not None
+        ), "base_url must be provided or set as env var JULEP_API_URL"
+
         self._api_client = AsyncJulepApi(
             api_key=api_key, base_url=base_url, *args, **kwargs
         )
