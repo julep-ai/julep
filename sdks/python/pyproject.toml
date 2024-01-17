@@ -8,7 +8,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+httpx = "^0.26.0"
+pydantic = "^2.5.3"
 
+
+[tool.poetry.group.dev.dependencies]
+pytype = "^2024.1.5"
+black = "^23.12.1"
+ward = "^0.68.0b0"
+ipython = "^8.20.0"
+ruff = "^0.1.13"
 
 [build-system]
 requires = ["poetry-core"]
