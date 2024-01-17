@@ -13,18 +13,30 @@ except ImportError:
 
 
 class Suggestion(pydantic.BaseModel):
-    created_at: typing.Optional[dt.datetime] = pydantic.Field(description="Suggestion created at (RFC-3339 format)")
-    target: SuggestionTarget = pydantic.Field(description="Whether the suggestion is for the `agent` or a `user`")
+    created_at: typing.Optional[dt.datetime] = pydantic.Field(
+        description="Suggestion created at (RFC-3339 format)"
+    )
+    target: SuggestionTarget = pydantic.Field(
+        description="Whether the suggestion is for the `agent` or a `user`"
+    )
     content: str = pydantic.Field(description="The content of the suggestion")
     message_id: str = pydantic.Field(description="The message that produced it")
     session_id: str = pydantic.Field(description="Session this suggestion belongs to")
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:

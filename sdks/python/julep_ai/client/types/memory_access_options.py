@@ -12,17 +12,27 @@ except ImportError:
 
 
 class MemoryAccessOptions(pydantic.BaseModel):
-    recall: typing.Optional[bool] = pydantic.Field(description="Whether previous memories should be recalled or not")
+    recall: typing.Optional[bool] = pydantic.Field(
+        description="Whether previous memories should be recalled or not"
+    )
     remember: typing.Optional[bool] = pydantic.Field(
         description="Whether this interaction should be recorded in memory or not"
     )
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:

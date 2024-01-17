@@ -14,7 +14,9 @@ class SuggestionTarget(str, enum.Enum):
     USER = "user"
     AGENT = "agent"
 
-    def visit(self, user: typing.Callable[[], T_Result], agent: typing.Callable[[], T_Result]) -> T_Result:
+    def visit(
+        self, user: typing.Callable[[], T_Result], agent: typing.Callable[[], T_Result]
+    ) -> T_Result:
         if self is SuggestionTarget.USER:
             return user()
         if self is SuggestionTarget.AGENT:

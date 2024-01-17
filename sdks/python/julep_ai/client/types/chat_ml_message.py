@@ -13,18 +13,30 @@ except ImportError:
 
 
 class ChatMlMessage(pydantic.BaseModel):
-    role: ChatMlMessageRole = pydantic.Field(description="ChatML role (system|assistant|user|function_call)")
+    role: ChatMlMessageRole = pydantic.Field(
+        description="ChatML role (system|assistant|user|function_call)"
+    )
     content: str = pydantic.Field(description="ChatML content")
     name: typing.Optional[str] = pydantic.Field(description="ChatML name")
-    created_at: dt.datetime = pydantic.Field(description="Message created at (RFC-3339 format)")
+    created_at: dt.datetime = pydantic.Field(
+        description="Message created at (RFC-3339 format)"
+    )
     id: str = pydantic.Field(description="Message ID")
 
     def json(self, **kwargs: typing.Any) -> str:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {"by_alias": True, "exclude_unset": True, **kwargs}
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
         return super().dict(**kwargs_with_defaults)
 
     class Config:
