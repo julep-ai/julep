@@ -11,6 +11,7 @@ python = "^3.10"
 httpx = "^0.26.0"
 pydantic = "^2.5.3"
 environs = "^10.3.0"
+beartype = "^0.16.4"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -20,7 +21,19 @@ ward = "^0.68.0b0"
 ipython = "^8.20.0"
 ruff = "^0.1.13"
 jupyterlab = "^4.0.10"
+poethepoet = "^0.24.4"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+format = "black ."
+lint = "ruff **/*.py --fix --unsafe-fixes"
+typecheck = "pytype julep_ai"
+check = [
+    "format",
+    "lint",
+    "typecheck",
+]
+test = "ward"
