@@ -1,6 +1,7 @@
 from datetime import datetime
 from ...common.protocol.entries import Entry
 
+
 def parenthesize(s):
     return f'"({s})"'
 
