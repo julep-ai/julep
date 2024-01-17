@@ -17,20 +17,16 @@ oauth_url = f"https://{client_id}:{client_secret}@{cogito_endpoint}"
 me_endpoint = f"{endpoint_base}/api/v2/me"
 list_tenants_endpoint = f"{endpoint_base}/api/v1/integration_account_tenant_ids"
 tenants_endpoint = f"{endpoint_base}/api/v1/integration_account_tenants"
-users_endpoint = (
-    lambda tenant_id: f"{endpoint_base}/api/v1/integration_account_tenants/{tenant_id}/users"
-)
+def users_endpoint(tenant_id):
+    return f"{endpoint_base}/api/v1/integration_account_tenants/{tenant_id}/users"
 questions_endpoint = f"{endpoint_base}/api/v1/assessment/questions"
 answers_endpoint = f"{endpoint_base}/api/v1/assessment/answers"
-shortscale_results_endpoint = (
-    lambda accountId: f"{endpoint_base}/api/v1/shortscale_results/{accountId}"
-)
-full_results_endpoint = (
-    lambda accountId: f"{endpoint_base}/api/v2/assesment_results/{accountId}"
-)
-pdf_endpoint = (
-    lambda accountId: f"{endpoint_base}/api/v1/assessment_results/{accountId}/pdf"
-)
+def shortscale_results_endpoint(accountId):
+    return f"{endpoint_base}/api/v1/shortscale_results/{accountId}"
+def full_results_endpoint(accountId):
+    return f"{endpoint_base}/api/v2/assesment_results/{accountId}"
+def pdf_endpoint(accountId):
+    return f"{endpoint_base}/api/v1/assessment_results/{accountId}/pdf"
 
 
 ###########

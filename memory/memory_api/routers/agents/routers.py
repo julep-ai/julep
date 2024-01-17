@@ -1,7 +1,7 @@
 import json
 from uuid import uuid4
 from typing import Any, Annotated
-from fastapi import APIRouter, HTTPException, status, Header
+from fastapi import APIRouter, HTTPException, status, Depends
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from pydantic import UUID4, BaseModel
 
@@ -11,6 +11,7 @@ from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
 from memory_api.models.agent.delete_agent import delete_agent_query
 from memory_api.models.agent.update_agent import update_agent_query
+from memory_api.models.agent.get_agent import get_agent_query
 from memory_api.models.additional_info.create_additional_info import (
     create_additional_info_query,
 )
@@ -36,6 +37,7 @@ from memory_api.models.instructions.embed_instructions import embed_instructions
 from memory_api.models.instructions.delete_instructions import (
     delete_instructions_by_agent_query,
 )
+from memory_api.dependencies.developer_id import get_developer_id
 from memory_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -70,7 +72,9 @@ instruction_embed_instruction = "Embed this historical text chunk for retrieval:
 
 
 @router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
-async def delete_agent(agent_id: UUID4, x_developer_id: Annotated[UUID4, Header()]):
+async def delete_agent(
+    agent_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
+):
     # TODO: add 404 handling
     client.run(delete_agent_query(x_developer_id, agent_id))
 
@@ -79,7 +83,7 @@ async def delete_agent(agent_id: UUID4, x_developer_id: Annotated[UUID4, Header(
 async def update_agent(
     agent_id: UUID4,
     request: UpdateAgentRequest,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
         resp = client.run(
@@ -133,9 +137,34 @@ async def update_agent(
         )
 
 
+@router.get("/agents/{agent_id}", tags=["agents"])
+async def get_agent_details(
+    agent_id: UUID4,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+) -> Agent:
+    try:
+        resp = [
+            row.to_dict()
+            for _, row in client.run(
+                get_agent_query(
+                    developer_id=x_developer_id,
+                    agent_id=agent_id,
+                )
+            ).iterrows()
+        ][0]
+
+        return Agent(**resp)
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found",
+        )
+
+
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(
-    request: CreateAgentRequest, x_developer_id: Annotated[UUID4, Header()]
+    request: CreateAgentRequest,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     resp = client.run(
         create_agent_query(
@@ -194,7 +223,9 @@ async def create_agent(
 
 @router.get("/agents", tags=["agents"])
 async def list_agents(
-    x_developer_id: Annotated[UUID4, Header()], limit: int = 100, offset: int = 0
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    limit: int = 100,
+    offset: int = 0,
 ) -> AgentList:
     return AgentList(
         items=[
