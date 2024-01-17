@@ -13,7 +13,7 @@ externalDocs:
   description: Find out more about spec
   url: ""
 servers:
-  - url: https://api.julep.ai
+  - url: https://api-alpha.julep.ai
     description: ""
     variables: {}
 tags:
