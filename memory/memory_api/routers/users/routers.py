@@ -1,13 +1,14 @@
 from typing import Annotated
 from uuid import uuid4
 from pydantic import UUID4, BaseModel
-from fastapi import APIRouter, HTTPException, status, Header
+from fastapi import APIRouter, HTTPException, status, Depends
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from memory_api.clients.cozo import client
 from memory_api.clients.embed import embed
 from memory_api.models.user.create_user import create_user_query
 from memory_api.models.user.list_users import list_users_query
 from memory_api.models.user.update_user import update_user_query
+from memory_api.models.user.get_user import get_user_query
 from memory_api.models.additional_info.create_additional_info import (
     create_additional_info_query,
 )
@@ -23,6 +24,7 @@ from memory_api.models.additional_info.get_additional_info import (
 from memory_api.models.additional_info.embed_additional_info import (
     embed_additional_info_snippets_query,
 )
+from memory_api.dependencies.developer_id import get_developer_id
 from memory_api.autogen.openapi_model import (
     User,
     CreateUserRequest,
@@ -47,7 +49,9 @@ snippet_embed_instruction = "Encode this passage for retrieval: "
 
 
 @router.delete("/users/{user_id}", status_code=HTTP_202_ACCEPTED, tags=["users"])
-async def delete_user(user_id: UUID4, x_developer_id: Annotated[UUID4, Header()]):
+async def delete_user(
+    user_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
+):
     # TODO: add 404 handling
     client.rm(
         "users",
@@ -62,7 +66,7 @@ async def delete_user(user_id: UUID4, x_developer_id: Annotated[UUID4, Header()]
 async def update_user(
     user_id: UUID4,
     request: UpdateUserRequest,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
         resp = client.run(
@@ -86,9 +90,34 @@ async def update_user(
         )
 
 
+@router.get("/users/{user_id}", tags=["users"])
+async def get_user_details(
+    user_id: UUID4,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+) -> User:
+    try:
+        resp = [
+            row.to_dict()
+            for _, row in client.run(
+                get_user_query(
+                    developer_id=x_developer_id,
+                    user_id=user_id,
+                )
+            ).iterrows()
+        ][0]
+
+        return User(**resp)
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+
 @router.post("/users", status_code=HTTP_201_CREATED, tags=["users"])
 async def create_user(
-    request: CreateUserRequest, x_developer_id: Annotated[UUID4, Header()]
+    request: CreateUserRequest,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     resp = client.run(
         create_user_query(
@@ -126,7 +155,9 @@ async def create_user(
 
 @router.get("/users", tags=["users"])
 async def list_users(
-    x_developer_id: Annotated[UUID4, Header()], limit: int = 100, offset: int = 0
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    limit: int = 100,
+    offset: int = 0,
 ) -> UserList:
     # TODO: add additional info
     return UserList(

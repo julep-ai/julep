@@ -2,4 +2,5 @@
 
 from datetime import datetime, timezone
 
-utcnow = lambda: datetime.now(timezone.utc)
+def utcnow():
+    return datetime.now(timezone.utc)

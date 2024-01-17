@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import uuid4
 from pydantic import BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Header
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from memory_api.clients.cozo import client
@@ -10,6 +10,7 @@ from memory_api.models.session.get_session import get_session_query
 from memory_api.models.session.create_session import create_session_query
 from memory_api.models.session.list_sessions import list_sessions_query
 from memory_api.models.session.delete_session import delete_session_query
+from memory_api.dependencies.developer_id import get_developer_id
 from memory_api.autogen.openapi_model import (
     CreateSessionRequest,
     UpdateSessionRequest,
@@ -41,7 +42,7 @@ class ChatMLMessageList(BaseModel):
 
 @router.get("/sessions/{session_id}", tags=["sessions"])
 async def get_session(
-    session_id: UUID4, x_developer_id: Annotated[UUID4, Header()]
+    session_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
 ) -> Session:
     try:
         res = [
@@ -60,7 +61,8 @@ async def get_session(
 
 @router.post("/sessions/", status_code=HTTP_201_CREATED, tags=["sessions"])
 async def create_session(
-    request: CreateSessionRequest, x_developer_id: Annotated[UUID4, Header()]
+    request: CreateSessionRequest,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     session_id = uuid4()
     resp = client.run(
@@ -81,7 +83,9 @@ async def create_session(
 
 @router.get("/sessions/", tags=["sessions"])
 async def list_sessions(
-    x_developer_id: Annotated[UUID4, Header()], limit: int = 100, offset: int = 0
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    limit: int = 100,
+    offset: int = 0,
 ) -> SessionList:
     return SessionList(
         items=[
@@ -96,7 +100,9 @@ async def list_sessions(
 @router.delete(
     "/sessions/{session_id}", status_code=HTTP_202_ACCEPTED, tags=["sessions"]
 )
-async def delete_session(session_id: UUID4, x_developer_id: Annotated[UUID4, Header()]):
+async def delete_session(
+    session_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
+):
     try:
         client.run(delete_session_query(x_developer_id, session_id))
     except (IndexError, KeyError):
@@ -110,7 +116,7 @@ async def delete_session(session_id: UUID4, x_developer_id: Annotated[UUID4, Hea
 async def update_session(
     session_id: UUID4,
     request: UpdateSessionRequest,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
         resp = client.update(
@@ -136,7 +142,7 @@ async def update_session(
 @router.get("/sessions/{session_id}/suggestions", tags=["sessions"])
 async def get_suggestions(
     session_id: UUID4,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
 ) -> SuggestionList:
@@ -146,7 +152,7 @@ async def get_suggestions(
 @router.get("/sessions/{session_id}/history", tags=["sessions"])
 async def get_history(
     session_id: UUID4,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
 ) -> ChatMLMessageList:
@@ -158,7 +164,7 @@ async def session_chat(
     session_id: UUID4,
     request: ChatInput,
     background_tasks: BackgroundTasks,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ):
     async def run_task(task):
         await task
