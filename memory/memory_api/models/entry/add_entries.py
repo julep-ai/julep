@@ -1,7 +1,8 @@
 from datetime import datetime
 from ...common.protocol.entries import Entry
 
-parenthesize = lambda s: f'"({s})"'
+def parenthesize(s):
+    return f'"({s})"'
 
 
 def add_entries_query(entries: list[Entry]) -> str:
