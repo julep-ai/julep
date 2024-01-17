@@ -1,9 +1,9 @@
 import json
 from uuid import uuid4
 from typing import Any, Annotated
-from fastapi import APIRouter, HTTPException, status, Header
+from fastapi import APIRouter, HTTPException, status, Depends
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
-from pydantic import UUID4
+from pydantic import UUID4, BaseModel
 
 from memory_api.clients.cozo import client
 from memory_api.clients.embed import embed
@@ -11,6 +11,7 @@ from memory_api.models.agent.create_agent import create_agent_query
 from memory_api.models.agent.list_agents import list_agents_query
 from memory_api.models.agent.delete_agent import delete_agent_query
 from memory_api.models.agent.update_agent import update_agent_query
+from memory_api.models.agent.get_agent import get_agent_query
 from memory_api.models.additional_info.create_additional_info import (
     create_additional_info_query,
 )
@@ -36,6 +37,7 @@ from memory_api.models.instructions.embed_instructions import embed_instructions
 from memory_api.models.instructions.delete_instructions import (
     delete_instructions_by_agent_query,
 )
+from memory_api.dependencies.developer_id import get_developer_id
 from memory_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
@@ -51,6 +53,18 @@ from memory_api.autogen.openapi_model import (
 )
 
 
+class AgentList(BaseModel):
+    items: list[Agent]
+
+
+class AdditionalInfoList(BaseModel):
+    items: list[AdditionalInfo]
+
+
+class ToolList(BaseModel):
+    items: list[Tool]
+
+
 router = APIRouter()
 snippet_embed_instruction = "Encode this passage for retrieval: "
 function_embed_instruction = "Transform this tool description for retrieval: "
@@ -58,7 +72,9 @@ instruction_embed_instruction = "Embed this historical text chunk for retrieval:
 
 
 @router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
-async def delete_agent(agent_id: UUID4, x_developer_id: Annotated[UUID4, Header()]):
+async def delete_agent(
+    agent_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
+):
     # TODO: add 404 handling
     client.run(delete_agent_query(x_developer_id, agent_id))
 
@@ -67,7 +83,7 @@ async def delete_agent(agent_id: UUID4, x_developer_id: Annotated[UUID4, Header(
 async def update_agent(
     agent_id: UUID4,
     request: UpdateAgentRequest,
-    x_developer_id: Annotated[UUID4, Header()],
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
         resp = client.run(
@@ -121,9 +137,34 @@ async def update_agent(
         )
 
 
+@router.get("/agents/{agent_id}", tags=["agents"])
+async def get_agent_details(
+    agent_id: UUID4,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+) -> Agent:
+    try:
+        resp = [
+            row.to_dict()
+            for _, row in client.run(
+                get_agent_query(
+                    developer_id=x_developer_id,
+                    agent_id=agent_id,
+                )
+            ).iterrows()
+        ][0]
+
+        return Agent(**resp)
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found",
+        )
+
+
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(
-    request: CreateAgentRequest, x_developer_id: Annotated[UUID4, Header()]
+    request: CreateAgentRequest,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     resp = client.run(
         create_agent_query(
@@ -182,18 +223,22 @@ async def create_agent(
 
 @router.get("/agents", tags=["agents"])
 async def list_agents(
-    x_developer_id: Annotated[UUID4, Header()], limit: int = 100, offset: int = 0
-) -> list[Agent]:
-    return [
-        Agent(**row.to_dict())
-        for _, row in client.run(
-            list_agents_query(
-                developer_id=x_developer_id,
-                limit=limit,
-                offset=offset,
-            )
-        ).iterrows()
-    ]
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    limit: int = 100,
+    offset: int = 0,
+) -> AgentList:
+    return AgentList(
+        items=[
+            Agent(**row.to_dict())
+            for _, row in client.run(
+                list_agents_query(
+                    developer_id=x_developer_id,
+                    limit=limit,
+                    offset=offset,
+                )
+            ).iterrows()
+        ]
+    )
 
 
 @router.post("/agents/{agent_id}/additional_info", tags=["agents"])
@@ -239,7 +284,7 @@ async def create_additional_info(
 @router.get("/agents/{agent_id}/additional_info", tags=["agents"])
 async def list_additional_info(
     agent_id: UUID4, limit: int = 100, offset: int = 0
-) -> list[AdditionalInfo]:
+) -> AdditionalInfoList:
     resp = client.run(
         list_additional_info_snippets_by_owner_query(
             owner_type="agent",
@@ -247,14 +292,16 @@ async def list_additional_info(
         )
     )
 
-    return [
-        AdditionalInfo(
-            id=row["additional_info_id"],
-            title=row["title"],
-            content=row["snippet"],
-        )
-        for _, row in resp.iterrows()
-    ]
+    return AdditionalInfoList(
+        items=[
+            AdditionalInfo(
+                id=row["additional_info_id"],
+                title=row["title"],
+                content=row["snippet"],
+            )
+            for _, row in resp.iterrows()
+        ]
+    )
 
 
 @router.delete(
@@ -321,25 +368,27 @@ async def create_tool(
 
 
 @router.get("/agents/{agent_id}/tools", tags=["agents"])
-async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> list[Tool]:
+async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> ToolList:
     resp = client.run(
         list_functions_by_agent_query(
             agent_id=agent_id,
         )
     )
 
-    return [
-        Tool(
-            type="function",
-            definition=FunctionDef(
-                description=row.get("description"),
-                name=row["name"],
-                parameters=row["parameters"],
-            ),
-            id=row["tool_id"],
-        )
-        for _, row in resp.iterrows()
-    ]
+    return ToolList(
+        items=[
+            Tool(
+                type="function",
+                definition=FunctionDef(
+                    description=row.get("description"),
+                    name=row["name"],
+                    parameters=row["parameters"],
+                ),
+                id=row["tool_id"],
+            )
+            for _, row in resp.iterrows()
+        ]
+    )
 
 
 @router.delete("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
