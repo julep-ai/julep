@@ -1,6 +1,6 @@
 from typing import Annotated
 from uuid import uuid4
-from pydantic import UUID4
+from pydantic import UUID4, BaseModel
 from fastapi import APIRouter, HTTPException, status, Header
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from memory_api.clients.cozo import client
@@ -32,6 +32,14 @@ from memory_api.autogen.openapi_model import (
     CreateAdditionalInfoRequest,
     AdditionalInfo,
 )
+
+
+class UserList(BaseModel):
+    items: list[User]
+
+
+class AdditionalInfoList(BaseModel):
+    items: list[AdditionalInfo]
 
 
 router = APIRouter()
@@ -119,18 +127,20 @@ async def create_user(
 @router.get("/users", tags=["users"])
 async def list_users(
     x_developer_id: Annotated[UUID4, Header()], limit: int = 100, offset: int = 0
-) -> list[User]:
+) -> UserList:
     # TODO: add additional info
-    return [
-        User(**row.to_dict())
-        for _, row in client.run(
-            list_users_query(
-                developer_id=x_developer_id,
-                limit=limit,
-                offset=offset,
-            ),
-        ).iterrows()
-    ]
+    return UserList(
+        items=[
+            User(**row.to_dict())
+            for _, row in client.run(
+                list_users_query(
+                    developer_id=x_developer_id,
+                    limit=limit,
+                    offset=offset,
+                ),
+            ).iterrows()
+        ]
+    )
 
 
 @router.post("/users/{user_id}/additional_info", tags=["users"])
@@ -176,7 +186,7 @@ async def create_additional_info(
 @router.get("/users/{user_id}/additional_info", tags=["users"])
 async def list_additional_info(
     user_id: UUID4, limit: int = 100, offset: int = 0
-) -> list[AdditionalInfo]:
+) -> AdditionalInfoList:
     resp = client.run(
         list_additional_info_snippets_by_owner_query(
             owner_type="user",
@@ -184,14 +194,16 @@ async def list_additional_info(
         )
     )
 
-    return [
-        AdditionalInfo(
-            id=row["additional_info_id"],
-            title=row["title"],
-            content=row["snippet"],
-        )
-        for _, row in resp.iterrows()
-    ]
+    return AdditionalInfoList(
+        items=[
+            AdditionalInfo(
+                id=row["additional_info_id"],
+                title=row["title"],
+                content=row["snippet"],
+            )
+            for _, row in resp.iterrows()
+        ]
+    )
 
 
 @router.delete("/users/{user_id}/additional_info/{additional_info_id}", tags=["users"])

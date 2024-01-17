@@ -1,5 +1,6 @@
 from typing import Annotated
 from uuid import uuid4
+from pydantic import BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Header
 from fastapi.responses import JSONResponse
@@ -24,6 +25,18 @@ from .session import PlainCompletionSession
 
 
 router = APIRouter()
+
+
+class SessionList(BaseModel):
+    items: list[Session]
+
+
+class SuggestionList(BaseModel):
+    items: list[Suggestion]
+
+
+class ChatMLMessageList(BaseModel):
+    items: list[ChatMLMessage]
 
 
 @router.get("/sessions/{session_id}", tags=["sessions"])
@@ -69,13 +82,15 @@ async def create_session(
 @router.get("/sessions/", tags=["sessions"])
 async def list_sessions(
     x_developer_id: Annotated[UUID4, Header()], limit: int = 100, offset: int = 0
-) -> list[Session]:
-    return [
-        Session(**row.to_dict())
-        for _, row in client.run(
-            list_sessions_query(x_developer_id, limit, offset),
-        ).iterrows()
-    ]
+) -> SessionList:
+    return SessionList(
+        items=[
+            Session(**row.to_dict())
+            for _, row in client.run(
+                list_sessions_query(x_developer_id, limit, offset),
+            ).iterrows()
+        ]
+    )
 
 
 @router.delete(
@@ -124,8 +139,8 @@ async def get_suggestions(
     x_developer_id: Annotated[UUID4, Header()],
     limit: int = 100,
     offset: int = 0,
-) -> list[Suggestion]:
-    return []
+) -> SuggestionList:
+    return SuggestionList(items=[])
 
 
 @router.get("/sessions/{session_id}/history", tags=["sessions"])
@@ -134,8 +149,8 @@ async def get_history(
     x_developer_id: Annotated[UUID4, Header()],
     limit: int = 100,
     offset: int = 0,
-) -> list[ChatMLMessage]:
-    return []
+) -> ChatMLMessageList:
+    return ChatMLMessageList(items=[])
 
 
 @router.post("/sessions/{session_id}/chat", tags=["sessions"])
