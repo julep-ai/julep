@@ -3,7 +3,7 @@
  */
 
 export const JulepApiEnvironment = {
-    Default: "https://api-alpha.julep.ai/api",
+    Default: "https://api-alpha.julep.ai",
 } as const;
 
 export type JulepApiEnvironment = typeof JulepApiEnvironment.Default;
