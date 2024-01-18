@@ -19,9 +19,8 @@ pytype = "^2024.1.5"
 black = "^23.12.1"
 ward = "^0.68.0b0"
 ruff = "^0.1.13"
-# ipython = "^8.20.0"
-# jupyterlab = "^4.0.10"
 poethepoet = "^0.24.4"
+ipython = "<8.13"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,4 +35,12 @@ check = [
     "lint",
     "typecheck",
 ]
-test = "ward"
+start_prism.shell = "prism mock ./tests/mock_openapi.yaml -p 8080 -m -d --json-schema-faker-fillProperties -v fatal 1> /dev/null &"
+kill_prism.shell = "kill $(pgrep -f 'prism .*')"
+test = [
+    "start_prism",
+    { cmd = "echo 'Waiting for prism to start up'" },
+    { cmd = "sleep 3" },
+    { cmd = "ward" },
+    "kill_prism",
+]
