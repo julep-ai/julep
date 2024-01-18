@@ -40,7 +40,7 @@ kill_prism.shell = "kill $(pgrep -f 'prism .*')"
 test = [
     "start_prism",
     { cmd = "echo 'Waiting for prism to start up'" },
-    { cmd = "sleep 3" },
+    { cmd = "sleep 1" },
     { cmd = "ward" },
     "kill_prism",
 ]

@@ -1,6 +1,6 @@
 from uuid import UUID
-
 from typing import Optional
+
 from beartype import beartype
 from beartype.typing import Awaitable, List, TypedDict, Union
 
@@ -48,21 +48,25 @@ class BaseUsersManager(BaseManager):
             additional_information=docs,
         )
 
-    def _list(self, limit: Optional[int] = None, offset: Optional[int] = None) -> Union[ListUsersResponse, Awaitable[ListUsersResponse]]:
+    def _list_items(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> Union[ListUsersResponse, Awaitable[ListUsersResponse]]:
         return self.api_client.list_users(
             limit=limit,
             offset=offset,
         )
-    
-    def _delete(self, user_id: str) -> Union[None, Awaitable[None]]:
+
+    def _delete(self, user_id: Union[str, UUID]) -> Union[None, Awaitable[None]]:
+        assert is_valid_uuid4(user_id), "id must be a valid UUID v4"
         return self.api_client.delete_user(user_id=user_id)
-    
+
     def _update(
-            self, 
-            user_id: str, 
-            about: Optional[str] = None,
-            name: Optional[str] = None,
-        ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        self,
+        user_id: Union[str, UUID],
+        about: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        assert is_valid_uuid4(user_id), "id must be a valid UUID v4"
         return self.api_client.update_user(
             user_id=user_id,
             about=about,
@@ -88,35 +92,35 @@ class UsersManager(BaseUsersManager):
             about,
             docs,
         )
-    
+
     @beartype
     def list(
         self,
         *,
-        limit: Optional[int] = None, 
+        limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> ListUsersResponse:
-        return self._list(
-            limit=limit, 
+    ) -> List[User]:
+        return self._list_items(
+            limit=limit,
             offset=offset,
-        )
-    
+        ).items
+
     @beartype
     def delete(
         self,
-        user_id: str,
-    ) -> ListUsersResponse:
+        user_id: Union[str, UUID],
+    ) -> None:
         return self._delete(
             user_id=user_id,
         )
-    
+
     @beartype
     def update(
-        self, 
-        user_id: str, 
+        self,
+        user_id: Union[str, UUID],
         *,
         about: Optional[str] = None,
-        name: Optional[str] = None
+        name: Optional[str] = None,
     ) -> ResourceUpdatedResponse:
         return self._update(
             user_id=user_id,
@@ -143,35 +147,37 @@ class AsyncUsersManager(BaseUsersManager):
             about,
             docs,
         )
-    
+
     @beartype
     async def list(
         self,
         *,
-        limit: Optional[int] = None, 
+        limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> ListUsersResponse:
-        return await self._list(
-            limit, 
-            offset,
-        )
-    
+    ) -> List[User]:
+        return (
+            await self._list_items(
+                limit,
+                offset,
+            )
+        ).items
+
     @beartype
     async def delete(
         self,
-        user_id: str,
-    ) -> ListUsersResponse:
+        user_id: Union[str, UUID],
+    ) -> None:
         return await self._delete(
             user_id=user_id,
         )
-    
+
     @beartype
     async def update(
-        self, 
-        user_id: str, 
+        self,
+        user_id: Union[str, UUID],
         *,
         about: Optional[str] = None,
-        name: Optional[str] = None
+        name: Optional[str] = None,
     ) -> ResourceUpdatedResponse:
         return await self._update(
             user_id=user_id,
