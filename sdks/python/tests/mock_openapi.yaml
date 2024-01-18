@@ -228,7 +228,11 @@ paths:
       tags: []
       parameters: []
       responses:
-        "202": {}
+        "202":
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - api-key: []
     put:
@@ -465,7 +469,11 @@ paths:
       tags: []
       parameters: []
       responses:
-        "202": {}
+        "202":
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - api-key: []
     put:
@@ -516,7 +524,11 @@ paths:
       tags: []
       parameters: []
       responses:
-        "202": {}
+        "202":
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - api-key: []
     put:
@@ -680,7 +692,11 @@ paths:
       tags: []
       parameters: []
       responses:
-        "202": {}
+        "202":
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - api-key: []
   /api/agents/{agent_id}/additional_info/{additional_info_id}:
@@ -704,7 +720,11 @@ paths:
       tags: []
       parameters: []
       responses:
-        "202": {}
+        "202":
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - api-key: []
   /api/agents/{agent_id}/memories/{memory_id}:
@@ -810,7 +830,11 @@ paths:
       tags: []
       parameters: []
       responses:
-        "202": {}
+        "202":
+          content:
+            application/json:
+              schema:
+                type: object
       security:
         - api-key: []
     put:
