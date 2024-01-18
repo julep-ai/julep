@@ -7,20 +7,40 @@ license = "ISC"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.8,<3.13"
 httpx = "^0.26.0"
 pydantic = "^2.5.3"
 environs = "^10.3.0"
+beartype = "^0.16.4"
 
 
 [tool.poetry.group.dev.dependencies]
 pytype = "^2024.1.5"
 black = "^23.12.1"
 ward = "^0.68.0b0"
-ipython = "^8.20.0"
 ruff = "^0.1.13"
-jupyterlab = "^4.0.10"
+poethepoet = "^0.24.4"
+ipython = "<8.13"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+format = "black ."
+lint = "ruff **/*.py --fix --unsafe-fixes"
+typecheck = "pytype julep_ai"
+check = [
+    "format",
+    "lint",
+    "typecheck",
+]
+start_prism.shell = "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &"
+kill_prism.shell = "kill $(pgrep -f 'prism .*')"
+test = [
+    "start_prism",
+    { cmd = "echo 'Waiting for prism to start up'" },
+    { cmd = "sleep 3" },
+    { cmd = "ward" },
+    "kill_prism",
+]
