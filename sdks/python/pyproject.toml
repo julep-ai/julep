@@ -35,7 +35,7 @@ check = [
     "lint",
     "typecheck",
 ]
-start_prism.shell = "prism mock ./tests/mock_openapi.yaml -p 8080 -m -d --json-schema-faker-fillProperties -v fatal 1> /dev/null &"
+start_prism.shell = "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &"
 kill_prism.shell = "kill $(pgrep -f 'prism .*')"
 test = [
     "start_prism",
