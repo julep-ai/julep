@@ -11,7 +11,7 @@ def client():
     return client
 
 
-@fixture(scope="global")
+@fixture
 def async_client():
     # Mock server base url
     base_url = "http://localhost:8080"
