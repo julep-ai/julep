@@ -45,3 +45,5 @@ So, we ended up creating Samantha initially for ourselves. However, as we shared
 * **Empathetic systems**: For use cases such as therapeutic support, personal coaching, and companionship.
 * **Games and Interactive Media**: Create engaging characters and interactive dialogues for games and media.
 * **Community Engagement:** Connect and empower users to engage with brand communities on channels such as WhatsApp
+
+<figure><img src=".gitbook/assets/implicit_memory.excalidraw.png" alt=""><figcaption></figcaption></figure>
