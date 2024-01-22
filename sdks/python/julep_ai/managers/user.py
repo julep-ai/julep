@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import Optional
 
 from beartype import beartype
-from beartype.typing import Awaitable, List, TypedDict, Union
+from beartype.typing import Awaitable, List, Union
 
 from ..api.types import (
     User,
@@ -14,16 +14,7 @@ from ..api.types import (
 
 from .base import BaseManager
 from .utils import is_valid_uuid4
-
-
-###########
-## TYPES ##
-###########
-
-DocDict = TypedDict(
-    "DocDict",
-    **{k: v.outer_type_ for k, v in CreateAdditionalInfoRequest.__fields__.items()},
-)
+from .types import DocDict
 
 
 class BaseUsersManager(BaseManager):
@@ -108,6 +99,7 @@ class UsersManager(BaseUsersManager):
     @beartype
     def delete(
         self,
+        *,
         user_id: Union[str, UUID],
     ) -> None:
         return self._delete(
@@ -117,8 +109,8 @@ class UsersManager(BaseUsersManager):
     @beartype
     def update(
         self,
-        user_id: Union[str, UUID],
         *,
+        user_id: Union[str, UUID],
         about: Optional[str] = None,
         name: Optional[str] = None,
     ) -> ResourceUpdatedResponse:
@@ -165,6 +157,7 @@ class AsyncUsersManager(BaseUsersManager):
     @beartype
     async def delete(
         self,
+        *,
         user_id: Union[str, UUID],
     ) -> None:
         return await self._delete(
@@ -174,8 +167,8 @@ class AsyncUsersManager(BaseUsersManager):
     @beartype
     async def update(
         self,
-        user_id: Union[str, UUID],
         *,
+        user_id: Union[str, UUID],
         about: Optional[str] = None,
         name: Optional[str] = None,
     ) -> ResourceUpdatedResponse:
