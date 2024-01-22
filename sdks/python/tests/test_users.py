@@ -58,7 +58,7 @@ async def _(client=async_client):
 @test("users.update")
 def _(client=client):
     response = client.users.update(
-        uuid4(),
+        user_id=uuid4(),
         name="test user",
         about="test user about",
     )
@@ -70,7 +70,7 @@ def _(client=client):
 @test("async users.update")
 async def _(client=async_client):
     response = await client.users.update(
-        uuid4(),
+        user_id=uuid4(),
         name="test user",
         about="test user about",
     )
@@ -82,7 +82,7 @@ async def _(client=async_client):
 @test("users.delete")
 def _(client=client):
     response = client.users.delete(
-        uuid4(),
+        user_id=uuid4(),
     )
 
     assert response is None
@@ -91,7 +91,7 @@ def _(client=client):
 @test("async users.delete")
 async def _(client=async_client):
     response = await client.users.delete(
-        uuid4(),
+        user_id=uuid4(),
     )
 
     assert response is None

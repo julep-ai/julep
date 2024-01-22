@@ -2,7 +2,11 @@ from uuid import uuid4
 
 from ward import test
 
-from julep_ai.api.types import Agent, ResourceCreatedResponse
+from julep_ai.api.types import (
+    Agent,
+    ResourceCreatedResponse,
+    ResourceUpdatedResponse,
+)
 
 from .fixtures import async_client, client
 
@@ -43,3 +47,65 @@ async def _(client=async_client):
 
     assert isinstance(response, ResourceCreatedResponse)
     assert response.created_at
+
+
+@test("agents.list")
+def _(client=client):
+    response = client.agents.list()
+    assert len(response) > 0
+    assert isinstance(response[0], Agent)
+
+
+@test("async agents.list")
+async def _(client=async_client):
+    response = await client.agents.list()
+    assert len(response) > 0
+    assert isinstance(response[0], Agent)
+
+
+@test("agents.update")
+def _(client=client):
+    response = client.agents.update(
+        agent_id=uuid4(),
+        name="test user",
+        about="test user about",
+        instructions=["test agent instructions"],
+        default_settings={"temperature": 0.5},
+        model="some model",
+    )
+
+    assert isinstance(response, ResourceUpdatedResponse)
+    assert response.updated_at
+
+
+@test("async agents.update")
+async def _(client=async_client):
+    response = await client.agents.update(
+        agent_id=uuid4(),
+        name="test user",
+        about="test user about",
+        instructions=["test agent instructions"],
+        default_settings={"temperature": 0.5},
+        model="some model",
+    )
+
+    assert isinstance(response, ResourceUpdatedResponse)
+    assert response.updated_at
+
+
+@test("agents.delete")
+def _(client=client):
+    response = client.agents.delete(
+        uuid4(),
+    )
+
+    assert response is None
+
+
+@test("async agents.delete")
+async def _(client=async_client):
+    response = await client.agents.delete(
+        uuid4(),
+    )
+
+    assert response is None

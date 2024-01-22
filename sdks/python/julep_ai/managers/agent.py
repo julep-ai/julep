@@ -1,20 +1,29 @@
 from uuid import UUID
 
+from typing import Optional
 from beartype import beartype
-from beartype.typing import Awaitable, List, Literal, TypedDict, Union
+from beartype.typing import Awaitable, List, Literal, Union
 
 from ..api.types import (
     Agent,
     AgentDefaultSettings,
     CreateAdditionalInfoRequest,
     CreateToolRequest,
-    FunctionDef,
     Instruction,
     ResourceCreatedResponse,
+    ListAgentsResponse,
+    ResourceUpdatedResponse,
 )
 
 from .base import BaseManager
 from .utils import is_valid_uuid4
+from .types import (
+    ToolDict,
+    FunctionDefDict,
+    DefaultSettingsDict,
+    DocDict,
+    InstructionDict,
+)
 
 
 ###########
@@ -25,24 +34,6 @@ ModelName = Literal[
     "julep-ai/samantha-1",
     "julep-ai/samantha-1-turbo",
 ]
-
-DocDict = TypedDict(
-    "DocDict",
-    **{k: v.outer_type_ for k, v in CreateAdditionalInfoRequest.__fields__.items()},
-)
-DefaultSettingsDict = TypedDict(
-    "DefaultSettingsDict",
-    **{k: v.outer_type_ for k, v in AgentDefaultSettings.__fields__.items()},
-)
-FunctionDefDict = TypedDict(
-    "FunctionDefDict", **{k: v.outer_type_ for k, v in FunctionDef.__fields__.items()}
-)
-ToolDict = TypedDict(
-    "ToolDict", **{k: v.outer_type_ for k, v in CreateToolRequest.__fields__.items()}
-)
-InstructionDict = TypedDict(
-    "InstructionDict", **{k: v.outer_type_ for k, v in Instruction.__fields__.items()}
-)
 
 
 class BaseAgentsManager(BaseManager):
@@ -102,6 +93,51 @@ class BaseAgentsManager(BaseManager):
             additional_info=docs,
         )
 
+    def _list_items(
+        self, limit: Optional[int] = None, offset: Optional[int] = None
+    ) -> Union[ListAgentsResponse, Awaitable[ListAgentsResponse]]:
+        return self.api_client.list_agents(
+            limit=limit,
+            offset=offset,
+        )
+
+    def _delete(self, agent_id: Union[str, UUID]) -> Union[None, Awaitable[None]]:
+        assert is_valid_uuid4(agent_id), "id must be a valid UUID v4"
+        return self.api_client.delete_agent(agent_id=agent_id)
+
+    def _update(
+        self,
+        agent_id: Union[str, UUID],
+        about: Optional[str] = None,
+        instructions: Optional[Union[List[str], List[InstructionDict]]] = None,
+        name: Optional[str] = None,
+        model: Optional[str] = None,
+        default_settings: Optional[DefaultSettingsDict] = None,
+    ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        assert is_valid_uuid4(agent_id), "id must be a valid UUID v4"
+
+        if instructions is not None:
+            instructions: List[Instruction] = [
+                Instruction(content=content, important=False)
+                if isinstance(content, str)
+                else Instruction(**content)
+                for content in instructions
+            ]
+
+        if default_settings is not None:
+            default_settings: AgentDefaultSettings = AgentDefaultSettings(
+                **default_settings
+            )
+
+        return self.api_client.update_agent(
+            agent_id=agent_id,
+            about=about,
+            instructions=instructions,
+            name=name,
+            model=model,
+            default_settings=default_settings,
+        )
+
 
 class AgentsManager(BaseAgentsManager):
     @beartype
@@ -132,6 +168,42 @@ class AgentsManager(BaseAgentsManager):
             docs,
         )
 
+    @beartype
+    def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> List[Agent]:
+        return self._list_items(
+            limit=limit,
+            offset=offset,
+        ).items
+
+    @beartype
+    def delete(self, agent_id: Union[str, UUID]):
+        return self._delete(agent_id=agent_id)
+
+    @beartype
+    def update(
+        self,
+        *,
+        agent_id: Union[str, UUID],
+        about: Optional[str] = None,
+        instructions: Optional[Union[List[str], List[InstructionDict]]] = None,
+        name: Optional[str] = None,
+        model: Optional[str] = None,
+        default_settings: Optional[DefaultSettingsDict] = None,
+    ) -> ResourceUpdatedResponse:
+        return self._update(
+            agent_id=agent_id,
+            about=about,
+            instructions=instructions,
+            name=name,
+            model=model,
+            default_settings=default_settings,
+        )
+
 
 class AsyncAgentsManager(BaseAgentsManager):
     @beartype
@@ -160,4 +232,42 @@ class AsyncAgentsManager(BaseAgentsManager):
             default_settings,
             model,
             docs,
+        )
+
+    @beartype
+    async def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> List[Agent]:
+        return (
+            await self._list_items(
+                limit=limit,
+                offset=offset,
+            )
+        ).items
+
+    @beartype
+    async def delete(self, agent_id: Union[str, UUID]):
+        return await self._delete(agent_id=agent_id)
+
+    @beartype
+    async def update(
+        self,
+        *,
+        agent_id: Union[str, UUID],
+        about: Optional[str] = None,
+        instructions: Optional[Union[List[str], List[InstructionDict]]] = None,
+        name: Optional[str] = None,
+        model: Optional[str] = None,
+        default_settings: Optional[DefaultSettingsDict] = None,
+    ) -> ResourceUpdatedResponse:
+        return await self._update(
+            agent_id=agent_id,
+            about=about,
+            instructions=instructions,
+            name=name,
+            model=model,
+            default_settings=default_settings,
         )
