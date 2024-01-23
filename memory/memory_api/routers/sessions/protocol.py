@@ -16,3 +16,5 @@ class Settings(BaseModel):
     stream: bool = Field(default=False)
     temperature: float | None = Field(default=0.7)
     top_p: float | None = Field(default=1)
+    remember: bool | None = Field(default=True)
+    recall: bool | None = Field(default=True)
