@@ -10,12 +10,7 @@ from pycozo.client import QueryException
 from memory_api.routers import (
     agents,
     sessions,
-    embedder,
     users,
-    entries,
-    models,
-    personality,
-    beliefs,
 )
 from memory_api.env import sentry_dsn
 from memory_api.dependencies.auth import get_api_key
@@ -66,12 +61,12 @@ register_exceptions(app)
 
 app.include_router(agents.router)
 app.include_router(sessions.router)
-app.include_router(embedder.router)
+# app.include_router(embedder.router)
 app.include_router(users.router)
-app.include_router(entries.router)
-app.include_router(models.router)
-app.include_router(personality.router)
-app.include_router(beliefs.router)
+# app.include_router(entries.router)
+# app.include_router(models.router)
+# app.include_router(personality.router)
+# app.include_router(beliefs.router)
 
 
 def main(
