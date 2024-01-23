@@ -1,6 +1,6 @@
 import json
 from uuid import uuid4
-from typing import Any, Annotated
+from typing import Annotated
 from fastapi import APIRouter, HTTPException, status, Depends
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from pydantic import UUID4, BaseModel
@@ -12,6 +12,7 @@ from memory_api.models.agent.list_agents import list_agents_query
 from memory_api.models.agent.delete_agent import delete_agent_query
 from memory_api.models.agent.update_agent import update_agent_query
 from memory_api.models.agent.get_agent import get_agent_query
+from memory_api.models.agent.update_tool import update_tool_by_id_query
 from memory_api.models.additional_info.create_additional_info import (
     create_additional_info_query,
 )
@@ -372,6 +373,8 @@ async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> Tool
     resp = client.run(
         list_functions_by_agent_query(
             agent_id=agent_id,
+            limit=limit,
+            offset=offset,
         )
     )
 
@@ -413,7 +416,43 @@ async def delete_tool(agent_id: UUID4, tool_id: UUID4):
     )
 
 
-@router.get("/agents/{agent_id}/memories", tags=["agents"])
-async def list_memories(agent_id: UUID4) -> list[Any]:
-    # TODO: implement later
-    return []
+@router.put("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
+async def update_tool(
+    agent_id: UUID4, tool_id: UUID4, request: FunctionDef
+) -> ResourceUpdatedResponse:
+    embedding = await embed(
+        [
+            function_embed_instruction
+            + request.description
+            + "\nParameters: "
+            + json.dumps(request.parameters.model_dump())
+        ]
+    )
+
+    try:
+        return client.run(
+            update_tool_by_id_query(
+                agent_id=agent_id,
+                tool_id=tool_id,
+                function=request,
+                embedding=embedding,
+            )
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent or tool not found",
+        )
+
+
+@router.delete("/agents/{agent_id}/memories/{memory_id}", tags=["agents"])
+async def delete_memories(agent_id: UUID4, memory_id: UUID4):
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+    )
+
+
+# @router.get("/agents/{agent_id}/memories", tags=["agents"])
+# async def list_memories(agent_id: UUID4) -> list[Any]:
+#     # TODO: implement later
+#     return []
