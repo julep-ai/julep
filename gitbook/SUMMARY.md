@@ -3,9 +3,11 @@
 ## ✨ INTRODUCTION
 
 * [Overview](README.md)
-* [Features](introduction/features.md)
-* [Capabilities](introduction/capabilities.md)
-* [Context "sections"](introduction/context-sections.md)
+* [Concepts](introduction/concepts.md)
+* [Samantha-1](introduction/samantha-1/README.md)
+  * [Features](introduction/samantha-1/features.md)
+  * [Capabilities](introduction/samantha-1/capabilities.md)
+  * [Context "sections"](introduction/samantha-1/context-sections.md)
 
 ## 👟 GETTING STARTED
 
