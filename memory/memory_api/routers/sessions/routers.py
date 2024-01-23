@@ -187,6 +187,8 @@ async def session_chat(
         stream=request.stream,
         temperature=request.temperature,
         top_p=request.top_p,
+        remember=request.remember,
+        recall=request.recall,
     )
     response, bg_task = await session.run(request.messages, settings)
 

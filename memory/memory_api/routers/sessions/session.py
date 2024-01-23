@@ -165,6 +165,9 @@ class BaseSession:
         response,
         final_settings,
     ) -> None:
+        if not final_settings.get("remember"):
+            return
+
         entries: list[Entry] = []
         for m in new_input:
             entries.append(
