@@ -14,7 +14,7 @@ from .managers.doc import DocsManager, AsyncDocsManager
 
 from .managers.memory import MemoriesManager, AsyncMemoriesManager
 
-# from .managers.session import SessionsManager, AsyncSessionsManager
+from .managers.session import SessionsManager, AsyncSessionsManager
 from .managers.tool import ToolsManager, AsyncToolsManager
 
 # See Note above
@@ -24,7 +24,7 @@ __all__ = ["AsyncJulepApi", "JulepApi", "Client", "AsyncClient"]
 class Client:
     agents: AgentsManager
     users: UsersManager
-    # sessions: SessionsManager
+    sessions: SessionsManager
     docs: DocsManager
     memories: MemoriesManager
     tools: ToolsManager
@@ -48,7 +48,7 @@ class Client:
 
         self.agents = AgentsManager(api_client=self._api_client)
         self.users = UsersManager(api_client=self._api_client)
-        # self.sessions = SessionsManager(api_client=self._api_client)
+        self.sessions = SessionsManager(api_client=self._api_client)
         self.docs = DocsManager(api_client=self._api_client)
         self.memories = MemoriesManager(api_client=self._api_client)
         self.tools = ToolsManager(api_client=self._api_client)
@@ -57,7 +57,7 @@ class Client:
 class AsyncClient:
     agents: AsyncAgentsManager
     users: AsyncUsersManager
-    # sessions: AsyncSessionsManager
+    sessions: AsyncSessionsManager
     docs: AsyncDocsManager
     memories: AsyncMemoriesManager
     tools: AsyncToolsManager
@@ -83,7 +83,7 @@ class AsyncClient:
 
         self.agents = AsyncAgentsManager(api_client=self._api_client)
         self.users = AsyncUsersManager(api_client=self._api_client)
-        # self.sessions = AsyncSessionsManager(api_client=self._api_client)
+        self.sessions = AsyncSessionsManager(api_client=self._api_client)
         self.docs = AsyncDocsManager(api_client=self._api_client)
         self.memories = AsyncMemoriesManager(api_client=self._api_client)
         self.tools = AsyncToolsManager(api_client=self._api_client)
