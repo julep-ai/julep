@@ -6,13 +6,16 @@ description: A new standard for building AI agents
 
 ## What is Julep AI?
 
-Julep AI is a platform designed for the rapid development, prototyping, and deployment of AI agents. These agents are autonomous applications powered by Large Language Models (LLMs) that can perform a variety of tasks without constant human oversight. They operate by planning steps, selecting appropriate tools, and executing actions in a manner that mimics cognitive processes, effectively bridging the gap between complex AI technologies and practical, everyday applications.
+Julep AI is a platform for rapid prototyping, and deployment of AI agents. Agents are autonomous applications that use LLMs to plan and perform complex tasks without human oversight. They operate by planning steps, selecting appropriate tools, and executing actions to accomplish practical, everyday tasks that require reasoning.
 
-At its core, Julep AI provides a robust infrastructure that supports the entire lifecycle of an AI agent – from the initial idea scribbled on a virtual napkin to a fully-functional system integrated within a user's environment. The platform is web-based, offering a Prompt Integrated Development Environment (IDE) and execution platform that is both versatile for developers and approachable for those with less coding experience.
+At its core, Julep AI comprises the following:
+1. A simple and intuitive **framework for building Agents**,
+1. A **memory-store** that agents use to continuously learn from their interactions with users and their environment,
+1. A web-based **Agent IDE** that allows iterating on agents and complicated prompts is both versatile for developers and approachable for those with less coding experience,
+1. A robust **agent execution infrastructure** that can run agent tasks and inference at scale, and
+1. An **ecosystem of tools and integrations** for use by agents on the platform.
 
-Julep AI stands out by enabling agents with a form of 'memory', allowing them to save and utilize past interactions and states to make informed decisions and follow through with tasks over time. This memory system is not only a technical feat but also a cornerstone of the platform's capability to deliver personalized and context-aware services.
-
-To put it plainly, think of Julep AI as a workshop where you can craft smart, memory-equipped digital helpers that learn and adapt as they work, ready to be deployed into the digital world to handle tasks that would otherwise require human intelligence and effort.
+Julep AI stands out by enabling agents with a form of 'memory', allowing them to save and utilize past interactions and states to make informed decisions and follow through with tasks over time. This memory system is the cornerstone of the platform.
 
 ***
 

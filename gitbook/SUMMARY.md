@@ -4,6 +4,7 @@
 
 * [Overview](README.md)
 * [Concepts](introduction/concepts.md)
+* [Features](introduction/features.md)
 * [Samantha-1](introduction/samantha-1/README.md)
   * [Features](introduction/samantha-1/features.md)
   * [Capabilities](introduction/samantha-1/capabilities.md)
