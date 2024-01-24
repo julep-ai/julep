@@ -160,11 +160,14 @@ class BaseSession:
 
     async def backward(
         self,
-        session_data,
+        session_data: SessionData | None,
         new_input: list[InputChatMLMessage],
         response,
-        final_settings,
+        final_settings: Settings,
     ) -> None:
+        if not final_settings.remember:
+            return
+
         entries: list[Entry] = []
         for m in new_input:
             entries.append(
@@ -178,12 +181,11 @@ class BaseSession:
 
         message = response["choices"][0]["message"]
 
-        # TODO: get assistant's name
         entries.append(
             Entry(
                 session_id=self.session_id,
                 role=message["role"],
-                # name=final_settings["name"],
+                name=None if session_data is None else session_data.agent_name,
                 content=message["content"],
                 token_count=response["usage"]["total_tokens"],
             )
