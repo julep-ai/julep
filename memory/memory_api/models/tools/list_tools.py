@@ -3,6 +3,8 @@ from uuid import UUID
 
 def list_functions_by_agent_query(
     agent_id: UUID,
+    limit: int = 100,
+    offset: int = 0,
 ):
     agent_id = str(agent_id)
 
@@ -28,4 +30,7 @@ def list_functions_by_agent_query(
                 updated_at,
                 created_at,
             }}
+
+        :limit {limit}
+        :offset {offset}
     }}"""
