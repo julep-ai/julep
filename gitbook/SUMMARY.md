@@ -25,9 +25,8 @@
 
 ## 📖 API REFERENCE
 
+* [Agents API](api-reference/agents-api.md)
 * [Model API](api-reference/model-api.md)
-* [Memory API](api-reference/memory-api.md)
-* [Agents API (alpha)](api-reference/agents-api-alpha.md)
 
 ***
 
@@ -35,6 +34,3 @@
   * [Models](technical-details/models.md)
   * [APIs](technical-details/apis.md)
 * [FAQ + Tips](faq-+-tips.md)
-* [Reference](reference/README.md)
-  * [LMQL API Reference (experimental)](reference/lmql-api-reference-experimental.md)
-  * [Finetunes API (coming soon)](reference/finetunes-api-coming-soon.md)
