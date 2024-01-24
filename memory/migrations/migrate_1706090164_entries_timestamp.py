@@ -37,7 +37,7 @@ update_entries = {
         created_at,
     }, timestamp = created_at
 
-    :replace users {
+    :replace entries {
         session_id: Uuid,
         entry_id: Uuid default random_uuid_v4(),
         source: String,
@@ -74,7 +74,7 @@ update_entries = {
         created_at,
     }
 
-    :replace users {
+    :replace entries {
         session_id: Uuid,
         entry_id: Uuid default random_uuid_v4(),
         source: String,
