@@ -17,6 +17,7 @@ def get_entries_query(session_id: UUID, limit: int = 100, offset: int = 0):
             source,
             token_count,
             created_at,
+            timestamp,
         ] := input[session_id],
             *entries{{
                 session_id,
@@ -27,10 +28,11 @@ def get_entries_query(session_id: UUID, limit: int = 100, offset: int = 0):
                 source,
                 token_count,
                 created_at,
+                timestamp,
             }},
             source == "api_request" || source == "api_response",
 
-        :sort created_at
+        :sort timestamp
         :limit {limit}
         :offset {offset}
     }}"""
