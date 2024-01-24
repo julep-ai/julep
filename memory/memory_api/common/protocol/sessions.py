@@ -15,7 +15,9 @@ class SessionData(BaseModel):
     session_id: UUID
     situation: str
     summary: str | None
+    user_name: str | None
     user_about: str
+    agent_name: str | None
     agent_about: str
     updated_at: float
     created_at: float

@@ -21,7 +21,9 @@ def session_data_query(developer_id: UUID, session_id: UUID):
         summary,
         updated_at,
         created_at,
+        user_name,
         user_about,
+        agent_name,
         agent_about,
         model,
         default_settings,
@@ -42,10 +44,12 @@ def session_data_query(developer_id: UUID, session_id: UUID):
         }}, updated_at = to_int(validity),
         *users{{
             user_id,
+            name: user_name,
             about: user_about,
         }},
         *agents{{
             agent_id,
+            name: agent_name,
             about: agent_about,
             model,
         }},
