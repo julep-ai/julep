@@ -82,7 +82,6 @@ async def update_user(
             id=resp["user_id"][0],
             updated_at=resp["updated_at"][0],
         )
-        # TODO: add additional info update
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -159,7 +158,6 @@ async def list_users(
     limit: int = 100,
     offset: int = 0,
 ) -> UserList:
-    # TODO: add additional info
     return UserList(
         items=[
             User(**row.to_dict())
