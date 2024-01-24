@@ -6,6 +6,7 @@
 * [Concepts](introduction/concepts.md)
 * [Features](introduction/features.md)
 * [Platform](introduction/platform.md)
+* [Use Cases](introduction/use-cases.md)
 * [Samantha-1](introduction/samantha-1/README.md)
   * [Features](introduction/samantha-1/features.md)
   * [Capabilities](introduction/samantha-1/capabilities.md)
