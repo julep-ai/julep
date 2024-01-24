@@ -84,9 +84,7 @@ class JulepApi:
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -111,6 +109,16 @@ class JulepApi:
             - agent_id: str. Agent ID of agent to associate with this session
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
+        ---
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_session(
+            user_id="string",
+            agent_id="string",
+        )
         """
         _request: typing.Dict[str, typing.Any] = {
             "user_id": user_id,
@@ -120,9 +128,7 @@ class JulepApi:
             _request["situation"] = situation
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -155,9 +161,7 @@ class JulepApi:
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -188,6 +192,21 @@ class JulepApi:
             - about: typing.Optional[str]. About the user
 
             - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
+        ---
+        from julep_ai import CreateAdditionalInfoRequest
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_user(
+            additional_information=[
+                CreateAdditionalInfoRequest(
+                    title="string",
+                    content="string",
+                )
+            ],
+        )
         """
         _request: typing.Dict[str, typing.Any] = {}
         if name is not OMIT:
@@ -198,9 +217,7 @@ class JulepApi:
             _request["additional_information"] = additional_information
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -233,9 +250,7 @@ class JulepApi:
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -278,6 +293,49 @@ class JulepApi:
             - model: str. Name of the model that the agent is supposed to use
 
             - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
+        ---
+        from julep_ai import (
+            AgentDefaultSettings,
+            CreateAdditionalInfoRequest,
+            CreateToolRequest,
+            CreateToolRequestType,
+            FunctionDef,
+            Instruction,
+        )
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_agent(
+            name="string",
+            about="string",
+            instructions=[
+                Instruction(
+                    content="string",
+                )
+            ],
+            tools=[
+                CreateToolRequest(
+                    type=CreateToolRequestType.FUNCTION,
+                    definition=FunctionDef(
+                        name="string",
+                        parameters={"string": "string"},
+                    ),
+                )
+            ],
+            default_settings=AgentDefaultSettings(
+                temperature=1.0,
+                top_p=1.0,
+            ),
+            model="string",
+            additional_info=[
+                CreateAdditionalInfoRequest(
+                    title="string",
+                    content="string",
+                )
+            ],
+        )
         """
         _request: typing.Dict[str, typing.Any] = {
             "name": name,
@@ -294,9 +352,7 @@ class JulepApi:
             _request["additional_info"] = additional_info
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -315,11 +371,20 @@ class JulepApi:
 
         Parameters:
             - session_id: str.
+        ---
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_session(
+            session_id="string",
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -342,11 +407,21 @@ class JulepApi:
             - session_id: str.
 
             - situation: str. Updated situation for this session
+        ---
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.update_session(
+            session_id="string",
+            situation="string",
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             json=jsonable_encoder({"situation": situation}),
             headers=self._client_wrapper.get_headers(),
@@ -373,13 +448,13 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_session(
-            session_id="session-id",
+            session_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -415,14 +490,14 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_suggestions(
-            session_id="session-id",
+            session_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/suggestions",
+                f"sessions/{session_id}/suggestions",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -459,14 +534,14 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_history(
-            session_id="session-id",
+            session_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/history",
+                f"sessions/{session_id}/history",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -547,6 +622,45 @@ class JulepApi:
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
             - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
+        ---
+        from julep_ai import (
+            ChatSettingsResponseFormat,
+            ChatSettingsResponseFormatType,
+            FunctionDef,
+            InputChatMlMessage,
+            InputChatMlMessageRole,
+            Tool,
+            ToolType,
+        )
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.chat(
+            session_id="string",
+            response_format=ChatSettingsResponseFormat(
+                type=ChatSettingsResponseFormatType.TEXT,
+            ),
+            temperature=1.0,
+            top_p=1.0,
+            messages=[
+                InputChatMlMessage(
+                    role=InputChatMlMessageRole.USER,
+                    content="string",
+                )
+            ],
+            tools=[
+                Tool(
+                    type=ToolType.FUNCTION,
+                    definition=FunctionDef(
+                        name="string",
+                        parameters={"string": "string"},
+                    ),
+                    id="string",
+                )
+            ],
+        )
         """
         _request: typing.Dict[str, typing.Any] = {"messages": messages}
         if tools is not OMIT:
@@ -584,8 +698,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/chat",
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}/chat"
             ),
             json=jsonable_encoder(_request),
             headers=remove_none_from_dict(
@@ -633,15 +746,14 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent_memories(
-            agent_id="agent-id",
-            query="query",
+            agent_id="string",
+            query="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
             ),
             params=remove_none_from_dict(
                 {
@@ -669,11 +781,20 @@ class JulepApi:
 
         Parameters:
             - user_id: str.
+        ---
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_user(
+            user_id="string",
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -702,6 +823,15 @@ class JulepApi:
             - about: typing.Optional[str]. About the user
 
             - name: typing.Optional[str]. Name of the user
+        ---
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.update_user(
+            user_id="string",
+        )
         """
         _request: typing.Dict[str, typing.Any] = {}
         if about is not OMIT:
@@ -711,7 +841,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -738,13 +868,13 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_user(
-            user_id="user-id",
+            user_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -763,11 +893,20 @@ class JulepApi:
 
         Parameters:
             - agent_id: str.
+        ---
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_agent(
+            agent_id="string",
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -805,6 +944,25 @@ class JulepApi:
             - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+        ---
+        from julep_ai import AgentDefaultSettings, Instruction
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.update_agent(
+            agent_id="string",
+            instructions=[
+                Instruction(
+                    content="string",
+                )
+            ],
+            default_settings=AgentDefaultSettings(
+                temperature=1.0,
+                top_p=1.0,
+            ),
+        )
         """
         _request: typing.Dict[str, typing.Any] = {}
         if about is not OMIT:
@@ -820,7 +978,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -847,13 +1005,13 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent(
-            agent_id="agent-id",
+            agent_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -889,14 +1047,14 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent_additional_info(
-            agent_id="agent-id",
+            agent_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"agents/{agent_id}/additional_info",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -920,12 +1078,26 @@ class JulepApi:
             - agent_id: str.
 
             - request: CreateAdditionalInfoRequest.
+        ---
+        from julep_ai import CreateAdditionalInfoRequest
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_agent_additional_info(
+            agent_id="string",
+            request=CreateAdditionalInfoRequest(
+                title="string",
+                content="string",
+            ),
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"agents/{agent_id}/additional_info",
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -962,14 +1134,14 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_user_additional_info(
-            user_id="user-id",
+            user_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"users/{user_id}/additional_info",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -993,12 +1165,26 @@ class JulepApi:
             - user_id: str.
 
             - request: CreateAdditionalInfoRequest.
+        ---
+        from julep_ai import CreateAdditionalInfoRequest
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_user_additional_info(
+            user_id="string",
+            request=CreateAdditionalInfoRequest(
+                title="string",
+                content="string",
+            ),
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"users/{user_id}/additional_info",
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1029,15 +1215,15 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_user_additional_info(
-            user_id="user-id",
-            additional_info_id="additional-info-id",
+            user_id="string",
+            additional_info_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info/{additional_info_id}",
+                f"users/{user_id}/additional_info/{additional_info_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1067,15 +1253,15 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent_additional_info(
-            agent_id="agent-id",
-            additional_info_id="additional-info-id",
+            agent_id="string",
+            additional_info_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info/{additional_info_id}",
+                f"agents/{agent_id}/additional_info/{additional_info_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1103,15 +1289,15 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent_memory(
-            agent_id="agent-id",
-            memory_id="memory-id",
+            agent_id="string",
+            memory_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories/{memory_id}",
+                f"agents/{agent_id}/memories/{memory_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1147,14 +1333,13 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent_tools(
-            agent_id="agent-id",
+            agent_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1178,12 +1363,28 @@ class JulepApi:
             - agent_id: str.
 
             - request: CreateToolRequest.
+        ---
+        from julep_ai import CreateToolRequest, CreateToolRequestType, FunctionDef
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_agent_tool(
+            agent_id="string",
+            request=CreateToolRequest(
+                type=CreateToolRequestType.FUNCTION,
+                definition=FunctionDef(
+                    name="string",
+                    parameters={"string": "string"},
+                ),
+            ),
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1209,12 +1410,27 @@ class JulepApi:
             - tool_id: str.
 
             - definition: FunctionDef. Function definition and parameters
+        ---
+        from julep_ai import FunctionDef
+        from julep_ai.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.update_agent_tool(
+            agent_id="string",
+            tool_id="string",
+            definition=FunctionDef(
+                name="string",
+                parameters={"string": "string"},
+            ),
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             json=jsonable_encoder({"definition": definition}),
             headers=self._client_wrapper.get_headers(),
@@ -1243,15 +1459,15 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent_tool(
-            agent_id="agent-id",
-            tool_id="tool-id",
+            agent_id="string",
+            tool_id="string",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1303,9 +1519,7 @@ class AsyncJulepApi:
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1330,6 +1544,16 @@ class AsyncJulepApi:
             - agent_id: str. Agent ID of agent to associate with this session
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
+        ---
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_session(
+            user_id="string",
+            agent_id="string",
+        )
         """
         _request: typing.Dict[str, typing.Any] = {
             "user_id": user_id,
@@ -1339,9 +1563,7 @@ class AsyncJulepApi:
             _request["situation"] = situation
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1374,9 +1596,7 @@ class AsyncJulepApi:
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1407,6 +1627,21 @@ class AsyncJulepApi:
             - about: typing.Optional[str]. About the user
 
             - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
+        ---
+        from julep_ai import CreateAdditionalInfoRequest
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_user(
+            additional_information=[
+                CreateAdditionalInfoRequest(
+                    title="string",
+                    content="string",
+                )
+            ],
+        )
         """
         _request: typing.Dict[str, typing.Any] = {}
         if name is not OMIT:
@@ -1417,9 +1652,7 @@ class AsyncJulepApi:
             _request["additional_information"] = additional_information
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1452,9 +1685,7 @@ class AsyncJulepApi:
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1497,6 +1728,49 @@ class AsyncJulepApi:
             - model: str. Name of the model that the agent is supposed to use
 
             - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
+        ---
+        from julep_ai import (
+            AgentDefaultSettings,
+            CreateAdditionalInfoRequest,
+            CreateToolRequest,
+            CreateToolRequestType,
+            FunctionDef,
+            Instruction,
+        )
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_agent(
+            name="string",
+            about="string",
+            instructions=[
+                Instruction(
+                    content="string",
+                )
+            ],
+            tools=[
+                CreateToolRequest(
+                    type=CreateToolRequestType.FUNCTION,
+                    definition=FunctionDef(
+                        name="string",
+                        parameters={"string": "string"},
+                    ),
+                )
+            ],
+            default_settings=AgentDefaultSettings(
+                temperature=1.0,
+                top_p=1.0,
+            ),
+            model="string",
+            additional_info=[
+                CreateAdditionalInfoRequest(
+                    title="string",
+                    content="string",
+                )
+            ],
+        )
         """
         _request: typing.Dict[str, typing.Any] = {
             "name": name,
@@ -1513,9 +1787,7 @@ class AsyncJulepApi:
             _request["additional_info"] = additional_info
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1534,11 +1806,20 @@ class AsyncJulepApi:
 
         Parameters:
             - session_id: str.
+        ---
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_session(
+            session_id="string",
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1561,11 +1842,21 @@ class AsyncJulepApi:
             - session_id: str.
 
             - situation: str. Updated situation for this session
+        ---
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.update_session(
+            session_id="string",
+            situation="string",
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             json=jsonable_encoder({"situation": situation}),
             headers=self._client_wrapper.get_headers(),
@@ -1592,13 +1883,13 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_session(
-            session_id="session-id",
+            session_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1634,14 +1925,14 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_suggestions(
-            session_id="session-id",
+            session_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/suggestions",
+                f"sessions/{session_id}/suggestions",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1678,14 +1969,14 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_history(
-            session_id="session-id",
+            session_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/history",
+                f"sessions/{session_id}/history",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1766,6 +2057,45 @@ class AsyncJulepApi:
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
             - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
+        ---
+        from julep_ai import (
+            ChatSettingsResponseFormat,
+            ChatSettingsResponseFormatType,
+            FunctionDef,
+            InputChatMlMessage,
+            InputChatMlMessageRole,
+            Tool,
+            ToolType,
+        )
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.chat(
+            session_id="string",
+            response_format=ChatSettingsResponseFormat(
+                type=ChatSettingsResponseFormatType.TEXT,
+            ),
+            temperature=1.0,
+            top_p=1.0,
+            messages=[
+                InputChatMlMessage(
+                    role=InputChatMlMessageRole.USER,
+                    content="string",
+                )
+            ],
+            tools=[
+                Tool(
+                    type=ToolType.FUNCTION,
+                    definition=FunctionDef(
+                        name="string",
+                        parameters={"string": "string"},
+                    ),
+                    id="string",
+                )
+            ],
+        )
         """
         _request: typing.Dict[str, typing.Any] = {"messages": messages}
         if tools is not OMIT:
@@ -1803,8 +2133,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/chat",
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}/chat"
             ),
             json=jsonable_encoder(_request),
             headers=remove_none_from_dict(
@@ -1852,15 +2181,14 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent_memories(
-            agent_id="agent-id",
-            query="query",
+            agent_id="string",
+            query="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
             ),
             params=remove_none_from_dict(
                 {
@@ -1888,11 +2216,20 @@ class AsyncJulepApi:
 
         Parameters:
             - user_id: str.
+        ---
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_user(
+            user_id="string",
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1921,6 +2258,15 @@ class AsyncJulepApi:
             - about: typing.Optional[str]. About the user
 
             - name: typing.Optional[str]. Name of the user
+        ---
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.update_user(
+            user_id="string",
+        )
         """
         _request: typing.Dict[str, typing.Any] = {}
         if about is not OMIT:
@@ -1930,7 +2276,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -1957,13 +2303,13 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_user(
-            user_id="user-id",
+            user_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1982,11 +2328,20 @@ class AsyncJulepApi:
 
         Parameters:
             - agent_id: str.
+        ---
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_agent(
+            agent_id="string",
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2024,6 +2379,25 @@ class AsyncJulepApi:
             - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+        ---
+        from julep_ai import AgentDefaultSettings, Instruction
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.update_agent(
+            agent_id="string",
+            instructions=[
+                Instruction(
+                    content="string",
+                )
+            ],
+            default_settings=AgentDefaultSettings(
+                temperature=1.0,
+                top_p=1.0,
+            ),
+        )
         """
         _request: typing.Dict[str, typing.Any] = {}
         if about is not OMIT:
@@ -2039,7 +2413,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -2066,13 +2440,13 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent(
-            agent_id="agent-id",
+            agent_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2108,14 +2482,14 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent_additional_info(
-            agent_id="agent-id",
+            agent_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"agents/{agent_id}/additional_info",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2139,12 +2513,26 @@ class AsyncJulepApi:
             - agent_id: str.
 
             - request: CreateAdditionalInfoRequest.
+        ---
+        from julep_ai import CreateAdditionalInfoRequest
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_agent_additional_info(
+            agent_id="string",
+            request=CreateAdditionalInfoRequest(
+                title="string",
+                content="string",
+            ),
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"agents/{agent_id}/additional_info",
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2181,14 +2569,14 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_user_additional_info(
-            user_id="user-id",
+            user_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"users/{user_id}/additional_info",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2212,12 +2600,26 @@ class AsyncJulepApi:
             - user_id: str.
 
             - request: CreateAdditionalInfoRequest.
+        ---
+        from julep_ai import CreateAdditionalInfoRequest
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_user_additional_info(
+            user_id="string",
+            request=CreateAdditionalInfoRequest(
+                title="string",
+                content="string",
+            ),
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"users/{user_id}/additional_info",
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2248,15 +2650,15 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_user_additional_info(
-            user_id="user-id",
-            additional_info_id="additional-info-id",
+            user_id="string",
+            additional_info_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info/{additional_info_id}",
+                f"users/{user_id}/additional_info/{additional_info_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2286,15 +2688,15 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent_additional_info(
-            agent_id="agent-id",
-            additional_info_id="additional-info-id",
+            agent_id="string",
+            additional_info_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info/{additional_info_id}",
+                f"agents/{agent_id}/additional_info/{additional_info_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2322,15 +2724,15 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent_memory(
-            agent_id="agent-id",
-            memory_id="memory-id",
+            agent_id="string",
+            memory_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories/{memory_id}",
+                f"agents/{agent_id}/memories/{memory_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2366,14 +2768,13 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent_tools(
-            agent_id="agent-id",
+            agent_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2397,12 +2798,28 @@ class AsyncJulepApi:
             - agent_id: str.
 
             - request: CreateToolRequest.
+        ---
+        from julep_ai import CreateToolRequest, CreateToolRequestType, FunctionDef
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_agent_tool(
+            agent_id="string",
+            request=CreateToolRequest(
+                type=CreateToolRequestType.FUNCTION,
+                definition=FunctionDef(
+                    name="string",
+                    parameters={"string": "string"},
+                ),
+            ),
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2428,12 +2845,27 @@ class AsyncJulepApi:
             - tool_id: str.
 
             - definition: FunctionDef. Function definition and parameters
+        ---
+        from julep_ai import FunctionDef
+        from julep_ai.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.update_agent_tool(
+            agent_id="string",
+            tool_id="string",
+            definition=FunctionDef(
+                name="string",
+                parameters={"string": "string"},
+            ),
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             json=jsonable_encoder({"definition": definition}),
             headers=self._client_wrapper.get_headers(),
@@ -2462,15 +2894,15 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent_tool(
-            agent_id="agent-id",
-            tool_id="tool-id",
+            agent_id="string",
+            tool_id="string",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
