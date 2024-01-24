@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "entries_timestamp"
 CREATED_AT = 1706090164.80913
@@ -86,7 +86,7 @@ update_entries = {
         tokenizer: String,
         created_at: Float default now(),
     }
-    """
+    """,
 }
 
 queries_to_run = [
