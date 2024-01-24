@@ -1,7 +1,8 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "entry_relations"
 CREATED_AT = 1706092435.462968
+
 
 def run(client, *queries):
     joiner = "}\n\n{"
@@ -21,7 +22,7 @@ entry_relations = {
     """,
     "down": """
     ::remove entry_relations
-    """
+    """,
 }
 
 queries_to_run = [
