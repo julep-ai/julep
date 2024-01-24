@@ -2,10 +2,6 @@
   "name": "@julep/sdk",
   "version": "0.1.0",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "main": "index.js",
-  "scripts": {
-    "test": "npm test"
-  },
   "keywords": [
     "julep-ai",
     "julep",
@@ -14,6 +10,28 @@
     "memory",
     "ai"
   ],
-  "author": "developers@julep.ai",
-  "license": "ISC"
+  "author": {
+    "name": "Julep",
+    "email": "developers@julep.ai"
+  },
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/julep-ai/sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/julep-ai/sdk/issues"
+  },
+  "homepage": "https://github.com/julep-ai/sdk#readme",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "qs": "^6.11.2",
+    "url-join": "^4.0.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.4",
+    "typedoc": "^0.25.7"
+  }
 }
