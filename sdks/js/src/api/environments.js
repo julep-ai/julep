@@ -5,5 +5,5 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JulepApiEnvironment = void 0;
 exports.JulepApiEnvironment = {
-  Default: "https://api-alpha.julep.ai/api",
+  Default: "https://api-alpha.julep.ai",
 };

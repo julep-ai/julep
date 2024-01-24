@@ -118,7 +118,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "sessions",
+          "api/sessions",
         ),
         method: "GET",
         headers: {
@@ -189,7 +189,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "sessions",
+          "api/sessions",
         ),
         method: "POST",
         headers: {
@@ -267,7 +267,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "users",
+          "api/users",
         ),
         method: "GET",
         headers: {
@@ -340,7 +340,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "users",
+          "api/users",
         ),
         method: "POST",
         headers: {
@@ -418,7 +418,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "agents",
+          "api/agents",
         ),
         method: "GET",
         headers: {
@@ -510,7 +510,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "agents",
+          "api/agents",
         ),
         method: "POST",
         headers: {
@@ -580,7 +580,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `sessions/${sessionId}`,
+          `api/sessions/${sessionId}`,
         ),
         method: "GET",
         headers: {
@@ -646,7 +646,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `sessions/${sessionId}`,
+          `api/sessions/${sessionId}`,
         ),
         method: "PUT",
         headers: {
@@ -716,7 +716,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `sessions/${sessionId}`,
+          `api/sessions/${sessionId}`,
         ),
         method: "DELETE",
         headers: {
@@ -783,7 +783,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `sessions/${sessionId}/suggestions`,
+          `api/sessions/${sessionId}/suggestions`,
         ),
         method: "GET",
         headers: {
@@ -859,7 +859,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `sessions/${sessionId}/history`,
+          `api/sessions/${sessionId}/history`,
         ),
         method: "GET",
         headers: {
@@ -948,7 +948,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `sessions/${sessionId}/chat`,
+          `api/sessions/${sessionId}/chat`,
         ),
         method: "POST",
         headers: {
@@ -1037,7 +1037,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/memories`,
+          `api/agents/${agentId}/memories`,
         ),
         method: "GET",
         headers: {
@@ -1105,7 +1105,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `users/${userId}`,
+          `api/users/${userId}`,
         ),
         method: "GET",
         headers: {
@@ -1169,7 +1169,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `users/${userId}`,
+          `api/users/${userId}`,
         ),
         method: "PUT",
         headers: {
@@ -1239,7 +1239,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `users/${userId}`,
+          `api/users/${userId}`,
         ),
         method: "DELETE",
         headers: {
@@ -1298,7 +1298,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}`,
+          `api/agents/${agentId}`,
         ),
         method: "GET",
         headers: {
@@ -1370,7 +1370,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}`,
+          `api/agents/${agentId}`,
         ),
         method: "PUT",
         headers: {
@@ -1440,7 +1440,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}`,
+          `api/agents/${agentId}`,
         ),
         method: "DELETE",
         headers: {
@@ -1507,7 +1507,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/additional_info`,
+          `api/agents/${agentId}/additional_info`,
         ),
         method: "GET",
         headers: {
@@ -1578,7 +1578,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/additional_info`,
+          `api/agents/${agentId}/additional_info`,
         ),
         method: "POST",
         headers: {
@@ -1659,7 +1659,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `users/${userId}/additional_info`,
+          `api/users/${userId}/additional_info`,
         ),
         method: "GET",
         headers: {
@@ -1730,7 +1730,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `users/${userId}/additional_info`,
+          `api/users/${userId}/additional_info`,
         ),
         method: "POST",
         headers: {
@@ -1803,7 +1803,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `users/${userId}/additional_info/${additionalInfoId}`,
+          `api/users/${userId}/additional_info/${additionalInfoId}`,
         ),
         method: "DELETE",
         headers: {
@@ -1862,7 +1862,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/additional_info/${additionalInfoId}`,
+          `api/agents/${agentId}/additional_info/${additionalInfoId}`,
         ),
         method: "DELETE",
         headers: {
@@ -1921,7 +1921,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/memories/${memoryId}`,
+          `api/agents/${agentId}/memories/${memoryId}`,
         ),
         method: "DELETE",
         headers: {
@@ -1988,7 +1988,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/tools`,
+          `api/agents/${agentId}/tools`,
         ),
         method: "GET",
         headers: {
@@ -2064,7 +2064,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/tools`,
+          `api/agents/${agentId}/tools`,
         ),
         method: "POST",
         headers: {
@@ -2141,7 +2141,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/tools/${toolId}`,
+          `api/agents/${agentId}/tools/${toolId}`,
         ),
         method: "PUT",
         headers: {
@@ -2211,7 +2211,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `agents/${agentId}/tools/${toolId}`,
+          `api/agents/${agentId}/tools/${toolId}`,
         ),
         method: "DELETE",
         headers: {

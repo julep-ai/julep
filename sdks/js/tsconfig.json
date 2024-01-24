@@ -21,6 +21,6 @@
     // "noUnusedLocals": true,
     // "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noImplicitOverride": true
-  }
+    "noImplicitOverride": true,
+  },
 }
