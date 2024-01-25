@@ -45,12 +45,11 @@
   * [Client](js-sdk-docs/classes/Client.JulepApiClient-1.md)
   * [Modules](js-sdk-docs/index.md)
 
-***
+## 🔍 FAQs
 
-* [FAQs](faqs/README.md)
-  * [General Overview](faqs/general-overview.md)
-  * [Getting Started](faqs/getting-started.md)
-  * [Agent Prototyping](faqs/agent-prototyping.md)
-  * [Memory and Learning](faqs/memory-and-learning.md)
-  * [Sessions and Tasks](faqs/sessions-and-tasks.md)
-  * [Technical Details](faqs/technical-details.md)
+* [General Overview](faqs/general-overview.md)
+* [Getting Started](faqs/getting-started.md)
+* [Agent Prototyping](faqs/agent-prototyping.md)
+* [Memory and Learning](faqs/memory-and-learning.md)
+* [Sessions and Tasks](faqs/sessions-and-tasks.md)
+* [Technical Details](faqs/technical-details.md)
