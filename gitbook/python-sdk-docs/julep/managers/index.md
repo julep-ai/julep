@@ -17,4 +17,3 @@
 - [Tool](./tool.md)
 - [Types](./types.md)
 - [User](./user.md)
-- [Utils](./utils.md)

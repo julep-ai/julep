@@ -46,7 +46,7 @@ test = [
     { cmd = "ward" },
     "kill_prism",
 ]
-doc = "handsdown julep --exclude julep/api --cleanup -n 'Julep Python SDK' --toc-depth 2 -o ../../gitbook/python-sdk-docs"
+doc = "handsdown julep --exclude julep/api/core --exclude julep/api/types --exclude julep/api/environment.py --exclude julep/env.py --exclude julep/managers/base.py --exclude julep/managers/types.py --exclude julep/managers/utils.py --cleanup -n 'Julep Python SDK' --toc-depth 2 -o ../../gitbook/python-sdk-docs"
 
 [[tool.pydoc-markdown.loaders]]
 type = "python"
