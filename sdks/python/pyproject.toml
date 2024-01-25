@@ -21,6 +21,7 @@ ward = "^0.68.0b0"
 ruff = "^0.1.13"
 poethepoet = "^0.24.4"
 ipython = "<8.13"
+pyright = "^1.1.348"
 
 [build-system]
 requires = ["poetry-core"]
