@@ -9,6 +9,7 @@
 
 ## Modules
 
+- [Api](api/index.md)
 - [Client](./client.md)
 - [Env](./env.md)
 - [Managers](managers/index.md)
