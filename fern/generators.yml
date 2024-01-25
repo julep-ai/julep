@@ -21,4 +21,4 @@ groups:
           skip_formatting: false
         output:
           location: local-file-system
-          path: ../sdks/python/julep_ai/api
+          path: ../sdks/python/julep/api

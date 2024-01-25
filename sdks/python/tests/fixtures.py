@@ -1,5 +1,5 @@
 from ward import fixture
-from julep_ai import AsyncClient, Client
+from julep import AsyncClient, Client
 
 
 @fixture(scope="global")
