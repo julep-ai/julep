@@ -12,15 +12,12 @@
 
 * [Python Setup](getting-started/python-setup.md)
 
-## 🤸 QUICKSTART
-
-* [Try it out](getting-started/try-it-out.md)
-
 ## 💁 SAMANTHA-1 MODEL
 * [Overview](introduction/samantha-1/README.md)
   * [Features](introduction/samantha-1/features.md)
   * [Capabilities](introduction/samantha-1/capabilities.md)
   * [Context "sections"](introduction/samantha-1/context-sections.md)
+* [Quickstart](getting-started/model-quickstart.md)
 * [Examples](quickstart/example.md)
   * [Langchain](quickstart/langchain.md)
   * [Chatbot](quickstart/chatbot.md)
