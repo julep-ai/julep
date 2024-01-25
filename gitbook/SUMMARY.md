@@ -53,3 +53,4 @@
   * [Agent Prototyping](faqs/agent-prototyping.md)
   * [Memory and Learning](faqs/memory-and-learning.md)
   * [Sessions and Tasks](faqs/sessions-and-tasks.md)
+  * [Technical Details](faqs/technical-details.md)
