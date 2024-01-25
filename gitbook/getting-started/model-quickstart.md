@@ -121,7 +121,7 @@ Head over to [playground.julep.ai](https://playground.julep.ai), paste your API 
 
 ### Screenshot
 
-<figure><img src=".gitbook/assets/playground-screenshot.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/playground-screenshot.png" alt=""><figcaption></figcaption></figure>
 
 *****
 
