@@ -49,3 +49,4 @@
 
 * [FAQs](faqs/README.md)
   * [General Overview](faqs/general-overview.md)
+  * [Getting Started](faqs/getting-started.md)
