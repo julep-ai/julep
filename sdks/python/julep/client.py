@@ -22,6 +22,32 @@ __all__ = ["AsyncJulepApi", "JulepApi", "Client", "AsyncClient"]
 
 
 class Client:
+    """
+    A class that encapsulates managers for different aspects of a system and provides an interface for interacting with an API.
+
+        This class initializes and makes use of various manager classes to handle agents, users, sessions, documents, memories, and tools. It requires an API key and a base URL to initialize the API client that the managers will use.
+
+        Attributes:
+            agents (AgentsManager): A manager instance for handling agents.
+            users (UsersManager): A manager instance for handling users.
+            sessions (SessionsManager): A manager instance for handling sessions.
+            docs (DocsManager): A manager instance for handling documents.
+            memories (MemoriesManager): A manager instance for handling memories.
+            tools (ToolsManager): A manager instance for handling tools.
+
+        Args:
+            api_key (Optional[str]): The API key needed to authenticate with the API. Defaults to the JULEP_API_KEY environment variable.
+            base_url (Optional[str]): The base URL for the API endpoints. Defaults to the JULEP_API_URL environment variable.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Raises:
+            AssertionError: If either `api_key` or `base_url` is not provided and not set as an environment variable.
+
+        Note:
+            `beartype` decorator is expected to ensure type checking on the parameters during runtime. The constants `JULEP_API_KEY` and `JULEP_API_URL` should be predefined and represent default values for the API key and base URL, respectively, which can be overridden by providing a value at instantiation.
+    """
+
     agents: AgentsManager
     users: UsersManager
     sessions: SessionsManager
@@ -37,6 +63,26 @@ class Client:
         *args,
         **kwargs
     ):
+        """
+        Initialize a new client object with the given API key and base URL.
+
+            Args:
+                api_key (Optional[str]): The API key for authentication. If not provided,
+                    the default is taken from the environment variable JULEP_API_KEY.
+                base_url (Optional[str]): The base URL for the API endpoints. If not provided,
+                    the default is taken from the environment variable JULEP_API_URL.
+                *args: Variable length argument list.
+                **kwargs: Arbitrary keyword arguments.
+
+            Raises:
+                AssertionError: If either `api_key` or `base_url` is None, indicating they have
+                    not been provided and are not set as environment variables.
+
+            Note:
+                This constructor populates the client with different resource managers like
+                agents, users, sessions, docs, memories, and tools, by initializing respective
+                manager classes with the provided API client configuration.
+        """
         assert (
             api_key is not None
         ), "api_key must be provided or set as env var JULEP_API_KEY"
@@ -55,6 +101,38 @@ class Client:
 
 
 class AsyncClient:
+    """
+    A class representing an asynchronous client for interacting with various managers.
+
+    This class initializes asynchronous managers for agents, users, sessions, documents, memories,
+    and tools. It requires an API key and a base URL to establish a connection with the backend
+    service. If these are not explicitly provided, it looks for them in the environment variables.
+
+    Attributes:
+        agents (AsyncAgentsManager): Manager for handling agent-related interactions.
+        users (AsyncUsersManager): Manager for handling user-related interactions.
+        sessions (AsyncSessionsManager): Manager for handling session-related interactions.
+        docs (AsyncDocsManager): Manager for handling document-related interactions.
+        memories (AsyncMemoriesManager): Manager for handling memory-related interactions.
+        tools (AsyncToolsManager): Manager for handling tool-related interactions.
+
+    Raises:
+        AssertionError: If `api_key` or `base_url` is not provided and also not set as an
+                        environment variable.
+
+    Note:
+        The `api_key` and `base_url` can either be passed explicitly or set as environment
+        variables `JULEP_API_KEY` and `JULEP_API_URL`, respectively.
+
+    Args:
+        api_key (Optional[str]): The API key required to authenticate with the service.
+                                 Defaults to the value of the `JULEP_API_KEY` environment variable.
+        base_url (Optional[str]): The base URL of the API service.
+                                  Defaults to the value of the `JULEP_API_URL` environment variable.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+    """
+
     agents: AsyncAgentsManager
     users: AsyncUsersManager
     sessions: AsyncSessionsManager
@@ -70,6 +148,35 @@ class AsyncClient:
         *args,
         **kwargs
     ):
+        """
+        Initialize the client with the provided API key and base URL.
+
+            This constructor sets up an asynchronous client for various service managers
+            like agents, users, sessions, documents, memories, and tools.
+
+            The 'beartype' decorator is used for runtime type checking on the given arguments.
+
+            The `api_key` and `base_url` must either be provided as arguments or set as
+            environment variables (`JULEP_API_KEY`, `JULEP_API_URL` respectively).
+
+            Args:
+                api_key (Optional[str]): The API key for authentication. If not provided,
+                    it should be set as the environment variable 'JULEP_API_KEY'.
+                base_url (Optional[str]): The base URL of the API. If not provided,
+                    it should be set as the environment variable 'JULEP_API_URL'.
+                *args: Variable length argument list to be passed to the `AsyncJulepApi`.
+                **kwargs: Arbitrary keyword arguments to be passed to the `AsyncJulepApi`.
+
+            Raises:
+                AssertionError: If `api_key` or `base_url` is not supplied either
+                    through function arguments or environment variables.
+
+            Note:
+                The actual function signature does not explicitly show the environment variables
+                (`JULEP_API_KEY`, `JULEP_API_URL`) as default values for `api_key` and `base_url`
+                due to the limitations in using environment variables as default function argument values.
+                Instead, they must be handled within the body of the function.
+        """
         assert (
             api_key is not None
         ), "api_key must be provided or set as env var JULEP_API_KEY"
