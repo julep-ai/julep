@@ -206,12 +206,20 @@ class RecursiveSummarizationSession(PlainCompletionSession):
         self, session_data, new_input, settings
     ) -> Tuple[ChatML, Settings]:
         # Don't call super: we dont want normal messages anyway
-
-        # Settings dont change
-        final_settings = {**settings}
-
         context = await self._query_summary_messages()
-        return context, final_settings
+        return context, settings
 
-    async def backward(self, session_data, new_input, response) -> None:
-        pass
+    async def backward(
+        self, 
+        session_data: SessionData | None,
+        new_input: list[InputChatMLMessage],
+        response,
+        final_settings: Settings,
+    ) -> None:
+        super().backward(
+            session_data=session_data,
+            new_input=new_input,
+            response=response,
+            final_settings=final_settings,
+        )
+        # trigger summarization task (need session_id)
