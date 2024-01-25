@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from ward import test
 
-from julep_ai.api.types import (
+from julep.api.types import (
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
     Tool,

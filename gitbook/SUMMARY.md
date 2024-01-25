@@ -28,8 +28,8 @@
 * [Agents API](api-reference/agents-api.md)
 * [Model API](api-reference/model-api.md)
 * [JS SDK](js-sdk-docs/README.md)
-  * [Modules](js-sdk-docs/index.md)
   * [Client](js-sdk-docs/classes/Client.JulepApiClient-1.md)
+  * [Modules](js-sdk-docs/index.md)
 
 ***
 

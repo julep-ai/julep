@@ -75,7 +75,7 @@ class JulepApi:
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -112,7 +112,7 @@ class JulepApi:
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -156,7 +156,7 @@ class JulepApi:
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -199,8 +199,8 @@ class JulepApi:
 
             - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
         ---
-        from julep_ai import CreateAdditionalInfoRequest
-        from julep_ai.client import JulepApi
+        from julep import CreateAdditionalInfoRequest
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -249,7 +249,7 @@ class JulepApi:
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -304,7 +304,7 @@ class JulepApi:
 
             - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
         ---
-        from julep_ai import (
+        from julep import (
             AgentDefaultSettings,
             CreateAdditionalInfoRequest,
             CreateToolRequest,
@@ -312,7 +312,7 @@ class JulepApi:
             FunctionDef,
             Instruction,
         )
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -384,7 +384,7 @@ class JulepApi:
         Parameters:
             - session_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -420,7 +420,7 @@ class JulepApi:
 
             - situation: str. Updated situation for this session
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -454,7 +454,7 @@ class JulepApi:
         Parameters:
             - session_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -496,7 +496,7 @@ class JulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -540,7 +540,7 @@ class JulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -635,7 +635,7 @@ class JulepApi:
 
             - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
         ---
-        from julep_ai import (
+        from julep import (
             ChatSettingsResponseFormat,
             ChatSettingsResponseFormatType,
             FunctionDef,
@@ -644,7 +644,7 @@ class JulepApi:
             Tool,
             ToolType,
         )
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -753,7 +753,7 @@ class JulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -796,7 +796,7 @@ class JulepApi:
         Parameters:
             - user_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -838,7 +838,7 @@ class JulepApi:
 
             - name: typing.Optional[str]. Name of the user
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -876,7 +876,7 @@ class JulepApi:
         Parameters:
             - user_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -908,7 +908,7 @@ class JulepApi:
         Parameters:
             - agent_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -959,8 +959,8 @@ class JulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
         ---
-        from julep_ai import AgentDefaultSettings, Instruction
-        from julep_ai.client import JulepApi
+        from julep import AgentDefaultSettings, Instruction
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1013,7 +1013,7 @@ class JulepApi:
         Parameters:
             - agent_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1055,7 +1055,7 @@ class JulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1093,8 +1093,8 @@ class JulepApi:
 
             - request: CreateAdditionalInfoRequest.
         ---
-        from julep_ai import CreateAdditionalInfoRequest
-        from julep_ai.client import JulepApi
+        from julep import CreateAdditionalInfoRequest
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1142,7 +1142,7 @@ class JulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1180,8 +1180,8 @@ class JulepApi:
 
             - request: CreateAdditionalInfoRequest.
         ---
-        from julep_ai import CreateAdditionalInfoRequest
-        from julep_ai.client import JulepApi
+        from julep import CreateAdditionalInfoRequest
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1223,7 +1223,7 @@ class JulepApi:
 
             - additional_info_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1261,7 +1261,7 @@ class JulepApi:
 
             - additional_info_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1297,7 +1297,7 @@ class JulepApi:
 
             - memory_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1341,7 +1341,7 @@ class JulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1379,8 +1379,8 @@ class JulepApi:
 
             - request: CreateToolRequest.
         ---
-        from julep_ai import CreateToolRequest, CreateToolRequestType, FunctionDef
-        from julep_ai.client import JulepApi
+        from julep import CreateToolRequest, CreateToolRequestType, FunctionDef
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1427,8 +1427,8 @@ class JulepApi:
 
             - definition: FunctionDef. Function definition and parameters
         ---
-        from julep_ai import FunctionDef
-        from julep_ai.client import JulepApi
+        from julep import FunctionDef
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1469,7 +1469,7 @@ class JulepApi:
 
             - tool_id: str.
         ---
-        from julep_ai.client import JulepApi
+        from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
@@ -1526,7 +1526,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1563,7 +1563,7 @@ class AsyncJulepApi:
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1607,7 +1607,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1650,8 +1650,8 @@ class AsyncJulepApi:
 
             - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
         ---
-        from julep_ai import CreateAdditionalInfoRequest
-        from julep_ai.client import AsyncJulepApi
+        from julep import CreateAdditionalInfoRequest
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1700,7 +1700,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1755,7 +1755,7 @@ class AsyncJulepApi:
 
             - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
         ---
-        from julep_ai import (
+        from julep import (
             AgentDefaultSettings,
             CreateAdditionalInfoRequest,
             CreateToolRequest,
@@ -1763,7 +1763,7 @@ class AsyncJulepApi:
             FunctionDef,
             Instruction,
         )
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1835,7 +1835,7 @@ class AsyncJulepApi:
         Parameters:
             - session_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1871,7 +1871,7 @@ class AsyncJulepApi:
 
             - situation: str. Updated situation for this session
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1905,7 +1905,7 @@ class AsyncJulepApi:
         Parameters:
             - session_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1947,7 +1947,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -1991,7 +1991,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2086,7 +2086,7 @@ class AsyncJulepApi:
 
             - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
         ---
-        from julep_ai import (
+        from julep import (
             ChatSettingsResponseFormat,
             ChatSettingsResponseFormatType,
             FunctionDef,
@@ -2095,7 +2095,7 @@ class AsyncJulepApi:
             Tool,
             ToolType,
         )
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2204,7 +2204,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2247,7 +2247,7 @@ class AsyncJulepApi:
         Parameters:
             - user_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2289,7 +2289,7 @@ class AsyncJulepApi:
 
             - name: typing.Optional[str]. Name of the user
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2327,7 +2327,7 @@ class AsyncJulepApi:
         Parameters:
             - user_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2359,7 +2359,7 @@ class AsyncJulepApi:
         Parameters:
             - agent_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2410,8 +2410,8 @@ class AsyncJulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
         ---
-        from julep_ai import AgentDefaultSettings, Instruction
-        from julep_ai.client import AsyncJulepApi
+        from julep import AgentDefaultSettings, Instruction
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2464,7 +2464,7 @@ class AsyncJulepApi:
         Parameters:
             - agent_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2506,7 +2506,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2544,8 +2544,8 @@ class AsyncJulepApi:
 
             - request: CreateAdditionalInfoRequest.
         ---
-        from julep_ai import CreateAdditionalInfoRequest
-        from julep_ai.client import AsyncJulepApi
+        from julep import CreateAdditionalInfoRequest
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2593,7 +2593,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2631,8 +2631,8 @@ class AsyncJulepApi:
 
             - request: CreateAdditionalInfoRequest.
         ---
-        from julep_ai import CreateAdditionalInfoRequest
-        from julep_ai.client import AsyncJulepApi
+        from julep import CreateAdditionalInfoRequest
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2674,7 +2674,7 @@ class AsyncJulepApi:
 
             - additional_info_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2712,7 +2712,7 @@ class AsyncJulepApi:
 
             - additional_info_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2748,7 +2748,7 @@ class AsyncJulepApi:
 
             - memory_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2792,7 +2792,7 @@ class AsyncJulepApi:
 
             - offset: typing.Optional[int].
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2830,8 +2830,8 @@ class AsyncJulepApi:
 
             - request: CreateToolRequest.
         ---
-        from julep_ai import CreateToolRequest, CreateToolRequestType, FunctionDef
-        from julep_ai.client import AsyncJulepApi
+        from julep import CreateToolRequest, CreateToolRequestType, FunctionDef
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2878,8 +2878,8 @@ class AsyncJulepApi:
 
             - definition: FunctionDef. Function definition and parameters
         ---
-        from julep_ai import FunctionDef
-        from julep_ai.client import AsyncJulepApi
+        from julep import FunctionDef
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
@@ -2920,7 +2920,7 @@ class AsyncJulepApi:
 
             - tool_id: str.
         ---
-        from julep_ai.client import AsyncJulepApi
+        from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
