@@ -274,6 +274,7 @@ def proc_mem_context_query(
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{session_id}},
             *entries{{
+                entry_id,
                 session_id,
                 source,
                 role,
@@ -281,6 +282,9 @@ def proc_mem_context_query(
                 content,
                 token_count,
                 created_at,
+            }},
+            not *entry_relations {{
+                tail: entry_id,
             }},
             index = 6,
             source == "api_request" || source == "api_response",
