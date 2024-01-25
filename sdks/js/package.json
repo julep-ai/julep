@@ -2,14 +2,7 @@
   "name": "@julep/sdk",
   "version": "0.1.0",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "keywords": [
-    "julep-ai",
-    "julep",
-    "agents",
-    "llms",
-    "memory",
-    "ai"
-  ],
+  "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
   "author": {
     "name": "Julep",
     "email": "developers@julep.ai"
@@ -34,5 +27,9 @@
     "prettier": "^3.2.4",
     "typedoc": "^0.25.7",
     "typedoc-plugin-markdown": "^3.17.1"
+  },
+  "scripts": {
+    "format": "prettier -w .",
+    "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts"
   }
 }
