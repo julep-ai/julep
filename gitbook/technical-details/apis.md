@@ -2,15 +2,16 @@
 
 ## APIs Offered
 
-We offer three different sets of APIs:
+We offer two main sets of APIs:
 
-1. **Stateless API**: Stateless APIs are compatible with the `openai` API and can be used with their client libraries without modification.
-2. **Stateful API with Memory**: (_Coming soon!_) We also offer a stateful API that:
-   1. Manages user sessions.
-   2. Simple API where you need to send _only_ the most recent message for a given "session".
-   3. Handles the prompt and context window packing.
-   4. (Optional) Can learn and remember facts and "beliefs" about individual users.
-3. **Custom finetuning**: (_Coming soon!_)
+1. **Agents API with Memory**: The main offering of the platform is a stateful API that:
+   1. Creates and manages agents,
+   1. Manages user sessions,
+   1. Only needs the most recent message for a given "session",
+   1. Handles the prompt and context window packing, and
+   1. Learns and remembers facts and "beliefs" about individual users.
+
+1. **Model API**: Model APIs are compatible with the `openai` API and can be used with their client libraries without modification.
 
 ***
 
