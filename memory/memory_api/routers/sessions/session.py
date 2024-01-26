@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pydantic import UUID4
 from memory_api.clients.cozo import client
 from memory_api.clients.embed import embed
+from memory_api.clients.temporal import run_summarization_task
 from memory_api.models.entry.add_entries import add_entries_query
 from memory_api.common.protocol.entries import Entry
 from memory_api.clients.worker.types import ChatML
@@ -198,28 +199,17 @@ class PlainCompletionSession(BaseSession):
 
 
 class RecursiveSummarizationSession(PlainCompletionSession):
-    async def _query_summary_messages(self) -> ChatML:
-        """Get messages leaf nodes on summary tree from cozo"""
-        ...
-
-    async def forward(
-        self, session_data, new_input, settings
-    ) -> Tuple[ChatML, Settings]:
-        # Don't call super: we dont want normal messages anyway
-        context = await self._query_summary_messages()
-        return context, settings
-
     async def backward(
-        self, 
+        self,
         session_data: SessionData | None,
         new_input: list[InputChatMLMessage],
         response,
         final_settings: Settings,
     ) -> None:
-        super().backward(
+        await super().backward(
             session_data=session_data,
             new_input=new_input,
             response=response,
             final_settings=final_settings,
         )
-        # trigger summarization task (need session_id)
+        await run_summarization_task(self.session_id)
