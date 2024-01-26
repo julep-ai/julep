@@ -44,3 +44,6 @@ api_key: str = env.str("API_KEY")
 embedding_service_url: str = env.str(
     "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8082/embed"
 )
+
+
+temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:7233")

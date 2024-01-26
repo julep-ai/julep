@@ -22,7 +22,7 @@ from memory_api.autogen.openapi_model import (
     ResourceUpdatedResponse,
 )
 from .protocol import Settings
-from .session import PlainCompletionSession
+from .session import RecursiveSummarizationSession
 
 
 router = APIRouter()
@@ -169,7 +169,7 @@ async def session_chat(
     async def run_task(task):
         await task
 
-    session = PlainCompletionSession(
+    session = RecursiveSummarizationSession(
         developer_id=x_developer_id,
         session_id=session_id,
     )
