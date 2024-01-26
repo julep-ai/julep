@@ -18,6 +18,9 @@ generation_auth_token: str = env.str("GENERATION_AUTH_TOKEN", default=None)
 summarization_ratio_threshold: float = env.float(
     "MAX_TOKENS_RATIO_TO_SUMMARIZE", default=0.5
 )
+summarization_tokens_threshold: int = env.int(
+    "SUMMARIZATION_TOKENS_THRESHOLD", default=2048
+)
 worker_url: str = env.str("WORKER_URL", default=None)
 
 # principles you API
