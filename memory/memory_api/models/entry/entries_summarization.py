@@ -2,6 +2,39 @@ from uuid import UUID
 from ...common.protocol.entries import Entry
 
 
+def get_toplevel_entries_query(session_id: UUID):
+    return f"""
+    input[session_id] <- [[to_uuid("{session_id}")]]
+
+    ?[
+        entry_id,
+        session_id,
+        source,
+        role,
+        name,
+        content,
+        token_count,
+        created_at,
+    ] :=
+        input[session_id],
+        *entries{{
+            entry_id,
+            session_id,
+            source,
+            role,
+            name,
+            content,
+            token_count,
+            created_at,
+        }},
+        not *entry_relations {{
+            tail: entry_id,
+        }}
+    
+    :sort timestamp
+    """
+
+
 def entries_summarization_query(
     session_id: UUID, new_entry: Entry, old_entry_ids: list[UUID]
 ):
