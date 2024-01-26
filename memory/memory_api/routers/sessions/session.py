@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pydantic import UUID4
 from memory_api.clients.cozo import client
 from memory_api.clients.embed import embed
+from memory_api.env import summarization_tokens_threshold
 from memory_api.clients.temporal import run_summarization_task
 from memory_api.models.entry.add_entries import add_entries_query
 from memory_api.common.protocol.entries import Entry
@@ -182,16 +183,21 @@ class BaseSession:
 
         message = response["choices"][0]["message"]
 
+        total_tokens = response["usage"]["total_tokens"]
+        completion_tokens = response["usage"]["completion_tokens"]
         entries.append(
             Entry(
                 session_id=self.session_id,
                 role=message["role"],
                 name=None if session_data is None else session_data.agent_name,
                 content=message["content"],
-                token_count=response["usage"]["total_tokens"],
+                token_count=completion_tokens,
             )
         )
         client.run(add_entries_query(entries))
+
+        if total_tokens >= summarization_tokens_threshold:
+            return run_summarization_task(self.session_id)
 
 
 class PlainCompletionSession(BaseSession):
@@ -199,17 +205,4 @@ class PlainCompletionSession(BaseSession):
 
 
 class RecursiveSummarizationSession(PlainCompletionSession):
-    async def backward(
-        self,
-        session_data: SessionData | None,
-        new_input: list[InputChatMLMessage],
-        response,
-        final_settings: Settings,
-    ) -> None:
-        await super().backward(
-            session_data=session_data,
-            new_input=new_input,
-            response=response,
-            final_settings=final_settings,
-        )
-        await run_summarization_task(self.session_id)
+    pass
