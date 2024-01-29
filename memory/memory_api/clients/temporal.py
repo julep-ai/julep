@@ -7,7 +7,7 @@ async def run_summarization_task(session_id: UUID):
     client = await Client.connect(temporal_worker_url)
     await client.execute_workflow(
         "SummarizationWorkflow",
-        args=[session_id],
+        args=[str(session_id)],
         task_queue="memory-task-queue",
         id=str(uuid4()),
     )

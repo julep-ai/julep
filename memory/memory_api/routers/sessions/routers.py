@@ -192,6 +192,7 @@ async def session_chat(
     )
     response, bg_task = await session.run(request.messages, settings)
 
-    background_tasks.add_task(run_task, bg_task)
+    if bg_task:
+        background_tasks.add_task(bg_task)
 
     return JSONResponse(response)

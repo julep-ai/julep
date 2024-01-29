@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 
-from uuid import UUID
 from datetime import timedelta
 from temporalio import workflow
 
@@ -12,7 +11,7 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class SummarizationWorkflow:
     @workflow.run
-    async def run(self, session_id: UUID) -> None:
+    async def run(self, session_id: str) -> None:
         return await workflow.execute_activity(
             summarization,
             session_id,

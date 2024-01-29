@@ -15,6 +15,7 @@ def get_toplevel_entries_query(session_id: UUID):
         content,
         token_count,
         created_at,
+        timestamp,
     ] :=
         input[session_id],
         *entries{{
@@ -26,6 +27,7 @@ def get_toplevel_entries_query(session_id: UUID):
             content,
             token_count,
             created_at,
+            timestamp,
         }},
         not *entry_relations {{
             tail: entry_id,
@@ -40,7 +42,7 @@ def entries_summarization_query(
 ):
     relations = ",\n".join(
         [
-            f'[to_uuid("{new_entry.id}")", "summary_of", to_uuid("{old_id}")]'
+            f'[to_uuid("{new_entry.id}"), "summary_of", to_uuid("{old_id}")]'
             for old_id in old_entry_ids
         ]
     )
