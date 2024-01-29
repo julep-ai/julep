@@ -5,9 +5,9 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from ..activities.demo import say_hello
+from ..activities.summarization import summarization
 from ..env import temporal_endpoint, temporal_task_queue
-from ..workflows.demo import GreetingWorkflow
+from ..workflows.summarization import SummarizationWorkflow
 
 
 async def main():
@@ -18,8 +18,8 @@ async def main():
     worker = Worker(
         client,
         task_queue=temporal_task_queue,
-        workflows=[GreetingWorkflow],
-        activities=[say_hello],
+        workflows=[SummarizationWorkflow],
+        activities=[summarization],
     )
 
     await worker.run()
