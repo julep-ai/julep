@@ -51,7 +51,9 @@ class BaseSession:
         #     await self.add_to_session(new_input, response)
 
         # Return response and the backward pass as a background task (dont await here)
-        backward_pass = self.backward(session_data, new_input, response, final_settings)
+        backward_pass = await self.backward(
+            session_data, new_input, response, final_settings
+        )
 
         return response, backward_pass
 

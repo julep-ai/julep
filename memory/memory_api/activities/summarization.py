@@ -6,7 +6,6 @@ from typing import Awaitable, Callable
 from textwrap import dedent
 from temporalio import activity
 from memory_api.clients.cozo import client
-from memory_api.common.utils.datetime import utcnow
 from memory_api.models.entry.entries_summarization import (
     get_toplevel_entries_query,
     entries_summarization_query,
@@ -121,7 +120,7 @@ def make_prompt(
 
 
 async def run_prompt(
-    dialog: list[Entry], 
+    dialog: list[Entry],
     previous_memories: list[str],
     model: str = "julep-ai/samantha-1-turbo",
     max_tokens: int = 400,
@@ -147,7 +146,8 @@ async def run_prompt(
 
 
 @activity.defn
-async def summarization(session_id: UUID) -> None:
+async def summarization(session_id: str) -> None:
+    session_id = UUID(session_id)
     entries = [
         Entry(**row)
         for _, row in client.run(
