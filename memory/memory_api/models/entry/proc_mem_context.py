@@ -284,6 +284,7 @@ def proc_mem_context_query(
                 created_at,
             }},
             not *entry_relations {{
+                relation: "summary_of",
                 tail: entry_id,
             }},
             index = 6,
