@@ -30,6 +30,7 @@ def get_toplevel_entries_query(session_id: UUID):
             timestamp,
         }},
         not *entry_relations {{
+            relation: "summary_of",
             tail: entry_id,
         }}
     
