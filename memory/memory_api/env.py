@@ -50,3 +50,6 @@ embedding_service_url: str = env.str(
 
 
 temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:7233")
+temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
+temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
+temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)

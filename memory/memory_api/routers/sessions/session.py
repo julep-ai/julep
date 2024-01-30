@@ -199,7 +199,7 @@ class BaseSession:
         client.run(add_entries_query(entries))
 
         if total_tokens >= summarization_tokens_threshold:
-            return run_summarization_task(self.session_id)
+            return run_summarization_task
 
 
 class PlainCompletionSession(BaseSession):
