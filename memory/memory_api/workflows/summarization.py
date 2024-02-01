@@ -15,5 +15,5 @@ class SummarizationWorkflow:
         return await workflow.execute_activity(
             summarization,
             session_id,
-            schedule_to_close_timeout=timedelta(seconds=5),
+            schedule_to_close_timeout=timedelta(seconds=600),
         )
