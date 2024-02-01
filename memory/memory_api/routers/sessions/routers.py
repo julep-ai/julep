@@ -22,7 +22,7 @@ from memory_api.autogen.openapi_model import (
     ResourceUpdatedResponse,
 )
 from .protocol import Settings
-from .session import PlainCompletionSession
+from .session import RecursiveSummarizationSession
 
 
 router = APIRouter()
@@ -166,10 +166,7 @@ async def session_chat(
     background_tasks: BackgroundTasks,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ):
-    async def run_task(task):
-        await task
-
-    session = PlainCompletionSession(
+    session = RecursiveSummarizationSession(
         developer_id=x_developer_id,
         session_id=session_id,
     )
@@ -192,6 +189,7 @@ async def session_chat(
     )
     response, bg_task = await session.run(request.messages, settings)
 
-    background_tasks.add_task(run_task, bg_task)
+    if bg_task:
+        background_tasks.add_task(bg_task, session_id)
 
     return JSONResponse(response)

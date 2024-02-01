@@ -18,6 +18,7 @@ class Entry(BaseModel):
     content: str
     tokenizer: str = Field(default="character_count")
     created_at: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
+    timestamp: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
 
     @computed_field
     @property

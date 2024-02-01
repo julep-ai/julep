@@ -18,6 +18,9 @@ generation_auth_token: str = env.str("GENERATION_AUTH_TOKEN", default=None)
 summarization_ratio_threshold: float = env.float(
     "MAX_TOKENS_RATIO_TO_SUMMARIZE", default=0.5
 )
+summarization_tokens_threshold: int = env.int(
+    "SUMMARIZATION_TOKENS_THRESHOLD", default=2048
+)
 worker_url: str = env.str("WORKER_URL", default=None)
 
 # principles you API
@@ -44,3 +47,9 @@ api_key: str = env.str("API_KEY")
 embedding_service_url: str = env.str(
     "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8082/embed"
 )
+
+
+temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:7233")
+temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
+temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
+temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
