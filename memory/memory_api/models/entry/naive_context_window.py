@@ -13,7 +13,7 @@ def naive_context_window_query(session_id: UUID):
             to_uuid("{session_id}"),
         ]]
 
-        ?[role, name, content, token_count, created_at] :=
+        ?[role, name, content, token_count, created_at, timestamp] :=
             input[session_id],
             *entries{{
                 session_id,
@@ -23,9 +23,10 @@ def naive_context_window_query(session_id: UUID):
                 content,
                 token_count,
                 created_at,
+                timestamp,
             }},
             source == "api_request" || source == "api_response",
 
-        :sort created_at
+        :sort timestamp
     }}
     """
