@@ -59,7 +59,7 @@ async def get_session(
         )
 
 
-@router.post("/sessions/", status_code=HTTP_201_CREATED, tags=["sessions"])
+@router.post("/sessions", status_code=HTTP_201_CREATED, tags=["sessions"])
 async def create_session(
     request: CreateSessionRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
@@ -81,7 +81,7 @@ async def create_session(
     )
 
 
-@router.get("/sessions/", tags=["sessions"])
+@router.get("/sessions", tags=["sessions"])
 async def list_sessions(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
