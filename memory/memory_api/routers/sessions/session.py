@@ -32,7 +32,7 @@ class BaseSession:
     session_id: UUID4
     developer_id: UUID4
 
-    async def run(self, new_input, settings: Settings) -> Tuple[ChatML, Callable]:
+    async def run(self, new_input, settings: Settings) -> Tuple[dict, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -142,7 +142,7 @@ class BaseSession:
 
         return messages, settings
 
-    async def generate(self, init_context, settings: Settings) -> ChatML:
+    async def generate(self, init_context, settings: Settings) -> dict:
         # TODO: how to use response_format ?
 
         return openai.ChatCompletion.create(
@@ -187,15 +187,16 @@ class BaseSession:
 
         total_tokens = response["usage"]["total_tokens"]
         completion_tokens = response["usage"]["completion_tokens"]
-        entries.append(
-            Entry(
-                session_id=self.session_id,
-                role=message["role"],
-                name=None if session_data is None else session_data.agent_name,
-                content=message["content"],
-                token_count=completion_tokens,
-            )
+        new_entry = Entry(
+            session_id=self.session_id,
+            role=message["role"],
+            name=None if session_data is None else session_data.agent_name,
+            content=message["content"],
+            token_count=completion_tokens,
         )
+        response["choices"][0]["message"]["id"] = new_entry.id
+        response["choices"][0]["message"]["created_at"] = new_entry.created_at
+        entries.append(new_entry)
         client.run(add_entries_query(entries))
 
         if total_tokens >= summarization_tokens_threshold:

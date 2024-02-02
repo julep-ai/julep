@@ -3,7 +3,6 @@ from uuid import uuid4
 from pydantic import BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
-from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from memory_api.clients.cozo import client
 from memory_api.models.session.get_session import get_session_query
@@ -20,6 +19,9 @@ from memory_api.autogen.openapi_model import (
     ChatMLMessage,
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
+    ChatResponse,
+    FinishReason,
+    CompletionUsage,
 )
 from .protocol import Settings
 from .session import RecursiveSummarizationSession
@@ -165,7 +167,7 @@ async def session_chat(
     request: ChatInput,
     background_tasks: BackgroundTasks,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-):
+) -> ChatResponse:
     session = RecursiveSummarizationSession(
         developer_id=x_developer_id,
         session_id=session_id,
@@ -192,4 +194,12 @@ async def session_chat(
     if bg_task:
         background_tasks.add_task(bg_task, session_id)
 
-    return JSONResponse(response)
+    choices = response["choices"]
+    resp = [ChatMLMessage(**c["message"]) for c in choices]
+
+    return ChatResponse(
+        id=uuid4(),
+        finish_reason=FinishReason[choices[0]["finish_reason"]],
+        response=[resp],
+        usage=CompletionUsage(**response["usage"]),
+    )
