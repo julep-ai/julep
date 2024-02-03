@@ -2,10 +2,6 @@ from datetime import datetime
 from ...common.protocol.entries import Entry
 
 
-def parenthesize(s):
-    return f'"({s})"'
-
-
 def add_entries_query(entries: list[Entry]) -> str:
     def _aux_content(e: Entry):
         return e.content.replace('"', "'")
@@ -15,7 +11,7 @@ def add_entries_query(entries: list[Entry]) -> str:
         ts = datetime.utcnow().timestamp()
         if e.content:
             entries_lst.append(
-                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", {parenthesize(e.name) if e.name else "null"}, "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}", {ts}, {ts}]'
+                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", "{e.name or "null"}", "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}", {ts}, {ts}]'
             )
 
     if not len(entries_lst):
