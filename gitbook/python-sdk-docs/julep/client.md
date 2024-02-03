@@ -10,7 +10,7 @@
 
 ## AsyncClient
 
-[Show source in client.py:103](../../../../../julep/client.py#L103)
+[Show source in client.py:122](../../../../../julep/client.py#L122)
 
 A class representing an asynchronous client for interacting with various managers.
 
@@ -26,6 +26,8 @@ service. If these are not explicitly provided, it looks for them in the environm
 - `docs` *AsyncDocsManager* - Manager for handling document-related interactions.
 - `memories` *AsyncMemoriesManager* - Manager for handling memory-related interactions.
 - `tools` *AsyncToolsManager* - Manager for handling tool-related interactions.
+- `chat` *AsyncChat* - A chat manager instance for handling chat interactions (based on OpenAI client).
+- `completions` *AsyncCompletions* - A manager instance for handling completions (based on OpenAI client).
 
 #### Raises
 
@@ -64,7 +66,7 @@ class AsyncClient:
 
 ## Client
 
-[Show source in client.py:24](../../../../../julep/client.py#L24)
+[Show source in client.py:27](../../../../../julep/client.py#L27)
 
 A class that encapsulates managers for different aspects of a system and provides an interface for interacting with an API.
 
@@ -77,6 +79,8 @@ Attributes:
     docs (DocsManager): A manager instance for handling documents.
     memories (MemoriesManager): A manager instance for handling memories.
     tools (ToolsManager): A manager instance for handling tools.
+    chat (Chat): A chat manager instance for handling chat interactions (based on OpenAI client).
+    completions (Completions): A manager instance for handling completions (based on OpenAI client).
 
 Args:
     api_key (Optional[str]): The API key needed to authenticate with the API. Defaults to the JULEP_API_KEY environment variable.
