@@ -1,6 +1,9 @@
 from typing import Optional
 
 from beartype import beartype
+from openai import AsyncOpenAI, OpenAI
+from openai.resources.chat.chat import AsyncChat, Chat
+from openai.resources.completions import AsyncCompletions, Completions
 
 # Note: This is just here because fern generates docs where it asks to:
 # `from julep_ai.client import AsyncJulepApi, JulepApi`
@@ -34,6 +37,8 @@ class Client:
             docs (DocsManager): A manager instance for handling documents.
             memories (MemoriesManager): A manager instance for handling memories.
             tools (ToolsManager): A manager instance for handling tools.
+            chat (Chat): A chat manager instance for handling chat interactions (based on OpenAI client).
+            completions (Completions): A manager instance for handling completions (based on OpenAI client).
 
         Args:
             api_key (Optional[str]): The API key needed to authenticate with the API. Defaults to the JULEP_API_KEY environment variable.
@@ -55,13 +60,16 @@ class Client:
     memories: MemoriesManager
     tools: ToolsManager
 
+    chat: Chat
+    completions: Completions
+
     @beartype
     def __init__(
         self,
         api_key: Optional[str] = JULEP_API_KEY,
         base_url: Optional[str] = JULEP_API_URL,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize a new client object with the given API key and base URL.
@@ -99,6 +107,17 @@ class Client:
         self.memories = MemoriesManager(api_client=self._api_client)
         self.tools = ToolsManager(api_client=self._api_client)
 
+        # Set up the OpenAI client
+        self._openai_client = OpenAI(
+            api_key=api_key,
+            base_url=f"{base_url}/v1",
+            *args,
+            **kwargs,
+        )
+
+        self.chat = self._openai_client.chat
+        self.completions = self._openai_client.completions
+
 
 class AsyncClient:
     """
@@ -115,6 +134,8 @@ class AsyncClient:
         docs (AsyncDocsManager): Manager for handling document-related interactions.
         memories (AsyncMemoriesManager): Manager for handling memory-related interactions.
         tools (AsyncToolsManager): Manager for handling tool-related interactions.
+        chat (AsyncChat): A chat manager instance for handling chat interactions (based on OpenAI client).
+        completions (AsyncCompletions): A manager instance for handling completions (based on OpenAI client).
 
     Raises:
         AssertionError: If `api_key` or `base_url` is not provided and also not set as an
@@ -140,13 +161,16 @@ class AsyncClient:
     memories: AsyncMemoriesManager
     tools: AsyncToolsManager
 
+    chat: AsyncChat
+    completions: AsyncCompletions
+
     @beartype
     def __init__(
         self,
         api_key: Optional[str] = JULEP_API_KEY,
         base_url: Optional[str] = JULEP_API_URL,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize the client with the provided API key and base URL.
@@ -194,3 +218,14 @@ class AsyncClient:
         self.docs = AsyncDocsManager(api_client=self._api_client)
         self.memories = AsyncMemoriesManager(api_client=self._api_client)
         self.tools = AsyncToolsManager(api_client=self._api_client)
+
+        # Set up the OpenAI client
+        self._openai_client = AsyncOpenAI(
+            api_key=api_key,
+            base_url=f"{base_url}/v1",
+            *args,
+            **kwargs,
+        )
+
+        self.chat = self._openai_client.chat
+        self.completions = self._openai_client.completions
