@@ -1,0 +1,51 @@
+name: samantha-1-turbo-vllm
+
+resources:
+  cloud: kubernetes
+
+envs:
+  MODEL_NAME: julep-ai/samantha-1-turbo
+  MODEL_SETTINGS: "{}"
+  SENTRY_DSN: ""
+  HUGGING_FACE_HUB_TOKEN: "SET_MANUALLY"
+  HF_TOKEN: "SET_MANUALLY"
+  BACKLOG: "4096"
+  PORT: "8000"
+  HOST: "127.0.0.1"
+  BLOCK_SIZE: "8"
+  COZODB_URL: "http://127.0.0.1:9070"
+  LAGO_API_KEY: ""
+  LAGO_API_URL: ""
+
+workdir: ./ # Project home
+
+setup: |
+  conda activate samantha-api
+  if [ $? -ne 0 ]; then
+    conda create -n samantha-api -c conda-forge python=3.11 poetry cxx-compiler -y
+    conda activate samantha-api
+    conda install -c "nvidia/label/cuda-12.3.2" -y cuda-toolkit cuda-cudart-dev libcublas-dev libcusparse-dev libcusolver-dev cuda-nvml-dev
+    conda install -c conda-forge -y cudnn
+  fi
+
+  # Install dependencies
+  export PATH="/home/sky/.conda/include:/home/sky/.conda/envs/samantha-api/include:$PATH"
+  export CPATH="/home/sky/.conda/include:/home/sky/.conda/envs/samantha-api/include:$CPATH"
+  export C_INCLUDE_PATH="/home/sky/.conda/include:/home/sky/.conda/envs/samantha-api/include:$C_INCLUDE_PATH"
+  export LD_LIBRARY_PATH="/home/sky/.conda/lib:/home/sky/.conda/envs/samantha-api/lib:$LD_LIBRARY_PATH"
+  poetry config virtualenvs.create false
+  poetry install --directory services/vllm
+
+run: |
+  conda activate samantha-api
+
+  echo "Starting service"
+
+  python services/vllm/samantha_api/web.py \
+    --model $MODEL_NAME \
+    --tensor-parallel-size $SKYPILOT_NUM_GPUS_PER_NODE \
+    --host $HOST \
+    --port $PORT \
+    --backlog $BACKLOG \
+    --block-size $BLOCK_SIZE \
+    --trust-remote-code
