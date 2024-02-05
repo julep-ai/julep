@@ -189,13 +189,13 @@ async def session_chat(
         remember=request.remember,
         recall=request.recall,
     )
-    response, bg_task = await session.run(request.messages, settings)
+    response, new_entry, bg_task = await session.run(request.messages, settings)
 
     if bg_task:
         background_tasks.add_task(bg_task, session_id)
 
     choices = response["choices"]
-    resp = [ChatMLMessage(**c["message"]) for c in choices]
+    resp = [ChatMLMessage(**new_entry.model_dump())]
 
     return ChatResponse(
         id=uuid4(),

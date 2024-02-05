@@ -32,7 +32,7 @@ class BaseSession:
     session_id: UUID4
     developer_id: UUID4
 
-    async def run(self, new_input, settings: Settings) -> Tuple[dict, Callable]:
+    async def run(self, new_input, settings: Settings) -> Tuple[dict, Entry, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -50,12 +50,25 @@ class BaseSession:
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)
 
-        # Return response and the backward pass as a background task (dont await here)
-        backward_pass = await self.backward(
-            session_data, new_input, response, final_settings
+        # TODO: this needs to be refactored somehow, no need to return 3rd value from this method
+        message = response["choices"][0]["message"]
+
+        total_tokens = response["usage"]["total_tokens"]
+        completion_tokens = response["usage"]["completion_tokens"]
+        new_entry = Entry(
+            session_id=self.session_id,
+            role=message["role"],
+            name=None if session_data is None else session_data.agent_name,
+            content=message["content"],
+            token_count=completion_tokens,
         )
 
-        return response, backward_pass
+        # Return response and the backward pass as a background task (dont await here)
+        backward_pass = await self.backward(
+            new_input, total_tokens, new_entry, final_settings
+        )
+
+        return response, new_entry, backward_pass
 
     async def forward(
         self,
@@ -164,9 +177,9 @@ class BaseSession:
 
     async def backward(
         self,
-        session_data: SessionData | None,
         new_input: list[InputChatMLMessage],
-        response,
+        total_tokens: int,
+        new_entry: Entry,
         final_settings: Settings,
     ) -> None:
         if not final_settings.remember:
@@ -183,19 +196,6 @@ class BaseSession:
                 )
             )
 
-        message = response["choices"][0]["message"]
-
-        total_tokens = response["usage"]["total_tokens"]
-        completion_tokens = response["usage"]["completion_tokens"]
-        new_entry = Entry(
-            session_id=self.session_id,
-            role=message["role"],
-            name=None if session_data is None else session_data.agent_name,
-            content=message["content"],
-            token_count=completion_tokens,
-        )
-        response["choices"][0]["message"]["id"] = new_entry.id
-        response["choices"][0]["message"]["created_at"] = new_entry.created_at
         entries.append(new_entry)
         client.run(add_entries_query(entries))
 
