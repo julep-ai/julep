@@ -25,6 +25,7 @@ jsonschema = "^4.21.1"
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"
 pytest = "^8.0.0"
+modal = "^0.56.4964"
 
 [build-system]
 requires = ["poetry-core"]
