@@ -2,7 +2,8 @@ import os
 
 from modal import Image, Secret, Stub, method, asgi_app
 
-from samantha_api.web import create_app
+## Needed so that modal knows to package this directory
+import samantha_api
 
 MODEL_DIR = "/model"
 BASE_MODEL = "julep-ai/samantha-1-turbo"
@@ -24,6 +25,7 @@ def download_model_to_folder():
 
 image = (
     Image.from_registry("nvidia/cuda:12.1.1-base-ubuntu22.04", add_python="3.10")
+    .apt_install()
     .pip_install(
         "vllm==0.3.0",
         "huggingface_hub==0.20.3",
@@ -50,7 +52,7 @@ image = (
     )
 )
 
-stub = Stub("example-vllm-inference", image=image)
+stub = Stub("model-api", image=image)
 
 
 @stub.function(
@@ -62,6 +64,8 @@ stub = Stub("example-vllm-inference", image=image)
 )
 @asgi_app()
 def get_app():
+    from samantha_api.web import create_app
+
     API_KEY = os.environ["API_KEY"]
     REVISION = os.environ["REVISION"]
     BACKLOG = os.environ["BACKLOG"]
