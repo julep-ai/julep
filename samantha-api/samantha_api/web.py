@@ -60,6 +60,12 @@ from samantha_api.dependencies.auth import get_api_key
 from samantha_api.utils import validate_functions
 
 
+engine = None
+engine_model_config = None
+tokenizer = None
+served_model = None
+
+
 model_settings = {
     "julep-ai/samantha-1-turbo": {
         "section_start_tag": "<|im_start|>",
@@ -716,9 +722,11 @@ async def chat_completions(
                     "role", "assistant" if not append_fcall_prefix else "function_call"
                 ),
                 name=msg.get("name"),
-                content=f'{{"name": "{request.function_call}",{msg.get("content", "")}'
-                if append_fcall_prefix
-                else msg.get("content", ""),
+                content=(
+                    f'{{"name": "{request.function_call}",{msg.get("content", "")}'
+                    if append_fcall_prefix
+                    else msg.get("content", "")
+                ),
             ),
             finish_reason=output.finish_reason,
         )
@@ -774,7 +782,9 @@ async def me():
     return {"status": "ok"}
 
 
-if __name__ == "__main__":
+def create_app(args=None):
+    global engine, engine_model_config, tokenizer, served_model
+
     parser = argparse.ArgumentParser(
         description="vLLM OpenAI-Compatible RESTful API server."
     )
@@ -808,7 +818,7 @@ if __name__ == "__main__":
     )
 
     parser = AsyncEngineArgs.add_cli_args(parser)
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     app.add_middleware(
         CORSMiddleware,
@@ -864,6 +874,12 @@ if __name__ == "__main__":
         tokenizer_mode=engine_args.tokenizer_mode,
         trust_remote_code=engine_args.trust_remote_code,
     )
+
+    return app, args
+
+
+if __name__ == "__main__":
+    app, args = create_app()
 
     uvicorn.run(
         app,
