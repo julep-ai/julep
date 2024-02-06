@@ -360,6 +360,7 @@ async def completions(
 
     result_generator = vllm_with_character_level_parser(
         engine,
+        tokenizer,
         prompt,
         sampling_params,
         request_id,
@@ -604,6 +605,7 @@ async def chat_completions(
 
     result_generator = vllm_with_character_level_parser(
         engine,
+        tokenizer,
         prompt,
         sampling_params,
         request_id,

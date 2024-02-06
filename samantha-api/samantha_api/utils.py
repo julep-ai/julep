@@ -62,8 +62,7 @@ def validate_functions(functions: list[dict]):
     validate(instance=functions, schema=_schema)
 
 
-def build_vllm_token_enforcer_tokenizer_data(llm: LLM) -> TokenEnforcerTokenizerData:
-    tokenizer = llm.get_tokenizer()
+def build_vllm_token_enforcer_tokenizer_data(tokenizer) -> TokenEnforcerTokenizerData:
     # In some vLLM versions the tokenizer is wrapped in a TokenizerGroup
     if tokenizer.__class__.__name__ == 'TokenizerGroup':
         tokenizer = tokenizer.tokenizer  # noqa
@@ -72,12 +71,13 @@ def build_vllm_token_enforcer_tokenizer_data(llm: LLM) -> TokenEnforcerTokenizer
 
 def vllm_with_character_level_parser(
     engine: LLM,
+    tokenizer,
     prompt: ListOrStrList,
     sampling_params: SamplingParams,
     request_id: str,
     parser: Optional[CharacterLevelParser] = None,
 ) -> ListOrStrList:
-    tokenizer_data = build_vllm_token_enforcer_tokenizer_data(engine)
+    tokenizer_data = build_vllm_token_enforcer_tokenizer_data(tokenizer)
     
     if parser:
         logits_processor = build_vllm_logits_processor(tokenizer_data, parser)
