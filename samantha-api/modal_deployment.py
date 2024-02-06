@@ -1,6 +1,6 @@
 import os
 
-from modal import Image, Secret, Stub, method, asgi_app
+from modal import Image, Secret, Stub, method, asgi_app, gpu
 
 ## Needed so that modal knows to package this directory
 import samantha_api
@@ -56,7 +56,9 @@ stub = Stub("model-api", image=image)
 
 
 @stub.function(
-    gpu="A100",
+    gpu=gpu.A100(size="80GB"),
+    container_idle_timeout=1200,
+    keep_warm=3,
     secrets=[
         Secret.from_name("huggingface-secret"),
         Secret.from_name("samantha-model-api"),
