@@ -83,11 +83,7 @@ def vllm_with_character_level_parser(
         logits_processor = build_vllm_logits_processor(tokenizer_data, parser)
         sampling_params.logits_processors = [logits_processor]
 
-    results = engine.generate(prompt, sampling_params, request_id)
-    if isinstance(prompt, str):
-        return results[0].outputs[0].text
-    else:
-        return [result.outputs[0].text for result in results]
+    return engine.generate(prompt, sampling_params, request_id)
 
 
 class FunctionCallResult(BaseModel):
