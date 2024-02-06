@@ -56,7 +56,7 @@ run: |
 
   echo "Starting service"
 
-  python services/vllm/samantha_api/web.py \
+  python samantha_api/web.py \
     --model $MODEL_NAME \
     --tokenizer $MODEL_NAME \
     --revision $REVISION \
