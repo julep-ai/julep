@@ -5,6 +5,7 @@ import time
 import logging
 import sentry_sdk
 from http import HTTPStatus
+from functools import partial
 from contextlib import suppress
 from typing import AsyncGenerator, Optional, List, Dict, Union, Any, Annotated
 
@@ -17,6 +18,7 @@ from aioprometheus.asgi.starlette import metrics
 from jsonschema.exceptions import ValidationError
 
 from vllm.engine.metrics import add_global_metrics_labels
+from lmformatenforcer import JsonSchemaParser
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.sampling_params import SamplingParams
@@ -58,7 +60,11 @@ from samantha_api.metrics import (
     MetricsMiddleware,
 )
 from samantha_api.dependencies.auth import get_api_key
-from samantha_api.utils import validate_functions
+from samantha_api.utils import (
+    validate_functions,
+    vllm_with_character_level_parser,
+    FunctionCallResult,
+)
 
 
 engine = None
@@ -352,10 +358,12 @@ async def completions(
     except ValueError as e:
         return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
 
-    result_generator = engine.generate(
+    result_generator = vllm_with_character_level_parser(
+        engine,
         prompt,
         sampling_params,
         request_id,
+        parser=JsonSchemaParser(FunctionCallResult.schema()),
     )
 
     # Similar to the OpenAI API, when n != best_of, we do not stream the
@@ -594,10 +602,12 @@ async def chat_completions(
     except ValueError as e:
         return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
 
-    result_generator = engine.generate(
+    result_generator = vllm_with_character_level_parser(
+        engine,
         prompt,
         sampling_params,
         request_id,
+        parser=JsonSchemaParser(FunctionCallResult.schema()),
     )
 
     async def abort_request() -> None:
