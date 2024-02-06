@@ -1,6 +1,5 @@
 import argparse
 import json
-import uvicorn
 import asyncio
 import time
 import logging
@@ -74,10 +73,13 @@ model_settings = {
 }
 
 
-sentry_sdk.init(
-    dsn=sentry_dsn,
-    enable_tracing=True,
-)
+if not sentry_dsn:
+    print("Sentry DSN not found. Sentry will not be enabled.")
+else:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        enable_tracing=True,
+    )
 
 
 DEFAULT_MAX_TOKENS = 4000
@@ -880,6 +882,8 @@ def create_app(args=None):
 
 if __name__ == "__main__":
     app, args = create_app()
+
+    import uvicorn
 
     uvicorn.run(
         app,
