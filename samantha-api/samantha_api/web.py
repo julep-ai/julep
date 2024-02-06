@@ -44,7 +44,7 @@ from vllm.entrypoints.openai.protocol import (
 from vllm.outputs import RequestOutput
 from samantha_api.conversion.conversions import to_prompt, parse_message
 
-from conversion.exceptions import (
+from samantha_api.conversion.exceptions import (
     InvalidPromptException,
     InvalidFunctionName,
 )
