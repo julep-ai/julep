@@ -1,6 +1,7 @@
 import psutil
 from starlette_exporter import PrometheusMiddleware
 from prometheus_client import Gauge, Counter
+from vllm.engine.metrics import *
 from pynvml import *
 
 
@@ -85,21 +86,21 @@ gpu_memory_percents_metric = Gauge(
 tokens_per_user_metric = Counter(
     "total_tokens_per_user",
     "Total tokens per user",
-    labelnames=("user_name", "user_email"),
+    labelnames=("user_name",),
 )
 
 
 generation_time_metric = Gauge(
     "model_response_generation_time",
     "Model response generation time",
-    labelnames=("user_name", "user_email"),
+    labelnames=("user_name",),
 )
 
 
 generated_tokens_per_second_metric = Gauge(
     "generated_token_per_second",
     "Generated tokens per second",
-    labelnames=("user_name", "user_email"),
+    labelnames=("user_name",),
 )
 
 

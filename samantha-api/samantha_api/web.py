@@ -6,15 +6,17 @@ import logging
 import sentry_sdk
 from http import HTTPStatus
 from contextlib import suppress
-from typing import AsyncGenerator, Optional, List, Dict, Union, Any
+from typing import AsyncGenerator, Optional, List, Dict, Union, Any, Annotated
 
+from pydantic import UUID4
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, BackgroundTasks, Request, Depends
+from fastapi import FastAPI, BackgroundTasks, Request, Depends, Header
 from fastapi.responses import Response, JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
 from starlette_exporter import handle_metrics
 from jsonschema.exceptions import ValidationError
 
+from vllm.engine.metrics import add_global_metrics_labels
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.sampling_params import SamplingParams
@@ -258,10 +260,14 @@ async def show_available_models():
     return ModelList(data=model_cards)
 
 
-def _write_metrics(total_gen_time: float, total_tokens: float):
-    generation_time_metric.labels("developer", "local@mail").set(total_gen_time)
-    tokens_per_user_metric.labels("developer", "local@mail").inc(total_tokens)
-    generated_tokens_per_second_metric.labels("developer", "local@mail").set(
+def _write_metrics(total_gen_time: float, total_tokens: float, developer: UUID4 | str | None = None):
+    if developer is None:
+        developer = "unknown_developer"
+
+    developer = str(developer)
+    generation_time_metric.labels(developer).set(total_gen_time)
+    tokens_per_user_metric.labels(developer).inc(total_tokens)
+    generated_tokens_per_second_metric.labels(developer).set(
         total_tokens / total_gen_time
     )
 
@@ -270,6 +276,7 @@ def _write_metrics(total_gen_time: float, total_tokens: float):
 async def completions(
     raw_request: Request,
     background_tasks: BackgroundTasks,
+    x_developer_id: Annotated[UUID4 | None, Header()] = None,
 ) -> Response:
     """Completion API similar to OpenAI's API.
 
@@ -423,6 +430,7 @@ async def completions(
             _write_metrics,
             total_gen_time,
             total_tokens,
+            x_developer_id,
         )
 
         yield "data: [DONE]\n\n"
@@ -473,6 +481,7 @@ async def completions(
         _write_metrics,
         tokens_gen_time,
         total_tokens,
+        x_developer_id,
     )
 
     usage = UsageInfo(
@@ -509,6 +518,7 @@ async def completions(
 async def chat_completions(
     raw_request: Request,
     background_tasks: BackgroundTasks,
+    x_developer_id: Annotated[UUID4 | None, Header()] = None,
 ) -> Response:
     """Completion API similar to OpenAI's API.
 
@@ -686,6 +696,7 @@ async def chat_completions(
             _write_metrics,
             total_gen_time,
             total_tokens,
+            x_developer_id,
         )
 
         yield "data: [DONE]\n\n"
@@ -747,6 +758,7 @@ async def chat_completions(
         _write_metrics,
         tokens_gen_time,
         total_tokens,
+        x_developer_id,
     )
 
     response = ChatCompletionResponse(
@@ -803,6 +815,9 @@ def create_app(args=None):
     )
     parser.add_argument(
         "--allowed-headers", type=json.loads, default=["*"], help="allowed headers"
+    )
+    parser.add_argument(
+        "--log-stats", type=bool, default=True, help="log stats metrics"
     )
     parser.add_argument(
         "--served-model-name",
@@ -876,6 +891,8 @@ def create_app(args=None):
         tokenizer_mode=engine_args.tokenizer_mode,
         trust_remote_code=engine_args.trust_remote_code,
     )
+
+    add_global_metrics_labels(model_name=engine_args.model)
 
     return app, args
 
