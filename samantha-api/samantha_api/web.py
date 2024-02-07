@@ -260,15 +260,17 @@ async def show_available_models():
     return ModelList(data=model_cards)
 
 
-def _write_metrics(total_gen_time: float, total_tokens: float, developer: UUID4 | str | None = None):
+def _write_metrics(
+    total_gen_time: float, total_tokens: float, developer: UUID4 | str | None = None
+):
     if developer is None:
         developer = "unknown_developer"
 
     developer = str(developer)
-    generation_time_metric.labels(developer).set(total_gen_time)
-    tokens_per_user_metric.labels(developer).inc(total_tokens)
-    generated_tokens_per_second_metric.labels(developer).set(
-        total_tokens / total_gen_time
+    generation_time_metric.set({"developer": developer}, total_gen_time)
+    tokens_per_user_metric.add({"developer": developer}, total_tokens)
+    generated_tokens_per_second_metric.set(
+        {"developer": developer}, total_tokens / total_gen_time
     )
 
 
