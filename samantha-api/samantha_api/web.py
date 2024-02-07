@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, BackgroundTasks, Request, Depends, Header
 from fastapi.responses import Response, JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
-from starlette_exporter import handle_metrics
+from aioprometheus.asgi.starlette import metrics
 from jsonschema.exceptions import ValidationError
 
 from vllm.engine.metrics import add_global_metrics_labels
@@ -866,13 +866,9 @@ def create_app(args=None):
 
     app.add_middleware(
         MetricsMiddleware,
-        app_name="samantha_api",
-        prefix="samantha_api",
-        filter_unhandled_paths=True,
-        skip_paths=["/metrics", "/docs", "/status"],
-        exemplars=lambda: {"trace_id": random_uuid()},
+        exclude_paths=["/metrics", "/docs", "/status"],
     )
-    app.add_route("/metrics", handle_metrics)
+    app.add_route("/metrics", metrics)
 
     logger.info(f"args: {args}")
 
