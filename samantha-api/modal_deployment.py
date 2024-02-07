@@ -58,6 +58,7 @@ stub = Stub("model-api", image=image)
 @stub.function(
     gpu=gpu.A100(size="80GB"),
     container_idle_timeout=1200,
+    allow_concurrent_inputs=10,
     keep_warm=3,
     secrets=[
         Secret.from_name("huggingface-secret"),
