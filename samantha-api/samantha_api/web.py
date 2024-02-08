@@ -5,7 +5,6 @@ import time
 import logging
 import sentry_sdk
 from http import HTTPStatus
-from functools import partial
 from contextlib import suppress
 from typing import AsyncGenerator, Optional, List, Dict, Union, Any, Annotated
 
@@ -21,7 +20,6 @@ from vllm.engine.metrics import add_global_metrics_labels
 from lmformatenforcer import JsonSchemaParser
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
-from vllm.sampling_params import SamplingParams
 from vllm.utils import random_uuid
 from vllm.transformers_utils.tokenizer import get_tokenizer
 from vllm.entrypoints.openai.protocol import (
@@ -124,14 +122,12 @@ class ChatCompletionRequest(ChatCompletionRequest):
     max_tokens: int | None = DEFAULT_MAX_TOKENS
     spaces_between_special_tokens: Optional[bool] = False
     messages: Union[str, List[Dict[str, Any]]]
+    temperature: Optional[float] = 0.0
 
 
 class CompletionRequest(CompletionRequest):
-    functions: list[dict] | None = None
-    function_call: str | None = None
-    response_format: ResponseFormat | None = None
-    max_tokens: int | None = DEFAULT_MAX_TOKENS
     spaces_between_special_tokens: Optional[bool] = False
+    temperature: Optional[float] = 0.0
 
 
 class EndpointFilter(logging.Filter):
@@ -349,45 +345,12 @@ async def completions(
     else:
         prompt = request.prompt
     created_time = int(time.time())
-    try:
-        sampling_params = SamplingParams(
-            n=request.n,
-            best_of=request.best_of,
-            presence_penalty=request.presence_penalty,
-            frequency_penalty=request.frequency_penalty,
-            temperature=request.temperature,
-            top_p=request.top_p,
-            top_k=request.top_k,
-            stop=request.stop,
-            ignore_eos=request.ignore_eos,
-            max_tokens=request.max_tokens,
-            logprobs=request.logprobs,
-            use_beam_search=request.use_beam_search,
-        )
-    except ValueError as e:
-        return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
+    sampling_params = request.to_sampling_params()
 
-    result_generator = (
-        vllm_with_character_level_parser(
-            engine,
-            tokenizer,
-            prompt,
-            sampling_params,
-            request_id,
-            parser=JsonSchemaParser(
-                FunctionCallResult.model_json_schema()
-                if request.function_call
-                and request.function_call not in ("none", "auto")
-                else {}
-            ),
-        )
-        if request.response_format is not None
-        and request.response_format.type_ == "json_object"
-        else engine.generate(
-            prompt,
-            sampling_params,
-            request_id,
-        )
+    result_generator = engine.generate(
+        prompt,
+        sampling_params,
+        request_id,
     )
 
     # Similar to the OpenAI API, when n != best_of, we do not stream the
@@ -609,22 +572,7 @@ async def chat_completions(
     model_name = request.model
     request_id = f"cmpl-{random_uuid()}"
     created_time = int(time.time())
-    try:
-        sampling_params = SamplingParams(
-            n=request.n,
-            presence_penalty=request.presence_penalty or 0,
-            frequency_penalty=request.frequency_penalty or 1,
-            temperature=request.temperature or 1,
-            top_p=request.top_p or 1,
-            stop=request.stop,
-            max_tokens=request.max_tokens,
-            best_of=request.best_of,
-            top_k=request.top_k,
-            ignore_eos=request.ignore_eos,
-            use_beam_search=request.use_beam_search,
-        )
-    except ValueError as e:
-        return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
+    sampling_params = request.to_sampling_params()
 
     result_generator = (
         vllm_with_character_level_parser(
