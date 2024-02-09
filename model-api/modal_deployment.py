@@ -1,9 +1,8 @@
 import os
 
-from modal import Image, Secret, Stub, method, asgi_app, gpu
+from modal import Image, Secret, Stub, asgi_app, gpu
 
 ## Needed so that modal knows to package this directory
-import samantha_api
 
 MODEL_DIR = "/model"
 BASE_MODEL = "julep-ai/samantha-1-turbo"
@@ -67,9 +66,9 @@ stub = Stub("model-api", image=image)
 )
 @asgi_app()
 def get_app():
-    from samantha_api.web import create_app
+    from model_api.web import create_app
 
-    API_KEY = os.environ["API_KEY"]
+    assert os.environ["API_KEY"]
     REVISION = os.environ["REVISION"]
     BACKLOG = os.environ["BACKLOG"]
     BLOCK_SIZE = os.environ["BLOCK_SIZE"]

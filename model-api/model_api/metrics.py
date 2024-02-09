@@ -1,7 +1,12 @@
 import psutil
 from aioprometheus import Gauge, Counter, MetricsMiddleware
-from pynvml import *
-
+from pynvml import (
+    nvmlInit,
+    nvmlDeviceGetCount,
+    nvmlDeviceGetHandleByIndex,
+    nvmlDeviceGetMemoryInfo,
+    nvmlDeviceGetUtilizationRates,
+)
 
 nvmlInit()
 
@@ -15,7 +20,7 @@ def _gpu_usage():
             util = nvmlDeviceGetUtilizationRates(handle)
             util_gpu = util.gpu
             util_memory = util.memory
-        except:
+        except Exception:
             util_gpu = 0
             util_memory = 0
 

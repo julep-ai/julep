@@ -43,22 +43,23 @@ from vllm.entrypoints.openai.protocol import (
     UsageInfo,
 )
 from vllm.outputs import RequestOutput
-from samantha_api.conversion.conversions import to_prompt, parse_message
 
-from samantha_api.conversion.exceptions import (
+from .conversion.conversions import to_prompt, parse_message
+
+from .conversion.exceptions import (
     InvalidPromptException,
     InvalidFunctionName,
 )
-from samantha_api.logger import logger
-from samantha_api.env import sentry_dsn
-from samantha_api.metrics import (
+from .logger import logger
+from .env import sentry_dsn
+from .metrics import (
     tokens_per_user_metric,
     generation_time_metric,
     generated_tokens_per_second_metric,
     MetricsMiddleware,
 )
-from samantha_api.dependencies.auth import get_api_key
-from samantha_api.utils import (
+from .dependencies.auth import get_api_key
+from .utils import (
     validate_functions,
     vllm_with_character_level_parser,
     FunctionCallResult,
@@ -214,7 +215,7 @@ async def invalid_prompt_exception_handler(
 
 
 @app.exception_handler(InvalidFunctionName)
-async def invalid_prompt_exception_handler(request: Request, exc: InvalidFunctionName):
+async def invalid_function_name_handler(request: Request, exc: InvalidFunctionName):
     return JSONResponse(
         status_code=400,
         content={"error": {"message": str(exc), "code": "invalid function call"}},
@@ -222,7 +223,7 @@ async def invalid_prompt_exception_handler(request: Request, exc: InvalidFunctio
 
 
 @app.exception_handler(ValidationError)
-async def invalid_prompt_exception_handler(request: Request, exc: ValidationError):
+async def validation_error_handler(request: Request, exc: ValidationError):
     return JSONResponse(
         status_code=400,
         content={"error": {"message": str(exc), "code": "invalid functions parameter"}},
@@ -574,8 +575,11 @@ async def chat_completions(
     created_time = int(time.time())
     sampling_params = request.to_sampling_params()
 
-    result_generator = (
-        vllm_with_character_level_parser(
+    if (
+        request.response_format is not None
+        and request.response_format.type_ == "json_object"
+    ):
+        result_generator = vllm_with_character_level_parser(
             engine,
             tokenizer,
             prompt,
@@ -590,14 +594,13 @@ async def chat_completions(
                 ),
             ),
         )
-        if request.response_format is not None
-        and request.response_format.type_ == "json_object"
-        else engine.generate(
+
+    else:
+        result_generator = engine.generate(
             prompt,
             sampling_params,
             request_id,
         )
-    )
 
     async def abort_request() -> None:
         await engine.abort(request_id)
