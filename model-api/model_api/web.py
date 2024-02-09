@@ -215,7 +215,7 @@ async def invalid_prompt_exception_handler(
 
 
 @app.exception_handler(json.decoder.JSONDecodeError)
-async def invalid_prompt_exception_handler(
+async def json_decode_error_handler(
     request: Request, exc: json.decoder.JSONDecodeError
 ):
     return JSONResponse(
@@ -810,25 +810,47 @@ async def me():
     return {"status": "ok"}
 
 
+app.add_middleware(
+    MetricsMiddleware,
+    exclude_paths=["/metrics", "/docs", "/status"],
+)
+
+app.add_route("/metrics", metrics)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins="*",
+    allow_methods="*",
+    allow_headers="*",
+)
+# app.add_middleware(
+#     BaseHTTPMiddleware,
+#     dispatch=make_logging_middleware(
+#         exclude_urls=["/status", "/docs", "/openapi.json"]
+#     ),
+# )
+# # TODO: should we enable this middleware for completion endpoints only?
+# app.add_middleware(
+#     BaseHTTPMiddleware,
+#     dispatch=make_billing_middleware(
+#         exclude_urls=[
+#             "/status",
+#             "/v1/models",
+#             "/docs",
+#             "/openapi.json",
+#             "/metrics",
+#         ]
+#     ),
+# )
+
+
 def create_app(args=None):
     global engine, engine_model_config, tokenizer, served_model
 
     parser = argparse.ArgumentParser(
         description="vLLM OpenAI-Compatible RESTful API server."
-    )
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="host name")
-    parser.add_argument("--port", type=int, default=8000, help="port number")
-    parser.add_argument(
-        "--allow-credentials", action="store_true", help="allow credentials"
-    )
-    parser.add_argument(
-        "--allowed-origins", type=json.loads, default=["*"], help="allowed origins"
-    )
-    parser.add_argument(
-        "--allowed-methods", type=json.loads, default=["*"], help="allowed methods"
-    )
-    parser.add_argument(
-        "--allowed-headers", type=json.loads, default=["*"], help="allowed headers"
     )
     parser.add_argument(
         "--log-stats", type=bool, default=True, help="log stats metrics"
@@ -841,48 +863,9 @@ def create_app(args=None):
         "specified, the model name will be the same as "
         "the huggingface name.",
     )
-    parser.add_argument(
-        "--backlog",
-        type=int,
-        default=2048,
-        help="Maximum number of connections to hold in backlog",
-    )
 
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args(args=args)
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=args.allowed_origins,
-        allow_credentials=args.allow_credentials,
-        allow_methods=args.allowed_methods,
-        allow_headers=args.allowed_headers,
-    )
-    # app.add_middleware(
-    #     BaseHTTPMiddleware,
-    #     dispatch=make_logging_middleware(
-    #         exclude_urls=["/status", "/docs", "/openapi.json"]
-    #     ),
-    # )
-    # # TODO: should we enable this middleware for completion endpoints only?
-    # app.add_middleware(
-    #     BaseHTTPMiddleware,
-    #     dispatch=make_billing_middleware(
-    #         exclude_urls=[
-    #             "/status",
-    #             "/v1/models",
-    #             "/docs",
-    #             "/openapi.json",
-    #             "/metrics",
-    #         ]
-    #     ),
-    # )
-
-    app.add_middleware(
-        MetricsMiddleware,
-        exclude_paths=["/metrics", "/docs", "/status"],
-    )
-    app.add_route("/metrics", metrics)
 
     logger.info(f"args: {args}")
 
@@ -904,19 +887,4 @@ def create_app(args=None):
 
     add_global_metrics_labels(model_name=engine_args.model)
 
-    return app, args
-
-
-if __name__ == "__main__":
-    app, args = create_app()
-
-    import uvicorn
-
-    uvicorn.run(
-        app,
-        host=args.host,
-        port=args.port,
-        log_level="info",
-        timeout_keep_alive=TIMEOUT_KEEP_ALIVE,
-        backlog=args.backlog,
-    )
+    return app
