@@ -1,7 +1,8 @@
-import re
-import json
 from io import StringIO
+import json
+import re
 from typing import Optional
+
 from .datatypes import ChatML, ChatMLMessage
 from .exceptions import InvalidPromptException, InvalidFunctionName
 
@@ -54,16 +55,16 @@ def message_role_to_prefix(message: ChatMLMessage) -> str:
         case {"role": "assistant", **rest}:
             return "me"
         case {"role": "function_call", **rest}:
-            return f"function_call"
+            return "function_call"
 
 
 def _check_last_message(message: ChatMLMessage):
     match message:
         case (
-            {"role": "system", "name": "thought", **rest}
-            | {"role": "assistant", **rest}
-            | {"role": "system", "name": "functions", **rest}
-            | {"role": "function_call", **rest}
+            {"role": "system", "name": "thought", **_rest}
+            | {"role": "assistant", **_rest}
+            | {"role": "system", "name": "functions", **_rest}
+            | {"role": "function_call", **_rest}
         ):
             return True
 

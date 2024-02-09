@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "model_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 uvicorn = "^0.25.0"
 fastapi = "^0.108.0"
 torch = "^2.1.2"
@@ -21,6 +21,7 @@ vllm = "^0.3.0"
 jsonschema = "^4.21.1"
 aioprometheus = {extras = ["starlette"], version = "^23.12.0"}
 lm-format-enforcer = "^0.8.3"
+interegular = "^0.3.3"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -28,7 +29,20 @@ black = "^23.12.1"
 pytest = "^8.0.0"
 modal = "^0.56.4964"
 ipython = "^8.21.0"
+ruff = "^0.1.9"
+poethepoet = "^0.24.4"
+pytype = "^2024.1.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+prettify = "black ."
+lint = "ruff **/*.py --fix --unsafe-fixes"
+typecheck = "pytype model_api"
+check = [
+    "prettify",
+    "lint",
+    "typecheck",
+]
