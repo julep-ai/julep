@@ -51,7 +51,7 @@ from .conversion.exceptions import (
     InvalidFunctionName,
 )
 from .logger import logger
-from .env import host, port, sentry_dsn
+from .env import sentry_dsn
 from .metrics import (
     tokens_per_user_metric,
     generation_time_metric,
@@ -215,7 +215,7 @@ async def invalid_prompt_exception_handler(
 
 
 @app.exception_handler(json.decoder.JSONDecodeError)
-async def invalid_prompt_exception_handler(
+async def json_decode_error_handler(
     request: Request, exc: json.decoder.JSONDecodeError
 ):
     return JSONResponse(
