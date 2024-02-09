@@ -1,3 +1,4 @@
 ngrok*
 .env*
 .env
+*.pyc

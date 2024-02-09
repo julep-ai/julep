@@ -214,6 +214,16 @@ async def invalid_prompt_exception_handler(
     )
 
 
+@app.exception_handler(json.decoder.JSONDecodeError)
+async def invalid_prompt_exception_handler(
+    request: Request, exc: json.decoder.JSONDecodeError
+):
+    return JSONResponse(
+        status_code=400,
+        content={"error": {"message": str(exc), "code": "invalid json input"}},
+    )
+
+
 @app.exception_handler(InvalidFunctionName)
 async def invalid_function_name_handler(request: Request, exc: InvalidFunctionName):
     return JSONResponse(
