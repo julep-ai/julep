@@ -4,12 +4,7 @@
 import * as JulepApi from "../..";
 /**
  * @example
- *     {
- *         additionalInformation: [{
- *                 title: "string",
- *                 content: "string"
- *             }]
- *     }
+ *     {}
  */
 export interface CreateUserRequest {
   /** Name of the user */

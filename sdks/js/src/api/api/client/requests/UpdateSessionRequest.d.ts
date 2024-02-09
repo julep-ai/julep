@@ -4,7 +4,7 @@
 /**
  * @example
  *     {
- *         situation: "string"
+ *         situation: "situation"
  *     }
  */
 export interface UpdateSessionRequest {

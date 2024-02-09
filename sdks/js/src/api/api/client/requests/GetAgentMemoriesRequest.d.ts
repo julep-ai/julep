@@ -4,7 +4,7 @@
 /**
  * @example
  *     {
- *         query: "string"
+ *         query: "query"
  *     }
  */
 export interface GetAgentMemoriesRequest {

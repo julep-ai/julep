@@ -4,8 +4,8 @@
 /**
  * @example
  *     {
- *         userId: "string",
- *         agentId: "string"
+ *         userId: "user_id",
+ *         agentId: "agent_id"
  *     }
  */
 export interface CreateSessionRequest {
