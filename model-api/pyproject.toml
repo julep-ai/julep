@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "samantha-api"
+name = "model-api"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Julep Developers <developers@julep.ai>"]
 readme = "README.md"
-packages = [{include = "samantha_api"}]
+packages = [{include = "model_api"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -27,6 +27,7 @@ lm-format-enforcer = "^0.8.3"
 black = "^23.12.1"
 pytest = "^8.0.0"
 modal = "^0.56.4964"
+ipython = "^8.21.0"
 
 [build-system]
 requires = ["poetry-core"]
