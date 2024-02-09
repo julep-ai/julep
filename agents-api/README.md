@@ -5,7 +5,7 @@
 1. Start the temporal dev server
    `temporal server start-dev --db-filename temporal.db`
 2. Start the worker
-   `python -m memory_api.worker`
+   `python -m agents_api.worker`
 
 ---
 
@@ -13,7 +13,7 @@
 
 #### DIRECTORY CONVENTION
 
-- `memory_api/models/{relation_prefix}/`
+- `agents_api/models/{relation_prefix}/`
 
   - `__init__.py`
   - `schema.py` # DDL
