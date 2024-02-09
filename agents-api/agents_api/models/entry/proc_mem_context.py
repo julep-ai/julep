@@ -112,7 +112,7 @@ def proc_mem_context_query(
             content: String,
             token_count: Int,
             created_at: Float,
-            index: Int,
+            index: Float,
         }}
     }} {{
         # Collect all instructions
@@ -163,7 +163,7 @@ def proc_mem_context_query(
             content: String,
             token_count: Int,
             created_at: Float,
-            index: Int,
+            index: Float,
         }}
     }} {{
         # Collect all tools
@@ -203,7 +203,7 @@ def proc_mem_context_query(
             content: String,
             token_count: Int,
             created_at: Float,
-            index: Int,
+            index: Float,
         }}
     }} {{
         # Collect additional_info docs
@@ -267,7 +267,7 @@ def proc_mem_context_query(
             content: String,
             token_count: Int,
             created_at: Float,
-            index: Int,
+            index: Float,
         }}
     }} {{
         # Collect all entries
@@ -297,7 +297,7 @@ def proc_mem_context_query(
             content: String,
             token_count: Int,
             created_at: Float,
-            index: Int,
+            index: Float,
         }}
     }} {{
         # Combine all
