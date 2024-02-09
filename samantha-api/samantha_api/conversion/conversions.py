@@ -143,23 +143,39 @@ def to_prompt(
         raise InvalidPromptException("must be a list")
 
     if functions:
-        if function_call not in ("auto", None):
-            functions = _validate_functions(functions, function_call)
-        funcs = {
-            "role": "system",
-            "name": "functions",
-            "content": "\n".join([json.dumps(f, indent=4) for f in functions]),
-        }
-        if not messages[-1].get("continue"):
-            messages.append(funcs)
-            if function_call not in ("auto", None, "none"):
-                fun_call = {"role": "function_call", "continue": True}
-                fun_call.update({"content": f'{{"name": "{function_call}", '})
-                messages.append(fun_call)
-        elif (
-            messages[-1].get("continue") and messages[-1].get("role") == "function_call"
-        ):
-            messages.insert(-1, funcs)
+        if function_call not in ("auto", "none", None):
+            functions = {
+                "role": "system",
+                "name": "functions",
+                "content": "\n".join(
+                    [
+                        json.dumps(f, indent=4)
+                        for f in _validate_functions(functions, function_call)
+                    ]
+                ),
+            }
+            messages.insert(1, functions)
+            fun_call = {"role": "function_call", "continue": True}
+            fun_call.update({"content": f'{{"name": "{function_call}", '})
+
+            if messages[-1].get("continue"):
+                raise InvalidPromptException(
+                    "Conflicting instructions, "
+                    "please remove the last instruction with 'continue' "
+                    "flag set to 'true' or set the flag to 'false'. "
+                    "You can either remove `functions` and/or `function_call` parameters."
+                )
+
+            messages.append(fun_call)
+        elif function_call in ("auto", None):
+            messages.insert(
+                1,
+                {
+                    "role": "system",
+                    "name": "functions",
+                    "content": "\n".join([json.dumps(f, indent=4) for f in functions]),
+                },
+            )
 
     prompt = StringIO()
     add_extra_message = False
