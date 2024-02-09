@@ -19,7 +19,7 @@ def test_function_call_none_last_not_continue():
     )
     assert (
         prompt
-        == f"""<|im_start|>situation
+        == """<|im_start|>situation
 I am talking to John<|im_end|>
 <|im_start|>me (Samantha)
 Hey John<|im_end|>
@@ -46,7 +46,7 @@ def test_function_call_auto_functions_not_passed():
     )
     assert (
         prompt
-        == f"""<|im_start|>situation
+        == """<|im_start|>situation
 I am talking to John<|im_end|>
 <|im_start|>me (Samantha)
 Hey John<|im_end|>
@@ -73,7 +73,7 @@ def test_function_call_none_functions_not_passed():
     )
     assert (
         prompt
-        == f"""<|im_start|>situation
+        == """<|im_start|>situation
 I am talking to John<|im_end|>
 <|im_start|>me (Samantha)
 Hey John<|im_end|>
@@ -217,7 +217,7 @@ def test_function_call_none_last_continue():
     )
     assert (
         prompt
-        == f"""<|im_start|>situation
+        == """<|im_start|>situation
 I am talking to John<|im_end|>
 <|im_start|>me (Samantha)
 Hey John<|im_end|>
