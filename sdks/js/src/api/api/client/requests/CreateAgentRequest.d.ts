@@ -5,29 +5,9 @@ import * as JulepApi from "../..";
 /**
  * @example
  *     {
- *         name: "string",
- *         about: "string",
- *         instructions: [{
- *                 content: "string"
- *             }],
- *         tools: [{
- *                 type: JulepApi.CreateToolRequestType.Function,
- *                 definition: {
- *                     name: "string",
- *                     parameters: {
- *                         "string": "string"
- *                     }
- *                 }
- *             }],
- *         defaultSettings: {
- *             temperature: 1,
- *             topP: 1
- *         },
- *         model: "string",
- *         additionalInfo: [{
- *                 title: "string",
- *                 content: "string"
- *             }]
+ *         name: "name",
+ *         about: "about",
+ *         model: "model"
  *     }
  */
 export interface CreateAgentRequest {

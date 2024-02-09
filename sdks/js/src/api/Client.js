@@ -137,7 +137,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ListSessionsResponse.parseOrThrow(
@@ -176,8 +175,8 @@ class JulepApiClient {
    *
    * @example
    *     await julepApi.createSession({
-   *         userId: "string",
-   *         agentId: "string"
+   *         userId: "user_id",
+   *         agentId: "agent_id"
    *     })
    */
   createSession(request, requestOptions) {
@@ -210,7 +209,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -286,7 +284,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ListUsersResponse.parseOrThrow(
@@ -324,12 +321,7 @@ class JulepApiClient {
    * Create a new user
    *
    * @example
-   *     await julepApi.createUser({
-   *         additionalInformation: [{
-   *                 title: "string",
-   *                 content: "string"
-   *             }]
-   *     })
+   *     await julepApi.createUser({})
    */
   createUser(request = {}, requestOptions) {
     var _a;
@@ -361,7 +353,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -437,7 +428,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ListAgentsResponse.parseOrThrow(
@@ -476,29 +466,9 @@ class JulepApiClient {
    *
    * @example
    *     await julepApi.createAgent({
-   *         name: "string",
-   *         about: "string",
-   *         instructions: [{
-   *                 content: "string"
-   *             }],
-   *         tools: [{
-   *                 type: JulepApi.CreateToolRequestType.Function,
-   *                 definition: {
-   *                     name: "string",
-   *                     parameters: {
-   *                         "string": "string"
-   *                     }
-   *                 }
-   *             }],
-   *         defaultSettings: {
-   *             temperature: 1,
-   *             topP: 1
-   *         },
-   *         model: "string",
-   *         additionalInfo: [{
-   *                 title: "string",
-   *                 content: "string"
-   *             }]
+   *         name: "name",
+   *         about: "about",
+   *         model: "model"
    *     })
    */
   createAgent(request, requestOptions) {
@@ -531,7 +501,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -569,7 +538,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.getSession("string")
+   *     await julepApi.getSession("session_id")
    */
   getSession(sessionId, requestOptions) {
     var _a;
@@ -598,7 +567,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.Session.parseOrThrow(_response.body, {
@@ -633,8 +601,8 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateSession("string", {
-   *         situation: "string"
+   *     await julepApi.updateSession("session_id", {
+   *         situation: "situation"
    *     })
    */
   updateSession(sessionId, request, requestOptions) {
@@ -667,7 +635,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -705,7 +672,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteSession("string")
+   *     await julepApi.deleteSession("session_id")
    */
   deleteSession(sessionId, requestOptions) {
     var _a;
@@ -734,7 +701,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -764,7 +730,7 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getSuggestions("string", {})
+   *     await julepApi.getSuggestions("session_id", {})
    */
   getSuggestions(sessionId, request = {}, requestOptions) {
     var _a;
@@ -802,7 +768,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetSuggestionsResponse.parseOrThrow(
@@ -840,7 +805,7 @@ class JulepApiClient {
    * Sorted (created_at ascending)
    *
    * @example
-   *     await julepApi.getHistory("string", {})
+   *     await julepApi.getHistory("session_id", {})
    */
   getHistory(sessionId, request = {}, requestOptions) {
     var _a;
@@ -878,7 +843,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetHistoryResponse.parseOrThrow(
@@ -916,26 +880,11 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.chat("string", {
+   *     await julepApi.chat("session_id", {
    *         accept: "application/json",
-   *         responseFormat: {
-   *             type: JulepApi.ChatSettingsResponseFormatType.Text
-   *         },
-   *         temperature: 1,
-   *         topP: 1,
    *         messages: [{
    *                 role: JulepApi.InputChatMlMessageRole.User,
-   *                 content: "string"
-   *             }],
-   *         tools: [{
-   *                 type: JulepApi.ToolType.Function,
-   *                 definition: {
-   *                     name: "string",
-   *                     parameters: {
-   *                         "string": "string"
-   *                     }
-   *                 },
-   *                 id: "string"
+   *                 content: "content"
    *             }]
    *     })
    */
@@ -970,7 +919,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ChatResponse.parseOrThrow(_response.body, {
@@ -1005,8 +953,8 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentMemories("string", {
-   *         query: "string"
+   *     await julepApi.getAgentMemories("agent_id", {
+   *         query: "query"
    *     })
    */
   getAgentMemories(agentId, request, requestOptions) {
@@ -1056,7 +1004,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetAgentMemoriesResponse.parseOrThrow(
@@ -1094,7 +1041,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.getUser("string")
+   *     await julepApi.getUser("user_id")
    */
   getUser(userId, requestOptions) {
     var _a;
@@ -1123,7 +1070,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.User.parseOrThrow(_response.body, {
@@ -1158,7 +1104,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateUser("string", {})
+   *     await julepApi.updateUser("user_id", {})
    */
   updateUser(userId, request = {}, requestOptions) {
     var _a;
@@ -1190,7 +1136,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -1228,7 +1173,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteUser("string")
+   *     await julepApi.deleteUser("user_id")
    */
   deleteUser(userId, requestOptions) {
     var _a;
@@ -1257,7 +1202,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1287,7 +1231,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.getAgent("string")
+   *     await julepApi.getAgent("agent_id")
    */
   getAgent(agentId, requestOptions) {
     var _a;
@@ -1316,7 +1260,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.Agent.parseOrThrow(_response.body, {
@@ -1351,15 +1294,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateAgent("string", {
-   *         instructions: [{
-   *                 content: "string"
-   *             }],
-   *         defaultSettings: {
-   *             temperature: 1,
-   *             topP: 1
-   *         }
-   *     })
+   *     await julepApi.updateAgent("agent_id", {})
    */
   updateAgent(agentId, request = {}, requestOptions) {
     var _a;
@@ -1391,7 +1326,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -1429,7 +1363,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgent("string")
+   *     await julepApi.deleteAgent("agent_id")
    */
   deleteAgent(agentId, requestOptions) {
     var _a;
@@ -1458,7 +1392,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1488,7 +1421,7 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentAdditionalInfo("string", {})
+   *     await julepApi.getAgentAdditionalInfo("agent_id", {})
    */
   getAgentAdditionalInfo(agentId, request = {}, requestOptions) {
     var _a;
@@ -1526,7 +1459,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetAgentAdditionalInfoResponse.parseOrThrow(
@@ -1564,9 +1496,9 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createAgentAdditionalInfo("string", {
-   *         title: "string",
-   *         content: "string"
+   *     await julepApi.createAgentAdditionalInfo("agent_id", {
+   *         title: "title",
+   *         content: "content"
    *     })
    */
   createAgentAdditionalInfo(agentId, request, requestOptions) {
@@ -1602,7 +1534,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -1640,7 +1571,7 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getUserAdditionalInfo("string", {})
+   *     await julepApi.getUserAdditionalInfo("user_id", {})
    */
   getUserAdditionalInfo(userId, request = {}, requestOptions) {
     var _a;
@@ -1678,7 +1609,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetUserAdditionalInfoResponse.parseOrThrow(
@@ -1716,9 +1646,9 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createUserAdditionalInfo("string", {
-   *         title: "string",
-   *         content: "string"
+   *     await julepApi.createUserAdditionalInfo("user_id", {
+   *         title: "title",
+   *         content: "content"
    *     })
    */
   createUserAdditionalInfo(userId, request, requestOptions) {
@@ -1754,7 +1684,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -1792,7 +1721,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteUserAdditionalInfo("string", "string")
+   *     await julepApi.deleteUserAdditionalInfo("user_id", "additional_info_id")
    */
   deleteUserAdditionalInfo(userId, additionalInfoId, requestOptions) {
     var _a;
@@ -1821,7 +1750,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1851,7 +1779,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentAdditionalInfo("string", "string")
+   *     await julepApi.deleteAgentAdditionalInfo("agent_id", "additional_info_id")
    */
   deleteAgentAdditionalInfo(agentId, additionalInfoId, requestOptions) {
     var _a;
@@ -1880,7 +1808,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1910,7 +1837,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentMemory("string", "string")
+   *     await julepApi.deleteAgentMemory("agent_id", "memory_id")
    */
   deleteAgentMemory(agentId, memoryId, requestOptions) {
     var _a;
@@ -1939,7 +1866,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1969,7 +1895,7 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentTools("string", {})
+   *     await julepApi.getAgentTools("agent_id", {})
    */
   getAgentTools(agentId, request = {}, requestOptions) {
     var _a;
@@ -2007,7 +1933,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetAgentToolsResponse.parseOrThrow(
@@ -2045,13 +1970,11 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createAgentTool("string", {
+   *     await julepApi.createAgentTool("agent_id", {
    *         type: JulepApi.CreateToolRequestType.Function,
    *         definition: {
-   *             name: "string",
-   *             parameters: {
-   *                 "string": "string"
-   *             }
+   *             name: "name",
+   *             parameters: {}
    *         }
    *     })
    */
@@ -2085,7 +2008,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -2123,12 +2045,10 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateAgentTool("string", "string", {
+   *     await julepApi.updateAgentTool("agent_id", "tool_id", {
    *         definition: {
-   *             name: "string",
-   *             parameters: {
-   *                 "string": "string"
-   *             }
+   *             name: "name",
+   *             parameters: {}
    *         }
    *     })
    */
@@ -2162,7 +2082,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -2200,7 +2119,7 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentTool("string", "string")
+   *     await julepApi.deleteAgentTool("agent_id", "tool_id")
    */
   deleteAgentTool(agentId, toolId, requestOptions) {
     var _a;
@@ -2229,7 +2148,6 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
-        withCredentials: true,
       });
       if (_response.ok) {
         return;

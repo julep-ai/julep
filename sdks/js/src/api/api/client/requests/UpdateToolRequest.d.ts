@@ -6,10 +6,8 @@ import * as JulepApi from "../..";
  * @example
  *     {
  *         definition: {
- *             name: "string",
- *             parameters: {
- *                 "string": "string"
- *             }
+ *             name: "name",
+ *             parameters: {}
  *         }
  *     }
  */

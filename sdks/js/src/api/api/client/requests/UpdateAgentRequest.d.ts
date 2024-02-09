@@ -4,15 +4,7 @@
 import * as JulepApi from "../..";
 /**
  * @example
- *     {
- *         instructions: [{
- *                 content: "string"
- *             }],
- *         defaultSettings: {
- *             temperature: 1,
- *             topP: 1
- *         }
- *     }
+ *     {}
  */
 export interface UpdateAgentRequest {
   /** About the agent */
