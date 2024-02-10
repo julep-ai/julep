@@ -2,7 +2,7 @@
 
 import openai
 from uuid import UUID
-from typing import Awaitable, Callable
+from typing import Callable
 from textwrap import dedent
 from temporalio import activity
 from agents_api.clients.cozo import client
@@ -127,7 +127,7 @@ async def run_prompt(
     temperature: float = 0.1,
     parser: Callable[[str], str] = lambda x: x,
     **kwargs,
-) -> Awaitable[str]:
+) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
 
     response = await openai.Completion.acreate(

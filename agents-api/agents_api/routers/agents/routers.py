@@ -1,9 +1,10 @@
-import json
-from uuid import uuid4
-from typing import Annotated
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends
-from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+import json
 from pydantic import UUID4, BaseModel
+from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+from typing import Annotated
+from uuid import uuid4
 
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
@@ -13,20 +14,20 @@ from agents_api.models.agent.delete_agent import delete_agent_query
 from agents_api.models.agent.update_agent import update_agent_query
 from agents_api.models.agent.get_agent import get_agent_query
 from agents_api.models.agent.update_tool import update_tool_by_id_query
-from agents_api.models.additional_info.create_additional_info import (
-    create_additional_info_query,
+from agents_api.models.docs.create_docs import (
+    create_docs_query,
 )
-from agents_api.models.additional_info.list_additional_info import (
-    list_additional_info_snippets_by_owner_query,
+from agents_api.models.docs.list_docs import (
+    list_docs_snippets_by_owner_query,
 )
-from agents_api.models.additional_info.delete_additional_info import (
-    delete_additional_info_by_id_query,
+from agents_api.models.docs.delete_docs import (
+    delete_docs_by_id_query,
 )
-from agents_api.models.additional_info.get_additional_info import (
-    get_additional_info_snippets_by_id_query,
+from agents_api.models.docs.get_docs import (
+    get_docs_snippets_by_id_query,
 )
-from agents_api.models.additional_info.embed_additional_info import (
-    embed_additional_info_snippets_query,
+from agents_api.models.docs.embed_docs import (
+    embed_docs_snippets_query,
 )
 from agents_api.models.tools.create_tools import create_function_query
 from agents_api.models.tools.embed_tools import embed_functions_query
@@ -44,10 +45,11 @@ from agents_api.autogen.openapi_model import (
     CreateAgentRequest,
     UpdateAgentRequest,
     ResourceCreatedResponse,
+    ResourceDeletedResponse,
     ResourceUpdatedResponse,
     AgentDefaultSettings,
-    CreateAdditionalInfoRequest,
-    AdditionalInfo,
+    CreateDoc,
+    Doc,
     CreateToolRequest,
     Tool,
     FunctionDef,
@@ -58,8 +60,8 @@ class AgentList(BaseModel):
     items: list[Agent]
 
 
-class AdditionalInfoList(BaseModel):
-    items: list[AdditionalInfo]
+class DocsList(BaseModel):
+    items: list[Doc]
 
 
 class ToolList(BaseModel):
@@ -75,9 +77,11 @@ instruction_embed_instruction = "Embed this historical text chunk for retrieval:
 @router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
 async def delete_agent(
     agent_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
-):
+) -> ResourceDeletedResponse:
     # TODO: add 404 handling
     client.run(delete_agent_query(x_developer_id, agent_id))
+
+    return ResourceDeletedResponse(id=agent_id, deleted_at=datetime.now())
 
 
 @router.put("/agents/{agent_id}", tags=["agents"])
@@ -187,18 +191,18 @@ async def create_agent(
         created_at=resp["created_at"][0],
     )
 
-    if request.additional_info:
+    if request.docs:
         client.run(
             "\n".join(
                 [
-                    create_additional_info_query(
+                    create_docs_query(
                         owner_type="agent",
                         owner_id=new_agent_id,
                         id=uuid4(),
                         title=info.title,
                         content=info.content,
                     )
-                    for info in request.additional_info
+                    for info in request.docs
                 ]
             )
         )
@@ -242,24 +246,22 @@ async def list_agents(
     )
 
 
-@router.post("/agents/{agent_id}/additional_info", tags=["agents"])
-async def create_additional_info(
-    agent_id: UUID4, request: CreateAdditionalInfoRequest
-) -> ResourceCreatedResponse:
-    additional_info_id = uuid4()
+@router.post("/agents/{agent_id}/docs", tags=["agents"])
+async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
+    doc_id = uuid4()
     resp = client.run(
-        create_additional_info_query(
+        create_docs_query(
             owner_type="agent",
             owner_id=agent_id,
-            id=additional_info_id,
+            id=doc_id,
             title=request.title,
             content=request.content,
         )
     )
 
-    additional_info_id = resp["additional_info_id"][0]
+    doc_id = resp["doc_id"][0]
     res = ResourceCreatedResponse(
-        id=additional_info_id,
+        id=doc_id,
         created_at=resp["created_at"][0],
     )
 
@@ -272,8 +274,8 @@ async def create_additional_info(
     )
 
     client.run(
-        embed_additional_info_snippets_query(
-            additional_info_id=additional_info_id,
+        embed_docs_snippets_query(
+            doc_id=doc_id,
             snippet_indices=indices,
             embeddings=embeddings,
         )
@@ -282,21 +284,19 @@ async def create_additional_info(
     return res
 
 
-@router.get("/agents/{agent_id}/additional_info", tags=["agents"])
-async def list_additional_info(
-    agent_id: UUID4, limit: int = 100, offset: int = 0
-) -> AdditionalInfoList:
+@router.get("/agents/{agent_id}/docs", tags=["agents"])
+async def list_docs(agent_id: UUID4, limit: int = 100, offset: int = 0) -> DocsList:
     resp = client.run(
-        list_additional_info_snippets_by_owner_query(
+        list_docs_snippets_by_owner_query(
             owner_type="agent",
             owner_id=agent_id,
         )
     )
 
-    return AdditionalInfoList(
+    return DocsList(
         items=[
-            AdditionalInfo(
-                id=row["additional_info_id"],
+            Doc(
+                id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
             )
@@ -305,29 +305,29 @@ async def list_additional_info(
     )
 
 
-@router.delete(
-    "/agents/{agent_id}/additional_info/{additional_info_id}", tags=["agents"]
-)
-async def delete_additional_info(agent_id: UUID4, additional_info_id: UUID4):
+@router.delete("/agents/{agent_id}/docs/{doc_id}", tags=["agents"])
+async def delete_docs(agent_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse:
     resp = client.run(
-        get_additional_info_snippets_by_id_query(
+        get_docs_snippets_by_id_query(
             owner_type="agent",
-            additional_info_id=additional_info_id,
+            doc_id=doc_id,
         )
     )
     if not resp.size:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Additional info not found",
+            detail="Docs not found",
         )
 
     client.run(
-        delete_additional_info_by_id_query(
+        delete_docs_by_id_query(
             owner_type="agent",
             owner_id=agent_id,
-            additional_info_id=additional_info_id,
+            doc_id=doc_id,
         )
     )
+
+    return ResourceDeletedResponse(id=doc_id, deleted_at=datetime.now())
 
 
 @router.post("/agents/{agent_id}/tools", tags=["agents"])
@@ -395,7 +395,7 @@ async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> Tool
 
 
 @router.delete("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
-async def delete_tool(agent_id: UUID4, tool_id: UUID4):
+async def delete_tool(agent_id: UUID4, tool_id: UUID4) -> ResourceDeletedResponse:
     resp = client.run(
         get_function_by_id_query(
             agent_id=agent_id,
@@ -414,6 +414,8 @@ async def delete_tool(agent_id: UUID4, tool_id: UUID4):
             tool_id=tool_id,
         )
     )
+
+    return ResourceDeletedResponse(id=tool_id, deleted_at=datetime.now())
 
 
 @router.put("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
@@ -446,10 +448,12 @@ async def update_tool(
 
 
 @router.delete("/agents/{agent_id}/memories/{memory_id}", tags=["agents"])
-async def delete_memories(agent_id: UUID4, memory_id: UUID4):
+async def delete_memories(agent_id: UUID4, memory_id: UUID4) -> ResourceDeletedResponse:
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
     )
+
+    return ResourceDeletedResponse(id=memory_id, deleted_at=datetime.now())
 
 
 # @router.get("/agents/{agent_id}/memories", tags=["agents"])

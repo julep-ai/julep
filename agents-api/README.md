@@ -63,7 +63,7 @@
 
 - all entries that are root nodes in summarization chain
 
-### phase 4 (additional_info):
+### phase 4 (docs):
 
 -
 

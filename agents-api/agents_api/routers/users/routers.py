@@ -1,28 +1,31 @@
+from datetime import datetime
 from typing import Annotated
 from uuid import uuid4
-from pydantic import UUID4, BaseModel
+
 from fastapi import APIRouter, HTTPException, status, Depends
+from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
 from agents_api.models.user.create_user import create_user_query
 from agents_api.models.user.list_users import list_users_query
 from agents_api.models.user.update_user import update_user_query
 from agents_api.models.user.get_user import get_user_query
-from agents_api.models.additional_info.create_additional_info import (
-    create_additional_info_query,
+from agents_api.models.docs.create_docs import (
+    create_docs_query,
 )
-from agents_api.models.additional_info.list_additional_info import (
-    list_additional_info_snippets_by_owner_query,
+from agents_api.models.docs.list_docs import (
+    list_docs_snippets_by_owner_query,
 )
-from agents_api.models.additional_info.delete_additional_info import (
-    delete_additional_info_by_id_query,
+from agents_api.models.docs.delete_docs import (
+    delete_docs_by_id_query,
 )
-from agents_api.models.additional_info.get_additional_info import (
-    get_additional_info_snippets_by_id_query,
+from agents_api.models.docs.get_docs import (
+    get_docs_snippets_by_id_query,
 )
-from agents_api.models.additional_info.embed_additional_info import (
-    embed_additional_info_snippets_query,
+from agents_api.models.docs.embed_docs import (
+    embed_docs_snippets_query,
 )
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.autogen.openapi_model import (
@@ -30,9 +33,10 @@ from agents_api.autogen.openapi_model import (
     CreateUserRequest,
     UpdateUserRequest,
     ResourceCreatedResponse,
+    ResourceDeletedResponse,
     ResourceUpdatedResponse,
-    CreateAdditionalInfoRequest,
-    AdditionalInfo,
+    CreateDoc,
+    Doc,
 )
 
 
@@ -40,8 +44,8 @@ class UserList(BaseModel):
     items: list[User]
 
 
-class AdditionalInfoList(BaseModel):
-    items: list[AdditionalInfo]
+class DocsList(BaseModel):
+    items: list[Doc]
 
 
 router = APIRouter()
@@ -51,7 +55,7 @@ snippet_embed_instruction = "Encode this passage for retrieval: "
 @router.delete("/users/{user_id}", status_code=HTTP_202_ACCEPTED, tags=["users"])
 async def delete_user(
     user_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
-):
+) -> ResourceDeletedResponse:
     # TODO: add 404 handling
     client.rm(
         "users",
@@ -60,6 +64,8 @@ async def delete_user(
             "developer_id": str(x_developer_id),
         },
     )
+
+    return ResourceDeletedResponse(id=user_id, deleted_at=datetime.now())
 
 
 @router.put("/users/{user_id}", tags=["users"])
@@ -133,18 +139,18 @@ async def create_user(
         created_at=resp["created_at"][0],
     )
 
-    if request.additional_information:
+    if request.docs:
         client.run(
             "\n".join(
                 [
-                    create_additional_info_query(
+                    create_docs_query(
                         owner_type="user",
                         owner_id=new_user_id,
                         id=uuid4(),
                         title=info.title,
                         content=info.content,
                     )
-                    for info in request.additional_information
+                    for info in request.docs
                 ]
             )
         )
@@ -172,24 +178,22 @@ async def list_users(
     )
 
 
-@router.post("/users/{user_id}/additional_info", tags=["users"])
-async def create_additional_info(
-    user_id: UUID4, request: CreateAdditionalInfoRequest
-) -> ResourceCreatedResponse:
-    additional_info_id = uuid4()
+@router.post("/users/{user_id}/docs", tags=["users"])
+async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
+    doc_id = uuid4()
     resp = client.run(
-        create_additional_info_query(
+        create_docs_query(
             owner_type="user",
             owner_id=user_id,
-            id=additional_info_id,
+            id=doc_id,
             title=request.title,
             content=request.content,
         )
     )
 
-    additional_info_id = resp["additional_info_id"][0]
+    doc_id = resp["doc_id"][0]
     res = ResourceCreatedResponse(
-        id=additional_info_id,
+        id=doc_id,
         created_at=resp["created_at"][0],
     )
 
@@ -202,8 +206,8 @@ async def create_additional_info(
     )
 
     client.run(
-        embed_additional_info_snippets_query(
-            additional_info_id=additional_info_id,
+        embed_docs_snippets_query(
+            doc_id=doc_id,
             snippet_indices=indices,
             embeddings=embeddings,
         )
@@ -212,21 +216,19 @@ async def create_additional_info(
     return res
 
 
-@router.get("/users/{user_id}/additional_info", tags=["users"])
-async def list_additional_info(
-    user_id: UUID4, limit: int = 100, offset: int = 0
-) -> AdditionalInfoList:
+@router.get("/users/{user_id}/docs", tags=["users"])
+async def list_docs(user_id: UUID4, limit: int = 100, offset: int = 0) -> DocsList:
     resp = client.run(
-        list_additional_info_snippets_by_owner_query(
+        list_docs_snippets_by_owner_query(
             owner_type="user",
             owner_id=user_id,
         )
     )
 
-    return AdditionalInfoList(
+    return DocsList(
         items=[
-            AdditionalInfo(
-                id=row["additional_info_id"],
+            Doc(
+                id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
             )
@@ -235,24 +237,26 @@ async def list_additional_info(
     )
 
 
-@router.delete("/users/{user_id}/additional_info/{additional_info_id}", tags=["users"])
-async def delete_additional_info(user_id: UUID4, additional_info_id: UUID4):
+@router.delete("/users/{user_id}/docs/{doc_id}", tags=["users"])
+async def delete_docs(user_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse:
     resp = client.run(
-        get_additional_info_snippets_by_id_query(
+        get_docs_snippets_by_id_query(
             owner_type="user",
-            additional_info_id=additional_info_id,
+            doc_id=doc_id,
         )
     )
     if not resp.size:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Additional info not found",
+            detail="Docs not found",
         )
 
     client.run(
-        delete_additional_info_by_id_query(
+        delete_docs_by_id_query(
             owner_type="user",
             owner_id=user_id,
-            additional_info_id=additional_info_id,
+            doc_id=doc_id,
         )
     )
+
+    return ResourceDeletedResponse(id=doc_id, deleted_at=datetime.now())

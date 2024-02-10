@@ -7,8 +7,8 @@ from ward import test
 
 from ...autogen.openapi_model import FunctionDef, Instruction
 from ...common.protocol.entries import Entry
-from ..additional_info.create_additional_info import create_additional_info_query
-from ..additional_info.embed_additional_info import embed_additional_info_snippets_query
+from ..docs.create_docs import create_docs_query
+from ..docs.embed_docs import embed_docs_snippets_query
 from ..agent.create_agent import create_agent_query
 from ..instructions.embed_instructions import embed_instructions_query
 from ..session.create_session import create_session_query
@@ -166,14 +166,14 @@ def _():
             id=tool_id,
             function=test_function,
         ),
-        create_additional_info_query(
+        create_docs_query(
             owner_type="agent",
             owner_id=agent_id,
             id=agent_doc_id,
             title=test_agent_doc,
             content=test_agent_doc,
         ),
-        create_additional_info_query(
+        create_docs_query(
             owner_type="user",
             owner_id=user_id,
             id=user_doc_id,
@@ -190,12 +190,12 @@ def _():
             tool_ids=[tool_id],
             embeddings=[[1.0] * 768],
         ),
-        embed_additional_info_snippets_query(
+        embed_docs_snippets_query(
             agent_doc_id,
             snippet_indices=[0],
             embeddings=[[1.0] * 768],
         ),
-        embed_additional_info_snippets_query(
+        embed_docs_snippets_query(
             user_doc_id,
             snippet_indices=[0],
             embeddings=[[1.0] * 768],

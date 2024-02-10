@@ -6,7 +6,7 @@ from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
 
-def create_additional_info_query(
+def create_docs_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
     id: UUID,
@@ -24,7 +24,7 @@ def create_additional_info_query(
     for snippet_idx, snippet in enumerate(snippets):
         snippet_cols, new_snippet_rows = cozo_process_mutate_data(
             dict(
-                additional_info_id=id,
+                doc_id=id,
                 snippet_idx=snippet_idx,
                 title=title,
                 snippet=snippet,
@@ -35,15 +35,15 @@ def create_additional_info_query(
 
     return f"""
     {{
-        # Create the additional info
-        ?[{owner_type}_id, additional_info_id, created_at] <- [[
+        # Create the docs
+        ?[{owner_type}_id, doc_id, created_at] <- [[
             to_uuid("{owner_id}"),
             to_uuid("{id}"),
             {created_at},
         ]]
 
-        :insert {owner_type}_additional_info {{
-            {owner_type}_id, additional_info_id, created_at
+        :insert {owner_type}_docs {{
+            {owner_type}_id, doc_id, created_at
         }}
     }} {{
         # create the snippets
@@ -53,8 +53,8 @@ def create_additional_info_query(
             {snippet_cols}
         }}
     }} {{
-        # return the additional info
-        ?[{owner_type}_id, additional_info_id, created_at] <- [[
+        # return the docs
+        ?[{owner_type}_id, doc_id, created_at] <- [[
             to_uuid("{owner_id}"),
             to_uuid("{id}"),
             {created_at},

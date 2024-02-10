@@ -206,6 +206,7 @@ def _():
     # Setup client for user and agent
     client = cozo_client()
 
+    developer_id = uuid4()
     session_id = uuid4()
     agent_id = uuid4()
     user_id = uuid4()
@@ -214,6 +215,7 @@ def _():
     client.run(
         create_user_query(
             user_id=user_id,
+            developer_id=developer_id,
             about="test user about",
             name="test user name",
         )
@@ -222,6 +224,7 @@ def _():
     # Create an agent
     client.run(
         create_agent_query(
+            developer_id=developer_id,
             agent_id=agent_id,
             about="test agent about",
             name="test agent name",
@@ -231,6 +234,7 @@ def _():
     # Create a session
 
     query = create_session_query(
+        developer_id=developer_id,
         session_id=session_id,
         user_id=user_id,
         agent_id=agent_id,
@@ -240,6 +244,7 @@ def _():
     client.run(query)
 
     session_data = get_session_data(
+        developer_id=developer_id,
         session_id=session_id,
         client=client,
     )
