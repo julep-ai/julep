@@ -24,6 +24,7 @@ poethepoet = "^0.24.4"
 ipython = "<8.13"
 pyright = "^1.1.348"
 handsdown = "^2.1.0"
+jupyterlab = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]
