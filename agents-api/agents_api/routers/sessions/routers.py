@@ -14,6 +14,7 @@ from agents_api.models.session.create_session import create_session_query
 from agents_api.models.session.list_sessions import list_sessions_query
 from agents_api.models.session.delete_session import delete_session_query
 from agents_api.dependencies.developer_id import get_developer_id
+from agents_api.models.entry.get_entries import get_entries_query
 from agents_api.autogen.openapi_model import (
     CreateSessionRequest,
     UpdateSessionRequest,
@@ -165,7 +166,23 @@ async def get_history(
     limit: int = 100,
     offset: int = 0,
 ) -> ChatMLMessageList:
-    return ChatMLMessageList(items=[])
+    try:
+        items = []
+        for _, row in client.run(
+            get_entries_query(session_id=session_id, limit=limit, offset=offset),
+        ).iterrows():
+            row_dict = row.to_dict()
+            row_dict["id"] = row_dict["entry_id"]
+            items.append(ChatMLMessage(**row_dict))
+
+        return ChatMLMessageList(
+            items=items,
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found",
+        )
 
 
 @router.post("/sessions/{session_id}/chat", tags=["sessions"])
