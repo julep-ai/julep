@@ -138,10 +138,9 @@ class BaseSession:
                     created_at=first_instruction_created_at,
                 ),
             )
-
         messages = [
             ChatML(
-                role=e.role,
+                role=e.role.value if hasattr(e.role, "value") else e.role,
                 name=e.name,
                 content=(
                     e.content
