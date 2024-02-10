@@ -12,18 +12,19 @@
 
 * [Python Setup](getting-started/python-setup.md)
 
-## 💁 SAMANTHA-1 MODEL
-* [Overview](introduction/samantha-1/README.md)
-  * [Features](introduction/samantha-1/features.md)
-  * [Capabilities](introduction/samantha-1/capabilities.md)
-  * [Context "sections"](introduction/samantha-1/context-sections.md)
-* [Quickstart](getting-started/model-quickstart.md)
-* [Examples](quickstart/example.md)
-  * [Langchain](quickstart/langchain.md)
-  * [Chatbot](quickstart/chatbot.md)
-* [Technical Details](technical-details/README.md)
-  * [Models](technical-details/models.md)
-  * [APIs](technical-details/apis.md)
+## 💁 SAMANTHA-1-TURBO
+
+* [Overview](samantha-1-turbo/samantha-1/README.md)
+  * [Features](samantha-1-turbo/samantha-1/features.md)
+  * [Capabilities](samantha-1-turbo/samantha-1/capabilities.md)
+  * [Context "sections"](samantha-1-turbo/samantha-1/context-sections.md)
+* [Quickstart](samantha-1-turbo/model-quickstart.md)
+* [Examples](samantha-1-turbo/example/README.md)
+  * [Langchain](samantha-1-turbo/example/langchain.md)
+  * [Chatbot](samantha-1-turbo/example/chatbot.md)
+* [Technical Details](samantha-1-turbo/technical-details/README.md)
+  * [Models](samantha-1-turbo/technical-details/models.md)
+  * [APIs](samantha-1-turbo/technical-details/apis.md)
 
 ## 📖 API REFERENCE
 
