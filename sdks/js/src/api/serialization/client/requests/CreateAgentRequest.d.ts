@@ -16,6 +16,6 @@ export declare namespace CreateAgentRequest {
     tools?: serializers.CreateToolRequest.Raw[] | null;
     default_settings?: serializers.AgentDefaultSettings.Raw | null;
     model: string;
-    additional_info?: serializers.CreateAdditionalInfoRequest.Raw[] | null;
+    docs?: serializers.CreateDoc.Raw[] | null;
   }
 }

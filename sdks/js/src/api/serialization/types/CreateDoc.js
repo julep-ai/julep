@@ -47,10 +47,9 @@ var __importStar =
     return result;
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdditionalInfo = void 0;
+exports.CreateDoc = void 0;
 const core = __importStar(require("../../core"));
-exports.AdditionalInfo = core.serialization.object({
+exports.CreateDoc = core.serialization.object({
   title: core.serialization.string(),
   content: core.serialization.string(),
-  id: core.serialization.string(),
 });
