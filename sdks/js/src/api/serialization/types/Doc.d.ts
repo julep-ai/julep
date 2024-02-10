@@ -4,11 +4,11 @@
 import * as serializers from "..";
 import * as JulepApi from "../../api";
 import * as core from "../../core";
-export declare const AdditionalInfo: core.serialization.ObjectSchema<
-  serializers.AdditionalInfo.Raw,
-  JulepApi.AdditionalInfo
+export declare const Doc: core.serialization.ObjectSchema<
+  serializers.Doc.Raw,
+  JulepApi.Doc
 >;
-export declare namespace AdditionalInfo {
+export declare namespace Doc {
   interface Raw {
     title: string;
     content: string;

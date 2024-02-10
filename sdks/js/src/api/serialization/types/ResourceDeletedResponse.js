@@ -47,9 +47,12 @@ var __importStar =
     return result;
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateAdditionalInfoRequest = void 0;
+exports.ResourceDeletedResponse = void 0;
 const core = __importStar(require("../../core"));
-exports.CreateAdditionalInfoRequest = core.serialization.object({
-  title: core.serialization.string(),
-  content: core.serialization.string(),
+exports.ResourceDeletedResponse = core.serialization.object({
+  id: core.serialization.string(),
+  deletedAt: core.serialization.property(
+    "deleted_at",
+    core.serialization.date(),
+  ),
 });

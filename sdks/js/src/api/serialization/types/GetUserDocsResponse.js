@@ -80,16 +80,16 @@ var __awaiter =
     });
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetAgentAdditionalInfoResponse = void 0;
+exports.GetUserDocsResponse = void 0;
 const core = __importStar(require("../../core"));
-exports.GetAgentAdditionalInfoResponse = core.serialization.object({
+exports.GetUserDocsResponse = core.serialization.object({
   items: core.serialization
     .list(
       core.serialization.lazyObject(() =>
         __awaiter(void 0, void 0, void 0, function* () {
           return (yield Promise.resolve().then(() =>
             __importStar(require("..")),
-          )).AdditionalInfo;
+          )).Doc;
         }),
       ),
     )

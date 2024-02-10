@@ -80,53 +80,16 @@ var __awaiter =
     });
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateAgentRequest = void 0;
-const core = __importStar(require("../../../core"));
-exports.CreateAgentRequest = core.serialization.object({
-  name: core.serialization.string(),
-  about: core.serialization.string(),
-  instructions: core.serialization
+exports.GetAgentDocsResponse = void 0;
+const core = __importStar(require("../../core"));
+exports.GetAgentDocsResponse = core.serialization.object({
+  items: core.serialization
     .list(
       core.serialization.lazyObject(() =>
         __awaiter(void 0, void 0, void 0, function* () {
           return (yield Promise.resolve().then(() =>
-            __importStar(require("../..")),
-          )).Instruction;
-        }),
-      ),
-    )
-    .optional(),
-  tools: core.serialization
-    .list(
-      core.serialization.lazyObject(() =>
-        __awaiter(void 0, void 0, void 0, function* () {
-          return (yield Promise.resolve().then(() =>
-            __importStar(require("../..")),
-          )).CreateToolRequest;
-        }),
-      ),
-    )
-    .optional(),
-  defaultSettings: core.serialization.property(
-    "default_settings",
-    core.serialization
-      .lazyObject(() =>
-        __awaiter(void 0, void 0, void 0, function* () {
-          return (yield Promise.resolve().then(() =>
-            __importStar(require("../..")),
-          )).AgentDefaultSettings;
-        }),
-      )
-      .optional(),
-  ),
-  model: core.serialization.string(),
-  docs: core.serialization
-    .list(
-      core.serialization.lazyObject(() =>
-        __awaiter(void 0, void 0, void 0, function* () {
-          return (yield Promise.resolve().then(() =>
-            __importStar(require("../..")),
-          )).CreateDoc;
+            __importStar(require("..")),
+          )).Doc;
         }),
       ),
     )

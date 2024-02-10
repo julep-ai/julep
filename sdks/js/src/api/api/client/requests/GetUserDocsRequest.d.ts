@@ -5,7 +5,7 @@
  * @example
  *     {}
  */
-export interface GetAgentAdditionalInfoRequest {
+export interface GetUserDocsRequest {
   /**
    *
    */
