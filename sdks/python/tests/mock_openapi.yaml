@@ -5,20 +5,25 @@ info:
   termsOfService: ""
   contact:
     email: developers@julep.ai
+    name: Julep Developers
+    url: https://julep.ai
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 externalDocs:
   description: Find out more about spec
-  url: ""
+  url: https://docs.julep.ai
 servers:
-  - url: https://api.julep.ai
+  - url: https://api-alpha.julep.ai/api
     description: ""
     variables: {}
 tags:
   - name: Default
     description: ""
+    externalDocs:
+      url: https://docs.julep.ai
+      description: https://docs.julep.ai
 paths:
   /api/sessions:
     post:
@@ -232,7 +237,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -473,7 +478,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -528,7 +533,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -557,11 +562,11 @@ paths:
         schema:
           type: string
         required: true
-  /api/agents/{agent_id}/additional_info:
+  /api/agents/{agent_id}/docs:
     get:
-      summary: Get additional info of the agent
+      summary: Get docs of the agent
       description: Sorted (created_at descending)
-      operationId: GetAgentAdditionalInfo
+      operationId: GetAgentDocs
       tags: []
       parameters:
         - in: query
@@ -574,6 +579,8 @@ paths:
           description: ""
           schema:
             type: integer
+      requestBody:
+        content: {}
       responses:
         "200":
           content:
@@ -585,7 +592,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/AdditionalInfo'
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
@@ -596,16 +603,16 @@ paths:
           type: string
         required: true
     post:
-      summary: Create additional info of the agent
+      summary: Create doc of the agent
       description: ""
-      operationId: CreateAgentAdditionalInfo
+      operationId: CreateAgentDoc
       tags: []
       parameters: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+              $ref: '#/components/schemas/CreateDoc'
       responses:
         "201":
           content:
@@ -614,11 +621,11 @@ paths:
                 $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
-  /api/users/{user_id}/additional_info:
+  /api/users/{user_id}/docs:
     get:
-      summary: Get additional info of the user
+      summary: Get docs of the user
       description: Sorted (created_at descending)
-      operationId: GetUserAdditionalInfo
+      operationId: GetUserDocs
       tags: []
       parameters:
         - in: query
@@ -631,6 +638,8 @@ paths:
           description: ""
           schema:
             type: integer
+      requestBody:
+        content: {}
       responses:
         "200":
           content:
@@ -642,7 +651,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/AdditionalInfo'
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
@@ -653,16 +662,16 @@ paths:
           type: string
         required: true
     post:
-      summary: Create additional info of the user
+      summary: Create doc of the user
       description: ""
-      operationId: CreateUserAdditionalInfo
+      operationId: CreateUserDoc
       tags: []
       parameters: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+              $ref: '#/components/schemas/CreateDoc'
       responses:
         "201":
           content:
@@ -671,7 +680,7 @@ paths:
                 $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
-  /api/users/{user_id}/additional_info/{additional_info_id}:
+  /api/users/{user_id}/docs/{doc_id}:
     parameters:
       - in: path
         name: user_id
@@ -680,15 +689,15 @@ paths:
           type: string
         required: true
       - in: path
-        name: additional_info_id
+        name: doc_id
         description: ""
         schema:
           type: string
         required: true
     delete:
-      summary: Delete additional info doc by id
+      summary: Delete doc by id
       description: ""
-      operationId: DeleteUserAdditionalInfo
+      operationId: DeleteUserDoc
       tags: []
       parameters: []
       responses:
@@ -696,10 +705,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
-  /api/agents/{agent_id}/additional_info/{additional_info_id}:
+  /api/agents/{agent_id}/docs/{doc_id}:
     parameters:
       - in: path
         name: agent_id
@@ -708,15 +717,15 @@ paths:
           type: string
         required: true
       - in: path
-        name: additional_info_id
+        name: doc_id
         description: ""
         schema:
           type: string
         required: true
     delete:
-      summary: Delete additional info doc by id
+      summary: Delete doc by id
       description: ""
-      operationId: DeleteAgentAdditionalInfo
+      operationId: DeleteAgentDoc
       tags: []
       parameters: []
       responses:
@@ -724,7 +733,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/memories/{memory_id}:
@@ -736,7 +745,10 @@ paths:
       parameters: []
       responses:
         "202":
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     parameters:
@@ -769,6 +781,8 @@ paths:
           description: ""
           schema:
             type: integer
+      requestBody:
+        content: {}
       responses:
         "200":
           content:
@@ -834,7 +848,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -1009,12 +1023,12 @@ components:
         about:
           type: string
           description: About the user
-        additional_information:
+        docs:
           type: array
           items:
-            $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the user
-          description: List of additional info about user
+          description: List of docs about user
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1063,12 +1077,12 @@ components:
           type: string
           description: Name of the model that the agent is supposed to use
           default: julep-ai/samantha-1-turbo
-        additional_info:
+        docs:
           type: array
           items:
-            $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the agent
-          description: List of additional info about agent
+          description: List of docs about agent
       required:
         - name
         - about
@@ -1511,8 +1525,8 @@ components:
               description: Must be one of `text` or `json_object`.
         seed:
           type: integer
-          minimum: -9223372036854776000
-          maximum: 9223372036854776000
+          minimum: -9.223372036854776e+18
+          maximum: 9.223372036854776e+18
           nullable: true
           description: |
             This feature is in Beta.
@@ -1608,7 +1622,7 @@ components:
         - $ref: '#/components/schemas/ChatInputData'
         - $ref: '#/components/schemas/ChatSettings'
         - $ref: '#/components/schemas/MemoryAccessOptions'
-    AdditionalInfo:
+    Doc:
       type: object
       properties:
         title:
@@ -1619,13 +1633,13 @@ components:
           description: Information content
         id:
           type: string
-          description: ID of additional info doc
+          description: ID of doc
           format: uuid
       required:
         - title
         - content
         - id
-    CreateAdditionalInfoRequest:
+    CreateDoc:
       type: object
       properties:
         title:
@@ -1709,6 +1723,18 @@ components:
       required:
         - id
         - updated_at
+    ResourceDeletedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        deleted_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - deleted_at
   securitySchemes:
     api-key:
       type: apiKey
@@ -1741,7 +1767,7 @@ components:
       description: ""
       schema:
         type: string
-    additional_info_id:
+    doc_id:
       in: path
       required: false
       description: ""

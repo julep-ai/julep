@@ -16,15 +16,15 @@ from .types.agent_default_settings import AgentDefaultSettings
 from .types.chat_response import ChatResponse
 from .types.chat_settings_response_format import ChatSettingsResponseFormat
 from .types.chat_settings_stop import ChatSettingsStop
-from .types.create_additional_info_request import CreateAdditionalInfoRequest
+from .types.create_doc import CreateDoc
 from .types.create_tool_request import CreateToolRequest
 from .types.function_def import FunctionDef
-from .types.get_agent_additional_info_response import GetAgentAdditionalInfoResponse
+from .types.get_agent_docs_response import GetAgentDocsResponse
 from .types.get_agent_memories_response import GetAgentMemoriesResponse
 from .types.get_agent_tools_response import GetAgentToolsResponse
 from .types.get_history_response import GetHistoryResponse
 from .types.get_suggestions_response import GetSuggestionsResponse
-from .types.get_user_additional_info_response import GetUserAdditionalInfoResponse
+from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
 from .types.instruction import Instruction
 from .types.list_agents_response import ListAgentsResponse
@@ -185,9 +185,7 @@ class JulepApi:
         *,
         name: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
-        additional_information: typing.Optional[
-            typing.List[CreateAdditionalInfoRequest]
-        ] = OMIT,
+        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new user
@@ -197,7 +195,7 @@ class JulepApi:
 
             - about: typing.Optional[str]. About the user
 
-            - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
+            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
         ---
         from julep.client import JulepApi
 
@@ -211,8 +209,8 @@ class JulepApi:
             _request["name"] = name
         if about is not OMIT:
             _request["about"] = about
-        if additional_information is not OMIT:
-            _request["additional_information"] = additional_information
+        if docs is not OMIT:
+            _request["docs"] = docs
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
@@ -274,9 +272,7 @@ class JulepApi:
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: str,
-        additional_info: typing.Optional[
-            typing.List[CreateAdditionalInfoRequest]
-        ] = OMIT,
+        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new agent
@@ -294,7 +290,7 @@ class JulepApi:
 
             - model: str. Name of the model that the agent is supposed to use
 
-            - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
+            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
         ---
         from julep.client import JulepApi
 
@@ -318,8 +314,8 @@ class JulepApi:
             _request["tools"] = tools
         if default_settings is not OMIT:
             _request["default_settings"] = default_settings
-        if additional_info is not OMIT:
-            _request["additional_info"] = additional_info
+        if docs is not OMIT:
+            _request["docs"] = docs
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
@@ -965,13 +961,13 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_agent_additional_info(
+    def get_agent_docs(
         self,
         agent_id: str,
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
-    ) -> GetAgentAdditionalInfoResponse:
+    ) -> GetAgentDocsResponse:
         """
         Sorted (created_at descending)
 
@@ -987,30 +983,29 @@ class JulepApi:
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.get_agent_additional_info(
+        client.get_agent_docs(
             agent_id="agent_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentAdditionalInfoResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(GetAgentDocsResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def create_agent_additional_info(
-        self, agent_id: str, *, request: CreateAdditionalInfoRequest
+    def create_agent_doc(
+        self, agent_id: str, *, request: CreateDoc
     ) -> ResourceCreatedResponse:
         """
 
@@ -1018,17 +1013,17 @@ class JulepApi:
         Parameters:
             - agent_id: str.
 
-            - request: CreateAdditionalInfoRequest.
+            - request: CreateDoc.
         ---
-        from julep import CreateAdditionalInfoRequest
+        from julep import CreateDoc
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.create_agent_additional_info(
+        client.create_agent_doc(
             agent_id="agent_id",
-            request=CreateAdditionalInfoRequest(
+            request=CreateDoc(
                 title="title",
                 content="content",
             ),
@@ -1037,8 +1032,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1052,13 +1046,13 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_user_additional_info(
+    def get_user_docs(
         self,
         user_id: str,
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
-    ) -> GetUserAdditionalInfoResponse:
+    ) -> GetUserDocsResponse:
         """
         Sorted (created_at descending)
 
@@ -1074,30 +1068,29 @@ class JulepApi:
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.get_user_additional_info(
+        client.get_user_docs(
             user_id="user_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetUserAdditionalInfoResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(GetUserDocsResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def create_user_additional_info(
-        self, user_id: str, *, request: CreateAdditionalInfoRequest
+    def create_user_doc(
+        self, user_id: str, *, request: CreateDoc
     ) -> ResourceCreatedResponse:
         """
 
@@ -1105,17 +1098,17 @@ class JulepApi:
         Parameters:
             - user_id: str.
 
-            - request: CreateAdditionalInfoRequest.
+            - request: CreateDoc.
         ---
-        from julep import CreateAdditionalInfoRequest
+        from julep import CreateDoc
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.create_user_additional_info(
+        client.create_user_doc(
             user_id="user_id",
-            request=CreateAdditionalInfoRequest(
+            request=CreateDoc(
                 title="title",
                 content="content",
             ),
@@ -1124,8 +1117,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1139,32 +1131,30 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def delete_user_additional_info(
-        self, user_id: str, additional_info_id: str
-    ) -> None:
+    def delete_user_doc(self, user_id: str, doc_id: str) -> None:
         """
 
 
         Parameters:
             - user_id: str.
 
-            - additional_info_id: str.
+            - doc_id: str.
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.delete_user_additional_info(
+        client.delete_user_doc(
             user_id="user_id",
-            additional_info_id="additional_info_id",
+            doc_id="doc_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info/{additional_info_id}",
+                f"api/users/{user_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1177,32 +1167,30 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def delete_agent_additional_info(
-        self, agent_id: str, additional_info_id: str
-    ) -> None:
+    def delete_agent_doc(self, agent_id: str, doc_id: str) -> None:
         """
 
 
         Parameters:
             - agent_id: str.
 
-            - additional_info_id: str.
+            - doc_id: str.
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.delete_agent_additional_info(
+        client.delete_agent_doc(
             agent_id="agent_id",
-            additional_info_id="additional_info_id",
+            doc_id="doc_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info/{additional_info_id}",
+                f"api/agents/{agent_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1563,9 +1551,7 @@ class AsyncJulepApi:
         *,
         name: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
-        additional_information: typing.Optional[
-            typing.List[CreateAdditionalInfoRequest]
-        ] = OMIT,
+        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new user
@@ -1575,7 +1561,7 @@ class AsyncJulepApi:
 
             - about: typing.Optional[str]. About the user
 
-            - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
+            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
         ---
         from julep.client import AsyncJulepApi
 
@@ -1589,8 +1575,8 @@ class AsyncJulepApi:
             _request["name"] = name
         if about is not OMIT:
             _request["about"] = about
-        if additional_information is not OMIT:
-            _request["additional_information"] = additional_information
+        if docs is not OMIT:
+            _request["docs"] = docs
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
@@ -1652,9 +1638,7 @@ class AsyncJulepApi:
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: str,
-        additional_info: typing.Optional[
-            typing.List[CreateAdditionalInfoRequest]
-        ] = OMIT,
+        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new agent
@@ -1672,7 +1656,7 @@ class AsyncJulepApi:
 
             - model: str. Name of the model that the agent is supposed to use
 
-            - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
+            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
         ---
         from julep.client import AsyncJulepApi
 
@@ -1696,8 +1680,8 @@ class AsyncJulepApi:
             _request["tools"] = tools
         if default_settings is not OMIT:
             _request["default_settings"] = default_settings
-        if additional_info is not OMIT:
-            _request["additional_info"] = additional_info
+        if docs is not OMIT:
+            _request["docs"] = docs
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
@@ -2343,13 +2327,13 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_agent_additional_info(
+    async def get_agent_docs(
         self,
         agent_id: str,
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
-    ) -> GetAgentAdditionalInfoResponse:
+    ) -> GetAgentDocsResponse:
         """
         Sorted (created_at descending)
 
@@ -2365,30 +2349,29 @@ class AsyncJulepApi:
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.get_agent_additional_info(
+        await client.get_agent_docs(
             agent_id="agent_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentAdditionalInfoResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(GetAgentDocsResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def create_agent_additional_info(
-        self, agent_id: str, *, request: CreateAdditionalInfoRequest
+    async def create_agent_doc(
+        self, agent_id: str, *, request: CreateDoc
     ) -> ResourceCreatedResponse:
         """
 
@@ -2396,17 +2379,17 @@ class AsyncJulepApi:
         Parameters:
             - agent_id: str.
 
-            - request: CreateAdditionalInfoRequest.
+            - request: CreateDoc.
         ---
-        from julep import CreateAdditionalInfoRequest
+        from julep import CreateDoc
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.create_agent_additional_info(
+        await client.create_agent_doc(
             agent_id="agent_id",
-            request=CreateAdditionalInfoRequest(
+            request=CreateDoc(
                 title="title",
                 content="content",
             ),
@@ -2415,8 +2398,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2430,13 +2412,13 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_user_additional_info(
+    async def get_user_docs(
         self,
         user_id: str,
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
-    ) -> GetUserAdditionalInfoResponse:
+    ) -> GetUserDocsResponse:
         """
         Sorted (created_at descending)
 
@@ -2452,30 +2434,29 @@ class AsyncJulepApi:
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.get_user_additional_info(
+        await client.get_user_docs(
             user_id="user_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetUserAdditionalInfoResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(GetUserDocsResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def create_user_additional_info(
-        self, user_id: str, *, request: CreateAdditionalInfoRequest
+    async def create_user_doc(
+        self, user_id: str, *, request: CreateDoc
     ) -> ResourceCreatedResponse:
         """
 
@@ -2483,17 +2464,17 @@ class AsyncJulepApi:
         Parameters:
             - user_id: str.
 
-            - request: CreateAdditionalInfoRequest.
+            - request: CreateDoc.
         ---
-        from julep import CreateAdditionalInfoRequest
+        from julep import CreateDoc
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.create_user_additional_info(
+        await client.create_user_doc(
             user_id="user_id",
-            request=CreateAdditionalInfoRequest(
+            request=CreateDoc(
                 title="title",
                 content="content",
             ),
@@ -2502,8 +2483,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info",
+                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2517,32 +2497,30 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def delete_user_additional_info(
-        self, user_id: str, additional_info_id: str
-    ) -> None:
+    async def delete_user_doc(self, user_id: str, doc_id: str) -> None:
         """
 
 
         Parameters:
             - user_id: str.
 
-            - additional_info_id: str.
+            - doc_id: str.
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.delete_user_additional_info(
+        await client.delete_user_doc(
             user_id="user_id",
-            additional_info_id="additional_info_id",
+            doc_id="doc_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/additional_info/{additional_info_id}",
+                f"api/users/{user_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2555,32 +2533,30 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def delete_agent_additional_info(
-        self, agent_id: str, additional_info_id: str
-    ) -> None:
+    async def delete_agent_doc(self, agent_id: str, doc_id: str) -> None:
         """
 
 
         Parameters:
             - agent_id: str.
 
-            - additional_info_id: str.
+            - doc_id: str.
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.delete_agent_additional_info(
+        await client.delete_agent_doc(
             agent_id="agent_id",
-            additional_info_id="additional_info_id",
+            doc_id="doc_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/additional_info/{additional_info_id}",
+                f"api/agents/{agent_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,

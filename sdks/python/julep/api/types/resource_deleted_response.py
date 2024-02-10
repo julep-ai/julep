@@ -4,7 +4,6 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
-from .additional_info import AdditionalInfo
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -12,8 +11,9 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class GetUserAdditionalInfoResponse(pydantic.BaseModel):
-    items: typing.Optional[typing.List[AdditionalInfo]]
+class ResourceDeletedResponse(pydantic.BaseModel):
+    id: str
+    deleted_at: dt.datetime
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
