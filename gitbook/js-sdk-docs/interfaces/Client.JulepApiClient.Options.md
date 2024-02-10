@@ -15,18 +15,18 @@
 
 ### apiKey
 
-• **apiKey**: [`Supplier`](../modules/core_fetcher_Supplier.md#supplier)\<`string`\>
+• **apiKey**: `Supplier`\<`string`\>
 
 #### Defined in
 
-[src/api/Client.d.ts:10](https://github.com/julep-ai/samantha-monorepo/blob/9aefd53/sdks/js/src/api/Client.d.ts#L10)
+[src/api/Client.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L10)
 
 ___
 
 ### environment
 
-• `Optional` **environment**: [`Supplier`](../modules/core_fetcher_Supplier.md#supplier)\<`string`\>
+• `Optional` **environment**: `Supplier`\<`string`\>
 
 #### Defined in
 
-[src/api/Client.d.ts:9](https://github.com/julep-ai/samantha-monorepo/blob/9aefd53/sdks/js/src/api/Client.d.ts#L9)
+[src/api/Client.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L9)

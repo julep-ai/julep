@@ -11,6 +11,6 @@ export interface CreateUserRequest {
   name?: string;
   /** About the user */
   about?: string;
-  /** List of additional info about user */
-  additionalInformation?: JulepApi.CreateAdditionalInfoRequest[];
+  /** List of docs about user */
+  docs?: JulepApi.CreateDoc[];
 }

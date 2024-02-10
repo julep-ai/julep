@@ -23,6 +23,6 @@ export interface CreateAgentRequest {
   defaultSettings?: JulepApi.AgentDefaultSettings;
   /** Name of the model that the agent is supposed to use */
   model: string;
-  /** List of additional info about agent */
-  additionalInfo?: JulepApi.CreateAdditionalInfoRequest[];
+  /** List of docs about agent */
+  docs?: JulepApi.CreateDoc[];
 }

@@ -6,7 +6,7 @@ from beartype.typing import Awaitable, List, Union
 
 from ..api.types import (
     User,
-    CreateAdditionalInfoRequest,
+    CreateDoc,
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
     ListUsersResponse,
@@ -66,17 +66,17 @@ class BaseUsersManager(BaseManager):
         about: str,
         docs: List[DocDict] = [],
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
-        # Cast docs to a list of CreateAdditionalInfoRequest objects
+        # Cast docs to a list of CreateDoc objects
         """
         Create a new resource with the given name and about information, optionally including additional docs.
 
-        This internal method allows for creating a new resource with optional additional information.
+        This internal method allows for creating a new resource with optional docsrmation.
 
         Args:
             name (str): The name of the new resource.
             about (str): A brief description about the new resource.
             docs (List[DocDict], optional): A list of dictionaries with documentation-related information. Each dictionary
-                must conform to the structure expected by CreateAdditionalInfoRequest. Defaults to an empty list.
+                must conform to the structure expected by CreateDoc. Defaults to an empty list.
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response indicating the resource has been
@@ -88,17 +88,15 @@ class BaseUsersManager(BaseManager):
             or module.
 
         Side effects:
-            Modifies internal state by converting each doc dict to an instance of CreateAdditionalInfoRequest and uses the
+            Modifies internal state by converting each doc dict to an instance of CreateDoc and uses the
             internal API client to create a new user resource.
         """
-        docs: List[CreateAdditionalInfoRequest] = [
-            CreateAdditionalInfoRequest(**doc) for doc in docs
-        ]
+        docs: List[CreateDoc] = [CreateDoc(**doc) for doc in docs]
 
         return self.api_client.create_user(
             name=name,
             about=about,
-            additional_information=docs,
+            docs=docs,
         )
 
     def _list_items(

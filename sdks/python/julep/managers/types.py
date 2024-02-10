@@ -1,7 +1,7 @@
 # type: ignore
 from typing import TypedDict
 from ..api.types import (
-    CreateAdditionalInfoRequest,
+    CreateDoc,
     AgentDefaultSettings,
     FunctionDef,
     CreateToolRequest,
@@ -11,7 +11,7 @@ from ..api.types import (
 
 DocDict = TypedDict(
     "DocDict",
-    **{k: v.outer_type_ for k, v in CreateAdditionalInfoRequest.__fields__.items()},
+    **{k: v.outer_type_ for k, v in CreateDoc.__fields__.items()},
 )
 DefaultSettingsDict = TypedDict(
     "DefaultSettingsDict",

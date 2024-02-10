@@ -5,10 +5,10 @@ from beartype import beartype
 from beartype.typing import Awaitable, List, Union
 
 from ..api.types import (
-    CreateAdditionalInfoRequest,
+    CreateDoc,
+    Doc,
     ResourceCreatedResponse,
-    GetAgentAdditionalInfoResponse,
-    AdditionalInfo as Doc,
+    GetAgentDocsResponse,
 )
 
 from .base import BaseManager
@@ -18,7 +18,7 @@ from .types import DocDict
 
 class BaseDocsManager(BaseManager):
     """
-    Manages documents for agents or users by providing methods to get, create, and delete additional information.
+    Manages documents for agents or users by providing methods to get, create, and delete docsrmation.
 
     The class utilizes an API client to interact with a back-end service that handles the document management operations.
 
@@ -35,17 +35,17 @@ class BaseDocsManager(BaseManager):
 
     Methods:
         _get(agent_id: Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]],
-             limit: Optional[int]=None, offset: Optional[int]=None) -> Union[GetAgentAdditionalInfoResponse, Awaitable[GetAgentAdditionalInfoResponse]]
-            Retrieves additional information for either an agent or user.
+             limit: Optional[int]=None, offset: Optional[int]=None) -> Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]
+            Retrieves docsrmation for either an agent or user.
             Must provide exactly one valid UUID v4 for either `agent_id` or `user_id`.
 
         _create(agent_id: Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]], doc: DocDict) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]
-            Creates additional information for either an agent or user.
+            Creates docsrmation for either an agent or user.
             Must provide exactly one valid UUID v4 for either `agent_id` or `user_id`.
             The `doc` parameter contains the document information to be created.
 
         _delete(agent_id: Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]], doc_id: Union[str, UUID]):
-            Deletes additional information for either an agent or user.
+            Deletes docsrmation for either an agent or user.
             Must provide exactly one valid UUID v4 for either `agent_id` or `user_id`, and a valid UUID for `doc_id`.
     """
 
@@ -55,24 +55,22 @@ class BaseDocsManager(BaseManager):
         user_id: Optional[Union[str, UUID]],
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> Union[
-        GetAgentAdditionalInfoResponse, Awaitable[GetAgentAdditionalInfoResponse]
-    ]:
+    ) -> Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]:
         """
-        Retrieve additional information for an agent or user based on their ID.
+        Retrieve docsrmation for an agent or user based on their ID.
 
-        This internal method fetches additional information for either an agent or a user,
+        This internal method fetches docsrmation for either an agent or a user,
         but not both. If both or neither `agent_id` and `user_id` are provided, it will
         assert an error.
 
         Args:
-            agent_id (Optional[Union[str, UUID]]): The UUID v4 of the agent for whom additional info is requested, exclusive with `user_id`.
-            user_id (Optional[Union[str, UUID]]): The UUID v4 of the user for whom additional info is requested, exclusive with `agent_id`.
+            agent_id (Optional[Union[str, UUID]]): The UUID v4 of the agent for whom docs is requested, exclusive with `user_id`.
+            user_id (Optional[Union[str, UUID]]): The UUID v4 of the user for whom docs is requested, exclusive with `agent_id`.
             limit (Optional[int]): The maximum number of records to return. Defaults to None.
             offset (Optional[int]): The number of records to skip before starting to collect the response set. Defaults to None.
 
         Returns:
-            Union[GetAgentAdditionalInfoResponse, Awaitable[GetAgentAdditionalInfoResponse]]: The response object containing additional information about the agent or user, or a promise of such an object if the call is asynchronous.
+            Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]: The response object containing docsrmation about the agent or user, or a promise of such an object if the call is asynchronous.
 
         Raises:
             AssertionError: If both `agent_id` and `user_id` are provided or neither is provided, or if the provided IDs are not valid UUID v4.
@@ -84,14 +82,14 @@ class BaseDocsManager(BaseManager):
         ), "One and only one of user_id or agent_id must be given and must be valid UUID v4"
 
         if agent_id is not None:
-            return self.api_client.get_agent_additional_info(
+            return self.api_client.get_agent_docs(
                 agent_id=agent_id,
                 limit=limit,
                 offset=offset,
             )
 
         if user_id is not None:
-            return self.api_client.get_user_additional_info(
+            return self.api_client.get_user_docs(
                 user_id=user_id,
                 limit=limit,
                 offset=offset,
@@ -104,10 +102,10 @@ class BaseDocsManager(BaseManager):
         doc: DocDict,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         """
-        Create a new resource with additional information for either an agent or a user, but not both.
+        Create a new resource with docsrmation for either an agent or a user, but not both.
 
             This function asserts that exactly one of `agent_id` or `user_id` is provided and is a valid UUID v4.
-            It then creates the appropriate additional information based on which ID was provided.
+            It then creates the appropriate docsrmation based on which ID was provided.
 
             Args:
                 agent_id (Optional[Union[str, UUID]]): The UUID of the agent or None.
@@ -122,7 +120,7 @@ class BaseDocsManager(BaseManager):
 
             Note:
                 One and only one of `agent_id` or `user_id` must be provided and must be a valid UUID v4.
-                The `DocDict` type should be a dictionary compatible with the `CreateAdditionalInfoRequest` schema.
+                The `DocDict` type should be a dictionary compatible with the `CreateDoc` schema.
         """
         assert (
             (agent_id and is_valid_uuid4(agent_id))
@@ -130,16 +128,16 @@ class BaseDocsManager(BaseManager):
             and not (agent_id and user_id)
         ), "One and only one of user_id or agent_id must be given and must be valid UUID v4"
 
-        doc: CreateAdditionalInfoRequest = CreateAdditionalInfoRequest(**doc)
+        doc: CreateDoc = CreateDoc(**doc)
 
         if agent_id is not None:
-            return self.api_client.create_agent_additional_info(
+            return self.api_client.create_agent_doc(
                 agent_id=agent_id,
                 request=doc,
             )
 
         if user_id is not None:
-            return self.api_client.create_user_additional_info(
+            return self.api_client.create_user_doc(
                 user_id=user_id,
                 request=doc,
             )
@@ -151,14 +149,14 @@ class BaseDocsManager(BaseManager):
         doc_id: Union[str, UUID],
     ):
         """
-        Delete additional info based on either an agent_id or a user_id.
+        Delete docs based on either an agent_id or a user_id.
 
             This method selects the appropriate deletion operation (agent or user) based on whether an `agent_id` or `user_id` is provided. Only one of these ID types should be valid and provided.
 
             Args:
                 agent_id (Optional[Union[str, UUID]]): A unique identifier of an agent. Either a string or UUID v4, but not both `agent_id` and `user_id`.
                 user_id (Optional[Union[str, UUID]]): A unique identifier of a user. Either a string or UUID v4, but not both `agent_id` and `user_id`.
-                doc_id (Union[str, UUID]): A unique identifier for additional information to be deleted, as a string or UUID v4.
+                doc_id (Union[str, UUID]): A unique identifier for docsrmation to be deleted, as a string or UUID v4.
 
             Returns:
                 The result of the API deletion request. This can be the response object from the client's delete operation.
@@ -174,15 +172,15 @@ class BaseDocsManager(BaseManager):
         ), "One and only one of user_id or agent_id must be given and must be valid UUID v4"
 
         if agent_id is not None:
-            return self.api_client.delete_agent_additional_info(
+            return self.api_client.delete_agent_doc(
                 agent_id=agent_id,
-                additional_info_id=doc_id,
+                doc_id=doc_id,
             )
 
         if user_id is not None:
-            return self.api_client.delete_user_additional_info(
+            return self.api_client.delete_user_doc(
                 user_id=user_id,
-                additional_info_id=doc_id,
+                doc_id=doc_id,
             )
 
 

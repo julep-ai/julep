@@ -1421,9 +1421,9 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentAdditionalInfo("agent_id", {})
+   *     await julepApi.getAgentDocs("agent_id", {})
    */
-  getAgentAdditionalInfo(agentId, request = {}, requestOptions) {
+  getAgentDocs(agentId, request = {}, requestOptions) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
@@ -1440,7 +1440,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/additional_info`,
+          `api/agents/${agentId}/docs`,
         ),
         method: "GET",
         headers: {
@@ -1461,7 +1461,7 @@ class JulepApiClient {
             : requestOptions.maxRetries,
       });
       if (_response.ok) {
-        return yield serializers.GetAgentAdditionalInfoResponse.parseOrThrow(
+        return yield serializers.GetAgentDocsResponse.parseOrThrow(
           _response.body,
           {
             unrecognizedObjectKeys: "passthrough",
@@ -1496,12 +1496,12 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createAgentAdditionalInfo("agent_id", {
+   *     await julepApi.createAgentDoc("agent_id", {
    *         title: "title",
    *         content: "content"
    *     })
    */
-  createAgentAdditionalInfo(agentId, request, requestOptions) {
+  createAgentDoc(agentId, request, requestOptions) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
       const _response = yield core.fetcher({
@@ -1510,7 +1510,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/additional_info`,
+          `api/agents/${agentId}/docs`,
         ),
         method: "POST",
         headers: {
@@ -1518,12 +1518,9 @@ class JulepApiClient {
           "X-Fern-Language": "JavaScript",
         },
         contentType: "application/json",
-        body: yield serializers.CreateAdditionalInfoRequest.jsonOrThrow(
-          request,
-          {
-            unrecognizedObjectKeys: "strip",
-          },
-        ),
+        body: yield serializers.CreateDoc.jsonOrThrow(request, {
+          unrecognizedObjectKeys: "strip",
+        }),
         timeoutMs:
           (requestOptions === null || requestOptions === void 0
             ? void 0
@@ -1571,9 +1568,9 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getUserAdditionalInfo("user_id", {})
+   *     await julepApi.getUserDocs("user_id", {})
    */
-  getUserAdditionalInfo(userId, request = {}, requestOptions) {
+  getUserDocs(userId, request = {}, requestOptions) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
@@ -1590,7 +1587,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}/additional_info`,
+          `api/users/${userId}/docs`,
         ),
         method: "GET",
         headers: {
@@ -1611,7 +1608,7 @@ class JulepApiClient {
             : requestOptions.maxRetries,
       });
       if (_response.ok) {
-        return yield serializers.GetUserAdditionalInfoResponse.parseOrThrow(
+        return yield serializers.GetUserDocsResponse.parseOrThrow(
           _response.body,
           {
             unrecognizedObjectKeys: "passthrough",
@@ -1646,12 +1643,12 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createUserAdditionalInfo("user_id", {
+   *     await julepApi.createUserDoc("user_id", {
    *         title: "title",
    *         content: "content"
    *     })
    */
-  createUserAdditionalInfo(userId, request, requestOptions) {
+  createUserDoc(userId, request, requestOptions) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
       const _response = yield core.fetcher({
@@ -1660,7 +1657,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}/additional_info`,
+          `api/users/${userId}/docs`,
         ),
         method: "POST",
         headers: {
@@ -1668,12 +1665,9 @@ class JulepApiClient {
           "X-Fern-Language": "JavaScript",
         },
         contentType: "application/json",
-        body: yield serializers.CreateAdditionalInfoRequest.jsonOrThrow(
-          request,
-          {
-            unrecognizedObjectKeys: "strip",
-          },
-        ),
+        body: yield serializers.CreateDoc.jsonOrThrow(request, {
+          unrecognizedObjectKeys: "strip",
+        }),
         timeoutMs:
           (requestOptions === null || requestOptions === void 0
             ? void 0
@@ -1721,9 +1715,9 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteUserAdditionalInfo("user_id", "additional_info_id")
+   *     await julepApi.deleteUserDoc("user_id", "doc_id")
    */
-  deleteUserAdditionalInfo(userId, additionalInfoId, requestOptions) {
+  deleteUserDoc(userId, docId, requestOptions) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
       const _response = yield core.fetcher({
@@ -1732,7 +1726,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}/additional_info/${additionalInfoId}`,
+          `api/users/${userId}/docs/${docId}`,
         ),
         method: "DELETE",
         headers: {
@@ -1779,9 +1773,9 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentAdditionalInfo("agent_id", "additional_info_id")
+   *     await julepApi.deleteAgentDoc("agent_id", "doc_id")
    */
-  deleteAgentAdditionalInfo(agentId, additionalInfoId, requestOptions) {
+  deleteAgentDoc(agentId, docId, requestOptions) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
       const _response = yield core.fetcher({
@@ -1790,7 +1784,7 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/additional_info/${additionalInfoId}`,
+          `api/agents/${agentId}/docs/${docId}`,
         ),
         method: "DELETE",
         headers: {

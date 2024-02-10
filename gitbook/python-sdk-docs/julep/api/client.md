@@ -15,7 +15,7 @@
 
 ## AsyncJulepApi
 
-[Show source in client.py:1500](../../../../../../julep/api/client.py#L1500)
+[Show source in client.py:1415](../../../../../../julep/api/client.py#L1415)
 
 #### Signature
 
@@ -33,7 +33,7 @@ class AsyncJulepApi:
 
 ### AsyncJulepApi().chat
 
-[Show source in client.py:2021](../../../../../../julep/api/client.py#L2021)
+[Show source in client.py:1892](../../../../../../julep/api/client.py#L1892)
 
 #### Arguments
 
@@ -79,41 +79,18 @@ Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the m
 
     - `-` *remember* - typing.Optional[bool]. Whether this interaction should be recorded in memory or not
 ---
-from julep import (
-    ChatSettingsResponseFormat,
-    ChatSettingsResponseFormatType,
-    FunctionDef,
-    InputChatMlMessage,
-    InputChatMlMessageRole,
-    Tool,
-    ToolType,
-)
+from julep import InputChatMlMessage, InputChatMlMessageRole
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.chat(
-    session_id="string",
-    response_format=ChatSettingsResponseFormat(
-        type=ChatSettingsResponseFormatType.TEXT,
-    ),
-    temperature=1.0,
-    top_p=1.0,
+    session_id="session_id",
     messages=[
         InputChatMlMessage(
             role=InputChatMlMessageRole.USER,
-            content="string",
-        )
-    ],
-    tools=[
-        Tool(
-            type=ToolType.FUNCTION,
-            definition=FunctionDef(
-                name="string",
-                - `parameters={"string"` - "string"},
-            ),
-            id="string",
+            content="content",
         )
     ],
 )
@@ -150,7 +127,7 @@ async def chat(
 
 ### AsyncJulepApi().create_agent
 
-[Show source in client.py:1727](../../../../../../julep/api/client.py#L1727)
+[Show source in client.py:1632](../../../../../../julep/api/client.py#L1632)
 
 Create a new agent
 
@@ -168,49 +145,17 @@ Create a new agent
 
 - `-` *model* - str. Name of the model that the agent is supposed to use
 
-    - `-` *additional_info* - typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
+    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 ---
-from julep import (
-    AgentDefaultSettings,
-    CreateAdditionalInfoRequest,
-    CreateToolRequest,
-    CreateToolRequestType,
-    FunctionDef,
-    Instruction,
-)
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.create_agent(
-    name="string",
-    about="string",
-    instructions=[
-        Instruction(
-            content="string",
-        )
-    ],
-    tools=[
-        CreateToolRequest(
-            type=CreateToolRequestType.FUNCTION,
-            definition=FunctionDef(
-                name="string",
-                - `parameters={"string"` - "string"},
-            ),
-        )
-    ],
-    default_settings=AgentDefaultSettings(
-        temperature=1.0,
-        top_p=1.0,
-    ),
-    model="string",
-    additional_info=[
-        CreateAdditionalInfoRequest(
-            title="string",
-            content="string",
-        )
-    ],
+    name="name",
+    about="about",
+    model="model",
 )
 
 #### Signature
@@ -224,7 +169,7 @@ async def create_agent(
     tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
     default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
     model: str,
-    additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]] = OMIT,
+    docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -232,41 +177,41 @@ async def create_agent(
 
 - [OMIT](#omit)
 
-### AsyncJulepApi().create_agent_additional_info
+### AsyncJulepApi().create_agent_doc
 
-[Show source in client.py:2536](../../../../../../julep/api/client.py#L2536)
+[Show source in client.py:2373](../../../../../../julep/api/client.py#L2373)
 
 #### Arguments
 
 - `-` *agent_id* - str.
 
-    - `-` *request* - CreateAdditionalInfoRequest.
+    - `-` *request* - CreateDoc.
 ---
-from julep import CreateAdditionalInfoRequest
+from julep import CreateDoc
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.create_agent_additional_info(
-    agent_id="string",
-    request=CreateAdditionalInfoRequest(
-        title="string",
-        content="string",
+await client.create_agent_doc(
+    agent_id="agent_id",
+    request=CreateDoc(
+        title="title",
+        content="content",
     ),
 )
 
 #### Signature
 
 ```python
-async def create_agent_additional_info(
-    self, agent_id: str, request: CreateAdditionalInfoRequest
+async def create_agent_doc(
+    self, agent_id: str, request: CreateDoc
 ) -> ResourceCreatedResponse: ...
 ```
 
 ### AsyncJulepApi().create_agent_tool
 
-[Show source in client.py:2822](../../../../../../julep/api/client.py#L2822)
+[Show source in client.py:2652](../../../../../../julep/api/client.py#L2652)
 
 #### Arguments
 
@@ -281,12 +226,12 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.create_agent_tool(
-    agent_id="string",
+    agent_id="agent_id",
     request=CreateToolRequest(
         type=CreateToolRequestType.FUNCTION,
         definition=FunctionDef(
-            name="string",
-            - `parameters={"string"` - "string"},
+            name="name",
+            parameters={},
         ),
     ),
 )
@@ -301,7 +246,7 @@ async def create_agent_tool(
 
 ### AsyncJulepApi().create_session
 
-[Show source in client.py:1553](../../../../../../julep/api/client.py#L1553)
+[Show source in client.py:1468](../../../../../../julep/api/client.py#L1468)
 
 Create a session between an agent and a user
 
@@ -319,8 +264,8 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.create_session(
-    user_id="string",
-    agent_id="string",
+    user_id="user_id",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -337,7 +282,7 @@ async def create_session(
 
 ### AsyncJulepApi().create_user
 
-[Show source in client.py:1634](../../../../../../julep/api/client.py#L1634)
+[Show source in client.py:1549](../../../../../../julep/api/client.py#L1549)
 
 Create a new user
 
@@ -347,22 +292,14 @@ Create a new user
 
 - `-` *about* - typing.Optional[str]. About the user
 
-    - `-` *additional_information* - typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
+    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about user
 ---
-from julep import CreateAdditionalInfoRequest
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.create_user(
-    additional_information=[
-        CreateAdditionalInfoRequest(
-            title="string",
-            content="string",
-        )
-    ],
-)
+await client.create_user()
 
 #### Signature
 
@@ -371,9 +308,7 @@ async def create_user(
     self,
     name: typing.Optional[str] = OMIT,
     about: typing.Optional[str] = OMIT,
-    additional_information: typing.Optional[
-        typing.List[CreateAdditionalInfoRequest]
-    ] = OMIT,
+    docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -381,41 +316,41 @@ async def create_user(
 
 - [OMIT](#omit)
 
-### AsyncJulepApi().create_user_additional_info
+### AsyncJulepApi().create_user_doc
 
-[Show source in client.py:2623](../../../../../../julep/api/client.py#L2623)
+[Show source in client.py:2458](../../../../../../julep/api/client.py#L2458)
 
 #### Arguments
 
 - `-` *user_id* - str.
 
-    - `-` *request* - CreateAdditionalInfoRequest.
+    - `-` *request* - CreateDoc.
 ---
-from julep import CreateAdditionalInfoRequest
+from julep import CreateDoc
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.create_user_additional_info(
-    user_id="string",
-    request=CreateAdditionalInfoRequest(
-        title="string",
-        content="string",
+await client.create_user_doc(
+    user_id="user_id",
+    request=CreateDoc(
+        title="title",
+        content="content",
     ),
 )
 
 #### Signature
 
 ```python
-async def create_user_additional_info(
-    self, user_id: str, request: CreateAdditionalInfoRequest
+async def create_user_doc(
+    self, user_id: str, request: CreateDoc
 ) -> ResourceCreatedResponse: ...
 ```
 
 ### AsyncJulepApi().delete_agent
 
-[Show source in client.py:2460](../../../../../../julep/api/client.py#L2460)
+[Show source in client.py:2298](../../../../../../julep/api/client.py#L2298)
 
 #### Arguments
 
@@ -427,7 +362,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.delete_agent(
-    agent_id="string",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -436,37 +371,35 @@ await client.delete_agent(
 async def delete_agent(self, agent_id: str) -> None: ...
 ```
 
-### AsyncJulepApi().delete_agent_additional_info
+### AsyncJulepApi().delete_agent_doc
 
-[Show source in client.py:2704](../../../../../../julep/api/client.py#L2704)
+[Show source in client.py:2536](../../../../../../julep/api/client.py#L2536)
 
 #### Arguments
 
 - `-` *agent_id* - str.
 
-    - `-` *additional_info_id* - str.
+    - `-` *doc_id* - str.
 ---
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.delete_agent_additional_info(
-    agent_id="string",
-    additional_info_id="string",
+await client.delete_agent_doc(
+    agent_id="agent_id",
+    doc_id="doc_id",
 )
 
 #### Signature
 
 ```python
-async def delete_agent_additional_info(
-    self, agent_id: str, additional_info_id: str
-) -> None: ...
+async def delete_agent_doc(self, agent_id: str, doc_id: str) -> None: ...
 ```
 
 ### AsyncJulepApi().delete_agent_memory
 
-[Show source in client.py:2742](../../../../../../julep/api/client.py#L2742)
+[Show source in client.py:2572](../../../../../../julep/api/client.py#L2572)
 
 #### Arguments
 
@@ -480,8 +413,8 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.delete_agent_memory(
-    agent_id="string",
-    memory_id="string",
+    agent_id="agent_id",
+    memory_id="memory_id",
 )
 
 #### Signature
@@ -492,7 +425,7 @@ async def delete_agent_memory(self, agent_id: str, memory_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_tool
 
-[Show source in client.py:2914](../../../../../../julep/api/client.py#L2914)
+[Show source in client.py:2744](../../../../../../julep/api/client.py#L2744)
 
 #### Arguments
 
@@ -506,8 +439,8 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.delete_agent_tool(
-    agent_id="string",
-    tool_id="string",
+    agent_id="agent_id",
+    tool_id="tool_id",
 )
 
 #### Signature
@@ -518,7 +451,7 @@ async def delete_agent_tool(self, agent_id: str, tool_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_session
 
-[Show source in client.py:1901](../../../../../../julep/api/client.py#L1901)
+[Show source in client.py:1772](../../../../../../julep/api/client.py#L1772)
 
 #### Arguments
 
@@ -530,7 +463,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.delete_session(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -541,7 +474,7 @@ async def delete_session(self, session_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_user
 
-[Show source in client.py:2323](../../../../../../julep/api/client.py#L2323)
+[Show source in client.py:2171](../../../../../../julep/api/client.py#L2171)
 
 #### Arguments
 
@@ -553,7 +486,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.delete_user(
-    user_id="string",
+    user_id="user_id",
 )
 
 #### Signature
@@ -562,37 +495,35 @@ await client.delete_user(
 async def delete_user(self, user_id: str) -> None: ...
 ```
 
-### AsyncJulepApi().delete_user_additional_info
+### AsyncJulepApi().delete_user_doc
 
-[Show source in client.py:2666](../../../../../../julep/api/client.py#L2666)
+[Show source in client.py:2500](../../../../../../julep/api/client.py#L2500)
 
 #### Arguments
 
 - `-` *user_id* - str.
 
-    - `-` *additional_info_id* - str.
+    - `-` *doc_id* - str.
 ---
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.delete_user_additional_info(
-    user_id="string",
-    additional_info_id="string",
+await client.delete_user_doc(
+    user_id="user_id",
+    doc_id="doc_id",
 )
 
 #### Signature
 
 ```python
-async def delete_user_additional_info(
-    self, user_id: str, additional_info_id: str
-) -> None: ...
+async def delete_user_doc(self, user_id: str, doc_id: str) -> None: ...
 ```
 
 ### AsyncJulepApi().get_agent
 
-[Show source in client.py:2355](../../../../../../julep/api/client.py#L2355)
+[Show source in client.py:2203](../../../../../../julep/api/client.py#L2203)
 
 #### Arguments
 
@@ -604,7 +535,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_agent(
-    agent_id="string",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -613,9 +544,9 @@ await client.get_agent(
 async def get_agent(self, agent_id: str) -> Agent: ...
 ```
 
-### AsyncJulepApi().get_agent_additional_info
+### AsyncJulepApi().get_agent_docs
 
-[Show source in client.py:2492](../../../../../../julep/api/client.py#L2492)
+[Show source in client.py:2330](../../../../../../julep/api/client.py#L2330)
 
 Sorted (created_at descending)
 
@@ -632,24 +563,24 @@ from julep.client import AsyncJulepApi
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.get_agent_additional_info(
-    agent_id="string",
+await client.get_agent_docs(
+    agent_id="agent_id",
 )
 
 #### Signature
 
 ```python
-async def get_agent_additional_info(
+async def get_agent_docs(
     self,
     agent_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
-) -> GetAgentAdditionalInfoResponse: ...
+) -> GetAgentDocsResponse: ...
 ```
 
 ### AsyncJulepApi().get_agent_memories
 
-[Show source in client.py:2181](../../../../../../julep/api/client.py#L2181)
+[Show source in client.py:2029](../../../../../../julep/api/client.py#L2029)
 
 Sorted (created_at descending)
 
@@ -673,8 +604,8 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_agent_memories(
-    agent_id="string",
-    query="string",
+    agent_id="agent_id",
+    query="query",
 )
 
 #### Signature
@@ -693,7 +624,7 @@ async def get_agent_memories(
 
 ### AsyncJulepApi().get_agent_tools
 
-[Show source in client.py:2778](../../../../../../julep/api/client.py#L2778)
+[Show source in client.py:2608](../../../../../../julep/api/client.py#L2608)
 
 Sorted (created_at descending)
 
@@ -711,7 +642,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_agent_tools(
-    agent_id="string",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -727,7 +658,7 @@ async def get_agent_tools(
 
 ### AsyncJulepApi().get_history
 
-[Show source in client.py:1977](../../../../../../julep/api/client.py#L1977)
+[Show source in client.py:1848](../../../../../../julep/api/client.py#L1848)
 
 Sorted (created_at ascending)
 
@@ -745,7 +676,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_history(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -761,7 +692,7 @@ async def get_history(
 
 ### AsyncJulepApi().get_session
 
-[Show source in client.py:1831](../../../../../../julep/api/client.py#L1831)
+[Show source in client.py:1702](../../../../../../julep/api/client.py#L1702)
 
 #### Arguments
 
@@ -773,7 +704,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_session(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -784,7 +715,7 @@ async def get_session(self, session_id: str) -> Session: ...
 
 ### AsyncJulepApi().get_suggestions
 
-[Show source in client.py:1933](../../../../../../julep/api/client.py#L1933)
+[Show source in client.py:1804](../../../../../../julep/api/client.py#L1804)
 
 Sorted (created_at descending)
 
@@ -802,7 +733,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_suggestions(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -818,7 +749,7 @@ async def get_suggestions(
 
 ### AsyncJulepApi().get_user
 
-[Show source in client.py:2243](../../../../../../julep/api/client.py#L2243)
+[Show source in client.py:2091](../../../../../../julep/api/client.py#L2091)
 
 #### Arguments
 
@@ -830,7 +761,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.get_user(
-    user_id="string",
+    user_id="user_id",
 )
 
 #### Signature
@@ -839,9 +770,9 @@ await client.get_user(
 async def get_user(self, user_id: str) -> User: ...
 ```
 
-### AsyncJulepApi().get_user_additional_info
+### AsyncJulepApi().get_user_docs
 
-[Show source in client.py:2579](../../../../../../julep/api/client.py#L2579)
+[Show source in client.py:2415](../../../../../../julep/api/client.py#L2415)
 
 Sorted (created_at descending)
 
@@ -858,24 +789,24 @@ from julep.client import AsyncJulepApi
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
-await client.get_user_additional_info(
-    user_id="string",
+await client.get_user_docs(
+    user_id="user_id",
 )
 
 #### Signature
 
 ```python
-async def get_user_additional_info(
+async def get_user_docs(
     self,
     user_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
-) -> GetUserAdditionalInfoResponse: ...
+) -> GetUserDocsResponse: ...
 ```
 
 ### AsyncJulepApi().list_agents
 
-[Show source in client.py:1692](../../../../../../julep/api/client.py#L1692)
+[Show source in client.py:1597](../../../../../../julep/api/client.py#L1597)
 
 List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
 
@@ -902,7 +833,7 @@ async def list_agents(
 
 ### AsyncJulepApi().list_sessions
 
-[Show source in client.py:1518](../../../../../../julep/api/client.py#L1518)
+[Show source in client.py:1433](../../../../../../julep/api/client.py#L1433)
 
 List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
 
@@ -929,7 +860,7 @@ async def list_sessions(
 
 ### AsyncJulepApi().list_users
 
-[Show source in client.py:1599](../../../../../../julep/api/client.py#L1599)
+[Show source in client.py:1514](../../../../../../julep/api/client.py#L1514)
 
 List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
 
@@ -956,7 +887,7 @@ async def list_users(
 
 ### AsyncJulepApi().update_agent
 
-[Show source in client.py:2387](../../../../../../julep/api/client.py#L2387)
+[Show source in client.py:2235](../../../../../../julep/api/client.py#L2235)
 
 #### Arguments
 
@@ -972,23 +903,13 @@ async def list_users(
 
     - `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 ---
-from julep import AgentDefaultSettings, Instruction
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.update_agent(
-    agent_id="string",
-    instructions=[
-        Instruction(
-            content="string",
-        )
-    ],
-    default_settings=AgentDefaultSettings(
-        temperature=1.0,
-        top_p=1.0,
-    ),
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -1011,7 +932,7 @@ async def update_agent(
 
 ### AsyncJulepApi().update_agent_tool
 
-[Show source in client.py:2868](../../../../../../julep/api/client.py#L2868)
+[Show source in client.py:2698](../../../../../../julep/api/client.py#L2698)
 
 #### Arguments
 
@@ -1028,11 +949,11 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.update_agent_tool(
-    agent_id="string",
-    tool_id="string",
+    agent_id="agent_id",
+    tool_id="tool_id",
     definition=FunctionDef(
-        name="string",
-        - `parameters={"string"` - "string"},
+        name="name",
+        parameters={},
     ),
 )
 
@@ -1046,7 +967,7 @@ async def update_agent_tool(
 
 ### AsyncJulepApi().update_session
 
-[Show source in client.py:1863](../../../../../../julep/api/client.py#L1863)
+[Show source in client.py:1734](../../../../../../julep/api/client.py#L1734)
 
 #### Arguments
 
@@ -1060,8 +981,8 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.update_session(
-    session_id="string",
-    situation="string",
+    session_id="session_id",
+    situation="situation",
 )
 
 #### Signature
@@ -1074,7 +995,7 @@ async def update_session(
 
 ### AsyncJulepApi().update_user
 
-[Show source in client.py:2275](../../../../../../julep/api/client.py#L2275)
+[Show source in client.py:2123](../../../../../../julep/api/client.py#L2123)
 
 #### Arguments
 
@@ -1090,7 +1011,7 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.update_user(
-    user_id="string",
+    user_id="user_id",
 )
 
 #### Signature
@@ -1130,7 +1051,7 @@ class JulepApi:
 
 ### JulepApi().chat
 
-[Show source in client.py:570](../../../../../../julep/api/client.py#L570)
+[Show source in client.py:526](../../../../../../julep/api/client.py#L526)
 
 #### Arguments
 
@@ -1176,41 +1097,18 @@ Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the m
 
     - `-` *remember* - typing.Optional[bool]. Whether this interaction should be recorded in memory or not
 ---
-from julep import (
-    ChatSettingsResponseFormat,
-    ChatSettingsResponseFormatType,
-    FunctionDef,
-    InputChatMlMessage,
-    InputChatMlMessageRole,
-    Tool,
-    ToolType,
-)
+from julep import InputChatMlMessage, InputChatMlMessageRole
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.chat(
-    session_id="string",
-    response_format=ChatSettingsResponseFormat(
-        type=ChatSettingsResponseFormatType.TEXT,
-    ),
-    temperature=1.0,
-    top_p=1.0,
+    session_id="session_id",
     messages=[
         InputChatMlMessage(
             role=InputChatMlMessageRole.USER,
-            content="string",
-        )
-    ],
-    tools=[
-        Tool(
-            type=ToolType.FUNCTION,
-            definition=FunctionDef(
-                name="string",
-                - `parameters={"string"` - "string"},
-            ),
-            id="string",
+            content="content",
         )
     ],
 )
@@ -1247,7 +1145,7 @@ def chat(
 
 ### JulepApi().create_agent
 
-[Show source in client.py:276](../../../../../../julep/api/client.py#L276)
+[Show source in client.py:266](../../../../../../julep/api/client.py#L266)
 
 Create a new agent
 
@@ -1265,49 +1163,17 @@ Create a new agent
 
 - `-` *model* - str. Name of the model that the agent is supposed to use
 
-    - `-` *additional_info* - typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
+    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 ---
-from julep import (
-    AgentDefaultSettings,
-    CreateAdditionalInfoRequest,
-    CreateToolRequest,
-    CreateToolRequestType,
-    FunctionDef,
-    Instruction,
-)
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.create_agent(
-    name="string",
-    about="string",
-    instructions=[
-        Instruction(
-            content="string",
-        )
-    ],
-    tools=[
-        CreateToolRequest(
-            type=CreateToolRequestType.FUNCTION,
-            definition=FunctionDef(
-                name="string",
-                - `parameters={"string"` - "string"},
-            ),
-        )
-    ],
-    default_settings=AgentDefaultSettings(
-        temperature=1.0,
-        top_p=1.0,
-    ),
-    model="string",
-    additional_info=[
-        CreateAdditionalInfoRequest(
-            title="string",
-            content="string",
-        )
-    ],
+    name="name",
+    about="about",
+    model="model",
 )
 
 #### Signature
@@ -1321,7 +1187,7 @@ def create_agent(
     tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
     default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
     model: str,
-    additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]] = OMIT,
+    docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -1329,41 +1195,41 @@ def create_agent(
 
 - [OMIT](#omit)
 
-### JulepApi().create_agent_additional_info
+### JulepApi().create_agent_doc
 
-[Show source in client.py:1085](../../../../../../julep/api/client.py#L1085)
+[Show source in client.py:1007](../../../../../../julep/api/client.py#L1007)
 
 #### Arguments
 
 - `-` *agent_id* - str.
 
-    - `-` *request* - CreateAdditionalInfoRequest.
+    - `-` *request* - CreateDoc.
 ---
-from julep import CreateAdditionalInfoRequest
+from julep import CreateDoc
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.create_agent_additional_info(
-    agent_id="string",
-    request=CreateAdditionalInfoRequest(
-        title="string",
-        content="string",
+client.create_agent_doc(
+    agent_id="agent_id",
+    request=CreateDoc(
+        title="title",
+        content="content",
     ),
 )
 
 #### Signature
 
 ```python
-def create_agent_additional_info(
-    self, agent_id: str, request: CreateAdditionalInfoRequest
+def create_agent_doc(
+    self, agent_id: str, request: CreateDoc
 ) -> ResourceCreatedResponse: ...
 ```
 
 ### JulepApi().create_agent_tool
 
-[Show source in client.py:1371](../../../../../../julep/api/client.py#L1371)
+[Show source in client.py:1286](../../../../../../julep/api/client.py#L1286)
 
 #### Arguments
 
@@ -1378,12 +1244,12 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.create_agent_tool(
-    agent_id="string",
+    agent_id="agent_id",
     request=CreateToolRequest(
         type=CreateToolRequestType.FUNCTION,
         definition=FunctionDef(
-            name="string",
-            - `parameters={"string"` - "string"},
+            name="name",
+            parameters={},
         ),
     ),
 )
@@ -1416,8 +1282,8 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.create_session(
-    user_id="string",
-    agent_id="string",
+    user_id="user_id",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -1444,22 +1310,14 @@ Create a new user
 
 - `-` *about* - typing.Optional[str]. About the user
 
-    - `-` *additional_information* - typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
+    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about user
 ---
-from julep import CreateAdditionalInfoRequest
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.create_user(
-    additional_information=[
-        CreateAdditionalInfoRequest(
-            title="string",
-            content="string",
-        )
-    ],
-)
+client.create_user()
 
 #### Signature
 
@@ -1468,9 +1326,7 @@ def create_user(
     self,
     name: typing.Optional[str] = OMIT,
     about: typing.Optional[str] = OMIT,
-    additional_information: typing.Optional[
-        typing.List[CreateAdditionalInfoRequest]
-    ] = OMIT,
+    docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -1478,41 +1334,41 @@ def create_user(
 
 - [OMIT](#omit)
 
-### JulepApi().create_user_additional_info
+### JulepApi().create_user_doc
 
-[Show source in client.py:1172](../../../../../../julep/api/client.py#L1172)
+[Show source in client.py:1092](../../../../../../julep/api/client.py#L1092)
 
 #### Arguments
 
 - `-` *user_id* - str.
 
-    - `-` *request* - CreateAdditionalInfoRequest.
+    - `-` *request* - CreateDoc.
 ---
-from julep import CreateAdditionalInfoRequest
+from julep import CreateDoc
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.create_user_additional_info(
-    user_id="string",
-    request=CreateAdditionalInfoRequest(
-        title="string",
-        content="string",
+client.create_user_doc(
+    user_id="user_id",
+    request=CreateDoc(
+        title="title",
+        content="content",
     ),
 )
 
 #### Signature
 
 ```python
-def create_user_additional_info(
-    self, user_id: str, request: CreateAdditionalInfoRequest
+def create_user_doc(
+    self, user_id: str, request: CreateDoc
 ) -> ResourceCreatedResponse: ...
 ```
 
 ### JulepApi().delete_agent
 
-[Show source in client.py:1009](../../../../../../julep/api/client.py#L1009)
+[Show source in client.py:932](../../../../../../julep/api/client.py#L932)
 
 #### Arguments
 
@@ -1524,7 +1380,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.delete_agent(
-    agent_id="string",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -1533,37 +1389,35 @@ client.delete_agent(
 def delete_agent(self, agent_id: str) -> None: ...
 ```
 
-### JulepApi().delete_agent_additional_info
+### JulepApi().delete_agent_doc
 
-[Show source in client.py:1253](../../../../../../julep/api/client.py#L1253)
+[Show source in client.py:1170](../../../../../../julep/api/client.py#L1170)
 
 #### Arguments
 
 - `-` *agent_id* - str.
 
-    - `-` *additional_info_id* - str.
+    - `-` *doc_id* - str.
 ---
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.delete_agent_additional_info(
-    agent_id="string",
-    additional_info_id="string",
+client.delete_agent_doc(
+    agent_id="agent_id",
+    doc_id="doc_id",
 )
 
 #### Signature
 
 ```python
-def delete_agent_additional_info(
-    self, agent_id: str, additional_info_id: str
-) -> None: ...
+def delete_agent_doc(self, agent_id: str, doc_id: str) -> None: ...
 ```
 
 ### JulepApi().delete_agent_memory
 
-[Show source in client.py:1291](../../../../../../julep/api/client.py#L1291)
+[Show source in client.py:1206](../../../../../../julep/api/client.py#L1206)
 
 #### Arguments
 
@@ -1577,8 +1431,8 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.delete_agent_memory(
-    agent_id="string",
-    memory_id="string",
+    agent_id="agent_id",
+    memory_id="memory_id",
 )
 
 #### Signature
@@ -1589,7 +1443,7 @@ def delete_agent_memory(self, agent_id: str, memory_id: str) -> None: ...
 
 ### JulepApi().delete_agent_tool
 
-[Show source in client.py:1463](../../../../../../julep/api/client.py#L1463)
+[Show source in client.py:1378](../../../../../../julep/api/client.py#L1378)
 
 #### Arguments
 
@@ -1603,8 +1457,8 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.delete_agent_tool(
-    agent_id="string",
-    tool_id="string",
+    agent_id="agent_id",
+    tool_id="tool_id",
 )
 
 #### Signature
@@ -1615,7 +1469,7 @@ def delete_agent_tool(self, agent_id: str, tool_id: str) -> None: ...
 
 ### JulepApi().delete_session
 
-[Show source in client.py:450](../../../../../../julep/api/client.py#L450)
+[Show source in client.py:406](../../../../../../julep/api/client.py#L406)
 
 #### Arguments
 
@@ -1627,7 +1481,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.delete_session(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -1638,7 +1492,7 @@ def delete_session(self, session_id: str) -> None: ...
 
 ### JulepApi().delete_user
 
-[Show source in client.py:872](../../../../../../julep/api/client.py#L872)
+[Show source in client.py:805](../../../../../../julep/api/client.py#L805)
 
 #### Arguments
 
@@ -1650,7 +1504,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.delete_user(
-    user_id="string",
+    user_id="user_id",
 )
 
 #### Signature
@@ -1659,35 +1513,35 @@ client.delete_user(
 def delete_user(self, user_id: str) -> None: ...
 ```
 
-### JulepApi().delete_user_additional_info
+### JulepApi().delete_user_doc
 
-[Show source in client.py:1215](../../../../../../julep/api/client.py#L1215)
+[Show source in client.py:1134](../../../../../../julep/api/client.py#L1134)
 
 #### Arguments
 
 - `-` *user_id* - str.
 
-    - `-` *additional_info_id* - str.
+    - `-` *doc_id* - str.
 ---
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.delete_user_additional_info(
-    user_id="string",
-    additional_info_id="string",
+client.delete_user_doc(
+    user_id="user_id",
+    doc_id="doc_id",
 )
 
 #### Signature
 
 ```python
-def delete_user_additional_info(self, user_id: str, additional_info_id: str) -> None: ...
+def delete_user_doc(self, user_id: str, doc_id: str) -> None: ...
 ```
 
 ### JulepApi().get_agent
 
-[Show source in client.py:904](../../../../../../julep/api/client.py#L904)
+[Show source in client.py:837](../../../../../../julep/api/client.py#L837)
 
 #### Arguments
 
@@ -1699,7 +1553,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_agent(
-    agent_id="string",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -1708,9 +1562,9 @@ client.get_agent(
 def get_agent(self, agent_id: str) -> Agent: ...
 ```
 
-### JulepApi().get_agent_additional_info
+### JulepApi().get_agent_docs
 
-[Show source in client.py:1041](../../../../../../julep/api/client.py#L1041)
+[Show source in client.py:964](../../../../../../julep/api/client.py#L964)
 
 Sorted (created_at descending)
 
@@ -1727,24 +1581,24 @@ from julep.client import JulepApi
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.get_agent_additional_info(
-    agent_id="string",
+client.get_agent_docs(
+    agent_id="agent_id",
 )
 
 #### Signature
 
 ```python
-def get_agent_additional_info(
+def get_agent_docs(
     self,
     agent_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
-) -> GetAgentAdditionalInfoResponse: ...
+) -> GetAgentDocsResponse: ...
 ```
 
 ### JulepApi().get_agent_memories
 
-[Show source in client.py:730](../../../../../../julep/api/client.py#L730)
+[Show source in client.py:663](../../../../../../julep/api/client.py#L663)
 
 Sorted (created_at descending)
 
@@ -1768,8 +1622,8 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_agent_memories(
-    agent_id="string",
-    query="string",
+    agent_id="agent_id",
+    query="query",
 )
 
 #### Signature
@@ -1788,7 +1642,7 @@ def get_agent_memories(
 
 ### JulepApi().get_agent_tools
 
-[Show source in client.py:1327](../../../../../../julep/api/client.py#L1327)
+[Show source in client.py:1242](../../../../../../julep/api/client.py#L1242)
 
 Sorted (created_at descending)
 
@@ -1806,7 +1660,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_agent_tools(
-    agent_id="string",
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -1822,7 +1676,7 @@ def get_agent_tools(
 
 ### JulepApi().get_history
 
-[Show source in client.py:526](../../../../../../julep/api/client.py#L526)
+[Show source in client.py:482](../../../../../../julep/api/client.py#L482)
 
 Sorted (created_at ascending)
 
@@ -1840,7 +1694,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_history(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -1856,7 +1710,7 @@ def get_history(
 
 ### JulepApi().get_session
 
-[Show source in client.py:380](../../../../../../julep/api/client.py#L380)
+[Show source in client.py:336](../../../../../../julep/api/client.py#L336)
 
 #### Arguments
 
@@ -1868,7 +1722,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_session(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -1879,7 +1733,7 @@ def get_session(self, session_id: str) -> Session: ...
 
 ### JulepApi().get_suggestions
 
-[Show source in client.py:482](../../../../../../julep/api/client.py#L482)
+[Show source in client.py:438](../../../../../../julep/api/client.py#L438)
 
 Sorted (created_at descending)
 
@@ -1897,7 +1751,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_suggestions(
-    session_id="string",
+    session_id="session_id",
 )
 
 #### Signature
@@ -1913,7 +1767,7 @@ def get_suggestions(
 
 ### JulepApi().get_user
 
-[Show source in client.py:792](../../../../../../julep/api/client.py#L792)
+[Show source in client.py:725](../../../../../../julep/api/client.py#L725)
 
 #### Arguments
 
@@ -1925,7 +1779,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.get_user(
-    user_id="string",
+    user_id="user_id",
 )
 
 #### Signature
@@ -1934,9 +1788,9 @@ client.get_user(
 def get_user(self, user_id: str) -> User: ...
 ```
 
-### JulepApi().get_user_additional_info
+### JulepApi().get_user_docs
 
-[Show source in client.py:1128](../../../../../../julep/api/client.py#L1128)
+[Show source in client.py:1049](../../../../../../julep/api/client.py#L1049)
 
 Sorted (created_at descending)
 
@@ -1953,24 +1807,24 @@ from julep.client import JulepApi
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
-client.get_user_additional_info(
-    user_id="string",
+client.get_user_docs(
+    user_id="user_id",
 )
 
 #### Signature
 
 ```python
-def get_user_additional_info(
+def get_user_docs(
     self,
     user_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
-) -> GetUserAdditionalInfoResponse: ...
+) -> GetUserDocsResponse: ...
 ```
 
 ### JulepApi().list_agents
 
-[Show source in client.py:241](../../../../../../julep/api/client.py#L241)
+[Show source in client.py:231](../../../../../../julep/api/client.py#L231)
 
 List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
 
@@ -2051,7 +1905,7 @@ def list_users(
 
 ### JulepApi().update_agent
 
-[Show source in client.py:936](../../../../../../julep/api/client.py#L936)
+[Show source in client.py:869](../../../../../../julep/api/client.py#L869)
 
 #### Arguments
 
@@ -2067,23 +1921,13 @@ def list_users(
 
     - `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 ---
-from julep import AgentDefaultSettings, Instruction
 from julep.client import JulepApi
 
 client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.update_agent(
-    agent_id="string",
-    instructions=[
-        Instruction(
-            content="string",
-        )
-    ],
-    default_settings=AgentDefaultSettings(
-        temperature=1.0,
-        top_p=1.0,
-    ),
+    agent_id="agent_id",
 )
 
 #### Signature
@@ -2106,7 +1950,7 @@ def update_agent(
 
 ### JulepApi().update_agent_tool
 
-[Show source in client.py:1417](../../../../../../julep/api/client.py#L1417)
+[Show source in client.py:1332](../../../../../../julep/api/client.py#L1332)
 
 #### Arguments
 
@@ -2123,11 +1967,11 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.update_agent_tool(
-    agent_id="string",
-    tool_id="string",
+    agent_id="agent_id",
+    tool_id="tool_id",
     definition=FunctionDef(
-        name="string",
-        - `parameters={"string"` - "string"},
+        name="name",
+        parameters={},
     ),
 )
 
@@ -2141,7 +1985,7 @@ def update_agent_tool(
 
 ### JulepApi().update_session
 
-[Show source in client.py:412](../../../../../../julep/api/client.py#L412)
+[Show source in client.py:368](../../../../../../julep/api/client.py#L368)
 
 #### Arguments
 
@@ -2155,8 +1999,8 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.update_session(
-    session_id="string",
-    situation="string",
+    session_id="session_id",
+    situation="situation",
 )
 
 #### Signature
@@ -2167,7 +2011,7 @@ def update_session(self, session_id: str, situation: str) -> ResourceUpdatedResp
 
 ### JulepApi().update_user
 
-[Show source in client.py:824](../../../../../../julep/api/client.py#L824)
+[Show source in client.py:757](../../../../../../julep/api/client.py#L757)
 
 #### Arguments
 
@@ -2183,7 +2027,7 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.update_user(
-    user_id="string",
+    user_id="user_id",
 )
 
 #### Signature

@@ -7,7 +7,7 @@ from beartype.typing import Awaitable, List, Literal, Union
 from ..api.types import (
     Agent,
     AgentDefaultSettings,
-    CreateAdditionalInfoRequest,
+    CreateDoc,
     CreateToolRequest,
     Instruction,
     ResourceCreatedResponse,
@@ -172,10 +172,8 @@ class BaseAgentsManager(BaseManager):
             **default_settings
         )
 
-        # Cast docs to a list of CreateAdditionalInfoRequest objects
-        docs: List[CreateAdditionalInfoRequest] = [
-            CreateAdditionalInfoRequest(**doc) for doc in docs
-        ]
+        # Cast docs to a list of CreateDoc objects
+        docs: List[CreateDoc] = [CreateDoc(**doc) for doc in docs]
 
         return self.api_client.create_agent(
             name=name,
@@ -184,7 +182,7 @@ class BaseAgentsManager(BaseManager):
             tools=tools,
             default_settings=default_settings,
             model=model,
-            additional_info=docs,
+            docs=docs,
         )
 
     def _list_items(
