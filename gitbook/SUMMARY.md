@@ -41,7 +41,7 @@
   * [API](python-sdk-docs/julep/api/client.md)
 * [JS SDK](js-sdk-docs/README.md)
   * [Client](js-sdk-docs/classes/Client.JulepApiClient-1.md)
-  * [Modules](js-sdk-docs/index.md)
+  * [Modules](js-sdk-docs/modules.md)
 
 ## 🔍 FAQs
 
