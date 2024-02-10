@@ -157,8 +157,13 @@ class BaseSession:
 
         return messages, settings
 
-    async def generate(self, init_context, settings: Settings) -> dict:
+    async def generate(self, init_context: list[ChatML], settings: Settings) -> dict:
         # TODO: how to use response_format ?
+
+        init_context = [
+            {"name": msg.name, "role": msg.role, "content": msg.content}
+            for msg in init_context
+        ]
 
         return openai.ChatCompletion.create(
             model=settings.model,
