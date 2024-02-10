@@ -1,9 +1,13 @@
+from datetime import datetime
 from typing import Annotated
 from uuid import uuid4
-from pydantic import BaseModel
-from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+
+
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
+from pydantic import BaseModel
 from pydantic import UUID4
+from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+
 from agents_api.clients.cozo import client
 from agents_api.models.session.get_session import get_session_query
 from agents_api.models.session.create_session import create_session_query
@@ -18,6 +22,7 @@ from agents_api.autogen.openapi_model import (
     Suggestion,
     ChatMLMessage,
     ResourceCreatedResponse,
+    ResourceDeletedResponse,
     ResourceUpdatedResponse,
     ChatResponse,
     FinishReason,
@@ -104,7 +109,7 @@ async def list_sessions(
 )
 async def delete_session(
     session_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
-):
+) -> ResourceDeletedResponse:
     try:
         client.run(delete_session_query(x_developer_id, session_id))
     except (IndexError, KeyError):
@@ -112,6 +117,8 @@ async def delete_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found",
         )
+
+    return ResourceDeletedResponse(id=session_id, deleted_at=datetime.now())
 
 
 @router.put("/sessions/{session_id}", tags=["sessions"])

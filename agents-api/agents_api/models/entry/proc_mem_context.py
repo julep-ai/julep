@@ -206,18 +206,18 @@ def proc_mem_context_query(
             index: Float,
         }}
     }} {{
-        # Collect additional_info docs
+        # Collect docs
 
         # Search for agent docs
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{agent_id, doc_query}},
-            *agent_additional_info {{
+            *agent_docs {{
                 agent_id,
-                additional_info_id,
+                doc_id,
                 created_at,
             }},
             ~information_snippets:embedding_space {{
-                additional_info_id,
+                doc_id,
                 snippet_idx,
                 title,
                 snippet |
@@ -237,13 +237,13 @@ def proc_mem_context_query(
         # Search for user docs
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{user_id, doc_query}},
-            *user_additional_info {{
+            *user_docs {{
                 user_id,
-                additional_info_id,
+                doc_id,
                 created_at,
             }},
             ~information_snippets:embedding_space {{
-                additional_info_id,
+                doc_id,
                 snippet_idx,
                 title,
                 snippet |
@@ -261,7 +261,7 @@ def proc_mem_context_query(
             index = 5 + (snippet_idx * 0.01)
 
         # Save in temp table
-        :create _additional_info {{
+        :create _docs {{
             role: String,
             name: String?,
             content: String,
@@ -317,7 +317,7 @@ def proc_mem_context_query(
             }},
 
         ?[role, name, content, token_count, created_at, index] :=
-            *_additional_info{{
+            *_docs {{
                 role, name, content, token_count, created_at, index
             }},
 

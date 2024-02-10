@@ -3,7 +3,7 @@
 MIGRATION_ID = "rename_additional_info"
 CREATED_AT = 1707537826.539182
 
-rename_agent_additional_info_id = dict(
+rename_agent_doc_id = dict(
     up="""
     ?[agent_id, doc_id, created_at] :=
         *agent_additional_info{
@@ -37,7 +37,7 @@ rename_agent_additional_info_id = dict(
 )
 
 
-rename_user_additional_info_id = dict(
+rename_user_doc_id = dict(
     up="""
     ?[user_id, doc_id, created_at] :=
         *user_additional_info{
@@ -70,8 +70,52 @@ rename_user_additional_info_id = dict(
     """,
 )
 
+# See: https://github.com/nmslib/hnswlib/blob/master/ALGO_PARAMS.md
+information_snippets_hnsw_index = dict(
+    up="""
+    ::hnsw create information_snippets:embedding_space {
+        fields: [embedding],
+        filter: !is_null(embedding),
+        dim: 768,
+        distance: Cosine,
+        m: 64,
+        ef_construction: 256,
+        extend_candidates: false,
+        keep_pruned_connections: false,
+    }
+    """,
+    down="""
+    ::hnsw drop information_snippets:embedding_space
+    """,
+)
 
-rename_information_snippets_additional_info_id = dict(
+# See: https://docs.cozodb.org/en/latest/vector.html#full-text-search-fts
+information_snippets_fts_index = dict(
+    up="""
+    ::fts create information_snippets:fts {
+        extractor: concat(title, ' ', snippet),
+        tokenizer: Simple,
+        filters: [Lowercase, Stemmer('english'), Stopwords('en')],
+    }
+    """,
+    down="""
+    ::fts drop information_snippets:fts
+    """,
+)
+
+drop_information_snippets_hnsw_index = {
+    "up": information_snippets_hnsw_index["down"],
+    "down": information_snippets_hnsw_index["up"],
+}
+
+
+drop_information_snippets_fts_index = {
+    "up": information_snippets_fts_index["down"],
+    "down": information_snippets_fts_index["up"],
+}
+
+
+rename_information_snippets_doc_id = dict(
     up="""
     ?[
         doc_id,
@@ -145,8 +189,13 @@ rename_relations = dict(
 
 
 queries_to_run = [
-    rename_agent_additional_info_id,
-    rename_user_additional_info_id,
+    rename_agent_doc_id,
+    rename_user_doc_id,
+    drop_information_snippets_hnsw_index,
+    drop_information_snippets_fts_index,
+    rename_information_snippets_doc_id,
+    information_snippets_hnsw_index,
+    information_snippets_fts_index,
     rename_relations,
 ]
 
@@ -156,7 +205,14 @@ def run(client, *queries):
 
     query = joiner.join(queries)
     query = f"{{\n{query}\n}}"
-    client.run(query)
+
+    try:
+        client.run(query)
+    except Exception as error:
+        print(error)
+        import pdb
+
+        pdb.set_trace()
 
 
 def up(client):

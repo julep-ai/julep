@@ -2,33 +2,35 @@ from typing import Literal
 from uuid import UUID
 
 
-def list_additional_info_snippets_by_owner_query(
+def get_docs_snippets_by_id_query(
     owner_type: Literal["user", "agent"],
-    owner_id: UUID,
+    doc_id: UUID,
 ):
-    owner_id = str(owner_id)
+    doc_id = str(doc_id)
 
     return f"""
     {{
-        input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
+        input[doc_id] <- [[to_uuid("{doc_id}")]]
 
         ?[
             {owner_type}_id,
-            additional_info_id,
+            doc_id,
             title,
             snippet,
             snippet_idx,
             created_at,
-        ] := input[{owner_type}_id],
-            *{owner_type}_additional_info {{
+            embed_instruction,
+        ] := input[doc_id],
+            *{owner_type}_docs {{
                 {owner_type}_id,
-                additional_info_id,
+                doc_id,
                 created_at,
             }},
             *information_snippets {{
-                additional_info_id,
+                doc_id,
                 snippet_idx,
                 title,
                 snippet,
+                embed_instruction,
             }}
     }}"""

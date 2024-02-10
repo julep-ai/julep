@@ -3,7 +3,7 @@ from typing import Literal
 from uuid import UUID
 
 
-def search_additional_info_snippets_by_embedding_query(
+def search_docs_snippets_by_embedding_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
     query_embedding: list[float],
@@ -24,25 +24,25 @@ def search_additional_info_snippets_by_embedding_query(
         ]]
 
         candidate[
-            additional_info_id
+            doc_id
         ] := input[{owner_type}_id, _],
-            *{owner_type}_additional_info {{
+            *{owner_type}_docs {{
                 {owner_type}_id,
-                additional_info_id
+                doc_id
             }}
 
         ?[
             {owner_type}_id,
-            additional_info_id,
+            doc_id,
             title,
             snippet,
             snippet_idx,
             distance,
             vector,
         ] := input[{owner_type}_id, query_embedding],
-            candidate[additional_info_id],
+            candidate[doc_id],
             ~information_snippets:embedding_space {{
-                additional_info_id,
+                doc_id,
                 snippet_idx,
                 title,
                 snippet |

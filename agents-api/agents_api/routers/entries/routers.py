@@ -29,5 +29,5 @@ async def get_entries(
 @router.post("/entries/", tags=["entries"])
 async def create_entries(request: EntriesRequest):
     return client.run(
-        add_entries_query(request.entries, return_result=True),
+        add_entries_query(request.entries),
     )

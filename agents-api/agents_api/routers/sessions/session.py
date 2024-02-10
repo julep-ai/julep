@@ -1,4 +1,4 @@
-from typing import Tuple, Callable
+from typing import Callable
 import openai
 from dataclasses import dataclass
 from pydantic import UUID4
@@ -32,7 +32,7 @@ class BaseSession:
     session_id: UUID4
     developer_id: UUID4
 
-    async def run(self, new_input, settings: Settings) -> Tuple[dict, Entry, Callable]:
+    async def run(self, new_input, settings: Settings) -> tuple[dict, Entry, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -75,7 +75,7 @@ class BaseSession:
         session_data: SessionData | None,
         new_input: list[Entry],
         settings: Settings,
-    ) -> Tuple[ChatML, Settings]:
+    ) -> tuple[list[ChatML], Settings]:
         # role, name, content, token_count, created_at
         string_to_embed = "\n".join(
             [f"{msg.name or msg.role}: {msg.content}" for msg in new_input]
@@ -140,13 +140,15 @@ class BaseSession:
             )
 
         messages = [
-            {
-                "role": e.role,
-                "name": e.name,
-                "content": e.content
-                if not isinstance(e.content, list)
-                else "\n".join(e.content),
-            }
+            ChatML(
+                role=e.role,
+                name=e.name,
+                content=(
+                    e.content
+                    if not isinstance(e.content, list)
+                    else "\n".join(e.content)
+                ),
+            )
             for e in entries + new_input
             if e.content
         ]
@@ -181,7 +183,7 @@ class BaseSession:
         total_tokens: int,
         new_entry: Entry,
         final_settings: Settings,
-    ) -> None:
+    ) -> Callable | None:
         if not final_settings.remember:
             return
 
