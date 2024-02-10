@@ -48,20 +48,5 @@ test = [
     { cmd = "ward" },
     "kill_prism",
 ]
+generate_docstrings = "gpt4docstrings -k $OPENAI_API_KEY -v 1 -w -p -s -n -C -e api/ -m gpt-4-1106-preview julep/"
 doc = "handsdown julep --exclude julep/api/core --exclude julep/api/types --exclude julep/api/environment.py --exclude julep/env.py --exclude julep/managers/base.py --exclude julep/managers/types.py --exclude julep/managers/utils.py --cleanup -n 'Julep Python SDK' --toc-depth 2 -o ../../gitbook/python-sdk-docs"
-
-[[tool.pydoc-markdown.loaders]]
-type = "python"
-search_path = [ "./" ]
-
-[tool.pydoc-markdown.renderer]
-type = "markdown"
-insert_header_anchors = false
-classdef_with_decorators = false
-signature_with_decorators = false
-format_code = false
-descriptive_class_title = false
-classdef_code_block = false
-signature_in_header = true
-signature_code_block = false
-docstrings_as_blockquote = false

@@ -4,7 +4,6 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
-from .additional_info import AdditionalInfo
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -12,8 +11,12 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class GetAgentAdditionalInfoResponse(pydantic.BaseModel):
-    items: typing.Optional[typing.List[AdditionalInfo]]
+class Doc(pydantic.BaseModel):
+    title: str = pydantic.Field(
+        description="Title describing what this bit of information contains"
+    )
+    content: str = pydantic.Field(description="Information content")
+    id: str = pydantic.Field(description="ID of doc")
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
