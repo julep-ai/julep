@@ -32,8 +32,8 @@ export declare class JulepApiClient {
    *
    * @example
    *     await julepApi.createSession({
-   *         userId: "string",
-   *         agentId: "string"
+   *         userId: "user_id",
+   *         agentId: "agent_id"
    *     })
    */
   createSession(
@@ -54,12 +54,7 @@ export declare class JulepApiClient {
    * Create a new user
    *
    * @example
-   *     await julepApi.createUser({
-   *         additionalInformation: [{
-   *                 title: "string",
-   *                 content: "string"
-   *             }]
-   *     })
+   *     await julepApi.createUser({})
    */
   createUser(
     request?: JulepApi.CreateUserRequest,
@@ -80,29 +75,9 @@ export declare class JulepApiClient {
    *
    * @example
    *     await julepApi.createAgent({
-   *         name: "string",
-   *         about: "string",
-   *         instructions: [{
-   *                 content: "string"
-   *             }],
-   *         tools: [{
-   *                 type: JulepApi.CreateToolRequestType.Function,
-   *                 definition: {
-   *                     name: "string",
-   *                     parameters: {
-   *                         "string": "string"
-   *                     }
-   *                 }
-   *             }],
-   *         defaultSettings: {
-   *             temperature: 1,
-   *             topP: 1
-   *         },
-   *         model: "string",
-   *         additionalInfo: [{
-   *                 title: "string",
-   *                 content: "string"
-   *             }]
+   *         name: "name",
+   *         about: "about",
+   *         model: "model"
    *     })
    */
   createAgent(
@@ -113,7 +88,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.getSession("string")
+   *     await julepApi.getSession("session_id")
    */
   getSession(
     sessionId: string,
@@ -123,8 +98,8 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateSession("string", {
-   *         situation: "string"
+   *     await julepApi.updateSession("session_id", {
+   *         situation: "situation"
    *     })
    */
   updateSession(
@@ -136,7 +111,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteSession("string")
+   *     await julepApi.deleteSession("session_id")
    */
   deleteSession(
     sessionId: string,
@@ -146,7 +121,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getSuggestions("string", {})
+   *     await julepApi.getSuggestions("session_id", {})
    */
   getSuggestions(
     sessionId: string,
@@ -157,7 +132,7 @@ export declare class JulepApiClient {
    * Sorted (created_at ascending)
    *
    * @example
-   *     await julepApi.getHistory("string", {})
+   *     await julepApi.getHistory("session_id", {})
    */
   getHistory(
     sessionId: string,
@@ -168,26 +143,11 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.chat("string", {
+   *     await julepApi.chat("session_id", {
    *         accept: "application/json",
-   *         responseFormat: {
-   *             type: JulepApi.ChatSettingsResponseFormatType.Text
-   *         },
-   *         temperature: 1,
-   *         topP: 1,
    *         messages: [{
    *                 role: JulepApi.InputChatMlMessageRole.User,
-   *                 content: "string"
-   *             }],
-   *         tools: [{
-   *                 type: JulepApi.ToolType.Function,
-   *                 definition: {
-   *                     name: "string",
-   *                     parameters: {
-   *                         "string": "string"
-   *                     }
-   *                 },
-   *                 id: "string"
+   *                 content: "content"
    *             }]
    *     })
    */
@@ -200,8 +160,8 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentMemories("string", {
-   *         query: "string"
+   *     await julepApi.getAgentMemories("agent_id", {
+   *         query: "query"
    *     })
    */
   getAgentMemories(
@@ -213,7 +173,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.getUser("string")
+   *     await julepApi.getUser("user_id")
    */
   getUser(
     userId: string,
@@ -223,7 +183,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateUser("string", {})
+   *     await julepApi.updateUser("user_id", {})
    */
   updateUser(
     userId: string,
@@ -234,7 +194,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteUser("string")
+   *     await julepApi.deleteUser("user_id")
    */
   deleteUser(
     userId: string,
@@ -244,7 +204,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.getAgent("string")
+   *     await julepApi.getAgent("agent_id")
    */
   getAgent(
     agentId: string,
@@ -254,15 +214,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateAgent("string", {
-   *         instructions: [{
-   *                 content: "string"
-   *             }],
-   *         defaultSettings: {
-   *             temperature: 1,
-   *             topP: 1
-   *         }
-   *     })
+   *     await julepApi.updateAgent("agent_id", {})
    */
   updateAgent(
     agentId: string,
@@ -273,7 +225,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgent("string")
+   *     await julepApi.deleteAgent("agent_id")
    */
   deleteAgent(
     agentId: string,
@@ -283,7 +235,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentAdditionalInfo("string", {})
+   *     await julepApi.getAgentAdditionalInfo("agent_id", {})
    */
   getAgentAdditionalInfo(
     agentId: string,
@@ -294,9 +246,9 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createAgentAdditionalInfo("string", {
-   *         title: "string",
-   *         content: "string"
+   *     await julepApi.createAgentAdditionalInfo("agent_id", {
+   *         title: "title",
+   *         content: "content"
    *     })
    */
   createAgentAdditionalInfo(
@@ -308,7 +260,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getUserAdditionalInfo("string", {})
+   *     await julepApi.getUserAdditionalInfo("user_id", {})
    */
   getUserAdditionalInfo(
     userId: string,
@@ -319,9 +271,9 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createUserAdditionalInfo("string", {
-   *         title: "string",
-   *         content: "string"
+   *     await julepApi.createUserAdditionalInfo("user_id", {
+   *         title: "title",
+   *         content: "content"
    *     })
    */
   createUserAdditionalInfo(
@@ -333,7 +285,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteUserAdditionalInfo("string", "string")
+   *     await julepApi.deleteUserAdditionalInfo("user_id", "additional_info_id")
    */
   deleteUserAdditionalInfo(
     userId: string,
@@ -344,7 +296,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentAdditionalInfo("string", "string")
+   *     await julepApi.deleteAgentAdditionalInfo("agent_id", "additional_info_id")
    */
   deleteAgentAdditionalInfo(
     agentId: string,
@@ -355,7 +307,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentMemory("string", "string")
+   *     await julepApi.deleteAgentMemory("agent_id", "memory_id")
    */
   deleteAgentMemory(
     agentId: string,
@@ -366,7 +318,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentTools("string", {})
+   *     await julepApi.getAgentTools("agent_id", {})
    */
   getAgentTools(
     agentId: string,
@@ -377,13 +329,11 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.createAgentTool("string", {
+   *     await julepApi.createAgentTool("agent_id", {
    *         type: JulepApi.CreateToolRequestType.Function,
    *         definition: {
-   *             name: "string",
-   *             parameters: {
-   *                 "string": "string"
-   *             }
+   *             name: "name",
+   *             parameters: {}
    *         }
    *     })
    */
@@ -396,12 +346,10 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateAgentTool("string", "string", {
+   *     await julepApi.updateAgentTool("agent_id", "tool_id", {
    *         definition: {
-   *             name: "string",
-   *             parameters: {
-   *                 "string": "string"
-   *             }
+   *             name: "name",
+   *             parameters: {}
    *         }
    *     })
    */
@@ -415,7 +363,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.deleteAgentTool("string", "string")
+   *     await julepApi.deleteAgentTool("agent_id", "tool_id")
    */
   deleteAgentTool(
     agentId: string,

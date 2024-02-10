@@ -6,24 +6,9 @@ import * as JulepApi from "../..";
  * @example
  *     {
  *         accept: "application/json",
- *         responseFormat: {
- *             type: JulepApi.ChatSettingsResponseFormatType.Text
- *         },
- *         temperature: 1,
- *         topP: 1,
  *         messages: [{
  *                 role: JulepApi.InputChatMlMessageRole.User,
- *                 content: "string"
- *             }],
- *         tools: [{
- *                 type: JulepApi.ToolType.Function,
- *                 definition: {
- *                     name: "string",
- *                     parameters: {
- *                         "string": "string"
- *                     }
- *                 },
- *                 id: "string"
+ *                 content: "content"
  *             }]
  *     }
  */
