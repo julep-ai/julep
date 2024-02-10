@@ -124,7 +124,7 @@ class Suggestion(BaseModel):
     session_id: UUID = Field(..., description="Session this suggestion belongs to")
 
 
-class Role(Enum):
+class Role(str, Enum):
     user = "user"
     assistant = "assistant"
     system = "system"

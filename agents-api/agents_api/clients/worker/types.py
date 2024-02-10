@@ -12,7 +12,7 @@ class PromptModule(Protocol):
 
 
 class ChatML(BaseModel):
-    role: Literal["system", "user", "assistant"]
+    role: Literal["system", "user", "assistant", "function_call"]
     content: str
 
     name: Optional[str] = None
