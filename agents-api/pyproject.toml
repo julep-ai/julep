@@ -28,7 +28,7 @@ pydantic = "^2.5.3"
 ipython = "^8.18.1"
 black = "^23.12.1"
 ruff = "^0.1.9"
-datamodel-code-generator = "^0.25.2"
+datamodel-code-generator = "^0.25.3"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.24.4"
 pytype = "^2024.1.5"
@@ -47,3 +47,4 @@ check = [
     "typecheck",
 ]
 test = "ward"
+codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/openapi_model.py"
