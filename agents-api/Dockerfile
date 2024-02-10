@@ -9,4 +9,4 @@ COPY . ./
 
 RUN pip install -e .
 
-CMD ["python", "memory_api/web.py", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "agents_api/web.py", "--host", "0.0.0.0", "--port", "8080"]

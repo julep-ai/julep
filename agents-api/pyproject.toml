@@ -1,12 +1,13 @@
 [tool.poetry]
-name = "memory-api"
+name = "agents-api"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Julep Developers <developers@julep.ai>"]
 readme = "README.md"
+packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 fastapi = "^0.103.1"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.23.2"
@@ -27,7 +28,7 @@ pydantic = "^2.5.3"
 ipython = "^8.18.1"
 black = "^23.12.1"
 ruff = "^0.1.9"
-datamodel-code-generator = "^0.25.2"
+datamodel-code-generator = "^0.25.3"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.24.4"
 pytype = "^2024.1.5"
@@ -39,10 +40,11 @@ build-backend = "poetry.core.masonry.api"
 [tool.poe.tasks]
 prettify = "black ."
 lint = "ruff **/*.py --fix --unsafe-fixes"
-typecheck = "pytype memory_api"
+typecheck = "pytype agents_api"
 check = [
     "prettify",
     "lint",
     "typecheck",
 ]
 test = "ward"
+codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/openapi_model.py"

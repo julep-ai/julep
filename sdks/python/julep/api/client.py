@@ -118,8 +118,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_session(
-            user_id="string",
-            agent_id="string",
+            user_id="user_id",
+            agent_id="agent_id",
         )
         """
         _request: typing.Dict[str, typing.Any] = {
@@ -199,20 +199,12 @@ class JulepApi:
 
             - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
         ---
-        from julep import CreateAdditionalInfoRequest
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.create_user(
-            additional_information=[
-                CreateAdditionalInfoRequest(
-                    title="string",
-                    content="string",
-                )
-            ],
-        )
+        client.create_user()
         """
         _request: typing.Dict[str, typing.Any] = {}
         if name is not OMIT:
@@ -304,47 +296,15 @@ class JulepApi:
 
             - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
         ---
-        from julep import (
-            AgentDefaultSettings,
-            CreateAdditionalInfoRequest,
-            CreateToolRequest,
-            CreateToolRequestType,
-            FunctionDef,
-            Instruction,
-        )
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
         client.create_agent(
-            name="string",
-            about="string",
-            instructions=[
-                Instruction(
-                    content="string",
-                )
-            ],
-            tools=[
-                CreateToolRequest(
-                    type=CreateToolRequestType.FUNCTION,
-                    definition=FunctionDef(
-                        name="string",
-                        parameters={"string": "string"},
-                    ),
-                )
-            ],
-            default_settings=AgentDefaultSettings(
-                temperature=1.0,
-                top_p=1.0,
-            ),
-            model="string",
-            additional_info=[
-                CreateAdditionalInfoRequest(
-                    title="string",
-                    content="string",
-                )
-            ],
+            name="name",
+            about="about",
+            model="model",
         )
         """
         _request: typing.Dict[str, typing.Any] = {
@@ -390,7 +350,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_session(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -426,8 +386,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.update_session(
-            session_id="string",
-            situation="string",
+            session_id="session_id",
+            situation="situation",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -460,7 +420,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_session(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -502,7 +462,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_suggestions(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -546,7 +506,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_history(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -635,41 +595,18 @@ class JulepApi:
 
             - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
         ---
-        from julep import (
-            ChatSettingsResponseFormat,
-            ChatSettingsResponseFormatType,
-            FunctionDef,
-            InputChatMlMessage,
-            InputChatMlMessageRole,
-            Tool,
-            ToolType,
-        )
+        from julep import InputChatMlMessage, InputChatMlMessageRole
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
         client.chat(
-            session_id="string",
-            response_format=ChatSettingsResponseFormat(
-                type=ChatSettingsResponseFormatType.TEXT,
-            ),
-            temperature=1.0,
-            top_p=1.0,
+            session_id="session_id",
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
-                    content="string",
-                )
-            ],
-            tools=[
-                Tool(
-                    type=ToolType.FUNCTION,
-                    definition=FunctionDef(
-                        name="string",
-                        parameters={"string": "string"},
-                    ),
-                    id="string",
+                    content="content",
                 )
             ],
         )
@@ -759,8 +696,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent_memories(
-            agent_id="string",
-            query="string",
+            agent_id="agent_id",
+            query="query",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -802,7 +739,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_user(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -844,7 +781,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.update_user(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _request: typing.Dict[str, typing.Any] = {}
@@ -882,7 +819,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_user(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -914,7 +851,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -959,23 +896,13 @@ class JulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
         ---
-        from julep import AgentDefaultSettings, Instruction
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
         client.update_agent(
-            agent_id="string",
-            instructions=[
-                Instruction(
-                    content="string",
-                )
-            ],
-            default_settings=AgentDefaultSettings(
-                temperature=1.0,
-                top_p=1.0,
-            ),
+            agent_id="agent_id",
         )
         """
         _request: typing.Dict[str, typing.Any] = {}
@@ -1019,7 +946,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1061,7 +988,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent_additional_info(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1100,10 +1027,10 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_agent_additional_info(
-            agent_id="string",
+            agent_id="agent_id",
             request=CreateAdditionalInfoRequest(
-                title="string",
-                content="string",
+                title="title",
+                content="content",
             ),
         )
         """
@@ -1148,7 +1075,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_user_additional_info(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1187,10 +1114,10 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_user_additional_info(
-            user_id="string",
+            user_id="user_id",
             request=CreateAdditionalInfoRequest(
-                title="string",
-                content="string",
+                title="title",
+                content="content",
             ),
         )
         """
@@ -1229,8 +1156,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_user_additional_info(
-            user_id="string",
-            additional_info_id="string",
+            user_id="user_id",
+            additional_info_id="additional_info_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1267,8 +1194,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent_additional_info(
-            agent_id="string",
-            additional_info_id="string",
+            agent_id="agent_id",
+            additional_info_id="additional_info_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1303,8 +1230,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent_memory(
-            agent_id="string",
-            memory_id="string",
+            agent_id="agent_id",
+            memory_id="memory_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1347,7 +1274,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_agent_tools(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1386,12 +1313,12 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_agent_tool(
-            agent_id="string",
+            agent_id="agent_id",
             request=CreateToolRequest(
                 type=CreateToolRequestType.FUNCTION,
                 definition=FunctionDef(
-                    name="string",
-                    parameters={"string": "string"},
+                    name="name",
+                    parameters={},
                 ),
             ),
         )
@@ -1434,11 +1361,11 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.update_agent_tool(
-            agent_id="string",
-            tool_id="string",
+            agent_id="agent_id",
+            tool_id="tool_id",
             definition=FunctionDef(
-                name="string",
-                parameters={"string": "string"},
+                name="name",
+                parameters={},
             ),
         )
         """
@@ -1475,8 +1402,8 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.delete_agent_tool(
-            agent_id="string",
-            tool_id="string",
+            agent_id="agent_id",
+            tool_id="tool_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1569,8 +1496,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_session(
-            user_id="string",
-            agent_id="string",
+            user_id="user_id",
+            agent_id="agent_id",
         )
         """
         _request: typing.Dict[str, typing.Any] = {
@@ -1650,20 +1577,12 @@ class AsyncJulepApi:
 
             - additional_information: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about user
         ---
-        from julep import CreateAdditionalInfoRequest
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.create_user(
-            additional_information=[
-                CreateAdditionalInfoRequest(
-                    title="string",
-                    content="string",
-                )
-            ],
-        )
+        await client.create_user()
         """
         _request: typing.Dict[str, typing.Any] = {}
         if name is not OMIT:
@@ -1755,47 +1674,15 @@ class AsyncJulepApi:
 
             - additional_info: typing.Optional[typing.List[CreateAdditionalInfoRequest]]. List of additional info about agent
         ---
-        from julep import (
-            AgentDefaultSettings,
-            CreateAdditionalInfoRequest,
-            CreateToolRequest,
-            CreateToolRequestType,
-            FunctionDef,
-            Instruction,
-        )
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
         await client.create_agent(
-            name="string",
-            about="string",
-            instructions=[
-                Instruction(
-                    content="string",
-                )
-            ],
-            tools=[
-                CreateToolRequest(
-                    type=CreateToolRequestType.FUNCTION,
-                    definition=FunctionDef(
-                        name="string",
-                        parameters={"string": "string"},
-                    ),
-                )
-            ],
-            default_settings=AgentDefaultSettings(
-                temperature=1.0,
-                top_p=1.0,
-            ),
-            model="string",
-            additional_info=[
-                CreateAdditionalInfoRequest(
-                    title="string",
-                    content="string",
-                )
-            ],
+            name="name",
+            about="about",
+            model="model",
         )
         """
         _request: typing.Dict[str, typing.Any] = {
@@ -1841,7 +1728,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_session(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -1877,8 +1764,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.update_session(
-            session_id="string",
-            situation="string",
+            session_id="session_id",
+            situation="situation",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -1911,7 +1798,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_session(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -1953,7 +1840,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_suggestions(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -1997,7 +1884,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_history(
-            session_id="string",
+            session_id="session_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2086,41 +1973,18 @@ class AsyncJulepApi:
 
             - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
         ---
-        from julep import (
-            ChatSettingsResponseFormat,
-            ChatSettingsResponseFormatType,
-            FunctionDef,
-            InputChatMlMessage,
-            InputChatMlMessageRole,
-            Tool,
-            ToolType,
-        )
+        from julep import InputChatMlMessage, InputChatMlMessageRole
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
         await client.chat(
-            session_id="string",
-            response_format=ChatSettingsResponseFormat(
-                type=ChatSettingsResponseFormatType.TEXT,
-            ),
-            temperature=1.0,
-            top_p=1.0,
+            session_id="session_id",
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
-                    content="string",
-                )
-            ],
-            tools=[
-                Tool(
-                    type=ToolType.FUNCTION,
-                    definition=FunctionDef(
-                        name="string",
-                        parameters={"string": "string"},
-                    ),
-                    id="string",
+                    content="content",
                 )
             ],
         )
@@ -2210,8 +2074,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent_memories(
-            agent_id="string",
-            query="string",
+            agent_id="agent_id",
+            query="query",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2253,7 +2117,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_user(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2295,7 +2159,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.update_user(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _request: typing.Dict[str, typing.Any] = {}
@@ -2333,7 +2197,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_user(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2365,7 +2229,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2410,23 +2274,13 @@ class AsyncJulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
         ---
-        from julep import AgentDefaultSettings, Instruction
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
         await client.update_agent(
-            agent_id="string",
-            instructions=[
-                Instruction(
-                    content="string",
-                )
-            ],
-            default_settings=AgentDefaultSettings(
-                temperature=1.0,
-                top_p=1.0,
-            ),
+            agent_id="agent_id",
         )
         """
         _request: typing.Dict[str, typing.Any] = {}
@@ -2470,7 +2324,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2512,7 +2366,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent_additional_info(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2551,10 +2405,10 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_agent_additional_info(
-            agent_id="string",
+            agent_id="agent_id",
             request=CreateAdditionalInfoRequest(
-                title="string",
-                content="string",
+                title="title",
+                content="content",
             ),
         )
         """
@@ -2599,7 +2453,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_user_additional_info(
-            user_id="string",
+            user_id="user_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2638,10 +2492,10 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_user_additional_info(
-            user_id="string",
+            user_id="user_id",
             request=CreateAdditionalInfoRequest(
-                title="string",
-                content="string",
+                title="title",
+                content="content",
             ),
         )
         """
@@ -2680,8 +2534,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_user_additional_info(
-            user_id="string",
-            additional_info_id="string",
+            user_id="user_id",
+            additional_info_id="additional_info_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2718,8 +2572,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent_additional_info(
-            agent_id="string",
-            additional_info_id="string",
+            agent_id="agent_id",
+            additional_info_id="additional_info_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2754,8 +2608,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent_memory(
-            agent_id="string",
-            memory_id="string",
+            agent_id="agent_id",
+            memory_id="memory_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2798,7 +2652,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_agent_tools(
-            agent_id="string",
+            agent_id="agent_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
@@ -2837,12 +2691,12 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_agent_tool(
-            agent_id="string",
+            agent_id="agent_id",
             request=CreateToolRequest(
                 type=CreateToolRequestType.FUNCTION,
                 definition=FunctionDef(
-                    name="string",
-                    parameters={"string": "string"},
+                    name="name",
+                    parameters={},
                 ),
             ),
         )
@@ -2885,11 +2739,11 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.update_agent_tool(
-            agent_id="string",
-            tool_id="string",
+            agent_id="agent_id",
+            tool_id="tool_id",
             definition=FunctionDef(
-                name="string",
-                parameters={"string": "string"},
+                name="name",
+                parameters={},
             ),
         )
         """
@@ -2926,8 +2780,8 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.delete_agent_tool(
-            agent_id="string",
-            tool_id="string",
+            agent_id="agent_id",
+            tool_id="tool_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
