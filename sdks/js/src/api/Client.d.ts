@@ -235,72 +235,72 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentAdditionalInfo("agent_id", {})
+   *     await julepApi.getAgentDocs("agent_id", {})
    */
-  getAgentAdditionalInfo(
+  getAgentDocs(
     agentId: string,
-    request?: JulepApi.GetAgentAdditionalInfoRequest,
+    request?: JulepApi.GetAgentDocsRequest,
     requestOptions?: JulepApiClient.RequestOptions,
-  ): Promise<JulepApi.GetAgentAdditionalInfoResponse>;
+  ): Promise<JulepApi.GetAgentDocsResponse>;
   /**
    *
    *
    * @example
-   *     await julepApi.createAgentAdditionalInfo("agent_id", {
+   *     await julepApi.createAgentDoc("agent_id", {
    *         title: "title",
    *         content: "content"
    *     })
    */
-  createAgentAdditionalInfo(
+  createAgentDoc(
     agentId: string,
-    request: JulepApi.CreateAdditionalInfoRequest,
+    request: JulepApi.CreateDoc,
     requestOptions?: JulepApiClient.RequestOptions,
   ): Promise<JulepApi.ResourceCreatedResponse>;
   /**
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getUserAdditionalInfo("user_id", {})
+   *     await julepApi.getUserDocs("user_id", {})
    */
-  getUserAdditionalInfo(
+  getUserDocs(
     userId: string,
-    request?: JulepApi.GetUserAdditionalInfoRequest,
+    request?: JulepApi.GetUserDocsRequest,
     requestOptions?: JulepApiClient.RequestOptions,
-  ): Promise<JulepApi.GetUserAdditionalInfoResponse>;
+  ): Promise<JulepApi.GetUserDocsResponse>;
   /**
    *
    *
    * @example
-   *     await julepApi.createUserAdditionalInfo("user_id", {
+   *     await julepApi.createUserDoc("user_id", {
    *         title: "title",
    *         content: "content"
    *     })
    */
-  createUserAdditionalInfo(
+  createUserDoc(
     userId: string,
-    request: JulepApi.CreateAdditionalInfoRequest,
+    request: JulepApi.CreateDoc,
     requestOptions?: JulepApiClient.RequestOptions,
   ): Promise<JulepApi.ResourceCreatedResponse>;
   /**
    *
    *
    * @example
-   *     await julepApi.deleteUserAdditionalInfo("user_id", "additional_info_id")
+   *     await julepApi.deleteUserDoc("user_id", "doc_id")
    */
-  deleteUserAdditionalInfo(
+  deleteUserDoc(
     userId: string,
-    additionalInfoId: string,
+    docId: string,
     requestOptions?: JulepApiClient.RequestOptions,
   ): Promise<void>;
   /**
    *
    *
    * @example
-   *     await julepApi.deleteAgentAdditionalInfo("agent_id", "additional_info_id")
+   *     await julepApi.deleteAgentDoc("agent_id", "doc_id")
    */
-  deleteAgentAdditionalInfo(
+  deleteAgentDoc(
     agentId: string,
-    additionalInfoId: string,
+    docId: string,
     requestOptions?: JulepApiClient.RequestOptions,
   ): Promise<void>;
   /**

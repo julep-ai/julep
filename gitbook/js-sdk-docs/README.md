@@ -1,1 +1,1 @@
-@julep/sdk / [Modules](index.md)
+@julep/sdk / [Modules](modules.md)

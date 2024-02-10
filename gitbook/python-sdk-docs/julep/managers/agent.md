@@ -11,7 +11,7 @@
 
 ## AgentsManager
 
-[Show source in agent.py:282](../../../../../../julep/managers/agent.py#L282)
+[Show source in agent.py:280](../../../../../../julep/managers/agent.py#L280)
 
 A class for managing agents, inheriting from [BaseAgentsManager](#baseagentsmanager).
 
@@ -81,7 +81,7 @@ class AgentsManager(BaseAgentsManager): ...
 
 ### AgentsManager().create
 
-[Show source in agent.py:362](../../../../../../julep/managers/agent.py#L362)
+[Show source in agent.py:360](../../../../../../julep/managers/agent.py#L360)
 
 Creates a new resource with the specified details.
 
@@ -127,7 +127,7 @@ def create(
 
 ### AgentsManager().delete
 
-[Show source in agent.py:434](../../../../../../julep/managers/agent.py#L434)
+[Show source in agent.py:432](../../../../../../julep/managers/agent.py#L432)
 
 Delete the agent with the specified ID.
 
@@ -150,7 +150,7 @@ def delete(self, agent_id: Union[str, UUID]): ...
 
 ### AgentsManager().get
 
-[Show source in agent.py:345](../../../../../../julep/managers/agent.py#L345)
+[Show source in agent.py:343](../../../../../../julep/managers/agent.py#L343)
 
 Retrieve an Agent object by its identifier.
 
@@ -176,7 +176,7 @@ def get(self, id: Union[str, UUID]) -> Agent: ...
 
 ### AgentsManager().list
 
-[Show source in agent.py:405](../../../../../../julep/managers/agent.py#L405)
+[Show source in agent.py:403](../../../../../../julep/managers/agent.py#L403)
 
 List the Agent objects, possibly with pagination.
 
@@ -208,7 +208,7 @@ def list(
 
 ### AgentsManager().update
 
-[Show source in agent.py:451](../../../../../../julep/managers/agent.py#L451)
+[Show source in agent.py:449](../../../../../../julep/managers/agent.py#L449)
 
 Update the properties of a resource.
 
@@ -250,7 +250,7 @@ def update(
 
 ## AsyncAgentsManager
 
-[Show source in agent.py:491](../../../../../../julep/managers/agent.py#L491)
+[Show source in agent.py:489](../../../../../../julep/managers/agent.py#L489)
 
 A class for managing asynchronous agent operations.
 
@@ -328,7 +328,7 @@ class AsyncAgentsManager(BaseAgentsManager): ...
 
 ### AsyncAgentsManager().create
 
-[Show source in agent.py:581](../../../../../../julep/managers/agent.py#L581)
+[Show source in agent.py:579](../../../../../../julep/managers/agent.py#L579)
 
 Create a new resource asynchronously with specified details.
 
@@ -376,7 +376,7 @@ async def create(
 
 ### AsyncAgentsManager().delete
 
-[Show source in agent.py:653](../../../../../../julep/managers/agent.py#L653)
+[Show source in agent.py:651](../../../../../../julep/managers/agent.py#L651)
 
 Asynchronously deletes an agent given its identifier.
 
@@ -399,7 +399,7 @@ async def delete(self, agent_id: Union[str, UUID]): ...
 
 ### AsyncAgentsManager().get
 
-[Show source in agent.py:562](../../../../../../julep/managers/agent.py#L562)
+[Show source in agent.py:560](../../../../../../julep/managers/agent.py#L560)
 
 Asynchronously retrieve an Agent object by its ID.
 
@@ -427,7 +427,7 @@ async def get(self, id: Union[UUID, str]) -> Agent: ...
 
 ### AsyncAgentsManager().list
 
-[Show source in agent.py:626](../../../../../../julep/managers/agent.py#L626)
+[Show source in agent.py:624](../../../../../../julep/managers/agent.py#L624)
 
 Asynchronously lists agents with optional limit and offset.
 
@@ -454,7 +454,7 @@ async def list(
 
 ### AsyncAgentsManager().update
 
-[Show source in agent.py:668](../../../../../../julep/managers/agent.py#L668)
+[Show source in agent.py:666](../../../../../../julep/managers/agent.py#L666)
 
 Asynchronously update an agent's details.
 
@@ -607,7 +607,7 @@ def _create(
 
 ### BaseAgentsManager()._delete
 
-[Show source in agent.py:210](../../../../../../julep/managers/agent.py#L210)
+[Show source in agent.py:208](../../../../../../julep/managers/agent.py#L208)
 
 Delete an agent by its ID.
 
@@ -657,7 +657,7 @@ def _get(self, id: Union[str, UUID]) -> Union[Agent, Awaitable[Agent]]: ...
 
 ### BaseAgentsManager()._list_items
 
-[Show source in agent.py:190](../../../../../../julep/managers/agent.py#L190)
+[Show source in agent.py:188](../../../../../../julep/managers/agent.py#L188)
 
 Lists items with optional pagination.
 
@@ -680,7 +680,7 @@ def _list_items(
 
 ### BaseAgentsManager()._update
 
-[Show source in agent.py:228](../../../../../../julep/managers/agent.py#L228)
+[Show source in agent.py:226](../../../../../../julep/managers/agent.py#L226)
 
 Update the agent's properties.
 

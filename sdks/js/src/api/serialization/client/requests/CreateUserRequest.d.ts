@@ -12,8 +12,6 @@ export declare namespace CreateUserRequest {
   interface Raw {
     name?: string | null;
     about?: string | null;
-    additional_information?:
-      | serializers.CreateAdditionalInfoRequest.Raw[]
-      | null;
+    docs?: serializers.CreateDoc.Raw[] | null;
   }
 }

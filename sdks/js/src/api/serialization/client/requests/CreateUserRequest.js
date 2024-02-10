@@ -85,18 +85,15 @@ const core = __importStar(require("../../../core"));
 exports.CreateUserRequest = core.serialization.object({
   name: core.serialization.string().optional(),
   about: core.serialization.string().optional(),
-  additionalInformation: core.serialization.property(
-    "additional_information",
-    core.serialization
-      .list(
-        core.serialization.lazyObject(() =>
-          __awaiter(void 0, void 0, void 0, function* () {
-            return (yield Promise.resolve().then(() =>
-              __importStar(require("../..")),
-            )).CreateAdditionalInfoRequest;
-          }),
-        ),
-      )
-      .optional(),
-  ),
+  docs: core.serialization
+    .list(
+      core.serialization.lazyObject(() =>
+        __awaiter(void 0, void 0, void 0, function* () {
+          return (yield Promise.resolve().then(() =>
+            __importStar(require("../..")),
+          )).CreateDoc;
+        }),
+      ),
+    )
+    .optional(),
 });

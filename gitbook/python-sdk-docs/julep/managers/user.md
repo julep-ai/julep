@@ -11,7 +11,7 @@
 
 ## AsyncUsersManager
 
-[Show source in user.py:332](../../../../../../julep/managers/user.py#L332)
+[Show source in user.py:330](../../../../../../julep/managers/user.py#L330)
 
 A class that provides asynchronous management of users extending BaseUsersManager.
 
@@ -50,7 +50,7 @@ class AsyncUsersManager(BaseUsersManager): ...
 
 ### AsyncUsersManager().create
 
-[Show source in user.py:376](../../../../../../julep/managers/user.py#L376)
+[Show source in user.py:374](../../../../../../julep/managers/user.py#L374)
 
 Asynchronously create a new resource with the provided name, description, and documents.
 
@@ -81,7 +81,7 @@ async def create(
 
 ### AsyncUsersManager().delete
 
-[Show source in user.py:439](../../../../../../julep/managers/user.py#L439)
+[Show source in user.py:437](../../../../../../julep/managers/user.py#L437)
 
 Asynchronously deletes a user by their user ID.
 
@@ -111,7 +111,7 @@ async def delete(self, user_id: Union[str, UUID]) -> None: ...
 
 ### AsyncUsersManager().get
 
-[Show source in user.py:358](../../../../../../julep/managers/user.py#L358)
+[Show source in user.py:356](../../../../../../julep/managers/user.py#L356)
 
 Fetch a User object asynchronously by its identifier.
 
@@ -138,7 +138,7 @@ async def get(self, id: Union[UUID, str]) -> User: ...
 
 ### AsyncUsersManager().list
 
-[Show source in user.py:406](../../../../../../julep/managers/user.py#L406)
+[Show source in user.py:404](../../../../../../julep/managers/user.py#L404)
 
 Asynchronously lists users with optional limits and offsets.
 
@@ -173,7 +173,7 @@ async def list(
 
 ### AsyncUsersManager().update
 
-[Show source in user.py:465](../../../../../../julep/managers/user.py#L465)
+[Show source in user.py:463](../../../../../../julep/managers/user.py#L463)
 
 Asynchronously updates user details.
 
@@ -242,14 +242,14 @@ class BaseUsersManager(BaseManager): ...
 
 Create a new resource with the given name and about information, optionally including additional docs.
 
-This internal method allows for creating a new resource with optional additional information.
+This internal method allows for creating a new resource with optional docsrmation.
 
 #### Arguments
 
 - `name` *str* - The name of the new resource.
 - `about` *str* - A brief description about the new resource.
 - `docs` *List[DocDict], optional* - A list of dictionaries with documentation-related information. Each dictionary
-    must conform to the structure expected by CreateAdditionalInfoRequest. Defaults to an empty list.
+    must conform to the structure expected by CreateDoc. Defaults to an empty list.
 
 #### Returns
 
@@ -263,7 +263,7 @@ This method is an internal API implementation detail and should not be used dire
 or module.
 
 Side effects:
-    Modifies internal state by converting each doc dict to an instance of CreateAdditionalInfoRequest and uses the
+    Modifies internal state by converting each doc dict to an instance of CreateDoc and uses the
     internal API client to create a new user resource.
 
 #### Signature
@@ -276,7 +276,7 @@ def _create(
 
 ### BaseUsersManager()._delete
 
-[Show source in user.py:123](../../../../../../julep/managers/user.py#L123)
+[Show source in user.py:121](../../../../../../julep/managers/user.py#L121)
 
 Delete a user given their user ID.
 
@@ -328,7 +328,7 @@ def _get(self, id: Union[str, UUID]) -> Union[User, Awaitable[User]]: ...
 
 ### BaseUsersManager()._list_items
 
-[Show source in user.py:104](../../../../../../julep/managers/user.py#L104)
+[Show source in user.py:102](../../../../../../julep/managers/user.py#L102)
 
 Fetch a list of users, with optional pagination parameters.
 
@@ -350,7 +350,7 @@ def _list_items(
 
 ### BaseUsersManager()._update
 
-[Show source in user.py:140](../../../../../../julep/managers/user.py#L140)
+[Show source in user.py:138](../../../../../../julep/managers/user.py#L138)
 
 Update user details for a given user ID.
 
@@ -385,7 +385,7 @@ def _update(
 
 ## UsersManager
 
-[Show source in user.py:170](../../../../../../julep/managers/user.py#L170)
+[Show source in user.py:168](../../../../../../julep/managers/user.py#L168)
 
 A class responsible for managing users in a system.
 
@@ -424,7 +424,7 @@ class UsersManager(BaseUsersManager): ...
 
 ### UsersManager().create
 
-[Show source in user.py:217](../../../../../../julep/managers/user.py#L217)
+[Show source in user.py:215](../../../../../../julep/managers/user.py#L215)
 
 Create a new resource with the specified name, about text, and associated docs.
 
@@ -455,7 +455,7 @@ def create(
 
 ### UsersManager().delete
 
-[Show source in user.py:277](../../../../../../julep/managers/user.py#L277)
+[Show source in user.py:275](../../../../../../julep/managers/user.py#L275)
 
 Deletes a user based on the provided user ID.
 
@@ -486,7 +486,7 @@ def delete(self, user_id: Union[str, UUID]) -> None: ...
 
 ### UsersManager().get
 
-[Show source in user.py:197](../../../../../../julep/managers/user.py#L197)
+[Show source in user.py:195](../../../../../../julep/managers/user.py#L195)
 
 Retrieve a User object by its identifier.
 
@@ -515,7 +515,7 @@ def get(self, id: Union[str, UUID]) -> User: ...
 
 ### UsersManager().list
 
-[Show source in user.py:250](../../../../../../julep/managers/user.py#L250)
+[Show source in user.py:248](../../../../../../julep/managers/user.py#L248)
 
 Lists the users optionally applying limit and offset.
 
@@ -545,7 +545,7 @@ def list(
 
 ### UsersManager().update
 
-[Show source in user.py:304](../../../../../../julep/managers/user.py#L304)
+[Show source in user.py:302](../../../../../../julep/managers/user.py#L302)
 
 Update user information.
 

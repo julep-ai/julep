@@ -120,18 +120,15 @@ exports.CreateAgentRequest = core.serialization.object({
       .optional(),
   ),
   model: core.serialization.string(),
-  additionalInfo: core.serialization.property(
-    "additional_info",
-    core.serialization
-      .list(
-        core.serialization.lazyObject(() =>
-          __awaiter(void 0, void 0, void 0, function* () {
-            return (yield Promise.resolve().then(() =>
-              __importStar(require("../..")),
-            )).CreateAdditionalInfoRequest;
-          }),
-        ),
-      )
-      .optional(),
-  ),
+  docs: core.serialization
+    .list(
+      core.serialization.lazyObject(() =>
+        __awaiter(void 0, void 0, void 0, function* () {
+          return (yield Promise.resolve().then(() =>
+            __importStar(require("../..")),
+          )).CreateDoc;
+        }),
+      ),
+    )
+    .optional(),
 });
