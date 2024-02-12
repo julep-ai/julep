@@ -134,10 +134,16 @@ class ChatCompletionRequest(ChatCompletionRequest):
     messages: ChatML
     temperature: Optional[float] = 0.0
 
+    class Config:
+        extra = "forbid"
+
 
 class CompletionRequest(CompletionRequest):
     spaces_between_special_tokens: Optional[bool] = False
     temperature: Optional[float] = 0.0
+
+    class Config:
+        extra = "forbid"
 
 
 class EndpointFilter(logging.Filter):
