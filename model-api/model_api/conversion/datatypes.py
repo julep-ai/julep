@@ -1,4 +1,5 @@
-from typing import cast, Optional, Literal, TypedDict
+from typing import cast, Optional, Literal
+from typing_extensions import TypedDict
 
 
 ValidRole = Literal["assistant", "system", "user", "function_call"]
