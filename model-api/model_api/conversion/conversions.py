@@ -34,7 +34,7 @@ def parse_message(message: str) -> ChatMLMessage:
     if person:
         return ChatMLMessage(role="user", name=person["name"], content=content)
 
-    return ChatMLMessage(content=message)
+    return ChatMLMessage(role="assistant", content=message)
 
 
 def message_role_to_prefix(message: ChatMLMessage) -> Optional[str]:
