@@ -1,23 +1,23 @@
 import argparse
-import json
 import asyncio
-import time
-import logging
-import sentry_sdk
-from http import HTTPStatus
 from contextlib import suppress
+from http import HTTPStatus
+import json
+import logging
+import time
 from typing import AsyncGenerator, Optional, List, Dict, Union, Any, Annotated
 
-from pydantic import UUID4, Field, BaseModel
+from aioprometheus.asgi.starlette import metrics
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, BackgroundTasks, Request, Depends
 from fastapi.responses import Response, JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
-from aioprometheus.asgi.starlette import metrics
 from jsonschema.exceptions import ValidationError
+from lmformatenforcer import JsonSchemaParser
+from pydantic import UUID4, Field, BaseModel
+import sentry_sdk
 
 from vllm.engine.metrics import add_global_metrics_labels
-from lmformatenforcer import JsonSchemaParser
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.utils import random_uuid
@@ -51,7 +51,12 @@ from .conversion.exceptions import (
     InvalidFunctionName,
 )
 from .logger import logger
-from .env import sentry_dsn
+from .env import (
+    sentry_dsn,
+    temperature_scaling_factor,
+    temperature_scaling_power,
+)
+
 from .metrics import (
     tokens_per_user_metric,
     generation_time_metric,
@@ -65,6 +70,7 @@ from .utils import (
     validate_functions,
     vllm_with_character_level_parser,
     FunctionCallResult,
+    rescale_temperature,
 )
 
 
@@ -375,6 +381,13 @@ async def completions(
     created_time = int(time.time())
     sampling_params = request.to_sampling_params()
 
+    # Rescale the temperature
+    sampling_params.temperature = rescale_temperature(
+        sampling_params.temperature,
+        temperature_scaling_factor,
+        power=temperature_scaling_power,  # Set it to lower than 1.0 to punish high temperatures more
+    )
+
     result_generator = engine.generate(
         prompt,
         sampling_params,
@@ -604,6 +617,13 @@ async def chat_completions(
     request_id = f"cmpl-{random_uuid()}"
     created_time = int(time.time())
     sampling_params = request.to_sampling_params()
+
+    # Rescale the temperature
+    sampling_params.temperature = rescale_temperature(
+        sampling_params.temperature,
+        temperature_scaling_factor,
+        power=temperature_scaling_power,  # Set it to lower than 1.0 to punish high temperatures more
+    )
 
     if (
         request.response_format is not None
