@@ -9,7 +9,7 @@ from typing import AsyncGenerator, Optional, List, Dict, Union, Any, Annotated
 
 from aioprometheus.asgi.starlette import metrics
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, BackgroundTasks, Request, Depends, Header
+from fastapi import FastAPI, BackgroundTasks, Request, Depends
 from fastapi.responses import Response, JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
 from jsonschema.exceptions import ValidationError
@@ -64,6 +64,8 @@ from .metrics import (
     MetricsMiddleware,
 )
 from .dependencies.auth import get_api_key
+from .dependencies.developer import get_developer_id, get_developer_email
+from .dependencies.exceptions import InvalidHeaderFormat
 from .utils import (
     validate_functions,
     vllm_with_character_level_parser,
@@ -246,6 +248,19 @@ async def validation_error_handler(request: Request, exc: ValidationError):
     )
 
 
+@app.exception_handler(InvalidHeaderFormat)
+async def invalid_dev_header_error_handler(request: Request, exc: InvalidHeaderFormat):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": {
+                "message": "The API key used has invalid metadata. Please contact support for fixing this issue",
+                "code": "invalid API key",
+            }
+        },
+    )
+
+
 def create_error_response(
     status_code: HTTPStatus,
     message: str,
@@ -289,16 +304,17 @@ async def show_available_models():
 
 
 def _write_metrics(
-    total_gen_time: float, total_tokens: float, developer: UUID4 | str | None = None
+    total_gen_time: float,
+    total_tokens: float,
+    developer: UUID4 | None = None,
+    email: UUID4 | None = None,
 ):
-    if developer is None:
-        developer = "unknown_developer"
-
     developer = str(developer)
-    generation_time_metric.set({"developer": developer}, total_gen_time)
-    tokens_per_user_metric.add({"developer": developer}, total_tokens)
+    email = str(email)
+    generation_time_metric.set({"developer": developer, "email": email}, total_gen_time)
+    tokens_per_user_metric.add({"developer": developer, "email": email}, total_tokens)
     generated_tokens_per_second_metric.set(
-        {"developer": developer}, total_tokens / total_gen_time
+        {"developer": developer, "email": email}, total_tokens / total_gen_time
     )
 
 
@@ -306,7 +322,8 @@ def _write_metrics(
 async def completions(
     raw_request: Request,
     background_tasks: BackgroundTasks,
-    x_developer_id: Annotated[UUID4 | None, Header()] = None,
+    x_developer_id: Annotated[UUID4 | None, Depends(get_developer_id)] = None,
+    x_developer_email: Annotated[UUID4 | None, Depends(get_developer_email)] = None,
 ) -> Response:
     """Completion API similar to OpenAI's API.
 
@@ -452,6 +469,7 @@ async def completions(
             total_gen_time,
             total_tokens,
             x_developer_id,
+            x_developer_email,
         )
 
         yield "data: [DONE]\n\n"
@@ -503,6 +521,7 @@ async def completions(
         tokens_gen_time,
         total_tokens,
         x_developer_id,
+        x_developer_email,
     )
 
     usage = UsageInfo(
@@ -539,7 +558,8 @@ async def completions(
 async def chat_completions(
     raw_request: Request,
     background_tasks: BackgroundTasks,
-    x_developer_id: Annotated[UUID4 | None, Header()] = None,
+    x_developer_id: Annotated[UUID4 | None, Depends(get_developer_id)] = None,
+    x_developer_email: Annotated[UUID4 | None, Depends(get_developer_email)] = None,
 ) -> Response:
     """Completion API similar to OpenAI's API.
 
@@ -731,6 +751,7 @@ async def chat_completions(
             total_gen_time,
             total_tokens,
             x_developer_id,
+            x_developer_email,
         )
 
         yield "data: [DONE]\n\n"
@@ -793,6 +814,7 @@ async def chat_completions(
         tokens_gen_time,
         total_tokens,
         x_developer_id,
+        x_developer_email,
     )
 
     response = ChatCompletionResponse(

@@ -1,0 +1,2 @@
+class InvalidHeaderFormat(Exception):
+    pass
