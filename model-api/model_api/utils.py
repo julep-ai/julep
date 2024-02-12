@@ -89,3 +89,11 @@ def vllm_with_character_level_parser(
 class FunctionCallResult(BaseModel):
     name: str
     arguments: dict[str, Any]
+
+
+def rescale_temperature(
+    temperature: float,
+    scaling_factor: float,
+    power: float = 1.0,
+) -> float:
+    return (temperature**power) * scaling_factor
