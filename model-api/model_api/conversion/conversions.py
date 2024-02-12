@@ -1,9 +1,9 @@
 from io import StringIO
 import json
 import re
-from typing import Optional
+from typing import Callable, Optional
 
-from .datatypes import ChatML, ChatMLMessage
+from .datatypes import ChatML, ChatMLMessage, make_chatml_message
 from .exceptions import InvalidPromptException, InvalidFunctionName
 
 
@@ -14,30 +14,32 @@ person_regex = re.compile(r"(?P<tag>person)(\s+\((?P<name>.+)\)|$)")
 def parse_message(message: str) -> ChatMLMessage:
     parts = message.split("\n", 1)
 
-    tag = ""
+    tag = None
     content = message
     if len(parts) > 1:
         tag = parts[0].strip()
         content = parts[1].lstrip()
 
     if tag in ("situation", "information", "thought"):
-        return ChatMLMessage(role="system", name=tag, content=content)
+        return make_chatml_message(role="system", name=tag, content=content)
 
     if tag == "function_call":
-        return ChatMLMessage(role=tag, content=content)
+        return make_chatml_message(role=tag, content=content)
 
     assistant = me_regex.match(tag)
     if assistant:
-        return ChatMLMessage(role="assistant", name=assistant["name"], content=content)
+        return make_chatml_message(
+            role="assistant", name=assistant["name"], content=content
+        )
 
     person = person_regex.match(tag)
     if person:
-        return ChatMLMessage(role="user", name=person["name"], content=content)
+        return make_chatml_message(role="user", name=person["name"], content=content)
 
-    return ChatMLMessage(content=message)
+    return make_chatml_message(content=message)
 
 
-def message_role_to_prefix(message: ChatMLMessage) -> str:
+def message_role_to_prefix(message: ChatMLMessage) -> Optional[str]:
     match message:
         # If empty <system> tag, then assume role="situation"
         case {"role": "system", "name": None, **rest}:
@@ -119,7 +121,7 @@ def to_prompt(
     messages: ChatML,
     bos: str = "<|im_start|>",
     eos: str = "<|im_end|>",
-    model_dump: Optional[callable] = None,
+    model_dump: Optional[Callable] = None,
     functions: list[dict] | None = None,
     function_call: str | None = None,
 ) -> str:
@@ -145,19 +147,23 @@ def to_prompt(
 
     if functions:
         if function_call not in ("auto", "none", None):
-            functions = {
-                "role": "system",
-                "name": "functions",
-                "content": "\n".join(
+            functions: ChatMLMessage = make_chatml_message(
+                role="system",
+                name="functions",
+                content="\n".join(
                     [
                         json.dumps(f, indent=4)
                         for f in _validate_functions(functions, function_call)
                     ]
                 ),
-            }
+            )
+
             messages.insert(1, functions)
-            fun_call = {"role": "function_call", "continue": True}
-            fun_call.update({"content": f'{{"name": "{function_call}", '})
+            fun_call: ChatMLMessage = make_chatml_message(
+                role="function_call",
+                continue_=True,
+                content=f'{{"name": "{function_call}", ',
+            )
 
             if messages[-1].get("continue"):
                 raise InvalidPromptException(
@@ -169,14 +175,13 @@ def to_prompt(
 
             messages.append(fun_call)
         elif function_call in ("auto", None):
-            messages.insert(
-                1,
-                {
-                    "role": "system",
-                    "name": "functions",
-                    "content": "\n".join([json.dumps(f, indent=4) for f in functions]),
-                },
+            fun_call: ChatMLMessage = make_chatml_message(
+                role="system",
+                name="functions",
+                content="\n".join([json.dumps(f, indent=4) for f in functions]),
             )
+
+            messages.insert(1, fun_call)
 
     prompt = StringIO()
     add_extra_message = False
@@ -192,17 +197,16 @@ def to_prompt(
             add_extra_message = True
 
         end_tag = "" if is_last and continue_ else f"{eos}\n"
-        content = f"{bos}{message_role_to_prefix(message)}\n{message.get('content', '').strip()}{end_tag}"
+        content = f"{bos}{message_role_to_prefix(message)}\n{(message.get('content') or '').strip()}{end_tag}"
         prompt.write(content)
 
     if add_extra_message:
-        new_last_msg = {"name": None, "role": "assistant", "content": None}
-
         content = (
             bos
             if functions and function_call in ("auto", None)
-            else f"{bos}{message_role_to_prefix(new_last_msg)}\n"
+            else f"{bos}assistant\n"
         )
+
         prompt.write(content)
 
     return prompt.getvalue()
