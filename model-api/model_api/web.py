@@ -702,7 +702,7 @@ async def chat_completions(
                     if append_fcall_prefix:
                         delta_text = f'{{"name": "{request.function_call}",{delta_text}'
 
-                    msg = parse_message(delta_text)
+                    msg = parse_message(delta_text).dict()
                     role = msg.get(
                         "role",
                         "assistant" if not append_fcall_prefix else "function_call",
@@ -779,7 +779,7 @@ async def chat_completions(
     assert final_res is not None
     choices = []
     for output in final_res.outputs:
-        msg = parse_message(output.text)
+        msg = parse_message(output.text).dict()
         choice_data = ChatCompletionResponseChoice(
             index=output.index,
             message=ChatMessage(
