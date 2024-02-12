@@ -10,6 +10,8 @@ api_key: str = env.str("API_KEY")
 host: str = env.str("HOST", default="0.0.0.0")
 port: int = env.int("PORT", default=8000)
 backlog: int = env.int("BACKLOG", default=2048)
-skip_check_developer_headers: bool = env.bool("SKIP_CHECK_DEVELOPER_HEADERS", default=False)
+skip_check_developer_headers: bool = env.bool(
+    "SKIP_CHECK_DEVELOPER_HEADERS", default=False
+)
 temperature_scaling_factor: float = env.float("TEMPERATURE_SCALING_FACTOR", default=1.0)
 temperature_scaling_power: float = env.float("TEMPERATURE_SCALING_POWER", default=1.0)
