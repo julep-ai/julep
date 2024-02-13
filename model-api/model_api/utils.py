@@ -1,7 +1,6 @@
-from typing import AsyncIterator, Union, List, Optional, Any
+from typing import AsyncIterator, Any
 
 from interegular.patterns import _ParsePattern
-from jsonschema import validate
 from lmformatenforcer import CharacterLevelParser
 from lmformatenforcer.integrations.vllm import (
     build_vllm_logits_processor,
@@ -15,54 +14,7 @@ from vllm import SamplingParams, LLM
 from vllm.outputs import RequestOutput
 
 
-ListOrStrList = Union[str, List[str]]
-
-
-_schema = {
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "string",
-                "description": "Function name",
-            },
-            "description": {
-                "type": "string",
-                "description": "Function description",
-            },
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "type": {
-                        "type": "string",
-                    },
-                    "properties": {
-                        "type": "object",
-                    },
-                    "required": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "uniqueItems": True,
-                    },
-                },
-                "required": [
-                    "type",
-                    "properties",
-                ],
-            },
-        },
-        "required": [
-            "name",
-            "description",
-            "parameters",
-        ],
-    },
-}
-
-
-def validate_functions(functions: list[dict]):
-    validate(instance=functions, schema=_schema)
+ListOrStrList = str | list[str]
 
 
 def build_vllm_token_enforcer_tokenizer_data(tokenizer) -> TokenEnforcerTokenizerData:
@@ -78,7 +30,7 @@ def vllm_with_character_level_parser(
     prompt: ListOrStrList,
     sampling_params: SamplingParams,
     request_id: str,
-    parser: Optional[CharacterLevelParser] = None,
+    parser: CharacterLevelParser | None = None,
 ) -> AsyncIterator[RequestOutput]:
     tokenizer_data = build_vllm_token_enforcer_tokenizer_data(tokenizer)
 

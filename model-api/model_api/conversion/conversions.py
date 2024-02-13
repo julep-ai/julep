@@ -5,6 +5,7 @@ from typing import Callable, Optional
 
 from .datatypes import ChatML, ChatMLMessage
 from .exceptions import InvalidPromptException, InvalidFunctionName
+from ..protocol import RequestFunctionCall, FunctionCall
 
 
 me_regex = re.compile(r"(?P<tag>me)(\s+\((?P<name>.+)\)|$)")
@@ -110,12 +111,14 @@ def _validate_message(message: ChatMLMessage, continue_: bool, is_last: bool):
         )
 
 
-def _validate_functions(functions: list[dict], function_call: str) -> list[dict]:
+def _validate_functions(
+    functions: list[dict], function_call: FunctionCall
+) -> list[dict]:
     for f in functions:
-        if f["name"].strip() == function_call.strip():
+        if f["name"].strip() == function_call.name.strip():
             return [f]
 
-    raise InvalidFunctionName(function_call)
+    raise InvalidFunctionName(function_call.name)
 
 
 def to_prompt(
@@ -124,7 +127,7 @@ def to_prompt(
     eos: str = "<|im_end|>",
     model_dump: Optional[Callable] = None,
     functions: list[dict] | None = None,
-    function_call: str | None = None,
+    function_call: RequestFunctionCall | None = None,
 ) -> str:
     # Input format:
     # [
@@ -157,6 +160,9 @@ def to_prompt(
                 name="functions",
                 content=f"Available functions:\n\n{formatted_functions}",
             )
+            messages.insert(1, functions)
+            fun_call = {"role": "function_call", "continue": True}
+            fun_call.update({"content": f'{{"name": "{function_call.name}", '})
 
             messages.insert(1, functions_msg)
             fun_call = ChatMLMessage(
