@@ -8,18 +8,22 @@ T_Result = typing.TypeVar("T_Result")
 
 class ChatSettingsResponseFormatType(str, enum.Enum):
     """
-    Must be one of `text` or `json_object`.
+    Must be one of `"text"`, `"regex"` or `"json_object"`.
     """
 
     TEXT = "text"
     JSON_OBJECT = "json_object"
+    REGEX = "regex"
 
     def visit(
         self,
         text: typing.Callable[[], T_Result],
         json_object: typing.Callable[[], T_Result],
+        regex: typing.Callable[[], T_Result],
     ) -> T_Result:
         if self is ChatSettingsResponseFormatType.TEXT:
             return text()
         if self is ChatSettingsResponseFormatType.JSON_OBJECT:
             return json_object()
+        if self is ChatSettingsResponseFormatType.REGEX:
+            return regex()

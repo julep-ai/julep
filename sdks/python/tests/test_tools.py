@@ -24,7 +24,7 @@ def _(client=client):
         agent_id=uuid4(),
         tool={
             "type": "function",
-            "definition": {
+            "function": {
                 "description": "test description",
                 "name": "test name",
                 "parameters": {"test_arg": "test val"},
@@ -41,7 +41,7 @@ def _(client=client):
     response = client.tools.update(
         agent_id=uuid4(),
         tool_id=uuid4(),
-        definition={
+        function={
             "description": "test description",
             "name": "test name",
             "parameters": {"test_arg": "test val"},
@@ -74,7 +74,7 @@ async def _(client=async_client):
         agent_id=uuid4(),
         tool={
             "type": "function",
-            "definition": {
+            "function": {
                 "description": "test description",
                 "name": "test name",
                 "parameters": {"test_arg": "test val"},
@@ -91,7 +91,7 @@ async def _(client=async_client):
     response = await client.tools.update(
         agent_id=uuid4(),
         tool_id=uuid4(),
-        definition={
+        function={
             "description": "test description",
             "name": "test name",
             "parameters": {"test_arg": "test val"},

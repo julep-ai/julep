@@ -4,8 +4,6 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
-from .function_def import FunctionDef
-from .tool_type import ToolType
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -13,14 +11,10 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class Tool(pydantic.BaseModel):
-    type: ToolType = pydantic.Field(
-        description="Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)"
-    )
-    function: FunctionDef = pydantic.Field(
-        description="Function definition and parameters"
-    )
-    id: str = pydantic.Field(description="Tool ID")
+class ChatSettingsResponseFormatSchema(pydantic.BaseModel):
+    """
+    JSON Schema to use if `type` is `"json_object"`
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
