@@ -27,7 +27,6 @@ from vllm.entrypoints.openai.protocol import (
     CompletionResponseChoice,
     CompletionResponseStreamChoice,
     CompletionStreamResponse,
-    ChatCompletionResponse,
     ErrorResponse,
     LogProbs,
     ModelCard,
@@ -63,6 +62,7 @@ from .utils import (
     vllm_with_character_level_parser,
     FunctionCallResult,
     rescale_temperature,
+    random_tool_id,
 )
 from .protocol import (
     CompletionRequest,
@@ -72,6 +72,11 @@ from .protocol import (
     ChatCompletionResponseStreamChoice,
     ChatMessage,
     DeltaMessage,
+    Type,
+    ToolCall,
+    NamedToolChoice,
+    FunctionCall,
+    ChatCompletionResponse,
 )
 
 
@@ -547,6 +552,22 @@ async def chat_completions(
             "logit_bias is not currently supported",
         )
 
+    append_fcall_prefix = False
+
+    if request.functions and request.tools:
+        raise InvalidPromptException("can not accept both 'functions' and 'tools'")
+
+    if request.tools:
+        request.functions = [
+            t.function for t in request.tools if t.type == Type.function
+        ]
+
+        request.function_call = (
+            request.tool_choice.function
+            if isinstance(request.tool_choice, NamedToolChoice)
+            else request.tool_choice
+        )
+
     bos = model_settings[request.model]["section_start_tag"]
     eos = model_settings[request.model]["section_end_tag"]
     prompt = to_prompt(
@@ -557,9 +578,11 @@ async def chat_completions(
         function_call=request.function_call,
     )
 
-    append_fcall_prefix = False
-
-    if request.functions and request.function_call and request.function_call != "auto":
+    if (
+        request.functions
+        and request.function_call
+        and request.function_call not in ("none", "auto", None)
+    ):
         with suppress(IndexError):
             if prompt.split("\n")[-1].startswith('{"name":'):
                 append_fcall_prefix = True
@@ -621,14 +644,27 @@ async def chat_completions(
         role: str = "assistant",
         name: str | None = None,
         finish_reason: str | None = None,
+        is_function_call: bool | None = None,
+        is_tool_call: bool | None = None,
     ) -> str:
         choice_data = ChatCompletionResponseStreamChoice(
             index=index,
             delta=DeltaMessage(
                 role=role,
-                content=text if finish_reason != "function_call" else None,
+                content=text if not (is_function_call or is_tool_call) else None,
                 name=name,
-                function_call=text if finish_reason == "function_call" else None,
+                function_call=text if is_function_call else None,
+                tool_calls=(
+                    [
+                        ToolCall(
+                            id=random_tool_id(),
+                            type="function",
+                            function=text,
+                        )
+                    ]
+                    if is_tool_call
+                    else None
+                ),
             ),
             finish_reason=finish_reason,
         )
@@ -643,24 +679,13 @@ async def chat_completions(
         return response_json
 
     async def completion_stream_generator() -> AsyncGenerator[str, None]:
-        # First chunk with role
-        # for i in range(request.n):
-        #     choice_data = ChatCompletionResponseStreamChoice(
-        #         index=i,
-        #         delta=DeltaMessage(role="assistant"),
-        #         finish_reason=None,
-        #     )
-        #     chunk = ChatCompletionStreamResponse(
-        #         id=request_id, choices=[choice_data], model=model_name
-        #     )
-        #     data = chunk.json(exclude_unset=True)
-        #     yield f"data: {data}\n\n"
-
         previous_texts = [""] * request.n
         previous_num_tokens = [0] * request.n
         start = time.time()
         role = "assistant"
         name = None
+        is_function_call = False
+        is_tool_call = False
         async for res in result_generator:
             res: RequestOutput
             for idx, output in enumerate(res.outputs):
@@ -668,14 +693,15 @@ async def chat_completions(
                 delta_text = output.text[len(previous_texts[i]) :]
                 if not idx:
                     if append_fcall_prefix:
-                        delta_text = f'{{"name": "{request.function_call}",{delta_text}'
+                        delta_text = f"""function_call\n{delta_text}"""
 
-                    msg = parse_message(delta_text).model_dump()
-                    role = msg.get(
-                        "role",
-                        "assistant" if not append_fcall_prefix else "function_call",
+                    msg = parse_message(delta_text)
+                    role = msg.role or "assistant"
+                    name = msg.name
+                    is_function_call = bool(
+                        request.functions and msg.function_call and not request.tools
                     )
-                    name = msg.get("name")
+                    is_tool_call = bool(request.tools and msg.function_call)
 
                     for i in range(request.n):
                         choice_data = ChatCompletionResponseStreamChoice(
@@ -696,15 +722,24 @@ async def chat_completions(
                     text=delta_text,
                     role=role,
                     name=name,
+                    is_function_call=is_function_call,
+                    is_tool_call=is_tool_call,
                 )
                 yield f"data: {response_json}\n\n"
                 if output.finish_reason is not None:
+                    finish_reason = output.finish_reason
+                    if is_function_call:
+                        finish_reason = "function_call"
+                    if is_tool_call:
+                        finish_reason = "tool_calls"
                     response_json = create_stream_response_json(
                         index=i,
                         text="",
                         role=role,
                         name=name,
-                        finish_reason=output.finish_reason,
+                        finish_reason=finish_reason,
+                        is_function_call=is_function_call,
+                        is_tool_call=is_tool_call,
                     )
                     yield f"data: {response_json}\n\n"
 
@@ -747,24 +782,57 @@ async def chat_completions(
     assert final_res is not None
     choices = []
     for output in final_res.outputs:
-        msg = parse_message(output.text).model_dump()
+        msg = parse_message(
+            output.text
+            if not append_fcall_prefix
+            else f"""function_call\n{output.text}"""
+        )
+        finish_reason = output.finish_reason
+        is_function_call = bool(
+            request.functions and msg.function_call and not request.tools
+        )
+        is_tool_call = bool(request.tools and msg.function_call)
+        if is_function_call:
+            finish_reason = "function_call"
+        if is_tool_call:
+            finish_reason = "tool_calls"
+
+        func_name = (
+            request.function_call.name
+            if isinstance(request.function_call, FunctionCall)
+            else request.function_call or ""
+        )
+        tool_func_name = (
+            request.tool_choice.function
+            if isinstance(request.tool_choice, NamedToolChoice)
+            else request.tool_choice or ""
+        )
         choice_data = ChatCompletionResponseChoice(
             index=output.index,
             message=ChatMessage(
-                role=msg.get("role", "assistant"),
-                name=msg.get("name"),
+                role=msg.role or "assistant",
+                name=msg.name,
                 content=(
-                    None
-                    if output.finish_reason == "function_call"
-                    else msg.get("content", "")
+                    None if is_function_call or is_tool_call else msg.content or ""
                 ),
                 function_call=(
-                    f'{{"name": "{request.function_call.name}",{msg.get("content", "")}'
-                    if output.finish_reason == "function_call"
+                    f'{{"name": "{func_name}",{msg.function_call or ""}'
+                    if is_function_call
+                    else None
+                ),
+                tool_calls=(
+                    [
+                        ToolCall(
+                            id=random_tool_id(),
+                            type="function",
+                            function=f'{{"name": "{tool_func_name}",{msg.function_call or ""}',
+                        )
+                    ]
+                    if is_tool_call
                     else None
                 ),
             ),
-            finish_reason=output.finish_reason,
+            finish_reason=finish_reason,
         )
         choices.append(choice_data)
 
