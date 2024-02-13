@@ -149,7 +149,7 @@ This function is type-enforced using the `beartype` decorator.
 
 agent_id (Union[str, UUID]): The unique identifier for the agent.
 tool_id (Union[str, UUID]): The unique identifier for the tool.
-- `definition` *FunctionDefDict* - A dictionary containing the function definition which needs to be updated.
+- `function` *FunctionDefDict* - A dictionary containing the function definition which needs to be updated.
 
 #### Returns
 
@@ -167,7 +167,7 @@ async def update(
     self,
     agent_id: Union[str, UUID],
     tool_id: Union[str, UUID],
-    definition: FunctionDefDict,
+    function: FunctionDefDict,
 ) -> ResourceUpdatedResponse: ...
 ```
 
@@ -193,7 +193,7 @@ This class provides an interface for creating, reading, updating, and deleting t
 - `_create(self,` *agent_id* - Union[str, UUID], tool: ToolDict) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
     Create a new tool associated with the given agent using the API client.
 
-- `_update(self,` *agent_id* - Union[str, UUID], tool_id: Union[str, UUID], definition: FunctionDefDict) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+- `_update(self,` *agent_id* - Union[str, UUID], tool_id: Union[str, UUID], function: FunctionDefDict) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
     Update the definition of an existing tool associated with the given agent using the API client.
 
 - `_delete(self,` *agent_id* - Union[str, UUID], tool_id: Union[str, UUID]):
@@ -300,7 +300,7 @@ Update the tool definition for a given agent.
 Args:
     agent_id (Union[str, UUID]): The unique identifier for the agent, either in string or UUID format.
     tool_id (Union[str, UUID]): The unique identifier for the tool, either in string or UUID format.
-    definition (FunctionDefDict): A dictionary containing the function definition that conforms with the required API schema.
+    function (FunctionDefDict): A dictionary containing the function definition that conforms with the required API schema.
 
 Returns:
     Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The updated resource response sync or async.
@@ -315,7 +315,7 @@ def _update(
     self,
     agent_id: Union[str, UUID],
     tool_id: Union[str, UUID],
-    definition: FunctionDefDict,
+    function: FunctionDefDict,
 ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: ...
 ```
 
@@ -352,7 +352,7 @@ update:
 
 agent_id (Union[str, UUID]): The identifier of the agent whose tool is being updated.
 tool_id (Union[str, UUID]): The unique identifier of the tool to be updated.
-- `definition` *FunctionDefDict* - A dictionary representing the definition of the tool to be updated.
+- `function` *FunctionDefDict* - A dictionary representing the definition of the tool to be updated.
 
 #### Returns
 
@@ -489,7 +489,7 @@ Update a specific tool definition for an agent.
 
 agent_id (Union[str, UUID]): The unique identifier of the agent.
 tool_id (Union[str, UUID]): The unique identifier of the tool to be updated.
-- `definition` *FunctionDefDict* - A dictionary containing the new definition of the tool.
+- `function` *FunctionDefDict* - A dictionary containing the new definition of the tool.
 
 #### Returns
 
@@ -513,6 +513,6 @@ def update(
     self,
     agent_id: Union[str, UUID],
     tool_id: Union[str, UUID],
-    definition: FunctionDefDict,
+    function: FunctionDefDict,
 ) -> ResourceUpdatedResponse: ...
 ```

@@ -28,7 +28,7 @@ Agent ID of agent associated with this session
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L10)
+[src/api/api/types/Session.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L10)
 
 ___
 
@@ -40,7 +40,7 @@ Session created at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L16)
+[src/api/api/types/Session.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L16)
 
 ___
 
@@ -52,7 +52,7 @@ Session id (UUID)
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L6)
+[src/api/api/types/Session.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L6)
 
 ___
 
@@ -64,7 +64,7 @@ A specific situation that sets the background for this session
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L12)
+[src/api/api/types/Session.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L12)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L14)
+[src/api/api/types/Session.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L14)
 
 ___
 
@@ -88,7 +88,7 @@ Session updated at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L18)
+[src/api/api/types/Session.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L18)
 
 ___
 
@@ -100,4 +100,4 @@ User ID of user associated with this session
 
 #### Defined in
 
-[src/api/api/types/Session.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Session.d.ts#L8)
+[src/api/api/types/Session.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Session.d.ts#L8)

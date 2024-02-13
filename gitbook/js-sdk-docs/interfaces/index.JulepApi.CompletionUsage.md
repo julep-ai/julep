@@ -24,7 +24,7 @@ Number of tokens in the generated completion.
 
 #### Defined in
 
-[src/api/api/types/CompletionUsage.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/CompletionUsage.d.ts#L9)
+[src/api/api/types/CompletionUsage.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CompletionUsage.d.ts#L9)
 
 ___
 
@@ -36,7 +36,7 @@ Number of tokens in the prompt.
 
 #### Defined in
 
-[src/api/api/types/CompletionUsage.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/CompletionUsage.d.ts#L11)
+[src/api/api/types/CompletionUsage.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CompletionUsage.d.ts#L11)
 
 ___
 
@@ -48,4 +48,4 @@ Total number of tokens used in the request (prompt + completion).
 
 #### Defined in
 
-[src/api/api/types/CompletionUsage.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/CompletionUsage.d.ts#L13)
+[src/api/api/types/CompletionUsage.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CompletionUsage.d.ts#L13)

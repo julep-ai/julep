@@ -29,7 +29,7 @@ Content of the memory
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L9)
+[src/api/api/types/Belief.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L9)
 
 ___
 
@@ -41,7 +41,7 @@ Belief created at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L17)
+[src/api/api/types/Belief.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L17)
 
 ___
 
@@ -53,7 +53,7 @@ Belief id (UUID)
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L19)
+[src/api/api/types/Belief.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L19)
 
 ___
 
@@ -65,7 +65,7 @@ Rationale: Why did the model decide to form this memory
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L11)
+[src/api/api/types/Belief.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L11)
 
 ___
 
@@ -77,7 +77,7 @@ Sentiment (valence) of the memory on a scale of -1 to 1
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L15)
+[src/api/api/types/Belief.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L15)
 
 ___
 
@@ -89,7 +89,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L7)
+[src/api/api/types/Belief.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L7)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:5](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L5)
+[src/api/api/types/Belief.d.ts:5](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L5)
 
 ___
 
@@ -111,4 +111,4 @@ Weight (importance) of the memory on a scale of 0-100
 
 #### Defined in
 
-[src/api/api/types/Belief.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Belief.d.ts#L13)
+[src/api/api/types/Belief.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Belief.d.ts#L13)

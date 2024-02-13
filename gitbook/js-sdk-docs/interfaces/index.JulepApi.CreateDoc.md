@@ -23,7 +23,7 @@ Information content
 
 #### Defined in
 
-[src/api/api/types/CreateDoc.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/CreateDoc.d.ts#L8)
+[src/api/api/types/CreateDoc.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateDoc.d.ts#L8)
 
 ___
 
@@ -35,4 +35,4 @@ Title describing what this bit of information contains
 
 #### Defined in
 
-[src/api/api/types/CreateDoc.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/CreateDoc.d.ts#L6)
+[src/api/api/types/CreateDoc.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateDoc.d.ts#L6)

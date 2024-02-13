@@ -25,6 +25,7 @@ A full list of `Julep Python SDK` project modules.
             - [ChatResponseFinishReason](julep/api/types/chat_response_finish_reason.md#chatresponsefinishreason)
             - [ChatSettings](julep/api/types/chat_settings.md#chatsettings)
             - [ChatSettingsResponseFormat](julep/api/types/chat_settings_response_format.md#chatsettingsresponseformat)
+            - [ChatSettingsResponseFormatSchema](julep/api/types/chat_settings_response_format_schema.md#chatsettingsresponseformatschema)
             - [ChatSettingsResponseFormatType](julep/api/types/chat_settings_response_format_type.md#chatsettingsresponseformattype)
             - [Chat Settings Stop](julep/api/types/chat_settings_stop.md#chat-settings-stop)
             - [CompletionUsage](julep/api/types/completion_usage.md#completionusage)

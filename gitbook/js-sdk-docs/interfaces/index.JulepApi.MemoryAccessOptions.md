@@ -29,7 +29,7 @@ Whether previous memories should be recalled or not
 
 #### Defined in
 
-[src/api/api/types/MemoryAccessOptions.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L6)
+[src/api/api/types/MemoryAccessOptions.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L6)
 
 ___
 
@@ -41,4 +41,4 @@ Whether this interaction should be recorded in memory or not
 
 #### Defined in
 
-[src/api/api/types/MemoryAccessOptions.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L8)
+[src/api/api/types/MemoryAccessOptions.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L8)

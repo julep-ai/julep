@@ -24,7 +24,7 @@ The content of the suggestion
 
 #### Defined in
 
-[src/api/api/types/Suggestion.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Suggestion.d.ts#L11)
+[src/api/api/types/Suggestion.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Suggestion.d.ts#L11)
 
 ___
 
@@ -36,7 +36,7 @@ Suggestion created at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Suggestion.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Suggestion.d.ts#L7)
+[src/api/api/types/Suggestion.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Suggestion.d.ts#L7)
 
 ___
 
@@ -48,7 +48,7 @@ The message that produced it
 
 #### Defined in
 
-[src/api/api/types/Suggestion.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Suggestion.d.ts#L13)
+[src/api/api/types/Suggestion.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Suggestion.d.ts#L13)
 
 ___
 
@@ -60,7 +60,7 @@ Session this suggestion belongs to
 
 #### Defined in
 
-[src/api/api/types/Suggestion.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Suggestion.d.ts#L15)
+[src/api/api/types/Suggestion.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Suggestion.d.ts#L15)
 
 ___
 
@@ -72,4 +72,4 @@ Whether the suggestion is for the `agent` or a `user`
 
 #### Defined in
 
-[src/api/api/types/Suggestion.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Suggestion.d.ts#L9)
+[src/api/api/types/Suggestion.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Suggestion.d.ts#L9)

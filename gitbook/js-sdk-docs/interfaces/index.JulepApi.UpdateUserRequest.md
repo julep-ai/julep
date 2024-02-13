@@ -27,7 +27,7 @@ About the user
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateUserRequest.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateUserRequest.d.ts#L10)
+[src/api/api/client/requests/UpdateUserRequest.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateUserRequest.d.ts#L10)
 
 ___
 
@@ -39,4 +39,4 @@ Name of the user
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateUserRequest.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateUserRequest.d.ts#L12)
+[src/api/api/client/requests/UpdateUserRequest.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateUserRequest.d.ts#L12)

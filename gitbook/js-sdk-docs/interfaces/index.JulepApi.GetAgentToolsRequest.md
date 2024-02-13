@@ -25,7 +25,7 @@
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentToolsRequest.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentToolsRequest.d.ts#L12)
+[src/api/api/client/requests/GetAgentToolsRequest.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentToolsRequest.d.ts#L12)
 
 ___
 
@@ -35,4 +35,4 @@ ___
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentToolsRequest.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentToolsRequest.d.ts#L16)
+[src/api/api/client/requests/GetAgentToolsRequest.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentToolsRequest.d.ts#L16)

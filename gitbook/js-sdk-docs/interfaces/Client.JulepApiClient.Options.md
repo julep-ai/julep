@@ -19,7 +19,7 @@
 
 #### Defined in
 
-[src/api/Client.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L10)
+[src/api/Client.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L10)
 
 ___
 
@@ -29,4 +29,4 @@ ___
 
 #### Defined in
 
-[src/api/Client.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L9)
+[src/api/Client.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L9)
