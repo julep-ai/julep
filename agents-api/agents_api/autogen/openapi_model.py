@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, Extra, Field, PositiveFloat, confloat, conint
+from pydantic import BaseModel, Extra, Field, PositiveFloat, confloat, conint, RootModel
 
 
 class User(BaseModel):
@@ -122,7 +122,7 @@ class Suggestion(BaseModel):
     session_id: UUID = Field(..., description="Session this suggestion belongs to")
 
 
-class Role(Enum):
+class Role(str, Enum):
     user = "user"
     assistant = "assistant"
     system = "system"
@@ -175,8 +175,8 @@ class ToolChoiceOption1(Enum):
     auto = "auto"
 
 
-class ToolChoiceOption(BaseModel):
-    __root__: Union[ToolChoiceOption1, NamedToolChoice] = Field(
+class ToolChoiceOption(RootModel):
+    root: Union[ToolChoiceOption1, NamedToolChoice] = Field(
         ...,
         description='Controls which (if any) function is called by the model.\n`none` means the model will not call a function and instead generates a message.\n`auto` means the model can pick between generating a message or calling a function.\nSpecifying a particular function via `{"type: "function", "function": {"name": "my_function"}}` forces the model to call that function.\n\n`none` is the default when no functions are present. `auto` is the default if functions are present.\n',
     )
@@ -520,8 +520,8 @@ class ChatInputData(BaseModel):
     )
 
 
-class Memory(BaseModel):
-    __root__: Union[Belief, Episode, Entity]
+class Memory(RootModel):
+    root: Union[Belief, Episode, Entity]
 
 
 class ChatInput(ChatInputData, ChatSettings, MemoryAccessOptions):
