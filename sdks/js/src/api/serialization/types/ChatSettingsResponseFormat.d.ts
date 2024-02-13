@@ -11,5 +11,7 @@ export declare const ChatSettingsResponseFormat: core.serialization.ObjectSchema
 export declare namespace ChatSettingsResponseFormat {
   interface Raw {
     type?: serializers.ChatSettingsResponseFormatType.Raw | null;
+    pattern?: string | null;
+    schema?: serializers.ChatSettingsResponseFormatSchema.Raw | null;
   }
 }

@@ -52,4 +52,5 @@ const core = __importStar(require("../../core"));
 exports.ChatSettingsResponseFormatType = core.serialization.enum_([
   "text",
   "json_object",
+  "regex",
 ]);

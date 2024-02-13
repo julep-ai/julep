@@ -2,7 +2,14 @@
   "name": "@julep/sdk",
   "version": "0.2.0",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
+  "keywords": [
+    "julep-ai",
+    "julep",
+    "agents",
+    "llms",
+    "memory",
+    "ai"
+  ],
   "author": {
     "name": "Julep",
     "email": "developers@julep.ai"

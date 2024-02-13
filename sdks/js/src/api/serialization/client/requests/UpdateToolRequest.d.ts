@@ -10,6 +10,6 @@ export declare const UpdateToolRequest: core.serialization.Schema<
 >;
 export declare namespace UpdateToolRequest {
   interface Raw {
-    definition: serializers.FunctionDef.Raw;
+    function: serializers.FunctionDef.Raw;
   }
 }

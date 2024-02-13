@@ -7,4 +7,5 @@ exports.ChatSettingsResponseFormatType = void 0;
 exports.ChatSettingsResponseFormatType = {
   Text: "text",
   JsonObject: "json_object",
+  Regex: "regex",
 };
