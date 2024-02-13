@@ -1,14 +1,16 @@
-from typing import Optional, Literal, TypedDict
+from typing import Optional, Literal
+
+from pydantic import BaseModel, Field
 
 
-ChatMLMessage = TypedDict(
-    "ChatMLMessage",
-    {
-        "name": Optional[str],
-        "role": Literal["assistant", "system", "user", "function_call"],
-        "content": str,
-        "continue": Optional[bool],
-    },
-)
+ValidRole = Literal["assistant", "system", "user", "function_call"]
+
+
+class ChatMLMessage(BaseModel):
+    name: Optional[str] = None
+    role: Optional[ValidRole] = None
+    content: Optional[str] = None
+    continue_: Optional[bool] = Field(default=None, alias="continue")
+
 
 ChatML = list[ChatMLMessage]

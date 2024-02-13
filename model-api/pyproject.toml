@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "model_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 uvicorn = "^0.25.0"
 fastapi = "^0.108.0"
 torch = "^2.1.2"

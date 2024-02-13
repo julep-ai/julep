@@ -1,7 +1,7 @@
 from io import StringIO
 import json
 import re
-from typing import Optional
+from typing import Callable, Optional
 
 from .datatypes import ChatML, ChatMLMessage
 from .exceptions import InvalidPromptException, InvalidFunctionName
@@ -34,11 +34,11 @@ def parse_message(message: str) -> ChatMLMessage:
     if person:
         return ChatMLMessage(role="user", name=person["name"], content=content)
 
-    return ChatMLMessage(content=message)
+    return ChatMLMessage(role="assistant", content=message)
 
 
-def message_role_to_prefix(message: ChatMLMessage) -> str:
-    match message:
+def message_role_to_prefix(message: ChatMLMessage) -> Optional[str]:
+    match (message.dict()):
         # If empty <system> tag, then assume role="situation"
         case {"role": "system", "name": None, **rest}:
             return "situation"
@@ -59,7 +59,7 @@ def message_role_to_prefix(message: ChatMLMessage) -> str:
 
 
 def _check_last_message(message: ChatMLMessage):
-    match message:
+    match (message.dict()):
         case (
             {"role": "system", "name": "thought", **_rest}
             | {"role": "assistant", **_rest}
@@ -71,12 +71,12 @@ def _check_last_message(message: ChatMLMessage):
     return False
 
 
-def _validate_message(message, continue_, is_last):
-    msg_role = message.get("role")
+def _validate_message(message: ChatMLMessage, continue_: bool, is_last: bool):
+    msg_role = message.role
     if not msg_role:
         raise InvalidPromptException("'role' can not be null")
 
-    if not message.get("content") and not (is_last and continue_):
+    if not message.content and not (is_last and continue_):
         raise InvalidPromptException("'content' can not be null")
 
     #### "functions" is only valid as a system name
@@ -91,7 +91,8 @@ def _validate_message(message, continue_, is_last):
         "functions",
         "instruction",
     }
-    if msg_role == "system" and message.get("name") not in allowed_system_names:
+
+    if msg_role == "system" and message.name not in allowed_system_names:
         raise InvalidPromptException(
             f"name for role 'system' must be one of {allowed_system_names}"
         )
@@ -119,7 +120,7 @@ def to_prompt(
     messages: ChatML,
     bos: str = "<|im_start|>",
     eos: str = "<|im_end|>",
-    model_dump: Optional[callable] = None,
+    model_dump: Optional[Callable] = None,
     functions: list[dict] | None = None,
     function_call: str | None = None,
 ) -> str:
@@ -140,26 +141,27 @@ def to_prompt(
     # Hey<|endsection|>
     # <|section|>me (Samantha)\n
 
-    if not isinstance(messages, list):
-        raise InvalidPromptException("must be a list")
-
     if functions:
         if function_call not in ("auto", "none", None):
-            functions = {
-                "role": "system",
-                "name": "functions",
-                "content": "\n".join(
+            functions_msg = ChatMLMessage(
+                role="system",
+                name="functions",
+                content="\n".join(
                     [
                         json.dumps(f, indent=4)
                         for f in _validate_functions(functions, function_call)
                     ]
                 ),
-            }
-            messages.insert(1, functions)
-            fun_call = {"role": "function_call", "continue": True}
-            fun_call.update({"content": f'{{"name": "{function_call}", '})
+            )
 
-            if messages[-1].get("continue"):
+            messages.insert(1, functions_msg)
+            fun_call = ChatMLMessage(
+                role="function_call",
+                continue_=True,
+                content=f'{{"name": "{function_call}", ',
+            )
+
+            if messages[-1].continue_:
                 raise InvalidPromptException(
                     "Conflicting instructions, "
                     "please remove the last instruction with 'continue' "
@@ -169,22 +171,18 @@ def to_prompt(
 
             messages.append(fun_call)
         elif function_call in ("auto", None):
-            messages.insert(
-                1,
-                {
-                    "role": "system",
-                    "name": "functions",
-                    "content": "\n".join([json.dumps(f, indent=4) for f in functions]),
-                },
+            fun_call = ChatMLMessage(
+                role="system",
+                name="functions",
+                content="\n".join([json.dumps(f, indent=4) for f in functions]),
             )
+
+            messages.insert(1, fun_call)
 
     prompt = StringIO()
     add_extra_message = False
     for idx, message in enumerate(messages):
-        if not isinstance(message, dict) and model_dump is not None:
-            message = model_dump(message)
-
-        continue_ = message.get("continue", False)
+        continue_ = message.continue_
         is_last = idx == len(messages) - 1
 
         _validate_message(message, continue_, is_last)
@@ -192,17 +190,16 @@ def to_prompt(
             add_extra_message = True
 
         end_tag = "" if is_last and continue_ else f"{eos}\n"
-        content = f"{bos}{message_role_to_prefix(message)}\n{message.get('content', '').strip()}{end_tag}"
+        content = f"{bos}{message_role_to_prefix(message)}\n{(message.content or '').strip()}{end_tag}"
         prompt.write(content)
 
     if add_extra_message:
-        new_last_msg = {"name": None, "role": "assistant", "content": None}
-
         content = (
             bos
             if functions and function_call in ("auto", None)
-            else f"{bos}{message_role_to_prefix(new_last_msg)}\n"
+            else f"{bos}assistant\n"
         )
+
         prompt.write(content)
 
     return prompt.getvalue()
