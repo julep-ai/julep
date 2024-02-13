@@ -17,7 +17,7 @@ class CreateToolRequest(pydantic.BaseModel):
     type: CreateToolRequestType = pydantic.Field(
         description="Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)"
     )
-    definition: FunctionDef = pydantic.Field(
+    function: FunctionDef = pydantic.Field(
         description="Function definition and parameters"
     )
 

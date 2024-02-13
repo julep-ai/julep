@@ -1304,7 +1304,7 @@ class JulepApi:
             agent_id="agent_id",
             request=CreateToolRequest(
                 type=CreateToolRequestType.FUNCTION,
-                definition=FunctionDef(
+                function=FunctionDef(
                     name="name",
                     parameters={},
                 ),
@@ -1330,7 +1330,7 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def update_agent_tool(
-        self, agent_id: str, tool_id: str, *, definition: FunctionDef
+        self, agent_id: str, tool_id: str, *, function: FunctionDef
     ) -> ResourceUpdatedResponse:
         """
 
@@ -1340,7 +1340,7 @@ class JulepApi:
 
             - tool_id: str.
 
-            - definition: FunctionDef. Function definition and parameters
+            - function: FunctionDef. Function definition and parameters
         ---
         from julep import FunctionDef
         from julep.client import JulepApi
@@ -1351,7 +1351,7 @@ class JulepApi:
         client.update_agent_tool(
             agent_id="agent_id",
             tool_id="tool_id",
-            definition=FunctionDef(
+            function=FunctionDef(
                 name="name",
                 parameters={},
             ),
@@ -1363,7 +1363,7 @@ class JulepApi:
                 f"{self._client_wrapper.get_base_url()}/",
                 f"api/agents/{agent_id}/tools/{tool_id}",
             ),
-            json=jsonable_encoder({"definition": definition}),
+            json=jsonable_encoder({"function": function}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -2670,7 +2670,7 @@ class AsyncJulepApi:
             agent_id="agent_id",
             request=CreateToolRequest(
                 type=CreateToolRequestType.FUNCTION,
-                definition=FunctionDef(
+                function=FunctionDef(
                     name="name",
                     parameters={},
                 ),
@@ -2696,7 +2696,7 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def update_agent_tool(
-        self, agent_id: str, tool_id: str, *, definition: FunctionDef
+        self, agent_id: str, tool_id: str, *, function: FunctionDef
     ) -> ResourceUpdatedResponse:
         """
 
@@ -2706,7 +2706,7 @@ class AsyncJulepApi:
 
             - tool_id: str.
 
-            - definition: FunctionDef. Function definition and parameters
+            - function: FunctionDef. Function definition and parameters
         ---
         from julep import FunctionDef
         from julep.client import AsyncJulepApi
@@ -2717,7 +2717,7 @@ class AsyncJulepApi:
         await client.update_agent_tool(
             agent_id="agent_id",
             tool_id="tool_id",
-            definition=FunctionDef(
+            function=FunctionDef(
                 name="name",
                 parameters={},
             ),
@@ -2729,7 +2729,7 @@ class AsyncJulepApi:
                 f"{self._client_wrapper.get_base_url()}/",
                 f"api/agents/{agent_id}/tools/{tool_id}",
             ),
-            json=jsonable_encoder({"definition": definition}),
+            json=jsonable_encoder({"function": function}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )

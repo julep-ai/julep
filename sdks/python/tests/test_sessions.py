@@ -125,7 +125,7 @@ def _(client=client):
             Tool(
                 **{
                     "type": "function",
-                    "definition": {
+                    "function": {
                         "description": "test description",
                         "name": "test name",
                         "parameters": {"test_arg": "test val"},
@@ -171,7 +171,7 @@ async def _(client=async_client):
             Tool(
                 **{
                     "type": "function",
-                    "definition": {
+                    "function": {
                         "description": "test description",
                         "name": "test name",
                         "parameters": {"test_arg": "test val"},
