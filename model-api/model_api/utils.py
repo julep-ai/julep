@@ -1,3 +1,5 @@
+import string
+import random
 from typing import AsyncIterator, Any
 
 from interegular.patterns import _ParsePattern
@@ -60,3 +62,7 @@ def validate_interegular_regex(pattern: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def random_tool_id(n: int = 8) -> str:
+    return "tool-" + "".join(random.choices(string.digits, k=n))

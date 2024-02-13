@@ -1,11 +1,10 @@
 from io import StringIO
 import json
 import re
-from typing import Callable
 
 from .datatypes import ChatML, ChatMLMessage
 from .exceptions import InvalidPromptException, InvalidFunctionName
-from ..protocol import RequestFunctionCall, FunctionCall
+from ..protocol import RequestFunctionCall, FunctionCall, FunctionDef
 
 
 me_regex = re.compile(r"(?P<tag>me)(\s+\((?P<name>.+)\)|$)")
@@ -25,7 +24,7 @@ def parse_message(message: str) -> ChatMLMessage:
         return ChatMLMessage(role="system", name=tag, content=content)
 
     if tag == "function_call":
-        return ChatMLMessage(role=tag, content=content)
+        return ChatMLMessage(role="assistant", content=None, function_call=content)
 
     assistant = me_regex.match(tag)
     if assistant:
@@ -39,7 +38,7 @@ def parse_message(message: str) -> ChatMLMessage:
 
 
 def message_role_to_prefix(message: ChatMLMessage) -> str | None:
-    match (message.dict()):
+    match (message.model_dump()):
         # If empty <system> tag, then assume role="situation"
         case {"role": "system", "name": "functions", **rest}:
             return "functions"
@@ -62,7 +61,7 @@ def message_role_to_prefix(message: ChatMLMessage) -> str | None:
 
 
 def _check_last_message(message: ChatMLMessage):
-    match (message.dict()):
+    match (message.model_dump()):
         case (
             {"role": "system", "name": "thought", **_rest}
             | {"role": "assistant", **_rest}
@@ -112,10 +111,10 @@ def _validate_message(message: ChatMLMessage, continue_: bool, is_last: bool):
 
 
 def _validate_functions(
-    functions: list[dict], function_call: FunctionCall
-) -> list[dict]:
+    functions: list[FunctionDef], function_call: FunctionCall
+) -> list[FunctionDef]:
     for f in functions:
-        if f["name"].strip() == function_call.name.strip():
+        if f.name.strip() == function_call.name.strip():
             return [f]
 
     raise InvalidFunctionName(function_call.name)
@@ -125,8 +124,7 @@ def to_prompt(
     messages: ChatML,
     bos: str = "<|im_start|>",
     eos: str = "<|im_end|>",
-    model_dump: Callable | None = None,
-    functions: list[dict] | None = None,
+    functions: list[FunctionDef] | None = None,
     function_call: RequestFunctionCall | None = None,
 ) -> str:
     # Input format:
@@ -150,7 +148,7 @@ def to_prompt(
         if function_call not in ("auto", "none", None):
             formatted_functions: str = "\n".join(
                 [
-                    json.dumps(f, indent=4)
+                    f.model_dump_json(indent=4)
                     for f in _validate_functions(functions, function_call)
                 ]
             )
@@ -160,17 +158,7 @@ def to_prompt(
                 name="functions",
                 content=f"Available functions:\n\n{formatted_functions}",
             )
-            messages.insert(1, functions)
-            fun_call = {"role": "function_call", "continue": True}
-            fun_call.update({"content": f'{{"name": "{function_call.name}", '})
-
             messages.insert(1, functions_msg)
-            fun_call = ChatMLMessage(
-                role="function_call",
-                continue_=True,
-                content=f'{{"name": "{function_call}", ',
-            )
-
             if messages[-1].continue_:
                 raise InvalidPromptException(
                     "Conflicting instructions, "
@@ -179,20 +167,27 @@ def to_prompt(
                     "You can either remove `functions` and/or `function_call` parameters."
                 )
 
-            messages.append(fun_call)
+            messages.append(
+                ChatMLMessage(
+                    role="function_call",
+                    continue_=True,
+                    content=f'{{"name": "{function_call.name}",',
+                )
+            )
 
         elif function_call in ("auto", None):
             formatted_functions: str = "\n".join(
-                [json.dumps(f, indent=4) for f in functions]
+                [f.model_dump_json(indent=4) for f in functions]
             )
 
-            functions = ChatMLMessage(
-                role="system",
-                name="functions",
-                content=f"Available functions:\n\n{formatted_functions}",
+            messages.insert(
+                1,
+                ChatMLMessage(
+                    role="system",
+                    name="functions",
+                    content=f"Available functions:\n\n{formatted_functions}",
+                ),
             )
-
-            messages.insert(1, functions)
 
     prompt = StringIO()
     add_extra_message = False
@@ -210,11 +205,7 @@ def to_prompt(
         prompt.write(content)
 
     if add_extra_message:
-        content = (
-            bos
-            if functions and function_call in ("auto", None)
-            else f"{bos}assistant\n"
-        )
+        content = bos if functions and function_call in ("auto", None) else f"{bos}me\n"
 
         prompt.write(content)
 
