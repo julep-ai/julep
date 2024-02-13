@@ -30,7 +30,7 @@
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:26](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L26)
+[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:26](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L26)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:30](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L30)
+[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:30](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L30)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L14)
+[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L14)
 
 ___
 
@@ -62,7 +62,7 @@ episode, belief, entity
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L18)
+[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L18)
 
 ___
 
@@ -72,4 +72,4 @@ ___
 
 #### Defined in
 
-[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:22](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L22)
+[src/api/api/client/requests/GetAgentMemoriesRequest.d.ts:22](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/GetAgentMemoriesRequest.d.ts#L22)

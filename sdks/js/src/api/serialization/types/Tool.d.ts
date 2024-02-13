@@ -11,7 +11,7 @@ export declare const Tool: core.serialization.ObjectSchema<
 export declare namespace Tool {
   interface Raw {
     type: serializers.ToolType.Raw;
-    definition: serializers.FunctionDef.Raw;
+    function: serializers.FunctionDef.Raw;
     id: string;
   }
 }

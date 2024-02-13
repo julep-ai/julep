@@ -89,7 +89,7 @@ exports.CreateToolRequest = core.serialization.object({
         .CreateToolRequestType;
     }),
   ),
-  definition: core.serialization.lazyObject(() =>
+  function: core.serialization.lazyObject(() =>
     __awaiter(void 0, void 0, void 0, function* () {
       return (yield Promise.resolve().then(() => __importStar(require(".."))))
         .FunctionDef;

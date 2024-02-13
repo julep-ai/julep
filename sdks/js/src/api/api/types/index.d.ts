@@ -33,6 +33,7 @@ export * from "./Episode";
 export * from "./Memory";
 export * from "./Entity";
 export * from "./ChatSettingsResponseFormatType";
+export * from "./ChatSettingsResponseFormatSchema";
 export * from "./ChatSettingsResponseFormat";
 export * from "./ChatSettingsStop";
 export * from "./ChatSettings";

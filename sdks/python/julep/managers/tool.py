@@ -34,7 +34,7 @@ class BaseToolsManager(BaseManager):
         _create(self, agent_id: Union[str, UUID], tool: ToolDict) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
             Create a new tool associated with the given agent using the API client.
 
-        _update(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID], definition: FunctionDefDict) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        _update(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID], function: FunctionDefDict) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
             Update the definition of an existing tool associated with the given agent using the API client.
 
         _delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]):
@@ -106,7 +106,7 @@ class BaseToolsManager(BaseManager):
         self,
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
-        definition: FunctionDefDict,
+        function: FunctionDefDict,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update the tool definition for a given agent.
@@ -114,7 +114,7 @@ class BaseToolsManager(BaseManager):
             Args:
                 agent_id (Union[str, UUID]): The unique identifier for the agent, either in string or UUID format.
                 tool_id (Union[str, UUID]): The unique identifier for the tool, either in string or UUID format.
-                definition (FunctionDefDict): A dictionary containing the function definition that conforms with the required API schema.
+                function (FunctionDefDict): A dictionary containing the function definition that conforms with the required API schema.
 
             Returns:
                 Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The updated resource response sync or async.
@@ -126,12 +126,12 @@ class BaseToolsManager(BaseManager):
             tool_id
         ), "agent_id and tool_id must be a valid UUID v4"
 
-        definition: FunctionDef = FunctionDef(**definition)
+        function: FunctionDef = FunctionDef(**function)
 
         return self.api_client.update_agent_tool(
             agent_id=agent_id,
             tool_id=tool_id,
-            definition=definition,
+            function=function,
         )
 
     def _delete(
@@ -204,7 +204,7 @@ class ToolsManager(BaseToolsManager):
             Args:
                 agent_id (Union[str, UUID]): The identifier of the agent whose tool is being updated.
                 tool_id (Union[str, UUID]): The unique identifier of the tool to be updated.
-                definition (FunctionDefDict): A dictionary representing the definition of the tool to be updated.
+                function (FunctionDefDict): A dictionary representing the definition of the tool to be updated.
 
             Returns:
                 ResourceUpdatedResponse: An object indicating the successful update of the tool.
@@ -313,7 +313,7 @@ class ToolsManager(BaseToolsManager):
         *,
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
-        definition: FunctionDefDict,
+        function: FunctionDefDict,
     ) -> ResourceUpdatedResponse:
         """
         Update a specific tool definition for an agent.
@@ -321,7 +321,7 @@ class ToolsManager(BaseToolsManager):
         Args:
             agent_id (Union[str, UUID]): The unique identifier of the agent.
             tool_id (Union[str, UUID]): The unique identifier of the tool to be updated.
-            definition (FunctionDefDict): A dictionary containing the new definition of the tool.
+            function (FunctionDefDict): A dictionary containing the new definition of the tool.
 
         Returns:
             ResourceUpdatedResponse: An object representing the update operation response.
@@ -337,7 +337,7 @@ class ToolsManager(BaseToolsManager):
         return self._update(
             agent_id=agent_id,
             tool_id=tool_id,
-            definition=definition,
+            function=function,
         )
 
 
@@ -461,7 +461,7 @@ class AsyncToolsManager(BaseToolsManager):
         *,
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
-        definition: FunctionDefDict,
+        function: FunctionDefDict,
     ) -> ResourceUpdatedResponse:
         """
         Asynchronously updates a resource identified by the agent_id and tool_id with a new definition.
@@ -471,7 +471,7 @@ class AsyncToolsManager(BaseToolsManager):
         Args:
             agent_id (Union[str, UUID]): The unique identifier for the agent.
             tool_id (Union[str, UUID]): The unique identifier for the tool.
-            definition (FunctionDefDict): A dictionary containing the function definition which needs to be updated.
+            function (FunctionDefDict): A dictionary containing the function definition which needs to be updated.
 
         Returns:
             ResourceUpdatedResponse: An object representing the response received after updating the resource.
@@ -482,5 +482,5 @@ class AsyncToolsManager(BaseToolsManager):
         return await self._update(
             agent_id=agent_id,
             tool_id=tool_id,
-            definition=definition,
+            function=function,
         )

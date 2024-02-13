@@ -40,6 +40,8 @@ def parse_message(message: str) -> ChatMLMessage:
 def message_role_to_prefix(message: ChatMLMessage) -> Optional[str]:
     match (message.dict()):
         # If empty <system> tag, then assume role="situation"
+        case {"role": "system", "name": "functions", **rest}:
+            return "functions"
         case {"role": "system", "name": None, **rest}:
             return "situation"
         case {"role": "system", **rest} if "name" not in message:
@@ -143,15 +145,17 @@ def to_prompt(
 
     if functions:
         if function_call not in ("auto", "none", None):
+            formatted_functions: str = "\n".join(
+                [
+                    json.dumps(f, indent=4)
+                    for f in _validate_functions(functions, function_call)
+                ]
+            )
+
             functions_msg = ChatMLMessage(
                 role="system",
                 name="functions",
-                content="\n".join(
-                    [
-                        json.dumps(f, indent=4)
-                        for f in _validate_functions(functions, function_call)
-                    ]
-                ),
+                content=f"Available functions:\n\n{formatted_functions}",
             )
 
             messages.insert(1, functions_msg)
@@ -170,17 +174,23 @@ def to_prompt(
                 )
 
             messages.append(fun_call)
+
         elif function_call in ("auto", None):
-            fun_call = ChatMLMessage(
-                role="system",
-                name="functions",
-                content="\n".join([json.dumps(f, indent=4) for f in functions]),
+            formatted_functions: str = "\n".join(
+                [json.dumps(f, indent=4) for f in functions]
             )
 
-            messages.insert(1, fun_call)
+            functions = ChatMLMessage(
+                role="system",
+                name="functions",
+                content=f"Available functions:\n\n{formatted_functions}",
+            )
+
+            messages.insert(1, functions)
 
     prompt = StringIO()
     add_extra_message = False
+
     for idx, message in enumerate(messages):
         continue_ = message.continue_
         is_last = idx == len(messages) - 1

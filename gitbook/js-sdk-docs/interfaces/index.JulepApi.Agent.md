@@ -27,7 +27,7 @@ About the agent
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L9)
+[src/api/api/types/Agent.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L9)
 
 ___
 
@@ -39,7 +39,7 @@ Agent created at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L13)
+[src/api/api/types/Agent.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L13)
 
 ___
 
@@ -51,7 +51,7 @@ Default settings for all sessions created by this agent
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L19)
+[src/api/api/types/Agent.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L19)
 
 ___
 
@@ -63,7 +63,7 @@ Agent id (UUID)
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L17)
+[src/api/api/types/Agent.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L17)
 
 ___
 
@@ -75,7 +75,7 @@ List of instructions for the agent
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L11)
+[src/api/api/types/Agent.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L11)
 
 ___
 
@@ -87,7 +87,7 @@ The model to use with this agent
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:21](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L21)
+[src/api/api/types/Agent.d.ts:21](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L21)
 
 ___
 
@@ -99,7 +99,7 @@ Name of the agent
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L7)
+[src/api/api/types/Agent.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L7)
 
 ___
 
@@ -111,4 +111,4 @@ Agent updated at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Agent.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/Agent.d.ts#L15)
+[src/api/api/types/Agent.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Agent.d.ts#L15)

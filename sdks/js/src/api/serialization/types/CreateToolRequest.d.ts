@@ -11,6 +11,6 @@ export declare const CreateToolRequest: core.serialization.ObjectSchema<
 export declare namespace CreateToolRequest {
   interface Raw {
     type: serializers.CreateToolRequestType.Raw;
-    definition: serializers.FunctionDef.Raw;
+    function: serializers.FunctionDef.Raw;
   }
 }

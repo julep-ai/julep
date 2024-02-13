@@ -52,7 +52,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/errors/JulepApiError.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/errors/JulepApiError.d.ts#L7)
+[src/api/errors/JulepApiError.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/errors/JulepApiError.d.ts#L7)
 
 ## Properties
 
@@ -62,7 +62,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/errors/JulepApiError.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/errors/JulepApiError.d.ts#L6)
+[src/api/errors/JulepApiError.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/errors/JulepApiError.d.ts#L6)
 
 ___
 
@@ -128,4 +128,4 @@ ___
 
 #### Defined in
 
-[src/api/errors/JulepApiError.d.ts:5](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/errors/JulepApiError.d.ts#L5)
+[src/api/errors/JulepApiError.d.ts:5](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/errors/JulepApiError.d.ts#L5)

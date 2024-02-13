@@ -10,6 +10,7 @@ from .chat_response import ChatResponse
 from .chat_response_finish_reason import ChatResponseFinishReason
 from .chat_settings import ChatSettings
 from .chat_settings_response_format import ChatSettingsResponseFormat
+from .chat_settings_response_format_schema import ChatSettingsResponseFormatSchema
 from .chat_settings_response_format_type import ChatSettingsResponseFormatType
 from .chat_settings_stop import ChatSettingsStop
 from .completion_usage import CompletionUsage
@@ -60,6 +61,7 @@ __all__ = [
     "ChatResponseFinishReason",
     "ChatSettings",
     "ChatSettingsResponseFormat",
+    "ChatSettingsResponseFormatSchema",
     "ChatSettingsResponseFormatType",
     "ChatSettingsStop",
     "CompletionUsage",

@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "model_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.10,<3.11"
 uvicorn = "^0.25.0"
 fastapi = "^0.108.0"
 torch = "^2.1.2"
@@ -33,6 +33,7 @@ ipython = "^8.21.0"
 ruff = "^0.1.9"
 poethepoet = "^0.24.4"
 pytype = "^2024.1.5"
+julep = "^0.2.1"
 
 [build-system]
 requires = ["poetry-core"]

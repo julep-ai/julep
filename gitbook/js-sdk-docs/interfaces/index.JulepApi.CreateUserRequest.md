@@ -28,7 +28,7 @@ About the user
 
 #### Defined in
 
-[src/api/api/client/requests/CreateUserRequest.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/CreateUserRequest.d.ts#L13)
+[src/api/api/client/requests/CreateUserRequest.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateUserRequest.d.ts#L13)
 
 ___
 
@@ -40,7 +40,7 @@ List of docs about user
 
 #### Defined in
 
-[src/api/api/client/requests/CreateUserRequest.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/CreateUserRequest.d.ts#L15)
+[src/api/api/client/requests/CreateUserRequest.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateUserRequest.d.ts#L15)
 
 ___
 
@@ -52,4 +52,4 @@ Name of the user
 
 #### Defined in
 
-[src/api/api/client/requests/CreateUserRequest.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/CreateUserRequest.d.ts#L11)
+[src/api/api/client/requests/CreateUserRequest.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateUserRequest.d.ts#L11)
