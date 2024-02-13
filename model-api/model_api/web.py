@@ -5,7 +5,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
-from typing import AsyncGenerator, Optional, Dict, Annotated
+from typing import AsyncGenerator, Optional, Annotated
 
 from aioprometheus.asgi.starlette import metrics
 from fastapi.middleware.cors import CORSMiddleware
@@ -163,7 +163,7 @@ AGENT_NAME = "Samantha"
 
 def create_logprobs(
     token_ids: list[int],
-    id_logprobs: list[Dict[int, float]],
+    id_logprobs: list[dict[int, float]],
     initial_text_offset: int = 0,
 ) -> LogProbs:
     """Create OpenAI-style logprobs."""
