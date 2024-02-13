@@ -9,7 +9,7 @@
 
 ## ChatSettingsResponseFormat
 
-[Show source in chat_settings_response_format.py:15](../../../../../../../julep/api/types/chat_settings_response_format.py#L15)
+[Show source in chat_settings_response_format.py:16](../../../../../../../julep/api/types/chat_settings_response_format.py#L16)
 
 An object specifying the format that the model must output.
 
@@ -25,7 +25,7 @@ class ChatSettingsResponseFormat(pydantic.BaseModel): ...
 
 ### ChatSettingsResponseFormat().dict
 
-[Show source in chat_settings_response_format.py:36](../../../../../../../julep/api/types/chat_settings_response_format.py#L36)
+[Show source in chat_settings_response_format.py:43](../../../../../../../julep/api/types/chat_settings_response_format.py#L43)
 
 #### Signature
 
@@ -35,7 +35,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ChatSettingsResponseFormat().json
 
-[Show source in chat_settings_response_format.py:28](../../../../../../../julep/api/types/chat_settings_response_format.py#L28)
+[Show source in chat_settings_response_format.py:35](../../../../../../../julep/api/types/chat_settings_response_format.py#L35)
 
 #### Signature
 

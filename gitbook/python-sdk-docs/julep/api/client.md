@@ -229,7 +229,7 @@ await client.create_agent_tool(
     agent_id="agent_id",
     request=CreateToolRequest(
         type=CreateToolRequestType.FUNCTION,
-        definition=FunctionDef(
+        function=FunctionDef(
             name="name",
             parameters={},
         ),
@@ -940,7 +940,7 @@ async def update_agent(
 
 - `-` *tool_id* - str.
 
-    - `-` *definition* - FunctionDef. Function definition and parameters
+    - `-` *function* - FunctionDef. Function definition and parameters
 ---
 from julep import FunctionDef
 from julep.client import AsyncJulepApi
@@ -951,7 +951,7 @@ client = AsyncJulepApi(
 await client.update_agent_tool(
     agent_id="agent_id",
     tool_id="tool_id",
-    definition=FunctionDef(
+    function=FunctionDef(
         name="name",
         parameters={},
     ),
@@ -961,7 +961,7 @@ await client.update_agent_tool(
 
 ```python
 async def update_agent_tool(
-    self, agent_id: str, tool_id: str, definition: FunctionDef
+    self, agent_id: str, tool_id: str, function: FunctionDef
 ) -> ResourceUpdatedResponse: ...
 ```
 
@@ -1247,7 +1247,7 @@ client.create_agent_tool(
     agent_id="agent_id",
     request=CreateToolRequest(
         type=CreateToolRequestType.FUNCTION,
-        definition=FunctionDef(
+        function=FunctionDef(
             name="name",
             parameters={},
         ),
@@ -1958,7 +1958,7 @@ def update_agent(
 
 - `-` *tool_id* - str.
 
-    - `-` *definition* - FunctionDef. Function definition and parameters
+    - `-` *function* - FunctionDef. Function definition and parameters
 ---
 from julep import FunctionDef
 from julep.client import JulepApi
@@ -1969,7 +1969,7 @@ client = JulepApi(
 client.update_agent_tool(
     agent_id="agent_id",
     tool_id="tool_id",
-    definition=FunctionDef(
+    function=FunctionDef(
         name="name",
         parameters={},
     ),
@@ -1979,7 +1979,7 @@ client.update_agent_tool(
 
 ```python
 def update_agent_tool(
-    self, agent_id: str, tool_id: str, definition: FunctionDef
+    self, agent_id: str, tool_id: str, function: FunctionDef
 ) -> ResourceUpdatedResponse: ...
 ```
 

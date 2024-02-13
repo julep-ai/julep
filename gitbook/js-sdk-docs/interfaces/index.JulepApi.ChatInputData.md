@@ -28,7 +28,7 @@ A list of new input messages comprising the conversation so far.
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatInputData.d.ts#L7)
+[src/api/api/types/ChatInputData.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L7)
 
 ___
 
@@ -40,7 +40,7 @@ Can be one of existing tools given to the agent earlier or the ones included in 
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatInputData.d.ts#L11)
+[src/api/api/types/ChatInputData.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L11)
 
 ___
 
@@ -52,4 +52,4 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatInputData.d.ts#L9)
+[src/api/api/types/ChatInputData.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L9)

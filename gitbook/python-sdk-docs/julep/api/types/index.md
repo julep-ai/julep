@@ -19,6 +19,7 @@
 - [ChatResponseFinishReason](./chat_response_finish_reason.md)
 - [ChatSettings](./chat_settings.md)
 - [ChatSettingsResponseFormat](./chat_settings_response_format.md)
+- [ChatSettingsResponseFormatSchema](./chat_settings_response_format_schema.md)
 - [ChatSettingsResponseFormatType](./chat_settings_response_format_type.md)
 - [Chat Settings Stop](./chat_settings_stop.md)
 - [CompletionUsage](./completion_usage.md)
