@@ -380,7 +380,11 @@ async def completions(
     else:
         prompt = request.prompt
     created_time = int(time.time())
-    sampling_params = request.to_sampling_params()
+
+    try:
+        sampling_params = request.to_sampling_params()
+    except ValueError as e:
+        return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
 
     # Rescale the temperature
     sampling_params.temperature = rescale_temperature(
@@ -613,7 +617,11 @@ async def chat_completions(
     model_name = request.model
     request_id = f"cmpl-{random_uuid()}"
     created_time = int(time.time())
-    sampling_params = request.to_sampling_params()
+
+    try:
+        sampling_params = request.to_sampling_params()
+    except ValueError as e:
+        return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
 
     # Rescale the temperature
     sampling_params.temperature = rescale_temperature(
