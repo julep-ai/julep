@@ -5,7 +5,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
-from typing import AsyncGenerator, Optional, Annotated
+from typing import AsyncGenerator, Annotated
 
 from aioprometheus.asgi.starlette import metrics
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +14,7 @@ from fastapi.responses import Response, JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
 from jsonschema.exceptions import ValidationError
 from lmformatenforcer import JsonSchemaParser
-from pydantic import UUID4, Field, BaseModel
+from pydantic import UUID4
 import sentry_sdk
 
 from vllm.engine.metrics import add_global_metrics_labels
@@ -23,18 +23,11 @@ from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.utils import random_uuid
 from vllm.transformers_utils.tokenizer import get_tokenizer
 from vllm.entrypoints.openai.protocol import (
-    CompletionRequest,
     CompletionResponse,
     CompletionResponseChoice,
     CompletionResponseStreamChoice,
     CompletionStreamResponse,
-    ChatCompletionRequest,
     ChatCompletionResponse,
-    ChatCompletionResponseChoice,
-    ChatCompletionResponseStreamChoice,
-    ChatCompletionStreamResponse,
-    ChatMessage,
-    DeltaMessage,
     ErrorResponse,
     LogProbs,
     ModelCard,
@@ -45,7 +38,6 @@ from vllm.entrypoints.openai.protocol import (
 from vllm.outputs import RequestOutput
 
 from .conversion.conversions import to_prompt, parse_message
-from .conversion.datatypes import ChatML
 
 from .conversion.exceptions import (
     InvalidPromptException,
@@ -68,10 +60,18 @@ from .dependencies.auth import get_api_key
 from .dependencies.developer import get_developer_id, get_developer_email
 from .dependencies.exceptions import InvalidHeaderFormat
 from .utils import (
-    validate_functions,
     vllm_with_character_level_parser,
     FunctionCallResult,
     rescale_temperature,
+)
+from .protocol import (
+    CompletionRequest,
+    ChatCompletionRequest,
+    ChatCompletionStreamResponse,
+    ChatCompletionResponseChoice,
+    ChatCompletionResponseStreamChoice,
+    ChatMessage,
+    DeltaMessage,
 )
 
 
@@ -96,54 +96,6 @@ else:
         dsn=sentry_dsn,
         enable_tracing=True,
     )
-
-
-DEFAULT_MAX_TOKENS = 4000
-
-
-class ChatMessage(ChatMessage):
-    name: str | None = None
-
-
-class DeltaMessage(DeltaMessage):
-    name: str | None = None
-
-
-class ChatCompletionResponseChoice(ChatCompletionResponseChoice):
-    message: ChatMessage
-
-
-class ChatCompletionResponseStreamChoice(ChatCompletionResponseStreamChoice):
-    delta: DeltaMessage
-
-
-class ChatCompletionStreamResponse(ChatCompletionStreamResponse):
-    choices: list[ChatCompletionResponseStreamChoice]
-
-
-class ResponseFormat(BaseModel):
-    type_: str = Field(..., alias="type")
-
-
-class ChatCompletionRequest(ChatCompletionRequest):
-    functions: list[dict] | None = None
-    function_call: str | None = None
-    response_format: ResponseFormat | None = None
-    max_tokens: int | None = DEFAULT_MAX_TOKENS
-    spaces_between_special_tokens: Optional[bool] = False
-    messages: ChatML
-    temperature: Optional[float] = 0.0
-
-    class Config:
-        extra = "forbid"
-
-
-class CompletionRequest(CompletionRequest):
-    spaces_between_special_tokens: Optional[bool] = False
-    temperature: Optional[float] = 0.0
-
-    class Config:
-        extra = "forbid"
 
 
 class EndpointFilter(logging.Filter):
@@ -287,7 +239,7 @@ async def validation_exception_handler(request, exc):  # pylint: disable=unused-
     return create_error_response(HTTPStatus.BAD_REQUEST, str(exc))
 
 
-async def check_model(request) -> Optional[JSONResponse]:
+async def check_model(request) -> JSONResponse | None:
     if request.model == served_model:
         return
     ret = create_error_response(
@@ -419,8 +371,8 @@ async def completions(
     def create_stream_response_json(
         index: int,
         text: str,
-        logprobs: Optional[LogProbs] = None,
-        finish_reason: Optional[str] = None,
+        logprobs: LogProbs | None = None,
+        finish_reason: str | None = None,
     ) -> str:
         choice_data = CompletionResponseStreamChoice(
             index=index,
@@ -584,9 +536,6 @@ async def chat_completions(
     request = ChatCompletionRequest(**await raw_request.json())
     logger.info(f"Received chat completion request: {request}")
 
-    if request.functions:
-        validate_functions(request.functions)
-
     error_check_ret = await check_model(request)
     if error_check_ret is not None:
         return error_check_ret
@@ -670,12 +619,17 @@ async def chat_completions(
         index: int,
         text: str,
         role: str = "assistant",
-        name: Optional[str] = None,
-        finish_reason: Optional[str] = None,
+        name: str | None = None,
+        finish_reason: str | None = None,
     ) -> str:
         choice_data = ChatCompletionResponseStreamChoice(
             index=index,
-            delta=DeltaMessage(role=role, content=text, name=name),
+            delta=DeltaMessage(
+                role=role,
+                content=text if finish_reason != "function_call" else None,
+                name=name,
+                function_call=text if finish_reason == "function_call" else None,
+            ),
             finish_reason=finish_reason,
         )
         response = ChatCompletionStreamResponse(
@@ -716,7 +670,7 @@ async def chat_completions(
                     if append_fcall_prefix:
                         delta_text = f'{{"name": "{request.function_call}",{delta_text}'
 
-                    msg = parse_message(delta_text).dict()
+                    msg = parse_message(delta_text).model_dump()
                     role = msg.get(
                         "role",
                         "assistant" if not append_fcall_prefix else "function_call",
@@ -793,18 +747,21 @@ async def chat_completions(
     assert final_res is not None
     choices = []
     for output in final_res.outputs:
-        msg = parse_message(output.text).dict()
+        msg = parse_message(output.text).model_dump()
         choice_data = ChatCompletionResponseChoice(
             index=output.index,
             message=ChatMessage(
-                role=msg.get(
-                    "role", "assistant" if not append_fcall_prefix else "function_call"
-                ),
+                role=msg.get("role", "assistant"),
                 name=msg.get("name"),
                 content=(
-                    f'{{"name": "{request.function_call}",{msg.get("content", "")}'
-                    if append_fcall_prefix
+                    None
+                    if output.finish_reason == "function_call"
                     else msg.get("content", "")
+                ),
+                function_call=(
+                    f'{{"name": "{request.function_call.name}",{msg.get("content", "")}'
+                    if output.finish_reason == "function_call"
+                    else None
                 ),
             ),
             finish_reason=output.finish_reason,
