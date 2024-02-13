@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Union, List, Dict, Any, TypeAlias
+from typing import Literal, Any, TypeAlias
 from pydantic import BaseModel, Field
 from vllm.entrypoints.openai.protocol import (
     CompletionRequest,
@@ -63,17 +63,17 @@ class ChatCompletionRequest(ChatCompletionRequest):
     function_call: RequestFunctionCall | None = None
     response_format: ResponseFormat | None = None
     max_tokens: int | None = DEFAULT_MAX_TOKENS
-    spaces_between_special_tokens: Optional[bool] = False
-    messages: Union[str, List[Dict[str, Any]]]
-    temperature: Optional[float] = 0.0
+    spaces_between_special_tokens: bool | None = False
+    messages: str | list[dict[str, Any]]
+    temperature: float | None = 0.0
 
     class Config:
         extra = "forbid"
 
 
 class CompletionRequest(CompletionRequest):
-    spaces_between_special_tokens: Optional[bool] = False
-    temperature: Optional[float] = 0.0
+    spaces_between_special_tokens: bool | None = False
+    temperature: float | None = 0.0
 
     class Config:
         extra = "forbid"

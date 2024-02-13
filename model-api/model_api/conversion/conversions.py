@@ -1,7 +1,7 @@
 from io import StringIO
 import json
 import re
-from typing import Callable, Optional
+from typing import Callable
 
 from .datatypes import ChatML, ChatMLMessage
 from .exceptions import InvalidPromptException, InvalidFunctionName
@@ -38,7 +38,7 @@ def parse_message(message: str) -> ChatMLMessage:
     return ChatMLMessage(role="assistant", content=message)
 
 
-def message_role_to_prefix(message: ChatMLMessage) -> Optional[str]:
+def message_role_to_prefix(message: ChatMLMessage) -> str | None:
     match (message.dict()):
         # If empty <system> tag, then assume role="situation"
         case {"role": "system", "name": "functions", **rest}:
@@ -125,7 +125,7 @@ def to_prompt(
     messages: ChatML,
     bos: str = "<|im_start|>",
     eos: str = "<|im_end|>",
-    model_dump: Optional[Callable] = None,
+    model_dump: Callable | None = None,
     functions: list[dict] | None = None,
     function_call: RequestFunctionCall | None = None,
 ) -> str:
