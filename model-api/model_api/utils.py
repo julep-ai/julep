@@ -1,3 +1,7 @@
+from typing import AsyncIterator, Union, List, Optional, Any
+
+from interegular.patterns import _ParsePattern
+from jsonschema import validate
 from lmformatenforcer import CharacterLevelParser
 from lmformatenforcer.integrations.vllm import (
     build_vllm_logits_processor,
@@ -6,10 +10,9 @@ from lmformatenforcer.integrations.transformers import (
     build_token_enforcer_tokenizer_data,
 )
 from lmformatenforcer import TokenEnforcerTokenizerData
-from typing import Union, List, Optional, Any
-from vllm import SamplingParams, LLM
 from pydantic import BaseModel
-from jsonschema import validate
+from vllm import SamplingParams, LLM
+from vllm.outputs import RequestOutput
 
 
 ListOrStrList = Union[str, List[str]]
@@ -76,7 +79,7 @@ def vllm_with_character_level_parser(
     sampling_params: SamplingParams,
     request_id: str,
     parser: Optional[CharacterLevelParser] = None,
-) -> ListOrStrList:
+) -> AsyncIterator[RequestOutput]:
     tokenizer_data = build_vllm_token_enforcer_tokenizer_data(tokenizer)
 
     if parser:
@@ -97,3 +100,11 @@ def rescale_temperature(
     power: float = 1.0,
 ) -> float:
     return (temperature**power) * scaling_factor
+
+
+def validate_interegular_regex(pattern: str) -> bool:
+    try:
+        _ParsePattern(pattern).parse()
+        return True
+    except Exception:
+        return False

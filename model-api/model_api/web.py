@@ -5,7 +5,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
-from typing import AsyncGenerator, Optional, List, Dict, Union, Any, Annotated
+from typing import AsyncGenerator, Optional, Annotated
 
 from aioprometheus.asgi.starlette import metrics
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,6 +45,7 @@ from vllm.entrypoints.openai.protocol import (
 from vllm.outputs import RequestOutput
 
 from .conversion.conversions import to_prompt, parse_message
+from .conversion.datatypes import ChatML
 
 from .conversion.exceptions import (
     InvalidPromptException,
@@ -130,7 +131,7 @@ class ChatCompletionRequest(ChatCompletionRequest):
     response_format: ResponseFormat | None = None
     max_tokens: int | None = DEFAULT_MAX_TOKENS
     spaces_between_special_tokens: Optional[bool] = False
-    messages: Union[str, List[Dict[str, Any]]]
+    messages: ChatML
     temperature: Optional[float] = 0.0
 
 
@@ -161,8 +162,8 @@ AGENT_NAME = "Samantha"
 
 
 def create_logprobs(
-    token_ids: List[int],
-    id_logprobs: List[Dict[int, float]],
+    token_ids: list[int],
+    id_logprobs: list[dict[int, float]],
     initial_text_offset: int = 0,
 ) -> LogProbs:
     """Create OpenAI-style logprobs."""
@@ -423,7 +424,7 @@ async def completions(
             model=model_name,
             choices=[choice_data],
         )
-        response_json = response.json(ensure_ascii=False)
+        response_json = response.json()
 
         return response_json
 
@@ -541,7 +542,7 @@ async def completions(
     if request.stream:
         # When user requests streaming but we don't stream, we still need to
         # return a streaming response with a single event.
-        response_json = response.json(ensure_ascii=False)
+        response_json = response.json()
 
         async def fake_stream_generator() -> AsyncGenerator[str, None]:
             yield f"data: {response_json}\n\n"
@@ -589,16 +590,12 @@ async def chat_completions(
 
     bos = model_settings[request.model]["section_start_tag"]
     eos = model_settings[request.model]["section_end_tag"]
-    prompt = (
-        request.messages
-        if isinstance(request.messages, str)
-        else to_prompt(
-            request.messages,
-            bos=bos,
-            eos=eos,
-            functions=request.functions,
-            function_call=request.function_call,
-        )
+    prompt = to_prompt(
+        request.messages,
+        bos=bos,
+        eos=eos,
+        functions=request.functions,
+        function_call=request.function_call,
     )
 
     append_fcall_prefix = False
@@ -673,7 +670,7 @@ async def chat_completions(
             model=model_name,
             choices=[choice_data],
         )
-        response_json = response.json(ensure_ascii=False)
+        response_json = response.json()
 
         return response_json
 
@@ -688,7 +685,7 @@ async def chat_completions(
         #     chunk = ChatCompletionStreamResponse(
         #         id=request_id, choices=[choice_data], model=model_name
         #     )
-        #     data = chunk.json(exclude_unset=True, ensure_ascii=False)
+        #     data = chunk.json(exclude_unset=True)
         #     yield f"data: {data}\n\n"
 
         previous_texts = [""] * request.n
@@ -705,7 +702,7 @@ async def chat_completions(
                     if append_fcall_prefix:
                         delta_text = f'{{"name": "{request.function_call}",{delta_text}'
 
-                    msg = parse_message(delta_text)
+                    msg = parse_message(delta_text).dict()
                     role = msg.get(
                         "role",
                         "assistant" if not append_fcall_prefix else "function_call",
@@ -721,7 +718,7 @@ async def chat_completions(
                         chunk = ChatCompletionStreamResponse(
                             id=request_id, choices=[choice_data], model=model_name
                         )
-                        data = chunk.json(exclude_unset=True, ensure_ascii=False)
+                        data = chunk.json(exclude_unset=True)
                         yield f"data: {data}\n\n"
 
                 previous_texts[i] = output.text
@@ -782,7 +779,7 @@ async def chat_completions(
     assert final_res is not None
     choices = []
     for output in final_res.outputs:
-        msg = parse_message(output.text)
+        msg = parse_message(output.text).dict()
         choice_data = ChatCompletionResponseChoice(
             index=output.index,
             message=ChatMessage(
@@ -828,7 +825,7 @@ async def chat_completions(
     if request.stream:
         # When user requests streaming but we don't stream, we still need to
         # return a streaming response with a single event.
-        response_json = response.json(ensure_ascii=False)
+        response_json = response.json()
 
         async def fake_stream_generator() -> AsyncGenerator[str, None]:
             yield f"data: {response_json}\n\n"
