@@ -65,6 +65,7 @@ __exportStar(require("./Episode"), exports);
 __exportStar(require("./Memory"), exports);
 __exportStar(require("./Entity"), exports);
 __exportStar(require("./ChatSettingsResponseFormatType"), exports);
+__exportStar(require("./ChatSettingsResponseFormatSchema"), exports);
 __exportStar(require("./ChatSettingsResponseFormat"), exports);
 __exportStar(require("./ChatSettingsStop"), exports);
 __exportStar(require("./ChatSettings"), exports);

@@ -5,7 +5,7 @@ import * as JulepApi from "../..";
 /**
  * @example
  *     {
- *         definition: {
+ *         function: {
  *             name: "name",
  *             parameters: {}
  *         }
@@ -13,5 +13,5 @@ import * as JulepApi from "../..";
  */
 export interface UpdateToolRequest {
   /** Function definition and parameters */
-  definition: JulepApi.FunctionDef;
+  function: JulepApi.FunctionDef;
 }
