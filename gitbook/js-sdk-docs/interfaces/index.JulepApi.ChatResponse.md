@@ -25,7 +25,7 @@ The reason the model stopped generating tokens. This will be `stop` if the model
 
 #### Defined in
 
-[src/api/api/types/ChatResponse.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatResponse.d.ts#L12)
+[src/api/api/types/ChatResponse.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponse.d.ts#L12)
 
 ___
 
@@ -37,7 +37,7 @@ A unique identifier for the chat completion.
 
 #### Defined in
 
-[src/api/api/types/ChatResponse.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatResponse.d.ts#L10)
+[src/api/api/types/ChatResponse.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponse.d.ts#L10)
 
 ___
 
@@ -49,7 +49,7 @@ A list of chat completion messages produced as a response.
 
 #### Defined in
 
-[src/api/api/types/ChatResponse.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatResponse.d.ts#L14)
+[src/api/api/types/ChatResponse.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponse.d.ts#L14)
 
 ___
 
@@ -59,4 +59,4 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatResponse.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatResponse.d.ts#L15)
+[src/api/api/types/ChatResponse.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponse.d.ts#L15)

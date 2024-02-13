@@ -66,7 +66,7 @@
 
 #### Defined in
 
-[src/api/Client.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L19)
+[src/api/Client.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L19)
 
 ## Properties
 
@@ -76,7 +76,7 @@
 
 #### Defined in
 
-[src/api/Client.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L18)
+[src/api/Client.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L18)
 
 ## Methods
 
@@ -90,7 +90,7 @@
 
 #### Defined in
 
-[src/api/Client.d.ts:373](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L373)
+[src/api/Client.d.ts:373](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L373)
 
 ___
 
@@ -124,7 +124,7 @@ await julepApi.chat("session_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:154](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L154)
+[src/api/Client.d.ts:154](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L154)
 
 ___
 
@@ -157,7 +157,7 @@ await julepApi.createAgent({
 
 #### Defined in
 
-[src/api/Client.d.ts:83](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L83)
+[src/api/Client.d.ts:83](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L83)
 
 ___
 
@@ -188,7 +188,7 @@ await julepApi.createAgentDoc("agent_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:254](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L254)
+[src/api/Client.d.ts:254](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L254)
 
 ___
 
@@ -213,7 +213,7 @@ ___
 ```ts
 await julepApi.createAgentTool("agent_id", {
         type: JulepApi.CreateToolRequestType.Function,
-        definition: {
+        function: {
             name: "name",
             parameters: {}
         }
@@ -222,7 +222,7 @@ await julepApi.createAgentTool("agent_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:340](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L340)
+[src/api/Client.d.ts:340](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L340)
 
 ___
 
@@ -254,7 +254,7 @@ await julepApi.createSession({
 
 #### Defined in
 
-[src/api/Client.d.ts:39](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L39)
+[src/api/Client.d.ts:39](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L39)
 
 ___
 
@@ -283,7 +283,7 @@ await julepApi.createUser({})
 
 #### Defined in
 
-[src/api/Client.d.ts:59](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L59)
+[src/api/Client.d.ts:59](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L59)
 
 ___
 
@@ -314,7 +314,7 @@ await julepApi.createUserDoc("user_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:279](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L279)
+[src/api/Client.d.ts:279](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L279)
 
 ___
 
@@ -341,7 +341,7 @@ await julepApi.deleteAgent("agent_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:230](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L230)
+[src/api/Client.d.ts:230](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L230)
 
 ___
 
@@ -369,7 +369,7 @@ await julepApi.deleteAgentDoc("agent_id", "doc_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:301](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L301)
+[src/api/Client.d.ts:301](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L301)
 
 ___
 
@@ -397,7 +397,7 @@ await julepApi.deleteAgentMemory("agent_id", "memory_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:312](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L312)
+[src/api/Client.d.ts:312](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L312)
 
 ___
 
@@ -425,7 +425,7 @@ await julepApi.deleteAgentTool("agent_id", "tool_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:368](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L368)
+[src/api/Client.d.ts:368](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L368)
 
 ___
 
@@ -452,7 +452,7 @@ await julepApi.deleteSession("session_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:116](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L116)
+[src/api/Client.d.ts:116](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L116)
 
 ___
 
@@ -479,7 +479,7 @@ await julepApi.deleteUser("user_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:199](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L199)
+[src/api/Client.d.ts:199](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L199)
 
 ___
 
@@ -507,7 +507,7 @@ await julepApi.deleteUserDoc("user_id", "doc_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:290](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L290)
+[src/api/Client.d.ts:290](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L290)
 
 ___
 
@@ -534,7 +534,7 @@ await julepApi.getAgent("agent_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:209](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L209)
+[src/api/Client.d.ts:209](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L209)
 
 ___
 
@@ -564,7 +564,7 @@ await julepApi.getAgentDocs("agent_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:240](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L240)
+[src/api/Client.d.ts:240](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L240)
 
 ___
 
@@ -596,7 +596,7 @@ await julepApi.getAgentMemories("agent_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:167](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L167)
+[src/api/Client.d.ts:167](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L167)
 
 ___
 
@@ -626,7 +626,7 @@ await julepApi.getAgentTools("agent_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:323](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L323)
+[src/api/Client.d.ts:323](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L323)
 
 ___
 
@@ -656,7 +656,7 @@ await julepApi.getHistory("session_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:137](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L137)
+[src/api/Client.d.ts:137](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L137)
 
 ___
 
@@ -683,7 +683,7 @@ await julepApi.getSession("session_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:93](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L93)
+[src/api/Client.d.ts:93](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L93)
 
 ___
 
@@ -713,7 +713,7 @@ await julepApi.getSuggestions("session_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:126](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L126)
+[src/api/Client.d.ts:126](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L126)
 
 ___
 
@@ -740,7 +740,7 @@ await julepApi.getUser("user_id")
 
 #### Defined in
 
-[src/api/Client.d.ts:178](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L178)
+[src/api/Client.d.ts:178](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L178)
 
 ___
 
@@ -770,7 +770,7 @@ await julepApi.getUserDocs("user_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:265](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L265)
+[src/api/Client.d.ts:265](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L265)
 
 ___
 
@@ -799,7 +799,7 @@ await julepApi.listAgents({})
 
 #### Defined in
 
-[src/api/Client.d.ts:69](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L69)
+[src/api/Client.d.ts:69](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L69)
 
 ___
 
@@ -828,7 +828,7 @@ await julepApi.listSessions({})
 
 #### Defined in
 
-[src/api/Client.d.ts:26](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L26)
+[src/api/Client.d.ts:26](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L26)
 
 ___
 
@@ -857,7 +857,7 @@ await julepApi.listUsers({})
 
 #### Defined in
 
-[src/api/Client.d.ts:49](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L49)
+[src/api/Client.d.ts:49](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L49)
 
 ___
 
@@ -885,7 +885,7 @@ await julepApi.updateAgent("agent_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:219](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L219)
+[src/api/Client.d.ts:219](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L219)
 
 ___
 
@@ -910,7 +910,7 @@ ___
 
 ```ts
 await julepApi.updateAgentTool("agent_id", "tool_id", {
-        definition: {
+        function: {
             name: "name",
             parameters: {}
         }
@@ -919,7 +919,7 @@ await julepApi.updateAgentTool("agent_id", "tool_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:356](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L356)
+[src/api/Client.d.ts:356](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L356)
 
 ___
 
@@ -949,7 +949,7 @@ await julepApi.updateSession("session_id", {
 
 #### Defined in
 
-[src/api/Client.d.ts:105](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L105)
+[src/api/Client.d.ts:105](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L105)
 
 ___
 
@@ -977,4 +977,4 @@ await julepApi.updateUser("user_id", {})
 
 #### Defined in
 
-[src/api/Client.d.ts:188](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/Client.d.ts#L188)
+[src/api/Client.d.ts:188](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L188)

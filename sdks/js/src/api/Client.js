@@ -1966,7 +1966,7 @@ class JulepApiClient {
    * @example
    *     await julepApi.createAgentTool("agent_id", {
    *         type: JulepApi.CreateToolRequestType.Function,
-   *         definition: {
+   *         function: {
    *             name: "name",
    *             parameters: {}
    *         }
@@ -2040,7 +2040,7 @@ class JulepApiClient {
    *
    * @example
    *     await julepApi.updateAgentTool("agent_id", "tool_id", {
-   *         definition: {
+   *         function: {
    *             name: "name",
    *             parameters: {}
    *         }

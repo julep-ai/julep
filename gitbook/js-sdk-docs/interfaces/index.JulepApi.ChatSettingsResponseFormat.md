@@ -14,16 +14,42 @@ Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the m
 
 ### Properties
 
+- [pattern](index.JulepApi.ChatSettingsResponseFormat.md#pattern)
+- [schema](index.JulepApi.ChatSettingsResponseFormat.md#schema)
 - [type](index.JulepApi.ChatSettingsResponseFormat.md#type)
 
 ## Properties
+
+### pattern
+
+• `Optional` **pattern**: `string`
+
+Regular expression pattern to use if `type` is `"regex"`
+
+#### Defined in
+
+[src/api/api/types/ChatSettingsResponseFormat.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L16)
+
+___
+
+### schema
+
+• `Optional` **schema**: [`ChatSettingsResponseFormatSchema`](index.JulepApi.ChatSettingsResponseFormatSchema.md)
+
+JSON Schema to use if `type` is `"json_object"`
+
+#### Defined in
+
+[src/api/api/types/ChatSettingsResponseFormat.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L18)
+
+___
 
 ### type
 
 • `Optional` **type**: [`ChatSettingsResponseFormatType`](../modules/index.JulepApi.md#chatsettingsresponseformattype)
 
-Must be one of `text` or `json_object`.
+Must be one of `"text"`, `"regex"` or `"json_object"`.
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsResponseFormat.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L14)
+[src/api/api/types/ChatSettingsResponseFormat.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L14)

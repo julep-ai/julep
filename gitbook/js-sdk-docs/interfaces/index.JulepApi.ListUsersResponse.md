@@ -18,4 +18,4 @@
 
 #### Defined in
 
-[src/api/api/types/ListUsersResponse.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/ListUsersResponse.d.ts#L6)
+[src/api/api/types/ListUsersResponse.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ListUsersResponse.d.ts#L6)

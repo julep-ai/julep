@@ -21,7 +21,7 @@ Specifies a tool the model should use. Use to force the model to call a specific
 
 #### Defined in
 
-[src/api/api/types/NamedToolChoice.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/NamedToolChoice.d.ts#L10)
+[src/api/api/types/NamedToolChoice.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/NamedToolChoice.d.ts#L10)
 
 ___
 
@@ -31,4 +31,4 @@ ___
 
 #### Defined in
 
-[src/api/api/types/NamedToolChoice.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/types/NamedToolChoice.d.ts#L9)
+[src/api/api/types/NamedToolChoice.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/NamedToolChoice.d.ts#L9)

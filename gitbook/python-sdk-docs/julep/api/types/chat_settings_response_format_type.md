@@ -11,7 +11,7 @@
 
 [Show source in chat_settings_response_format_type.py:9](../../../../../../../julep/api/types/chat_settings_response_format_type.py#L9)
 
-Must be one of `text` or `json_object`.
+Must be one of `"text"`, `"regex"` or `"json_object"`.
 
 #### Signature
 
@@ -21,13 +21,16 @@ class ChatSettingsResponseFormatType(str, enum.Enum): ...
 
 ### ChatSettingsResponseFormatType().visit
 
-[Show source in chat_settings_response_format_type.py:17](../../../../../../../julep/api/types/chat_settings_response_format_type.py#L17)
+[Show source in chat_settings_response_format_type.py:18](../../../../../../../julep/api/types/chat_settings_response_format_type.py#L18)
 
 #### Signature
 
 ```python
 def visit(
-    self, text: typing.Callable[[], T_Result], json_object: typing.Callable[[], T_Result]
+    self,
+    text: typing.Callable[[], T_Result],
+    json_object: typing.Callable[[], T_Result],
+    regex: typing.Callable[[], T_Result],
 ) -> T_Result: ...
 ```
 

@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .chat_settings_response_format_schema import ChatSettingsResponseFormatSchema
 from .chat_settings_response_format_type import ChatSettingsResponseFormatType
 
 try:
@@ -22,7 +23,13 @@ class ChatSettingsResponseFormat(pydantic.BaseModel):
     """
 
     type: typing.Optional[ChatSettingsResponseFormatType] = pydantic.Field(
-        description="Must be one of `text` or `json_object`."
+        description='Must be one of `"text"`, `"regex"` or `"json_object"`.'
+    )
+    pattern: typing.Optional[str] = pydantic.Field(
+        description='Regular expression pattern to use if `type` is `"regex"`'
+    )
+    schema_: typing.Optional[ChatSettingsResponseFormatSchema] = pydantic.Field(
+        alias="schema", description='JSON Schema to use if `type` is `"json_object"`'
     )
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -44,4 +51,5 @@ class ChatSettingsResponseFormat(pydantic.BaseModel):
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
         json_encoders = {dt.datetime: serialize_datetime}

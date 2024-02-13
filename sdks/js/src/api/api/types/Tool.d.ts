@@ -6,7 +6,7 @@ export interface Tool {
   /** Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now) */
   type: JulepApi.ToolType;
   /** Function definition and parameters */
-  definition: JulepApi.FunctionDef;
+  function: JulepApi.FunctionDef;
   /** Tool ID */
   id: string;
 }

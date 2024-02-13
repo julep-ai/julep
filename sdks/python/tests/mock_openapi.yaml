@@ -966,7 +966,7 @@ components:
             - function
             - webhook
           description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
-        definition:
+        function:
           oneOf:
             - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
@@ -976,7 +976,7 @@ components:
           format: uuid
       required:
         - type
-        - definition
+        - function
         - id
     Session:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1520,9 +1520,18 @@ components:
               enum:
                 - text
                 - json_object
+                - regex
               example: json_object
               default: text
-              description: Must be one of `text` or `json_object`.
+              description: Must be one of `"text"`, `"regex"` or `"json_object"`.
+            pattern:
+              type: string
+              description: Regular expression pattern to use if `type` is `"regex"`
+            schema:
+              type: object
+              properties: {}
+              default: {}
+              description: JSON Schema to use if `type` is `"json_object"`
         seed:
           type: integer
           minimum: -9.223372036854776e+18
@@ -1683,22 +1692,22 @@ components:
             - function
             - webhook
           description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
-        definition:
+        function:
           oneOf:
             - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - type
-        - definition
+        - function
     UpdateToolRequest:
       type: object
       properties:
-        definition:
+        function:
           oneOf:
             - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
-        - definition
+        - function
     ResourceCreatedResponse:
       type: object
       properties:

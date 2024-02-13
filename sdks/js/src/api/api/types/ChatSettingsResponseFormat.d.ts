@@ -10,6 +10,10 @@ import * as JulepApi from "..";
  * **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.
  */
 export interface ChatSettingsResponseFormat {
-  /** Must be one of `text` or `json_object`. */
+  /** Must be one of `"text"`, `"regex"` or `"json_object"`. */
   type?: JulepApi.ChatSettingsResponseFormatType;
+  /** Regular expression pattern to use if `type` is `"regex"` */
+  pattern?: string;
+  /** JSON Schema to use if `type` is `"json_object"` */
+  schema?: JulepApi.ChatSettingsResponseFormatSchema;
 }

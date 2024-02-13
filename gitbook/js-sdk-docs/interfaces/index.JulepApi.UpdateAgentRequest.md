@@ -30,7 +30,7 @@ About the agent
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateAgentRequest.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L11)
+[src/api/api/client/requests/UpdateAgentRequest.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L11)
 
 ___
 
@@ -42,7 +42,7 @@ Default model settings to start every session with
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateAgentRequest.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L19)
+[src/api/api/client/requests/UpdateAgentRequest.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L19)
 
 ___
 
@@ -54,7 +54,7 @@ List of instructions for the agent
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateAgentRequest.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L13)
+[src/api/api/client/requests/UpdateAgentRequest.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L13)
 
 ___
 
@@ -66,7 +66,7 @@ Name of the model that the agent is supposed to use
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateAgentRequest.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L17)
+[src/api/api/client/requests/UpdateAgentRequest.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L17)
 
 ___
 
@@ -78,4 +78,4 @@ Name of the agent
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateAgentRequest.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/1a65618/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L15)
+[src/api/api/client/requests/UpdateAgentRequest.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateAgentRequest.d.ts#L15)

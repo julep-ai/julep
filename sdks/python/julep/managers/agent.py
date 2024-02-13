@@ -160,7 +160,7 @@ class BaseAgentsManager(BaseManager):
         # Cast functions/tools to a list of CreateToolRequest objects
         tools: List[CreateToolRequest] = (
             [
-                CreateToolRequest(type="function", definition=function)
+                CreateToolRequest(type="function", function=function)
                 for function in functions
             ]
             if functions

@@ -91,4 +91,13 @@ exports.ChatSettingsResponseFormat = core.serialization.object({
       }),
     )
     .optional(),
+  pattern: core.serialization.string().optional(),
+  schema: core.serialization
+    .lazyObject(() =>
+      __awaiter(void 0, void 0, void 0, function* () {
+        return (yield Promise.resolve().then(() => __importStar(require(".."))))
+          .ChatSettingsResponseFormatSchema;
+      }),
+    )
+    .optional(),
 });

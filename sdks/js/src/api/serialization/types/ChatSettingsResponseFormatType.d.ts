@@ -9,5 +9,5 @@ export declare const ChatSettingsResponseFormatType: core.serialization.Schema<
   JulepApi.ChatSettingsResponseFormatType
 >;
 export declare namespace ChatSettingsResponseFormatType {
-  type Raw = "text" | "json_object";
+  type Raw = "text" | "json_object" | "regex";
 }
