@@ -45,6 +45,7 @@ image = (
     .pip_install(
         "vllm==0.3.0",
         "uvicorn==0.27.0.post1",
+        "transformers==4.37.2",
         "torch==2.1.2",
         "aioprometheus==23.12.0",
         "psutil==5.9.8",
