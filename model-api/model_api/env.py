@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from environs import Env
 
 
@@ -15,3 +17,18 @@ skip_check_developer_headers: bool = env.bool(
 )
 temperature_scaling_factor: float = env.float("TEMPERATURE_SCALING_FACTOR", default=1.0)
 temperature_scaling_power: float = env.float("TEMPERATURE_SCALING_POWER", default=1.0)
+
+environment = dict(
+    sentry_dsn=sentry_dsn,
+    api_key=api_key,
+    host=host,
+    port=port,
+    backlog=backlog,
+    skip_check_developer_headers=skip_check_developer_headers,
+    temperature_scaling_factor=temperature_scaling_factor,
+    temperature_scaling_power=temperature_scaling_power,
+)
+
+print("Environment variables:")
+pprint(environment)
+print()
