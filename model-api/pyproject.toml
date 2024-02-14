@@ -34,6 +34,9 @@ ruff = "^0.1.9"
 poethepoet = "^0.24.4"
 pytype = "^2024.1.5"
 julep = "^0.2.1"
+jupyterlab = "^4.1.1"
+ipywidgets = "^8.1.2"
+matplotlib = "^3.8.2"
 
 [build-system]
 requires = ["poetry-core"]
