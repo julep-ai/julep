@@ -31,6 +31,19 @@ image = (
         "vllm==0.3.0",
         "huggingface_hub==0.20.3",
         "hf-transfer==0.1.5",
+    )
+    # Use the barebones hf-transfer package for maximum download speeds. No progress bar, but expect 700MB/s.
+    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
+    .run_function(
+        download_model_to_folder,
+        secrets=[
+            Secret.from_name("huggingface-secret"),
+            Secret.from_name("samantha-model-api"),
+        ],
+        timeout=60 * 20,
+    )
+    .pip_install(
+        "vllm==0.3.0",
         "uvicorn==0.27.0.post1",
         "torch==2.1.2",
         "aioprometheus==23.12.0",
@@ -43,16 +56,7 @@ image = (
         "jsonschema==4.21.1",
         "lm-format-enforcer==0.8.3",
         "interegular==0.3.3",
-    )
-    # Use the barebones hf-transfer package for maximum download speeds. No progress bar, but expect 700MB/s.
-    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
-    .run_function(
-        download_model_to_folder,
-        secrets=[
-            Secret.from_name("huggingface-secret"),
-            Secret.from_name("samantha-model-api"),
-        ],
-        timeout=60 * 20,
+        "pydantic[email]==2.6.1",
     )
 )
 
