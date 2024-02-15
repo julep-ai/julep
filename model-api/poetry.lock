@@ -1449,6 +1449,29 @@ pyside6 = ["pyside6"]
 test = ["flaky", "ipyparallel", "pre-commit", "pytest (>=7.0)", "pytest-asyncio (==0.23.4)", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "ipympl"
+version = "0.9.3"
+description = "Matplotlib Jupyter Extension"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ipympl-0.9.3-py2.py3-none-any.whl", hash = "sha256:d113cd55891bafe9b27ef99b6dd111a87beb6bb2ae550c404292272103be8013"},
+    {file = "ipympl-0.9.3.tar.gz", hash = "sha256:49bab75c05673a6881d1aaec5d8ac81d4624f73d292d154c5fb7096f10236a2b"},
+]
+
+[package.dependencies]
+ipython = "<9"
+ipython-genutils = "*"
+ipywidgets = ">=7.6.0,<9"
+matplotlib = ">=3.4.0,<4"
+numpy = "*"
+pillow = "*"
+traitlets = "<6"
+
+[package.extras]
+docs = ["Sphinx (>=1.5)", "myst-nb", "sphinx-book-theme", "sphinx-copybutton", "sphinx-thebe", "sphinx-togglebutton"]
+
+[[package]]
 name = "ipython"
 version = "8.21.0"
 description = "IPython: Productive Interactive Computing"
@@ -1483,6 +1506,17 @@ parallel = ["ipyparallel"]
 qtconsole = ["qtconsole"]
 test = ["pickleshare", "pytest (<8)", "pytest-asyncio (<0.22)", "testpath"]
 test-extra = ["curio", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.23)", "pandas", "pickleshare", "pytest (<8)", "pytest-asyncio (<0.22)", "testpath", "trio"]
+
+[[package]]
+name = "ipython-genutils"
+version = "0.2.0"
+description = "Vestigial utilities from IPython"
+optional = false
+python-versions = "*"
+files = [
+    {file = "ipython_genutils-0.2.0-py2.py3-none-any.whl", hash = "sha256:72dd37233799e619666c9f639a9da83c34013a73e8bbc79a7a6348d93c61fab8"},
+    {file = "ipython_genutils-0.2.0.tar.gz", hash = "sha256:eb2e116e75ecef9d4d228fdc66af54269afa26ab4463042e33785b887c628ba8"},
+]
 
 [[package]]
 name = "ipywidgets"
@@ -2259,6 +2293,22 @@ types-certifi = "*"
 types-toml = "*"
 typing-extensions = ">=4.6,<5.0"
 watchfiles = "*"
+
+[[package]]
+name = "mplcursors"
+version = "0.5.3"
+description = "Interactive data selection cursors for Matplotlib."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "mplcursors-0.5.3.tar.gz", hash = "sha256:cb220c8dffaafde195e138faec5654737267f7685d1f0503618cdc333aca0966"},
+]
+
+[package.dependencies]
+matplotlib = ">=3.1,<3.7.1 || >3.7.1"
+
+[package.extras]
+docs = ["pandas", "pydata_sphinx_theme (!=0.10.1)", "sphinx", "sphinx-gallery"]
 
 [[package]]
 name = "mpmath"
@@ -5555,4 +5605,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "9daa634cf42b94a61737d0b4fe4dd6e80f9a81b34c3f572e30e9ff036a5003ce"
+content-hash = "6f9e17ee17740ae20a41e0f0f6333deb4d939d01eba6a74417a64f7a1a387e89"
