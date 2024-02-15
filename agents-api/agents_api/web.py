@@ -8,10 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from pycozo.client import QueryException
 
-from .dependencies.auth import get_api_key
-from .env import sentry_dsn
+from agents_api.dependencies.auth import get_api_key
+from agents_api.env import sentry_dsn
 
-from .routers import (
+from agents_api.routers import (
     agents,
     sessions,
     users,
