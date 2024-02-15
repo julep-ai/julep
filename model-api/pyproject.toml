@@ -37,6 +37,8 @@ julep = "^0.2.1"
 jupyterlab = "^4.1.1"
 ipywidgets = "^8.1.2"
 matplotlib = "^3.8.2"
+ipympl = "^0.9.3"
+mplcursors = "^0.5.3"
 
 [build-system]
 requires = ["poetry-core"]
