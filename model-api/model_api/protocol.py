@@ -12,6 +12,7 @@ from vllm.entrypoints.openai.protocol import (
     ChatMessage,
     DeltaMessage,
 )
+from vllm.sampling_params import SamplingParams
 from .conversion.datatypes import ChatML
 
 
@@ -109,12 +110,64 @@ class ChatCompletionRequest(ChatCompletionRequest):
     messages: ChatML
     temperature: float | None = 0.0
 
+    def to_sampling_params(self) -> SamplingParams:
+        return SamplingParams(
+            n=self.n or 1,
+            presence_penalty=self.presence_penalty or 0.0,
+            frequency_penalty=self.frequency_penalty or 0.0,
+            repetition_penalty=self.repetition_penalty or 1.0,
+            temperature=self.temperature or 0.0,
+            top_p=self.top_p or 1.0,
+            min_p=self.min_p or 0.0,
+            stop=self.stop,
+            stop_token_ids=self.stop_token_ids,
+            max_tokens=self.max_tokens or DEFAULT_MAX_TOKENS,
+            best_of=self.best_of,
+            top_k=self.top_k or -1,
+            ignore_eos=self.ignore_eos or False,
+            use_beam_search=self.use_beam_search or False,
+            skip_special_tokens=self.skip_special_tokens or True,
+            spaces_between_special_tokens=self.spaces_between_special_tokens or False,
+            include_stop_str_in_output=self.include_stop_str_in_output or False,
+            length_penalty=self.length_penalty or 1.0,
+        )
+
 
 class CompletionRequest(CompletionRequest):
     model_config = ConfigDict(extra="forbid")
 
     spaces_between_special_tokens: bool | None = False
     temperature: float | None = 0.0
+
+    def to_sampling_params(self) -> SamplingParams:
+        echo_without_generation = self.echo and self.max_tokens == 0
+
+        return SamplingParams(
+            n=self.n or 1,
+            best_of=self.best_of,
+            presence_penalty=self.presence_penalty or 0.0,
+            frequency_penalty=self.frequency_penalty or 0.0,
+            repetition_penalty=self.repetition_penalty or 1.0,
+            temperature=self.temperature or 0.0,
+            top_p=self.top_p or 1.0,
+            top_k=self.top_k or -1,
+            min_p=self.min_p or 0.0,
+            stop=self.stop,
+            stop_token_ids=self.stop_token_ids,
+            ignore_eos=self.ignore_eos or False,
+            max_tokens=(
+                (self.max_tokens or DEFAULT_MAX_TOKENS)
+                if not echo_without_generation
+                else 1
+            ),
+            logprobs=self.logprobs,
+            use_beam_search=self.use_beam_search or False,
+            prompt_logprobs=self.logprobs if self.echo else None,
+            skip_special_tokens=self.skip_special_tokens or True,
+            spaces_between_special_tokens=self.spaces_between_special_tokens or False,
+            include_stop_str_in_output=self.include_stop_str_in_output or False,
+            length_penalty=self.length_penalty or 1.0,
+        )
 
 
 class ChatCompletionResponse(ChatCompletionResponse):
