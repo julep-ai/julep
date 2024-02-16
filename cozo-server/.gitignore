@@ -1,0 +1,4 @@
+cozo.db/
+tmp/
+
+*.pyc
