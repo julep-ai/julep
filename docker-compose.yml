@@ -3,38 +3,106 @@ version: '3'
 
 services:
   agents:
+    env_file:
+      - .env
     container_name: agents
     depends_on:
       - model
-    build: agents-api/
+      - cozo
+      - worker
+    build: 
+      context: agents-api/
+      dockerfile: Dockerfile
     ports: 
       - "8080:8080"
-    environment:
-      API_KEY: "xyz"
+    networks:
+      - julep-network
+
+  worker:
+    env_file:
+      - .env
+    build:
+      context: agents-api/
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - model
+      - text-embeddings-inference
+    networks:
+      - julep-network
 
   model:
+    env_file:
+      - .env
     container_name: model
-    build: model-api/
+    build: 
+      context: model-api/
     ports: 
       - "8000:8000"
     volumes:
-      - ~/.cache/huggingface:/root/.cache/huggingface
-    environment:
-      SENTRY_DSN: ""
-      API_KEY: 
-      MODEL_HOST: "0.0.0.0"
-      PORT: 8000
-      BACKLOG: 2048
-      SKIP_CHECK_DEVELOPER_HEADERS: false
-      TEMPERATURE_SCALING_FACTOR: 1.0
-      TEMPERATURE_SCALING_POWER: 1.0
-      MODEL_NAME: julep-ai/samantha-1-turbo
-      HF_TOKEN: ""
-      HUGGING_FACE_HUB_TOKEN: ""
-
+      - model_data:/root/.cache/huggingface
+    networks:
+      - julep-network
 
   cozo:
     container_name: cozo
-    build: cozo-server/
+    build:
+      context: cozo-server/
     ports: 
       - "9070:9070"
+    networks:
+      - julep-network
+
+  text-embeddings-inference:
+    env_file:
+      - .env
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-0.6
+    ports:
+      - "8082:80"
+    shm_size: '1gb'
+    networks:
+      - julep-network
+
+  postgresql:
+    container_name: temporal-postgresql
+    environment:
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_USER: temporal
+    image: postgres:15
+    networks:
+      - julep-network
+    expose:
+      - 5432
+    volumes:
+      - /var/lib/postgresql/data
+
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgresql
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=postgresql
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - ENABLE_ES=false
+    image: temporalio/auto-setup:1.22.4
+    networks:
+      - julep-network
+    ports:
+      - 7233:7233
+    labels:
+      kompose.volume.type: configMap
+    volumes:
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+
+volumes:
+  model_data:
+    name: model_data
+    external: true
+
+networks:
+  julep-network:
+    driver: bridge
+    name: julep-network
