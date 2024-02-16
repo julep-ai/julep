@@ -36,8 +36,8 @@ ENV SKIP_CHECK_DEVELOPER_HEADERS=false
 ENV TEMPERATURE_SCALING_FACTOR=1.0
 ENV TEMPERATURE_SCALING_POWER=1.0
 ENV MODEL_NAME=julep-ai/samantha-1-turbo
-ENV HF_TOKEN=HUGGINGFACE_API_KEY
-ENV HUGGING_FACE_HUB_TOKEN=HUGGINGFACE_API_KEY
+ENV HF_TOKEN=""
+ENV HUGGING_FACE_HUB_TOKEN=""
 # Define the entrypoint
 
 ENTRYPOINT ["python3", "-m", "model_api", "--model", "julep-ai/samantha-1-turbo", "--tensor-parallel-size", "2", "--enforce-eager", "--dtype", "bfloat16"]

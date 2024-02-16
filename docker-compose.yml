@@ -1,0 +1,34 @@
+name: julep
+version: 0.0.1
+
+services:
+  agents:
+    depends_on:
+      - model
+    build: agents-api/
+    ports: 
+      - "8080:8080"
+
+  model:
+    build: model-api/
+    ports: 
+      - "8000:8000"
+
+    environment:
+      - SENTRY_DSN: ""
+      - API_KEY: 
+      - MODEL_HOST: "0.0.0.0"
+      - PORT: 8000
+      - BACKLOG: 2048
+      - SKIP_CHECK_DEVELOPER_HEADERS: false
+      - TEMPERATURE_SCALING_FACTOR: 1.0
+      - TEMPERATURE_SCALING_POWER: 1.0
+      - MODEL_NAME: julep-ai/samantha-1-turbo
+      - HF_TOKEN: ""
+      - HUGGING_FACE_HUB_TOKEN: ""
+
+
+  cozo:
+    build: cozo-server/
+    ports: 
+      - "9070:9070"
