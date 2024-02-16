@@ -27,6 +27,7 @@ services:
     depends_on:
       - model
       - text-embeddings-inference
+      - temporal
     networks:
       - julep-network
 
@@ -39,7 +40,7 @@ services:
     ports: 
       - "8000:8000"
     volumes:
-      - model_data:/root/.cache/huggingface
+      - ~/.cache/huggingface:/root/.cache/huggingface
     networks:
       - julep-network
 
@@ -63,7 +64,7 @@ services:
       - julep-network
 
   postgresql:
-    container_name: temporal-postgresql
+    container_name: postgresql
     environment:
       POSTGRES_PASSWORD: temporal
       POSTGRES_USER: temporal
@@ -82,6 +83,7 @@ services:
     environment:
       - DB=postgresql
       - DB_PORT=5432
+      - DB_HOST=postgresql
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=postgresql
