@@ -37,6 +37,9 @@ services:
     container_name: model
     build: 
       context: model-api/
+      shm_size: '2gb'
+    shm_size: '2gb'
+
     ports: 
       - "8000:8000"
     volumes:
@@ -63,46 +66,51 @@ services:
     networks:
       - julep-network
 
-  postgresql:
-    container_name: postgresql
-    environment:
-      POSTGRES_PASSWORD: temporal
-      POSTGRES_USER: temporal
-    image: postgres:15
-    networks:
-      - julep-network
-    expose:
-      - 5432
-    volumes:
-      - /var/lib/postgresql/data
+  # postgresql:
+  #   container_name: postgresql
+  #   environment:
+  #     POSTGRES_PASSWORD: temporal
+  #     POSTGRES_USER: temporal
+  #   image: postgres:15
+  #   networks:
+  #     - julep-network
+  #   expose:
+  #     - 5432
+  #   volumes:
+  #     - /var/lib/postgresql/data
 
   temporal:
     container_name: temporal
-    depends_on:
-      - postgresql
-    environment:
-      - DB=postgresql
-      - DB_PORT=5432
-      - DB_HOST=postgresql
-      - POSTGRES_USER=temporal
-      - POSTGRES_PWD=temporal
-      - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
-      - ENABLE_ES=false
-    image: temporalio/auto-setup:1.22.4
+    # depends_on:
+    #   - postgresql
+    # environment:
+    #   - DB=postgresql
+    #   - DB_PORT=5432
+    #   - DB_HOST=postgresql
+    #   - POSTGRES_USER=temporal
+    #   - POSTGRES_PWD=temporal
+    #   - POSTGRES_SEEDS=postgresql
+    #   - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      # - ENABLE_ES=false
+    # image: temporalio/auto-setup:1.22.4
+    env_file:
+      - .env
+    build:
+      context: agents-api/
+      dockerfile: Dockerfile.temporal
     networks:
       - julep-network
     ports:
       - 7233:7233
-    labels:
-      kompose.volume.type: configMap
+    # labels:
+    #   kompose.volume.type: configMap
     volumes:
-      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+      # - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+      - temporal_data:/home/temporal
 
 volumes:
   model_data:
-    name: model_data
-    external: true
+  temporal_data:
 
 networks:
   julep-network:
