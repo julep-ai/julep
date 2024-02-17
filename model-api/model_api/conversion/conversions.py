@@ -1,5 +1,4 @@
 from io import StringIO
-import json
 import re
 
 from .datatypes import ChatML, ChatMLMessage
@@ -167,11 +166,17 @@ def to_prompt(
                     "You can either remove `functions` and/or `function_call` parameters."
                 )
 
+            # Get function name (could be a string or an object)
+            if isinstance(function_call, RequestFunctionCall):
+                function_name = function_call.name
+            else:
+                function_name = function_call
+
             messages.append(
                 ChatMLMessage(
                     role="function_call",
                     continue_=True,
-                    content=f'{{"name": "{function_call.name}",',
+                    content=f'{{"name": "{function_name}",',
                 )
             )
 

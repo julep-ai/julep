@@ -1,5 +1,4 @@
 from enum import Enum
-from uuid import UUID
 from typing import Literal, TypeAlias, Union
 from pydantic import BaseModel, Field, ConfigDict
 from vllm.entrypoints.openai.protocol import (
