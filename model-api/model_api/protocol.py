@@ -47,9 +47,9 @@ class DeltaMessage(DeltaMessage):
 
 class ChatCompletionResponseChoice(ChatCompletionResponseChoice):
     message: ChatMessage
-    finish_reason: Literal["stop", "length", "function_call", "tool_calls"] | None = (
-        None
-    )
+    finish_reason: Literal[
+        "stop", "length", "function_call", "tool_calls"
+    ] | None = None
 
 
 class ChatCompletionResponseStreamChoice(ChatCompletionResponseStreamChoice):
@@ -114,11 +114,11 @@ class ChatCompletionRequest(ChatCompletionRequest):
         return SamplingParams(
             n=self.n or 1,
             presence_penalty=self.presence_penalty or 0.0,
-            frequency_penalty=self.frequency_penalty or 0.0,
-            repetition_penalty=self.repetition_penalty or 1.02,
+            frequency_penalty=self.frequency_penalty or 0.01,
+            repetition_penalty=self.repetition_penalty or 1.0,
             temperature=self.temperature or 0.0,
             top_p=self.top_p or 0.98,
-            min_p=self.min_p or 0.05,
+            min_p=self.min_p or 0.02,
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
             max_tokens=self.max_tokens or DEFAULT_MAX_TOKENS,
