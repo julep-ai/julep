@@ -2,34 +2,26 @@
 
 ## ✨ INTRODUCTION
 
-* [Overview](README.md)
-* [Concepts](introduction/concepts.md)
-* [Features](introduction/features.md)
+* [Welcome!](README.md)
 * [Platform](introduction/platform.md)
-* [Use Cases](introduction/use-cases.md)
-
-## 👟 GETTING STARTED
-
-* [Python Setup](getting-started/python-setup.md)
 
 ## 💁 SAMANTHA-1-TURBO
 
-* [Overview](samantha-1-turbo/samantha-1/README.md)
-  * [Features](samantha-1-turbo/samantha-1/features.md)
-  * [Capabilities](samantha-1-turbo/samantha-1/capabilities.md)
-  * [Context "sections"](samantha-1-turbo/samantha-1/context-sections.md)
-* [Quickstart](samantha-1-turbo/model-quickstart.md)
-* [Examples](samantha-1-turbo/example/README.md)
-  * [Langchain](samantha-1-turbo/example/langchain.md)
-  * [Chatbot](samantha-1-turbo/example/chatbot.md)
-* [Technical Details](samantha-1-turbo/technical-details/README.md)
-  * [Models](samantha-1-turbo/technical-details/models.md)
-  * [APIs](samantha-1-turbo/technical-details/apis.md)
+* [Overview](samantha-1-turbo/overview.md)
+* [Quickstart](samantha-1-turbo/python-setup.md)
+* [Concepts](samantha-1-turbo/context-sections.md)
+* [Capabilities](samantha-1-turbo/capabilities.md)
+* [Guides](samantha-1-turbo/guides.md)
+* [Prompt Engineering](samantha-1-turbo/prompt-engineering.md)
+
+## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
+
+* [Overview](agents/overview.md)
 
 ## 📖 API REFERENCE
 
-* [Agents API](api-reference/agents-api.md)
 * [Model API](api-reference/model-api.md)
+* [Agents API](api-reference/agents-api.md)
 * [Python SDK](python-sdk-docs/README.md)
   * [Client](python-sdk-docs/julep/client.md)
   * [Agents](python-sdk-docs/julep/managers/agent.md)
