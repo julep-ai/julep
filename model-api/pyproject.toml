@@ -33,6 +33,13 @@ ruff = "^0.1.9"
 poethepoet = "^0.24.4"
 pytype = "^2024.1.5"
 julep = "^0.2.1"
+jupyterlab = "^4.1.1"
+ipywidgets = "^8.1.2"
+matplotlib = "^3.8.2"
+ipympl = "^0.9.3"
+mplcursors = "^0.5.3"
+scikit-learn = "^1.4.0"
+datasets = "^2.17.0"
 
 [build-system]
 requires = ["poetry-core"]
