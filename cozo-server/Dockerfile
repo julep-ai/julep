@@ -16,9 +16,6 @@ WORKDIR $APP_HOME
 COPY ./bin ./bin
 COPY ./run.sh ./run.sh
 
-ENV COZO_AUTH_TOKEN ""
-ENV COZO_ROCKSDB_FILE "cozo.db"
-
 # Ensure the script is executable
 RUN \
     mkdir -p $MNT_DIR && \

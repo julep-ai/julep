@@ -3,38 +3,77 @@ version: '3'
 
 services:
   agents:
+    env_file:
+      - .env
     container_name: agents
     depends_on:
-      - model
-    build: agents-api/
+        model:
+          condition: service_started
+        cozo:
+          condition: service_started
+        worker:
+          condition: service_started
+    build: 
+      context: agents-api/
+      dockerfile: Dockerfile
     ports: 
       - "8080:8080"
-    environment:
-      API_KEY: "xyz"
+
+  worker:
+    env_file:
+      - .env
+    build:
+      context: agents-api/
+      dockerfile: Dockerfile.worker
+    entrypoint: ["tail", "-f", "/dev/null"]
+    depends_on:
+        text-embeddings-inference:
+          condition: service_started
+        temporal:
+          condition: service_started
+
 
   model:
+    env_file:
+      - .env
     container_name: model
-    build: model-api/
+    build: 
+      context: model-api/
+      shm_size: '2gb'
+    shm_size: '2gb'
+
     ports: 
       - "8000:8000"
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
-    environment:
-      SENTRY_DSN: ""
-      API_KEY: 
-      MODEL_HOST: "0.0.0.0"
-      PORT: 8000
-      BACKLOG: 2048
-      SKIP_CHECK_DEVELOPER_HEADERS: false
-      TEMPERATURE_SCALING_FACTOR: 1.0
-      TEMPERATURE_SCALING_POWER: 1.0
-      MODEL_NAME: julep-ai/samantha-1-turbo
-      HF_TOKEN: ""
-      HUGGING_FACE_HUB_TOKEN: ""
-
 
   cozo:
     container_name: cozo
-    build: cozo-server/
+    build:
+      context: cozo-server/
     ports: 
       - "9070:9070"
+
+  text-embeddings-inference:
+    env_file:
+      - .env
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-0.6
+    ports:
+      - "8082:80"
+    shm_size: '1gb'
+
+  temporal:
+    container_name: temporal
+    env_file:
+      - .env
+    build:
+      context: agents-api/
+      dockerfile: Dockerfile.temporal
+    ports:
+      - 7233:7233
+    volumes:
+      - temporal_data:/home/temporal
+
+volumes:
+  model_data:
+  temporal_data:
