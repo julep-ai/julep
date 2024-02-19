@@ -1,22 +1,48 @@
----
-description: A new standard for building AI agents
----
+# Welcome!
 
-# Overview
+## Making AI Apps is hard.
 
-## What is Julep AI?
+Production level AI applications follow the Pareto principle when it comes to engineering effort. The last 20% takes 80% of the effort. We faced a lot of challenges building our own AI applications;
 
-Julep AI is a platform for rapid prototyping, and deployment of AI agents. Agents are autonomous applications that use LLMs to plan and perform complex tasks without human oversight. They operate by planning steps, selecting appropriate tools, and executing actions to accomplish practical, everyday tasks that require reasoning.
+* Prompt engineering.
+* Hassle to get unfiltered conversational responses.
+* Hallucinations and accurate grounding.
+* RAG is inherently hard. No other reason why vector DBs would raise millions in funding.
+* Agentic / Assistant platforms often have unpredictable behaviour and low transparency.
+* Agentic /  Assistant platform have unpredictable pricing.
+* Ever-growing context windows lack automatic management.
 
-At its core, Julep AI comprises the following:
-1. A simple and intuitive **framework for building Agents**,
-1. A **memory-store** that agents use to continuously learn from their interactions with users and their environment,
-1. A web-based **Agent IDE** that allows iterating on agents and complicated prompts is both versatile for developers and approachable for those with less coding experience,
-1. A robust **agent execution infrastructure** that can run agent tasks and inference at scale, and
-1. An **ecosystem of tools and integrations** for use by agents on the platform.
-
-Julep AI stands out by enabling agents with a form of 'memory', allowing them to save and utilize past interactions and states to make informed decisions and follow through with tasks over time. This memory system is the cornerstone of the platform.
+Engineering teams need to handle ALL these _new_ problems alongside maintaining their own code base and developing their application.
 
 ***
 
+## Introduction
+
+Julep is aiming to be a more refined platform for creating AI products.
+
+Following an opinionated approach to building Agents and LLM apps, we aim to "bake-in" essential features to significantly improve the development experience speed-up the iteration process of launching an AI product.
+
+***
+
+## Opinionated Agents
+
+The core goal at Julep is to create a platform for building agents from a specification containing instructions and tools.
+
+As we launch our Agents Platform, we aim to offer:
+
+* Ability to orchestrate prompt, and hence execution of each step of execution
+* Independent long running tasks
+* Automatic context management
+* Episodic and Semantic Memory
+
 <figure><img src=".gitbook/assets/implicit_memory.excalidraw.png" alt=""><figcaption></figcaption></figure>
+
+***
+
+## Opinionated Models
+
+Language Models lay at the foundation of autonomous agents.  If an Agent is stateful specification of possible actions and instructions, then an LLM acts as the _finite state machine_ executor that executes those actions.
+
+Predictable and controllable Model behaviour leads to predictable and controllable Agent behaviour.
+
+Hence, a good developer experience in prompting and using the model for actual work use cases like RAG, conversations and function-calling (alpha) has been baked in to the `samantha-1-turbo` models.

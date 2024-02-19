@@ -7,6 +7,8 @@ $ cd services/vllm
 $ poetry install
 $ poetry shell
 $ python samantha_api/web.py --model ehartford/samantha-33b --tensor-parallel-size 2 --host 127.0.0.1 --port 8000 --backlog 4096
+
+$ python -m model_api --model julep-ai/samantha-1-turbo 
 ```
 
 ## Set up skypilot to run service on A100 spot instances
