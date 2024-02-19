@@ -26,18 +26,6 @@ COPY . .
 # Now, install the application with Poetry, which will not re-install the dependencies
 RUN poetry install --no-dev
 
-# Define environment variables
-ENV SENTRY_DSN=""
-ENV API_KEY="xyz"
-ENV HOST="0.0.0.0"
-ENV PORT=8000
-ENV BACKLOG=2048
-ENV SKIP_CHECK_DEVELOPER_HEADERS=false
-ENV TEMPERATURE_SCALING_FACTOR=1.0
-ENV TEMPERATURE_SCALING_POWER=1.0
-ENV MODEL_NAME=julep-ai/samantha-1-turbo
-ENV HF_TOKEN=""
-ENV HUGGING_FACE_HUB_TOKEN=""
 # Define the entrypoint
 
 ENTRYPOINT ["python3", "-m", "model_api", "--model", "julep-ai/samantha-1-turbo", "--tensor-parallel-size", "2", "--enforce-eager", "--dtype", "bfloat16"]
