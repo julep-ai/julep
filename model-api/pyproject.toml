@@ -40,6 +40,7 @@ ipympl = "^0.9.3"
 mplcursors = "^0.5.3"
 scikit-learn = "^1.4.0"
 datasets = "^2.17.0"
+imbalanced-learn = "^0.12.0"
 
 [build-system]
 requires = ["poetry-core"]
