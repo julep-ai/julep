@@ -10,13 +10,13 @@ description: >-
 
 `samantha-1-turbo` a conversational LLM, is a fine-tuned version of Mistral-7B-v0.1.
 
-During the fine-tuning process, [35 open-source datase](#user-content-fn-1)[^1]ts were adapted to enhance the model's capabilities. Each dataset underwent formatting and revision to not only support a conversational structure involving multiple turns and participants, but also incorporate the ability for native function calling. This enabled the conversational LLM to seamlessly integrate conversational dynamics with function execution within the same context.
+During the fine-tuning process, 35 open-source datasets were adapted to enhance the model's capabilities. Each dataset underwent formatting and revision to not only support a conversational structure involving multiple turns and participants, but also incorporate the ability for native function calling. This enabled the conversational LLM to seamlessly integrate conversational dynamics with function execution within the same context.
 
 ### Key Features
 
 * Fine-tuned for human-like conversations.
 * Handles multi-turn multi-participant conversations.
-* Fine-tuned for function calling.
+* Supports function-calling.
 * Special context section for embedded Chain of Thought.
 * Special context section for memory management.
 * More control over anthropomorphic personality.
@@ -43,9 +43,9 @@ Software:
 This model has the following context sections.
 
 * `user`: Represent the user and user input.
-* `assistant`: Represents the persona given to the LLM.
+* `assistant`: Represents the output by the model
 * `situation`: An equivalent of the `system` section in OpenAI and other models. Meant to give the background and set the conversation tone.
-* `thought`: A section for doing Chain of Thought. Let's the model "think" before generating a final response in the`assistant` section.
+* `thought`: A section for doing Chain of Thought. Let's the model "think" before generating a final response in the `assistant` section.
 * `information`: A section to store factual information and introduce context in order to enrich conversation.
 
 The model and speaker sections can optionally include a name like `me (Samantha)` or `person (Dmitry)`
@@ -119,6 +119,3 @@ Benchmarks show that `samantha-1-turbo` retains most, if not all the qualities o
 * **Empathetic systems**: For use cases such as therapeutic support, personal coaching, and companionship.
 * **Games and Interactive Media**: Create engaging characters and interactive dialogues for games and media.
 * **Community Engagement:** Connect and empower users to engage with brand communities on channels such as WhatsApp
-
-[^1]: such as?
-
