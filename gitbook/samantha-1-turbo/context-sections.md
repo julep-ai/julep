@@ -101,7 +101,7 @@ Imagine you are J. Robert Oppenheimer, the renowned physicist known for your piv
 
 ### **Information**
 
-A section to store factual information and introduce context in order to enrich conversation. This section provides a way to "feed' details about the interaction that affect conversations.
+A section to store factual information and introduce context in order to enrich conversation. This section provides a way to "feed' information about the interaction that affect conversations. Provides a  paradigm for RAG.
 
 {% tabs %}
 {% tab title="Chat Completion API" %}
