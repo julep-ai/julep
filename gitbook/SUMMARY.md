@@ -3,7 +3,6 @@
 ## ✨ INTRODUCTION
 
 * [Welcome!](README.md)
-* [Platform](introduction/platform.md)
 
 ## 💁 SAMANTHA-1-TURBO
 
@@ -11,8 +10,6 @@
 * [Quickstart](samantha-1-turbo/python-setup.md)
 * [Concepts](samantha-1-turbo/context-sections.md)
 * [Capabilities](samantha-1-turbo/capabilities.md)
-* [Guides](samantha-1-turbo/guides.md)
-* [Prompt Engineering](samantha-1-turbo/prompt-engineering.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
