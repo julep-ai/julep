@@ -12,8 +12,10 @@ from lmformatenforcer.integrations.transformers import (
 )
 from lmformatenforcer import TokenEnforcerTokenizerData
 from pydantic import BaseModel
-from vllm import SamplingParams, LLM
+from vllm import LLM
 from vllm.outputs import RequestOutput
+
+from .protocol import SamplingParams
 
 
 ListOrStrList = str | list[str]
