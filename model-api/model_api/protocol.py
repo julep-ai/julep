@@ -104,7 +104,7 @@ class SamplingParams(SamplingParams):
         presence_penalty: float = 0.0,
         frequency_penalty: float = 0.01,  # Custom
         repetition_penalty: float = 1.0,
-        temperature: float = 0.0,
+        temperature: float = 0.0,  # Custom
         top_p: float = 0.99,  # Custom
         top_k: int = -1,
         min_p: float = 0.01,  # Custom
@@ -156,13 +156,20 @@ class ChatCompletionRequest(ChatCompletionRequest):
     tools: list[Tool] | None = None
     tool_choice: ToolChoice | None = None
     response_format: ResponseFormat | None = None
-    max_tokens: int | None = DEFAULT_MAX_TOKENS
-    spaces_between_special_tokens: bool | None = False
     messages: ChatML
-    temperature: float | None = 0.0
+
+    spaces_between_special_tokens: bool | None = False  # Custom
+    max_tokens: int | None = DEFAULT_MAX_TOKENS  # Custom
+    temperature: float | None = 0.0  # Custom
+    frequency_penalty: float | None = 0.01  # Custom
+    top_p: float | None = 0.99  # Custom
+    min_p: float | None = 0.01  # Custom
 
     def to_sampling_params(self) -> SamplingParams:
         echo_without_generation = self.echo and self.max_tokens == 0
+
+        if self.logit_bias is not None:
+            raise ValueError("logit_bias is not supported currently.")
 
         return SamplingParams(
             n=self.n,
@@ -193,11 +200,18 @@ class ChatCompletionRequest(ChatCompletionRequest):
 class CompletionRequest(CompletionRequest):
     model_config = ConfigDict(extra="forbid")
 
-    spaces_between_special_tokens: bool | None = False
-    temperature: float | None = 0.0
+    spaces_between_special_tokens: bool | None = False  # Custom
+    max_tokens: int | None = DEFAULT_MAX_TOKENS  # Custom
+    temperature: float | None = 0.0  # Custom
+    frequency_penalty: float | None = 0.01  # Custom
+    top_p: float | None = 0.99  # Custom
+    min_p: float | None = 0.01  # Custom
 
     def to_sampling_params(self) -> SamplingParams:
         echo_without_generation = self.echo and self.max_tokens == 0
+
+        if self.logit_bias is not None:
+            raise ValueError("logit_bias is not supported currently.")
 
         return SamplingParams(
             n=self.n,
