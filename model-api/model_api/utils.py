@@ -17,6 +17,7 @@ from vllm import LLM
 from vllm.outputs import RequestOutput
 
 from .protocol import SamplingParams
+from .conversion.datatypes import ChatML
 
 
 ListOrStrList = str | list[str]
@@ -76,5 +77,25 @@ def random_tool_id(n: int = 8) -> str:
 def remove_last_space(prompt: str):
     if remove_last_space_re.match(prompt):
         return prompt[:-1]
-    
+
     return prompt
+
+
+def flatten(lst):
+    result = []
+    for i in lst:
+        if isinstance(i, list):
+            result.extend(flatten(i))
+        else:
+            result.append(i)
+
+    return result
+
+
+def escape_special_tokens(messages: ChatML, tokens: list[str]):
+    for m in messages:
+        if m.content is None:
+            continue
+
+        for t in tokens:
+            m.content = m.content.replace(t, f"{t[0]} {t[1:]}")
