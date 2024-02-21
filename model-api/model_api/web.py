@@ -64,6 +64,7 @@ from .utils import (
     FunctionCallResult,
     rescale_temperature,
     random_tool_id,
+    remove_last_space,
 )
 from .protocol import (
     CompletionRequest,
@@ -362,6 +363,8 @@ async def completions(
         power=temperature_scaling_power,  # Set it to lower than 1.0 to punish high temperatures more
     )
 
+    prompt = remove_last_space(prompt)
+
     bos = model_settings.get(request.model, {}).get("section_start_tag", DEFAULT_BOS)
     if prompt.endswith(bos):
         if sampling_params.logits_processors is None:
@@ -598,12 +601,14 @@ async def chat_completions(
             ),
         )
 
-    prompt = to_prompt(
-        request.messages,
-        bos=bos,
-        eos=eos,
-        functions=request.functions,
-        function_call=request.function_call,
+    prompt = remove_last_space(
+        to_prompt(
+            request.messages,
+            bos=bos,
+            eos=eos,
+            functions=request.functions,
+            function_call=request.function_call,
+        )
     )
 
     if (
