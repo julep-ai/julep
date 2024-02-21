@@ -78,6 +78,11 @@ from .protocol import (
     FunctionCall,
     ChatCompletionResponse,
 )
+from .logits_processors import drop_disallowed_start_tags, fix_function_call_prediction
+
+
+DEFAULT_BOS = "<|im_start|>"
+DEFAULT_EOS = "<|im_end|>"
 
 
 engine = None
@@ -356,6 +361,13 @@ async def completions(
         power=temperature_scaling_power,  # Set it to lower than 1.0 to punish high temperatures more
     )
 
+    bos = model_settings.get(request.model, {}).get("section_start_tag", DEFAULT_BOS)
+    if prompt.endswith(bos):
+        if sampling_params.logits_processors is None:
+            sampling_params.logits_processors = []
+
+        sampling_params.logits_processors.append(drop_disallowed_start_tags)
+
     result_generator = engine.generate(
         prompt,
         sampling_params,
@@ -568,8 +580,8 @@ async def chat_completions(
             else request.tool_choice
         )
 
-    bos = model_settings[request.model]["section_start_tag"]
-    eos = model_settings[request.model]["section_end_tag"]
+    bos = model_settings.get(request.model, {}).get("section_start_tag", DEFAULT_BOS)
+    eos = model_settings.get(request.model, {}).get("section_end_tag", DEFAULT_EOS)
     prompt = to_prompt(
         request.messages,
         bos=bos,
@@ -607,6 +619,19 @@ async def chat_completions(
         temperature_scaling_factor,
         power=temperature_scaling_power,  # Set it to lower than 1.0 to punish high temperatures more
     )
+
+    if prompt.endswith(bos):
+        func_call_possible = (
+            request.functions and request.function_call != "none"
+        ) or (request.tools and request.tool_choice != "none")
+        if sampling_params.logits_processors is None:
+            sampling_params.logits_processors = []
+
+        sampling_params.logits_processors.append(
+            fix_function_call_prediction
+            if func_call_possible
+            else drop_disallowed_start_tags
+        )
 
     if (
         request.response_format is not None
