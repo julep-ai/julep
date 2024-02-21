@@ -167,7 +167,7 @@ def to_prompt(
                 )
 
             # Get function name (could be a string or an object)
-            if isinstance(function_call, RequestFunctionCall):
+            if isinstance(function_call, FunctionCall):
                 function_name = function_call.name
             else:
                 function_name = function_call
