@@ -23,6 +23,7 @@ lm-format-enforcer = "^0.8.3"
 interegular = "^0.3.3"
 pydantic = {extras = ["email"], version = "^2.6.1"}
 scikit-learn = "^1.4.0"
+beartype = "0.16.4"
 
 
 [tool.poetry.group.dev.dependencies]

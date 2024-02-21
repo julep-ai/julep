@@ -1,6 +1,7 @@
 from io import StringIO
 import re
 
+from beartype.door import is_bearable
 from .datatypes import ChatML, ChatMLMessage
 from .exceptions import InvalidPromptException, InvalidFunctionName
 from ..protocol import RequestFunctionCall, FunctionCall, FunctionDef
@@ -167,7 +168,7 @@ def to_prompt(
                 )
 
             # Get function name (could be a string or an object)
-            if isinstance(function_call, RequestFunctionCall):
+            if is_bearable(function_call, RequestFunctionCall):
                 function_name = function_call.name
             else:
                 function_name = function_call
