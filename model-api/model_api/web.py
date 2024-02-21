@@ -592,7 +592,9 @@ async def chat_completions(
         request.messages.insert(
             0,
             ChatMLMessage(
-                name=None, role="system", content="You are a helpful AI Assistant"
+                name="situation",
+                role="system",
+                content="You are a helpful AI Assistant",
             ),
         )
 
