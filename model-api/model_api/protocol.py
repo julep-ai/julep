@@ -1,5 +1,4 @@
 from enum import Enum
-from uuid import UUID
 from typing import Literal, TypeAlias, Union
 from pydantic import BaseModel, Field, ConfigDict
 from vllm.entrypoints.openai.protocol import (
@@ -12,7 +11,7 @@ from vllm.entrypoints.openai.protocol import (
     ChatMessage,
     DeltaMessage,
 )
-from vllm.sampling_params import SamplingParams
+from vllm.sampling_params import LogitsProcessor, SamplingParams
 from .conversion.datatypes import ChatML
 
 
@@ -47,9 +46,9 @@ class DeltaMessage(DeltaMessage):
 
 class ChatCompletionResponseChoice(ChatCompletionResponseChoice):
     message: ChatMessage
-    finish_reason: Literal["stop", "length", "function_call", "tool_calls"] | None = (
-        None
-    )
+    finish_reason: Literal[
+        "stop", "length", "function_call", "tool_calls"
+    ] | None = None
 
 
 class ChatCompletionResponseStreamChoice(ChatCompletionResponseStreamChoice):
@@ -97,6 +96,58 @@ class Tool(BaseModel):
     id: str
 
 
+class SamplingParams(SamplingParams):
+    def __init__(
+        self,
+        n: int = 1,
+        best_of: int | None = None,
+        presence_penalty: float = 0.0,
+        frequency_penalty: float = 0.01,  # Custom
+        repetition_penalty: float = 1.0,
+        temperature: float = 0.0,  # Custom
+        top_p: float = 0.99,  # Custom
+        top_k: int = -1,
+        min_p: float = 0.01,  # Custom
+        use_beam_search: bool = False,
+        length_penalty: float = 1.0,
+        early_stopping: bool | str = False,
+        stop: str | list[str] | None = None,
+        stop_token_ids: list[int] | None = None,
+        include_stop_str_in_output: bool = False,
+        ignore_eos: bool = False,
+        max_tokens: int | None = DEFAULT_MAX_TOKENS,  # Custom
+        logprobs: int | None = None,
+        prompt_logprobs: int | None = None,
+        skip_special_tokens: bool = True,
+        spaces_between_special_tokens: bool = False,  # Custom
+        logits_processors: list[LogitsProcessor] | None = None,
+    ) -> None:
+        super().__init__(
+            n=n,
+            best_of=best_of,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty,
+            repetition_penalty=repetition_penalty,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            min_p=min_p,
+            use_beam_search=use_beam_search,
+            length_penalty=length_penalty,
+            early_stopping=early_stopping,
+            stop=stop,
+            stop_token_ids=stop_token_ids,
+            include_stop_str_in_output=include_stop_str_in_output,
+            ignore_eos=ignore_eos,
+            max_tokens=max_tokens,
+            logprobs=logprobs,
+            prompt_logprobs=prompt_logprobs,
+            skip_special_tokens=skip_special_tokens,
+            spaces_between_special_tokens=spaces_between_special_tokens,
+            logits_processors=logits_processors,
+        )
+
+
 class ChatCompletionRequest(ChatCompletionRequest):
     model_config = ConfigDict(extra="forbid")
 
@@ -105,68 +156,88 @@ class ChatCompletionRequest(ChatCompletionRequest):
     tools: list[Tool] | None = None
     tool_choice: ToolChoice | None = None
     response_format: ResponseFormat | None = None
-    max_tokens: int | None = DEFAULT_MAX_TOKENS
-    spaces_between_special_tokens: bool | None = False
     messages: ChatML
-    temperature: float | None = 0.0
+
+    spaces_between_special_tokens: bool | None = False  # Custom
+    max_tokens: int | None = DEFAULT_MAX_TOKENS  # Custom
+    temperature: float | None = 0.0  # Custom
+    frequency_penalty: float | None = 0.01  # Custom
+    top_p: float | None = 0.99  # Custom
+    min_p: float | None = 0.01  # Custom
 
     def to_sampling_params(self) -> SamplingParams:
+        echo_without_generation = self.echo and self.max_tokens == 0
+
+        if self.logit_bias is not None:
+            raise ValueError("logit_bias is not supported currently.")
+
         return SamplingParams(
-            n=self.n or 1,
-            presence_penalty=self.presence_penalty or 0.0,
-            frequency_penalty=self.frequency_penalty or 0.0,
-            repetition_penalty=self.repetition_penalty or 1.0,
-            temperature=self.temperature or 0.0,
-            top_p=self.top_p or 1.0,
-            min_p=self.min_p or 0.0,
+            n=self.n,
+            presence_penalty=self.presence_penalty,
+            frequency_penalty=self.frequency_penalty,
+            repetition_penalty=self.repetition_penalty,
+            temperature=self.temperature,
+            top_p=self.top_p,
+            min_p=self.min_p,
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
-            max_tokens=self.max_tokens or DEFAULT_MAX_TOKENS,
+            max_tokens=(
+                (self.max_tokens or DEFAULT_MAX_TOKENS)
+                if not echo_without_generation
+                else 1
+            ),
             best_of=self.best_of,
-            top_k=self.top_k or -1,
-            ignore_eos=self.ignore_eos or False,
-            use_beam_search=self.use_beam_search or False,
-            skip_special_tokens=self.skip_special_tokens or True,
-            spaces_between_special_tokens=self.spaces_between_special_tokens or False,
-            include_stop_str_in_output=self.include_stop_str_in_output or False,
-            length_penalty=self.length_penalty or 1.0,
+            top_k=self.top_k,
+            ignore_eos=self.ignore_eos,
+            use_beam_search=self.use_beam_search,
+            skip_special_tokens=self.skip_special_tokens,
+            spaces_between_special_tokens=self.spaces_between_special_tokens,
+            include_stop_str_in_output=self.include_stop_str_in_output,
+            length_penalty=self.length_penalty,
         )
 
 
 class CompletionRequest(CompletionRequest):
     model_config = ConfigDict(extra="forbid")
 
-    spaces_between_special_tokens: bool | None = False
-    temperature: float | None = 0.0
+    spaces_between_special_tokens: bool | None = False  # Custom
+    max_tokens: int | None = DEFAULT_MAX_TOKENS  # Custom
+    temperature: float | None = 0.0  # Custom
+    frequency_penalty: float | None = 0.01  # Custom
+    top_p: float | None = 0.99  # Custom
+    min_p: float | None = 0.01  # Custom
 
     def to_sampling_params(self) -> SamplingParams:
         echo_without_generation = self.echo and self.max_tokens == 0
 
+        if self.logit_bias is not None:
+            raise ValueError("logit_bias is not supported currently.")
+
         return SamplingParams(
-            n=self.n or 1,
+            n=self.n,
             best_of=self.best_of,
-            presence_penalty=self.presence_penalty or 0.0,
-            frequency_penalty=self.frequency_penalty or 0.0,
-            repetition_penalty=self.repetition_penalty or 1.0,
-            temperature=self.temperature or 0.0,
-            top_p=self.top_p or 1.0,
-            top_k=self.top_k or -1,
-            min_p=self.min_p or 0.0,
+            presence_penalty=self.presence_penalty,
+            frequency_penalty=self.frequency_penalty,
+            repetition_penalty=self.repetition_penalty,
+            temperature=self.temperature,
+            top_p=self.top_p,
+            top_k=self.top_k,
+            min_p=self.min_p,
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
-            ignore_eos=self.ignore_eos or False,
+            ignore_eos=self.ignore_eos,
             max_tokens=(
                 (self.max_tokens or DEFAULT_MAX_TOKENS)
                 if not echo_without_generation
                 else 1
             ),
             logprobs=self.logprobs,
-            use_beam_search=self.use_beam_search or False,
-            prompt_logprobs=self.logprobs if self.echo else None,
-            skip_special_tokens=self.skip_special_tokens or True,
-            spaces_between_special_tokens=self.spaces_between_special_tokens or False,
-            include_stop_str_in_output=self.include_stop_str_in_output or False,
-            length_penalty=self.length_penalty or 1.0,
+            use_beam_search=self.use_beam_search,
+            prompt_logprobs=self.logprobs,
+            skip_special_tokens=self.skip_special_tokens,
+            spaces_between_special_tokens=self.spaces_between_special_tokens,
+            include_stop_str_in_output=self.include_stop_str_in_output,
+            length_penalty=self.length_penalty,
         )
 
 
