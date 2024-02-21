@@ -65,6 +65,8 @@ from .utils import (
     rescale_temperature,
     random_tool_id,
     remove_last_space,
+    escape_special_tokens,
+    flatten,
 )
 from .protocol import (
     CompletionRequest,
@@ -600,6 +602,11 @@ async def chat_completions(
                 content="You are a helpful AI Assistant",
             ),
         )
+
+    escape_special_tokens(
+        request.messages,
+        flatten(engine.engine.tokenizer.tokenizer.special_tokens_map.values()),
+    )
 
     prompt = remove_last_space(
         to_prompt(
