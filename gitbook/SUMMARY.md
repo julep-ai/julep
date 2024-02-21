@@ -4,16 +4,24 @@
 
 * [Welcome!](README.md)
 
-## 💁 SAMANTHA-1-TURBO
+## 💁 SAMANTHA-1
 
-* [Overview](samantha-1-turbo/overview.md)
-* [Quickstart](samantha-1-turbo/python-setup.md)
-* [Concepts](samantha-1-turbo/context-sections.md)
-* [Capabilities](samantha-1-turbo/capabilities.md)
+* [Overview](samantha-1/overview.md)
+* [Quickstart](samantha-1/python-setup.md)
+* [Concepts](samantha-1/context-sections.md)
+* [Capabilities](samantha-1/capabilities.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
 * [Overview](agents/overview.md)
+
+## 🔍 FAQs
+
+* [General Overview](faqs/general-overview.md)
+* [Agent Studio](faqs/agent-prototyping.md)
+* [Memory and Learning](faqs/memory-and-learning.md)
+* [Sessions and Tasks](faqs/sessions-and-tasks.md)
+* [Technical Details](faqs/technical-details.md)
 
 ## 📖 API REFERENCE
 
@@ -32,10 +40,7 @@
   * [Client](js-sdk-docs/classes/Client.JulepApiClient-1.md)
   * [Modules](js-sdk-docs/modules.md)
 
-## 🔍 FAQs
+***
 
-* [General Overview](faqs/general-overview.md)
-* [Agent Studio](faqs/agent-prototyping.md)
-* [Memory and Learning](faqs/memory-and-learning.md)
-* [Sessions and Tasks](faqs/sessions-and-tasks.md)
-* [Technical Details](faqs/technical-details.md)
+* [PyPI package](https://pypi.org/project/julep/)
+* [npm package](https://www.npmjs.com/package/@julep/sdk)
