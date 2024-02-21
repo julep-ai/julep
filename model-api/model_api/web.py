@@ -37,6 +37,7 @@ from vllm.entrypoints.openai.protocol import (
 from vllm.outputs import RequestOutput
 
 from .conversion.conversions import to_prompt, parse_message
+from .conversion.datatypes import ChatMLMessage
 
 from .conversion.exceptions import (
     InvalidPromptException,
@@ -582,6 +583,21 @@ async def chat_completions(
 
     bos = model_settings.get(request.model, {}).get("section_start_tag", DEFAULT_BOS)
     eos = model_settings.get(request.model, {}).get("section_end_tag", DEFAULT_EOS)
+
+    if (
+        request.messages
+        and request.messages[0].role != "system"
+        and request.messages[0].name not in (None, "situation")
+    ):
+        request.messages.insert(
+            0,
+            ChatMLMessage(
+                name="situation",
+                role="system",
+                content="You are a helpful AI Assistant",
+            ),
+        )
+
     prompt = to_prompt(
         request.messages,
         bos=bos,
