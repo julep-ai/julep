@@ -1,3 +1,4 @@
+import re
 import string
 import random
 from typing import AsyncIterator, Any
@@ -19,6 +20,8 @@ from .protocol import SamplingParams
 
 
 ListOrStrList = str | list[str]
+
+remove_last_space_re = re.compile(r"[^\s]*\s{1}$")
 
 
 def build_vllm_token_enforcer_tokenizer_data(tokenizer) -> TokenEnforcerTokenizerData:
@@ -68,3 +71,8 @@ def validate_interegular_regex(pattern: str) -> bool:
 
 def random_tool_id(n: int = 8) -> str:
     return "tool-" + "".join(random.choices(string.digits, k=n))
+
+
+def remove_last_space(prompt: str):
+    if remove_last_space_re.match(prompt):
+        return prompt[:-1]
