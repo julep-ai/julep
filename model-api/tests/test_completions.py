@@ -13,6 +13,11 @@ MODEL = "Open-Orca/oo-phi-1_5"
 
 
 @pytest.fixture
+def args():
+    return ["--model", MODEL]
+
+
+@pytest.fixture
 def unauthorized_client(args):
     return TestClient(create_app(args))
 
@@ -27,13 +32,11 @@ def client(args):
     return TestClient(app, headers={"X-Auth-Key": auth_key})
 
 
-@pytest.mark.parametrize("unauthorized_client", [["--model", MODEL]], indirect=True)
 def test_security(unauthorized_client):
     response = unauthorized_client.post("/v1/completions")
     assert response.status_code == 403
 
 
-@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
 def test_check_model(client):
     body = CompletionRequest(
         model="some_nonexistent_model",
@@ -45,7 +48,6 @@ def test_check_model(client):
     assert response.status_code == 404
 
 
-@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
 def test_logit_bias_not_supported(client):
     body = CompletionRequest(
         model=MODEL,
@@ -58,7 +60,6 @@ def test_logit_bias_not_supported(client):
     assert response.status_code == 400
 
 
-@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
 def test_remove_last_space(client, mocker):
     st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
     if isinstance(st, list):
@@ -89,7 +90,6 @@ You are a helpful AI Assistant<|im_end|>
         assert response.status_code == 200
 
 
-@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
 def test_remove_last_space_2(client, mocker):
     st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
     if isinstance(st, list):
@@ -120,7 +120,6 @@ You are a helpful AI Assistant<|im_end|>
         assert response.status_code == 200
 
 
-@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
 def test_rescale_temperature(client, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
@@ -150,7 +149,6 @@ hi<|im_end|>
         assert response.status_code == 200
 
 
-@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
 def test_logits_processor_drop_disallowed_start_tags(client, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
