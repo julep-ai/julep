@@ -2,12 +2,22 @@ import os
 
 from modal import Image, Secret, Stub, asgi_app, gpu
 
+## Needed so that modal knows to package this directory
+
 import model_api  # noqa: F401
 
-## Needed so that modal knows to package this directory
+
+###############
+## Constants ##
+###############
 
 MODEL_DIR = "/model"
 BASE_MODEL = "julep-ai/samantha-1-turbo"
+
+
+###########
+## Tasks ##
+###########
 
 
 def download_model_to_folder():
@@ -23,6 +33,10 @@ def download_model_to_folder():
     )
     move_cache()
 
+
+###########
+## Image ##
+###########
 
 image = (
     Image.from_registry("nvidia/cuda:12.1.1-base-ubuntu22.04", add_python="3.10")
@@ -61,14 +75,21 @@ image = (
     )
 )
 
+
+################
+## Entrypoint ##
+################
+
 stub = Stub("model-api", image=image)
 
 
 @stub.function(
-    gpu=gpu.A100(size="80GB"),
-    container_idle_timeout=1200,
-    allow_concurrent_inputs=15,
-    keep_warm=1,
+    gpu=gpu.L4(),
+    container_idle_timeout=300,
+    allow_concurrent_inputs=5,
+    keep_warm=0,
+    concurrency_limit=1,
+    timeout=120,
     secrets=[
         Secret.from_name("huggingface-secret"),
         Secret.from_name("samantha-model-api"),

@@ -1,6 +1,12 @@
 # Samantha API
 Samantha API server
 
+## Deploying to modal
+
+1. Login to modal using CLI.
+2. Set up default env: `modal config set-environment staging`
+3. `modal deploy --env staging modal_staging.py`
+
 ## Install and run vllm service
 ```bash
 $ cd services/vllm
