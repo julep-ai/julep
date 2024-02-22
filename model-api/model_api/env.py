@@ -9,6 +9,7 @@ env.read_env()
 
 sentry_dsn: str = env.str("SENTRY_DSN", default="")
 api_key: str = env.str("API_KEY")
+api_key_header_name: str = env.str("API_KEY_HEADER_NAME", default="X-Auth-Key")
 host: str = env.str("HOST", default="0.0.0.0")
 port: int = env.int("PORT", default=8000)
 backlog: int = env.int("BACKLOG", default=2048)
