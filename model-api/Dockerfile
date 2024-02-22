@@ -27,5 +27,6 @@ COPY . .
 RUN poetry install --no-dev
 
 # Define the entrypoint
-
-ENTRYPOINT ["python3", "-m", "model_api", "--model", "julep-ai/samantha-1-turbo", "--tensor-parallel-size", "2", "--enforce-eager", "--dtype", "bfloat16"]
+ENV MODEL julep-ai/samantha-1-turbo
+ENV TP_SIZE 1
+ENTRYPOINT python3 -m model_api --model $MODEL --tensor-parallel-size $TP_SIZE --enforce-eager --dtype bfloat16
