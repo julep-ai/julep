@@ -26,7 +26,7 @@ def unauthorized_client(args):
 def client(args):
     auth_key = "myauthkey"
     os.environ["API_KEY"] = auth_key
-    os.environ["TEMPERATURE_SCALING_FACTOR"] = 0.0
+    os.environ["TEMPERATURE_SCALING_FACTOR"] = "0.0"
     app = create_app(args)
 
     return TestClient(app, headers={"X-Auth-Key": auth_key})
