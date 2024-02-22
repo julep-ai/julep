@@ -27,142 +27,152 @@ def client(args):
     return TestClient(app, headers={"X-Auth-Key": auth_key})
 
 
-@pytest.mark.parametrize("client,unauthorized_client", [["--model", MODEL], ["--model", MODEL]], indirect=True)
-class TestCompletions:
-    def test_security(self, unauthorized_client):
-        response = unauthorized_client.post("/v1/completions")
-        assert response.status_code == 403
-
-    def test_check_model(self, client):
-        body = CompletionRequest(
-            model="some_nonexistent_model",
-        ).model_dump()
-        response = client.post(
-            "/v1/completions",
-            json=body,
-        )
-        assert response.status_code == 404
+@pytest.mark.parametrize("unauthorized_client", [["--model", MODEL]], indirect=True)
+def test_security(unauthorized_client):
+    response = unauthorized_client.post("/v1/completions")
+    assert response.status_code == 403
 
 
-    def test_logit_bias_not_supported(self, client):
+@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
+def test_check_model(client):
+    body = CompletionRequest(
+        model="some_nonexistent_model",
+    ).model_dump()
+    response = client.post(
+        "/v1/completions",
+        json=body,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
+def test_logit_bias_not_supported(client):
+    body = CompletionRequest(
+        model=MODEL,
+        logit_bias={"a": 1.0},
+    ).model_dump()
+    response = client.post(
+        "/v1/completions",
+        json=body,
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
+def test_remove_last_space(client, mocker):
+    st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
+    if isinstance(st, list):
+        st = st[0]
+    expected_prompt = f"""<|im_start|>situation
+You are a helpful AI Assistant<|im_end|>
+<|im_start|>User
+{st[0]} {st[1:]}<|im_end|>
+<|im_start|>me """
+    prompt = expected_prompt + " "
+    expected_sampling_params = None
+    request_id = "request_id1"
+
+    with mocker.patch("model_api.web.random_uuid") as random_uuid:
+        random_uuid.return_value = request_id
+        spy = mocker.spy(model_api.web.engine, "generate")
+
         body = CompletionRequest(
             model=MODEL,
-            logit_bias={"a": 1.0},
+            prompt=prompt,
         ).model_dump()
         response = client.post(
             "/v1/completions",
             json=body,
         )
-        assert response.status_code == 400
-    
-    def test_remove_last_space(self, client, mocker):
-        st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
-        if isinstance(st, list):
-            st = st[0]
-        expected_prompt = f"""<|im_start|>situation
+        assert spy.call_count == 1
+        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
+        assert response.status_code == 200
+
+
+@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
+def test_remove_last_space_2(client, mocker):
+    st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
+    if isinstance(st, list):
+        st = st[0]
+    expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me """
-        prompt = expected_prompt + " "
-        expected_sampling_params = None
-        request_id = "request_id1"
+    prompt = expected_prompt
+    expected_sampling_params = None
+    request_id = "request_id1"
 
-        with mocker.patch("model_api.web.random_uuid") as random_uuid:
-            random_uuid.return_value = request_id
-            spy = mocker.spy(model_api.web.engine, "generate")
+    with mocker.patch("model_api.web.random_uuid") as random_uuid:
+        random_uuid.return_value = request_id
+        spy = mocker.spy(model_api.web.engine, "generate")
 
-            body = CompletionRequest(
-                model=MODEL,
-                prompt=prompt,
-            ).model_dump()
-            response = client.post(
-                "/v1/completions",
-                json=body,
-            )
-            assert spy.call_count == 1
-            spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-            assert response.status_code == 200
+        body = CompletionRequest(
+            model=MODEL,
+            prompt=prompt,
+        ).model_dump()
+        response = client.post(
+            "/v1/completions",
+            json=body,
+        )
+        assert spy.call_count == 1
+        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
+        assert response.status_code == 200
 
-    def test_remove_last_space_2(self, client, mocker):
-        st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
-        if isinstance(st, list):
-            st = st[0]
-        expected_prompt = f"""<|im_start|>situation
-You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
-{st[0]} {st[1:]}<|im_end|>
-<|im_start|>me """
-        prompt = expected_prompt
-        expected_sampling_params = None
-        request_id = "request_id1"
 
-        with mocker.patch("model_api.web.random_uuid") as random_uuid:
-            random_uuid.return_value = request_id
-            spy = mocker.spy(model_api.web.engine, "generate")
-
-            body = CompletionRequest(
-                model=MODEL,
-                prompt=prompt,
-            ).model_dump()
-            response = client.post(
-                "/v1/completions",
-                json=body,
-            )
-            assert spy.call_count == 1
-            spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-            assert response.status_code == 200
-
-    def test_rescale_temperature(self, client, mocker):
-        expected_prompt = f"""<|im_start|>situation
+@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
+def test_rescale_temperature(client, mocker):
+    expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
 hi<|im_end|>
 <|im_start|>me"""
-        prompt = expected_prompt
-        temperature = 0.7
-        expected_sampling_params = SamplingParams(temperature=0.0)
-        request_id = "request_id1"
+    prompt = expected_prompt
+    temperature = 0.7
+    expected_sampling_params = SamplingParams(temperature=0.0)
+    request_id = "request_id1"
 
-        with mocker.patch("model_api.web.random_uuid") as random_uuid:
-            random_uuid.return_value = request_id
-            spy = mocker.spy(model_api.web.engine, "generate")
+    with mocker.patch("model_api.web.random_uuid") as random_uuid:
+        random_uuid.return_value = request_id
+        spy = mocker.spy(model_api.web.engine, "generate")
 
-            body = CompletionRequest(
-                model=MODEL,
-                temperature=temperature,
-                prompt=prompt,
-            ).model_dump()
-            response = client.post(
-                "/v1/completions",
-                json=body,
-            )
-            assert spy.call_count == 1
-            spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-            assert response.status_code == 200
-    
-    def test_logits_processor_drop_disallowed_start_tags(self, client, mocker):
-        expected_prompt = f"""<|im_start|>situation
+        body = CompletionRequest(
+            model=MODEL,
+            temperature=temperature,
+            prompt=prompt,
+        ).model_dump()
+        response = client.post(
+            "/v1/completions",
+            json=body,
+        )
+        assert spy.call_count == 1
+        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
+        assert response.status_code == 200
+
+
+@pytest.mark.parametrize("client", [["--model", MODEL]], indirect=True)
+def test_logits_processor_drop_disallowed_start_tags(client, mocker):
+    expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
 hi<|im_end|>
 <|im_start|>"""
-        prompt = expected_prompt
-        expected_sampling_params = SamplingParams(logits_processors=[drop_disallowed_start_tags])
-        request_id = "request_id1"
+    prompt = expected_prompt
+    expected_sampling_params = SamplingParams(logits_processors=[drop_disallowed_start_tags])
+    request_id = "request_id1"
 
-        with mocker.patch("model_api.web.random_uuid") as random_uuid:
-            random_uuid.return_value = request_id
-            spy = mocker.spy(model_api.web.engine, "generate")
+    with mocker.patch("model_api.web.random_uuid") as random_uuid:
+        random_uuid.return_value = request_id
+        spy = mocker.spy(model_api.web.engine, "generate")
 
-            body = CompletionRequest(
-                model=MODEL,
-                prompt=prompt,
-            ).model_dump()
-            response = client.post(
-                "/v1/completions",
-                json=body,
-            )
-            assert spy.call_count == 1
-            spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-            assert response.status_code == 200
+        body = CompletionRequest(
+            model=MODEL,
+            prompt=prompt,
+        ).model_dump()
+        response = client.post(
+            "/v1/completions",
+            json=body,
+        )
+        assert spy.call_count == 1
+        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
+        assert response.status_code == 200
