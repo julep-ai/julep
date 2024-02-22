@@ -14,7 +14,7 @@ MODEL = "Open-Orca/oo-phi-1_5"
 
 @pytest.fixture
 def args():
-    return ["--model", MODEL]
+    return ["--model", MODEL, "--trust-remote-code"]
 
 
 @pytest.fixture
