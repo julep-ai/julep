@@ -3,6 +3,11 @@
 ## ✨ INTRODUCTION
 
 * [Welcome!](README.md)
+* [Welcome](introduction/welcome.md)
+
+## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
+
+* [Overview](agents/overview.md)
 
 ## 💁 SAMANTHA-1
 
@@ -10,10 +15,6 @@
 * [Quickstart](samantha-1/python-setup.md)
 * [Concepts](samantha-1/context-sections.md)
 * [Capabilities](samantha-1/capabilities.md)
-
-## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
-
-* [Overview](agents/overview.md)
 
 ## 🔍 FAQs
 
