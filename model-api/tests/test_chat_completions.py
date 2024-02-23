@@ -1,13 +1,13 @@
 # ruff: noqa: F401, F811
 import pytest
 from pytest_mock import mocker
-from vllm.sampling_params import SamplingParams
 
-import model_api.web
 from model_api.logits_processors import (
     drop_disallowed_start_tags,
     fix_function_call_prediction,
 )
+from model_api.protocol import SamplingParams
+import model_api.web
 from tests.fixtures import client, unauthorized_client, request_id, MODEL
 
 

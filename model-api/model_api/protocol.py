@@ -107,6 +107,7 @@ class SamplingParams(SamplingParams):
         "top_p",
         "top_k",
         "min_p",
+        "seed",
         "use_beam_search",
         "length_penalty",
         "early_stopping",
@@ -133,6 +134,7 @@ class SamplingParams(SamplingParams):
         top_p: float = 0.99,  # Custom
         top_k: int = -1,
         min_p: float = 0.01,  # Custom
+        seed: int | None = None,
         use_beam_search: bool = False,
         length_penalty: float = 1.0,
         early_stopping: bool | str = False,
@@ -157,6 +159,7 @@ class SamplingParams(SamplingParams):
             top_p=top_p,
             top_k=top_k,
             min_p=min_p,
+            seed=seed,
             use_beam_search=use_beam_search,
             length_penalty=length_penalty,
             early_stopping=early_stopping,

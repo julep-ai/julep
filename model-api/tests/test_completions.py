@@ -1,9 +1,9 @@
 # ruff: noqa: F401, F811
 from pytest_mock import mocker
-from vllm.sampling_params import SamplingParams
 
-import model_api.web
 from model_api.logits_processors import drop_disallowed_start_tags
+from model_api.protocol import SamplingParams
+import model_api.web
 from tests.fixtures import client, unauthorized_client, request_id, MODEL
 
 
@@ -85,6 +85,7 @@ hi<|im_end|>
         json=body,
     )
     assert spy.call_count == 1
+
     spy.assert_called_once_with(
         expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
     )
@@ -143,6 +144,7 @@ hi<|im_end|>
         "/v1/completions",
         json=body,
     )
+
     assert spy.call_count == 1
     spy.assert_called_once_with(
         expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
