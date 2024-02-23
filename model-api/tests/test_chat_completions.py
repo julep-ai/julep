@@ -9,7 +9,7 @@ from model_api.logits_processors import drop_disallowed_start_tags, fix_function
 from vllm.sampling_params import SamplingParams
 
 
-MODEL = "Open-Orca/oo-phi-1_5"
+MODEL = "microsoft/phi-2"
 
 
 @pytest.fixture
@@ -40,6 +40,7 @@ def test_security(self, unauthorized_client):
 def test_check_model(client):
     body = ChatCompletionRequest(
         model="some_nonexistent_model",
+        messages=[],
     ).model_dump()
     response = client.post(
         "/v1/chat/completions",
@@ -52,6 +53,7 @@ def test_logit_bias_not_supported(client):
     body = ChatCompletionRequest(
         model=MODEL,
         logit_bias={"a": 1.0},
+        messages=[],
     ).model_dump()
     response = client.post(
         "/v1/chat/completions",
@@ -85,6 +87,7 @@ def test_functions_and_tools(client):
                 },
             }
         ],
+        messages=[],
     ).model_dump()
     response = client.post(
         "/v1/chat/completions",
