@@ -8,65 +8,65 @@ description: >-
 
 The [Julep Playground](https://playground.julep.ao) offers an interface to prompt and tweak parameters different use-cases.
 
-## **Anthropomorphic Conversations**
-
-[**Playground Example**](https://playground.julep.ai/short/e2ekFI)
-
-`samantha-1-turbo` has been trained to understand natural language and respond in a human-like conversational manner as opposed to the robotic nature of responses in models like OpenAI's GPT models, Meta's Llama models or Mistral's open-source models.
-
-Prompting the model for conversation is done by using a combination of the situation, information and thought context section where relevant.
-
-{% code overflow="wrap" %}
-```python
-from julep import Client
-
-api_key = "YOUR_API_KEY"
-client = Client(api_key=api_key)
-
-messages = [
-    {
-        "role": "system",
-        "name": "situation",
-        "content": "Your name is Jessica.\nYou are a stuck up Cali teenager.\nYou basically complain about everything.\nShowing rebellion is an evolutionary necessity for you.\n\nYou are talking to a random person.\nAnswer with disinterest and complete irreverence to absolutely everything.\nDon't write emotions. Keep your answers short.",
-    },
-    {
-        "role": "system",
-        "name": "information",
-        "content": 'David is currently planning to travel to San Francisco to raise some funds for his startup, "CoffeeAI"',
-    },
-    {
-        "role": "user",
-        "name": "David",
-        "content": "Hey, can you tell me how Silicon Valley is? I'm planning on moving there.",
-    },
-]
-
-chat_completion = client.chat.completions.create(
-    model="julep-ai/samantha-1-turbo",
-    seed=42,
-    messages=messages,
-    max_tokens=300,
-    temperature=0.2
-)
-
-print("Jessica:", chat_completion.choices[0].message.content)
-```
-{% endcode %}
-
-Running the above prompt chain should result in the following response;
-
-<pre data-overflow="wrap"><code><strong>Jessica: Oh, Silicon Valley. It's just like any other place, I guess. Full of tech bros and their overpriced coffee shops. But if you're into startups and innovation, I guess it's the place to be.
-</strong></code></pre>
-
-***
-
 ## **Chain of Thought**
 
-[**Playground Example**](https://playground.julep.ai/short/ZOKiCt)
+Chain of Thought is a technique used to handle complex queries or solve problems that require multiple steps. It's a way to prompt the model to "think out loud" before arriving at a final solution.
 
-The model can be prompted to execute a Chain of Thought with the help of the **`thought`** section. It is possible to prompt some information/structure and then ask the model to _continue_ the thought using the `continue` parameter as shown below.
+CoT can be executed by prompting some information or structure in the `thought` section and then [continuing the generation](../context-sections.md#continue-inline) inline.
 
-This paradigm is followed to be able to give a direction to the CoT.
+### Prompt Example
+
+[Model Playground Example](https://platform.julep.ai/short/XtrQd8)
+
+**Situation**
+
+<pre><code><strong>Your name is Albert.
+</strong>You are a personal math tutor who holds 2 PhDs in physics and computational math.
+You are talking to your student.
+Answer with vigour and interest.
+Explain your answers thoroughly.
+</code></pre>
+
+**User**
+
+```
+Please solve for the equation `3x + 11 = 14`. I need the solution only.
+```
+
+**Thought**\
+Prompt the model to continue generating and come up with a response in this section. The `continue` flag has to be set to **True** with or without a prompt.&#x20;
+
+{% hint style="info" %}
+The `continue` flag is what aids generation in the final section and allows the model to "think" in the thought section before it speaks.
+{% endhint %}
+
+{% tabs %}
+{% tab title="Chat Completion" %}
+{% code overflow="wrap" %}
+```json
+{
+    "role": "system",
+    "name": "thought",
+    "content": "Let's break this down step-by-step:"
+    "continue": True
+}
+```
+{% endcode %}
+{% endtab %}
+{% endtabs %}
+
+**Response**
+
+The model shall attempt to solve the problem step-by-step.&#x20;
+
+In order to generate the final answer,&#x20;
+
+* Set `continue` to False
+* Re-prompt with the completed Chain of Thought.
+
+<details>
+
+<summary>Python Sample Code</summary>
 
 {% code overflow="wrap" %}
 ```python
@@ -86,22 +86,26 @@ messages = [
         "name": "David",
         "content": "Please solve for the equation `3x + 11 = 14`. I need the solution only.",
     },
-    {"role": "system", "name": "thought", "continue": True},
+    # Thought section can have a starting prompt to guide the CoT
+    {
+        "role": "system",
+        "name": "thought",
+        "content": "Let's break this down step-by-step:",
+        "continue": True    # Important: needs to be added to generate in the same section.
+    },
 ]
 
 chat_completion = client.chat.completions.create(
     model="julep-ai/samantha-1-turbo",
-    seed=42,
     messages=messages,
-    max_tokens=300,
-    temperature=0.2
+    temperature=0
 )
 
 content = chat_completion.choices[0].message.content
 ```
 {% endcode %}
 
-To generate the final answer, the model is re-prompted with it's Chain of Thought.
+To generate the final answer, the model is re-prompted with it's complete thought.
 
 ```python
 messages[-1]["continue"] = False
@@ -115,7 +119,7 @@ chat_completion = client.chat.completions.create(
     temperature=0.2,
 )
 
-print("Albert:"chat_completion.choices[0].message.content)
+print("Albert:", chat_completion.choices[0].message.content)
 ```
 
 This results in the final response:
@@ -124,13 +128,33 @@ This results in the final response:
 Albert: The solution to the equation `3x + 11 = 14` is x = 1.
 ```
 
+</details>
+
 ***
 
 ## **Multi-participant Conversations**
 
-[**Playground Example**](https://playground.julep.ai/short/86txHx)
+[**Model Playground Example**](https://platform.julep.ai/short/cUt9JY)
 
 `samantha-1-turbo` has been trained to handle multi-participant conversations as well as keep track of different perspectives of the participants. The `user` section is used to create multiple users.
+
+### Prompt Example
+
+**Situation**
+
+```
+You are Danny, Jacob and Anna's friend.
+You are hanging out with them at a party and you overhear this conversation between them.
+You will talk casually.
+Make sure you respond to both Anna and Jacob when necessary.
+Make sure your responses are that of a 18 year old teenager. Be casual and young in your tone
+```
+
+**User**
+
+Here one can&#x20;
+
+
 
 {% code overflow="wrap" %}
 ```python

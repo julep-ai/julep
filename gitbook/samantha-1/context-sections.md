@@ -155,7 +155,7 @@ I should ask him more about his food preferences and choices.<|im_end|>
 
 ***
 
-## Chat Paradigm
+## Continue Inline
 
 Julep's API also exposes a special paradigm for allowing the model to continue generating in any context section given some prompt.
 
@@ -177,4 +177,4 @@ messages = [
 ```
 {% endcode %}
 
-With `continue` set to `True`, the model will now respond with a continued generation in the `thought` section. This is particularly useful in [Chain of Thought](capabilities.md#chain-of-thought) prompting and [Intent Detection](capabilities.md#intent-detection).
+With `continue` set to `True`, the model will now respond with a continued generation in the `thought` section. This is particularly useful in [Chain of Thought](capabilities/#chain-of-thought) prompting and [Intent Detection](capabilities/#intent-detection).
