@@ -1,11 +1,13 @@
+# ruff: noqa: F401, F811
 import pytest
-import model_api.web
 from pytest_mock import mocker
+from vllm.sampling_params import SamplingParams
+
+import model_api.web
 from model_api.logits_processors import (
     drop_disallowed_start_tags,
     fix_function_call_prediction,
 )
-from vllm.sampling_params import SamplingParams
 from tests.fixtures import client, unauthorized_client, request_id, MODEL
 
 
@@ -115,7 +117,9 @@ def test_do_not_insert_default_situation_if_messages_empty(client, request_id, m
         json=body,
     )
     assert spy.call_count == 1
-    spy.assert_called_once_with(expected_prompt, expected_sampling_params, f"cmpl-{request_id}")
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
     assert response.status_code == 200
 
 
@@ -520,7 +524,7 @@ hi<|im_end|>
 #             }
 #         ],
 #         max_tokens=1,
-#         stop=["<", "<|"],    
+#         stop=["<", "<|"],
 #         frequency_penalty=0.75,
 #     )
 #     response = client.post(
@@ -646,7 +650,7 @@ hi<|im_end|>
         prompt_logprobs=None,
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
-        logits_processors=[drop_disallowed_start_tags]
+        logits_processors=[drop_disallowed_start_tags],
     )
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
