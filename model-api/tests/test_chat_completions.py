@@ -5,7 +5,7 @@ from model_api.logits_processors import (
     fix_function_call_prediction,
 )
 from vllm.sampling_params import SamplingParams
-from tests.fixtures import client, unauthorized_client, MODEL
+from tests.fixtures import client, unauthorized_client, request_id, MODEL
 
 
 def test_security(unauthorized_client):
@@ -72,7 +72,7 @@ def test_functions_and_tools(client):
     assert response.status_code == 400
 
 
-def test_do_not_insert_default_situation_if_messages_empty(client, mocker):
+def test_do_not_insert_default_situation_if_messages_empty(client, request_id, mocker):
     expected_prompt = ""
     expected_sampling_params = SamplingParams(
         n=1,
@@ -98,7 +98,6 @@ def test_do_not_insert_default_situation_if_messages_empty(client, mocker):
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -119,7 +118,7 @@ def test_do_not_insert_default_situation_if_messages_empty(client, mocker):
     assert response.status_code == 200
 
 
-def test_insert_default_situation(client, mocker):
+def test_insert_default_situation(client, request_id, mocker):
     expected_prompt = """<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>"""
     expected_sampling_params = SamplingParams(
@@ -146,7 +145,6 @@ You are a helpful AI Assistant<|im_end|>"""
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -175,7 +173,7 @@ You are a helpful AI Assistant<|im_end|>"""
     assert response.status_code == 200
 
 
-def test_escape_special_tokens(client, mocker):
+def test_escape_special_tokens(client, request_id, mocker):
     st = list(
         model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values()
     )[0]
@@ -210,7 +208,6 @@ You are a helpful AI Assistant<|im_end|>
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -240,7 +237,7 @@ You are a helpful AI Assistant<|im_end|>
     assert response.status_code == 200
 
 
-def test_function_called_by_name(client, mocker):
+def test_function_called_by_name(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>functions
@@ -279,7 +276,6 @@ hi<|im_end|>
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -319,7 +315,7 @@ hi<|im_end|>
     assert response.status_code == 200
 
 
-def test_function_is_none(client, mocker):
+def test_function_is_none(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
@@ -349,7 +345,6 @@ hi<|im_end|>
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -389,7 +384,7 @@ hi<|im_end|>
     assert response.status_code == 200
 
 
-def test_function_is_auto(client, mocker):
+def test_function_is_auto(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>functions
@@ -428,7 +423,6 @@ hi<|im_end|>
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -468,7 +462,7 @@ hi<|im_end|>
     assert response.status_code == 200
 
 
-def test_rescale_temperature(client, mocker):
+def test_rescale_temperature(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
@@ -499,7 +493,6 @@ hi<|im_end|>
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -529,7 +522,7 @@ hi<|im_end|>
     assert response.status_code == 200
 
 
-def test_logits_processor_fix_function_call_prediction(client, mocker):
+def test_logits_processor_fix_function_call_prediction(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>functions
@@ -569,7 +562,6 @@ hi<|im_end|>
         spaces_between_special_tokens=False,
         logits_processors=[fix_function_call_prediction],
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
@@ -609,7 +601,7 @@ hi<|im_end|>
     assert response.status_code == 200
 
 
-def test_logits_processor_drop_disallowed_start_tags(client, mocker):
+def test_logits_processor_drop_disallowed_start_tags(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
@@ -640,7 +632,6 @@ hi<|im_end|>
         spaces_between_special_tokens=False,
         logits_processors=[drop_disallowed_start_tags]
     )
-    request_id = "request_id1"
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")

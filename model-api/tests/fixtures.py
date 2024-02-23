@@ -1,4 +1,5 @@
 import os
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from model_api.web import create_app
@@ -21,3 +22,8 @@ def client():
     os.environ["TEMPERATURE_SCALING_FACTOR"] = "0.0"
 
     return TestClient(app, headers={"X-Auth-Key": auth_key})
+
+
+@pytest.fixture
+def request_id():
+    return str(uuid.uuid4())
