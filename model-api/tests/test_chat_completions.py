@@ -6,7 +6,7 @@ from vllm.sampling_params import SamplingParams
 from tests.fixtures import client, unauthorized_client, MODEL
 
 
-def test_security(self, unauthorized_client):
+def test_security(unauthorized_client):
     response = unauthorized_client.post("/v1/chat/completions")
     assert response.status_code == 403
 
