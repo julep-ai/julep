@@ -9,7 +9,7 @@ from model_api.logits_processors import drop_disallowed_start_tags
 from vllm.sampling_params import SamplingParams
 
 
-MODEL = "Open-Orca/oo-phi-1_5"
+MODEL = "microsoft/phi-2"
 
 
 @pytest.fixture
