@@ -1,6 +1,9 @@
 import model_api.web
 from pytest_mock import mocker
-from model_api.logits_processors import drop_disallowed_start_tags, fix_function_call_prediction
+from model_api.logits_processors import (
+    drop_disallowed_start_tags,
+    fix_function_call_prediction,
+)
 from vllm.sampling_params import SamplingParams
 from tests.fixtures import client, unauthorized_client, MODEL
 
@@ -69,31 +72,113 @@ def test_functions_and_tools(client):
     assert response.status_code == 400
 
 
-def test_insert_default_situation(client, mocker):
-    expected_prompt = """<|im_start|>situation
-You are a helpful AI Assistant<|im_end|>
-    """
-    expected_sampling_params = None
+def test_do_not_insert_default_situation_if_messages_empty(client, mocker):
+    expected_prompt = ""
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
-        body = dict(
-            model=MODEL,
-            messages=[],
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
+    body = dict(
+        model=MODEL,
+        messages=[],
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(expected_prompt, expected_sampling_params, f"cmpl-{request_id}")
+    assert response.status_code == 200
+
+
+def test_insert_default_situation(client, mocker):
+    expected_prompt = """<|im_start|>situation
+You are a helpful AI Assistant<|im_end|>"""
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
+    request_id = "request_id1"
+
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_escape_special_tokens(client, mocker):
-    st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
+    st = list(
+        model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values()
+    )[0]
     if isinstance(st, list):
         st = st[0]
     expected_prompt = f"""<|im_start|>situation
@@ -101,30 +186,58 @@ You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me"""
-    expected_sampling_params = None
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": st,
-                }
-            ],
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": st,
+            }
+        ],
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_function_called_by_name(client, mocker):
@@ -141,42 +254,69 @@ Available functions:
 }}<|im_end|>
 <|im_start|>User
 hi<|im_end|>
-<|im_start|>function_call {{"name": "func_name",
-"""
-    expected_sampling_params = None
+<|im_start|>function_call {{"name": "func_name", """
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": "hi",
-                }
-            ],
-            functions=[
-                {
-                    "name": "func_name",
-                    "description": "func_desc",
-                    "parameters": {
-                        "param1": "string",
-                    },
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        functions=[
+            {
+                "name": "func_name",
+                "description": "func_desc",
+                "parameters": {
+                    "param1": "string",
                 },
-            ],
-            function_call={"name": "func_name"},
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+            },
+        ],
+        function_call={"name": "func_name"},
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_function_is_none(client, mocker):
@@ -185,40 +325,68 @@ You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
 hi<|im_end|>
 <|im_start|>me"""
-    expected_sampling_params = None
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": "hi",
-                }
-            ],
-            functions=[
-                {
-                    "name": "func_name",
-                    "description": "func_desc",
-                    "parameters": {
-                        "param1": "string",
-                    },
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        functions=[
+            {
+                "name": "func_name",
+                "description": "func_desc",
+                "parameters": {
+                    "param1": "string",
                 },
-            ],
-            function_call="none",
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+            },
+        ],
+        function_call="none",
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_function_is_auto(client, mocker):
@@ -236,40 +404,68 @@ Available functions:
 <|im_start|>User
 hi<|im_end|>
 <|im_start|>"""
-    expected_sampling_params = None
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": "hi",
-                }
-            ],
-            functions=[
-                {
-                    "name": "func_name",
-                    "description": "func_desc",
-                    "parameters": {
-                        "param1": "string",
-                    },
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        functions=[
+            {
+                "name": "func_name",
+                "description": "func_desc",
+                "parameters": {
+                    "param1": "string",
                 },
-            ],
-            function_call="auto",
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+            },
+        ],
+        function_call="auto",
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_rescale_temperature(client, mocker):
@@ -279,31 +475,58 @@ You are a helpful AI Assistant<|im_end|>
 hi<|im_end|>
 <|im_start|>me"""
     temperature = 0.7
-    expected_sampling_params = SamplingParams(temperature=0.0)
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.0,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            temperature=temperature,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": "hi",
-                }
-            ],
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    body = dict(
+        model=MODEL,
+        temperature=temperature,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        max_tokens=1,
+        stop=["<", "<|"],    
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_logits_processor_fix_function_call_prediction(client, mocker):
@@ -321,40 +544,69 @@ Available functions:
 <|im_start|>User
 hi<|im_end|>
 <|im_start|>"""
-    expected_sampling_params = SamplingParams(logits_processors=[fix_function_call_prediction])
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+        logits_processors=[fix_function_call_prediction],
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": "hi",
-                }
-            ],
-            functions=[
-                {
-                    "name": "func_name",
-                    "description": "func_desc",
-                    "parameters": {
-                        "param1": "string",
-                    },
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        functions=[
+            {
+                "name": "func_name",
+                "description": "func_desc",
+                "parameters": {
+                    "param1": "string",
                 },
-            ],
-            function_call="auto",
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+            },
+        ],
+        function_call="auto",
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_logits_processor_drop_disallowed_start_tags(client, mocker):
@@ -363,37 +615,66 @@ You are a helpful AI Assistant<|im_end|>
 <|im_start|>User
 hi<|im_end|>
 <|im_start|>"""
-    expected_sampling_params = SamplingParams(logits_processors=[drop_disallowed_start_tags])
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+        logits_processors=[drop_disallowed_start_tags]
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "name": "User",
-                    "content": "hi",
-                }
-            ],
-            functions=[
-                {
-                    "name": "func_name",
-                    "description": "func_desc",
-                    "parameters": {
-                        "param1": "string",
-                    },
+    body = dict(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "name": "User",
+                "content": "hi",
+            }
+        ],
+        functions=[
+            {
+                "name": "func_name",
+                "description": "func_desc",
+                "parameters": {
+                    "param1": "string",
                 },
-            ],
-            function_call="none",
-        )
-        response = client.post(
-            "/v1/chat/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+            },
+        ],
+        function_call="none",
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/chat/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200

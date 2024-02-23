@@ -34,7 +34,9 @@ def test_logit_bias_not_supported(client):
 
 
 def test_remove_last_space(client, mocker):
-    st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
+    st = list(
+        model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values()
+    )[0]
     if isinstance(st, list):
         st = st[0]
     expected_prompt = f"""<|im_start|>situation
@@ -43,28 +45,58 @@ You are a helpful AI Assistant<|im_end|>
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me """
     prompt = expected_prompt + " "
-    expected_sampling_params = None
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value = request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            prompt=prompt,
-        )
-        response = client.post(
-            "/v1/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    body = dict(
+        model=MODEL,
+        prompt=prompt,
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_remove_last_space_2(client, mocker):
-    st = list(model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values())[0]
+    st = list(
+        model_api.web.engine.engine.tokenizer.tokenizer.special_tokens_map.values()
+    )[0]
     if isinstance(st, list):
         st = st[0]
     expected_prompt = f"""<|im_start|>situation
@@ -73,24 +105,52 @@ You are a helpful AI Assistant<|im_end|>
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me """
     prompt = expected_prompt
-    expected_sampling_params = None
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            prompt=prompt,
-        )
-        response = client.post(
-            "/v1/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    body = dict(
+        model=MODEL,
+        prompt=prompt,
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_rescale_temperature(client, mocker):
@@ -101,25 +161,52 @@ hi<|im_end|>
 <|im_start|>me"""
     prompt = expected_prompt
     temperature = 0.7
-    expected_sampling_params = SamplingParams(temperature=0.0)
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.0,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            temperature=temperature,
-            prompt=prompt,
-        )
-        response = client.post(
-            "/v1/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    body = dict(
+        model=MODEL,
+        temperature=temperature,
+        prompt=prompt,
+        max_tokens=1,
+        stop=["<", "<|"],
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
 
 
 def test_logits_processor_drop_disallowed_start_tags(client, mocker):
@@ -129,21 +216,50 @@ You are a helpful AI Assistant<|im_end|>
 hi<|im_end|>
 <|im_start|>"""
     prompt = expected_prompt
-    expected_sampling_params = SamplingParams(logits_processors=[drop_disallowed_start_tags])
+    expected_sampling_params = SamplingParams(
+        n=1,
+        best_of=1,
+        presence_penalty=0.0,
+        frequency_penalty=0.75,
+        repetition_penalty=1.0,
+        temperature=0.75,
+        top_p=0.99,
+        top_k=-1,
+        min_p=0.01,
+        seed=None,
+        use_beam_search=False,
+        length_penalty=1.0,
+        early_stopping=False,
+        stop=["<", "<|"],
+        stop_token_ids=[],
+        include_stop_str_in_output=False,
+        ignore_eos=False,
+        max_tokens=1,
+        logprobs=None,
+        prompt_logprobs=None,
+        skip_special_tokens=True,
+        spaces_between_special_tokens=False,
+        logits_processors=[drop_disallowed_start_tags]
+    )
     request_id = "request_id1"
 
-    with mocker.patch("model_api.web.random_uuid") as random_uuid:
-        random_uuid.return_value = request_id
-        spy = mocker.spy(model_api.web.engine, "generate")
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
+    spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = dict(
-            model=MODEL,
-            prompt=prompt,
-        )
-        response = client.post(
-            "/v1/completions",
-            json=body,
-        )
-        assert spy.call_count == 1
-        spy.assert_called_once_with(expected_prompt, expected_sampling_params, request_id)
-        assert response.status_code == 200
+    body = dict(
+        model=MODEL,
+        prompt=prompt,
+        max_tokens=1,
+        stop=["<", "<|"],
+        temperature=0.75,
+        frequency_penalty=0.75,
+    )
+    response = client.post(
+        "/v1/completions",
+        json=body,
+    )
+    assert spy.call_count == 1
+    spy.assert_called_once_with(
+        expected_prompt, expected_sampling_params, f"cmpl-{request_id}"
+    )
+    assert response.status_code == 200
