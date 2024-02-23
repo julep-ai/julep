@@ -42,7 +42,7 @@ image = (
     Image.from_registry("nvidia/cuda:12.1.1-base-ubuntu22.04", add_python="3.10")
     .apt_install()
     .pip_install(
-        "vllm==0.3.0",
+        "transformers==4.38.1",
         "huggingface_hub==0.20.3",
         "hf-transfer==0.1.5",
     )
@@ -57,16 +57,10 @@ image = (
         timeout=60 * 20,
     )
     .pip_install(
-        "vllm==0.3.0",
-        "uvicorn==0.27.0.post1",
-        "transformers==4.37.2",
-        "torch==2.1.2",
-        "aioprometheus==23.12.0",
-        "psutil==5.9.8",
+        "vllm==0.3.1",
         "starlette-exporter==0.17.1",
         "environs==10.3.0",
         "pynvml==11.5.0",
-        "fastapi==0.109.2",
         "sentry-sdk==1.40.1",
         "jsonschema==4.21.1",
         "lm-format-enforcer==0.8.3",

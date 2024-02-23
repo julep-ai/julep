@@ -159,7 +159,8 @@ class SamplingParams(SamplingParams):
             top_p=top_p,
             top_k=top_k,
             min_p=min_p,
-            seed=seed,
+            # FIXME: This is broken for some reason
+            # seed=seed,
             use_beam_search=use_beam_search,
             length_penalty=length_penalty,
             early_stopping=early_stopping,
