@@ -24,6 +24,10 @@
 * [Capabilities](samantha-1/capabilities.md)
   * [Human-like conversations](samantha-1/capabilities/capabilities.md)
 
+## 🤖 Platform <a href="#playground" id="playground"></a>
+
+* [Model Playground](platform/playground.md)
+
 ## 🔍 FAQs
 
 * [General Overview](faqs/general-overview.md)
