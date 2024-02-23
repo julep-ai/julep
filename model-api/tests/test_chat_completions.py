@@ -1,35 +1,9 @@
-import os
-import pytest
 import model_api.web
 from pytest_mock import mocker
-from fastapi.testclient import TestClient
-from model_api.web import create_app
 from model_api.protocol import ChatCompletionRequest
 from model_api.logits_processors import drop_disallowed_start_tags, fix_function_call_prediction
 from vllm.sampling_params import SamplingParams
-
-
-MODEL = "microsoft/phi-2"
-
-
-@pytest.fixture(scope="module")
-def args():
-    return ["--model", MODEL, "--trust-remote-code"]
-
-
-@pytest.fixture(scope="module")
-def unauthorized_client(args):
-    return TestClient(create_app(args))
-
-
-@pytest.fixture(scope="module")
-def client(args):
-    auth_key = "myauthkey"
-    os.environ["API_KEY"] = auth_key
-    os.environ["TEMPERATURE_SCALING_FACTOR"] = "0.0"
-    app = create_app(args)
-
-    return TestClient(app, headers={"X-Auth-Key": auth_key})
+from tests.fixtures import client, unauthorized_client, MODEL
 
 
 def test_security(self, unauthorized_client):
