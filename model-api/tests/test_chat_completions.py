@@ -120,7 +120,10 @@ def test_do_not_insert_default_situation_if_messages_empty(client, request_id, m
 
 def test_insert_default_situation(client, request_id, mocker):
     expected_prompt = """<|im_start|>situation
-You are a helpful AI Assistant<|im_end|>"""
+You are a helpful AI Assistant<|im_end|>
+<|im_start|>person (User)
+hi<|im_end|>
+<|im_start|>me"""
     expected_sampling_params = SamplingParams(
         n=1,
         best_of=1,
@@ -181,7 +184,7 @@ def test_escape_special_tokens(client, request_id, mocker):
         st = st[0]
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me"""
     expected_sampling_params = SamplingParams(
@@ -249,7 +252,7 @@ Available functions:
     "param1": "string",
 }},
 }}<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>function_call {{"name": "func_name", """
     expected_sampling_params = SamplingParams(
@@ -318,7 +321,7 @@ hi<|im_end|>
 def test_function_is_none(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>me"""
     expected_sampling_params = SamplingParams(
@@ -396,7 +399,7 @@ Available functions:
     "param1": "string",
 }},
 }}<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>"""
     expected_sampling_params = SamplingParams(
@@ -465,7 +468,7 @@ hi<|im_end|>
 def test_rescale_temperature(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>persion (User)
 hi<|im_end|>
 <|im_start|>me"""
     temperature = 0.7
@@ -534,7 +537,7 @@ Available functions:
     "param1": "string",
 }},
 }}<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>"""
     expected_sampling_params = SamplingParams(
@@ -604,7 +607,7 @@ hi<|im_end|>
 def test_logits_processor_drop_disallowed_start_tags(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>"""
     expected_sampling_params = SamplingParams(

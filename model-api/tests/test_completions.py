@@ -41,7 +41,7 @@ def test_remove_last_space(client, request_id, mocker):
         st = st[0]
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me """
     prompt = expected_prompt + " "
@@ -100,7 +100,7 @@ def test_remove_last_space_2(client, request_id, mocker):
         st = st[0]
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 {st[0]} {st[1:]}<|im_end|>
 <|im_start|>me """
     prompt = expected_prompt
@@ -154,7 +154,7 @@ You are a helpful AI Assistant<|im_end|>
 def test_rescale_temperature(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>me"""
     prompt = expected_prompt
@@ -209,7 +209,7 @@ hi<|im_end|>
 def test_logits_processor_drop_disallowed_start_tags(client, request_id, mocker):
     expected_prompt = f"""<|im_start|>situation
 You are a helpful AI Assistant<|im_end|>
-<|im_start|>User
+<|im_start|>person (User)
 hi<|im_end|>
 <|im_start|>"""
     prompt = expected_prompt
