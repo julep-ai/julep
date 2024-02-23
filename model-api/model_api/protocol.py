@@ -121,7 +121,7 @@ class SamplingParams(SamplingParams):
         "spaces_between_special_tokens",
         "logits_processors",
     ]
-    
+
     def __init__(
         self,
         n: int = 1,
@@ -171,12 +171,12 @@ class SamplingParams(SamplingParams):
             spaces_between_special_tokens=spaces_between_special_tokens,
             logits_processors=logits_processors,
         )
-    
-    def __eq__(self, other):        
+
+    def __eq__(self, other):
         for p in self._properties:
             if getattr(self, p) != getattr(other, p):
                 return False
-        
+
         return True
 
 
