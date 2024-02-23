@@ -97,6 +97,32 @@ class Tool(BaseModel):
 
 
 class SamplingParams(SamplingParams):
+    _properties = [
+        "n",
+        "best_of",
+        "presence_penalty",
+        "frequency_penalty",
+        "repetition_penalty",
+        "temperature",
+        "top_p",
+        "top_k",
+        "min_p",
+        "seed",
+        "use_beam_search",
+        "length_penalty",
+        "early_stopping",
+        "stop",
+        "stop_token_ids",
+        "include_stop_str_in_output",
+        "ignore_eos",
+        "max_tokens",
+        "logprobs",
+        "prompt_logprobs",
+        "skip_special_tokens",
+        "spaces_between_special_tokens",
+        "logits_processors",
+    ]
+
     def __init__(
         self,
         n: int = 1,
@@ -108,6 +134,7 @@ class SamplingParams(SamplingParams):
         top_p: float = 0.99,  # Custom
         top_k: int = -1,
         min_p: float = 0.01,  # Custom
+        seed: int | None = None,
         use_beam_search: bool = False,
         length_penalty: float = 1.0,
         early_stopping: bool | str = False,
@@ -132,6 +159,7 @@ class SamplingParams(SamplingParams):
             top_p=top_p,
             top_k=top_k,
             min_p=min_p,
+            seed=seed,
             use_beam_search=use_beam_search,
             length_penalty=length_penalty,
             early_stopping=early_stopping,
@@ -146,6 +174,13 @@ class SamplingParams(SamplingParams):
             spaces_between_special_tokens=spaces_between_special_tokens,
             logits_processors=logits_processors,
         )
+
+    def __eq__(self, other):
+        for p in self._properties:
+            if getattr(self, p) != getattr(other, p):
+                return False
+
+        return True
 
 
 class ChatCompletionRequest(ChatCompletionRequest):
