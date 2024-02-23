@@ -4,6 +4,12 @@
 
 * [Welcome!](README.md)
 * [Welcome](introduction/welcome.md)
+* [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
+
+## 📖 Concepts
+
+* [What is LAME](concepts/what-is-lame.md)
+* [What are agents](concepts/what-are-agents.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
@@ -11,10 +17,11 @@
 
 ## 💁 SAMANTHA-1
 
-* [Overview](samantha-1/overview.md)
+* [Overview](samantha-1-turbo/overview.md)
 * [Quickstart](samantha-1/python-setup.md)
 * [Concepts](samantha-1/context-sections.md)
-* [Capabilities](samantha-1/capabilities.md)
+* [Capabilities](samantha-1/capabilities/README.md)
+  * [Human-like conversations](samantha-1/capabilities/capabilities.md)
 
 ## 🔍 FAQs
 
@@ -26,7 +33,9 @@
 
 ## 📖 API REFERENCE
 
-* [Model API](api-reference/model-api.md)
+* [Model API](api-reference/model-api/README.md)
+  * [Chat Completions](api-reference/model-api/model-api.md)
+  * [Completions (Advanced)](api-reference/model-api/model-api-1.md)
 * [Agents API](api-reference/agents-api.md)
 * [Python SDK](python-sdk-docs/README.md)
   * [Client](python-sdk-docs/julep/client.md)
