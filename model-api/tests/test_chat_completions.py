@@ -1,6 +1,5 @@
 import model_api.web
 from pytest_mock import mocker
-from model_api.protocol import ChatCompletionRequest
 from model_api.logits_processors import drop_disallowed_start_tags, fix_function_call_prediction
 from vllm.sampling_params import SamplingParams
 from tests.fixtures import client, unauthorized_client, MODEL
@@ -12,10 +11,10 @@ def test_security(unauthorized_client):
 
 
 def test_check_model(client):
-    body = ChatCompletionRequest(
+    body = dict(
         model="some_nonexistent_model",
         messages=[],
-    ).model_dump()
+    )
     response = client.post(
         "/v1/chat/completions",
         json=body,
@@ -24,11 +23,11 @@ def test_check_model(client):
 
 
 def test_logit_bias_not_supported(client):
-    body = ChatCompletionRequest(
+    body = dict(
         model=MODEL,
         logit_bias={"a": 1.0},
         messages=[],
-    ).model_dump()
+    )
     response = client.post(
         "/v1/chat/completions",
         json=body,
@@ -37,7 +36,7 @@ def test_logit_bias_not_supported(client):
 
 
 def test_functions_and_tools(client):
-    body = ChatCompletionRequest(
+    body = dict(
         model=MODEL,
         functions=[
             {
@@ -62,7 +61,7 @@ def test_functions_and_tools(client):
             }
         ],
         messages=[],
-    ).model_dump()
+    )
     response = client.post(
         "/v1/chat/completions",
         json=body,
@@ -80,10 +79,10 @@ You are a helpful AI Assistant<|im_end|>
     with mocker.patch("model_api.web.random_uuid") as random_uuid:
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[],
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -109,7 +108,7 @@ You are a helpful AI Assistant<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[
                 {
@@ -118,7 +117,7 @@ You are a helpful AI Assistant<|im_end|>
                     "content": st,
                 }
             ],
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -151,7 +150,7 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[
                 {
@@ -170,7 +169,7 @@ hi<|im_end|>
                 },
             ],
             function_call={"name": "func_name"},
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -193,7 +192,7 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[
                 {
@@ -212,7 +211,7 @@ hi<|im_end|>
                 },
             ],
             function_call="none",
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -244,7 +243,7 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[
                 {
@@ -263,7 +262,7 @@ hi<|im_end|>
                 },
             ],
             function_call="auto",
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -287,7 +286,7 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             temperature=temperature,
             messages=[
@@ -297,7 +296,7 @@ hi<|im_end|>
                     "content": "hi",
                 }
             ],
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -329,7 +328,7 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[
                 {
@@ -348,7 +347,7 @@ hi<|im_end|>
                 },
             ],
             function_call="auto",
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,
@@ -371,7 +370,7 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = ChatCompletionRequest(
+        body = dict(
             model=MODEL,
             messages=[
                 {
@@ -390,7 +389,7 @@ hi<|im_end|>
                 },
             ],
             function_call="none",
-        ).model_dump()
+        )
         response = client.post(
             "/v1/chat/completions",
             json=body,

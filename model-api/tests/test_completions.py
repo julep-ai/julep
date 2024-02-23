@@ -1,6 +1,5 @@
 import model_api.web
 from pytest_mock import mocker
-from model_api.protocol import CompletionRequest
 from model_api.logits_processors import drop_disallowed_start_tags
 from vllm.sampling_params import SamplingParams
 from tests.fixtures import client, unauthorized_client, MODEL
@@ -12,9 +11,9 @@ def test_security(unauthorized_client):
 
 
 def test_check_model(client):
-    body = CompletionRequest(
+    body = dict(
         model="some_nonexistent_model",
-    ).model_dump()
+    )
     response = client.post(
         "/v1/completions",
         json=body,
@@ -23,10 +22,10 @@ def test_check_model(client):
 
 
 def test_logit_bias_not_supported(client):
-    body = CompletionRequest(
+    body = dict(
         model=MODEL,
         logit_bias={"a": 1.0},
-    ).model_dump()
+    )
     response = client.post(
         "/v1/completions",
         json=body,
@@ -51,10 +50,10 @@ You are a helpful AI Assistant<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = CompletionRequest(
+        body = dict(
             model=MODEL,
             prompt=prompt,
-        ).model_dump()
+        )
         response = client.post(
             "/v1/completions",
             json=body,
@@ -81,10 +80,10 @@ You are a helpful AI Assistant<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = CompletionRequest(
+        body = dict(
             model=MODEL,
             prompt=prompt,
-        ).model_dump()
+        )
         response = client.post(
             "/v1/completions",
             json=body,
@@ -109,11 +108,11 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = CompletionRequest(
+        body = dict(
             model=MODEL,
             temperature=temperature,
             prompt=prompt,
-        ).model_dump()
+        )
         response = client.post(
             "/v1/completions",
             json=body,
@@ -137,10 +136,10 @@ hi<|im_end|>
         random_uuid.return_value = request_id
         spy = mocker.spy(model_api.web.engine, "generate")
 
-        body = CompletionRequest(
+        body = dict(
             model=MODEL,
             prompt=prompt,
-        ).model_dump()
+        )
         response = client.post(
             "/v1/completions",
             json=body,
