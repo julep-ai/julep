@@ -3,13 +3,14 @@
 ## ✨ INTRODUCTION
 
 * [Welcome!](README.md)
-* [Welcome](introduction/welcome.md)
+* [Welcome to Julep](introduction/welcome-to-julep.md)
 * [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
 
 ## 📖 Concepts
 
-* [What is LAME](concepts/what-is-lame.md)
-* [What are agents](concepts/what-are-agents.md)
+* [LAME](concepts/lame.md)
+* [Agents](concepts/agents.md)
+* [Memory](concepts/memory.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
@@ -20,7 +21,7 @@
 * [Overview](samantha-1-turbo/overview.md)
 * [Quickstart](samantha-1/python-setup.md)
 * [Concepts](samantha-1/context-sections.md)
-* [Capabilities](samantha-1/capabilities/README.md)
+* [Capabilities](samantha-1/capabilities.md)
   * [Human-like conversations](samantha-1/capabilities/capabilities.md)
 
 ## 🔍 FAQs
@@ -33,10 +34,18 @@
 
 ## 📖 API REFERENCE
 
-* [Model API](api-reference/model-api/README.md)
+* [Agents API (alpha)](api-reference/agents-api/README.md)
+  * [Agents](api-reference/agents-api/agents-api.md)
+  * [Users](api-reference/agents-api/agents-api-1.md)
+  * [Sessions](api-reference/agents-api/agents-api-2.md)
+  * [Memories](api-reference/agents-api/agents-api-3.md)
+  * [Docs](api-reference/agents-api/agents-api-4.md)
+  * [Tasks](api-reference/agents-api/agents-api-5.md)
+  * [Task Runs](api-reference/agents-api/agents-api-6.md)
+* [Model API](api-reference/model-api.md)
   * [Chat Completions](api-reference/model-api/model-api.md)
   * [Completions (Advanced)](api-reference/model-api/model-api-1.md)
-* [Agents API](api-reference/agents-api.md)
+  * [Generation Parameters](api-reference/model-api/generation-parameters.md)
 * [Python SDK](python-sdk-docs/README.md)
   * [Client](python-sdk-docs/julep/client.md)
   * [Agents](python-sdk-docs/julep/managers/agent.md)
