@@ -6,7 +6,21 @@ from model_api.web import create_app
 
 
 MODEL = "julep-ai/samantha-1-turbo"
-args = ["--model", MODEL, "--trust-remote-code", "--max-model-len", "15000"]
+args = [
+    "--model",
+    MODEL,
+    "--trust-remote-code",
+    "--max-model-len",
+    "1024",
+    "--enforce-eager",
+    "--dtype",
+    "bfloat16",
+    "--gpu-memory-utilization",
+    "0.97",
+    "--max-num-seqs",
+    "1",
+]
+
 app = create_app(args)
 
 

@@ -1,7 +1,9 @@
-import model_api.web
+# ruff: noqa: F401, F811
 from pytest_mock import mocker
-from model_api.logits_processors import drop_disallowed_start_tags
 from vllm.sampling_params import SamplingParams
+
+import model_api.web
+from model_api.logits_processors import drop_disallowed_start_tags
 from tests.fixtures import client, unauthorized_client, request_id, MODEL
 
 
@@ -67,7 +69,7 @@ hi<|im_end|>
         spaces_between_special_tokens=False,
     )
 
-    mocker.patch("model_api.web.random_uuid", return_value = request_id)
+    mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
@@ -234,7 +236,7 @@ hi<|im_end|>
         prompt_logprobs=None,
         skip_special_tokens=True,
         spaces_between_special_tokens=False,
-        logits_processors=[drop_disallowed_start_tags]
+        logits_processors=[drop_disallowed_start_tags],
     )
 
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
