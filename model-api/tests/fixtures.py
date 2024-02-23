@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 from model_api.web import create_app
 
 
-MODEL = "microsoft/phi-2"
-args = ["--model", MODEL, "--trust-remote-code"]
+MODEL = "julep-ai/samantha-1-turbo"
+args = ["--model", MODEL, "--trust-remote-code", "--max-model-len", "15000"]
 
 
 @pytest.fixture(scope="session")
