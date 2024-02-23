@@ -226,7 +226,7 @@ curl --location 'https://api-alpha.julep.ai/v1/completions' \
 ## What's Next
 
 * Read more about [context sections](context-sections.md) and how they influence generation.&#x20;
-* Check out the [model capabilities](capabilities/) to explore all the features of the model and more detailed examples.
+* Check out the [model capabilities](capabilities.md) to explore all the features of the model and more detailed examples.
 * See our cookbook for in-depth API use cases and examples.
 
 

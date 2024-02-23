@@ -3,7 +3,7 @@
 {% hint style="info" %}
 At its core, Julep is a platform for creating and deploying agents[^1] powered by LAME[^2].
 
-Read more about about agents [here](../concepts/what-are-agents.md) and LAME [here](../concepts/what-is-lame.md).
+Read more about about agents [here](../concepts/agents.md) and LAME [here](../concepts/lame.md).
 {% endhint %}
 
 ### Agents Platform
