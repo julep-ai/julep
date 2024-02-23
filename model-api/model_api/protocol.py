@@ -97,6 +97,31 @@ class Tool(BaseModel):
 
 
 class SamplingParams(SamplingParams):
+    _properties = [
+        "n",
+        "best_of",
+        "presence_penalty",
+        "frequency_penalty",
+        "repetition_penalty",
+        "temperature",
+        "top_p",
+        "top_k",
+        "min_p",
+        "use_beam_search",
+        "length_penalty",
+        "early_stopping",
+        "stop",
+        "stop_token_ids",
+        "include_stop_str_in_output",
+        "ignore_eos",
+        "max_tokens",
+        "logprobs",
+        "prompt_logprobs",
+        "skip_special_tokens",
+        "spaces_between_special_tokens",
+        "logits_processors",
+    ]
+    
     def __init__(
         self,
         n: int = 1,
@@ -146,6 +171,13 @@ class SamplingParams(SamplingParams):
             spaces_between_special_tokens=spaces_between_special_tokens,
             logits_processors=logits_processors,
         )
+    
+    def __eq__(self, other):        
+        for p in self._properties:
+            if getattr(self, p) != getattr(other, p):
+                return False
+        
+        return True
 
 
 class ChatCompletionRequest(ChatCompletionRequest):
