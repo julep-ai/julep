@@ -12,17 +12,17 @@ from vllm.sampling_params import SamplingParams
 MODEL = "microsoft/phi-2"
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def args():
     return ["--model", MODEL, "--trust-remote-code"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def unauthorized_client(args):
     return TestClient(create_app(args))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def client(args):
     auth_key = "myauthkey"
     os.environ["API_KEY"] = auth_key
