@@ -6,35 +6,33 @@
 * [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
 * [Motivation](<README (1).md>)
 
+## 🚀 Getting Started
+
+* [Agents Quickstart](getting-started/agents-quickstart.md)
+* [Agents Playground](getting-started/agents-playground.md)
+* [Model Quickstart](getting-started/python-setup.md)
+* [Model Playground](getting-started/playground.md)
+* [Self-hosting](getting-started/self-hosting.md)
+
 ## 📖 Concepts
 
+* [Core Concepts](concepts/core-concepts.md)
 * [Agents](concepts/agents.md)
 * [Memory](concepts/memory.md)
-* [LAME](concepts/lame.md)
+* [S1 Model](concepts/lame.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
 * [Overview](agents/overview.md)
+* [Tutorial](agents/tutorial.md)
 
-## 💁 SAMANTHA-1
+## 💁 S1
 
-* [Overview](samantha-1-turbo/overview.md)
-* [Quickstart](samantha-1/python-setup.md)
-* [Concepts](samantha-1/context-sections.md)
-* [Capabilities](samantha-1/capabilities.md)
-  * [Human-like conversations](samantha-1/capabilities/capabilities.md)
-
-## 🤖 Platform <a href="#playground" id="playground"></a>
-
-* [Model Playground](platform/playground.md)
-
-## 🔍 FAQs
-
-* [General Questions](faqs/general-overview.md)
-* [Agent Studio](faqs/agent-prototyping.md)
-* [Memory and Learning](faqs/memory-and-learning.md)
-* [Sessions and Tasks](faqs/sessions-and-tasks.md)
-* [Technical Details](faqs/technical-details.md)
+* [Overview](s1/overview.md)
+* [Tutorial](s1/tutorial.md)
+* [Concepts](s1/context-sections.md)
+* [Capabilities](s1/capabilities/README.md)
+  * [Human-like conversations](s1/capabilities/capabilities.md)
 
 ## 🛠️ SDKs
 
@@ -67,9 +65,17 @@
   * [Completions (Advanced)](api-reference/model-api/model-api-1.md)
   * [Generation Parameters](api-reference/model-api/generation-parameters.md)
 
+## 🔍 FAQs
+
+* [General Questions](faqs/general-overview.md)
+* [Agent Studio](faqs/agent-prototyping.md)
+* [Memory and Learning](faqs/memory-and-learning.md)
+* [Sessions and Tasks](faqs/sessions-and-tasks.md)
+* [Technical Details](faqs/technical-details.md)
+
 ***
 
-* [🫂 Discord Community](https://discord.gg/RdaGyrzpC8)
-* [PyPI package](https://pypi.org/project/julep/)
-* [npm package](https://www.npmjs.com/package/@julep/sdk)
 * [⭐ Github](https://github.com/julep-ai/agents)
+* [🫂 Discord Community](https://discord.gg/RdaGyrzpC8)
+* [🐍 PyPI package](https://pypi.org/project/julep/)
+* [📦 npm package](https://www.npmjs.com/package/@julep/sdk)

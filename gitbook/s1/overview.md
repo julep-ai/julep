@@ -56,7 +56,7 @@ The model and speaker sections can optionally include a name like `me (Samantha)
 
 You will need an API key to inference the model.
 
-Samantha can be inferenced using either the Chat Completion API or Completion API. For more details check out [Quickstart](../samantha-1/python-setup.md).
+Samantha can be inferenced using either the Chat Completion API or Completion API. For more details check out [Quickstart](../getting-started/python-setup.md).
 
 {% tabs %}
 {% tab title="Chat Completion API" %}
