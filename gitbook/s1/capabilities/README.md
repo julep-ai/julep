@@ -12,7 +12,7 @@ The [Julep Playground](https://playground.julep.ao) offers an interface to promp
 
 Chain of Thought is a technique used to handle complex queries or solve problems that require multiple steps. It's a way to prompt the model to "think out loud" before arriving at a final solution.
 
-CoT can be executed by prompting some information or structure in the `thought` section and then [continuing the generation](context-sections.md#continue-inline) inline.
+CoT can be executed by prompting some information or structure in the `thought` section and then [continuing the generation](../context-sections.md#continue-inline) inline.
 
 ### Prompt Example
 
