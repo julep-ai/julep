@@ -1,55 +1,26 @@
-# Welcome!
+---
+layout:
+  title:
+    visible: true
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: false
+  pagination:
+    visible: false
+---
 
-## Making AI Apps is hard.
+# Welcome to Julep
 
-Production-ready AI applications follow the Pareto principle when it comes to engineering effort. The last 20% takes 80% of the effort. We faced a lot of _challenges_ building our own AI applications;
+{% hint style="success" %}
+Julep is a platform for building AI agents that can autonomously plan and execute tasks using tools and memory.
 
-* Prompt Engineering
-* Getting unfiltered responses from conversations
-* Controlling hallucinations with accurate grounding
-* Building [RAG](https://ai.meta.com/blog/retrieval-augmented-generation-streamlining-the-creation-of-intelligent-natural-language-processing-models/) pipelines (it's hard - No other reason why vector DBs would raise millions in funding)
-* Unpredictable pricing and/or lack of transparency with agent platforms
-* Growing context windows that lack automatic managements
-
-Engineering teams need to handle ALL these _new_ problems alongside maintaining their own code base and developing their application.
-
-***
-
-## Introduction
-
-Julep is aiming to be a more refined platform for creating AI products.
-
-Julep AI is building an ecosystem to build better AI products: ​
-
-1. Agents Platform, with memory, built-in integrations, long running context, etc ​
-2. Fine-tuned models, with native function calling and extended function ​ These 2 products can help developers to;
-   1. Control models
-   2. Manage context
-   3. Build agentic applications
-
-Following an opinionated approach to building Agents and LLM apps, we aim to "bake-in" essential features in a platform to aid development speed to significantly improve the development experience speed-up the iteration process of launching an AI product.
+* It's backed by our custom model LAME.
+* Open source.
+{% endhint %}
 
 ***
 
-## Our take on Agents
-
-The core goal at Julep is to create a platform for building agents from a specification containing instructions and tools.
-
-As we launch our Agents Platform, we aim to offer:
-
-* Ability to orchestrate prompt, and hence execution of each step of execution
-* Independent long running tasks
-* Automatic context management
-* Episodic and Semantic Memory
-
-<figure><img src=".gitbook/assets/implicit_memory.excalidraw.png" alt=""><figcaption></figcaption></figure>
-
-***
-
-## Our take on Models
-
-Language Models lay at the foundation of autonomous agents.  If an Agent is stateful specification of possible actions and instructions, then an LLM acts as the _finite state machine_ executor that executes those actions.
-
-Predictable and controllable Model behaviour leads to predictable and controllable Agent behaviour.
-
-Hence, a good developer experience in prompting and using the model for actual work use cases like RAG, conversations and function-calling (alpha) has been baked in to the `samantha-1-turbo` models.
+<table><thead><tr><th width="213">Title</th><th width="394">Description</th><th width="163" data-type="content-ref">Link 1</th></tr></thead><tbody><tr><td><h3><mark style="color:blue;">I'm just curious...</mark></h3></td><td>Read more about the <a href="introduction/julep-in-a-nutshell.md">Julep Platform</a> and <a href="README (1).md">why we are building it</a>.</td><td><a href="introduction/julep-in-a-nutshell.md">julep-in-a-nutshell.md</a></td></tr><tr><td><h3><mark style="color:green;">I want to learn more.</mark></h3></td><td>Learn more</td><td></td></tr><tr><td><h3><mark style="color:purple;">I'm in, let's go!</mark></h3></td><td></td><td></td></tr><tr><td><h3><mark style="color:red;">I'm stuck. Need help!</mark></h3></td><td>Get help on our <a href="https://discord.gg/RdaGyrzpC8">discord community</a>, create a <a href="https://github.com/julep-ai/platform">Github issue</a> or <a href="faqs/technical-details.md">check out FAQs</a> to see if your question is covered there.</td><td><a href="https://discord.gg/RdaGyrzpC8">https://discord.gg/RdaGyrzpC8</a></td></tr><tr><td><h3><mark style="color:orange;">Learn more about Agents</mark></h3></td><td></td><td><a href="agents/overview.md">overview.md</a></td></tr><tr><td><h3><mark style="color:green;">Explore LAME</mark></h3></td><td></td><td><a href="samantha-1-turbo/overview.md">overview.md</a></td></tr><tr><td><h3>SDKs</h3></td><td></td><td><a href="sdks/available-sdks.md">available-sdks.md</a></td></tr><tr><td><h3>FAQs</h3></td><td></td><td><a href="faqs/general-overview.md">general-overview.md</a></td></tr><tr><td><h3>API Reference</h3></td><td></td><td><a href="api-reference/agents-api/">agents-api</a></td></tr></tbody></table>
