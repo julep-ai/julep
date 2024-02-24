@@ -2,15 +2,15 @@
 
 ## ✨ INTRODUCTION
 
-* [Welcome!](README.md)
-* [Welcome to Julep](introduction/welcome-to-julep.md)
+* [Welcome to Julep](README.md)
 * [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
+* [Motivation](<README (1).md>)
 
 ## 📖 Concepts
 
-* [LAME](concepts/lame.md)
 * [Agents](concepts/agents.md)
 * [Memory](concepts/memory.md)
+* [LAME](concepts/lame.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
@@ -30,11 +30,27 @@
 
 ## 🔍 FAQs
 
-* [General Overview](faqs/general-overview.md)
+* [General Questions](faqs/general-overview.md)
 * [Agent Studio](faqs/agent-prototyping.md)
 * [Memory and Learning](faqs/memory-and-learning.md)
 * [Sessions and Tasks](faqs/sessions-and-tasks.md)
 * [Technical Details](faqs/technical-details.md)
+
+## 🛠️ SDKs
+
+* [Available SDKs](sdks/available-sdks.md)
+* [Python SDK](sdks/python-sdk-docs/README.md)
+  * [Client](sdks/python-sdk-docs/client.md)
+  * [Agents](sdks/python-sdk-docs/agent.md)
+  * [Users](sdks/python-sdk-docs/user.md)
+  * [Sessions](sdks/python-sdk-docs/session.md)
+  * [Memories](sdks/python-sdk-docs/memory.md)
+  * [Docs](sdks/python-sdk-docs/doc.md)
+  * [Tools](sdks/python-sdk-docs/tool.md)
+  * [API](sdks/python-sdk-docs/client-1.md)
+* [JS SDK](sdks/js-sdk-docs/README.md)
+  * [Client](sdks/js-sdk-docs/client.julepapiclient-1.md)
+  * [Modules](sdks/js-sdk-docs/modules.md)
 
 ## 📖 API REFERENCE
 
@@ -50,20 +66,10 @@
   * [Chat Completions](api-reference/model-api/model-api.md)
   * [Completions (Advanced)](api-reference/model-api/model-api-1.md)
   * [Generation Parameters](api-reference/model-api/generation-parameters.md)
-* [Python SDK](python-sdk-docs/README.md)
-  * [Client](python-sdk-docs/julep/client.md)
-  * [Agents](python-sdk-docs/julep/managers/agent.md)
-  * [Users](python-sdk-docs/julep/managers/user.md)
-  * [Sessions](python-sdk-docs/julep/managers/session.md)
-  * [Memories](python-sdk-docs/julep/managers/memory.md)
-  * [Docs](python-sdk-docs/julep/managers/doc.md)
-  * [Tools](python-sdk-docs/julep/managers/tool.md)
-  * [API](python-sdk-docs/julep/api/client.md)
-* [JS SDK](js-sdk-docs/README.md)
-  * [Client](js-sdk-docs/classes/Client.JulepApiClient-1.md)
-  * [Modules](js-sdk-docs/modules.md)
 
 ***
 
+* [🫂 Discord Community](https://discord.gg/RdaGyrzpC8)
 * [PyPI package](https://pypi.org/project/julep/)
 * [npm package](https://www.npmjs.com/package/@julep/sdk)
+* [⭐ Github](https://github.com/julep-ai/agents)
