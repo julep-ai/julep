@@ -3,7 +3,7 @@
 {% hint style="info" %}
 At its core, Julep is a platform for creating and deploying agents[^1] powered by S1.
 
-Read more about about agents [here](../concepts/agents.md) and S1 [here](../concepts/lame.md).
+Read more about about agents [here](broken-reference) and S1 [here](broken-reference).
 {% endhint %}
 
 ### Agents Platform
