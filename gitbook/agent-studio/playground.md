@@ -14,14 +14,12 @@ This guide will walk you through the process of utilizing the Model Playground f
 
 To begin using the Model Playground, you must first sign up for an account. Follow these steps:
 
-<figure><img src="../.gitbook/assets/signup.jpg" alt="Sign up page"/></figure>
-
 1. Visit the [Model Playground platform](http://platform.julep.ai).
 2. Click on the "Sign in With google" button.
 
 ## Navigating the Dashboard
 
-<figure><img src="../.gitbook/assets/playground.jpg" alt="Playground page"/></figure>
+<figure><img src="../.gitbook/assets/playground.jpg" alt="Playground page"><figcaption></figcaption></figure>
 
 After logging in, you will be directed to the dashboard. Here, you can find various options and features available to you. Take some time to familiarize yourself with the layout and navigation.
 
@@ -29,9 +27,9 @@ After logging in, you will be directed to the dashboard. Here, you can find vari
 
 The Model Playground allows you to interact with Samantha. Follow these steps to effectively utilize it:
 
-<figure><img src="../.gitbook/assets/params.jpg" alt="Playground params"/></figure>
+<figure><img src="../.gitbook/assets/params.jpg" alt="Playground params"><figcaption></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/input.jpg" alt="Playground input"/></figure>
+<figure><img src="../.gitbook/assets/input.jpg" alt="Playground input"><figcaption></figcaption></figure>
 
 1. Select parameters such as temperature, max tokens and top p.
 2. Inputting text prompts
@@ -43,9 +41,9 @@ The Model Playground allows you to interact with Samantha. Follow these steps to
 
 ## Using the "continue" feature
 
-<figure><img src="../.gitbook/assets/continue.jpg" alt="Continue"/></figure>
+<figure><img src="../.gitbook/assets/continue.jpg" alt="Continue"><figcaption></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/continue-result.jpg" alt="Continue result"/></figure>
+<figure><img src="../.gitbook/assets/continue-result.jpg" alt="Continue result"><figcaption></figcaption></figure>
 
 1. To use the "continue" feature, select either the assistant or thought roles.
 2. Enter a prompt that you want to the model to fill.
@@ -53,9 +51,9 @@ The Model Playground allows you to interact with Samantha. Follow these steps to
 
 ## Copying and Sharing Results
 
-<figure><img src="../.gitbook/assets/copy-code.jpg" alt="Copy Code"/></figure>
+<figure><img src="../.gitbook/assets/copy-code.jpg" alt="Copy Code"><figcaption></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/copy-url.jpg" alt="Copy result"/></figure>
+<figure><img src="../.gitbook/assets/copy-url.jpg" alt="Copy result"><figcaption></figcaption></figure>
 
 If you're satisfied with the generated text, you can copy the code for use in your codebases or share it with others.+
 

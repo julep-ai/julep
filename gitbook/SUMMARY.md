@@ -5,34 +5,31 @@
 * [Welcome to Julep](README.md)
 * [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
 * [Motivation](<README (1).md>)
+* [Core Concepts](introduction/core-concepts.md)
 
 ## 🚀 Getting Started
 
 * [Agents Quickstart](getting-started/agents-quickstart.md)
-* [Agents Playground](getting-started/agents-playground.md)
 * [Model Quickstart](getting-started/python-setup.md)
-* [Model Playground](getting-started/playground.md)
-* [Self-hosting](getting-started/self-hosting.md)
-
-## 📖 Concepts
-
-* [Core Concepts](concepts/core-concepts.md)
-* [Agents](concepts/agents.md)
-* [Memory](concepts/memory.md)
-* [S1 Model](concepts/lame.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
 * [Overview](agents/overview.md)
 * [Tutorial](agents/tutorial.md)
+* [Self-hosting](agents/self-hosting.md)
 
-## 💁 S1
+## 💁 S1 Model
 
-* [Overview](s1/overview.md)
-* [Tutorial](s1/tutorial.md)
-* [Concepts](s1/context-sections.md)
-* [Capabilities](s1/capabilities/README.md)
-  * [Human-like conversations](s1/capabilities/capabilities.md)
+* [Overview](s1-model/overview.md)
+* [Tutorial](s1-model/tutorial.md)
+* [Concepts](s1-model/context-sections.md)
+* [Capabilities](s1-model/capabilities/README.md)
+  * [Human-like conversations](s1-model/capabilities/capabilities.md)
+
+## 🧪 Agent Studio
+
+* [Model Playground](agent-studio/playground.md)
+* [Agents Playground](agent-studio/agents-playground.md)
 
 ## 🛠️ SDKs
 
