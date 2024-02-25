@@ -42,6 +42,7 @@ mplcursors = "^0.5.3"
 datasets = "^2.17.0"
 imbalanced-learn = "^0.12.0"
 pyjwt = "^2.8.0"
+fire = "^0.5.0"
 
 [build-system]
 requires = ["poetry-core"]
