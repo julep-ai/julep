@@ -118,12 +118,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "api/sessions",
+          "sessions",
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -188,12 +190,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "api/sessions",
+          "sessions",
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.CreateSessionRequest.jsonOrThrow(request, {
@@ -265,12 +269,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "api/users",
+          "users",
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -332,12 +338,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "api/users",
+          "users",
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.CreateUserRequest.jsonOrThrow(request, {
@@ -409,12 +417,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "api/agents",
+          "agents",
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -480,12 +490,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          "api/agents",
+          "agents",
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.CreateAgentRequest.jsonOrThrow(request, {
@@ -549,12 +561,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/sessions/${sessionId}`,
+          `sessions/${sessionId}`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -614,12 +628,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/sessions/${sessionId}`,
+          `sessions/${sessionId}`,
         ),
         method: "PUT",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.UpdateSessionRequest.jsonOrThrow(request, {
@@ -683,12 +699,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/sessions/${sessionId}`,
+          `sessions/${sessionId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -749,12 +767,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/sessions/${sessionId}/suggestions`,
+          `sessions/${sessionId}/suggestions`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -824,12 +844,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/sessions/${sessionId}/history`,
+          `sessions/${sessionId}/history`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -897,12 +919,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/sessions/${sessionId}/chat`,
+          `sessions/${sessionId}/chat`,
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
           Accept: "application/json",
         },
         contentType: "application/json",
@@ -985,12 +1009,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/memories`,
+          `agents/${agentId}/memories`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -1052,12 +1078,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}`,
+          `users/${userId}`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1115,12 +1143,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}`,
+          `users/${userId}`,
         ),
         method: "PUT",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.UpdateUserRequest.jsonOrThrow(request, {
@@ -1184,12 +1214,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}`,
+          `users/${userId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1242,12 +1274,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}`,
+          `agents/${agentId}`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1305,12 +1339,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}`,
+          `agents/${agentId}`,
         ),
         method: "PUT",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.UpdateAgentRequest.jsonOrThrow(request, {
@@ -1374,12 +1410,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}`,
+          `agents/${agentId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1440,12 +1478,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/docs`,
+          `agents/${agentId}/docs`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -1510,12 +1550,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/docs`,
+          `agents/${agentId}/docs`,
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.CreateDoc.jsonOrThrow(request, {
@@ -1587,12 +1629,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}/docs`,
+          `users/${userId}/docs`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -1657,12 +1701,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}/docs`,
+          `users/${userId}/docs`,
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.CreateDoc.jsonOrThrow(request, {
@@ -1726,12 +1772,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/users/${userId}/docs/${docId}`,
+          `users/${userId}/docs/${docId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1784,12 +1832,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/docs/${docId}`,
+          `agents/${agentId}/docs/${docId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1842,12 +1892,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/memories/${memoryId}`,
+          `agents/${agentId}/memories/${memoryId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:
@@ -1908,12 +1960,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/tools`,
+          `agents/${agentId}/tools`,
         ),
         method: "GET",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         queryParameters: _queryParams,
@@ -1981,12 +2035,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/tools`,
+          `agents/${agentId}/tools`,
         ),
         method: "POST",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.CreateToolRequest.jsonOrThrow(request, {
@@ -2055,12 +2111,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/tools/${toolId}`,
+          `agents/${agentId}/tools/${toolId}`,
         ),
         method: "PUT",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         body: yield serializers.UpdateToolRequest.jsonOrThrow(request, {
@@ -2124,12 +2182,14 @@ class JulepApiClient {
             _a !== void 0
             ? _a
             : environments.JulepApiEnvironment.Default,
-          `api/agents/${agentId}/tools/${toolId}`,
+          `agents/${agentId}/tools/${toolId}`,
         ),
         method: "DELETE",
         headers: {
           Authorization: yield this._getAuthorizationHeader(),
           "X-Fern-Language": "JavaScript",
+          "X-Fern-Runtime": core.RUNTIME.type,
+          "X-Fern-Runtime-Version": core.RUNTIME.version,
         },
         contentType: "application/json",
         timeoutMs:

@@ -41,6 +41,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetcher = void 0;
 const form_data_1 = __importDefault(require("form-data"));
 const qs_1 = __importDefault(require("qs"));
+const runtime_1 = require("../runtime");
 const INITIAL_RETRY_DELAY = 1;
 const MAX_RETRY_DELAY = 60;
 const DEFAULT_MAX_RETRIES = 2;
@@ -68,10 +69,20 @@ function fetcherImpl(args) {
     if (args.body instanceof form_data_1.default) {
       // @ts-expect-error
       body = args.body;
+    } else if (args.body instanceof Uint8Array) {
+      body = args.body;
     } else {
       body = JSON.stringify(args.body);
     }
-    const fetchFn = typeof fetch == "function" ? fetch : require("node-fetch");
+    // In Node.js environments, the SDK always uses`node-fetch`.
+    // If not in Node.js the SDK uses global fetch if available,
+    // and falls back to node-fetch.
+    const fetchFn =
+      runtime_1.RUNTIME.type === "node"
+        ? require("node-fetch")
+        : typeof fetch == "function"
+          ? fetch
+          : require("node-fetch");
     const makeRequest = () =>
       __awaiter(this, void 0, void 0, function* () {
         const controller = new AbortController();

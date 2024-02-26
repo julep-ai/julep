@@ -5,7 +5,7 @@ from julep import AsyncClient, Client
 @fixture(scope="global")
 def client():
     # Mock server base url
-    base_url = "http://localhost:8080"
+    base_url = "http://localhost:8080/api"
     client = Client(api_key="thisisnotarealapikey", base_url=base_url)
 
     return client
@@ -14,7 +14,7 @@ def client():
 @fixture
 def async_client():
     # Mock server base url
-    base_url = "http://localhost:8080"
+    base_url = "http://localhost:8080/api"
     client = AsyncClient(api_key="thisisnotarealapikey", base_url=base_url)
 
     return client
