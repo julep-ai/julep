@@ -14,7 +14,7 @@ const {
 } = require("../api/serialization/types");
 const { UUID } = require("uuid");
 const { isValidUuid4 } = require("./utils");
-const { BaseManager } = required("./base");
+const { BaseManager } = require("./base");
 
 class BaseSessionsManager extends BaseManager {
   /**
@@ -31,11 +31,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {string} situation
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async _create(
-    userId,
-    agentId,
-    situation
-  ) {
+  async _create(userId, agentId, situation) {
     if (!isValidUuid4(userId)) {
       throw new Error("userId must be a valid UUID v4");
     }
@@ -54,10 +50,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {number} offset
    * @returns {Promise<ListSessionsResponse>}
    */
-  async _listItems(
-    limit,
-    offset
-  ) {
+  async _listItems(limit, offset) {
     return this.apiClient
       .listSessions(limit, offset)
       .catch((error) => Promise.reject(error));
@@ -82,10 +75,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {string} situation
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async _update(
-    sessionId,
-    situation
-  ) {
+  async _update(sessionId, situation) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
@@ -134,7 +124,7 @@ class BaseSessionsManager extends BaseManager {
     temperature,
     topP,
     recall,
-    remember
+    remember,
   ) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
@@ -159,7 +149,7 @@ class BaseSessionsManager extends BaseManager {
         temperature,
         topP,
         recall,
-        remember
+        remember,
       )
       .catch((error) => Promise.reject(error));
   }
@@ -170,11 +160,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {number} offset
    * @returns {Promise<GetSuggestionsResponse>}
    */
-  async _suggestions(
-    sessionId,
-    limit,
-    offset
-  ) {
+  async _suggestions(sessionId, limit, offset) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
@@ -190,11 +176,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {number} offset
    * @returns {Promise<GetHistoryResponse>}
    */
-  async _history(
-    sessionId,
-    limit,
-    offset
-  ) {
+  async _history(sessionId, limit, offset) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
@@ -211,7 +193,7 @@ class SessionsManager extends BaseSessionsManager {
    * @returns {Promise<Session>}
    */
   async get(id) {
-    return await this._get(id)
+    return await this._get(id);
   }
 
   /**
@@ -220,16 +202,8 @@ class SessionsManager extends BaseSessionsManager {
    * @param {string} situation
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({
-    userId,
-    agentId,
-    situation
-  }) {
-    return await this._create(
-      userId,
-      agentId,
-      situation
-    )
+  async create({ userId, agentId, situation }) {
+    return await this._create(userId, agentId, situation);
   }
 
   /**
@@ -237,10 +211,7 @@ class SessionsManager extends BaseSessionsManager {
    * @param {number} offset
    * @returns {Promise<ListSessionsResponse>}
    */
-  async list({
-    limit = 100,
-    offset = 0
-  }) {
+  async list({ limit = 100, offset = 0 }) {
     const response = await this._listItems(limit, offset);
     return response.items;
   }
@@ -258,10 +229,7 @@ class SessionsManager extends BaseSessionsManager {
    * @param {string} situation
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update({
-    sessionId,
-    situation
-  }) {
+  async update({ sessionId, situation }) {
     return await this._update(sessionId, situation);
   }
 
@@ -304,7 +272,7 @@ class SessionsManager extends BaseSessionsManager {
     temperature,
     topP,
     recall,
-    remember
+    remember,
   }) {
     return await this._chat(
       sessionId,
@@ -324,8 +292,8 @@ class SessionsManager extends BaseSessionsManager {
       temperature,
       topP,
       recall,
-      remember
-    )
+      remember,
+    );
   }
 
   /**
@@ -334,11 +302,7 @@ class SessionsManager extends BaseSessionsManager {
    * @param {number} offset
    * @returns {Promise<GetSuggestionsResponse>}
    */
-  async suggestions({
-    sessionId,
-    limit,
-    offset
-  }) {
+  async suggestions({ sessionId, limit, offset }) {
     return await this._suggestions(sessionId, limit, offset);
   }
 
@@ -348,11 +312,7 @@ class SessionsManager extends BaseSessionsManager {
    * @param {number} offset
    * @returns {Promise<GetHistoryResponse>}
    */
-  async history({
-    sessionId,
-    limit,
-    offset
-  }) {
+  async history({ sessionId, limit, offset }) {
     return await this._history(sessionId, limit, offset);
   }
 }

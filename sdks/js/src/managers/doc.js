@@ -16,13 +16,11 @@ class BaseDocsManager extends BaseManager {
    * @param {number} [offset]
    * @returns {Promise<GetAgentDocsResponse>}
    */
-  async _get(
-    agentId,
-    userId,
-    limit,
-    offset,
-  ) {
-    if ((agentId && isValidUuid4(agentId)) || (userId && isValidUuid4(userId)) && !(agentId && userId)) {
+  async _get(agentId, userId, limit, offset) {
+    if (
+      (agentId && isValidUuid4(agentId)) ||
+      (userId && isValidUuid4(userId) && !(agentId && userId))
+    ) {
       if (agentId) {
         return this.apiClient
           .getAgentDocs(agentId, limit, offset)
@@ -34,7 +32,9 @@ class BaseDocsManager extends BaseManager {
           .catch((error) => Promise.reject(error));
       }
     } else {
-      throw new Error("One and only one of userId or agentId must be given and must be valid UUID v4");
+      throw new Error(
+        "One and only one of userId or agentId must be given and must be valid UUID v4",
+      );
     }
   }
 
@@ -44,12 +44,11 @@ class BaseDocsManager extends BaseManager {
    * @param {DocDict} doc
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async _create(
-    agentId,
-    userId,
-    doc,
-  ) {
-    if ((agentId && isValidUuid4(agentId)) || (userId && isValidUuid4(userId)) && !(agentId && userId)) {
+  async _create(agentId, userId, doc) {
+    if (
+      (agentId && isValidUuid4(agentId)) ||
+      (userId && isValidUuid4(userId) && !(agentId && userId))
+    ) {
       const request = new CreateDoc(doc); // Assuming CreateDoc can be instantiated like this, adjust accordingly
 
       if (agentId) {
@@ -63,7 +62,9 @@ class BaseDocsManager extends BaseManager {
           .catch((error) => Promise.reject(error));
       }
     } else {
-      throw new Error("One and only one of userId or agentId must be given and must be valid UUID v4");
+      throw new Error(
+        "One and only one of userId or agentId must be given and must be valid UUID v4",
+      );
     }
   }
 
@@ -73,12 +74,11 @@ class BaseDocsManager extends BaseManager {
    * @param {string | UUID} docId
    * @returns {Promise<void>}
    */
-  async _delete(
-    agentId,
-    userId,
-    docId,
-  ) {
-    if ((agentId && isValidUuid4(agentId)) || (userId && isValidUuid4(userId)) && !(agentId && userId)) {
+  async _delete(agentId, userId, docId) {
+    if (
+      (agentId && isValidUuid4(agentId)) ||
+      (userId && isValidUuid4(userId) && !(agentId && userId))
+    ) {
       if (agentId) {
         return this.apiClient
           .deleteAgentDoc(agentId, docId)
@@ -90,7 +90,9 @@ class BaseDocsManager extends BaseManager {
           .catch((error) => Promise.reject(error));
       }
     } else {
-      throw new Error("One and only one of userId or agentId must be given and must be valid UUID v4");
+      throw new Error(
+        "One and only one of userId or agentId must be given and must be valid UUID v4",
+      );
     }
   }
 }
@@ -103,12 +105,7 @@ class DocsManager extends BaseDocsManager {
    * @param {number} [offset]
    * @returns {Promise<Doc[]>}
    */
-  async get({
-    agentId,
-    userId,
-    limit,
-    offset,
-  }) {
+  async get({ agentId, userId, limit, offset }) {
     return (await this._get(agentId, userId, limit, offset)).items;
   }
 
@@ -118,11 +115,7 @@ class DocsManager extends BaseDocsManager {
    * @param {DocDict} doc
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({
-    agentId,
-    userId,
-    doc,
-  }) {
+  async create({ agentId, userId, doc }) {
     return await this._create(agentId, userId, doc);
   }
 
@@ -132,11 +125,7 @@ class DocsManager extends BaseDocsManager {
    * @param {string | UUID} docId
    * @returns {Promise<void>}
    */
-  async delete({
-    agentId,
-    userId,
-    docId,
-  }) {
+  async delete({ agentId, userId, docId }) {
     return await this._delete(agentId, userId, docId);
   }
 }

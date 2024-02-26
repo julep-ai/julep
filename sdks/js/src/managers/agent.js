@@ -10,8 +10,8 @@ const {
   AgentDefaultSettings,
 } = require("../api/serialization/types");
 const { UUID } = require("uuid"); // Use uuid package from npm for UUID types
-const { isValidUuid4 } = require('./utils');
-const { BaseManager } = require('./base');
+const { isValidUuid4 } = require("./utils");
+const { BaseManager } = require("./base");
 
 class BaseAgentsManager extends BaseManager {
   async _get(id) {
@@ -20,7 +20,7 @@ class BaseAgentsManager extends BaseManager {
     }
 
     return this.apiClient.getAgent(id).catch((error) => Promise.reject(error));
-  };
+  }
 
   /**
    * @param {string} name
@@ -40,28 +40,26 @@ class BaseAgentsManager extends BaseManager {
     tools = [],
     functions = [],
     defaultSettings = {},
-    model = 'julep-ai/samantha-1-turbo',
+    model = "julep-ai/samantha-1-turbo",
     docs = [],
   ) {
     // Cast instructions to Instruction objects
     const instructionsList =
-      typeof instructions[0] === 'string'
+      typeof instructions[0] === "string"
         ? instructions.map((instruction) => new Instruction(instruction))
         : instructions;
 
     // Ensure that only functions or tools are provided
     if (functions.length > 0 && tools.length > 0) {
-      throw new Error('Only functions or tools can be provided');
+      throw new Error("Only functions or tools can be provided");
     }
 
     // Cast tools/functions to CreateToolRequest objects
     const toolsList =
       tools.length > 0
         ? tools.map((tool) =>
-          typeof tool === 'object'
-            ? new CreateToolRequest(tool)
-            : tool,
-        )
+            typeof tool === "object" ? new CreateToolRequest(tool) : tool,
+          )
         : [];
 
     // Cast defaultSettings to AgentDefaultSettings
@@ -82,21 +80,18 @@ class BaseAgentsManager extends BaseManager {
         docsList,
       })
       .catch((error) => Promise.reject(error));
-  };
+  }
 
   /**
    * @param {number} limit
    * @param {number} offset
    * @returns {Promise<ListAgentsResponse>}
    */
-  async _listItems(
-    limit,
-    offset,
-  ) {
+  async _listItems(limit, offset) {
     return this.apiClient
       .listAgents(limit, offset)
       .catch((error) => Promise.reject(error));
-  };
+  }
 
   /**
    * @param {string | UUID} agentId
@@ -121,21 +116,14 @@ class BaseAgentsManager extends BaseManager {
    * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async _update(
-    agentId,
-    about,
-    instructions,
-    name,
-    model,
-    defaultSettings,
-  ) {
+  async _update(agentId, about, instructions, name, model, defaultSettings) {
     if (!isValidUuid4(agentId)) {
       throw new Error("agentId must be a valid UUID v4");
     }
 
     // Cast instructions to Instruction objects
     const instructionsList =
-      typeof instructions[0] === 'string'
+      typeof instructions[0] === "string"
         ? instructions.map((instruction) => new Instruction(instruction))
         : instructions;
 
@@ -151,7 +139,7 @@ class BaseAgentsManager extends BaseManager {
         defaultSettingsObj,
       })
       .catch((error) => Promise.reject(error));
-  };
+  }
 }
 
 class AgentsManager extends BaseAgentsManager {
@@ -161,7 +149,7 @@ class AgentsManager extends BaseAgentsManager {
    */
   async get(id) {
     return await this._get(id);
-  };
+  }
 
   /**
    * @param {string} name
@@ -181,7 +169,7 @@ class AgentsManager extends BaseAgentsManager {
     tools = [],
     functions = [],
     defaultSettings = {},
-    model = 'julep-ai/samantha-1-turbo',
+    model = "julep-ai/samantha-1-turbo",
     docs = [],
   }) {
     return await this._create(
@@ -194,7 +182,7 @@ class AgentsManager extends BaseAgentsManager {
       model,
       docs,
     );
-  };
+  }
 
   /**
    * @param {number} limit
@@ -204,7 +192,7 @@ class AgentsManager extends BaseAgentsManager {
   async list({ limit = 100, offset = 0 } = {}) {
     const { items } = await this._listItems(limit, offset);
     return items;
-  };
+  }
 
   /**
    * @param {string | UUID} agentId
@@ -212,7 +200,7 @@ class AgentsManager extends BaseAgentsManager {
    */
   async delete(agentId) {
     return await this._delete(agentId);
-  };
+  }
 
   /**
    * @param {string | UUID} agentId
@@ -223,14 +211,7 @@ class AgentsManager extends BaseAgentsManager {
    * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update({
-    agentId,
-    about,
-    instructions,
-    name,
-    model,
-    defaultSettings,
-  }) {
+  async update({ agentId, about, instructions, name, model, defaultSettings }) {
     return await this._update(
       agentId,
       about,
@@ -239,7 +220,7 @@ class AgentsManager extends BaseAgentsManager {
       model,
       defaultSettings,
     );
-  };
+  }
 }
 
 module.exports = { BaseAgentsManager, AgentsManager };
