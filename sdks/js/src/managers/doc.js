@@ -1,23 +1,21 @@
-// doc.ts
-
-import { UUID } from "uuid"; // Assuming `uuid` package is used for UUID types
-import {
-    CreateDoc,
-    Doc,
-    ResourceCreatedResponse,
-    GetAgentDocsResponse,
-} from "../api/types"; // Adjust the import paths based on your project structure
-import { BaseManager } from "./base";
-import { is_valid_uuid4 } from "./utils"; // You'll need to implement or replace this utility
-import { DocDict } from "./types"; // Ensure you have the corresponding type definitions
+const { UUID } = require("uuid");
+const { BaseManager } = require("./base");
+const { is_valid_uuid4 } = require("./utils");
 
 class BaseDocsManager extends BaseManager {
+    /**
+     * @param {string | UUID} agentId
+     * @param {string | UUID} userId
+     * @param {number} [limit]
+     * @param {number} [offset]
+     * @returns {Promise<GetAgentDocsResponse>}
+     */
     async _get(
-        agentId?: string | UUID,
-        userId?: string | UUID,
-        limit?: number,
-        offset?: number,
-    ): Promise<GetAgentDocsResponse> {
+        agentId,
+        userId,
+        limit,
+        offset,
+    ) {
         if ((agentId && is_valid_uuid4(agentId)) || (userId && is_valid_uuid4(userId)) && !(agentId && userId)) {
             if (agentId) {
                 return this.apiClient.getAgentDocs(agentId, limit, offset);
@@ -30,13 +28,19 @@ class BaseDocsManager extends BaseManager {
         }
     }
 
+    /**
+     * @param {string | UUID} agentId
+     * @param {string | UUID} userId
+     * @param {DocDict} doc
+     * @returns {Promise<ResourceCreatedResponse>}
+     */
     async _create(
-        agentId?: string | UUID,
-        userId?: string | UUID,
-        doc: DocDict,
-    ): Promise<ResourceCreatedResponse> {
+        agentId,
+        userId,
+        doc,
+    ) {
         if ((agentId && is_valid_uuid4(agentId)) || (userId && is_valid_uuid4(userId)) && !(agentId && userId)) {
-            const request: CreateDoc = new CreateDoc(doc); // Assuming CreateDoc can be instantiated like this, adjust accordingly
+            const request = new CreateDoc(doc); // Assuming CreateDoc can be instantiated like this, adjust accordingly
 
             if (agentId) {
                 return this.apiClient.createAgentDoc(agentId, request);
@@ -49,11 +53,17 @@ class BaseDocsManager extends BaseManager {
         }
     }
 
+    /**
+     * @param {string | UUID} agentId
+     * @param {string | UUID} userId
+     * @param {string | UUID} docId
+     * @returns {Promise<void>}
+     */
     async _delete(
-        agentId?: string | UUID,
-        userId?: string | UUID,
-        docId: string | UUID,
-    ): Promise<void> {
+        agentId,
+        userId,
+        docId,
+    ) {
         if ((agentId && is_valid_uuid4(agentId)) || (userId && is_valid_uuid4(userId)) && !(agentId && userId)) {
             if (agentId) {
                 return this.apiClient.deleteAgentDoc(agentId, docId);
@@ -68,28 +78,49 @@ class BaseDocsManager extends BaseManager {
 }
 
 class DocsManager extends BaseDocsManager {
+  /**
+   * @param {string | UUID} agentId
+   * @param {string | UUID} userId
+   * @param {number} [limit]
+   * @param {number} [offset]
+   * @returns {Promise<Doc[]>}
+   */
     async get(
-        agentId?: string | UUID,
-        userId?: string | UUID,
-        limit?: number,
-        offset?: number,
-    ): Promise<Doc[]> {
+        agentId,
+        userId,
+        limit,
+        offset,
+    ){
         return (await this._get(agentId, userId, limit, offset)).items;
     }
 
+    /**
+     * @param {string | UUID} agentId
+     * @param {string | UUID} userId
+     * @param {DocDict} doc
+     * @returns {Promise<ResourceCreatedResponse>}
+     */
     async create(
-        agentId?: string | UUID,
-        userId?: string | UUID,
-        doc: DocDict,
-    ): Promise<ResourceCreatedResponse> {
+        agentId,
+        userId,
+        doc,
+    ) {
         return await this._create(agentId, userId, doc);
     }
 
+    /**
+     * @param {string | UUID} agentId
+     * @param {string | UUID} userId
+     * @param {string | UUID} docId
+     * @returns {Promise<void>}
+     */
     async delete(
-        docId: string | UUID,
-        agentId?: string | UUID,
-        userId?: string | UUID,
-    ): Promise<void> {
+        agentId,
+        userId,
+        docId,
+    ) {
         return await this._delete(agentId, userId, docId);
     }
 }
+
+module.exports = { BaseDocsManager, DocsManager };
