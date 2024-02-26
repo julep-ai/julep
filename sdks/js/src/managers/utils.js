@@ -8,8 +8,8 @@ const { validate: uuidValidate, version: uuidVersion } = require("uuid");
  * @param {string} uuidToTest - String to test for valid UUID v4.
  * @returns {boolean} True if the input is a valid UUID v4, otherwise False.
  */
-function is_valid_uuid4(uuidToTest) {
+function isValidUuid4(uuidToTest) {
   return uuidValidate(uuidToTest) && uuidVersion(uuidToTest) === 4;
 }
 
-module.exports = { is_valid_uuid4 };
+module.exports = { isValidUuid4 };

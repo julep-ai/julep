@@ -41,10 +41,12 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "start_prism": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
-    "kill_prism": "kill $(pgrep -f 'prism .*')",
+    "mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080",
+    "start_mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
+    "kill_mock_api": "kill $(pgrep -f 'prism .*')",
     "format": "prettier -w .",
     "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts",
+    "test-inspect": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test": "jest"
   }
 }

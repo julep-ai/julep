@@ -1,8 +1,6 @@
 // memory.js
-const { UUID } = require("uuid"); // Use uuid package from npm for UUID types
-const { Memory, GetAgentMemoriesResponse } = require("../api/serialization/types");
 const { BaseManager } = require("./base");
-const { is_valid_uuid4 } = require("./utils"); // Assuming this utility function is implemented
+const { isValidUuid4 } = require("./utils");
 
 /**
  * @abstract
@@ -19,12 +17,11 @@ class BaseMemoriesManager extends BaseManager {
    * @returns {Promise<GetAgentMemoriesResponse>}
    */
   async _list(agentId, query, types, userId, limit, offset) {
-    if (!is_valid_uuid4(agentId)) {
+    if (!isValidUuid4(agentId)) {
       throw new Error("agentId must be a valid UUID v4");
     }
 
-    return this.apiClient.getAgentMemories({
-      agentId,
+    return this.apiClient.getAgentMemories(agentId, {
       query,
       types,
       userId,
@@ -47,7 +44,7 @@ class MemoriesManager extends BaseMemoriesManager {
    * @param {number} [offset]
    * @returns {Promise<Memory[]>}
    */
-  async list(agentId, query, types, userId, limit, offset) {
+  async list({ agentId, query, types, userId, limit, offset }) {
     const response = await this._list(
       agentId.toString(),
       query,

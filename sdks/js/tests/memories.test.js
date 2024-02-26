@@ -1,4 +1,4 @@
-// tests.js
+// memories.test.sjs
 
 const { v4: uuidv4 } = require("uuid");
 
@@ -24,6 +24,6 @@ describe("Julep Client Tests", () => {
     });
 
     expect(response.length).toBeGreaterThan(0);
-    expect(response[0]).toBeInstanceOf(Memory);
+    expect(response[0]).toHaveProperty("createdAt");
   });
 });
