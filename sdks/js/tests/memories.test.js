@@ -1,7 +1,8 @@
 // tests.js
 
 const { v4: uuidv4 } = require("uuid");
-const { Memory } = require("../api/serialization/types/Memory");
+
+const { Memory } = require("../src/api/serialization/types/Memory");
 const { setupClient } = require("./fixtures");
 
 describe("Julep Client Tests", () => {

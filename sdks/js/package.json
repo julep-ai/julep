@@ -27,6 +27,7 @@
   "types": "src/index.d.ts",
   "dependencies": {
     "form-data": "^4.0.0",
+    "openai": "^4.28.0",
     "qs": "^6.11.2",
     "url-join": "^4.0.1",
     "uuid": "^9.0.1"
