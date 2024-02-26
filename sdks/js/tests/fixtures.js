@@ -4,8 +4,9 @@ const { Client } = require("../");
 
 function setupClient() {
   // Mock server base URL
-  const baseURL = "http://localhost:8080";
-  const client = new Client("thisisnotarealapikey", baseURL);
+  const baseUrl = "http://localhost:8080";
+  const apiKey = "thisisnotarealapikey";
+  const client = new Client({ apiKey, baseUrl });
 
   return client;
 }

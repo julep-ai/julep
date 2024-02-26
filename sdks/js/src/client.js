@@ -17,7 +17,7 @@ class Client {
    * @param {string} [apiKey=JULEP_API_KEY] - API key for the Julep API
    * @param {string} [baseUrl=JULEP_API_URL] - Base URL for the Julep API
    */
-  constructor(apiKey = JULEP_API_KEY, baseUrl = JULEP_API_URL) {
+  constructor({ apiKey = JULEP_API_KEY, baseUrl = JULEP_API_URL }) {
     if (!apiKey || !baseUrl) {
       throw new Error(
         "apiKey and baseUrl must be provided or set as environment variables",
@@ -25,11 +25,10 @@ class Client {
     }
 
     /** @private */
-    const environment = { Default: baseUrl };
-    this._apiClient = new JulepApiClient({ apiKey, environment });
+    this._apiClient = new JulepApiClient({ apiKey, environment: baseUrl });
 
     /** @type {OpenAI} */
-    this._openaiClient = new OpenAI({ apiKey, baseUrl: `${baseUrl}/v1`});
+    this._openaiClient = new OpenAI({ apiKey, baseUrl: `${baseUrl}/v1` });
 
     /** @type {AgentsManager} */
     // this.agents = new AgentsManager(this._apiClient);
