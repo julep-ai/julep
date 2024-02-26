@@ -128,6 +128,14 @@
     ) -%}
   {%- endfor -%}
 
+  {#- Strip trailing single space -#}
+  {%- if (content_ns.value | length) > 1
+      and content_ns.value[-1] == ' '
+      and content_ns.value[-2] != ' '
+  -%}
+    {%- set content_ns.value = content_ns.value[:-1] -%}
+  {%- endif -%}
+
 {{ newline_unless_first() }}<|im_start|>
   {%- if role == 'system' -%}{{ name }}
   {%- elif role == 'user' -%}person{{ ' (' + name + ')' if name else '' }}
