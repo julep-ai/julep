@@ -1,4 +1,5 @@
 from typing import Optional
+from urllib.parse import urlparse
 
 from beartype import beartype
 from openai import AsyncOpenAI, OpenAI
@@ -22,6 +23,8 @@ from .managers.tool import ToolsManager, AsyncToolsManager
 
 # See Note above
 __all__ = ["AsyncJulepApi", "JulepApi", "Client", "AsyncClient"]
+
+get_base_url = lambda url: f"{urlparse(url).scheme}://{urlparse(url).netloc}"
 
 
 class Client:
@@ -108,9 +111,10 @@ class Client:
         self.tools = ToolsManager(api_client=self._api_client)
 
         # Set up the OpenAI client
+        openai_base_url = f"{get_base_url(base_url)}/v1"
         self._openai_client = OpenAI(
             api_key=api_key,
-            base_url=f"{base_url}/v1",
+            base_url=openai_base_url,
             *args,
             **kwargs,
         )
@@ -220,9 +224,10 @@ class AsyncClient:
         self.tools = AsyncToolsManager(api_client=self._api_client)
 
         # Set up the OpenAI client
+        openai_base_url = f"{get_base_url(base_url)}/v1"
         self._openai_client = AsyncOpenAI(
             api_key=api_key,
-            base_url=f"{base_url}/v1",
+            base_url=openai_base_url,
             *args,
             **kwargs,
         )
