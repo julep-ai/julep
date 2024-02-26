@@ -2,7 +2,7 @@
 
 const { OpenAI, Chat, Completions } = require("openai");
 // const { AgentsManager } = require("./managers/agent");
-// const { UsersManager } = require("./managers/user");
+const { UsersManager } = require("./managers/user");
 // const { DocsManager } = require("./managers/doc");
 const { MemoriesManager } = require("./managers/memory");
 // const { SessionsManager } = require("./managers/session");
@@ -34,7 +34,7 @@ class Client {
     // this.agents = new AgentsManager(this._apiClient);
 
     /** @type {UsersManager} */
-    // this.users = new UsersManager(this._apiClient);
+    this.users = new UsersManager(this._apiClient);
 
     /** @type {SessionsManager} */
     // this.sessions = new SessionsManager(this._apiClient);

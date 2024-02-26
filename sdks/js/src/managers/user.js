@@ -9,7 +9,7 @@ const {
 const { v4: uuidv4 } = require("uuid");
 
 const { BaseManager } = require("./base");
-const { isValidUuid } = require("./utils");
+const { isValidUuid4 } = require("./utils");
 
 /**
  * @extends BaseManager
@@ -20,7 +20,7 @@ class BaseUsersManager extends BaseManager {
    * @returns {Promise<User>}
    */
   _get(id) {
-    if (!isValidUuid(id)) {
+    if (!isValidUuid4(id)) {
       throw new Error("id must be a valid UUID v4");
     }
     return this.apiClient.getUser(id).catch((error) => Promise.reject(error));
@@ -35,7 +35,7 @@ class BaseUsersManager extends BaseManager {
   _create(name, about, docs = []) {
     const docsPrepared = docs.map((doc) => new CreateDoc(doc));
     return this.apiClient
-      .createUser(name, about, docsPrepared)
+      .createUser({ name, about, docsPrepared })
       .catch((error) => Promise.reject(error));
   }
 
@@ -55,7 +55,7 @@ class BaseUsersManager extends BaseManager {
    * @returns {Promise<void>}
    */
   _delete(userId) {
-    if (!isValidUuid(userId)) {
+    if (!isValidUuid4(userId)) {
       throw new Error("id must be a valid UUID v4");
     }
     return this.apiClient
@@ -70,11 +70,11 @@ class BaseUsersManager extends BaseManager {
    * @returns {Promise<ResourceUpdatedResponse>}
    */
   _update(userId, about, name) {
-    if (!isValidUuid(userId)) {
+    if (!isValidUuid4(userId)) {
       throw new Error("id must be a valid UUID v4");
     }
     return this.apiClient
-      .updateUser(userId, about, name)
+      .updateUser(userId, { about, name })
       .catch((error) => Promise.reject(error));
   }
 }
@@ -94,7 +94,7 @@ class UsersManager extends BaseUsersManager {
    * @param {DocDict[]} [docs=[]]
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create(name, about, docs = []) {
+  async create({ name, about, docs = [] }) {
     return await this._create(name, about, docs);
   }
 
@@ -103,7 +103,7 @@ class UsersManager extends BaseUsersManager {
    * @param {number} [offset]
    * @returns {Promise<User[]>}
    */
-  async list(limit, offset) {
+  async list({ limit = 100, offset = 0 } = {}) {
     const response = await this._listItems(limit, offset);
     return response.items;
   }
@@ -113,7 +113,8 @@ class UsersManager extends BaseUsersManager {
    * @returns {Promise<void>}
    */
   async delete(userId) {
-    return await this._delete(userId);
+    await this._delete(userId);
+    return null;
   }
 
   /**
@@ -122,7 +123,7 @@ class UsersManager extends BaseUsersManager {
    * @param {string} [name]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(userId, about, name) {
+  async update({ userId, about, name } = {}) {
     return await this._update(userId, about, name);
   }
 }
