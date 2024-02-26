@@ -17,7 +17,7 @@ describe("Julep Client Tests", () => {
       name: "test agent",
       about: "test agent about",
       instructions: ["test agent instructions"],
-      default_settings: { temperature: 0.5 },
+      defaultSettings: { temperature: 0.5 },
     });
 
     expect(response).toHaveProperty("createdAt");
@@ -31,12 +31,13 @@ describe("Julep Client Tests", () => {
   });
 
   test("agents.update", async () => {
-    const response = await client.agents.update({
-      agent_id: uuidv4(),
+    const agentId = uuidv4();
+
+    const response = await client.agents.update(agentId, {
       name: "test user",
       about: "test user about",
       instructions: ["test agent instructions"],
-      default_settings: { temperature: 0.5 },
+      defaultSettings: { temperature: 0.5 },
       model: "some model",
     });
 

@@ -15,14 +15,14 @@ describe("Julep Client Tests", () => {
     const response = await client.docs.get({ agentId: uuidv4() });
 
     expect(response.length).toBeGreaterThan(0);
-    expect(response[0]).toHaveProperty("createdAt");
+    expect(response[0]).toHaveProperty("id");
   });
 
   test("user docs.get", async () => {
     const response = await client.docs.get({ userId: uuidv4() });
 
     expect(response.length).toBeGreaterThan(0);
-    expect(response[0]).toHaveProperty("createdAt");
+    expect(response[0]).toHaveProperty("id");
   });
 
   test("agent docs.create", async () => {
@@ -31,7 +31,7 @@ describe("Julep Client Tests", () => {
       doc: { title: "test title", content: "test content" },
     });
 
-    expect(response).toHaveProperty("createdAt");
+    expect(response).toHaveProperty("id");
   });
 
   test("user docs.create", async () => {
