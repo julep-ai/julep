@@ -2,7 +2,14 @@
   "name": "@julep/sdk",
   "version": "0.2.1",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
+  "keywords": [
+    "julep-ai",
+    "julep",
+    "agents",
+    "llms",
+    "memory",
+    "ai"
+  ],
   "author": {
     "name": "Julep",
     "email": "developers@julep.ai"
@@ -24,12 +31,16 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "prettier": "^3.2.4",
     "typedoc": "^0.25.7",
     "typedoc-plugin-markdown": "^3.17.1"
   },
   "scripts": {
+    "start_prism": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
+    "kill_prism": "kill $(pgrep -f 'prism .*')",
     "format": "prettier -w .",
-    "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts"
+    "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts",
+    "test": "jest"
   }
 }
