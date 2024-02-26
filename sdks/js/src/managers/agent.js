@@ -1,28 +1,39 @@
+const {
+  Agent,
+  CreateDoc,
+  ResourceCreatedResponse,
+  ResourceUpdatedResponse,
+  ListAgentsResponse,
+  GetAgentMemoriesResponse,
+  Instruction,
+  CreateToolRequest,
+  AgentDefaultSettings,
+} = require("../api/serialization/types");
 const { UUID } = require("uuid"); // Use uuid package from npm for UUID types
-const { is_valid_uuid4 } = require('./utils');
+const { isValidUuid4 } = require('./utils');
 const { BaseManager } = require('./base');
 
 class BaseAgentsManager extends BaseManager {
   async _get(id) {
-    if (!is_valid_uuid4(id)) {
+    if (!isValidUuid4(id)) {
       throw new Error("id must be a valid UUID v4");
     }
 
-    return this.apiClient.getAgent(id);
+    return this.apiClient.getAgent(id).catch((error) => Promise.reject(error));
   };
 
   /**
    * @param {string} name
    * @param {string} about
-   * @param {Instruction[] | InstructionDict[]} instructions
-   * @param {ToolDict[] | CreateToolRequest[]} [tools]
+   * @param {Instruction[]} instructions
+   * @param {CreateToolRequest[]} [tools]
    * @param {FunctionDefDict[]} [functions]
-   * @param {DefaultSettingsDict} [defaultSettings]
+   * @param {AgentDefaultSettings} [defaultSettings]
    * @param {string} [model]
    * @param {DocDict[]} [docs]
    * @returns {Promise<GetAgentMemoriesResponse>}
    */
-  async _create (
+  async _create(
     name,
     about,
     instructions,
@@ -47,10 +58,10 @@ class BaseAgentsManager extends BaseManager {
     const toolsList =
       tools.length > 0
         ? tools.map((tool) =>
-            typeof tool === 'object'
-              ? new CreateToolRequest(tool)
-              : tool,
-          )
+          typeof tool === 'object'
+            ? new CreateToolRequest(tool)
+            : tool,
+        )
         : [];
 
     // Cast defaultSettings to AgentDefaultSettings
@@ -59,28 +70,32 @@ class BaseAgentsManager extends BaseManager {
     // Cast docs to CreateDoc objects
     const docsList = docs.map((doc) => new CreateDoc(doc));
 
-    return this.apiClient.createAgent({
-      name,
-      about,
-      instructions,
-      tools,
-      functions,
-      defaultSettings,
-      model,
-      docs,
-    });
+    return this.apiClient
+      .createAgent({
+        name,
+        about,
+        instructionsList,
+        toolsList,
+        functions,
+        defaultSettingsObj,
+        model,
+        docsList,
+      })
+      .catch((error) => Promise.reject(error));
   };
 
   /**
    * @param {number} limit
    * @param {number} offset
-   * @returns {Promise<ListAgentsResponseType>}
+   * @returns {Promise<ListAgentsResponse>}
    */
   async _listItems(
     limit,
     offset,
   ) {
-    return this.apiClient.listAgents(limit, offset);
+    return this.apiClient
+      .listAgents(limit, offset)
+      .catch((error) => Promise.reject(error));
   };
 
   /**
@@ -88,20 +103,22 @@ class BaseAgentsManager extends BaseManager {
    * @returns {Promise<void>}
    */
   _delete = async (agentId) => {
-    if (!is_valid_uuid4(agentId)) {
+    if (!isValidUuid4(agentId)) {
       throw new Error("agentId must be a valid UUID v4");
     }
 
-    return this.apiClient.deleteAgent(agentId);
+    return this.apiClient
+      .deleteAgent(agentId)
+      .catch((error) => Promise.reject(error));
   };
 
   /**
    * @param {string | UUID} agentId
    * @param {string} about
-   * @param {Instruction[] | InstructionDict[]} [instructions]
+   * @param {Instruction[]} [instructions]
    * @param {string} [name]
    * @param {string} [model]
-   * @param {DefaultSettingsDict} [defaultSettings]
+   * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
   async _update(
@@ -112,7 +129,7 @@ class BaseAgentsManager extends BaseManager {
     model,
     defaultSettings,
   ) {
-    if (!is_valid_uuid4(agentId)) {
+    if (!isValidUuid4(agentId)) {
       throw new Error("agentId must be a valid UUID v4");
     }
 
@@ -125,13 +142,15 @@ class BaseAgentsManager extends BaseManager {
     // Cast defaultSettings to AgentDefaultSettings
     const defaultSettingsObj = new AgentDefaultSettings(defaultSettings);
 
-    return this.apiClient.updateAgent(agentId, {
-      about,
-      instructions,
-      name,
-      model,
-      defaultSettings,
-    });
+    return this.apiClient
+      .updateAgent(agentId, {
+        about,
+        instructionsList,
+        name,
+        model,
+        defaultSettingsObj,
+      })
+      .catch((error) => Promise.reject(error));
   };
 }
 
@@ -140,14 +159,14 @@ class AgentsManager extends BaseAgentsManager {
    * @param {string | UUID} id
    * @returns {Promise<Agent>}
    */
-  async get(id){
+  async get(id) {
     return await this._get(id);
   };
 
   /**
    * @param {string} name
    * @param {string} about
-   * @param {Instruction[] | InstructionDict[]} instructions
+   * @param {Instruction[]} instructions
    * @param {ToolDict[]} [tools]
    * @param {FunctionDefDict[]} [functions]
    * @param {DefaultSettingsDict} [defaultSettings]
@@ -155,7 +174,7 @@ class AgentsManager extends BaseAgentsManager {
    * @param {DocDict[]} [docs]
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create(
+  async create({
     name,
     about,
     instructions,
@@ -164,7 +183,7 @@ class AgentsManager extends BaseAgentsManager {
     defaultSettings = {},
     model = 'julep-ai/samantha-1-turbo',
     docs = [],
-  ) {
+  }) {
     return await this._create(
       name,
       about,
@@ -182,10 +201,7 @@ class AgentsManager extends BaseAgentsManager {
    * @param {number} offset
    * @returns {Promise<Agent[]>}
    */
-  async list(
-    limit = 10,
-    offset = 0,
-  ) {
+  async list({ limit = 100, offset = 0 } = {}) {
     const { items } = await this._listItems(limit, offset);
     return items;
   };
@@ -201,20 +217,20 @@ class AgentsManager extends BaseAgentsManager {
   /**
    * @param {string | UUID} agentId
    * @param {string} [about]
-   * @param {Instruction[] | InstructionDict[]} [instructions]
+   * @param {Instruction[]} [instructions]
    * @param {string} [name]
    * @param {string} [model]
-   * @param {DefaultSettingsDict} [defaultSettings]
+   * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(
+  async update({
     agentId,
     about,
     instructions,
     name,
     model,
     defaultSettings,
-  ) {
+  }) {
     return await this._update(
       agentId,
       about,
