@@ -31,8 +31,9 @@ describe("Julep Client Tests", () => {
   });
 
   test("agents.update", async () => {
-    const response = await client.agents.update({
-      agent_id: uuidv4(),
+    const agentId = uuidv4();
+
+    const response = await client.agents.update(agentId, {
       name: "test user",
       about: "test user about",
       instructions: ["test agent instructions"],
