@@ -28,7 +28,8 @@ class Client {
     this._apiClient = new JulepApiClient({ apiKey, environment: baseUrl });
 
     /** @type {OpenAI} */
-    this._openaiClient = new OpenAI({ apiKey, baseUrl: `${baseUrl}/v1` });
+    const openaiBaseUrl = new URL(baseUrl).origin;
+    this._openaiClient = new OpenAI({ apiKey, baseUrl: `${openaiBaseUrl}/v1` });
 
     /** @type {AgentsManager} */
     // this.agents = new AgentsManager(this._apiClient);
