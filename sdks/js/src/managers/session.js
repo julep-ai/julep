@@ -1,17 +1,3 @@
-const {
-  Session,
-  ResourceCreatedResponse,
-  ListSessionsResponse,
-  ResourceUpdatedResponse,
-  Tool,
-  ToolChoiceOption,
-  ChatResponse,
-  ChatSettingsResponseFormat,
-  ChatSettingsStop,
-  InputChatMlMessage,
-  GetHistoryResponse,
-  GetSuggestionsResponse,
-} = require("../api/serialization/types");
 const { UUID } = require("uuid");
 const { isValidUuid4 } = require("./utils");
 const { BaseManager } = require("./base");
@@ -41,7 +27,7 @@ class BaseSessionsManager extends BaseManager {
     }
 
     return this.apiClient
-      .createSession(userId, agentId, situation)
+      .createSession({ userId, agentId, situation })
       .catch((error) => Promise.reject(error));
   }
 
@@ -81,7 +67,7 @@ class BaseSessionsManager extends BaseManager {
     }
 
     return this.apiClient
-      .updateSession(sessionId, situation)
+      .updateSession(sessionId, { situation })
       .catch((error) => Promise.reject(error));
   }
 
@@ -130,27 +116,34 @@ class BaseSessionsManager extends BaseManager {
       throw new Error("sessionId must be a valid UUID v4");
     }
 
+    const payload = {
+      messages,
+      tools,
+      toolChoice,
+      frequencyPenalty,
+      lengthPenalty,
+      logitBias,
+      maxTokens,
+      presencePenalty,
+      repetitionPenalty,
+      responseFormat,
+      seed,
+      stop,
+      stream,
+      temperature,
+      topP,
+      recall,
+      remember,
+    };
+
+    for (const [key, value] of Object.entries(payload)) {
+      if (value === undefined) {
+        delete payload[key];
+      }
+    }
+
     return this.apiClient
-      .chat(
-        sessionId,
-        messages,
-        tools,
-        toolChoice,
-        frequencyPenalty,
-        lengthPenalty,
-        logitBias,
-        maxTokens,
-        presencePenalty,
-        repetitionPenalty,
-        responseFormat,
-        seed,
-        stop,
-        stream,
-        temperature,
-        topP,
-        recall,
-        remember,
-      )
+      .chat(sessionId, payload)
       .catch((error) => Promise.reject(error));
   }
 
@@ -160,13 +153,13 @@ class BaseSessionsManager extends BaseManager {
    * @param {number} offset
    * @returns {Promise<GetSuggestionsResponse>}
    */
-  async _suggestions(sessionId, limit, offset) {
+  async _suggestions(sessionId, limit = 100, offset = 0) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
 
     return this.apiClient
-      .getSuggestions(sessionId, limit, offset)
+      .getSuggestions(sessionId, { limit, offset })
       .catch((error) => Promise.reject(error));
   }
 
@@ -176,13 +169,13 @@ class BaseSessionsManager extends BaseManager {
    * @param {number} offset
    * @returns {Promise<GetHistoryResponse>}
    */
-  async _history(sessionId, limit, offset) {
+  async _history(sessionId, limit = 100, offset = 0) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
 
     return this.apiClient
-      .getHistory(sessionId, limit, offset)
+      .getHistory(sessionId, { limit, offset })
       .catch((error) => Promise.reject(error));
   }
 }
@@ -229,7 +222,7 @@ class SessionsManager extends BaseSessionsManager {
    * @param {string} situation
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update({ sessionId, situation }) {
+  async update(sessionId, { situation }) {
     return await this._update(sessionId, situation);
   }
 
@@ -254,26 +247,28 @@ class SessionsManager extends BaseSessionsManager {
    * @param {boolean} remember
    * @returns {Promise<ChatResponse>}
    */
-  async chat({
+  async chat(
     sessionId,
-    messages,
-    tools,
-    toolChoice,
-    frequencyPenalty,
-    lengthPenalty,
-    logitBias,
-    maxTokens,
-    presencePenalty,
-    repetitionPenalty,
-    responseFormat,
-    seed,
-    stop,
-    stream,
-    temperature,
-    topP,
-    recall,
-    remember,
-  }) {
+    {
+      messages,
+      tools,
+      toolChoice,
+      frequencyPenalty,
+      lengthPenalty,
+      logitBias,
+      maxTokens,
+      presencePenalty,
+      repetitionPenalty,
+      responseFormat,
+      seed,
+      stop,
+      stream,
+      temperature,
+      topP,
+      recall,
+      remember,
+    } = {},
+  ) {
     return await this._chat(
       sessionId,
       messages,
@@ -302,8 +297,8 @@ class SessionsManager extends BaseSessionsManager {
    * @param {number} offset
    * @returns {Promise<GetSuggestionsResponse>}
    */
-  async suggestions({ sessionId, limit, offset }) {
-    return await this._suggestions(sessionId, limit, offset);
+  async suggestions(sessionId, { limit = 100, offset = 0 } = {}) {
+    return (await this._suggestions(sessionId, limit, offset)).items;
   }
 
   /**
@@ -312,8 +307,8 @@ class SessionsManager extends BaseSessionsManager {
    * @param {number} offset
    * @returns {Promise<GetHistoryResponse>}
    */
-  async history({ sessionId, limit, offset }) {
-    return await this._history(sessionId, limit, offset);
+  async history(sessionId, { limit = 100, offset = 0 } = {}) {
+    return (await this._history(sessionId, limit, offset)).items;
   }
 }
 
