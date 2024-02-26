@@ -84,9 +84,7 @@ class JulepApi:
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -130,9 +128,7 @@ class JulepApi:
             _request["situation"] = situation
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -165,9 +161,7 @@ class JulepApi:
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -213,9 +207,7 @@ class JulepApi:
             _request["docs"] = docs
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -248,9 +240,7 @@ class JulepApi:
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -318,9 +308,7 @@ class JulepApi:
             _request["docs"] = docs
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -352,7 +340,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -389,7 +377,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             json=jsonable_encoder({"situation": situation}),
             headers=self._client_wrapper.get_headers(),
@@ -422,7 +410,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -465,7 +453,7 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/suggestions",
+                f"sessions/{session_id}/suggestions",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -509,7 +497,7 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/history",
+                f"sessions/{session_id}/history",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -643,8 +631,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/chat",
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}/chat"
             ),
             json=jsonable_encoder(_request),
             headers=remove_none_from_dict(
@@ -699,8 +686,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
             ),
             params=remove_none_from_dict(
                 {
@@ -741,7 +727,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -788,7 +774,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -821,7 +807,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -853,7 +839,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -915,7 +901,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -948,7 +934,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -990,7 +976,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1032,7 +1018,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1075,7 +1061,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1117,7 +1103,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1154,7 +1140,7 @@ class JulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/docs/{doc_id}",
+                f"users/{user_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1190,7 +1176,7 @@ class JulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/docs/{doc_id}",
+                f"agents/{agent_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1226,7 +1212,7 @@ class JulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories/{memory_id}",
+                f"agents/{agent_id}/memories/{memory_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1268,8 +1254,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1314,8 +1299,7 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -1361,7 +1345,7 @@ class JulepApi:
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             json=jsonable_encoder({"function": function}),
             headers=self._client_wrapper.get_headers(),
@@ -1398,7 +1382,7 @@ class JulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1450,9 +1434,7 @@ class AsyncJulepApi:
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1496,9 +1478,7 @@ class AsyncJulepApi:
             _request["situation"] = situation
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/sessions"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1531,9 +1511,7 @@ class AsyncJulepApi:
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1579,9 +1557,7 @@ class AsyncJulepApi:
             _request["docs"] = docs
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/users"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1614,9 +1590,7 @@ class AsyncJulepApi:
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1684,9 +1658,7 @@ class AsyncJulepApi:
             _request["docs"] = docs
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", "api/agents"
-            ),
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1718,7 +1690,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1755,7 +1727,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             json=jsonable_encoder({"situation": situation}),
             headers=self._client_wrapper.get_headers(),
@@ -1788,7 +1760,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1831,7 +1803,7 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/suggestions",
+                f"sessions/{session_id}/suggestions",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -1875,7 +1847,7 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/history",
+                f"sessions/{session_id}/history",
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2009,8 +1981,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/sessions/{session_id}/chat",
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}/chat"
             ),
             json=jsonable_encoder(_request),
             headers=remove_none_from_dict(
@@ -2065,8 +2036,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
             ),
             params=remove_none_from_dict(
                 {
@@ -2107,7 +2077,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2154,7 +2124,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -2187,7 +2157,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2219,7 +2189,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2281,7 +2251,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
@@ -2314,7 +2284,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2356,7 +2326,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2398,7 +2368,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/agents/{agent_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2441,7 +2411,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2483,7 +2453,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"api/users/{user_id}/docs"
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2520,7 +2490,7 @@ class AsyncJulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/users/{user_id}/docs/{doc_id}",
+                f"users/{user_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2556,7 +2526,7 @@ class AsyncJulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/docs/{doc_id}",
+                f"agents/{agent_id}/docs/{doc_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2592,7 +2562,7 @@ class AsyncJulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/memories/{memory_id}",
+                f"agents/{agent_id}/memories/{memory_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2634,8 +2604,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
@@ -2680,8 +2649,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools",
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
             ),
             json=jsonable_encoder(request),
             headers=self._client_wrapper.get_headers(),
@@ -2727,7 +2695,7 @@ class AsyncJulepApi:
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             json=jsonable_encoder({"function": function}),
             headers=self._client_wrapper.get_headers(),
@@ -2764,7 +2732,7 @@ class AsyncJulepApi:
             "DELETE",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"api/agents/{agent_id}/tools/{tool_id}",
+                f"agents/{agent_id}/tools/{tool_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,

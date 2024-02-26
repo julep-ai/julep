@@ -4,4 +4,4 @@ import enum
 
 
 class JulepApiEnvironment(enum.Enum):
-    DEFAULT = "https://api-alpha.julep.ai"
+    DEFAULT = "https://api-alpha.julep.ai/api"
