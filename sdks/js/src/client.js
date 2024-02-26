@@ -10,23 +10,26 @@ const { MemoriesManager } = require("./managers/memory");
 
 const { JULEP_API_KEY, JULEP_API_URL } = require("./env");
 
+const { JulepApiClient } = require("./api");
+
 class Client {
   /**
-   * @param {string} [api_key=JULEP_API_KEY] - API key for the Julep API
-   * @param {string} [base_url=JULEP_API_URL] - Base URL for the Julep API
+   * @param {string} [apiKey=JULEP_API_KEY] - API key for the Julep API
+   * @param {string} [baseUrl=JULEP_API_URL] - Base URL for the Julep API
    */
-  constructor(api_key = JULEP_API_KEY, base_url = JULEP_API_URL) {
-    if (!api_key || !base_url) {
+  constructor(apiKey = JULEP_API_KEY, baseUrl = JULEP_API_URL) {
+    if (!apiKey || !baseUrl) {
       throw new Error(
-        "api_key and base_url must be provided or set as environment variables",
+        "apiKey and baseUrl must be provided or set as environment variables",
       );
     }
 
     /** @private */
-    this._apiClient = new JulepApi({ api_key, base_url });
+    const environment = { Default: baseUrl };
+    this._apiClient = new JulepApiClient({ apiKey, environment });
 
     /** @type {OpenAI} */
-    this._openaiClient = new OpenAI(api_key, `${base_url}/v1`);
+    this._openaiClient = new OpenAI({ apiKey, baseUrl: `${baseUrl}/v1`});
 
     /** @type {AgentsManager} */
     // this.agents = new AgentsManager(this._apiClient);
@@ -53,3 +56,5 @@ class Client {
     this.completions = this._openaiClient.completions;
   }
 }
+
+exports.Client = Client;
