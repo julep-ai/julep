@@ -26,6 +26,7 @@
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "form-data": "^4.0.0",
     "openai": "^4.28.0",
     "qs": "^6.11.2",
