@@ -126,7 +126,8 @@ class DocsManager extends BaseDocsManager {
    * @returns {Promise<void>}
    */
   async delete({ agentId, userId, docId }) {
-    return await this._delete(agentId, userId, docId);
+    await this._delete(agentId, userId, docId);
+    return null;
   }
 }
 

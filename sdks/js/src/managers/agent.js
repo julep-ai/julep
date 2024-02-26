@@ -199,7 +199,8 @@ class AgentsManager extends BaseAgentsManager {
    * @returns {Promise<void>}
    */
   async delete(agentId) {
-    return await this._delete(agentId);
+    await this._delete(agentId);
+    return null;
   }
 
   /**
@@ -211,7 +212,10 @@ class AgentsManager extends BaseAgentsManager {
    * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update({ agentId, about, instructions, name, model, defaultSettings }) {
+  async update(
+    agentId,
+    { about, instructions, name, model, defaultSettings } = {},
+  ) {
     return await this._update(
       agentId,
       about,
