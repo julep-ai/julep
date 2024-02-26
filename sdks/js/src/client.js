@@ -1,11 +1,11 @@
 // client.js
 
 const { OpenAI, Chat, Completions } = require("openai");
-// const { AgentsManager } = require("./managers/agent");
+const { AgentsManager } = require("./managers/agent");
 const { UsersManager } = require("./managers/user");
-// const { DocsManager } = require("./managers/doc");
+const { DocsManager } = require("./managers/doc");
 const { MemoriesManager } = require("./managers/memory");
-// const { SessionsManager } = require("./managers/session");
+const { SessionsManager } = require("./managers/session");
 const { ToolsManager } = require("./managers/tool");
 
 const { JULEP_API_KEY, JULEP_API_URL } = require("./env");
@@ -32,16 +32,16 @@ class Client {
     this._openaiClient = new OpenAI({ apiKey, baseURL: `${openaiBaseUrl}/v1` });
 
     /** @type {AgentsManager} */
-    // this.agents = new AgentsManager(this._apiClient);
+    this.agents = new AgentsManager(this._apiClient);
 
     /** @type {UsersManager} */
     this.users = new UsersManager(this._apiClient);
 
     /** @type {SessionsManager} */
-    // this.sessions = new SessionsManager(this._apiClient);
+    this.sessions = new SessionsManager(this._apiClient);
 
     /** @type {DocsManager} */
-    // this.docs = new DocsManager(this._apiClient);
+    this.docs = new DocsManager(this._apiClient);
 
     /** @type {MemoriesManager} */
     this.memories = new MemoriesManager(this._apiClient);

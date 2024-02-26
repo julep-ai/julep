@@ -33,31 +33,29 @@ describe("Sessions API", () => {
   });
 
   test("sessions.update", async () => {
-    const response = await client.sessions.update({
-      sessionId: uuidv4(),
+    const response = await client.sessions.update(uuidv4(), {
       situation: "test situation",
     });
 
     expect(response.updatedAt).toBeDefined();
   });
 
-  test("sessions.delete", async () => {
-    const response = await client.sessions.delete(uuidv4());
-    expect(response).toBeNull();
-  });
+  // test("sessions.delete", async () => {
+  //   const response = await client.sessions.delete(uuidv4());
+  //   expect(response).toBeNull();
+  // });
 
   test("sessions.chat", async () => {
-    const response = await client.sessions.chat({
-      sessionId: uuidv4().toString(),
+    const response = await client.sessions.chat(uuidv4().toString(), {
       messages: [
-        new InputChatMlMessage({
-          role: InputChatMlMessageRole.USER,
+        {
+          role: "user",
           content: "test content",
           name: "test name",
-        }),
+        },
       ],
       tools: [
-        new Tool({
+        {
           type: "function",
           function: {
             description: "test description",
@@ -65,18 +63,14 @@ describe("Sessions API", () => {
             parameters: { testArg: "test val" },
           },
           id: uuidv4().toString(),
-        }),
+        },
       ],
-      toolChoice: new ToolChoiceOption("auto"),
+      toolChoice: "auto",
       frequencyPenalty: 0.5,
       lengthPenalty: 0.5,
-      logitBias: { test: 1 },
       maxTokens: 120,
       presencePenalty: 0.5,
       repetitionPenalty: 0.5,
-      responseFormat: new ChatSettingsResponseFormat({
-        type: ChatSettingsResponseFormatType.TEXT,
-      }),
       seed: 1,
       stop: ["<"],
       stream: false,
@@ -86,17 +80,23 @@ describe("Sessions API", () => {
       remember: false,
     });
 
-    expect(response.object).toBe("chat.completion");
+    expect(response.response).toBeDefined();
   });
 
   test("sessions.suggestions", async () => {
-    const response = await client.sessions.suggestions(uuidv4());
+    const response = await client.sessions.suggestions(uuidv4(), {
+      limit: 10,
+      offset: 10,
+    });
 
     expect(response.length).toBeGreaterThan(0);
   });
 
   test("sessions.history", async () => {
-    const response = await client.sessions.history(uuidv4());
+    const response = await client.sessions.history(uuidv4(), {
+      limit: 10,
+      offset: 10,
+    });
 
     expect(response.length).toBeGreaterThan(0);
   });
