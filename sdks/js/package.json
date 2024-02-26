@@ -28,7 +28,8 @@
   "dependencies": {
     "form-data": "^4.0.0",
     "qs": "^6.11.2",
-    "url-join": "^4.0.1"
+    "url-join": "^4.0.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
