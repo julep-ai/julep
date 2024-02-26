@@ -1,14 +1,3 @@
-const {
-  Agent,
-  CreateDoc,
-  ResourceCreatedResponse,
-  ResourceUpdatedResponse,
-  ListAgentsResponse,
-  GetAgentMemoriesResponse,
-  Instruction,
-  CreateToolRequest,
-  AgentDefaultSettings,
-} = require("../api/serialization/types");
 const { UUID } = require("uuid"); // Use uuid package from npm for UUID types
 const { isValidUuid4 } = require("./utils");
 const { BaseManager } = require("./base");
@@ -43,41 +32,27 @@ class BaseAgentsManager extends BaseManager {
     model = "julep-ai/samantha-1-turbo",
     docs = [],
   ) {
-    // Cast instructions to Instruction objects
-    const instructionsList =
-      typeof instructions[0] === "string"
-        ? instructions.map((instruction) => new Instruction(instruction))
-        : instructions;
-
     // Ensure that only functions or tools are provided
     if (functions.length > 0 && tools.length > 0) {
       throw new Error("Only functions or tools can be provided");
     }
 
-    // Cast tools/functions to CreateToolRequest objects
-    const toolsList =
-      tools.length > 0
-        ? tools.map((tool) =>
-            typeof tool === "object" ? new CreateToolRequest(tool) : tool,
-          )
-        : [];
-
-    // Cast defaultSettings to AgentDefaultSettings
-    const defaultSettingsObj = new AgentDefaultSettings(defaultSettings);
-
-    // Cast docs to CreateDoc objects
-    const docsList = docs.map((doc) => new CreateDoc(doc));
+    // Cast instructions to Instruction objects
+    const instructionsList =
+      typeof instructions[0] === "string"
+        ? instructions.map((content) => ({ content, important: false }))
+        : instructions;
 
     return this.apiClient
       .createAgent({
         name,
         about,
-        instructionsList,
-        toolsList,
+        instructions: instructionsList,
+        tools,
         functions,
-        defaultSettingsObj,
+        defaultSettings,
         model,
-        docsList,
+        docs,
       })
       .catch((error) => Promise.reject(error));
   }
@@ -124,19 +99,16 @@ class BaseAgentsManager extends BaseManager {
     // Cast instructions to Instruction objects
     const instructionsList =
       typeof instructions[0] === "string"
-        ? instructions.map((instruction) => new Instruction(instruction))
+        ? instructions.map((content) => ({ content, important: false }))
         : instructions;
-
-    // Cast defaultSettings to AgentDefaultSettings
-    const defaultSettingsObj = new AgentDefaultSettings(defaultSettings);
 
     return this.apiClient
       .updateAgent(agentId, {
         about,
-        instructionsList,
+        instructions: instructionsList,
         name,
         model,
-        defaultSettingsObj,
+        defaultSettings,
       })
       .catch((error) => Promise.reject(error));
   }
