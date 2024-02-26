@@ -29,7 +29,7 @@ class Client {
 
     /** @type {OpenAI} */
     const openaiBaseUrl = new URL(baseUrl).origin;
-    this._openaiClient = new OpenAI({ apiKey, baseUrl: `${openaiBaseUrl}/v1` });
+    this._openaiClient = new OpenAI({ apiKey, baseURL: `${openaiBaseUrl}/v1` });
 
     /** @type {AgentsManager} */
     // this.agents = new AgentsManager(this._apiClient);
