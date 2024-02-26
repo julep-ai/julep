@@ -17,7 +17,7 @@ describe("Julep Client Tests", () => {
       name: "test agent",
       about: "test agent about",
       instructions: ["test agent instructions"],
-      default_settings: { temperature: 0.5 },
+      defaultSettings: { temperature: 0.5 },
     });
 
     expect(response).toHaveProperty("createdAt");
@@ -37,7 +37,7 @@ describe("Julep Client Tests", () => {
       name: "test user",
       about: "test user about",
       instructions: ["test agent instructions"],
-      default_settings: { temperature: 0.5 },
+      defaultSettings: { temperature: 0.5 },
       model: "some model",
     });
 

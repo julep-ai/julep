@@ -1,10 +1,3 @@
-const {
-  Doc,
-  CreateDoc,
-  ResourceCreatedResponse,
-  GetAgentDocsResponse,
-  GetUserDocsResponse,
-} = require("../api/serialization/types");
 const { UUID } = require("uuid");
 const { BaseManager } = require("./base");
 const { isValidUuid4 } = require("./utils");
@@ -17,7 +10,7 @@ class BaseDocsManager extends BaseManager {
    * @param {number} [offset]
    * @returns {Promise<GetAgentDocsResponse | GetUserDocsResponse>}
    */
-  async _get(agentId, userId, limit, offset) {
+  async _get(agentId, userId, limit = 100, offset = 0) {
     if (
       (agentId && isValidUuid4(agentId)) ||
       (userId && isValidUuid4(userId) && !(agentId && userId))
@@ -50,16 +43,14 @@ class BaseDocsManager extends BaseManager {
       (agentId && isValidUuid4(agentId)) ||
       (userId && isValidUuid4(userId) && !(agentId && userId))
     ) {
-      const request = new CreateDoc(doc); // Assuming CreateDoc can be instantiated like this, adjust accordingly
-
       if (agentId) {
         return this.apiClient
-          .createAgentDoc(agentId, request)
+          .createAgentDoc(agentId, doc)
           .catch((error) => Promise.reject(error));
       }
       if (userId) {
         return this.apiClient
-          .createUserDoc(userId, request)
+          .createUserDoc(userId, doc)
           .catch((error) => Promise.reject(error));
       }
     } else {
@@ -106,7 +97,7 @@ class DocsManager extends BaseDocsManager {
    * @param {number} [offset]
    * @returns {Promise<Doc[]>}
    */
-  async get({ agentId, userId, limit, offset }) {
+  async get({ agentId, userId, limit = 100, offset = 0 }) {
     return (await this._get(agentId, userId, limit, offset)).items;
   }
 
