@@ -66,7 +66,7 @@ class BaseSessionsManager extends BaseManager {
     }
 
     return this.apiClient
-      .deleteSessions(sessionId)
+      .deleteSession(sessionId)
       .catch((error) => Promise.reject(error));
   }
 
@@ -81,7 +81,7 @@ class BaseSessionsManager extends BaseManager {
     }
 
     return this.apiClient
-      .updateSessions(sessionId, situation)
+      .updateSession(sessionId, situation)
       .catch((error) => Promise.reject(error));
   }
 
@@ -211,7 +211,7 @@ class SessionsManager extends BaseSessionsManager {
    * @param {number} offset
    * @returns {Promise<ListSessionsResponse>}
    */
-  async list({ limit = 100, offset = 0 }) {
+  async list({ limit = 100, offset = 0 } = {}) {
     const response = await this._listItems(limit, offset);
     return response.items;
   }

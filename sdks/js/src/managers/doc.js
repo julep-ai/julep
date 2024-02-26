@@ -3,6 +3,7 @@ const {
   CreateDoc,
   ResourceCreatedResponse,
   GetAgentDocsResponse,
+  GetUserDocsResponse,
 } = require("../api/serialization/types");
 const { UUID } = require("uuid");
 const { BaseManager } = require("./base");
@@ -14,7 +15,7 @@ class BaseDocsManager extends BaseManager {
    * @param {string | UUID} userId
    * @param {number} [limit]
    * @param {number} [offset]
-   * @returns {Promise<GetAgentDocsResponse>}
+   * @returns {Promise<GetAgentDocsResponse | GetUserDocsResponse>}
    */
   async _get(agentId, userId, limit, offset) {
     if (
