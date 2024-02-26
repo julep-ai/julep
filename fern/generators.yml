@@ -14,7 +14,7 @@ groups:
           location: local-file-system
           path: ../sdks/js/src/api
       - name: fernapi/fern-python-sdk
-        version: 0.11.5
+        version: 0.9.1
         config:
           timeout_in_seconds: 300 # 5 minutes
           client_class_name: JulepApi
