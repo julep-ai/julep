@@ -6,7 +6,7 @@ const { UsersManager } = require("./managers/user");
 // const { DocsManager } = require("./managers/doc");
 const { MemoriesManager } = require("./managers/memory");
 // const { SessionsManager } = require("./managers/session");
-// const { ToolsManager } = require("./managers/tool");
+const { ToolsManager } = require("./managers/tool");
 
 const { JULEP_API_KEY, JULEP_API_URL } = require("./env");
 
@@ -46,7 +46,7 @@ class Client {
     this.memories = new MemoriesManager(this._apiClient);
 
     /** @type {ToolsManager} */
-    // this.tools = new ToolsManager(this._apiClient);
+    this.tools = new ToolsManager(this._apiClient);
 
     /** @type {Chat} */
     this.chat = this._openaiClient.chat;
