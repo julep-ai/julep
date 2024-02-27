@@ -1,5 +1,5 @@
 import httpx
-from ..env import embedding_service_url
+from ..env import embedding_service_url, truncate_embed_text
 
 
 async def embed(
@@ -15,7 +15,7 @@ async def embed(
             json={
                 "inputs": "\n\n".join(inputs) if join_inputs else inputs,
                 "normalize": True,
-                "truncate": False,
+                "truncate": truncate_embed_text,
             },
         )
         resp.raise_for_status()
