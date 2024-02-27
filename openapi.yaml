@@ -59,8 +59,6 @@ paths:
           description: Number of sessions to return
           schema:
             type: integer
-            exclusiveMinimum: true
-            exclusiveMaximum: true
             default: 10
             minimum: 1
             maximum: 100
@@ -69,7 +67,6 @@ paths:
           description: Number of sessions to skip (sorted created_at descending order)
           schema:
             type: integer
-            exclusiveMinimum: true
             default: 0
             minimum: 0
       responses:
@@ -123,9 +120,7 @@ paths:
           schema:
             type: integer
             default: 10
-            exclusiveMinimum: true
             minimum: 1
-            exclusiveMaximum: true
             maximum: 100
         - in: query
           name: offset
@@ -183,16 +178,13 @@ paths:
           schema:
             type: integer
             default: 10
-            exclusiveMinimum: true
             minimum: 1
-            exclusiveMaximum: true
             maximum: 100
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
-            exclusiveMinimum: true
             default: 0
             minimum: 0
       responses:
@@ -265,6 +257,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /sessions/{session_id}/suggestions:
     get:
@@ -279,8 +272,6 @@ paths:
           schema:
             type: integer
             default: 10
-            exclusiveMinimum: true
-            exclusiveMaximum: true
             minimum: 1
             maximum: 100
         - in: query
@@ -289,7 +280,6 @@ paths:
           schema:
             type: integer
             default: 0
-            exclusiveMinimum: true
             minimum: 0
       responses:
         "200":
@@ -311,6 +301,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /sessions/{session_id}/history:
     get:
@@ -325,8 +316,6 @@ paths:
           schema:
             type: integer
             default: 10
-            exclusiveMinimum: true
-            exclusiveMaximum: true
             minimum: 1
             maximum: 100
         - in: query
@@ -335,7 +324,6 @@ paths:
           schema:
             type: integer
             default: 0
-            exclusiveMinimum: true
             minimum: 0
       responses:
         "200":
@@ -357,6 +345,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /sessions/{session_id}/chat:
     parameters:
@@ -365,6 +354,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     post:
       summary: Interact with the session
@@ -451,6 +441,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /users/{user_id}:
     get:
@@ -506,6 +497,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /agents/{agent_id}:
     get:
@@ -561,6 +553,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /agents/{agent_id}/docs:
     get:
@@ -601,6 +594,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     post:
       summary: Create doc of the agent
@@ -660,6 +654,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     post:
       summary: Create doc of the user
@@ -687,12 +682,14 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
         name: doc_id
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     delete:
       summary: Delete doc by id
@@ -715,12 +712,14 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
         name: doc_id
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     delete:
       summary: Delete doc by id
@@ -757,12 +756,14 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
         name: memory_id
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
   /agents/{agent_id}/tools:
     get:
@@ -803,6 +804,7 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     post:
       summary: Create tool for the agent
@@ -830,12 +832,14 @@ paths:
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
         name: tool_id
         description: ""
         schema:
           type: string
+          format: uuid
         required: true
     delete:
       summary: Delete tool by id
@@ -870,6 +874,29 @@ paths:
                 $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
+  /jobs/{job_id}:
+    get:
+      summary: Get status of the job
+      description: ""
+      operationId: GetJobStatus
+      tags: []
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+      security:
+        - api-key: []
+    parameters:
+      - in: path
+        name: job_id
+        description: ""
+        schema:
+          type: string
+          format: uuid
+        required: true
 components:
   schemas:
     User:
@@ -1359,17 +1386,13 @@ components:
         weight:
           type: number
           default: 1
-          exclusiveMinimum: true
-          exclusiveMaximum: true
           minimum: 0
           maximum: 100
           description: Weight (importance) of the memory on a scale of 0-100
         sentiment:
           type: number
           default: 0
-          exclusiveMinimum: true
           minimum: -1
-          exclusiveMaximum: true
           maximum: 1
           description: Sentiment (valence) of the memory on a scale of -1 to 1
         created_at:
@@ -1407,8 +1430,6 @@ components:
         weight:
           type: number
           default: 1
-          exclusiveMinimum: true
-          exclusiveMaximum: true
           minimum: 0
           maximum: 100
           description: Weight (importance) of the memory on a scale of 0-100
@@ -1427,7 +1448,6 @@ components:
         duration:
           type: number
           description: Duration of the episode (in seconds)
-          exclusiveMinimum: true
           minimum: 0
           default: 0
         id:
@@ -1587,7 +1607,6 @@ components:
           maximum: 2
           nullable: true
           description: (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-          exclusiveMinimum: true
           exclusiveMaximum: true
         length_penalty:
           type: number
@@ -1644,10 +1663,15 @@ components:
           type: string
           description: ID of doc
           format: uuid
+        created_at:
+          type: string
+          description: Doc created at
+          format: date-time
       required:
         - title
         - content
         - id
+        - created_at
     CreateDoc:
       type: object
       properties:
@@ -1744,6 +1768,53 @@ components:
       required:
         - id
         - deleted_at
+    JobStatus:
+      $schema: http://json-schema.org/draft-04/schema#
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the job
+        reason:
+          type: string
+          description: Reason for current state
+        created_at:
+          type: string
+          format: date-time
+          description: Job created at (RFC-3339 format)
+        updated_at:
+          type: string
+          format: date-time
+          description: Job updated at (RFC-3339 format)
+        id:
+          type: string
+          description: Job id (UUID)
+          format: uuid
+        has_progress:
+          type: boolean
+          default: false
+          description: Whether this Job supports progress updates
+        progress:
+          type: integer
+          description: Progress percentage
+          default: 0
+          minimum: 0
+          maximum: 100
+        state:
+          type: string
+          description: 'Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)'
+          enum:
+            - pending
+            - in_progress
+            - retrying
+            - succeeded
+            - aborted
+            - failed
+      required:
+        - id
+        - name
+        - created_at
+        - state
   securitySchemes:
     api-key:
       type: apiKey
@@ -1758,41 +1829,55 @@ components:
       description: ""
       schema:
         type: string
+        format: uuid
     user_id:
       in: path
       required: false
       description: ""
       schema:
         type: string
+        format: uuid
     agent_id:
       in: path
       required: false
       description: ""
       schema:
         type: string
+        format: uuid
     message_id:
       in: path
       required: false
       description: ""
       schema:
         type: string
+        format: uuid
     doc_id:
       in: path
       required: false
       description: ""
       schema:
         type: string
+        format: uuid
     memory_id:
       in: path
       required: false
       description: ""
       schema:
         type: string
+        format: uuid
     tool_id:
       in: path
       required: false
       description: ""
       schema:
         type: string
+        format: uuid
+    job_id:
+      in: path
+      required: false
+      description: ""
+      schema:
+        type: string
+        format: uuid
 security:
   - api-key: []
