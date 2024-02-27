@@ -13,6 +13,7 @@ from fastapi import FastAPI, BackgroundTasks, Request, Depends
 from fastapi.responses import Response, JSONResponse, StreamingResponse
 from fastapi.exceptions import RequestValidationError
 from jsonschema.exceptions import ValidationError
+from pydantic import ValidationError as PydanticValidationError
 from lmformatenforcer import JsonSchemaParser
 from pydantic import UUID4
 import sentry_sdk
@@ -218,6 +219,18 @@ async def validation_error_handler(request: Request, exc: ValidationError):
     return JSONResponse(
         status_code=400,
         content={"error": {"message": str(exc), "code": "invalid functions parameter"}},
+    )
+
+
+@app.exception_handler(PydanticValidationError)
+async def pydantic_validation_error_handler(
+    request: Request, exc: PydanticValidationError
+):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": {"message": str(exc), "code": "invalid request parameter(s)"}
+        },
     )
 
 
