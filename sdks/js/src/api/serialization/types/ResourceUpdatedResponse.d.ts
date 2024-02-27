@@ -12,5 +12,6 @@ export declare namespace ResourceUpdatedResponse {
   interface Raw {
     id: string;
     updated_at: string;
+    jobs?: string[] | null;
   }
 }

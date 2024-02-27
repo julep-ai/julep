@@ -1741,6 +1741,13 @@ components:
         created_at:
           type: string
           format: date-time
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+          description: IDs (if any) of jobs created as part of this request
       required:
         - id
         - created_at
@@ -1753,6 +1760,13 @@ components:
         updated_at:
           type: string
           format: date-time
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+          description: IDs (if any) of jobs created as part of this request
       required:
         - id
         - updated_at

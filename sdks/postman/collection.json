@@ -196,7 +196,7 @@
             }
           },
           "description": "Session successfully created",
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -360,7 +360,7 @@
             }
           },
           "description": "User successfully created",
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -524,7 +524,7 @@
             }
           },
           "description": "Agent successfully created",
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -716,7 +716,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1396,7 +1396,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1676,7 +1676,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1960,7 +1960,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2156,7 +2156,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2658,7 +2658,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2776,7 +2776,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]

@@ -12,5 +12,6 @@ export declare namespace ResourceCreatedResponse {
   interface Raw {
     id: string;
     created_at: string;
+    jobs?: string[] | null;
   }
 }
