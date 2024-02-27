@@ -27,6 +27,7 @@ from .types.get_suggestions_response import GetSuggestionsResponse
 from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
 from .types.instruction import Instruction
+from .types.job_status import JobStatus
 from .types.list_agents_response import ListAgentsResponse
 from .types.list_sessions_response import ListSessionsResponse
 from .types.list_users_response import ListUsersResponse
@@ -1395,6 +1396,38 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def get_job_status(self, job_id: str) -> JobStatus:
+        """
+
+
+        Parameters:
+            - job_id: str.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_job_status(
+            job_id="job_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"jobs/{job_id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
 
 class AsyncJulepApi:
     def __init__(
@@ -2739,6 +2772,38 @@ class AsyncJulepApi:
         )
         if 200 <= _response.status_code < 300:
             return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def get_job_status(self, job_id: str) -> JobStatus:
+        """
+
+
+        Parameters:
+            - job_id: str.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_job_status(
+            job_id="job_id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"jobs/{job_id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:

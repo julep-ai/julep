@@ -79,3 +79,5 @@ __exportStar(require("./CreateToolRequest"), exports);
 __exportStar(require("./ResourceCreatedResponse"), exports);
 __exportStar(require("./ResourceUpdatedResponse"), exports);
 __exportStar(require("./ResourceDeletedResponse"), exports);
+__exportStar(require("./JobStatusState"), exports);
+__exportStar(require("./JobStatus"), exports);
