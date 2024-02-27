@@ -55,4 +55,5 @@ exports.ResourceUpdatedResponse = core.serialization.object({
     "updated_at",
     core.serialization.date(),
   ),
+  jobs: core.serialization.list(core.serialization.string()).optional(),
 });
