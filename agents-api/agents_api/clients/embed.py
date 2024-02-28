@@ -15,6 +15,7 @@ async def embed(
             json={
                 "inputs": "\n\n".join(inputs) if join_inputs else inputs,
                 "normalize": True,
+                # FIXME: We should control the truncation ourselves and truncate before sending
                 "truncate": truncate_embed_text,
             },
         )
