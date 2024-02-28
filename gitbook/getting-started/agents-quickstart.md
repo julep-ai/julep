@@ -1,17 +1,5 @@
 # Agents Quickstart
 
-### Loom Demo
-
-(Step by step code follows)
-
-{% embed url="https://www.loom.com/share/9d303e8ad1714c19a20afede05cdc7d3?sid=b5600ea5-583d-498e-8917-f2b35ca38a3c" %}
-
-***
-
-> * You can find your API key on your [Julep dashboard](https://platform.julep.ai).
-> * This quickstart is demonstrated in python but steps for [other runtimes](../sdks/available-sdks.md) are pretty much identical.
-> * Instructions for [self-hosting](../agents/self-hosting.md) the platform will be coming soon. Join our [discord community](https://discord.gg/Vfc85vpRyW) and [waitlist](https://julep.ai) for updates.
-
 ### Install SDK
 
 ```bash
