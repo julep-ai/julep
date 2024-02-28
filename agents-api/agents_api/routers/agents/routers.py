@@ -358,7 +358,7 @@ async def create_tool(
         create_function_query(
             agent_id=agent_id,
             id=uuid4(),
-            function=request.definition,
+            function=request.function,
         )
     )
 
@@ -371,9 +371,9 @@ async def create_tool(
     embeddings = await embed(
         [
             function_embed_instruction
-            + request.definition.description
+            + request.function.description
             + "\nParameters: "
-            + json.dumps(request.definition.parameters.model_dump())
+            + json.dumps(request.function.parameters.model_dump())
         ]
     )
 
