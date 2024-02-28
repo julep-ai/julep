@@ -208,13 +208,13 @@ class ChatCompletionRequest(ChatCompletionRequest):
             raise ValueError("logit_bias is not supported currently.")
 
         return SamplingParams(
-            n=self.n,
-            presence_penalty=self.presence_penalty,
-            frequency_penalty=self.frequency_penalty,
-            repetition_penalty=self.repetition_penalty,
-            temperature=self.temperature,
-            top_p=self.top_p,
-            min_p=self.min_p,
+            n=self.n or 1,
+            presence_penalty=self.presence_penalty or 0.0,
+            frequency_penalty=self.frequency_penalty or 0.0,
+            repetition_penalty=self.repetition_penalty or 1.0,
+            temperature=self.temperature or 0.0,
+            top_p=self.top_p or 0.99,
+            min_p=self.min_p or 0.01,
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
             max_tokens=(
@@ -223,13 +223,13 @@ class ChatCompletionRequest(ChatCompletionRequest):
                 else 1
             ),
             best_of=self.best_of,
-            top_k=self.top_k,
-            ignore_eos=self.ignore_eos,
-            use_beam_search=self.use_beam_search,
-            skip_special_tokens=self.skip_special_tokens,
-            spaces_between_special_tokens=self.spaces_between_special_tokens,
-            include_stop_str_in_output=self.include_stop_str_in_output,
-            length_penalty=self.length_penalty,
+            top_k=self.top_k or -1,
+            ignore_eos=self.ignore_eos or False,
+            use_beam_search=self.use_beam_search or False,
+            skip_special_tokens=self.skip_special_tokens or True,
+            spaces_between_special_tokens=self.spaces_between_special_tokens or False,
+            include_stop_str_in_output=self.include_stop_str_in_output or False,
+            length_penalty=self.length_penalty or 1.0,
         )
 
 
@@ -250,30 +250,30 @@ class CompletionRequest(CompletionRequest):
             raise ValueError("logit_bias is not supported currently.")
 
         return SamplingParams(
-            n=self.n,
+            n=self.n or 1,
             best_of=self.best_of,
-            presence_penalty=self.presence_penalty,
-            frequency_penalty=self.frequency_penalty,
-            repetition_penalty=self.repetition_penalty,
-            temperature=self.temperature,
-            top_p=self.top_p,
-            top_k=self.top_k,
-            min_p=self.min_p,
+            presence_penalty=self.presence_penalty or 0.0,
+            frequency_penalty=self.frequency_penalty or 0.0,
+            repetition_penalty=self.repetition_penalty or 1.0,
+            temperature=self.temperature or 0.0,
+            top_p=self.top_p or 0.99,
+            top_k=self.top_k or -1,
+            min_p=self.min_p or 0.01,
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
-            ignore_eos=self.ignore_eos,
+            ignore_eos=self.ignore_eos or False,
             max_tokens=(
                 (self.max_tokens or DEFAULT_MAX_TOKENS)
                 if not echo_without_generation
                 else 1
             ),
             logprobs=self.logprobs,
-            use_beam_search=self.use_beam_search,
-            prompt_logprobs=self.logprobs,
-            skip_special_tokens=self.skip_special_tokens,
-            spaces_between_special_tokens=self.spaces_between_special_tokens,
-            include_stop_str_in_output=self.include_stop_str_in_output,
-            length_penalty=self.length_penalty,
+            use_beam_search=self.use_beam_search or False,
+            prompt_logprobs=self.logprobs if self.echo else None,
+            skip_special_tokens=self.skip_special_tokens or True,
+            spaces_between_special_tokens=self.spaces_between_special_tokens or False,
+            include_stop_str_in_output=self.include_stop_str_in_output or False,
+            length_penalty=self.length_penalty or 1.0,
         )
 
 
