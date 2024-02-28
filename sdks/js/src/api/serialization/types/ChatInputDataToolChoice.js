@@ -80,38 +80,19 @@ var __awaiter =
     });
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChatInputData = void 0;
+exports.ChatInputDataToolChoice = void 0;
 const core = __importStar(require("../../core"));
-exports.ChatInputData = core.serialization.object({
-  messages: core.serialization.list(
-    core.serialization.lazyObject(() =>
-      __awaiter(void 0, void 0, void 0, function* () {
-        return (yield Promise.resolve().then(() => __importStar(require(".."))))
-          .InputChatMlMessage;
-      }),
-    ),
+exports.ChatInputDataToolChoice = core.serialization.undiscriminatedUnion([
+  core.serialization.lazy(() =>
+    __awaiter(void 0, void 0, void 0, function* () {
+      return (yield Promise.resolve().then(() => __importStar(require(".."))))
+        .ToolChoiceOption;
+    }),
   ),
-  tools: core.serialization
-    .list(
-      core.serialization.lazyObject(() =>
-        __awaiter(void 0, void 0, void 0, function* () {
-          return (yield Promise.resolve().then(() =>
-            __importStar(require("..")),
-          )).Tool;
-        }),
-      ),
-    )
-    .optional(),
-  toolChoice: core.serialization.property(
-    "tool_choice",
-    core.serialization
-      .lazy(() =>
-        __awaiter(void 0, void 0, void 0, function* () {
-          return (yield Promise.resolve().then(() =>
-            __importStar(require("..")),
-          )).ChatInputDataToolChoice;
-        }),
-      )
-      .optional(),
+  core.serialization.lazyObject(() =>
+    __awaiter(void 0, void 0, void 0, function* () {
+      return (yield Promise.resolve().then(() => __importStar(require(".."))))
+        .NamedToolChoice;
+    }),
   ),
-});
+]);

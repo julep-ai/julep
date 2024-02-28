@@ -8,5 +8,5 @@ export interface ChatInputData {
   /** (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden */
   tools?: JulepApi.Tool[];
   /** Can be one of existing tools given to the agent earlier or the ones included in the request */
-  toolChoice?: JulepApi.ToolChoiceOption;
+  toolChoice?: JulepApi.ChatInputDataToolChoice;
 }

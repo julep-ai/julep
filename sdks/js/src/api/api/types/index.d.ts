@@ -20,6 +20,7 @@ export * from "./ChatMlMessageRole";
 export * from "./ChatMlMessage";
 export * from "./InputChatMlMessageRole";
 export * from "./InputChatMlMessage";
+export * from "./ChatInputDataToolChoice";
 export * from "./ChatInputData";
 export * from "./NamedToolChoiceFunction";
 export * from "./NamedToolChoice";

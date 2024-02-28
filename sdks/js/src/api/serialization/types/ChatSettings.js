@@ -139,4 +139,8 @@ exports.ChatSettings = core.serialization.object({
     "top_p",
     core.serialization.number().optional(),
   ),
+  minP: core.serialization.property(
+    "min_p",
+    core.serialization.number().optional(),
+  ),
 });

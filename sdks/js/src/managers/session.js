@@ -19,11 +19,11 @@ class BaseSessionsManager extends BaseManager {
    */
   async _create(userId, agentId, situation) {
     if (!isValidUuid4(userId)) {
-      throw new Error("userId must be a valid UUID v4");
+      throw new Error(`userId must be a valid UUID v4. Got "${userId}"`);
     }
 
     if (!isValidUuid4(agentId)) {
-      throw new Error("agentId must be a valid UUID v4");
+      throw new Error(`agentId must be a valid UUID v4. Got "${agentId}"`);
     }
 
     return this.apiClient

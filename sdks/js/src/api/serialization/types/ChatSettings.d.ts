@@ -22,5 +22,6 @@ export declare namespace ChatSettings {
     stream?: boolean | null;
     temperature?: number | null;
     top_p?: number | null;
+    min_p?: number | null;
   }
 }
