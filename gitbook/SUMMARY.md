@@ -17,6 +17,7 @@
 * [Overview](agents/overview.md)
 * [Tutorial](agents/tutorial.md)
 * [Self-hosting](agents/self-hosting.md)
+* [Example: Jessica](agents/jessica.md)
 
 ## 💁 S1 Model
 
