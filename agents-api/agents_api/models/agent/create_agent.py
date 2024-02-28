@@ -1,4 +1,5 @@
 import json
+from contextlib import suppress
 from uuid import UUID
 
 from ...autogen.openapi_model import Instruction
@@ -18,6 +19,10 @@ def create_agent_query(
 ):
     assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
     agent_id_str = str(agent_id)
+
+    # FIXME: remove this and fix the corresponding relation instead
+    with suppress(KeyError):
+        del default_settings["min_p"]
 
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
