@@ -2,7 +2,7 @@ import uuid
 from julep.api import ResourceCreatedResponse, ResourceUpdatedResponse, User
 from julep.api.core import ApiError
 from ward import test
-from .fixtures import client, async_client, user
+from tests.fixtures import client, async_client, user
 
 
 @test("create user")

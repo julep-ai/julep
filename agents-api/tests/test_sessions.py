@@ -15,7 +15,7 @@ from julep.api import (
 )
 from julep.api.core import ApiError
 from ward import test
-from .fixtures import client, async_client, user, session, agent
+from tests.fixtures import client, async_client, user, session, agent
 
 
 @test("get existing session")
