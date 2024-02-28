@@ -205,6 +205,8 @@ class BaseSession:
         entries.append(new_entry)
         client.run(add_entries_query(entries))
 
+        # TODO: Add a job_id to the background task and,
+        # return it as part of the response.
         if total_tokens >= summarization_tokens_threshold:
             return run_summarization_task
 
