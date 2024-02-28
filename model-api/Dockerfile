@@ -1,5 +1,5 @@
-# Use vllm/vllm-openai:0.3.0 as a base image
-FROM vllm/vllm-openai:v0.3.0 as builder
+# Use vllm/vllm-openai:0.3.2 as a base image
+FROM vllm/vllm-openai:v0.3.2 as builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED True
@@ -8,11 +8,13 @@ ENV POETRY_CACHE_DIR=/tmp/poetry_cache
 # Set the working directory
 WORKDIR /app
 
-# Install Poetry
-RUN pip install poetry==1.6.1
+# # Install libnccl2
+# RUN apt-get update && apt-get install -y libnccl2
 
+# Install Poetry
 # Disable Poetry's virtual environment as Docker provides isolation
-RUN poetry config virtualenvs.create false
+RUN pip install --no-cache-dir --upgrade poetry \
+    && poetry config virtualenvs.create false
 
 # Copy only the Poetry configuration files
 COPY pyproject.toml poetry.lock ./
