@@ -21,7 +21,7 @@ from .fixtures import client, async_client, user, session, agent
 @test("get existing session")
 def _(existing_session=session, client=client):
     response = client.sessions.get(id=existing_session.id)
-    
+
     assert isinstance(response, Session)
     assert response.id == existing_session.id
 
@@ -29,7 +29,7 @@ def _(existing_session=session, client=client):
 @test("async get existing sessions")
 async def _(existing_session=session, client=async_client):
     response = await client.sessions.get(id=existing_session.id)
-    
+
     assert isinstance(response, Session)
     assert response.id == existing_session.id
 
@@ -180,7 +180,7 @@ async def _(existing_session=session, client=client):
 @test("sessions.chat")
 def _(client=client):
     response = client.sessions.chat(
-        session_id=str(uuid4()),
+        session_id=str(uuid.uuid4()),
         messages=[
             InputChatMlMessage(
                 role=InputChatMlMessageRole.USER,
@@ -197,7 +197,7 @@ def _(client=client):
                         "name": "test name",
                         "parameters": {"test_arg": "test val"},
                     },
-                    "id": str(uuid4()),
+                    "id": str(uuid.uuid4()),
                 },
             )
         ],
@@ -226,7 +226,7 @@ def _(client=client):
 @test("async sessions.chat")
 async def _(client=async_client):
     response = await client.sessions.chat(
-        session_id=str(uuid4()),
+        session_id=str(uuid.uuid4()),
         messages=[
             InputChatMlMessage(
                 role=InputChatMlMessageRole.USER,
@@ -243,7 +243,7 @@ async def _(client=async_client):
                         "name": "test name",
                         "parameters": {"test_arg": "test val"},
                     },
-                    "id": str(uuid4()),
+                    "id": str(uuid.uuid4()),
                 },
             )
         ],
@@ -272,7 +272,7 @@ async def _(client=async_client):
 @test("sessions.suggestions")
 def _(client=client):
     response = client.sessions.suggestions(
-        session_id=uuid4(),
+        session_id=uuid.uuid4(),
     )
     assert len(response) > 0
     assert isinstance(response[0], Suggestion)
@@ -281,7 +281,7 @@ def _(client=client):
 @test("async sessions.suggestions")
 async def _(client=async_client):
     response = await client.sessions.suggestions(
-        session_id=uuid4(),
+        session_id=uuid.uuid4(),
     )
     assert len(response) > 0
     assert isinstance(response[0], Suggestion)
@@ -290,7 +290,7 @@ async def _(client=async_client):
 @test("sessions.history")
 def _(client=client):
     response = client.sessions.history(
-        session_id=uuid4(),
+        session_id=uuid.uuid4(),
     )
     assert len(response) > 0
     assert isinstance(response[0], ChatMlMessage)
@@ -299,7 +299,7 @@ def _(client=client):
 @test("async sessions.list")
 async def _(client=async_client):
     response = await client.sessions.history(
-        session_id=uuid4(),
+        session_id=uuid.uuid4(),
     )
     assert len(response) > 0
     assert isinstance(response[0], ChatMlMessage)

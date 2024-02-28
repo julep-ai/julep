@@ -1,6 +1,5 @@
 from uuid import UUID, uuid4
 
-from ...common.protocol.functions import ParametersDict
 from agents_api.autogen.openapi_model import FunctionDef
 
 
