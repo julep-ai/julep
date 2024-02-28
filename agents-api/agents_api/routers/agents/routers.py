@@ -448,7 +448,8 @@ async def update_tool(
             + request.description
             + "\nParameters: "
             + json.dumps(request.parameters.model_dump())
-        ]
+        ],
+        join_inputs=True,
     )
 
     try:

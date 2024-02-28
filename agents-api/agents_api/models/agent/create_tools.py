@@ -9,6 +9,8 @@ def create_tools_query(
     functions: list[FunctionDef],
     embeddings: list[list[float]],
 ) -> str:
+    assert len(functions) == len(embeddings)
+
     agent_id = str(agent_id)
     functions_input = []
 
