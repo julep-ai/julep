@@ -4,7 +4,7 @@ from ..env import embedding_service_url
 
 async def embed(
     inputs: list[str],
-    join_inputs=True,
+    join_inputs=False,
 ) -> list[list[float]]:
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(

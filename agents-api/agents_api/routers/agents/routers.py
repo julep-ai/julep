@@ -13,6 +13,7 @@ from agents_api.models.agent.list_agents import list_agents_query
 from agents_api.models.agent.delete_agent import delete_agent_query
 from agents_api.models.agent.update_agent import update_agent_query
 from agents_api.models.agent.get_agent import get_agent_query
+from agents_api.models.agent.create_tools import create_tools_query
 from agents_api.models.agent.update_tool import update_tool_by_id_query
 from agents_api.models.docs.create_docs import (
     create_docs_query,
@@ -223,6 +224,25 @@ async def create_agent(
             )
         )
 
+    if request.tools:
+        functions = [t.function for t in request.tools]
+        embeddings = await embed(
+            [
+                function_embed_instruction
+                + f"{function.name}, {function.description}, "
+                + "required_params:"
+                + function.parameters.model_dump_json()
+                for function in functions
+            ]
+        )
+        client.run(
+            create_tools_query(
+                new_agent_id,
+                functions,
+                embeddings,
+            )
+        )
+
     return res
 
 
@@ -428,7 +448,8 @@ async def update_tool(
             + request.description
             + "\nParameters: "
             + json.dumps(request.parameters.model_dump())
-        ]
+        ],
+        join_inputs=True,
     )
 
     try:
