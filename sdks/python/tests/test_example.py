@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from ward import test
 
 from .fixtures import client
@@ -54,6 +52,8 @@ def _(client=client):
         session_id=session.id,
         messages=[message],
         max_tokens=200,  # and any other generation parameters
+        stream=False,
+        #
         # Memory options
         remember=True,  # "remember" / form memories about this user from the messages
         recall=True,  # "recall" / fetch past memories about this user.
