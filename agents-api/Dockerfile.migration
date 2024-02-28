@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED True
+ENV POETRY_CACHE_DIR=/tmp/poetry_cache
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir --upgrade cozo-migrate
+
+COPY . ./
+ENV COZO_HOST="http://cozo:9070"
+ENV COZO_AUTH_TOKEN="myauthkey"
+
+ENTRYPOINT \
+    cozo-migrate -e http -h $COZO_HOST --auth $COZO_AUTH_TOKEN init \
+    ; cozo-migrate -e http -h $COZO_HOST --auth $COZO_AUTH_TOKEN -d ./migrations apply -ay
