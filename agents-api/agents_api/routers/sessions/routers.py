@@ -218,12 +218,11 @@ async def session_chat(
     if bg_task:
         background_tasks.add_task(bg_task, session_id)
 
-    choices = response["choices"]
     resp = [ChatMLMessage(**new_entry.model_dump())]
 
     return ChatResponse(
         id=uuid4(),
-        finish_reason=FinishReason[choices[0]["finish_reason"]],
+        finish_reason=FinishReason[response.choices[0].finish_reason],
         response=[resp],
-        usage=CompletionUsage(**response["usage"]),
+        usage=CompletionUsage(**response.usage.model_dump()),
     )
