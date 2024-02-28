@@ -52,6 +52,7 @@ __exportStar(require("./ChatMlMessageRole"), exports);
 __exportStar(require("./ChatMlMessage"), exports);
 __exportStar(require("./InputChatMlMessageRole"), exports);
 __exportStar(require("./InputChatMlMessage"), exports);
+__exportStar(require("./ChatInputDataToolChoice"), exports);
 __exportStar(require("./ChatInputData"), exports);
 __exportStar(require("./NamedToolChoiceFunction"), exports);
 __exportStar(require("./NamedToolChoice"), exports);
