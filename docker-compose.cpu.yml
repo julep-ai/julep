@@ -38,25 +38,25 @@ services:
     container_name: model
     build:
       context: model-api/
-      shm_size: "12gb"
-    shm_size: "12gb"
+      shm_size: "2gb"
+    shm_size: "2gb"
 
     ports:
       - "8000:8000"
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 3
-              capabilities: [gpu]
+
+  cozo:
+    container_name: cozo
+    build:
+      context: cozo-server/
+    ports:
+      - "9070:9070"
 
   text-embeddings-inference:
     env_file:
       - .env
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.0
     ports:
       - "8082:80"
     shm_size: "1gb"
@@ -72,27 +72,6 @@ services:
       - 7233:7233
     volumes:
       - temporal_data:/home/temporal
-
-  cozo:
-    env_file:
-      - .env
-    container_name: cozo
-    build:
-      context: cozo-server/
-    ports:
-      - "9070:9070"
-
-  cozo-migrate:
-    env_file:
-      - .env
-    container_name: cozo-migrate
-    depends_on:
-      cozo:
-        condition: service_started
-    build:
-      context: agents-api/
-      dockerfile: Dockerfile.migration
-    restart: "no" # Make sure to double quote this
 
 volumes:
   model_data:
