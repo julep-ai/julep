@@ -2,7 +2,7 @@ import uuid
 from julep.api import ResourceCreatedResponse, ResourceUpdatedResponse, Agent
 from julep.api.core import ApiError
 from ward import test
-from .fixtures import client, async_client, agent
+from tests.fixtures import client, async_client, agent
 
 
 @test("create new agent with tools")
