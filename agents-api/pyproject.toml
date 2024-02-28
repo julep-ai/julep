@@ -7,16 +7,16 @@ readme = "README.md"
 packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.13"
 fastapi = "^0.103.1"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.23.2"
 fire = "^0.5.0"
-environs = "^9.5.0"
+environs = "^10.3.0"
 google-cloud-aiplatform = "^1.33.0"
 pandas = "^2.1.0"
 openai = "^1.12.0"
-httpx = "^0.25.0"
+httpx = "^0.26.0"
 async-lru = "^2.0.4"
 sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
 ward = "^0.68.0b0"
@@ -32,6 +32,7 @@ datamodel-code-generator = "^0.25.3"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.24.4"
 pytype = "^2024.1.5"
+julep = "^0.2.4"
 
 [build-system]
 requires = ["poetry-core"]
