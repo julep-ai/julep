@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import openai
 from uuid import UUID
 from typing import Callable
 from textwrap import dedent
@@ -11,6 +10,7 @@ from agents_api.models.entry.entries_summarization import (
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
+from agents_api.clients.openai import client as openai_client
 
 
 example_previous_memory = """
@@ -130,7 +130,7 @@ async def run_prompt(
 ) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
 
-    response = await openai.Completion.acreate(
+    response = await openai_client.completions.create(
         model=model,
         prompt=prompt,
         max_tokens=max_tokens,
