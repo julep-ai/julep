@@ -4,9 +4,9 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .input_chat_ml_message import InputChatMlMessage
 from .tool import Tool
-from .tool_choice_option import ToolChoiceOption
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -21,7 +21,7 @@ class ChatInputData(pydantic.BaseModel):
     tools: typing.Optional[typing.List[Tool]] = pydantic.Field(
         description="(Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden"
     )
-    tool_choice: typing.Optional[ToolChoiceOption] = pydantic.Field(
+    tool_choice: typing.Optional[ChatInputDataToolChoice] = pydantic.Field(
         description="Can be one of existing tools given to the agent earlier or the ones included in the request"
     )
 

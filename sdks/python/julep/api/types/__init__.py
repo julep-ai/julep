@@ -4,6 +4,7 @@ from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .belief import Belief
 from .chat_input_data import ChatInputData
+from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .chat_ml_message import ChatMlMessage
 from .chat_ml_message_role import ChatMlMessageRole
 from .chat_response import ChatResponse
@@ -57,6 +58,7 @@ __all__ = [
     "AgentDefaultSettings",
     "Belief",
     "ChatInputData",
+    "ChatInputDataToolChoice",
     "ChatMlMessage",
     "ChatMlMessageRole",
     "ChatResponse",

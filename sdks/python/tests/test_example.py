@@ -59,5 +59,6 @@ def _(client=client):
         recall=True,  # "recall" / fetch past memories about this user.
     )
 
-    response = result.response[0].content
-    assert isinstance(response, str)
+    [response_msg, *_] = result.response[0]
+    assert hasattr(response_msg, "role")
+    assert hasattr(response_msg, "content")
