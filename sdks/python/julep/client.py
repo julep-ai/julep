@@ -24,7 +24,9 @@ from .managers.tool import ToolsManager, AsyncToolsManager
 # See Note above
 __all__ = ["AsyncJulepApi", "JulepApi", "Client", "AsyncClient"]
 
-get_base_url = lambda url: f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+
+def get_base_url(url):
+    return f"{urlparse(url).scheme}://{urlparse(url).netloc}"
 
 
 class Client:

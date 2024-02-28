@@ -6,8 +6,23 @@ from ..api.types import (
     FunctionDef,
     CreateToolRequest,
     Instruction,
+    ChatSettingsResponseFormat,
+    InputChatMlMessage,
+    Tool,
 )
 
+ChatSettingsResponseFormatDict = TypedDict(
+    "ChatSettingsResponseFormat",
+    **{k: v.outer_type_ for k, v in ChatSettingsResponseFormat.__fields__.items()},
+)
+InputChatMlMessageDict = TypedDict(
+    "InputChatMlMessage",
+    **{k: v.outer_type_ for k, v in InputChatMlMessage.__fields__.items()},
+)
+ToolDict = TypedDict(
+    "Tool",
+    **{k: v.outer_type_ for k, v in Tool.__fields__.items()},
+)
 
 DocDict = TypedDict(
     "DocDict",
