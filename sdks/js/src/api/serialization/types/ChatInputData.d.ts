@@ -12,6 +12,6 @@ export declare namespace ChatInputData {
   interface Raw {
     messages: serializers.InputChatMlMessage.Raw[];
     tools?: serializers.Tool.Raw[] | null;
-    tool_choice?: serializers.ToolChoiceOption.Raw | null;
+    tool_choice?: serializers.ChatInputDataToolChoice.Raw | null;
   }
 }

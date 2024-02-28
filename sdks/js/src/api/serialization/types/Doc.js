@@ -53,4 +53,8 @@ exports.Doc = core.serialization.object({
   title: core.serialization.string(),
   content: core.serialization.string(),
   id: core.serialization.string(),
+  createdAt: core.serialization.property(
+    "created_at",
+    core.serialization.date(),
+  ),
 });

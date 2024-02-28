@@ -370,5 +370,15 @@ export declare class JulepApiClient {
     toolId: string,
     requestOptions?: JulepApiClient.RequestOptions,
   ): Promise<void>;
+  /**
+   *
+   *
+   * @example
+   *     await julepApi.getJobStatus("job_id")
+   */
+  getJobStatus(
+    jobId: string,
+    requestOptions?: JulepApiClient.RequestOptions,
+  ): Promise<JulepApi.JobStatus>;
   protected _getAuthorizationHeader(): Promise<string>;
 }

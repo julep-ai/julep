@@ -22,6 +22,12 @@ from ..api.types import (
 )
 
 from .base import BaseManager
+from .types import (
+    ChatSettingsResponseFormatDict,
+    InputChatMlMessageDict,
+    ToolDict,
+)
+
 from .utils import is_valid_uuid4
 
 
@@ -241,8 +247,8 @@ class BaseSessionsManager(BaseManager):
         self,
         *,
         session_id: str,
-        messages: List[InputChatMlMessage],
-        tools: Optional[List[Tool]] = None,
+        messages: List[Union[InputChatMlMessageDict, InputChatMlMessage]],
+        tools: Optional[List[Union[ToolDict, Tool]]] = None,
         tool_choice: Optional[ToolChoiceOption] = None,
         frequency_penalty: Optional[float] = None,
         length_penalty: Optional[float] = None,
@@ -250,7 +256,9 @@ class BaseSessionsManager(BaseManager):
         max_tokens: Optional[int] = None,
         presence_penalty: Optional[float] = None,
         repetition_penalty: Optional[float] = None,
-        response_format: Optional[ChatSettingsResponseFormat] = None,
+        response_format: Optional[
+            Union[ChatSettingsResponseFormatDict, ChatSettingsResponseFormat]
+        ] = None,
         seed: Optional[int] = None,
         stop: Optional[ChatSettingsStop] = None,
         stream: Optional[bool] = None,
@@ -555,8 +563,8 @@ class SessionsManager(BaseSessionsManager):
         self,
         *,
         session_id: str,
-        messages: List[InputChatMlMessage],
-        tools: Optional[List[Tool]] = None,
+        messages: List[Union[InputChatMlMessageDict, InputChatMlMessage]],
+        tools: Optional[List[Union[ToolDict, Tool]]] = None,
         tool_choice: Optional[ToolChoiceOption] = None,
         frequency_penalty: Optional[float] = None,
         length_penalty: Optional[float] = None,
@@ -564,7 +572,9 @@ class SessionsManager(BaseSessionsManager):
         max_tokens: Optional[int] = None,
         presence_penalty: Optional[float] = None,
         repetition_penalty: Optional[float] = None,
-        response_format: Optional[ChatSettingsResponseFormat] = None,
+        response_format: Optional[
+            Union[ChatSettingsResponseFormatDict, ChatSettingsResponseFormat]
+        ] = None,
         seed: Optional[int] = None,
         stop: Optional[ChatSettingsStop] = None,
         stream: Optional[bool] = None,
@@ -871,8 +881,8 @@ class AsyncSessionsManager(BaseSessionsManager):
         self,
         *,
         session_id: str,
-        messages: List[InputChatMlMessage],
-        tools: Optional[List[Tool]] = None,
+        messages: List[Union[InputChatMlMessageDict, InputChatMlMessage]],
+        tools: Optional[List[Union[ToolDict, Tool]]] = None,
         tool_choice: Optional[ToolChoiceOption] = None,
         frequency_penalty: Optional[float] = None,
         length_penalty: Optional[float] = None,
@@ -880,7 +890,9 @@ class AsyncSessionsManager(BaseSessionsManager):
         max_tokens: Optional[int] = None,
         presence_penalty: Optional[float] = None,
         repetition_penalty: Optional[float] = None,
-        response_format: Optional[ChatSettingsResponseFormat] = None,
+        response_format: Optional[
+            Union[ChatSettingsResponseFormatDict, ChatSettingsResponseFormat]
+        ] = None,
         seed: Optional[int] = None,
         stop: Optional[ChatSettingsStop] = None,
         stream: Optional[bool] = None,

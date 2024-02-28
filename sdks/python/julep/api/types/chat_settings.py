@@ -70,6 +70,9 @@ class ChatSettings(pydantic.BaseModel):
     top_p: typing.Optional[float] = pydantic.Field(
         description="Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both."
     )
+    min_p: typing.Optional[float] = pydantic.Field(
+        description="Minimum probability compared to leading token to be considered"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
