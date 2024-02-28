@@ -109,7 +109,7 @@ exports.ChatInputData = core.serialization.object({
         __awaiter(void 0, void 0, void 0, function* () {
           return (yield Promise.resolve().then(() =>
             __importStar(require("..")),
-          )).ToolChoiceOption;
+          )).ChatInputDataToolChoice;
         }),
       )
       .optional(),

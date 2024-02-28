@@ -16,5 +16,6 @@ export declare namespace AgentDefaultSettings {
     repetition_penalty?: number | null;
     temperature?: number | null;
     top_p?: number | null;
+    min_p?: number | null;
   }
 }

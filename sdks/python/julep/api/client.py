@@ -13,6 +13,7 @@ from .core.remove_none_from_dict import remove_none_from_dict
 from .environment import JulepApiEnvironment
 from .types.agent import Agent
 from .types.agent_default_settings import AgentDefaultSettings
+from .types.chat_input_data_tool_choice import ChatInputDataToolChoice
 from .types.chat_response import ChatResponse
 from .types.chat_settings_response_format import ChatSettingsResponseFormat
 from .types.chat_settings_stop import ChatSettingsStop
@@ -27,6 +28,7 @@ from .types.get_suggestions_response import GetSuggestionsResponse
 from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
 from .types.instruction import Instruction
+from .types.job_status import JobStatus
 from .types.list_agents_response import ListAgentsResponse
 from .types.list_sessions_response import ListSessionsResponse
 from .types.list_users_response import ListUsersResponse
@@ -34,7 +36,6 @@ from .types.resource_created_response import ResourceCreatedResponse
 from .types.resource_updated_response import ResourceUpdatedResponse
 from .types.session import Session
 from .types.tool import Tool
-from .types.tool_choice_option import ToolChoiceOption
 from .types.user import User
 
 try:
@@ -517,7 +518,7 @@ class JulepApi:
         *,
         messages: typing.List[InputChatMlMessage],
         tools: typing.Optional[typing.List[Tool]] = OMIT,
-        tool_choice: typing.Optional[ToolChoiceOption] = OMIT,
+        tool_choice: typing.Optional[ChatInputDataToolChoice] = OMIT,
         frequency_penalty: typing.Optional[float] = OMIT,
         length_penalty: typing.Optional[float] = OMIT,
         logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]] = OMIT,
@@ -530,6 +531,7 @@ class JulepApi:
         stream: typing.Optional[bool] = OMIT,
         temperature: typing.Optional[float] = OMIT,
         top_p: typing.Optional[float] = OMIT,
+        min_p: typing.Optional[float] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
     ) -> ChatResponse:
@@ -543,7 +545,7 @@ class JulepApi:
 
             - tools: typing.Optional[typing.List[Tool]]. (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
 
-            - tool_choice: typing.Optional[ToolChoiceOption]. Can be one of existing tools given to the agent earlier or the ones included in the request
+            - tool_choice: typing.Optional[ChatInputDataToolChoice]. Can be one of existing tools given to the agent earlier or the ones included in the request
 
             - frequency_penalty: typing.Optional[float]. (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
 
@@ -574,6 +576,8 @@ class JulepApi:
             - temperature: typing.Optional[float]. What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 
             - top_p: typing.Optional[float]. Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
+
+            - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -624,6 +628,8 @@ class JulepApi:
             _request["temperature"] = temperature
         if top_p is not OMIT:
             _request["top_p"] = top_p
+        if min_p is not OMIT:
+            _request["min_p"] = min_p
         if recall is not OMIT:
             _request["recall"] = recall
         if remember is not OMIT:
@@ -1395,6 +1401,38 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def get_job_status(self, job_id: str) -> JobStatus:
+        """
+
+
+        Parameters:
+            - job_id: str.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_job_status(
+            job_id="job_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"jobs/{job_id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
 
 class AsyncJulepApi:
     def __init__(
@@ -1867,7 +1905,7 @@ class AsyncJulepApi:
         *,
         messages: typing.List[InputChatMlMessage],
         tools: typing.Optional[typing.List[Tool]] = OMIT,
-        tool_choice: typing.Optional[ToolChoiceOption] = OMIT,
+        tool_choice: typing.Optional[ChatInputDataToolChoice] = OMIT,
         frequency_penalty: typing.Optional[float] = OMIT,
         length_penalty: typing.Optional[float] = OMIT,
         logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]] = OMIT,
@@ -1880,6 +1918,7 @@ class AsyncJulepApi:
         stream: typing.Optional[bool] = OMIT,
         temperature: typing.Optional[float] = OMIT,
         top_p: typing.Optional[float] = OMIT,
+        min_p: typing.Optional[float] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
     ) -> ChatResponse:
@@ -1893,7 +1932,7 @@ class AsyncJulepApi:
 
             - tools: typing.Optional[typing.List[Tool]]. (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
 
-            - tool_choice: typing.Optional[ToolChoiceOption]. Can be one of existing tools given to the agent earlier or the ones included in the request
+            - tool_choice: typing.Optional[ChatInputDataToolChoice]. Can be one of existing tools given to the agent earlier or the ones included in the request
 
             - frequency_penalty: typing.Optional[float]. (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
 
@@ -1924,6 +1963,8 @@ class AsyncJulepApi:
             - temperature: typing.Optional[float]. What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 
             - top_p: typing.Optional[float]. Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
+
+            - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -1974,6 +2015,8 @@ class AsyncJulepApi:
             _request["temperature"] = temperature
         if top_p is not OMIT:
             _request["top_p"] = top_p
+        if min_p is not OMIT:
+            _request["min_p"] = min_p
         if recall is not OMIT:
             _request["recall"] = recall
         if remember is not OMIT:
@@ -2739,6 +2782,38 @@ class AsyncJulepApi:
         )
         if 200 <= _response.status_code < 300:
             return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def get_job_status(self, job_id: str) -> JobStatus:
+        """
+
+
+        Parameters:
+            - job_id: str.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_job_status(
+            job_id="job_id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"jobs/{job_id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:

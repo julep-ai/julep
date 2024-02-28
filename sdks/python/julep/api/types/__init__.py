@@ -4,6 +4,7 @@ from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .belief import Belief
 from .chat_input_data import ChatInputData
+from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .chat_ml_message import ChatMlMessage
 from .chat_ml_message_role import ChatMlMessageRole
 from .chat_response import ChatResponse
@@ -32,6 +33,8 @@ from .get_user_docs_response import GetUserDocsResponse
 from .input_chat_ml_message import InputChatMlMessage
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .instruction import Instruction
+from .job_status import JobStatus
+from .job_status_state import JobStatusState
 from .list_agents_response import ListAgentsResponse
 from .list_sessions_response import ListSessionsResponse
 from .list_users_response import ListUsersResponse
@@ -55,6 +58,7 @@ __all__ = [
     "AgentDefaultSettings",
     "Belief",
     "ChatInputData",
+    "ChatInputDataToolChoice",
     "ChatMlMessage",
     "ChatMlMessageRole",
     "ChatResponse",
@@ -83,6 +87,8 @@ __all__ = [
     "InputChatMlMessage",
     "InputChatMlMessageRole",
     "Instruction",
+    "JobStatus",
+    "JobStatusState",
     "ListAgentsResponse",
     "ListSessionsResponse",
     "ListUsersResponse",

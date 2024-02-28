@@ -161,34 +161,32 @@ async def _(client=async_client):
     response = await client.sessions.chat(
         session_id=str(uuid4()),
         messages=[
-            InputChatMlMessage(
-                role=InputChatMlMessageRole.USER,
+            dict(
+                role="user",
                 content="test content",
                 name="tets name",
             )
         ],
         tools=[
-            Tool(
-                **{
-                    "type": "function",
-                    "function": {
-                        "description": "test description",
-                        "name": "test name",
-                        "parameters": {"test_arg": "test val"},
-                    },
-                    "id": str(uuid4()),
+            {
+                "type": "function",
+                "function": {
+                    "description": "test description",
+                    "name": "test name",
+                    "parameters": {"test_arg": "test val"},
                 },
-            )
+                "id": str(uuid4()),
+            },
         ],
-        tool_choice=ToolChoiceOption("auto"),
+        tool_choice="auto",
         frequency_penalty=0.5,
         length_penalty=0.5,
         logit_bias={"test": 1},
         max_tokens=120,
         presence_penalty=0.5,
         repetition_penalty=0.5,
-        response_format=ChatSettingsResponseFormat(
-            type=ChatSettingsResponseFormatType.TEXT,
+        response_format=dict(
+            type="text",
         ),
         seed=1,
         stop=["<"],

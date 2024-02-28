@@ -4,4 +4,6 @@
 export interface ResourceUpdatedResponse {
   id: string;
   updatedAt: Date;
+  /** IDs (if any) of jobs created as part of this request */
+  jobs?: string[];
 }

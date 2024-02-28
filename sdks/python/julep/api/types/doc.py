@@ -17,6 +17,7 @@ class Doc(pydantic.BaseModel):
     )
     content: str = pydantic.Field(description="Information content")
     id: str = pydantic.Field(description="ID of doc")
+    created_at: dt.datetime = pydantic.Field(description="Doc created at")
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
