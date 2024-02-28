@@ -47,14 +47,13 @@ var __importStar =
     return result;
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Doc = void 0;
+exports.JobStatusState = void 0;
 const core = __importStar(require("../../core"));
-exports.Doc = core.serialization.object({
-  title: core.serialization.string(),
-  content: core.serialization.string(),
-  id: core.serialization.string(),
-  createdAt: core.serialization.property(
-    "created_at",
-    core.serialization.date(),
-  ),
-});
+exports.JobStatusState = core.serialization.enum_([
+  "pending",
+  "in_progress",
+  "retrying",
+  "succeeded",
+  "aborted",
+  "failed",
+]);

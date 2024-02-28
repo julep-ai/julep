@@ -13,5 +13,6 @@ export declare namespace Doc {
     title: string;
     content: string;
     id: string;
+    created_at: string;
   }
 }

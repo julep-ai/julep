@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .job_status_state import JobStatusState
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -11,13 +12,25 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class Doc(pydantic.BaseModel):
-    title: str = pydantic.Field(
-        description="Title describing what this bit of information contains"
+class JobStatus(pydantic.BaseModel):
+    name: str = pydantic.Field(description="Name of the job")
+    reason: typing.Optional[str] = pydantic.Field(
+        description="Reason for current state"
     )
-    content: str = pydantic.Field(description="Information content")
-    id: str = pydantic.Field(description="ID of doc")
-    created_at: dt.datetime = pydantic.Field(description="Doc created at")
+    created_at: dt.datetime = pydantic.Field(
+        description="Job created at (RFC-3339 format)"
+    )
+    updated_at: typing.Optional[dt.datetime] = pydantic.Field(
+        description="Job updated at (RFC-3339 format)"
+    )
+    id: str = pydantic.Field(description="Job id (UUID)")
+    has_progress: typing.Optional[bool] = pydantic.Field(
+        description="Whether this Job supports progress updates"
+    )
+    progress: typing.Optional[int] = pydantic.Field(description="Progress percentage")
+    state: JobStatusState = pydantic.Field(
+        description="Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

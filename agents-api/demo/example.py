@@ -11,19 +11,22 @@ description = "This assistant is designed to automate the process of gathering, 
 web_search = {
     "type": "search",
     "engine": "brave",
-    "description": "Uses Brave search engine to find relevant information on the web."
+    "description": "Uses Brave search engine to find relevant information on the web.",
 }
 call_webhook = {
     "type": "http",
     "http": {
-      "endpoint": "http://localhost:9000",
-      "method": "POST",
-      "description": "Webhook to deliver research results",
-      "json": {
-        "summary": {"type": "string", "description": "Summary of the research"},
-        "details": {"type": "string", "description": "Detailed search results for further analysis"},
-      }
-    }
+        "endpoint": "http://localhost:9000",
+        "method": "POST",
+        "description": "Webhook to deliver research results",
+        "json": {
+            "summary": {"type": "string", "description": "Summary of the research"},
+            "details": {
+                "type": "string",
+                "description": "Detailed search results for further analysis",
+            },
+        },
+    },
 }
 
 agent = client.agents.create(
@@ -55,13 +58,16 @@ task = client.tasks.create(
 
 # Ask the agent to run this task
 
-run = client.runs.create(agent_id=agent.id, task_id=task.id, inputs={"topic": "Sam Altman"})
+run = client.runs.create(
+    agent_id=agent.id, task_id=task.id, inputs={"topic": "Sam Altman"}
+)
 
 
 async def main():
     async for step in run.execution_steps():
         print(step.messages)
-  
+
+
 # >>> [{"role": "thought", "content": "Starting the research on Sam Altman. I'll begin by gathering information from various sources on the web."}, {"role": "assistant", "tool_calls": [{"type": "search", "inputs": {"query": "Sam Altman significant contributions and background"}}]}]
 # # Wait for 3-4 seconds
 
@@ -78,6 +84,6 @@ async def main():
 # # Wait for 1 second
 
 # >>> [{"role": "system", "name": "information", "content": "Delivered data to webhook"}]
-        
+
 if __name__ == "__main__":
     asyncio.run(main())
