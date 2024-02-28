@@ -27,7 +27,7 @@ class JobStatus(pydantic.BaseModel):
     has_progress: typing.Optional[bool] = pydantic.Field(
         description="Whether this Job supports progress updates"
     )
-    progress: typing.Optional[int] = pydantic.Field(description="Progress percentage")
+    progress: typing.Optional[float] = pydantic.Field(description="Progress percentage")
     state: JobStatusState = pydantic.Field(
         description="Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)"
     )
