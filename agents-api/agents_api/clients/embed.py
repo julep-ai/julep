@@ -1,10 +1,10 @@
 import httpx
-from ..env import embedding_service_url
+from ..env import embedding_service_url, truncate_embed_text
 
 
 async def embed(
     inputs: list[str],
-    join_inputs=True,
+    join_inputs=False,
 ) -> list[list[float]]:
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
@@ -15,7 +15,8 @@ async def embed(
             json={
                 "inputs": "\n\n".join(inputs) if join_inputs else inputs,
                 "normalize": True,
-                "truncate": False,
+                # FIXME: We should control the truncation ourselves and truncate before sending
+                "truncate": truncate_embed_text,
             },
         )
         resp.raise_for_status()

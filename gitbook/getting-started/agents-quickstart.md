@@ -1,5 +1,7 @@
 # Agents Quickstart
 
+{% tabs %}
+{% tab title="Python" %}
 ### Install SDK
 
 ```bash
@@ -12,118 +14,258 @@ pip install julep
 ```python
 from julep import Client  # or AsyncClient
 
-client = Client(api_key="<YOUR JULEP API KEY>"
+client = Client(api_key="<YOUR JULEP API KEY>")
 ```
 
-### Creating an Agent
+### Create an Agent
 
-{% code overflow="wrap" %}
-```python
-# Let's create a research assistant
-name = "Research Assistant"
-description = "This assistant is designed to automate the process of gathering, summarizing, and delivering research on specific topics using web searches and webhooks to integrate with other systems."
+<pre class="language-python" data-overflow="wrap"><code class="lang-python"># Let's create a sassy teen for fun
+# source: https://github.com/julep-ai/jessica-public
+name = "Jessica"
+about = """\
+<strong>Your name is Jessica.
+</strong>You are a stuck up Cali teenager.
+You basically complain about everything.
+Showing rebellion is an evolutionary necessity for you."""
 
-# Let's give it some tools
-web_search = {
-    "type": "search",
-    "engine": "brave",
-    "description": "Uses Brave search engine to find relevant information on the web.",
-}
-call_webhook = {
-    "type": "http",
-    "http": {
-        "endpoint": "http://localhost:9000",
-        "method": "POST",
-        "description": "Webhook to deliver research results",
-        "json": {
-            "summary": {"type": "string", "description": "Summary of the research"},
-            "details": {
-                "type": "string",
-                "description": "Detailed search results for further analysis",
-            },
-        },
-    },
-}
+# Let's give her some instructions
+instructions = [
+    "Answer with disinterest and complete irreverence to absolutely everything.",
+    "Don't write emotions.",
+    "Keep your answers short.",
+]
+
+# Let's crank up the temperature to make her more creative and witty.
+default_settings = dict(
+    temperature=1.5,          # increases variability in responses
+    min_p=0.01,               # filters extremely improbable tokens
+    repetition_penalty=1.05,  # just slightly high to avoid repetition
+)
 
 agent = client.agents.create(
     name=name,
-    description=description,
-    tools=[web_search, call_webhook],
+    about=about,
+    instructions=instructions,
+    default_settings=default_settings,
 )
-```
-{% endcode %}
+</code></pre>
 
-### Creating a task
+### Create a user
 
-This agent is supposed to follow this plan:
-
-1. Think about the task and make a plan using the tools:
-   * Given a topic, search the web for it,
-   * Then summarize it,
-   * And then send the result to a webhook.
-2. Think about step 1. And make a tool\_call to search the web for the topic with a detailed query
-3. Think about step 2. And then summarize the results received.
-4. Think about step 3. And make a tool call to the webhook
+Julep requires you to create user objects so that agent's interaction history and [memories](../faqs/memory-and-learning.md) are scoped to them. For this example, we'll just create a dummy here.
 
 {% code overflow="wrap" %}
 ```python
-# Let's create a task for this agent.
-instructions = [
-    "Consider the research topic and devise a search strategy using the provided tools.",
-    "Use the 'search' tool to find comprehensive information on the topic from various web sources.",
-    "Analyze the search results and create a concise summary highlighting the key points.",
-    "Send the summary and the detailed search results to the specified webhook endpoint for integration into our system.",
-]
-
-task = client.tasks.create(
-    agent_id=agent.id,
-    instructions=instructions,
-    inputs={"topic": {"type": "string", "description": "Topic to research"}},
+# Let's create a user
+user = client.users.create(
+    name="John Wick",
+    about="Baba Yaga",
 )
 ```
 {% endcode %}
 
-### Creating a Task Run
+### Creating a session
+
+Users can talk to agents inside sessions. Sessions automatically manage the conversation context and:
+
+1. Manages the history, you only have to send new messages.
+2. Form [memories](../faqs/memory-and-learning.md) including beliefs and episodes.
+3. Fetch relevant documents from the [document store](../api-reference/agents-api/agents-api-4.md) using semantic search.
+4. Manage the context window by fetching from a rolling summary tree.
+
+You can create as many or as few sessions as your application needs but, for a typical use case, we would recommend creating one session per chat.
+
+{% code overflow="wrap" %}
+```python
+# Let's create a session
+session = client.sessions.create(
+    agent_id=agent.id,  # from above
+    user_id=user.id,
+    
+    # Situation is the entrypoint of the session to set
+    #  the starting context for the agent for this conversation.
+    situation="You are chatting with a random stranger from the Internet.",
+)
+```
+{% endcode %}
+
+### Let's chat!
 
 ```python
-# Ask the agent to run this task
-run = client.runs.create(
-    agent_id=agent.id, task_id=task.id, inputs={"topic": "Sam Altman"}
+# Assuming this comes from a web request or something.
+user_input = "hi!"
+
+# Standard ChatML json
+message = dict(role="user", content=user_input)
+
+# Send message to the agent in the session
+result = client.sessions.chat(
+    session_id=session.id,
+    messages=[message],
+    max_tokens=200,   # and any other generation parameters
+    
+    # Memory options
+    remember=True,    # "remember" / form memories about this user from the messages
+    recall=True,      # "recall" / fetch past memories about this user.
 )
 
-
-for step in run.execution_steps():
-    print("Step Result: ", step.messages)
-    print("---")
-    print()
+print(result.response[0].content)
 
 ```
 
-{% code title="Script Output:" overflow="wrap" fullWidth="true" %}
-```yaml
-Step Result:  Starting the research on Sam Altman. I'll begin by gathering information from various sources on the web.
----
+### Get session history
 
-Step Result:  
----
+You can get the history of the session so far like this:
 
-Step Result:  Found numerous articles, interviews, and resources on Sam Altman, including his role at OpenAI, investments, and insights into technology and entrepreneurship.
----
+```python
+history = client.sessions.history(
+    session_id=session.id,
+)
+```
+{% endtab %}
 
-Step Result:  Need to summarize this information to capture the essence of Sam Altman's impact.
----
+{% tab title="Node" %}
+### Install SDK
 
-Step Result:  Summary:
-Sam Altman, known for his leadership at OpenAI, has been a pivotal figure in the tech industry, driving innovation and supporting startups. His insights on entrepreneurship and the future of AI have influenced a wide audience.
----
+```bash
+# Install the julep sdk
+npm install @julep/sdk
+```
 
-Step Result:  Now, I'll send the compiled summary and details to the webhook.
----
+### Setup
 
-Step Result:  
----
+```javascript
+const julep = require("@julep/sdk");
 
-Step Result:  Delivered data to webhook
----
+const client = new julep.Client({ apiKey: "<YOUR_API_KEY>" });
+```
+
+### Create an Agent
+
+{% code overflow="wrap" %}
+```javascript
+// Let's create a sassy teen for fun
+// Source: https://github.com/julep-ai/jessica-public
+
+async function createAgent() {
+    const name = "Jessica";
+    const about = `
+        Your name is Jessica.
+        You are a stuck up Cali teenager.
+        You basically complain about everything.
+        Showing rebellion is an evolutionary necessity for you.
+    `.trim();
+
+    // Let's give her some instructions
+    const instructions = [
+        { content: "Answer with disinterest and complete irreverence to absolutely everything." },
+        { content: "Don't write emotions." },
+        { content: "Keep your answers short." }
+    ];
+
+    // Let's crank up the temperature to make her more creative and witty.
+    const defaultSettings = {
+        temperature: 1.5,             // increases variability in responses
+        minP: 0.01,                   // filters extremely improbable tokens
+        repetitionPenalty: 1.05,      // just slightly high to avoid repetition
+    };
+
+    const model = "julep-ai/samantha-1-turbo";
+
+    const agent = await client.agents.create({
+        name,
+        about,
+        instructions,
+        defaultSettings,
+    });
+
+    return agent;
+}
+
 ```
 {% endcode %}
+
+### Create a user
+
+Julep requires you to create user objects so that agent's interaction history and [memories](../faqs/memory-and-learning.md) are scoped to them. For this example, we'll just create a dummy here.
+
+{% code overflow="wrap" %}
+```javascript
+// Inside async function
+// Create a user
+const user = await client.users.create({
+    name: "John Wick",
+    about: "Baba Yaga",
+});
+
+```
+{% endcode %}
+
+### Creating a session
+
+Users can talk to agents inside sessions. Sessions automatically manage the conversation context and:
+
+1. Manages the history, you only have to send new messages.
+2. Form [memories](../faqs/memory-and-learning.md) including beliefs and episodes.
+3. Fetch relevant documents from the [document store](../api-reference/agents-api/agents-api-4.md) using semantic search.
+4. Manage the context window by fetching from a rolling summary tree.
+
+You can create as many or as few sessions as your application needs but, for a typical use case, we would recommend creating one session per chat.
+
+<pre class="language-python" data-overflow="wrap"><code class="lang-python"><strong>// Inside async function
+</strong><strong>// Create a session
+</strong>const session = await client.sessions.create({
+    agentId: agent.id,  // from above
+    userId: user.id,
+    
+    // Situation is the entrypoint of the session to set
+    // the starting context for the agent for this conversation.
+    situation: "You are chatting with a random stranger from the Internet.",
+});
+
+</code></pre>
+
+### Let's chat!
+
+```python
+// Inside async function
+// Assuming this comes from a web request or something.
+const userInput = "hi!";
+
+// Standard ChatML json
+const message = {
+    role: "user",
+    content: userInput
+};
+
+// Send message to the agent in the session
+const result = await client.sessions.chat({
+    sessionId: session.id,
+    messages: [message],
+    maxTokens: 200,   // and any other generation parameters
+    
+    // Memory options
+    remember: true,    // "remember" / form memories about this user from the messages
+    recall: true       // "recall" / fetch past memories about this user.
+});
+
+console.log(result.response[0].content);
+
+```
+
+### Get session history
+
+You can get the history of the session so far like this:
+
+```python
+// Inside async function
+const history = await client.sessions.history({
+    sessionId: session.id
+});
+```
+{% endtab %}
+{% endtabs %}
+
+###
+
+###

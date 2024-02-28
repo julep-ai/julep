@@ -17,7 +17,7 @@ def update_agent_query(
 
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
-            **update_data,
+            **{k: v for k, v in update_data.items() if v},
             "agent_id": agent_id,
             "developer_id": developer_id,
             "updated_at": utcnow().timestamp(),
