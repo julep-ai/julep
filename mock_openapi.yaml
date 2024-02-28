@@ -1257,11 +1257,15 @@ components:
             $ref: "#/components/schemas/InputChatMLMessage"
         tools:
           type: array
+          nullable: true
           description: (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
           items:
             $ref: "#/components/schemas/Tool"
         tool_choice:
-          $ref: "#/components/schemas/ToolChoiceOption"
+          nullable: true
+          oneOf:
+            - $ref: "#/components/schemas/ToolChoiceOption"
+            - $ref: "#/components/schemas/NamedToolChoice"
           description: Can be one of existing tools given to the agent earlier or the ones included in the request
       required:
         - messages
@@ -1583,7 +1587,7 @@ components:
           type: number
           minimum: 0
           maximum: 2
-          default: 1
+          default: 0.7
           example: 1
           nullable: true
           description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -1595,8 +1599,14 @@ components:
           example: 1
           nullable: true
           description: Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-      required:
-        - stream
+        min_p:
+          type: number
+          description: Minimum probability compared to leading token to be considered
+          exclusiveMaximum: true
+          maximum: 1
+          exclusiveMinimum: false
+          minimum: 0
+          default: 0.01
     AgentDefaultSettings:
       type: object
       properties:
@@ -1607,7 +1617,6 @@ components:
           maximum: 2
           nullable: true
           description: (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-          exclusiveMaximum: true
         length_penalty:
           type: number
           default: 1
@@ -1633,7 +1642,7 @@ components:
           type: number
           minimum: 0
           maximum: 2
-          default: 1
+          default: 0.7
           example: 1
           nullable: true
           description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
@@ -1645,6 +1654,14 @@ components:
           example: 1
           nullable: true
           description: Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+        min_p:
+          type: number
+          description: Minimum probability compared to leading token to be considered
+          exclusiveMaximum: true
+          maximum: 1
+          exclusiveMinimum: false
+          minimum: 0
+          default: 0.01
     ChatInput:
       allOf:
         - $ref: "#/components/schemas/ChatInputData"
@@ -1765,8 +1782,8 @@ components:
           items:
             type: string
             format: uuid
-          uniqueItems: true
           description: IDs (if any) of jobs created as part of this request
+          uniqueItems: true
       required:
         - id
         - updated_at
@@ -1809,7 +1826,7 @@ components:
           default: false
           description: Whether this Job supports progress updates
         progress:
-          type: integer
+          type: number
           description: Progress percentage
           default: 0
           minimum: 0
