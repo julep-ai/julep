@@ -3,6 +3,7 @@ from julep import AsyncClient, Client
 
 # TODO: make clients connect to real service
 
+
 @fixture(scope="global")
 def client():
     # Mock server base url
@@ -34,15 +35,13 @@ def agent(client=client):
             {
                 "content": "important content",
                 "important": True,
-            }
+            },
         ],
         functions=[
             {
                 "description": "func desc",
                 "name": "some_func",
-                "parameters": {
-                    "param1": "string"
-                },
+                "parameters": {"param1": "string"},
             }
         ],
         default_settings={

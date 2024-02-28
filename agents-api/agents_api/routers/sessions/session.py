@@ -1,5 +1,5 @@
 from typing import Callable
-import openai
+from openai.types.chat.chat_completion import ChatCompletion
 from dataclasses import dataclass
 from pydantic import UUID4
 from agents_api.clients.cozo import client
@@ -12,6 +12,7 @@ from agents_api.clients.worker.types import ChatML
 from agents_api.models.session.session_data import get_session_data
 from agents_api.models.entry.proc_mem_context import proc_mem_context_query
 from agents_api.autogen.openapi_model import InputChatMLMessage
+from agents_api.clients.openai import client as openai_client
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
@@ -32,7 +33,9 @@ class BaseSession:
     session_id: UUID4
     developer_id: UUID4
 
-    async def run(self, new_input, settings: Settings) -> tuple[dict, Entry, Callable]:
+    async def run(
+        self, new_input, settings: Settings
+    ) -> tuple[ChatCompletion, Entry, Callable]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -50,16 +53,15 @@ class BaseSession:
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)
 
-        # TODO: this needs to be refactored somehow, no need to return 3rd value from this method
-        message = response["choices"][0]["message"]
+        message = response.choices[0].message
 
-        total_tokens = response["usage"]["total_tokens"]
-        completion_tokens = response["usage"]["completion_tokens"]
+        total_tokens = response.usage.total_tokens
+        completion_tokens = response.usage.completion_tokens
         new_entry = Entry(
             session_id=self.session_id,
-            role=message["role"],
+            role=message.role,
             name=None if session_data is None else session_data.agent_name,
-            content=message["content"],
+            content=message.content,
             token_count=completion_tokens,
         )
 
@@ -156,7 +158,9 @@ class BaseSession:
 
         return messages, settings
 
-    async def generate(self, init_context: list[ChatML], settings: Settings) -> dict:
+    async def generate(
+        self, init_context: list[ChatML], settings: Settings
+    ) -> ChatCompletion:
         # TODO: how to use response_format ?
 
         init_context = [
@@ -164,19 +168,21 @@ class BaseSession:
             for msg in init_context
         ]
 
-        return openai.ChatCompletion.create(
+        return await openai_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
             max_tokens=settings.max_tokens,
             stop=settings.stop,
             temperature=settings.temperature,
             frequency_penalty=settings.frequency_penalty,
-            repetition_penalty=settings.repetition_penalty,
-            best_of=1,
+            extra_body=dict(
+                repetition_penalty=settings.repetition_penalty,
+                best_of=1,
+                top_k=1,
+                length_penalty=settings.length_penalty,
+                logit_bias=settings.logit_bias,
+            ),
             top_p=settings.top_p,
-            top_k=1,
-            length_penalty=settings.length_penalty,
-            # logit_bias=settings.logit_bias,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
         )

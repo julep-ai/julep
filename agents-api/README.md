@@ -1,5 +1,10 @@
 # Memory API
 
+## Deploy
+
+From `monorepo/agents-api` folder run
+```gcloud run deploy julep-memory-api --source . --region=us-central1```
+
 ## Running temporal
 
 1. Start the temporal dev server

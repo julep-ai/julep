@@ -18,7 +18,7 @@ def _(client=client):
             {
                 "content": "important content",
                 "important": True,
-            }
+            },
         ],
         tools=[
             {
@@ -26,10 +26,8 @@ def _(client=client):
                 "function": {
                     "description": "func desc",
                     "name": "some_func",
-                    "parameters": {
-                        "param1": "string"
-                    },
-                }
+                    "parameters": {"param1": "string"},
+                },
             }
         ],
         default_settings={
@@ -67,7 +65,7 @@ async def _(client=async_client):
             {
                 "content": "important content",
                 "important": True,
-            }
+            },
         ],
         tools=[
             {
@@ -75,10 +73,8 @@ async def _(client=async_client):
                 "function": {
                     "description": "func desc",
                     "name": "some_func",
-                    "parameters": {
-                        "param1": "string"
-                    },
-                }
+                    "parameters": {"param1": "string"},
+                },
             }
         ],
         default_settings={
@@ -116,15 +112,13 @@ def _(client=client):
             {
                 "content": "important content",
                 "important": True,
-            }
+            },
         ],
         functions=[
             {
                 "description": "func desc",
                 "name": "some_func",
-                "parameters": {
-                    "param1": "string"
-                },
+                "parameters": {"param1": "string"},
             }
         ],
         default_settings={
@@ -162,15 +156,13 @@ async def _(client=async_client):
             {
                 "content": "important content",
                 "important": True,
-            }
+            },
         ],
         functions=[
             {
                 "description": "func desc",
                 "name": "some_func",
-                "parameters": {
-                    "param1": "string"
-                },
+                "parameters": {"param1": "string"},
             }
         ],
         default_settings={
@@ -209,7 +201,7 @@ def _(client=client):
                 {
                     "content": "important content",
                     "important": True,
-                }
+                },
             ],
             tools=[
                 {
@@ -217,19 +209,15 @@ def _(client=client):
                     "function": {
                         "description": "func desc",
                         "name": "some_func",
-                        "parameters": {
-                            "param1": "string"
-                        },
-                    }
+                        "parameters": {"param1": "string"},
+                    },
                 }
             ],
             functions=[
                 {
                     "description": "func desc",
                     "name": "some_func",
-                    "parameters": {
-                        "param1": "string"
-                    },
+                    "parameters": {"param1": "string"},
                 }
             ],
             default_settings={
@@ -268,7 +256,7 @@ async def _(client=async_client):
                 {
                     "content": "important content",
                     "important": True,
-                }
+                },
             ],
             tools=[
                 {
@@ -276,19 +264,15 @@ async def _(client=async_client):
                     "function": {
                         "description": "func desc",
                         "name": "some_func",
-                        "parameters": {
-                            "param1": "string"
-                        },
-                    }
+                        "parameters": {"param1": "string"},
+                    },
                 }
             ],
             functions=[
                 {
                     "description": "func desc",
                     "name": "some_func",
-                    "parameters": {
-                        "param1": "string"
-                    },
+                    "parameters": {"param1": "string"},
                 }
             ],
             default_settings={
