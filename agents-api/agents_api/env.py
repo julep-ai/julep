@@ -48,7 +48,9 @@ embedding_service_url: str = env.str(
     "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8082/embed"
 )
 
+truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=False)
 
+# Temporal
 temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:7233")
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
