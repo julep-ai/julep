@@ -8,4 +8,6 @@ export interface Doc {
   content: string;
   /** ID of doc */
   id: string;
+  /** Doc created at */
+  createdAt: Date;
 }
