@@ -20,6 +20,12 @@ from .managers.memory import MemoriesManager, AsyncMemoriesManager
 
 from .managers.session import SessionsManager, AsyncSessionsManager
 from .managers.tool import ToolsManager, AsyncToolsManager
+from .utils.openai_patch import (
+    patch_chat_acreate,
+    patch_chat_create,
+    patch_completions_acreate,
+    patch_completions_create,
+)
 
 # See Note above
 __all__ = ["AsyncJulepApi", "JulepApi", "Client", "AsyncClient"]
@@ -120,6 +126,10 @@ class Client:
             *args,
             **kwargs,
         )
+
+        # Patch the OpenAI client to pass non-openai params
+        patch_chat_create(self._openai_client)
+        patch_completions_create(self._openai_client)
 
         self.chat = self._openai_client.chat
         self.completions = self._openai_client.completions
@@ -233,6 +243,10 @@ class AsyncClient:
             *args,
             **kwargs,
         )
+
+        # Patch the OpenAI client to pass non-openai params
+        patch_chat_acreate(self._openai_client)
+        patch_completions_acreate(self._openai_client)
 
         self.chat = self._openai_client.chat
         self.completions = self._openai_client.completions
