@@ -1,5 +1,4 @@
 import json
-from contextlib import suppress
 from uuid import UUID
 
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -34,10 +33,6 @@ def update_agent_query(
         }}
         :returning
     """
-
-    # FIXME: remove this and fix the corresponding relation instead
-    with suppress(KeyError):
-        del default_settings["min_p"]
 
     # Settings update query
     settings_cols, settings_vals = cozo_process_mutate_data(
