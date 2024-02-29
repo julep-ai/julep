@@ -11,6 +11,7 @@ class AgentDefaultSettings(BaseModel):
     length_penalty: float = 1.0
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
+    min_p: float = 0.01
 
 
 class Tool(BaseModel):
