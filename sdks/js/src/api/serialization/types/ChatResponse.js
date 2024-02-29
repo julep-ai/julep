@@ -110,4 +110,5 @@ exports.ChatResponse = core.serialization.object({
         .CompletionUsage;
     }),
   ),
+  jobs: core.serialization.list(core.serialization.string()).optional(),
 });

@@ -27,6 +27,9 @@ class ChatResponse(pydantic.BaseModel):
         description="A list of chat completion messages produced as a response."
     )
     usage: CompletionUsage
+    jobs: typing.Optional[typing.List[str]] = pydantic.Field(
+        description="IDs (if any) of jobs created as part of this request"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
