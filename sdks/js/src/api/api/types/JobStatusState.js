@@ -11,4 +11,5 @@ exports.JobStatusState = {
   Succeeded: "succeeded",
   Aborted: "aborted",
   Failed: "failed",
+  Unknown: "unknown",
 };

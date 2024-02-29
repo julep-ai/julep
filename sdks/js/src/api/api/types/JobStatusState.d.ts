@@ -10,7 +10,8 @@ export declare type JobStatusState =
   | "retrying"
   | "succeeded"
   | "aborted"
-  | "failed";
+  | "failed"
+  | "unknown";
 export declare const JobStatusState: {
   readonly Pending: "pending";
   readonly InProgress: "in_progress";
@@ -18,4 +19,5 @@ export declare const JobStatusState: {
   readonly Succeeded: "succeeded";
   readonly Aborted: "aborted";
   readonly Failed: "failed";
+  readonly Unknown: "unknown";
 };

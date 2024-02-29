@@ -13,4 +13,6 @@ export interface ChatResponse {
   /** A list of chat completion messages produced as a response. */
   response: JulepApi.ChatMlMessage[][];
   usage: JulepApi.CompletionUsage;
+  /** IDs (if any) of jobs created as part of this request */
+  jobs?: string[];
 }

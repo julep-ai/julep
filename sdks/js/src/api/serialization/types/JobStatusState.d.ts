@@ -15,5 +15,6 @@ export declare namespace JobStatusState {
     | "retrying"
     | "succeeded"
     | "aborted"
-    | "failed";
+    | "failed"
+    | "unknown";
 }

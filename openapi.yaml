@@ -1362,6 +1362,13 @@ components:
               $ref: "#/components/schemas/ChatMLMessage"
         usage:
           $ref: "#/components/schemas/CompletionUsage"
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+          description: IDs (if any) of jobs created as part of this request
       required:
         - usage
         - response
@@ -1516,6 +1523,9 @@ components:
             The total length of input tokens and generated tokens is limited by the model's context length.
           type: integer
           nullable: true
+          default: 200
+          minimum: 1
+          maximum: 16384
         presence_penalty:
           type: number
           default: 0
@@ -1587,8 +1597,8 @@ components:
           type: number
           minimum: 0
           maximum: 2
-          default: 0.7
-          example: 1
+          default: 0.75
+          example: 0.75
           nullable: true
           description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
         top_p:
@@ -1599,6 +1609,7 @@ components:
           example: 1
           nullable: true
           description: Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+          exclusiveMinimum: true
         min_p:
           type: number
           description: Minimum probability compared to leading token to be considered
@@ -1606,6 +1617,7 @@ components:
           maximum: 1
           exclusiveMinimum: false
           minimum: 0
+          example: 0.01
           default: 0.01
     AgentDefaultSettings:
       type: object
@@ -1641,9 +1653,9 @@ components:
         temperature:
           type: number
           minimum: 0
-          maximum: 2
-          default: 0.7
-          example: 1
+          maximum: 3
+          default: 0.75
+          example: 0.75
           nullable: true
           description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
         top_p:
@@ -1661,6 +1673,7 @@ components:
           maximum: 1
           exclusiveMinimum: false
           minimum: 0
+          example: 0.01
           default: 0.01
     ChatInput:
       allOf:
@@ -1841,6 +1854,7 @@ components:
             - succeeded
             - aborted
             - failed
+            - unknown
       required:
         - id
         - name

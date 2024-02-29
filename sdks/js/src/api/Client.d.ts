@@ -145,6 +145,7 @@ export declare class JulepApiClient {
    * @example
    *     await julepApi.chat("session_id", {
    *         accept: "application/json",
+   *         minP: 0.01,
    *         messages: [{
    *                 role: JulepApi.InputChatMlMessageRole.User,
    *                 content: "content"

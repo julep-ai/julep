@@ -17,6 +17,7 @@ class JobStatusState(str, enum.Enum):
     SUCCEEDED = "succeeded"
     ABORTED = "aborted"
     FAILED = "failed"
+    UNKNOWN = "unknown"
 
     def visit(
         self,
@@ -26,6 +27,7 @@ class JobStatusState(str, enum.Enum):
         succeeded: typing.Callable[[], T_Result],
         aborted: typing.Callable[[], T_Result],
         failed: typing.Callable[[], T_Result],
+        unknown: typing.Callable[[], T_Result],
     ) -> T_Result:
         if self is JobStatusState.PENDING:
             return pending()
@@ -39,3 +41,5 @@ class JobStatusState(str, enum.Enum):
             return aborted()
         if self is JobStatusState.FAILED:
             return failed()
+        if self is JobStatusState.UNKNOWN:
+            return unknown()

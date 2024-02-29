@@ -6,6 +6,7 @@ import * as JulepApi from "../..";
  * @example
  *     {
  *         accept: "application/json",
+ *         minP: 0.01,
  *         messages: [{
  *                 role: JulepApi.InputChatMlMessageRole.User,
  *                 content: "content"
