@@ -29,7 +29,7 @@ def list_sessions_query(developer_id: UUID, limit: int = 100, offset: int = 0):
             *session_lookup{{
                 agent_id,
                 user_id,
-                session_id,
+                session_id: id,
             }}, updated_at = to_int(validity)
 
         :limit {limit}
