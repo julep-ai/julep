@@ -56,4 +56,5 @@ exports.JobStatusState = core.serialization.enum_([
   "succeeded",
   "aborted",
   "failed",
+  "unknown",
 ]);
