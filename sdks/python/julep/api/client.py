@@ -591,6 +591,7 @@ class JulepApi:
         )
         client.chat(
             session_id="session_id",
+            min_p=0.01,
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
@@ -1978,6 +1979,7 @@ class AsyncJulepApi:
         )
         await client.chat(
             session_id="session_id",
+            min_p=0.01,
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
