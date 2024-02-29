@@ -14,5 +14,6 @@ export declare namespace ChatResponse {
     finish_reason: serializers.ChatResponseFinishReason.Raw;
     response: serializers.ChatMlMessage.Raw[][];
     usage: serializers.CompletionUsage.Raw;
+    jobs?: string[] | null;
   }
 }
