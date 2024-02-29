@@ -15,6 +15,7 @@ from agents_api.routers import (
     agents,
     sessions,
     users,
+    jobs,
 )
 
 
@@ -65,6 +66,7 @@ app.include_router(agents.router)
 app.include_router(sessions.router)
 # app.include_router(embedder.router)
 app.include_router(users.router)
+app.include_router(jobs.router)
 # app.include_router(entries.router)
 # app.include_router(models.router)
 # app.include_router(personality.router)

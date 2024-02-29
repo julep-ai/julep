@@ -217,8 +217,11 @@ async def session_chat(
     )
     response, new_entry, bg_task = await session.run(request.messages, settings)
 
+    jobs = None
     if bg_task:
-        background_tasks.add_task(bg_task, session_id)
+        job_id = uuid4()
+        jobs = {job_id}
+        background_tasks.add_task(bg_task, session_id, job_id)
 
     resp = [ChatMLMessage(**new_entry.model_dump())]
 
@@ -227,4 +230,5 @@ async def session_chat(
         finish_reason=FinishReason[response.choices[0].finish_reason],
         response=[resp],
         usage=CompletionUsage(**response.usage.model_dump()),
+        jobs=jobs,
     )
