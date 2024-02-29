@@ -316,8 +316,7 @@ async def list_docs(agent_id: UUID4, limit: int = 100, offset: int = 0) -> DocsL
     return DocsList(
         items=[
             Doc(
-                # TODO: Need to return created_at here
-                # created_at= ...
+                created_at=row["created_at"],
                 id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
