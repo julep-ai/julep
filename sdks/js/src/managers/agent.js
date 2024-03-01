@@ -137,7 +137,7 @@ class AgentsManager extends BaseAgentsManager {
   async create({
     name,
     about,
-    instructions,
+    instructions = [],
     tools = [],
     functions = [],
     defaultSettings = {},
