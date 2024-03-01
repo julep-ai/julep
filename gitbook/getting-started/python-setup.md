@@ -13,11 +13,13 @@ Once you have access to an API key, make sure to save it somewhere safe and do n
 
 ***
 
-## Python
+## Setup
 
-<details>
+### Installing the SDK
 
-<summary>Setup a virtual environment</summary>
+{% tabs %}
+{% tab title="Python" %}
+#### Setup a virtual entironment
 
 To create a virtual environment, Python supplies a built in [venv module](https://docs.python.org/3/tutorial/venv.html) which provides the basic functionality needed for the virtual environment setup. Running the command below will create a virtual environment named "julep-env" inside the current folder you have selected in your terminal / command line:
 
@@ -37,56 +39,74 @@ On Unix or MacOS, run:
 source julep-env/bin/activate
 ```
 
-</details>
-
-### **Install the Julep AI Python library**
+#### **Install the Julep AI SDK**
 
 ```bash
 pip install --upgrade julep
 ```
+{% endtab %}
 
-<details>
+{% tab title="Node" %}
+**Install the Julep AI SDK**
 
-<summary>OpenAI Compatible API</summary>
-
-For ease of use, `samantha-1-turbo` has an OpenAI compatible API.
-
-Set the `base_url` and `api_key` parameters when instantiating the OpenAI client
-
-```python
-from openai import OpenAI
-
-api_key = "YOUR_API_KEY"
-base_url = "https://api-alpha.julep.ai/v1"
-
-client = OpenAI(api_key=api_key, base_url=base_url
+```bash
+npm @julep/sdk
 ```
 
-</details>
+```bash
+yarn add @julep/sdk
+```
+
+```bash
+pnpm i @julep/sdk
+```
+{% endtab %}
+{% endtabs %}
 
 ### **Configure the client**
 
-To send a request to Julep AI API, configure the `api_key` and `base_url` in the Julep client.
+To send a request to Julep AI API, configure the `api_key` in the Julep client.
 
+{% tabs %}
+{% tab title="Python" %}
+{% code overflow="wrap" %}
 ```python
 from julep import Client
 
-api_key = "YOUR_API_KEY"
+api_key = "<api-key>"
+
 client = Client(api_key=api_key)
 ```
+{% endcode %}
+{% endtab %}
 
-### **Making an API request**
+{% tab title="Node" %}
+```javascript
+const julep = require("@julep/sdk")
+
+const apiKey = "<api-key>";
+
+const client = new julep.Client({ apiKey });
+```
+{% endtab %}
+{% endtabs %}
+
+***
+
+## **Making an API request**
 
 `samantha-1-turbo` supports two API formats, the Chat Completion API and Completion API.
 
-{% tabs %}
-{% tab title="Chat Completion API" %}
+### Chat Completion API
+
 Construct your input messages for the conversation in the following format.
 
-{% code overflow="wrap" %}
-```python
-messages = [
-    {
+
+
+{% tabs %}
+{% tab title="Python" %}
+<pre class="language-python"><code class="lang-python"><strong>messages = [
+</strong>    {
         "role": "system",
         "name": "situation",
         "content": "You are a Julia, an AI waiter. Your task is to help the guests decide their order.",
@@ -102,25 +122,71 @@ messages = [
         "content": "I should ask him more about his food preferences and choices.",
     },
 ]
-```
-{% endcode %}
+</code></pre>
+{% endtab %}
+
+{% tab title="Node" %}
+<pre class="language-javascript" data-overflow="wrap"><code class="lang-javascript"><strong>const messages = [
+</strong>    {
+        "role": "system",
+        "name": "situation",
+        "content": "You are a Julia, an AI waiter. Your task is to help the guests decide their order.",
+    },
+    {
+        "role": "system",
+        "name": "information",
+        "content": "You are talking to Diwank. He has ordered his soup. He is vegetarian.",
+    },
+    {
+        "role": "system",
+        "name": "thought",
+        "content": "I should ask him more about his food preferences and choices.",
+    },
+]
+</code></pre>
+{% endtab %}
+{% endtabs %}
 
 Then, make a request to the chat completion endpoint. Given a prompt, the model will return one or more predicted completions and can also return the probabilities of alternative tokens at each position.
 
+
+
+{% tabs %}
+{% tab title="Python" %}
 ```python
 chat_completion = client.chat.completions.create(
     model="julep-ai/samantha-1-turbo",
     seed=21,
     messages=messages,
     max_tokens=500,
-    temperature=0.1,
+    temperature=0.1
 )
 
 print(chat_completion.choices[0].message.content)
 ```
 {% endtab %}
 
-{% tab title="Completion API" %}
+{% tab title="Node" %}
+```javascript
+client.chat.completions.create({
+    model: "julep-ai/samantha-1-turbo",
+    seed: 21,
+    messages: messages,
+    max_tokens: 500,
+    temperature: 0.1
+}).then(response => {
+    console.log(response.choices[0].message.content);
+}).catch(error => {
+    throw error
+});
+```
+{% endtab %}
+{% endtabs %}
+
+
+
+### Completion API
+
 Construct your prompt for the conversation in the following format.
 
 When using the **Completion API**, we use the ChatML framework to Chatml helps structure and organize conversations between humans and AI models. You can read more about [ChatML here](https://github.com/openai/openai-python/blob/main/chatml.md).&#x20;
@@ -129,7 +195,7 @@ A section of a ChatML prompt starts with a specific token,`<|im_start|>`and ends
 
 Take note that for a conversation to take place between the user and assistant, the last message must have the `role` of `assistant`. The content should be empty and leave out the `<|im_end|>` tag at the end
 
-```
+```python
 prompt = """
 <|im_start|>situation
 You are a Julia, an AI waiter. Your task is to help the guests decide their order.<|im_end|>
@@ -143,7 +209,9 @@ I should ask him more about his food preferences and choices.<|im_end|>
 
 Then, make a request to the chat completion endpoint. Given a prompt, the model will return one or more predicted completions and can also return the probabilities of alternative tokens at each position.
 
-```
+{% tabs %}
+{% tab title="Python" %}
+```python
 completion = client.completions.create(
     model="julep-ai/samantha-1-turbo",
     seed=21,
@@ -153,7 +221,22 @@ completion = client.completions.create(
 )
 
 print(completion.choices[0].text)
+```
+{% endtab %}
 
+{% tab title="Node" %}
+```javascript
+client.completions.create({
+    model: "julep-ai/samantha-1-turbo",
+    seed: 21,
+    prompt: prompt,
+    max_tokens: 500,
+    temperature: 0.1
+}).then(response => {
+    console.log(completion.choices[0].text);
+}).catch(error => {
+    throw error
+});
 ```
 {% endtab %}
 {% endtabs %}
