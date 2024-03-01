@@ -10,7 +10,6 @@ with workflow.unsafe.imports_passed_through():
 
 @workflow.defn
 class SummarizationWorkflow:
-    # TODO: Set the job_id in a way that you can query later
     @workflow.run
     async def run(self, session_id: str) -> None:
         return await workflow.execute_activity(
