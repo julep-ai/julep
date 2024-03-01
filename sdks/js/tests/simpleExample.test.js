@@ -31,10 +31,10 @@ Showing rebellion is an evolutionary necessity for you.`.trim();
     };
 
     const agent = await client.agents.create({
-      name: name,
-      about: about,
-      instructions: instructions,
-      defaultSettings: defaultSettings,
+      name,
+      about,
+      instructions,
+      defaultSettings,
     });
 
     const user = await client.users.create({
@@ -42,12 +42,15 @@ Showing rebellion is an evolutionary necessity for you.`.trim();
       about: "Baba Yaga",
     });
 
+    // Situation is the entrypoint of the session to set
+    //  the starting context for the agent for this conversation.
+    const situation =
+      "You are chatting with a random stranger from the Internet.";
+
     const session = await client.sessions.create({
       agentId: agent.id, // from above
       userId: user.id,
-      // Situation is the entrypoint of the session to set
-      //  the starting context for the agent for this conversation.
-      situation: "You are chatting with a random stranger from the Internet.",
+      situation,
     });
 
     const userInput = "hi!";
