@@ -22,6 +22,7 @@ temperature_scaling_power: float = env.float("TEMPERATURE_SCALING_POWER", defaul
 environment = dict(
     sentry_dsn=sentry_dsn,
     api_key=api_key,
+    api_key_header_name=api_key_header_name,
     host=host,
     port=port,
     backlog=backlog,
