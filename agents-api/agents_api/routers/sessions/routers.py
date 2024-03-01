@@ -212,6 +212,8 @@ async def session_chat(
         top_p=request.top_p,
         remember=request.remember,
         recall=request.recall,
+        min_p=request.min_p,
+        preset=request.preset,
     )
     response, new_entry, bg_task = await session.run(request.messages, settings)
 

@@ -181,6 +181,7 @@ class BaseSession:
                 top_k=1,
                 length_penalty=settings.length_penalty,
                 logit_bias=settings.logit_bias,
+                preset=settings.preset.name if settings.preset else None,
             ),
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,

@@ -61,6 +61,8 @@ def session_data_query(developer_id: UUID, session_id: UUID):
             repetition_penalty,
             top_p,
             temperature,
+            min_p,
+            preset,
         }},
         default_settings = {{
             "frequency_penalty": frequency_penalty,
@@ -69,6 +71,8 @@ def session_data_query(developer_id: UUID, session_id: UUID):
             "repetition_penalty": repetition_penalty,
             "top_p": top_p,
             "temperature": temperature,
+            "min_p": min_p,
+            "preset": preset,
         }}
     """
 
