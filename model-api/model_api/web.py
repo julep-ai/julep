@@ -18,7 +18,7 @@ from lmformatenforcer import JsonSchemaParser
 from pydantic import UUID4
 import sentry_sdk
 
-from vllm.engine.metrics import add_global_metrics_labels
+#from vllm.engine.metrics import add_global_metrics_labels
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.utils import random_uuid
@@ -996,6 +996,8 @@ def create_app(args=None):
     parser = argparse.ArgumentParser(
         description="vLLM OpenAI-Compatible RESTful API server."
     )
+    parser.add_argument("--host", type=str, default=None, help="host name")
+    parser.add_argument("--port", type=int, default=8000, help="port number")
     parser.add_argument(
         "--log-stats", type=bool, default=True, help="log stats metrics"
     )
@@ -1028,7 +1030,7 @@ def create_app(args=None):
         tokenizer_mode=engine_args.tokenizer_mode,
         trust_remote_code=engine_args.trust_remote_code,
     )
-
-    add_global_metrics_labels(model_name=engine_args.model)
+    # TODO: this no longer works, as metrics were re-implemented in new vllm version, need to fix this somehow
+    #add_global_metrics_labels(model_name=engine_args.model)
 
     return app

@@ -57,7 +57,7 @@ image = (
         timeout=60 * 20,
     )
     .pip_install(
-        "vllm==0.3.2",
+        "vllm==0.3.3",
         "starlette-exporter==0.17.1",
         "environs==10.3.0",
         "pynvml==11.5.0",
@@ -67,6 +67,7 @@ image = (
         "interegular==0.3.3",
         "pydantic[email]==2.6.3",
         "scikit-learn==1.4.0",
+        "aioprometheus[starlette]==23.12.0",
     )
     .copy_local_dir("./artifacts", "/root/artifacts")
 )
