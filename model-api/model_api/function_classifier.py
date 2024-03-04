@@ -9,7 +9,9 @@ from .tokens import tag_start_id_map
 
 @cache
 def load_function_classifier(
-    path: str = os.path.join(os.path.dirname(__file__), "./function_classifier.sklearn")
+    path: str = os.path.join(
+        os.path.dirname(__file__), "../artifacts/function_classifier.bin"
+    )
 ):
     """
     Load the classifier model from disk.
@@ -34,7 +36,7 @@ def classify_function_call(logit_tensor: torch.Tensor) -> bool:
     input = logit_tensor[valid_tag_start_ids]
 
     # Convert to numpy (bfloat16 is not supported by numpy)
-    input = input.to(dtype=torch.float16).numpy()
+    input = input.cpu().to(dtype=torch.float16).numpy()
 
     # Reshape since the classifier expects a 2D array
     # (1, -1) means 1 row and as many columns as needed
