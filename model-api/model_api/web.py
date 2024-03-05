@@ -18,7 +18,7 @@ from lmformatenforcer import JsonSchemaParser
 from pydantic import UUID4
 import sentry_sdk
 
-#from vllm.engine.metrics import add_global_metrics_labels
+# from vllm.engine.metrics import add_global_metrics_labels
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.utils import random_uuid
@@ -1031,6 +1031,6 @@ def create_app(args=None):
         trust_remote_code=engine_args.trust_remote_code,
     )
     # TODO: this no longer works, as metrics were re-implemented in new vllm version, need to fix this somehow
-    #add_global_metrics_labels(model_name=engine_args.model)
+    # add_global_metrics_labels(model_name=engine_args.model)
 
     return app

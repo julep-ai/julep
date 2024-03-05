@@ -81,6 +81,7 @@ async def update_user(
                 user_id=user_id,
                 name=request.name,
                 about=request.about,
+                metadata=request.metadata or {},
             )
         )
 
@@ -130,6 +131,7 @@ async def create_user(
             user_id=uuid4(),
             name=request.name,
             about=request.about,
+            metadata=request.metadata or {},
         ),
     )
 
@@ -188,6 +190,7 @@ async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResp
             id=doc_id,
             title=request.title,
             content=request.content,
+            metadata=request.metadata or {},
         )
     )
 

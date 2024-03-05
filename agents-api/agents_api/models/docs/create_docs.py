@@ -13,6 +13,7 @@ def create_docs_query(
     title: str,
     content: str,
     split_fn: Callable[[str], list[str]] = lambda x: x.split("\n\n"),
+    metadata: dict = {},
 ):
     owner_id = str(owner_id)
     id = str(id)
@@ -40,10 +41,11 @@ def create_docs_query(
             to_uuid("{owner_id}"),
             to_uuid("{id}"),
             {created_at},
+            {metadata},
         ]]
 
         :insert {owner_type}_docs {{
-            {owner_type}_id, doc_id, created_at
+            {owner_type}_id, doc_id, created_at, metadata,
         }}
     }} {{
         # create the snippets
