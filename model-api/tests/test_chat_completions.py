@@ -8,7 +8,7 @@ from model_api.logits_processors import (
 )
 from model_api.protocol import SamplingParams
 import model_api.web
-from tests.fixtures import client, unauthorized_client, request_id, MODEL
+from tests.fixtures import client, unauthorized_client, request_id, MODEL_NAME
 
 
 def test_security(unauthorized_client):
@@ -30,7 +30,7 @@ def test_check_model(client):
 
 def test_logit_bias_not_supported(client):
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         logit_bias={"a": 1.0},
         messages=[],
     )
@@ -43,7 +43,7 @@ def test_logit_bias_not_supported(client):
 
 def test_functions_and_tools(client):
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         functions=[
             {
                 "name": "func_name",
@@ -105,7 +105,7 @@ def test_do_not_insert_default_situation_if_messages_empty(client, request_id, m
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[],
         max_tokens=1,
         stop=["<", "<|"],
@@ -158,7 +158,7 @@ hi<|im_end|>
     mocker.patch("model_api.web.random_uuid", return_value=request_id)
     spy = mocker.spy(model_api.web.engine, "generate")
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
@@ -223,7 +223,7 @@ You are a helpful AI Assistant<|im_end|>
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
@@ -293,7 +293,7 @@ hi<|im_end|>
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
@@ -363,7 +363,7 @@ hi<|im_end|>
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
@@ -443,7 +443,7 @@ hi<|im_end|>
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
@@ -514,7 +514,7 @@ hi<|im_end|>
 #     spy = mocker.spy(model_api.web.engine, "generate")
 
 #     body = dict(
-#         model=MODEL,
+#         model=MODEL_NAME,
 #         temperature=temperature,
 #         messages=[
 #             {
@@ -585,7 +585,7 @@ hi<|im_end|>
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
@@ -657,7 +657,7 @@ hi<|im_end|>
     spy = mocker.spy(model_api.web.engine, "generate")
 
     body = dict(
-        model=MODEL,
+        model=MODEL_NAME,
         messages=[
             {
                 "role": "user",
