@@ -102,13 +102,20 @@ class DocsManager extends BaseDocsManager {
   }
 
   /**
-   * @param {string | UUID} agentId
-   * @param {string | UUID} userId
-   * @param {DocDict} doc
+   * @typedef {Object} DocCreateArgs
+   * @property {string | UUID} agentId
+   * @property {string | UUID} userId
+   * @property {DocDict} doc
+   */
+
+  /**
+   * @param {DocCreateArgs} args
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({ agentId, userId, doc }) {
-    return await this._create(agentId, userId, doc);
+  async create(args) {
+    const result = await this._create(args);
+    const doc = { ...args, ...result };
+    return doc;
   }
 
   /**

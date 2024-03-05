@@ -89,13 +89,20 @@ class UsersManager extends BaseUsersManager {
   }
 
   /**
-   * @param {string} name
-   * @param {string} about
-   * @param {DocDict[]} [docs=[]]
+   * @typedef {Object} UserCreateArgs
+   * @property {string} name
+   * @property {string} about
+   * @property {DocDict[]} [docs]
+   */
+
+  /**
+   * @param {UserCreateArgs} args
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({ name, about, docs = [] }) {
-    return await this._create(name, about, docs);
+  async create(args) {
+    const result = await this._create(args);
+    const user = { ...args, ...result };
+    return user;
   }
 
   /**
@@ -118,14 +125,20 @@ class UsersManager extends BaseUsersManager {
   }
 
   /**
-   * @param {string | UUID} userId
-   * @param {string} [about]
-   * @param {string} [name]
+   * @typedef {Object} UserUpdateArgs
+   * @property {string | UUID} userId
+   * @property {string} [about]
+   * @property {string} [name]
+   */
+
+  /**
+   * @param {UserUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update({ userId, about, name } = {}) {
-    return await this._update(userId, about, name);
+  async update(args) {
+    const result = await this._update(args);
+    const updatedUser = { ...args, ...result };
+    return updatedUser;
   }
 }
-
 module.exports = { BaseUsersManager, UsersManager };

@@ -35,6 +35,7 @@ ModelName = Literal[
     "julep-ai/samantha-1-turbo",
 ]
 
+
 class AgentCreateArgs(TypedDict):
     name: str
     about: str
@@ -45,12 +46,14 @@ class AgentCreateArgs(TypedDict):
     model: ModelName = "julep-ai/samantha-1-turbo"
     docs: List[DocDict] = []
 
+
 class AgentUpdateArgs(TypedDict):
     about: Optional[str] = None
     instructions: Optional[Union[List[str], List[InstructionDict]]] = None
     name: Optional[str] = None
     model: Optional[str] = None
     default_settings: Optional[DefaultSettingsDict] = None
+
 
 class BaseAgentsManager(BaseManager):
     """
@@ -374,10 +377,7 @@ class AgentsManager(BaseAgentsManager):
         return self._get(id=id)
 
     @beartype
-    def create(
-        self,
-        **kwargs: AgentCreateArgs
-    ) -> ResourceCreatedResponse:
+    def create(self, **kwargs: AgentCreateArgs) -> ResourceCreatedResponse:
         """
         Creates a new resource with the specified details.
 
@@ -398,7 +398,7 @@ class AgentsManager(BaseAgentsManager):
             This function is decorated with `@beartype`, which will perform runtime type checking on the arguments.
         """
         result = self._create(**kwargs)
-        agent = Agent(**kwargs, **result)
+        agent = Agent(**{**kwargs, **result})
         return agent
 
     @beartype
@@ -449,10 +449,7 @@ class AgentsManager(BaseAgentsManager):
 
     @beartype
     def update(
-        self,
-        *,
-        agent_id: Union[str, UUID],
-        **kwargs: AgentUpdateArgs
+        self, *, agent_id: Union[str, UUID], **kwargs: AgentUpdateArgs
     ) -> ResourceUpdatedResponse:
         """
         Update the properties of a resource.
@@ -473,11 +470,8 @@ class AgentsManager(BaseAgentsManager):
         Note:
             This method is decorated with `beartype`, which means it enforces type annotations at runtime.
         """
-        result = self._update(
-            agent_id=agent_id,
-            **kwargs
-        )
-        agent = Agent(**kwargs, **result)
+        result = self._update(agent_id=agent_id, **kwargs)
+        agent = Agent(**{**kwargs, **result})
         return agent
 
 
@@ -572,10 +566,7 @@ class AsyncAgentsManager(BaseAgentsManager):
         return await self._get(id=id)
 
     @beartype
-    async def create(
-        self,
-        **kwargs: AgentCreateArgs
-    ) -> ResourceCreatedResponse:
+    async def create(self, **kwargs: AgentCreateArgs) -> ResourceCreatedResponse:
         """
         Create a new resource asynchronously with specified details.
 
@@ -598,7 +589,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             The exceptions that may be raised are not specified in the signature and depend on the implementation of the _create method.
         """
         result = await self._create(**kwargs)
-        agent = Agent(**kwargs, **result)
+        agent = Agent(**{**kwargs, **result})
         return agent
 
     @beartype
@@ -645,10 +636,7 @@ class AsyncAgentsManager(BaseAgentsManager):
 
     @beartype
     async def update(
-        self,
-        *,
-        agent_id: Union[str, UUID],
-        **kwargs: AgentUpdateArgs
+        self, *, agent_id: Union[str, UUID], **kwargs: AgentUpdateArgs
     ) -> ResourceUpdatedResponse:
         """
         Asynchronously update an agent's details.
@@ -666,9 +654,6 @@ class AsyncAgentsManager(BaseAgentsManager):
         Returns:
             ResourceUpdatedResponse: An object containing the details of the update response.
         """
-        result = await self._update(
-            agent_id=agent_id,
-            **kwargs
-        )
-        agent = Agent(**kwargs, **result)
+        result = await self._update(agent_id=agent_id, **kwargs)
+        agent = Agent(**{**kwargs, **result})
         return agent
