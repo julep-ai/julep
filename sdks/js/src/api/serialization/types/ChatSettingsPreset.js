@@ -47,9 +47,16 @@ var __importStar =
     return result;
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FunctionParameters = void 0;
+exports.ChatSettingsPreset = void 0;
 const core = __importStar(require("../../core"));
-exports.FunctionParameters = core.serialization.record(
-  core.serialization.string(),
-  core.serialization.any(),
-);
+exports.ChatSettingsPreset = core.serialization.enum_([
+  "problem_solving",
+  "conversational",
+  "fun",
+  "prose",
+  "creative",
+  "business",
+  "deterministic",
+  "code",
+  "multilingual",
+]);
