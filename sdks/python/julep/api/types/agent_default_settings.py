@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .agent_default_settings_preset import AgentDefaultSettingsPreset
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -32,6 +33,9 @@ class AgentDefaultSettings(pydantic.BaseModel):
     )
     min_p: typing.Optional[float] = pydantic.Field(
         description="Minimum probability compared to leading token to be considered"
+    )
+    preset: typing.Optional[AgentDefaultSettingsPreset] = pydantic.Field(
+        description="Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)"
     )
 
     def json(self, **kwargs: typing.Any) -> str:
