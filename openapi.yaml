@@ -922,6 +922,10 @@ components:
           type: string
           description: User id (UUID)
           format: uuid
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - id
     Agent:
@@ -959,6 +963,10 @@ components:
           type: string
           description: The model to use with this agent
           default: julep-ai/samantha-1-turbo
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
         - about
@@ -1035,6 +1043,10 @@ components:
           type: string
           format: date-time
           description: Session updated at (RFC-3339 format)
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - id
         - user_id
@@ -1056,6 +1068,10 @@ components:
             $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the user
           description: List of docs about user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1072,6 +1088,10 @@ components:
         situation:
           type: string
           description: A specific situation that sets the background for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - agent_id
         - user_id
@@ -1110,6 +1130,10 @@ components:
             $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the agent
           description: List of docs about agent
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
         - about
@@ -1122,6 +1146,10 @@ components:
         situation:
           type: string
           description: Updated situation for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - situation
       description: A valid request payload for updating a session
@@ -1147,6 +1175,10 @@ components:
         default_settings:
           $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating an agent
     UpdateUserRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1158,6 +1190,10 @@ components:
         name:
           type: string
           description: Name of the user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating a user
     Suggestion:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1723,6 +1759,10 @@ components:
           type: string
           description: Doc created at
           format: date-time
+        metadata:
+          type: object
+          properties: {}
+          description: optional metadata
       required:
         - title
         - content
@@ -1737,6 +1777,10 @@ components:
         content:
           type: string
           description: Information content
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - title
         - content

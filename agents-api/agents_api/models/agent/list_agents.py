@@ -13,6 +13,7 @@ def list_agents_query(developer_id: UUID, limit: int = 100, offset: int = 0):
             about,
             created_at,
             updated_at,
+            metadata,
         ] := input[developer_id],
             *agents {{
                 developer_id,
@@ -22,6 +23,7 @@ def list_agents_query(developer_id: UUID, limit: int = 100, offset: int = 0):
                 about,
                 created_at,
                 updated_at,
+                metadata,
             }}
         
         :limit {limit}

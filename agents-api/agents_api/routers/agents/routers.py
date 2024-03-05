@@ -102,6 +102,7 @@ async def update_agent(
                 name=request.name,
                 about=request.about,
                 model=request.model or "julep-ai/samantha-1-turbo",
+                metadata=request.metadata or {},
             )
         )
 
@@ -183,6 +184,7 @@ async def create_agent(
             default_settings=(
                 request.default_settings or AgentDefaultSettings()
             ).model_dump(),
+            metadata=request.metadata or {},
         ),
     )
 
@@ -276,6 +278,7 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
             id=doc_id,
             title=request.title,
             content=request.content,
+            metadata=request.metadata or {},
         )
     )
 

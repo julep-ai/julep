@@ -2,7 +2,12 @@ from uuid import UUID
 
 
 def create_session_query(
-    session_id: UUID, developer_id: UUID, agent_id: UUID, user_id: UUID, situation: str
+    session_id: UUID,
+    developer_id: UUID,
+    agent_id: UUID,
+    user_id: UUID,
+    situation: str,
+    metadata: dict = {},
 ):
     session_id = str(session_id)
     agent_id = str(agent_id)
@@ -29,12 +34,14 @@ def create_session_query(
             to_uuid("{session_id}"),
             to_uuid("{developer_id}"),
             "{situation}",
+            {metadata},
         ]]
 
         :insert sessions {{
             developer_id,
             session_id,
             situation,
+            metadata,
         }}
         :returning
      }}"""
