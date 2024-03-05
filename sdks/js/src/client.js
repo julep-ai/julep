@@ -11,13 +11,14 @@ const { ToolsManager } = require("./managers/tool");
 const { JULEP_API_KEY, JULEP_API_URL } = require("./env");
 
 const { JulepApiClient } = require("./api");
+const { patchCreate } = require("./utils/openaiPatch");
 
 class Client {
   /**
    * @param {string} [apiKey=JULEP_API_KEY] - API key for the Julep API
    * @param {string} [baseUrl=JULEP_API_URL] - Base URL for the Julep API
    */
-  constructor({ apiKey = JULEP_API_KEY, baseUrl = JULEP_API_URL }) {
+  constructor({ apiKey = JULEP_API_KEY, baseUrl = JULEP_API_URL } = {}) {
     if (!apiKey || !baseUrl) {
       throw new Error(
         "apiKey and baseUrl must be provided or set as environment variables",
@@ -51,9 +52,11 @@ class Client {
 
     /** @type {Chat} */
     this.chat = this._openaiClient.chat;
+    patchCreate(this.chat.completions, this.chat);
 
     /** @type {Completions} */
     this.completions = this._openaiClient.completions;
+    patchCreate(this.completions);
   }
 }
 
