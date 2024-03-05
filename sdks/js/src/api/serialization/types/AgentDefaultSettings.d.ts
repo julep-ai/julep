@@ -17,5 +17,6 @@ export declare namespace AgentDefaultSettings {
     temperature?: number | null;
     top_p?: number | null;
     min_p?: number | null;
+    preset?: serializers.AgentDefaultSettingsPreset.Raw | null;
   }
 }

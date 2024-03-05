@@ -8,7 +8,7 @@ groups:
           namespaceExport: JulepApi
           skipResponseValidation: true
           includeCredentialsOnCrossOriginRequests: true
-          outputSourceFiles: true
+          # outputSourceFiles: true
           allowCustomFetcher: true
           treatUnknownAsAny: true
           defaultTimeoutInSeconds: 300 # 5 minutes

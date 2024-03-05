@@ -99,10 +99,10 @@ class JulepApiClient {
    * List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
    *
    * @example
-   *     await julepApi.listSessions({})
+   *     await julepApi.listSessions()
    */
   listSessions(request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -112,11 +112,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           "sessions",
         ),
@@ -139,6 +143,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ListSessionsResponse.parseOrThrow(
@@ -147,6 +152,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -182,13 +188,17 @@ class JulepApiClient {
    *     })
    */
   createSession(request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           "sessions",
         ),
@@ -213,6 +223,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -221,6 +232,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -250,10 +262,10 @@ class JulepApiClient {
    * List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
    *
    * @example
-   *     await julepApi.listUsers({})
+   *     await julepApi.listUsers()
    */
   listUsers(request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -263,11 +275,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           "users",
         ),
@@ -290,6 +306,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ListUsersResponse.parseOrThrow(
@@ -298,6 +315,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -327,16 +345,20 @@ class JulepApiClient {
    * Create a new user
    *
    * @example
-   *     await julepApi.createUser({})
+   *     await julepApi.createUser()
    */
   createUser(request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           "users",
         ),
@@ -361,6 +383,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -369,6 +392,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -398,10 +422,10 @@ class JulepApiClient {
    * List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
    *
    * @example
-   *     await julepApi.listAgents({})
+   *     await julepApi.listAgents()
    */
   listAgents(request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -411,11 +435,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           "agents",
         ),
@@ -438,6 +466,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ListAgentsResponse.parseOrThrow(
@@ -446,6 +475,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -482,13 +512,17 @@ class JulepApiClient {
    *     })
    */
   createAgent(request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           "agents",
         ),
@@ -513,6 +547,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -521,6 +556,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -553,13 +589,17 @@ class JulepApiClient {
    *     await julepApi.getSession("session_id")
    */
   getSession(sessionId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `sessions/${sessionId}`,
         ),
@@ -581,12 +621,14 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.Session.parseOrThrow(_response.body, {
           unrecognizedObjectKeys: "passthrough",
           allowUnrecognizedUnionMembers: true,
           allowUnrecognizedEnumValues: true,
+          skipValidation: true,
           breadcrumbsPrefix: ["response"],
         });
       }
@@ -620,13 +662,17 @@ class JulepApiClient {
    *     })
    */
   updateSession(sessionId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `sessions/${sessionId}`,
         ),
@@ -651,6 +697,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -659,6 +706,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -691,13 +739,17 @@ class JulepApiClient {
    *     await julepApi.deleteSession("session_id")
    */
   deleteSession(sessionId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `sessions/${sessionId}`,
         ),
@@ -719,6 +771,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -748,10 +801,10 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getSuggestions("session_id", {})
+   *     await julepApi.getSuggestions("session_id")
    */
   getSuggestions(sessionId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -761,11 +814,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `sessions/${sessionId}/suggestions`,
         ),
@@ -788,6 +845,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetSuggestionsResponse.parseOrThrow(
@@ -796,6 +854,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -825,10 +884,10 @@ class JulepApiClient {
    * Sorted (created_at ascending)
    *
    * @example
-   *     await julepApi.getHistory("session_id", {})
+   *     await julepApi.getHistory("session_id")
    */
   getHistory(sessionId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -838,11 +897,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `sessions/${sessionId}/history`,
         ),
@@ -865,6 +928,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetHistoryResponse.parseOrThrow(
@@ -873,6 +937,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -912,13 +977,17 @@ class JulepApiClient {
    *     })
    */
   chat(sessionId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `sessions/${sessionId}/chat`,
         ),
@@ -944,12 +1013,14 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ChatResponse.parseOrThrow(_response.body, {
           unrecognizedObjectKeys: "passthrough",
           allowUnrecognizedUnionMembers: true,
           allowUnrecognizedEnumValues: true,
+          skipValidation: true,
           breadcrumbsPrefix: ["response"],
         });
       }
@@ -983,7 +1054,7 @@ class JulepApiClient {
    *     })
    */
   getAgentMemories(agentId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { query, types, userId, limit, offset } = request;
       const _queryParams = {};
@@ -1004,11 +1075,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/memories`,
         ),
@@ -1031,6 +1106,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetAgentMemoriesResponse.parseOrThrow(
@@ -1039,6 +1115,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1071,13 +1148,17 @@ class JulepApiClient {
    *     await julepApi.getUser("user_id")
    */
   getUser(userId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `users/${userId}`,
         ),
@@ -1099,12 +1180,14 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.User.parseOrThrow(_response.body, {
           unrecognizedObjectKeys: "passthrough",
           allowUnrecognizedUnionMembers: true,
           allowUnrecognizedEnumValues: true,
+          skipValidation: true,
           breadcrumbsPrefix: ["response"],
         });
       }
@@ -1133,16 +1216,20 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateUser("user_id", {})
+   *     await julepApi.updateUser("user_id")
    */
   updateUser(userId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `users/${userId}`,
         ),
@@ -1167,6 +1254,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -1175,6 +1263,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1207,13 +1296,17 @@ class JulepApiClient {
    *     await julepApi.deleteUser("user_id")
    */
   deleteUser(userId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `users/${userId}`,
         ),
@@ -1235,6 +1328,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1267,13 +1361,17 @@ class JulepApiClient {
    *     await julepApi.getAgent("agent_id")
    */
   getAgent(agentId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}`,
         ),
@@ -1295,12 +1393,14 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.Agent.parseOrThrow(_response.body, {
           unrecognizedObjectKeys: "passthrough",
           allowUnrecognizedUnionMembers: true,
           allowUnrecognizedEnumValues: true,
+          skipValidation: true,
           breadcrumbsPrefix: ["response"],
         });
       }
@@ -1329,16 +1429,20 @@ class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateAgent("agent_id", {})
+   *     await julepApi.updateAgent("agent_id")
    */
   updateAgent(agentId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}`,
         ),
@@ -1363,6 +1467,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -1371,6 +1476,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1403,13 +1509,17 @@ class JulepApiClient {
    *     await julepApi.deleteAgent("agent_id")
    */
   deleteAgent(agentId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}`,
         ),
@@ -1431,6 +1541,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1460,10 +1571,10 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentDocs("agent_id", {})
+   *     await julepApi.getAgentDocs("agent_id")
    */
   getAgentDocs(agentId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -1473,11 +1584,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/docs`,
         ),
@@ -1500,6 +1615,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetAgentDocsResponse.parseOrThrow(
@@ -1508,6 +1624,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1543,13 +1660,17 @@ class JulepApiClient {
    *     })
    */
   createAgentDoc(agentId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/docs`,
         ),
@@ -1574,6 +1695,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -1582,6 +1704,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1611,10 +1734,10 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getUserDocs("user_id", {})
+   *     await julepApi.getUserDocs("user_id")
    */
   getUserDocs(userId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -1624,11 +1747,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `users/${userId}/docs`,
         ),
@@ -1651,6 +1778,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetUserDocsResponse.parseOrThrow(
@@ -1659,6 +1787,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1694,13 +1823,17 @@ class JulepApiClient {
    *     })
    */
   createUserDoc(userId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `users/${userId}/docs`,
         ),
@@ -1725,6 +1858,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -1733,6 +1867,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -1765,13 +1900,17 @@ class JulepApiClient {
    *     await julepApi.deleteUserDoc("user_id", "doc_id")
    */
   deleteUserDoc(userId, docId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `users/${userId}/docs/${docId}`,
         ),
@@ -1793,6 +1932,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1825,13 +1965,17 @@ class JulepApiClient {
    *     await julepApi.deleteAgentDoc("agent_id", "doc_id")
    */
   deleteAgentDoc(agentId, docId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/docs/${docId}`,
         ),
@@ -1853,6 +1997,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1885,13 +2030,17 @@ class JulepApiClient {
    *     await julepApi.deleteAgentMemory("agent_id", "memory_id")
    */
   deleteAgentMemory(agentId, memoryId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/memories/${memoryId}`,
         ),
@@ -1913,6 +2062,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -1942,10 +2092,10 @@ class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentTools("agent_id", {})
+   *     await julepApi.getAgentTools("agent_id")
    */
   getAgentTools(agentId, request = {}, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
       const { limit, offset } = request;
       const _queryParams = {};
@@ -1955,11 +2105,15 @@ class JulepApiClient {
       if (offset != null) {
         _queryParams["offset"] = offset.toString();
       }
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/tools`,
         ),
@@ -1982,6 +2136,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.GetAgentToolsResponse.parseOrThrow(
@@ -1990,6 +2145,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -2028,13 +2184,17 @@ class JulepApiClient {
    *     })
    */
   createAgentTool(agentId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/tools`,
         ),
@@ -2059,6 +2219,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceCreatedResponse.parseOrThrow(
@@ -2067,6 +2228,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -2104,13 +2266,17 @@ class JulepApiClient {
    *     })
    */
   updateAgentTool(agentId, toolId, request, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/tools/${toolId}`,
         ),
@@ -2135,6 +2301,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.ResourceUpdatedResponse.parseOrThrow(
@@ -2143,6 +2310,7 @@ class JulepApiClient {
             unrecognizedObjectKeys: "passthrough",
             allowUnrecognizedUnionMembers: true,
             allowUnrecognizedEnumValues: true,
+            skipValidation: true,
             breadcrumbsPrefix: ["response"],
           },
         );
@@ -2175,13 +2343,17 @@ class JulepApiClient {
    *     await julepApi.deleteAgentTool("agent_id", "tool_id")
    */
   deleteAgentTool(agentId, toolId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `agents/${agentId}/tools/${toolId}`,
         ),
@@ -2203,6 +2375,7 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return;
@@ -2235,13 +2408,17 @@ class JulepApiClient {
    *     await julepApi.getJobStatus("job_id")
    */
   getJobStatus(jobId, requestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-      const _response = yield core.fetcher({
+      const _response = yield (
+        (_a = this._options.fetcher) !== null && _a !== void 0
+          ? _a
+          : core.fetcher
+      )({
         url: (0, url_join_1.default)(
-          (_a = yield core.Supplier.get(this._options.environment)) !== null &&
-            _a !== void 0
-            ? _a
+          (_b = yield core.Supplier.get(this._options.environment)) !== null &&
+            _b !== void 0
+            ? _b
             : environments.JulepApiEnvironment.Default,
           `jobs/${jobId}`,
         ),
@@ -2263,12 +2440,14 @@ class JulepApiClient {
           requestOptions === null || requestOptions === void 0
             ? void 0
             : requestOptions.maxRetries,
+        withCredentials: true,
       });
       if (_response.ok) {
         return yield serializers.JobStatus.parseOrThrow(_response.body, {
           unrecognizedObjectKeys: "passthrough",
           allowUnrecognizedUnionMembers: true,
           allowUnrecognizedEnumValues: true,
+          skipValidation: true,
           breadcrumbsPrefix: ["response"],
         });
       }
