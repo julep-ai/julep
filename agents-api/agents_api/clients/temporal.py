@@ -1,5 +1,5 @@
 from temporalio.client import Client, TLSConfig
-from uuid import UUID, uuid4
+from uuid import UUID
 from agents_api.env import (
     temporal_worker_url,
     temporal_namespace,
@@ -8,7 +8,7 @@ from agents_api.env import (
 )
 
 
-async def run_summarization_task(session_id: UUID):
+async def get_client():
     tls_config = False
 
     if temporal_private_key and temporal_client_cert:
@@ -17,14 +17,19 @@ async def run_summarization_task(session_id: UUID):
             client_private_key=temporal_private_key.encode(),
         )
 
-    client = await Client.connect(
+    return await Client.connect(
         temporal_worker_url,
         namespace=temporal_namespace,
         tls=tls_config,
     )
+
+
+async def run_summarization_task(session_id: UUID, job_id: UUID):
+    client = await get_client()
+
     await client.execute_workflow(
         "SummarizationWorkflow",
         args=[str(session_id)],
         task_queue="memory-task-queue",
-        id=str(uuid4()),
+        id=str(job_id),
     )
