@@ -4,4 +4,4 @@
 /**
  * The parameters the functions accepts, described as a JSON Schema object.
  */
-export declare type FunctionParameters = Record<string, unknown>;
+export declare type FunctionParameters = Record<string, any>;

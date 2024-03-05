@@ -23,5 +23,6 @@ export declare namespace ChatSettings {
     temperature?: number | null;
     top_p?: number | null;
     min_p?: number | null;
+    preset?: serializers.ChatSettingsPreset.Raw | null;
   }
 }
