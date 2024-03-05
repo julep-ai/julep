@@ -159,8 +159,7 @@ class SamplingParams(SamplingParams):
             top_p=top_p,
             top_k=top_k,
             min_p=min_p,
-            # FIXME: This is broken for some reason
-            # seed=seed,
+            seed=seed,
             use_beam_search=use_beam_search,
             length_penalty=length_penalty,
             early_stopping=early_stopping,
@@ -390,6 +389,7 @@ class ChatCompletionRequest(ChatCompletionRequest):
             top_k=self.top_k or -1,
             use_beam_search=self.use_beam_search or False,
             length_penalty=self.length_penalty or 1.0,
+            seed=self.seed,
         )
         if self.preset is not None:
             settings = self.preset.get_settings()
@@ -444,6 +444,7 @@ class CompletionRequest(CompletionRequest):
             top_k=self.top_k or -1,
             use_beam_search=self.use_beam_search or False,
             length_penalty=self.length_penalty or 1.0,
+            seed=self.seed,
         )
         if self.preset is not None:
             settings = self.preset.get_settings()
