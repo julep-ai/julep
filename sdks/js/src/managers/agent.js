@@ -122,38 +122,26 @@ class AgentsManager extends BaseAgentsManager {
   async get(id) {
     return await this._get(id);
   }
+/**
+ * @typedef {Object} AgentCreateArgs
+ * @property {string} name
+ * @property {string} about
+ * @property {Instruction[]} instructions
+ * @property {ToolDict[]} [tools]
+ * @property {FunctionDefDict[]} [functions]
+ * @property {DefaultSettingsDict} [defaultSettings]
+ * @property {ModelName} [model]
+ * @property {DocDict[]} [docs]
+ */
 
-  /**
-   * @param {string} name
-   * @param {string} about
-   * @param {Instruction[]} instructions
-   * @param {ToolDict[]} [tools]
-   * @param {FunctionDefDict[]} [functions]
-   * @param {DefaultSettingsDict} [defaultSettings]
-   * @param {ModelName} [model]
-   * @param {DocDict[]} [docs]
-   * @returns {Promise<ResourceCreatedResponse>}
-   */
-  async create({
-    name,
-    about,
-    instructions = [],
-    tools = [],
-    functions = [],
-    defaultSettings = {},
-    model = "julep-ai/samantha-1-turbo",
-    docs = [],
-  }) {
-    return await this._create(
-      name,
-      about,
-      instructions,
-      tools,
-      functions,
-      defaultSettings,
-      model,
-      docs,
-    );
+/**
+ * @param {AgentCreateArgs} args
+ * @returns {Promise<ResourceCreatedResponse>}
+ */
+  async create(args) {
+    const result = await this._create(args);
+    const agent = { ...args, ...result };
+    return agent;
   }
 
   /**
@@ -176,26 +164,23 @@ class AgentsManager extends BaseAgentsManager {
   }
 
   /**
+   * @typedef {Object} AgentUpdateArgs
    * @param {string | UUID} agentId
    * @param {string} [about]
    * @param {Instruction[]} [instructions]
    * @param {string} [name]
    * @param {string} [model]
    * @param {AgentDefaultSettings} [defaultSettings]
+  */
+
+ /** 
+   * @param {AgentUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(
-    agentId,
-    { about, instructions, name, model, defaultSettings } = {},
-  ) {
-    return await this._update(
-      agentId,
-      about,
-      instructions,
-      name,
-      model,
-      defaultSettings,
-    );
+  async create(args) {
+    const result = await this._create(args);
+    const agent = { ...args, ...result };
+    return agent;
   }
 }
 

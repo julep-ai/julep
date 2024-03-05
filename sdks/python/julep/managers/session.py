@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from typing import Optional
+from typing import Optional, TypedDict
 from beartype import beartype
 from beartype.typing import Awaitable, List, Union, Dict
 
@@ -29,6 +29,17 @@ from .types import (
 )
 
 from .utils import is_valid_uuid4
+
+
+class SessionCreateArgs(TypedDict):
+    user_id: Union[str, UUID]
+    agent_id: Union[str, UUID]
+    situation: Optional[str]
+
+
+class SessionUpdateArgs(TypedDict):
+    session_id: Union[str, UUID]
+    situation: str
 
 
 class BaseSessionsManager(BaseManager):
@@ -456,13 +467,7 @@ class SessionsManager(BaseSessionsManager):
         return self._get(id=id)
 
     @beartype
-    def create(
-        self,
-        *,
-        user_id: Union[str, UUID],
-        agent_id: Union[str, UUID],
-        situation: Optional[str] = None,
-    ) -> ResourceCreatedResponse:
+    def create(self, **kwargs: SessionCreateArgs) -> ResourceCreatedResponse:
         """
         Create a new resource with a user ID and an agent ID, optionally including a situation description.
 
@@ -478,11 +483,9 @@ class SessionsManager(BaseSessionsManager):
             BeartypeException: If the provided `user_id` or `agent_id` do not match the required type.
             Any other exception that `_create` might raise.
         """
-        return self._create(
-            user_id=user_id,
-            agent_id=agent_id,
-            situation=situation,
-        )
+        result = self._create(**kwargs)
+        session = Session(**{**kwargs, **result})
+        return session
 
     @beartype
     def list(
@@ -530,9 +533,7 @@ class SessionsManager(BaseSessionsManager):
     @beartype
     def update(
         self,
-        *,
-        session_id: Union[str, UUID],
-        situation: str,
+        **kwargs: SessionUpdateArgs,
     ) -> ResourceUpdatedResponse:
         """
         Updates the state of a resource based on a given situation.
@@ -553,10 +554,9 @@ class SessionsManager(BaseSessionsManager):
         Note:
             The `@beartype` decorator is used for runtime type checking of the function arguments.
         """
-        return self._update(
-            session_id=session_id,
-            situation=situation,
-        )
+        result = self._update(**kwargs)
+        session = Session(**{**kwargs, **result})
+        return session
 
     @beartype
     def chat(
@@ -766,13 +766,7 @@ class AsyncSessionsManager(BaseSessionsManager):
         return await self._get(id=id)
 
     @beartype
-    async def create(
-        self,
-        *,
-        user_id: Union[str, UUID],
-        agent_id: Union[str, UUID],
-        situation: Optional[str] = None,
-    ) -> ResourceCreatedResponse:
+    async def create(self, **kwargs: SessionCreateArgs) -> ResourceCreatedResponse:
         """
         Asynchronously create a resource with the specified user and agent identifiers.
 
@@ -790,11 +784,9 @@ class AsyncSessionsManager(BaseSessionsManager):
             BeartypeException: If any of the input arguments do not match their expected types.
             Any exception raised by the internal _create method.
         """
-        return await self._create(
-            user_id=user_id,
-            agent_id=agent_id,
-            situation=situation,
-        )
+        result = await self._create(**kwargs)
+        session = Session(**{**kwargs, **result})
+        return session
 
     @beartype
     async def list(
@@ -844,9 +836,7 @@ class AsyncSessionsManager(BaseSessionsManager):
     @beartype
     async def update(
         self,
-        *,
-        session_id: Union[str, UUID],
-        situation: str,
+        **kwargs: SessionUpdateArgs,
     ) -> ResourceUpdatedResponse:
         """
         Asynchronously update a resource with the given situation.
@@ -871,10 +861,9 @@ class AsyncSessionsManager(BaseSessionsManager):
             BeartypeCallHintParamViolation: If the `session_id` or `situation`
                 arguments do not match their annotated types.
         """
-        return await self._update(
-            session_id=session_id,
-            situation=situation,
-        )
+        result = await self._update(**kwargs)
+        session = Session(**{**kwargs, **result})
+        return session
 
     @beartype
     async def chat(

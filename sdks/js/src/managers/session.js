@@ -190,15 +190,21 @@ class SessionsManager extends BaseSessionsManager {
   }
 
   /**
-   * @param {string | UUID} userId
-   * @param {string | UUID} agentId
-   * @param {string} situation
+   * @typedef {Object} SessionCreateArgs
+   * @property {string | UUID} userId
+   * @property {string | UUID} agentId
+   * @property {string} situation
+   */
+
+  /**
+   * @param {SessionCreateArgs} args
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({ userId, agentId, situation }) {
-    return await this._create(userId, agentId, situation);
+  async create(args) {
+    const result = await this._create(args);
+    const session = { ...args, ...result };
+    return session;
   }
-
   /**
    * @param {number} limit
    * @param {number} offset
@@ -218,12 +224,19 @@ class SessionsManager extends BaseSessionsManager {
   }
 
   /**
-   * @param {string | UUID} sessionId
-   * @param {string} situation
+   * @typedef {Object} SessionUpdateArgs
+   * @property {string | UUID} sessionId
+   * @property {string} situation
+   */
+
+  /**
+   * @param {SessionUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(sessionId, { situation }) {
-    return await this._update(sessionId, situation);
+  async update(args) {
+    const result = await this._update(args);
+    const updatedSession = { ...args, ...result };
+    return updatedSession;
   }
 
   /**

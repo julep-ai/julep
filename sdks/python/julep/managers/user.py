@@ -16,14 +16,17 @@ from .base import BaseManager
 from .utils import is_valid_uuid4
 from .types import DocDict
 
+
 class UserCreateArgs(TypedDict):
     name: str
     about: str
     docs: List[str]
 
+
 class UserUpdateArgs(TypedDict):
     about: Optional[str] = None
     name: Optional[str] = None
+
 
 class BaseUsersManager(BaseManager):
     """
@@ -221,10 +224,7 @@ class UsersManager(BaseUsersManager):
         return self._get(id=id)
 
     @beartype
-    def create(
-        self,
-        **kwargs: UserCreateArgs
-    ) -> ResourceCreatedResponse:
+    def create(self, **kwargs: UserCreateArgs) -> ResourceCreatedResponse:
         """
         Create a new resource with the specified name, about text, and associated docs.
 
@@ -245,7 +245,7 @@ class UsersManager(BaseUsersManager):
                 BeartypeException: If the input types do not match the specified function annotations.
         """
         result = self._create(**kwargs)
-        user = User(**kwargs, **result)
+        user = User(**{**kwargs, **result})
         return user
 
     @beartype
@@ -304,10 +304,7 @@ class UsersManager(BaseUsersManager):
 
     @beartype
     def update(
-        self,
-        *,
-        user_id: Union[str, UUID],
-        **kwargs: UserUpdateArgs
+        self, *, user_id: Union[str, UUID], **kwargs: UserUpdateArgs
     ) -> ResourceUpdatedResponse:
         """
         Update user information.
@@ -322,11 +319,8 @@ class UsersManager(BaseUsersManager):
         Returns:
             ResourceUpdatedResponse: An object indicating the outcome of the update operation, which typically includes the status of the operation and possibly the updated resource data.
         """
-        result = self._update(
-            user_id=user_id,
-            **kwargs
-        )
-        user = User(**kwargs, **result)
+        result = self._update(user_id=user_id, **kwargs)
+        user = User(**{**kwargs, **result})
         return user
 
 
@@ -375,10 +369,7 @@ class AsyncUsersManager(BaseUsersManager):
         return await self._get(id=id)
 
     @beartype
-    async def create(
-        self,
-        **kwargs: UserCreateArgs
-    ) -> ResourceCreatedResponse:
+    async def create(self, **kwargs: UserCreateArgs) -> ResourceCreatedResponse:
         """
         Asynchronously create a new resource with the provided name, description, and documents.
 
@@ -396,7 +387,7 @@ class AsyncUsersManager(BaseUsersManager):
             BeartypeException: If any of the parameters do not match their annotated types.
         """
         result = await self._create(**kwargs)
-        user  = User(**kwargs, **result)
+        user = User(**{**kwargs, **result})
         return user
 
     @beartype
@@ -460,10 +451,7 @@ class AsyncUsersManager(BaseUsersManager):
 
     @beartype
     async def update(
-        self,
-        *,
-        user_id: Union[str, UUID],
-        **kwargs: UserUpdateArgs
+        self, *, user_id: Union[str, UUID], **kwargs: UserUpdateArgs
     ) -> ResourceUpdatedResponse:
         """
         Asynchronously updates user details.
@@ -481,9 +469,6 @@ class AsyncUsersManager(BaseUsersManager):
         Note:
             This function is decorated with @beartype to perform runtime type checking.
         """
-        result = await self._update(
-            user_id=user_id,
-            **kwargs
-        )
-        user = User(**kwargs, **result)
+        result = await self._update(user_id=user_id, **kwargs)
+        user = User(**{**kwargs, **result})
         return user
