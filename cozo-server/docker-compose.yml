@@ -1,0 +1,24 @@
+name: julep-cozo-server
+version: "3"
+
+services:
+  cozo-server:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+    environment:
+      - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
+      - PORT=${PORT}
+      - MNT_DIR=/data
+    container_name: cozo-server
+    volumes:
+      - cozo_data:/data
+    build:
+      context: .
+    ports:
+      - "9070:9070"
+
+volumes:
+  cozo_data:
