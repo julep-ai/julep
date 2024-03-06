@@ -23,7 +23,7 @@ ChatML content
 
 #### Defined in
 
-[src/api/api/types/InputChatMlMessage.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L9)
+[src/api/api/types/InputChatMlMessage.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L9)
 
 ___
 
@@ -35,7 +35,7 @@ Whether to continue this message or return a new one
 
 #### Defined in
 
-[src/api/api/types/InputChatMlMessage.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L13)
+[src/api/api/types/InputChatMlMessage.d.ts:13](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L13)
 
 ___
 
@@ -47,7 +47,7 @@ ChatML name
 
 #### Defined in
 
-[src/api/api/types/InputChatMlMessage.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L11)
+[src/api/api/types/InputChatMlMessage.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L11)
 
 ___
 
@@ -59,4 +59,4 @@ ChatML role (system|assistant|user|function_call)
 
 #### Defined in
 
-[src/api/api/types/InputChatMlMessage.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L7)
+[src/api/api/types/InputChatMlMessage.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessage.d.ts#L7)

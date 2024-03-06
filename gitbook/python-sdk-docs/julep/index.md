@@ -13,3 +13,4 @@
 - [Client](./client.md)
 - [Env](./env.md)
 - [Managers](managers/index.md)
+- [Utils](utils/index.md)

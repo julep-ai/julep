@@ -43,6 +43,7 @@
 - [GetUserDocsResponse](../interfaces/index.JulepApi.GetUserDocsResponse.md)
 - [InputChatMlMessage](../interfaces/index.JulepApi.InputChatMlMessage.md)
 - [Instruction](../interfaces/index.JulepApi.Instruction.md)
+- [JobStatus](../interfaces/index.JulepApi.JobStatus.md)
 - [ListAgentsRequest](../interfaces/index.JulepApi.ListAgentsRequest.md)
 - [ListAgentsResponse](../interfaces/index.JulepApi.ListAgentsResponse.md)
 - [ListSessionsRequest](../interfaces/index.JulepApi.ListSessionsRequest.md)
@@ -66,13 +67,17 @@
 
 ### Type Aliases
 
+- [AgentDefaultSettingsPreset](index.JulepApi.md#agentdefaultsettingspreset)
+- [ChatInputDataToolChoice](index.JulepApi.md#chatinputdatatoolchoice)
 - [ChatMlMessageRole](index.JulepApi.md#chatmlmessagerole)
 - [ChatResponseFinishReason](index.JulepApi.md#chatresponsefinishreason)
+- [ChatSettingsPreset](index.JulepApi.md#chatsettingspreset)
 - [ChatSettingsResponseFormatType](index.JulepApi.md#chatsettingsresponseformattype)
 - [ChatSettingsStop](index.JulepApi.md#chatsettingsstop)
 - [CreateToolRequestType](index.JulepApi.md#createtoolrequesttype)
 - [FunctionParameters](index.JulepApi.md#functionparameters)
 - [InputChatMlMessageRole](index.JulepApi.md#inputchatmlmessagerole)
+- [JobStatusState](index.JulepApi.md#jobstatusstate)
 - [Memory](index.JulepApi.md#memory)
 - [SuggestionTarget](index.JulepApi.md#suggestiontarget)
 - [ToolChoiceOption](index.JulepApi.md#toolchoiceoption)
@@ -80,15 +85,44 @@
 
 ### Variables
 
+- [AgentDefaultSettingsPreset](index.JulepApi.md#agentdefaultsettingspreset-1)
 - [ChatMlMessageRole](index.JulepApi.md#chatmlmessagerole-1)
 - [ChatResponseFinishReason](index.JulepApi.md#chatresponsefinishreason-1)
+- [ChatSettingsPreset](index.JulepApi.md#chatsettingspreset-1)
 - [ChatSettingsResponseFormatType](index.JulepApi.md#chatsettingsresponseformattype-1)
 - [CreateToolRequestType](index.JulepApi.md#createtoolrequesttype-1)
 - [InputChatMlMessageRole](index.JulepApi.md#inputchatmlmessagerole-1)
+- [JobStatusState](index.JulepApi.md#jobstatusstate-1)
 - [SuggestionTarget](index.JulepApi.md#suggestiontarget-1)
 - [ToolType](index.JulepApi.md#tooltype-1)
 
 ## Type Aliases
+
+### AgentDefaultSettingsPreset
+
+Ƭ **AgentDefaultSettingsPreset**: ``"problem_solving"`` \| ``"conversational"`` \| ``"fun"`` \| ``"prose"`` \| ``"creative"`` \| ``"business"`` \| ``"deterministic"`` \| ``"code"`` \| ``"multilingual"``
+
+Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+
+#### Defined in
+
+[src/api/api/types/AgentDefaultSettingsPreset.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/AgentDefaultSettingsPreset.d.ts#L7)
+
+[src/api/api/types/AgentDefaultSettingsPreset.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/AgentDefaultSettingsPreset.d.ts#L17)
+
+___
+
+### ChatInputDataToolChoice
+
+Ƭ **ChatInputDataToolChoice**: [`ToolChoiceOption`](index.JulepApi.md#toolchoiceoption) \| [`NamedToolChoice`](../interfaces/index.JulepApi.NamedToolChoice.md)
+
+Can be one of existing tools given to the agent earlier or the ones included in the request
+
+#### Defined in
+
+[src/api/api/types/ChatInputDataToolChoice.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputDataToolChoice.d.ts#L8)
+
+___
 
 ### ChatMlMessageRole
 
@@ -98,9 +132,9 @@ ChatML role (system|assistant|user|function_call)
 
 #### Defined in
 
-[src/api/api/types/ChatMlMessageRole.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L7)
+[src/api/api/types/ChatMlMessageRole.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L7)
 
-[src/api/api/types/ChatMlMessageRole.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L12)
+[src/api/api/types/ChatMlMessageRole.d.ts:12](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L12)
 
 ___
 
@@ -112,9 +146,23 @@ The reason the model stopped generating tokens. This will be `stop` if the model
 
 #### Defined in
 
-[src/api/api/types/ChatResponseFinishReason.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L7)
+[src/api/api/types/ChatResponseFinishReason.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L7)
 
-[src/api/api/types/ChatResponseFinishReason.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L13)
+[src/api/api/types/ChatResponseFinishReason.d.ts:13](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L13)
+
+___
+
+### ChatSettingsPreset
+
+Ƭ **ChatSettingsPreset**: ``"problem_solving"`` \| ``"conversational"`` \| ``"fun"`` \| ``"prose"`` \| ``"creative"`` \| ``"business"`` \| ``"deterministic"`` \| ``"code"`` \| ``"multilingual"``
+
+Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+
+#### Defined in
+
+[src/api/api/types/ChatSettingsPreset.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsPreset.d.ts#L7)
+
+[src/api/api/types/ChatSettingsPreset.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsPreset.d.ts#L17)
 
 ___
 
@@ -126,9 +174,9 @@ Must be one of `"text"`, `"regex"` or `"json_object"`.
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsResponseFormatType.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L7)
+[src/api/api/types/ChatSettingsResponseFormatType.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L7)
 
-[src/api/api/types/ChatSettingsResponseFormatType.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L11)
+[src/api/api/types/ChatSettingsResponseFormatType.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L11)
 
 ___
 
@@ -140,7 +188,7 @@ Up to 4 sequences where the API will stop generating further tokens.
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsStop.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsStop.d.ts#L7)
+[src/api/api/types/ChatSettingsStop.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsStop.d.ts#L7)
 
 ___
 
@@ -152,21 +200,21 @@ Whether this tool is a `function` or a `webhook` (Only `function` tool supported
 
 #### Defined in
 
-[src/api/api/types/CreateToolRequestType.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L7)
+[src/api/api/types/CreateToolRequestType.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L7)
 
-[src/api/api/types/CreateToolRequestType.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L8)
+[src/api/api/types/CreateToolRequestType.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L8)
 
 ___
 
 ### FunctionParameters
 
-Ƭ **FunctionParameters**: `Record`\<`string`, `unknown`\>
+Ƭ **FunctionParameters**: `Record`\<`string`, `any`\>
 
 The parameters the functions accepts, described as a JSON Schema object.
 
 #### Defined in
 
-[src/api/api/types/FunctionParameters.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/FunctionParameters.d.ts#L7)
+[src/api/api/types/FunctionParameters.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/FunctionParameters.d.ts#L7)
 
 ___
 
@@ -178,9 +226,23 @@ ChatML role (system|assistant|user|function_call)
 
 #### Defined in
 
-[src/api/api/types/InputChatMlMessageRole.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L7)
+[src/api/api/types/InputChatMlMessageRole.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L7)
 
-[src/api/api/types/InputChatMlMessageRole.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L12)
+[src/api/api/types/InputChatMlMessageRole.d.ts:12](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L12)
+
+___
+
+### JobStatusState
+
+Ƭ **JobStatusState**: ``"pending"`` \| ``"in_progress"`` \| ``"retrying"`` \| ``"succeeded"`` \| ``"aborted"`` \| ``"failed"`` \| ``"unknown"``
+
+Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)
+
+#### Defined in
+
+[src/api/api/types/JobStatusState.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/JobStatusState.d.ts#L7)
+
+[src/api/api/types/JobStatusState.d.ts:15](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/JobStatusState.d.ts#L15)
 
 ___
 
@@ -190,7 +252,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/Memory.d.ts:5](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Memory.d.ts#L5)
+[src/api/api/types/Memory.d.ts:5](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Memory.d.ts#L5)
 
 ___
 
@@ -202,9 +264,9 @@ Whether the suggestion is for the `agent` or a `user`
 
 #### Defined in
 
-[src/api/api/types/SuggestionTarget.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L7)
+[src/api/api/types/SuggestionTarget.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L7)
 
-[src/api/api/types/SuggestionTarget.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L8)
+[src/api/api/types/SuggestionTarget.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L8)
 
 ___
 
@@ -221,7 +283,7 @@ Specifying a particular function via `{"type: "function", "function": {"name": "
 
 #### Defined in
 
-[src/api/api/types/ToolChoiceOption.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ToolChoiceOption.d.ts#L12)
+[src/api/api/types/ToolChoiceOption.d.ts:12](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ToolChoiceOption.d.ts#L12)
 
 ___
 
@@ -233,11 +295,37 @@ Whether this tool is a `function` or a `webhook` (Only `function` tool supported
 
 #### Defined in
 
-[src/api/api/types/ToolType.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ToolType.d.ts#L7)
+[src/api/api/types/ToolType.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ToolType.d.ts#L7)
 
-[src/api/api/types/ToolType.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ToolType.d.ts#L8)
+[src/api/api/types/ToolType.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ToolType.d.ts#L8)
 
 ## Variables
+
+### AgentDefaultSettingsPreset
+
+• **AgentDefaultSettingsPreset**: `Object`
+
+#### Type declaration
+
+| Name | Type |
+| :------ | :------ |
+| `Business` | ``"business"`` |
+| `Code` | ``"code"`` |
+| `Conversational` | ``"conversational"`` |
+| `Creative` | ``"creative"`` |
+| `Deterministic` | ``"deterministic"`` |
+| `Fun` | ``"fun"`` |
+| `Multilingual` | ``"multilingual"`` |
+| `ProblemSolving` | ``"problem_solving"`` |
+| `Prose` | ``"prose"`` |
+
+#### Defined in
+
+[src/api/api/types/AgentDefaultSettingsPreset.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/AgentDefaultSettingsPreset.d.ts#L7)
+
+[src/api/api/types/AgentDefaultSettingsPreset.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/AgentDefaultSettingsPreset.d.ts#L17)
+
+___
 
 ### ChatMlMessageRole
 
@@ -254,9 +342,9 @@ Whether this tool is a `function` or a `webhook` (Only `function` tool supported
 
 #### Defined in
 
-[src/api/api/types/ChatMlMessageRole.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L7)
+[src/api/api/types/ChatMlMessageRole.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L7)
 
-[src/api/api/types/ChatMlMessageRole.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L12)
+[src/api/api/types/ChatMlMessageRole.d.ts:12](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatMlMessageRole.d.ts#L12)
 
 ___
 
@@ -276,9 +364,35 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatResponseFinishReason.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L7)
+[src/api/api/types/ChatResponseFinishReason.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L7)
 
-[src/api/api/types/ChatResponseFinishReason.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L13)
+[src/api/api/types/ChatResponseFinishReason.d.ts:13](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatResponseFinishReason.d.ts#L13)
+
+___
+
+### ChatSettingsPreset
+
+• **ChatSettingsPreset**: `Object`
+
+#### Type declaration
+
+| Name | Type |
+| :------ | :------ |
+| `Business` | ``"business"`` |
+| `Code` | ``"code"`` |
+| `Conversational` | ``"conversational"`` |
+| `Creative` | ``"creative"`` |
+| `Deterministic` | ``"deterministic"`` |
+| `Fun` | ``"fun"`` |
+| `Multilingual` | ``"multilingual"`` |
+| `ProblemSolving` | ``"problem_solving"`` |
+| `Prose` | ``"prose"`` |
+
+#### Defined in
+
+[src/api/api/types/ChatSettingsPreset.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsPreset.d.ts#L7)
+
+[src/api/api/types/ChatSettingsPreset.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsPreset.d.ts#L17)
 
 ___
 
@@ -296,9 +410,9 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsResponseFormatType.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L7)
+[src/api/api/types/ChatSettingsResponseFormatType.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L7)
 
-[src/api/api/types/ChatSettingsResponseFormatType.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L11)
+[src/api/api/types/ChatSettingsResponseFormatType.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormatType.d.ts#L11)
 
 ___
 
@@ -315,9 +429,9 @@ ___
 
 #### Defined in
 
-[src/api/api/types/CreateToolRequestType.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L7)
+[src/api/api/types/CreateToolRequestType.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L7)
 
-[src/api/api/types/CreateToolRequestType.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L8)
+[src/api/api/types/CreateToolRequestType.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/CreateToolRequestType.d.ts#L8)
 
 ___
 
@@ -336,9 +450,33 @@ ___
 
 #### Defined in
 
-[src/api/api/types/InputChatMlMessageRole.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L7)
+[src/api/api/types/InputChatMlMessageRole.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L7)
 
-[src/api/api/types/InputChatMlMessageRole.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L12)
+[src/api/api/types/InputChatMlMessageRole.d.ts:12](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/InputChatMlMessageRole.d.ts#L12)
+
+___
+
+### JobStatusState
+
+• **JobStatusState**: `Object`
+
+#### Type declaration
+
+| Name | Type |
+| :------ | :------ |
+| `Aborted` | ``"aborted"`` |
+| `Failed` | ``"failed"`` |
+| `InProgress` | ``"in_progress"`` |
+| `Pending` | ``"pending"`` |
+| `Retrying` | ``"retrying"`` |
+| `Succeeded` | ``"succeeded"`` |
+| `Unknown` | ``"unknown"`` |
+
+#### Defined in
+
+[src/api/api/types/JobStatusState.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/JobStatusState.d.ts#L7)
+
+[src/api/api/types/JobStatusState.d.ts:15](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/JobStatusState.d.ts#L15)
 
 ___
 
@@ -355,9 +493,9 @@ ___
 
 #### Defined in
 
-[src/api/api/types/SuggestionTarget.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L7)
+[src/api/api/types/SuggestionTarget.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L7)
 
-[src/api/api/types/SuggestionTarget.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L8)
+[src/api/api/types/SuggestionTarget.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/SuggestionTarget.d.ts#L8)
 
 ___
 
@@ -374,6 +512,6 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ToolType.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ToolType.d.ts#L7)
+[src/api/api/types/ToolType.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ToolType.d.ts#L7)
 
-[src/api/api/types/ToolType.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ToolType.d.ts#L8)
+[src/api/api/types/ToolType.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ToolType.d.ts#L8)

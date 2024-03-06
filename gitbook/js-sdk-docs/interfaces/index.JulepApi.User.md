@@ -26,7 +26,7 @@ About the user
 
 #### Defined in
 
-[src/api/api/types/User.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/User.d.ts#L8)
+[src/api/api/types/User.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/User.d.ts#L8)
 
 ___
 
@@ -38,7 +38,7 @@ User created at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/User.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/User.d.ts#L10)
+[src/api/api/types/User.d.ts:10](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/User.d.ts#L10)
 
 ___
 
@@ -50,7 +50,7 @@ User id (UUID)
 
 #### Defined in
 
-[src/api/api/types/User.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/User.d.ts#L14)
+[src/api/api/types/User.d.ts:14](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/User.d.ts#L14)
 
 ___
 
@@ -62,7 +62,7 @@ Name of the user
 
 #### Defined in
 
-[src/api/api/types/User.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/User.d.ts#L6)
+[src/api/api/types/User.d.ts:6](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/User.d.ts#L6)
 
 ___
 
@@ -74,4 +74,4 @@ User updated at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/User.d.ts:12](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/User.d.ts#L12)
+[src/api/api/types/User.d.ts:12](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/User.d.ts#L12)

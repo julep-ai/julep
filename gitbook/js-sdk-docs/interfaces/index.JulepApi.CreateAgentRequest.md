@@ -36,7 +36,7 @@ About the agent
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L17)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L17)
 
 ___
 
@@ -48,7 +48,7 @@ Default model settings to start every session with
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:23](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L23)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:23](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L23)
 
 ___
 
@@ -60,7 +60,7 @@ List of docs about agent
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:27](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L27)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:27](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L27)
 
 ___
 
@@ -72,7 +72,7 @@ List of instructions for the agent
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L19)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:19](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L19)
 
 ___
 
@@ -84,7 +84,7 @@ Name of the model that the agent is supposed to use
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:25](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L25)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:25](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L25)
 
 ___
 
@@ -96,7 +96,7 @@ Name of the agent
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L15)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:15](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L15)
 
 ___
 
@@ -108,4 +108,4 @@ A list of tools the model may call. Currently, only `function`s are supported as
 
 #### Defined in
 
-[src/api/api/client/requests/CreateAgentRequest.d.ts:21](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L21)
+[src/api/api/client/requests/CreateAgentRequest.d.ts:21](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateAgentRequest.d.ts#L21)
