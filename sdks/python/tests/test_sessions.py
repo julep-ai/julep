@@ -35,24 +35,24 @@ async def _(client=async_client):
 @test("sessions.create")
 def _(client=client):
     response = client.sessions.create(
-        user_id=uuid4(),
-        agent_id=uuid4(),
+        user_id=str(uuid4()),
+        agent_id=str(uuid4()),
         situation="test situation",
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Session)
     assert response.created_at
 
 
 @test("async sessions.create")
 async def _(client=async_client):
     response = await client.sessions.create(
-        user_id=uuid4(),
-        agent_id=uuid4(),
+        user_id=str(uuid4()),
+        agent_id=str(uuid4()),
         situation="test situation",
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Session)
     assert response.created_at
 
 
@@ -77,7 +77,7 @@ def _(client=client):
         situation="test situation",
     )
 
-    assert isinstance(response, ResourceUpdatedResponse)
+    assert isinstance(response, Session)
     assert response.updated_at
 
 
@@ -88,7 +88,7 @@ async def _(client=async_client):
         situation="test situation",
     )
 
-    assert isinstance(response, ResourceUpdatedResponse)
+    assert isinstance(response, Session)
     assert response.updated_at
 
 

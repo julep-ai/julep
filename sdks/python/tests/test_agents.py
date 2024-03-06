@@ -32,7 +32,7 @@ def _(client=client):
         default_settings={"temperature": 0.5},
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Agent)
     assert response.created_at
 
 
@@ -45,7 +45,7 @@ async def _(client=async_client):
         default_settings={"temperature": 0.5},
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Agent)
     assert response.created_at
 
 
@@ -74,7 +74,7 @@ def _(client=client):
         model="some model",
     )
 
-    assert isinstance(response, ResourceUpdatedResponse)
+    assert isinstance(response, Agent)
     assert response.updated_at
 
 
@@ -89,7 +89,7 @@ async def _(client=async_client):
         model="some model",
     )
 
-    assert isinstance(response, ResourceUpdatedResponse)
+    assert isinstance(response, Agent)
     assert response.updated_at
 
 
