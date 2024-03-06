@@ -3,7 +3,6 @@ from uuid import uuid4
 from ward import test
 
 from julep.api.types import (
-    ResourceCreatedResponse,
     Doc,
 )
 

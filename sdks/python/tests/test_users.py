@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from ward import test
 
-from julep.api.types import User, ResourceCreatedResponse, ResourceUpdatedResponse
+from julep.api.types import User
 
 from .fixtures import async_client, client
 

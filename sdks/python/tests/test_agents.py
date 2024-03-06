@@ -4,8 +4,6 @@ from ward import test
 
 from julep.api.types import (
     Agent,
-    ResourceCreatedResponse,
-    ResourceUpdatedResponse,
 )
 
 from .fixtures import async_client, client

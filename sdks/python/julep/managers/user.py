@@ -1,9 +1,8 @@
 from uuid import UUID
-from typing import Callable, Optional, TypedDict
+from typing import Optional, TypedDict
 
 from beartype import beartype
 from beartype.typing import Awaitable, List, Union
-from functools import wraps
 
 from .utils import rewrap_in_class
 
@@ -307,9 +306,7 @@ class UsersManager(BaseUsersManager):
 
     @beartype
     @rewrap_in_class(User)
-    def update(
-        self, *, user_id: Union[str, UUID], **kwargs: UserUpdateArgs
-    ) -> User:
+    def update(self, *, user_id: Union[str, UUID], **kwargs: UserUpdateArgs) -> User:
         """
         Update user information.
 

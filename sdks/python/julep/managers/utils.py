@@ -4,6 +4,7 @@ from typing import Callable
 from uuid import UUID
 from ..api.types import ResourceCreatedResponse
 
+
 def is_valid_uuid4(uuid_to_test: str) -> bool:
     """
     Check if uuid_to_test is a valid UUID v4.
@@ -22,6 +23,7 @@ def is_valid_uuid4(uuid_to_test: str) -> bool:
 
     return True
 
+
 def rewrap_in_class(cls):
     def decorator(func: Callable[..., ResourceCreatedResponse]):
         @wraps(func)
@@ -35,4 +37,5 @@ def rewrap_in_class(cls):
             return cls.construct(**kwargs, **result.dict())
 
         return async_wrapper if iscoroutinefunction(func) else sync_wrapper
+
     return decorator
