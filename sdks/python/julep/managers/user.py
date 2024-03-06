@@ -1,8 +1,9 @@
 from uuid import UUID
-from typing import Optional, TypedDict
+from typing import Callable, Optional, TypedDict
 
 from beartype import beartype
 from beartype.typing import Awaitable, List, Union
+from functools import wraps
 
 from ..api.types import (
     User,
@@ -15,6 +16,16 @@ from ..api.types import (
 from .base import BaseManager
 from .utils import is_valid_uuid4
 from .types import DocDict
+
+
+def rewrap_in_class(cls):
+    def decorator(func: Callable[..., ResourceCreatedResponse]):
+        @wraps(func)
+        def call_func(*args, **kwargs):
+            result = func(*args, **kwargs)
+            return cls(**kwargs, **result.dict())
+        return call_func
+    return decorator
 
 
 class UserCreateArgs(TypedDict):
@@ -224,7 +235,8 @@ class UsersManager(BaseUsersManager):
         return self._get(id=id)
 
     @beartype
-    def create(self, **kwargs: UserCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(User)
+    def create(self, **kwargs: UserCreateArgs) -> User:
         """
         Create a new resource with the specified name, about text, and associated docs.
 
@@ -245,8 +257,9 @@ class UsersManager(BaseUsersManager):
                 BeartypeException: If the input types do not match the specified function annotations.
         """
         result = self._create(**kwargs)
-        user = User(**{**kwargs, **result})
-        return user
+        # user = User(**{**kwargs, **result})
+        # user = User(**result, **kwargs)
+        return result
 
     @beartype
     def list(

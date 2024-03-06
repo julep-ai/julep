@@ -1,4 +1,3 @@
-# type: ignore
 from typing import TypedDict
 from ..api.types import (
     CreateDoc,

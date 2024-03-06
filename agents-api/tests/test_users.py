@@ -12,7 +12,7 @@ def _(client=client):
         about="test user about",
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, User)
     assert response.created_at
     assert bool(uuid.UUID(str(response.id), version=4))
 
