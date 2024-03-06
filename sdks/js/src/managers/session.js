@@ -17,7 +17,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {string} situation
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async _create(userId, agentId, situation) {
+  async _create({ userId, agentId, situation }) {
     if (!isValidUuid4(userId)) {
       throw new Error(`userId must be a valid UUID v4. Got "${userId}"`);
     }
@@ -61,7 +61,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {string} situation
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async _update(sessionId, situation) {
+  async _update(sessionId, { situation }) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
@@ -233,8 +233,8 @@ class SessionsManager extends BaseSessionsManager {
    * @param {SessionUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(args) {
-    const result = await this._update(args);
+  async update(sessionId, args) {
+    const result = await this._update(sessionId, args);
     const updatedSession = { ...args, ...result };
     return updatedSession;
   }

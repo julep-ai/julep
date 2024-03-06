@@ -22,7 +22,7 @@ class BaseAgentsManager extends BaseManager {
    * @param {DocDict[]} [docs]
    * @returns {Promise<GetAgentMemoriesResponse>}
    */
-  async _create(
+  async _create({
     name,
     about,
     instructions,
@@ -31,13 +31,11 @@ class BaseAgentsManager extends BaseManager {
     defaultSettings = {},
     model = "julep-ai/samantha-1-turbo",
     docs = [],
-  ) {
+  } = {}) {
     // Ensure that only functions or tools are provided
     if (functions.length > 0 && tools.length > 0) {
       throw new Error("Only functions or tools can be provided");
     }
-
-    // Cast instructions to Instruction objects
     const instructionsList =
       typeof instructions[0] === "string"
         ? instructions.map((content) => ({ content, important: false }))
@@ -91,7 +89,10 @@ class BaseAgentsManager extends BaseManager {
    * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async _update(agentId, about, instructions, name, model, defaultSettings) {
+  async _update(
+    agentId,
+    { about, instructions, name, model, defaultSettings } = {},
+  ) {
     if (!isValidUuid4(agentId)) {
       throw new Error("agentId must be a valid UUID v4");
     }
@@ -165,7 +166,7 @@ class AgentsManager extends BaseAgentsManager {
 
   /**
    * @typedef {Object} AgentUpdateArgs
-   * @param {string | UUID} agentId
+   * @param {UUID} agentId
    * @param {string} [about]
    * @param {Instruction[]} [instructions]
    * @param {string} [name]
@@ -177,8 +178,8 @@ class AgentsManager extends BaseAgentsManager {
    * @param {AgentUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async create(args) {
-    const result = await this._create(args);
+  async update(agentId, args) {
+    const result = await this._update(agentId, args);
     const agent = { ...args, ...result };
     return agent;
   }

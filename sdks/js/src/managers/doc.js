@@ -38,7 +38,7 @@ class BaseDocsManager extends BaseManager {
    * @param {DocDict} doc
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async _create(agentId, userId, doc) {
+  async _create({ agentId, userId, doc }) {
     if (
       (agentId && isValidUuid4(agentId)) ||
       (userId && isValidUuid4(userId) && !(agentId && userId))

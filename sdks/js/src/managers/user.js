@@ -32,7 +32,7 @@ class BaseUsersManager extends BaseManager {
    * @param {DocDict[]} [docs=[]]
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  _create(name, about, docs = []) {
+  _create({ name, about, docs = [] }) {
     const docsPrepared = docs.map((doc) => new CreateDoc(doc));
     return this.apiClient
       .createUser({ name, about, docsPrepared })
@@ -69,7 +69,7 @@ class BaseUsersManager extends BaseManager {
    * @param {string} [name]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  _update(userId, about, name) {
+  _update({ userId, about, name }) {
     if (!isValidUuid4(userId)) {
       throw new Error("id must be a valid UUID v4");
     }
