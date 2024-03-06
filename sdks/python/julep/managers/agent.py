@@ -451,9 +451,7 @@ class AgentsManager(BaseAgentsManager):
 
     @beartype
     @rewrap_in_class(Agent)
-    def update(
-        self, *, agent_id: Union[str, UUID], **kwargs: AgentUpdateArgs
-    ) -> Agent:
+    def update(self, *, agent_id: Union[str, UUID], **kwargs: AgentUpdateArgs) -> Agent:
         """
         Update the properties of a resource.
 
@@ -586,7 +584,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             docs (List[DocDict], optional): A list of dictionaries containing documentation for the resource. Defaults to an empty list.
 
         Returns:
-            Agent: An instance of the Agent with the specified details 
+            Agent: An instance of the Agent with the specified details
 
         Raises:
             The exceptions that may be raised are not specified in the signature and depend on the implementation of the _create method.
