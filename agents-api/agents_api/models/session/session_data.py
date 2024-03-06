@@ -27,6 +27,9 @@ def session_data_query(developer_id: UUID, session_id: UUID):
         agent_about,
         model,
         default_settings,
+        session_metadata,
+        users_metadata,
+        agents_metadata,
     ] := input[developer_id, session_id],
         *sessions{{
             developer_id,
@@ -35,6 +38,7 @@ def session_data_query(developer_id: UUID, session_id: UUID):
             summary,
             created_at,
             updated_at: validity,
+            metadata: session_metadata,
             @ "NOW"
         }},
         *session_lookup{{
@@ -46,12 +50,14 @@ def session_data_query(developer_id: UUID, session_id: UUID):
             user_id,
             name: user_name,
             about: user_about,
+            metadata: users_metadata,
         }},
         *agents{{
             agent_id,
             name: agent_name,
             about: agent_about,
             model,
+            metadata: agents_metadata,
         }},
         *agent_default_settings {{
             agent_id,
