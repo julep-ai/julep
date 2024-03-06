@@ -17,7 +17,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {string} situation
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async _create(userId, agentId, situation) {
+  async _create({ userId, agentId, situation }) {
     if (!isValidUuid4(userId)) {
       throw new Error(`userId must be a valid UUID v4. Got "${userId}"`);
     }
@@ -61,7 +61,7 @@ class BaseSessionsManager extends BaseManager {
    * @param {string} situation
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async _update(sessionId, situation) {
+  async _update(sessionId, { situation }) {
     if (!isValidUuid4(sessionId)) {
       throw new Error("sessionId must be a valid UUID v4");
     }
@@ -190,15 +190,21 @@ class SessionsManager extends BaseSessionsManager {
   }
 
   /**
-   * @param {string | UUID} userId
-   * @param {string | UUID} agentId
-   * @param {string} situation
+   * @typedef {Object} SessionCreateArgs
+   * @property {string | UUID} userId
+   * @property {string | UUID} agentId
+   * @property {string} situation
+   */
+
+  /**
+   * @param {SessionCreateArgs} args
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({ userId, agentId, situation }) {
-    return await this._create(userId, agentId, situation);
+  async create(args) {
+    const result = await this._create(args);
+    const session = { ...args, ...result };
+    return session;
   }
-
   /**
    * @param {number} limit
    * @param {number} offset
@@ -218,12 +224,19 @@ class SessionsManager extends BaseSessionsManager {
   }
 
   /**
-   * @param {string | UUID} sessionId
-   * @param {string} situation
+   * @typedef {Object} SessionUpdateArgs
+   * @property {string | UUID} sessionId
+   * @property {string} situation
+   */
+
+  /**
+   * @param {SessionUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(sessionId, { situation }) {
-    return await this._update(sessionId, situation);
+  async update(sessionId, args) {
+    const result = await this._update(sessionId, args);
+    const updatedSession = { ...args, ...result };
+    return updatedSession;
   }
 
   /**

@@ -1,4 +1,5 @@
 # type: ignore
+# ^^ Added to ignore pytype errors for this file as it uses hacks
 from typing import TypedDict
 from ..api.types import (
     CreateDoc,
