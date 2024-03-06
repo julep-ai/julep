@@ -22,7 +22,9 @@ class User(BaseModel):
         None, description="User updated at (RFC-3339 format)"
     )
     id: UUID = Field(..., description="User id (UUID)")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class FunctionParameters(BaseModel):
@@ -82,7 +84,9 @@ class Session(BaseModel):
     updated_at: Optional[datetime] = Field(
         None, description="Session updated at (RFC-3339 format)"
     )
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class CreateSessionRequest(BaseModel):
@@ -96,18 +100,24 @@ class CreateSessionRequest(BaseModel):
         None,
         description="A specific situation that sets the background for this session",
     )
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class UpdateSessionRequest(BaseModel):
     situation: str = Field(..., description="Updated situation for this session")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class UpdateUserRequest(BaseModel):
     about: Optional[str] = Field(None, description="About the user")
     name: Optional[str] = Field(None, description="Name of the user")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class Target(Enum):
@@ -426,7 +436,9 @@ class Doc(BaseModel):
     content: str = Field(..., description="Information content")
     id: UUID = Field(..., description="ID of doc")
     created_at: datetime = Field(..., description="Doc created at")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="optional metadata"
+    )
 
 
 class CreateDoc(BaseModel):
@@ -434,7 +446,9 @@ class CreateDoc(BaseModel):
         ..., description="Title describing what this bit of information contains"
     )
     content: str = Field(..., description="Information content")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class MemoryAccessOptions(BaseModel):
@@ -541,14 +555,18 @@ class Agent(BaseModel):
         None, description="Default settings for all sessions created by this agent"
     )
     model: str = Field(..., description="The model to use with this agent")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class CreateUserRequest(BaseModel):
     name: Optional[str] = Field("User", description="Name of the user")
     about: Optional[str] = Field(None, description="About the user")
     docs: Optional[List[CreateDoc]] = Field(None, description="List of docs about user")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class CreateAgentRequest(BaseModel):
@@ -570,7 +588,9 @@ class CreateAgentRequest(BaseModel):
     docs: Optional[List[CreateDoc]] = Field(
         None, description="List of docs about agent"
     )
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class UpdateAgentRequest(BaseModel):
@@ -585,7 +605,9 @@ class UpdateAgentRequest(BaseModel):
     default_settings: Optional[AgentDefaultSettings] = Field(
         None, description="Default model settings to start every session with"
     )
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: Optional[Dict[str, Union[str, int, bool, float, None]]] = Field(
+        None, description="Optional metadata"
+    )
 
 
 class ChatInputData(BaseModel):
