@@ -10,6 +10,7 @@
 
 - [apiKey](Client.JulepApiClient.Options.md#apikey)
 - [environment](Client.JulepApiClient.Options.md#environment)
+- [fetcher](Client.JulepApiClient.Options.md#fetcher)
 
 ## Properties
 
@@ -19,7 +20,7 @@
 
 #### Defined in
 
-[src/api/Client.d.ts:10](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L10)
+[src/api/Client.d.ts:10](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/Client.d.ts#L10)
 
 ___
 
@@ -29,4 +30,14 @@ ___
 
 #### Defined in
 
-[src/api/Client.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/Client.d.ts#L9)
+[src/api/Client.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/Client.d.ts#L9)
+
+___
+
+### fetcher
+
+• `Optional` **fetcher**: `FetchFunction`
+
+#### Defined in
+
+[src/api/Client.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/Client.d.ts#L11)

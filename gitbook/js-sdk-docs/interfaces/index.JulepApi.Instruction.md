@@ -23,7 +23,7 @@ Content of the instruction
 
 #### Defined in
 
-[src/api/api/types/Instruction.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Instruction.d.ts#L6)
+[src/api/api/types/Instruction.d.ts:6](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Instruction.d.ts#L6)
 
 ___
 
@@ -35,4 +35,4 @@ Whether this instruction should be marked as important (only up to 3 instruction
 
 #### Defined in
 
-[src/api/api/types/Instruction.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Instruction.d.ts#L8)
+[src/api/api/types/Instruction.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Instruction.d.ts#L8)

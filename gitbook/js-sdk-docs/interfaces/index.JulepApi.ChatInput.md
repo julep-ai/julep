@@ -9,6 +9,7 @@
 ```ts
 {
  *         accept: "application/json",
+ *         minP: 0.01,
  *         messages: [{
  *                 role: JulepApi.InputChatMlMessageRole.User,
  *                 content: "content"
@@ -35,7 +36,9 @@
 - [logitBias](index.JulepApi.ChatInput.md#logitbias)
 - [maxTokens](index.JulepApi.ChatInput.md#maxtokens)
 - [messages](index.JulepApi.ChatInput.md#messages)
+- [minP](index.JulepApi.ChatInput.md#minp)
 - [presencePenalty](index.JulepApi.ChatInput.md#presencepenalty)
+- [preset](index.JulepApi.ChatInput.md#preset)
 - [recall](index.JulepApi.ChatInput.md#recall)
 - [remember](index.JulepApi.ChatInput.md#remember)
 - [repetitionPenalty](index.JulepApi.ChatInput.md#repetitionpenalty)
@@ -62,7 +65,7 @@
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L7)
+[src/api/api/types/ChatSettings.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L7)
 
 ___
 
@@ -78,13 +81,13 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L9)
+[src/api/api/types/ChatSettings.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L9)
 
 ___
 
 ### logitBias
 
-• `Optional` **logitBias**: `Record`\<`string`, `undefined` \| `number`\>
+• `Optional` **logitBias**: `Record`\<`string`, `number`\>
 
 Modify the likelihood of specified tokens appearing in the completion.
 
@@ -96,7 +99,7 @@ Accepts a JSON object that maps tokens (specified by their token ID in the token
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L15)
+[src/api/api/types/ChatSettings.d.ts:15](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L15)
 
 ___
 
@@ -114,7 +117,7 @@ The total length of input tokens and generated tokens is limited by the model's 
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:21](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L21)
+[src/api/api/types/ChatSettings.d.ts:21](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L21)
 
 ___
 
@@ -130,7 +133,23 @@ A list of new input messages comprising the conversation so far.
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L7)
+[src/api/api/types/ChatInputData.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputData.d.ts#L7)
+
+___
+
+### minP
+
+• `Optional` **minP**: `number`
+
+Minimum probability compared to leading token to be considered
+
+#### Inherited from
+
+[ChatSettings](index.JulepApi.ChatSettings.md).[minP](index.JulepApi.ChatSettings.md#minp)
+
+#### Defined in
+
+[src/api/api/types/ChatSettings.d.ts:49](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L49)
 
 ___
 
@@ -146,7 +165,23 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:23](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L23)
+[src/api/api/types/ChatSettings.d.ts:23](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L23)
+
+___
+
+### preset
+
+• `Optional` **preset**: [`ChatSettingsPreset`](../modules/index.JulepApi.md#chatsettingspreset)
+
+Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+
+#### Inherited from
+
+[ChatSettings](index.JulepApi.ChatSettings.md).[preset](index.JulepApi.ChatSettings.md#preset)
+
+#### Defined in
+
+[src/api/api/types/ChatSettings.d.ts:51](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L51)
 
 ___
 
@@ -162,7 +197,7 @@ Whether previous memories should be recalled or not
 
 #### Defined in
 
-[src/api/api/types/MemoryAccessOptions.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L6)
+[src/api/api/types/MemoryAccessOptions.d.ts:6](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L6)
 
 ___
 
@@ -178,7 +213,7 @@ Whether this interaction should be recorded in memory or not
 
 #### Defined in
 
-[src/api/api/types/MemoryAccessOptions.d.ts:8](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L8)
+[src/api/api/types/MemoryAccessOptions.d.ts:8](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/MemoryAccessOptions.d.ts#L8)
 
 ___
 
@@ -194,7 +229,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:25](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L25)
+[src/api/api/types/ChatSettings.d.ts:25](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L25)
 
 ___
 
@@ -214,7 +249,7 @@ Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the m
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:33](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L33)
+[src/api/api/types/ChatSettings.d.ts:33](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L33)
 
 ___
 
@@ -232,7 +267,7 @@ Determinism is not guaranteed, and you should refer to the `system_fingerprint` 
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:39](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L39)
+[src/api/api/types/ChatSettings.d.ts:39](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L39)
 
 ___
 
@@ -248,7 +283,7 @@ Up to 4 sequences where the API will stop generating further tokens.
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:41](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L41)
+[src/api/api/types/ChatSettings.d.ts:41](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L41)
 
 ___
 
@@ -264,7 +299,7 @@ If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sen
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:43](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L43)
+[src/api/api/types/ChatSettings.d.ts:43](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L43)
 
 ___
 
@@ -280,13 +315,13 @@ What sampling temperature to use, between 0 and 2. Higher values like 0.8 will m
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:45](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L45)
+[src/api/api/types/ChatSettings.d.ts:45](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L45)
 
 ___
 
 ### toolChoice
 
-• `Optional` **toolChoice**: `string`
+• `Optional` **toolChoice**: [`ChatInputDataToolChoice`](../modules/index.JulepApi.md#chatinputdatatoolchoice)
 
 Can be one of existing tools given to the agent earlier or the ones included in the request
 
@@ -296,7 +331,7 @@ Can be one of existing tools given to the agent earlier or the ones included in 
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L11)
+[src/api/api/types/ChatInputData.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputData.d.ts#L11)
 
 ___
 
@@ -312,7 +347,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L9)
+[src/api/api/types/ChatInputData.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputData.d.ts#L9)
 
 ___
 
@@ -328,4 +363,4 @@ Defaults to 1 An alternative to sampling with temperature, called nucleus sampli
 
 #### Defined in
 
-[src/api/api/types/ChatSettings.d.ts:47](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettings.d.ts#L47)
+[src/api/api/types/ChatSettings.d.ts:47](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettings.d.ts#L47)

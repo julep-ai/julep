@@ -22,4 +22,4 @@ Entity id (UUID)
 
 #### Defined in
 
-[src/api/api/types/Entity.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Entity.d.ts#L9)
+[src/api/api/types/Entity.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Entity.d.ts#L9)
