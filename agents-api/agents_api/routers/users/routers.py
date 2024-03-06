@@ -81,6 +81,7 @@ async def update_user(
                 user_id=user_id,
                 name=request.name,
                 about=request.about,
+                metadata=request.metadata or {},
             )
         )
 
@@ -130,6 +131,7 @@ async def create_user(
             user_id=uuid4(),
             name=request.name,
             about=request.about,
+            metadata=request.metadata or {},
         ),
     )
 
@@ -149,6 +151,7 @@ async def create_user(
                         id=uuid4(),
                         title=info.title,
                         content=info.content,
+                        metadata=info.metadata or {},
                     )
                     for info in request.docs
                 ]
@@ -188,6 +191,7 @@ async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResp
             id=doc_id,
             title=request.title,
             content=request.content,
+            metadata=request.metadata or {},
         )
     )
 
@@ -231,6 +235,8 @@ async def list_docs(user_id: UUID4, limit: int = 100, offset: int = 0) -> DocsLi
                 id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
+                created_at=row["created_at"],
+                metadata=row.get("metadata"),
             )
             for _, row in resp.iterrows()
         ]

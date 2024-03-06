@@ -8,6 +8,7 @@ export declare namespace JulepApiClient {
   interface Options {
     environment?: core.Supplier<environments.JulepApiEnvironment | string>;
     apiKey: core.Supplier<string>;
+    fetcher?: core.FetchFunction;
   }
   interface RequestOptions {
     timeoutInSeconds?: number;
@@ -21,7 +22,7 @@ export declare class JulepApiClient {
    * List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
    *
    * @example
-   *     await julepApi.listSessions({})
+   *     await julepApi.listSessions()
    */
   listSessions(
     request?: JulepApi.ListSessionsRequest,
@@ -44,7 +45,7 @@ export declare class JulepApiClient {
    * List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
    *
    * @example
-   *     await julepApi.listUsers({})
+   *     await julepApi.listUsers()
    */
   listUsers(
     request?: JulepApi.ListUsersRequest,
@@ -54,7 +55,7 @@ export declare class JulepApiClient {
    * Create a new user
    *
    * @example
-   *     await julepApi.createUser({})
+   *     await julepApi.createUser()
    */
   createUser(
     request?: JulepApi.CreateUserRequest,
@@ -64,7 +65,7 @@ export declare class JulepApiClient {
    * List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
    *
    * @example
-   *     await julepApi.listAgents({})
+   *     await julepApi.listAgents()
    */
   listAgents(
     request?: JulepApi.ListAgentsRequest,
@@ -121,7 +122,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getSuggestions("session_id", {})
+   *     await julepApi.getSuggestions("session_id")
    */
   getSuggestions(
     sessionId: string,
@@ -132,7 +133,7 @@ export declare class JulepApiClient {
    * Sorted (created_at ascending)
    *
    * @example
-   *     await julepApi.getHistory("session_id", {})
+   *     await julepApi.getHistory("session_id")
    */
   getHistory(
     sessionId: string,
@@ -184,7 +185,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateUser("user_id", {})
+   *     await julepApi.updateUser("user_id")
    */
   updateUser(
     userId: string,
@@ -215,7 +216,7 @@ export declare class JulepApiClient {
    *
    *
    * @example
-   *     await julepApi.updateAgent("agent_id", {})
+   *     await julepApi.updateAgent("agent_id")
    */
   updateAgent(
     agentId: string,
@@ -236,7 +237,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentDocs("agent_id", {})
+   *     await julepApi.getAgentDocs("agent_id")
    */
   getAgentDocs(
     agentId: string,
@@ -261,7 +262,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getUserDocs("user_id", {})
+   *     await julepApi.getUserDocs("user_id")
    */
   getUserDocs(
     userId: string,
@@ -319,7 +320,7 @@ export declare class JulepApiClient {
    * Sorted (created_at descending)
    *
    * @example
-   *     await julepApi.getAgentTools("agent_id", {})
+   *     await julepApi.getAgentTools("agent_id")
    */
   getAgentTools(
     agentId: string,

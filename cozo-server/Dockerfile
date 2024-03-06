@@ -8,7 +8,7 @@ RUN \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set fallback mount directory
-ENV MNT_DIR /home/cozo
+ENV MNT_DIR /data
 
 # Copy local code to the container image.
 ENV APP_HOME /app

@@ -19,6 +19,7 @@ def get_session_query(developer_id: UUID, session_id: UUID):
         summary,
         updated_at,
         created_at,
+        metadata,
     ] := input[developer_id, id],
         *sessions{{
             developer_id,
@@ -27,6 +28,7 @@ def get_session_query(developer_id: UUID, session_id: UUID):
             summary,
             created_at,
             updated_at: validity,
+            metadata,
             @ "NOW"
         }},
         *session_lookup{{

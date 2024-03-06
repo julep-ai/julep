@@ -57,16 +57,19 @@ image = (
         timeout=60 * 20,
     )
     .pip_install(
-        "vllm==0.3.1",
+        "vllm==0.3.3",
         "starlette-exporter==0.17.1",
         "environs==10.3.0",
         "pynvml==11.5.0",
-        "sentry-sdk==1.40.1",
+        "sentry-sdk==1.40.6",
         "jsonschema==4.21.1",
         "lm-format-enforcer==0.8.3",
         "interegular==0.3.3",
-        "pydantic[email]==2.6.1",
+        "pydantic[email]==2.6.3",
+        "scikit-learn==1.4.0",
+        "aioprometheus[starlette]==23.12.0",
     )
+    .copy_local_dir("./artifacts", "/root/artifacts")
 )
 
 
@@ -79,9 +82,10 @@ stub = Stub("model-api", image=image)
 
 @stub.function(
     gpu=gpu.A100(size="80GB"),
-    container_idle_timeout=1200,
-    allow_concurrent_inputs=15,
-    keep_warm=1,
+    container_idle_timeout=600,
+    allow_concurrent_inputs=25,
+    keep_warm=0,
+    timeout=120,
     secrets=[
         Secret.from_name("huggingface-secret"),
         Secret.from_name("samantha-model-api"),

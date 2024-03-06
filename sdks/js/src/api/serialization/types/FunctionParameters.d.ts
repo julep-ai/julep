@@ -9,5 +9,5 @@ export declare const FunctionParameters: core.serialization.Schema<
   JulepApi.FunctionParameters
 >;
 export declare namespace FunctionParameters {
-  type Raw = Record<string, unknown>;
+  type Raw = Record<string, any>;
 }
