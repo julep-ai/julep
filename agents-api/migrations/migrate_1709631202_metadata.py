@@ -223,8 +223,10 @@ queries_to_run = [
 
 
 def up(client):
-    client.run([q["up"] for q in queries_to_run])
+    for q in queries_to_run:
+        client.run(q["up"])
 
 
 def down(client):
-    client.run([q["down"] for q in queries_to_run])
+    for q in queries_to_run:
+        client.run(q["down"])
