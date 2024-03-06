@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from pycozo.client import QueryException
+from temporalio.service import RPCError
 
 from agents_api.dependencies.auth import get_api_key
 from agents_api.env import sentry_dsn
@@ -15,6 +16,7 @@ from agents_api.routers import (
     agents,
     sessions,
     users,
+    jobs,
 )
 
 
@@ -65,10 +67,21 @@ app.include_router(agents.router)
 app.include_router(sessions.router)
 # app.include_router(embedder.router)
 app.include_router(users.router)
+app.include_router(jobs.router)
 # app.include_router(entries.router)
 # app.include_router(models.router)
 # app.include_router(personality.router)
 # app.include_router(beliefs.router)
+
+
+@app.exception_handler(RPCError)
+async def validation_error_handler(request: Request, exc: RPCError):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": {"message": "job not found or invalid", "code": exc.status.name}
+        },
+    )
 
 
 def main(

@@ -80,6 +80,7 @@ async def create_session(
             agent_id=request.agent_id,
             user_id=request.user_id,
             situation=request.situation,
+            metadata=request.metadata or {},
         ),
     )
 
@@ -135,6 +136,7 @@ async def update_session(
                 "developer_id": str(x_developer_id),
                 "session_id": str(session_id),
                 "situation": request.situation,
+                "metadata": request.metadata or {},
             },
         )
 
@@ -212,11 +214,16 @@ async def session_chat(
         top_p=request.top_p,
         remember=request.remember,
         recall=request.recall,
+        min_p=request.min_p,
+        preset=request.preset,
     )
     response, new_entry, bg_task = await session.run(request.messages, settings)
 
+    jobs = None
     if bg_task:
-        background_tasks.add_task(bg_task, session_id)
+        job_id = uuid4()
+        jobs = {job_id}
+        background_tasks.add_task(bg_task, session_id, job_id)
 
     resp = [ChatMLMessage(**new_entry.model_dump())]
 
@@ -225,4 +232,5 @@ async def session_chat(
         finish_reason=FinishReason[response.choices[0].finish_reason],
         response=[resp],
         usage=CompletionUsage(**response.usage.model_dump()),
+        jobs=jobs,
     )

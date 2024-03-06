@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .chat_settings_preset import ChatSettingsPreset
 from .chat_settings_response_format import ChatSettingsResponseFormat
 from .chat_settings_stop import ChatSettingsStop
 
@@ -72,6 +73,9 @@ class ChatSettings(pydantic.BaseModel):
     )
     min_p: typing.Optional[float] = pydantic.Field(
         description="Minimum probability compared to leading token to be considered"
+    )
+    preset: typing.Optional[ChatSettingsPreset] = pydantic.Field(
+        description="Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)"
     )
 
     def json(self, **kwargs: typing.Any) -> str:

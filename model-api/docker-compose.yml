@@ -1,0 +1,34 @@
+name: julep-model-api
+
+services:
+  model-api:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+    environment:
+      - API_KEY=${API_KEY}
+      - API_KEY_HEADER_NAME=${API_KEY_HEADER_NAME}
+      - SKIP_CHECK_DEVELOPER_HEADERS=${SKIP_CHECK_DEVELOPER_HEADERS}
+      - MODEL_NAME=${MODEL_NAME}
+      - HF_TOKEN=${HF_TOKEN}
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - SENTRY_DSN=${SENTRY_DSN}
+    container_name: model-api
+    build:
+      context: .
+      shm_size: "2gb"
+    shm_size: "2gb"
+
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

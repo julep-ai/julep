@@ -15,6 +15,7 @@ from .types.agent import Agent
 from .types.agent_default_settings import AgentDefaultSettings
 from .types.chat_input_data_tool_choice import ChatInputDataToolChoice
 from .types.chat_response import ChatResponse
+from .types.chat_settings_preset import ChatSettingsPreset
 from .types.chat_settings_response_format import ChatSettingsResponseFormat
 from .types.chat_settings_stop import ChatSettingsStop
 from .types.create_doc import CreateDoc
@@ -532,6 +533,7 @@ class JulepApi:
         temperature: typing.Optional[float] = OMIT,
         top_p: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
+        preset: typing.Optional[ChatSettingsPreset] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
     ) -> ChatResponse:
@@ -578,6 +580,8 @@ class JulepApi:
             - top_p: typing.Optional[float]. Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
 
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
+
+            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -631,6 +635,8 @@ class JulepApi:
             _request["top_p"] = top_p
         if min_p is not OMIT:
             _request["min_p"] = min_p
+        if preset is not OMIT:
+            _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
         if remember is not OMIT:
@@ -1920,6 +1926,7 @@ class AsyncJulepApi:
         temperature: typing.Optional[float] = OMIT,
         top_p: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
+        preset: typing.Optional[ChatSettingsPreset] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
     ) -> ChatResponse:
@@ -1966,6 +1973,8 @@ class AsyncJulepApi:
             - top_p: typing.Optional[float]. Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
 
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
+
+            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -2019,6 +2028,8 @@ class AsyncJulepApi:
             _request["top_p"] = top_p
         if min_p is not OMIT:
             _request["min_p"] = min_p
+        if preset is not OMIT:
+            _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
         if remember is not OMIT:

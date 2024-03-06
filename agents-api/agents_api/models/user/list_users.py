@@ -11,6 +11,7 @@ def list_users_query(developer_id: UUID, limit: int = 100, offset: int = 0):
         about,
         created_at,
         updated_at,
+        metadata,
     ] :=
         input[developer_id], 
         *users {{
@@ -20,6 +21,7 @@ def list_users_query(developer_id: UUID, limit: int = 100, offset: int = 0):
             about,
             created_at,
             updated_at,
+            metadata,
         }}
     
     :limit {limit}
