@@ -21,7 +21,7 @@ class ChatResponse(pydantic.BaseModel): ...
 
 ### ChatResponse().dict
 
-[Show source in chat_response.py:39](../../../../../../../julep/api/types/chat_response.py#L39)
+[Show source in chat_response.py:42](../../../../../../../julep/api/types/chat_response.py#L42)
 
 #### Signature
 
@@ -31,7 +31,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ChatResponse().json
 
-[Show source in chat_response.py:31](../../../../../../../julep/api/types/chat_response.py#L31)
+[Show source in chat_response.py:34](../../../../../../../julep/api/types/chat_response.py#L34)
 
 #### Signature
 

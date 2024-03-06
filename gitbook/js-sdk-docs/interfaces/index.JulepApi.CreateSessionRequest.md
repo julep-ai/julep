@@ -31,7 +31,7 @@ Agent ID of agent to associate with this session
 
 #### Defined in
 
-[src/api/api/client/requests/CreateSessionRequest.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateSessionRequest.d.ts#L15)
+[src/api/api/client/requests/CreateSessionRequest.d.ts:15](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateSessionRequest.d.ts#L15)
 
 ___
 
@@ -43,7 +43,7 @@ A specific situation that sets the background for this session
 
 #### Defined in
 
-[src/api/api/client/requests/CreateSessionRequest.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateSessionRequest.d.ts#L17)
+[src/api/api/client/requests/CreateSessionRequest.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateSessionRequest.d.ts#L17)
 
 ___
 
@@ -55,4 +55,4 @@ User ID of user to associate with this session
 
 #### Defined in
 
-[src/api/api/client/requests/CreateSessionRequest.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/CreateSessionRequest.d.ts#L13)
+[src/api/api/client/requests/CreateSessionRequest.d.ts:13](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/CreateSessionRequest.d.ts#L13)
