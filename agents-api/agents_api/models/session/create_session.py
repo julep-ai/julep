@@ -30,7 +30,7 @@ def create_session_query(
         }}
     }} {{
         # Create a new session
-        ?[session_id, developer_id, situation] <- [[
+        ?[session_id, developer_id, situation, metadata] <- [[
             to_uuid("{session_id}"),
             to_uuid("{developer_id}"),
             "{situation}",
