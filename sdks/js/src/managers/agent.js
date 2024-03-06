@@ -122,22 +122,22 @@ class AgentsManager extends BaseAgentsManager {
   async get(id) {
     return await this._get(id);
   }
-/**
- * @typedef {Object} AgentCreateArgs
- * @property {string} name
- * @property {string} about
- * @property {Instruction[]} instructions
- * @property {ToolDict[]} [tools]
- * @property {FunctionDefDict[]} [functions]
- * @property {DefaultSettingsDict} [defaultSettings]
- * @property {ModelName} [model]
- * @property {DocDict[]} [docs]
- */
+  /**
+   * @typedef {Object} AgentCreateArgs
+   * @property {string} name
+   * @property {string} about
+   * @property {Instruction[]} instructions
+   * @property {ToolDict[]} [tools]
+   * @property {FunctionDefDict[]} [functions]
+   * @property {DefaultSettingsDict} [defaultSettings]
+   * @property {ModelName} [model]
+   * @property {DocDict[]} [docs]
+   */
 
-/**
- * @param {AgentCreateArgs} args
- * @returns {Promise<ResourceCreatedResponse>}
- */
+  /**
+   * @param {AgentCreateArgs} args
+   * @returns {Promise<ResourceCreatedResponse>}
+   */
   async create(args) {
     const result = await this._create(args);
     const agent = { ...args, ...result };
@@ -171,9 +171,9 @@ class AgentsManager extends BaseAgentsManager {
    * @param {string} [name]
    * @param {string} [model]
    * @param {AgentDefaultSettings} [defaultSettings]
-  */
+   */
 
- /** 
+  /**
    * @param {AgentUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
