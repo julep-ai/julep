@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Header
 from pydantic import validate_email
 from pydantic_core import PydanticCustomError
+
 from ..env import skip_check_developer_headers
 from .exceptions import InvalidHeaderFormat
 
