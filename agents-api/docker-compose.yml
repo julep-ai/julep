@@ -1,0 +1,92 @@
+name: julep-agents-api
+version: "3"
+
+include:
+  - ../model-api/docker-compose.yml
+  - ../cozo-server/docker-compose.yml
+
+services:
+  agents-api:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+
+    container_name: agents-api
+    depends_on:
+      model-api:
+        condition: service_started
+      cozo-server:
+        condition: service_started
+      worker:
+        condition: service_started
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+
+  worker:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    entrypoint: ["tail", "-f", "/dev/null"]
+    depends_on:
+      text-embeddings-inference:
+        condition: service_started
+      temporal:
+        condition: service_started
+
+  text-embeddings-inference:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+
+    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    ports:
+      - "8082:80"
+    shm_size: "2gb"
+
+  temporal:
+    container_name: temporal
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+
+    build:
+      context: .
+      dockerfile: Dockerfile.temporal
+    ports:
+      - 7233:7233
+    volumes:
+      - temporal_data:/home/temporal
+
+  cozo-migrate:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+
+    container_name: cozo-migrate
+    depends_on:
+      cozo-server:
+        condition: service_started
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
+    restart: "no" # Make sure to double quote this
+
+volumes:
+  temporal_data:

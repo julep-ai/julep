@@ -7,13 +7,13 @@ auth_key = "myauthkey"
 os.environ["API_KEY"] = auth_key
 os.environ["TEMPERATURE_SCALING_FACTOR"] = "1.0"
 os.environ["TEMPERATURE_SCALING_POWER"] = "1.0"
+MODEL_NAME = os.environ.get("MODEL_NAME", "julep-ai/samantha-1-turbo")
 
 from model_api.web import create_app  # noqa: E402
 
-MODEL = "julep-ai/samantha-1-turbo"
 args = [
     "--model",
-    MODEL,
+    MODEL_NAME,
     "--trust-remote-code",
     "--max-model-len",
     "1024",
