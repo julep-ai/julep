@@ -80,7 +80,7 @@ async def create_session(
             agent_id=request.agent_id,
             user_id=request.user_id,
             situation=request.situation,
-            metadata=request.metadata,
+            metadata=request.metadata or {},
         ),
     )
 

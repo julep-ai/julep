@@ -204,7 +204,7 @@ async def create_agent(
                         id=uuid4(),
                         title=info.title,
                         content=info.content,
-                        metadata=info.metadata,
+                        metadata=info.metadata or {},
                     )
                     for info in request.docs
                 ]
