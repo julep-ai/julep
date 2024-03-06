@@ -26,7 +26,7 @@ def _(client=client):
         about="test user about",
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, User)
     assert response.created_at
 
 
@@ -37,7 +37,7 @@ async def _(client=async_client):
         about="test user about",
     )
 
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, User)
     assert response.created_at
 
 
@@ -63,7 +63,7 @@ def _(client=client):
         about="test user about",
     )
 
-    assert isinstance(response, ResourceUpdatedResponse)
+    assert isinstance(response, User)
     assert response.updated_at
 
 
@@ -75,7 +75,7 @@ async def _(client=async_client):
         about="test user about",
     )
 
-    assert isinstance(response, ResourceUpdatedResponse)
+    assert isinstance(response, User)
     assert response.updated_at
 
 

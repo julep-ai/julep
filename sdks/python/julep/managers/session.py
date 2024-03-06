@@ -21,6 +21,8 @@ from ..api.types import (
     Suggestion,
 )
 
+from .utils import rewrap_in_class
+
 from .base import BaseManager
 from .types import (
     ChatSettingsResponseFormatDict,
@@ -467,7 +469,8 @@ class SessionsManager(BaseSessionsManager):
         return self._get(id=id)
 
     @beartype
-    def create(self, **kwargs: SessionCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(Session)
+    def create(self, **kwargs: SessionCreateArgs) -> Session:
         """
         Create a new resource with a user ID and an agent ID, optionally including a situation description.
 
@@ -477,15 +480,14 @@ class SessionsManager(BaseSessionsManager):
             situation (Optional[str]): An optional description of the situation.
 
         Returns:
-            ResourceCreatedResponse: An object containing details about the newly created resource.
+            Session: The created Session object.
 
         Raises:
             BeartypeException: If the provided `user_id` or `agent_id` do not match the required type.
             Any other exception that `_create` might raise.
         """
         result = self._create(**kwargs)
-        session = Session(**{**kwargs, **result})
-        return session
+        return result
 
     @beartype
     def list(
@@ -531,10 +533,11 @@ class SessionsManager(BaseSessionsManager):
         return self._delete(session_id=session_id)
 
     @beartype
+    @rewrap_in_class(Session)
     def update(
         self,
         **kwargs: SessionUpdateArgs,
-    ) -> ResourceUpdatedResponse:
+    ) -> Session:
         """
         Updates the state of a resource based on a given situation.
 
@@ -548,15 +551,13 @@ class SessionsManager(BaseSessionsManager):
             situation (str): A string that represents the new situation for the resource update.
 
         Returns:
-            ResourceUpdatedResponse: An object representing the response after updating
-                the resource, typically including status and any relevant data.
+            Session: The updated Session object.
 
         Note:
             The `@beartype` decorator is used for runtime type checking of the function arguments.
         """
         result = self._update(**kwargs)
-        session = Session(**{**kwargs, **result})
-        return session
+        return result
 
     @beartype
     def chat(
@@ -766,7 +767,8 @@ class AsyncSessionsManager(BaseSessionsManager):
         return await self._get(id=id)
 
     @beartype
-    async def create(self, **kwargs: SessionCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(Session)
+    async def create(self, **kwargs: SessionCreateArgs) -> Session:
         """
         Asynchronously create a resource with the specified user and agent identifiers.
 
@@ -778,15 +780,14 @@ class AsyncSessionsManager(BaseSessionsManager):
             situation (Optional[str], optional): Description of the situation, defaults to None.
 
         Returns:
-            ResourceCreatedResponse: An object representing the successful creation of the resource.
+            Session: The created Session object
 
         Raises:
             BeartypeException: If any of the input arguments do not match their expected types.
             Any exception raised by the internal _create method.
         """
         result = await self._create(**kwargs)
-        session = Session(**{**kwargs, **result})
-        return session
+        return result
 
     @beartype
     async def list(
@@ -834,10 +835,11 @@ class AsyncSessionsManager(BaseSessionsManager):
         return await self._delete(session_id=session_id)
 
     @beartype
+    @rewrap_in_class(Session)
     async def update(
         self,
         **kwargs: SessionUpdateArgs,
-    ) -> ResourceUpdatedResponse:
+    ) -> Session:
         """
         Asynchronously update a resource with the given situation.
 
@@ -850,8 +852,7 @@ class AsyncSessionsManager(BaseSessionsManager):
             situation (str): Description of the situation to update the resource with.
 
         Returns:
-            ResourceUpdatedResponse: An object representing the response after
-                updating the resource.
+            Session: The updated Session object
 
         Note:
             This function is decorated with `@beartype`, which will perform runtime type
@@ -862,8 +863,7 @@ class AsyncSessionsManager(BaseSessionsManager):
                 arguments do not match their annotated types.
         """
         result = await self._update(**kwargs)
-        session = Session(**{**kwargs, **result})
-        return session
+        return result
 
     @beartype
     async def chat(

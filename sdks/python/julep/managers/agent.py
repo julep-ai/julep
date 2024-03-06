@@ -15,6 +15,8 @@ from ..api.types import (
     ResourceUpdatedResponse,
 )
 
+from .utils import rewrap_in_class
+
 from .base import BaseManager
 from .utils import is_valid_uuid4
 from .types import (
@@ -377,7 +379,8 @@ class AgentsManager(BaseAgentsManager):
         return self._get(id=id)
 
     @beartype
-    def create(self, **kwargs: AgentCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(Agent)
+    def create(self, **kwargs: AgentCreateArgs) -> Agent:
         """
         Creates a new resource with the specified details.
 
@@ -392,14 +395,13 @@ class AgentsManager(BaseAgentsManager):
             docs (List[DocDict], optional): A list of dictionaries with documentation details. Defaults to an empty list.
 
         Returns:
-            ResourceCreatedResponse: An object representing the response of the resource creation.
+            Agent: An instance of the Agent with the specified details
 
         Note:
             This function is decorated with `@beartype`, which will perform runtime type checking on the arguments.
         """
         result = self._create(**kwargs)
-        agent = Agent(**{**kwargs, **result})
-        return agent
+        return result
 
     @beartype
     def list(
@@ -448,9 +450,10 @@ class AgentsManager(BaseAgentsManager):
         return self._delete(agent_id=agent_id)
 
     @beartype
+    @rewrap_in_class(Agent)
     def update(
         self, *, agent_id: Union[str, UUID], **kwargs: AgentUpdateArgs
-    ) -> ResourceUpdatedResponse:
+    ) -> Agent:
         """
         Update the properties of a resource.
 
@@ -471,8 +474,7 @@ class AgentsManager(BaseAgentsManager):
             This method is decorated with `beartype`, which means it enforces type annotations at runtime.
         """
         result = self._update(agent_id=agent_id, **kwargs)
-        agent = Agent(**{**kwargs, **result})
-        return agent
+        return result
 
 
 class AsyncAgentsManager(BaseAgentsManager):
@@ -566,7 +568,8 @@ class AsyncAgentsManager(BaseAgentsManager):
         return await self._get(id=id)
 
     @beartype
-    async def create(self, **kwargs: AgentCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(Agent)
+    async def create(self, **kwargs: AgentCreateArgs) -> Agent:
         """
         Create a new resource asynchronously with specified details.
 
@@ -583,14 +586,13 @@ class AsyncAgentsManager(BaseAgentsManager):
             docs (List[DocDict], optional): A list of dictionaries containing documentation for the resource. Defaults to an empty list.
 
         Returns:
-            ResourceCreatedResponse: An object containing the response data for the resource creation.
+            Agent: An instance of the Agent with the specified details 
 
         Raises:
             The exceptions that may be raised are not specified in the signature and depend on the implementation of the _create method.
         """
         result = await self._create(**kwargs)
-        agent = Agent(**{**kwargs, **result})
-        return agent
+        return result
 
     @beartype
     async def list(
@@ -635,9 +637,10 @@ class AsyncAgentsManager(BaseAgentsManager):
         return await self._delete(agent_id=agent_id)
 
     @beartype
+    @rewrap_in_class(Agent)
     async def update(
         self, *, agent_id: Union[str, UUID], **kwargs: AgentUpdateArgs
-    ) -> ResourceUpdatedResponse:
+    ) -> Agent:
         """
         Asynchronously update an agent's details.
 
@@ -655,5 +658,4 @@ class AsyncAgentsManager(BaseAgentsManager):
             ResourceUpdatedResponse: An object containing the details of the update response.
         """
         result = await self._update(agent_id=agent_id, **kwargs)
-        agent = Agent(**{**kwargs, **result})
-        return agent
+        return result

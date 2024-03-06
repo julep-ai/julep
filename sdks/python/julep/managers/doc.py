@@ -11,6 +11,8 @@ from ..api.types import (
     GetAgentDocsResponse,
 )
 
+from .utils import rewrap_in_class
+
 from .base import BaseManager
 from .utils import is_valid_uuid4
 from .types import DocDict
@@ -103,9 +105,9 @@ class BaseDocsManager(BaseManager):
 
     def _create(
         self,
-        agent_id: Optional[Union[str, UUID]],
-        user_id: Optional[Union[str, UUID]],
         doc: DocDict,
+        agent_id: Optional[Union[str, UUID]] = None,
+        user_id: Optional[Union[str, UUID]] = None,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         """
         Create a new resource with docsrmation for either an agent or a user, but not both.
@@ -269,7 +271,8 @@ class DocsManager(BaseDocsManager):
         ).items
 
     @beartype
-    def create(self, **kwargs: DocsCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(Doc)
+    def create(self, **kwargs: DocsCreateArgs) -> Doc:
         """
         Create a new resource with the specified document.
 
@@ -288,8 +291,7 @@ class DocsManager(BaseDocsManager):
             BeartypeException: If any input parameters are of incorrect type, due to type enforcement by the @beartype decorator.
         """
         result = self._create(**kwargs)
-        doc = Doc(**{**kwargs, **result})
-        return doc
+        return result
 
     @beartype
     def delete(
@@ -402,7 +404,8 @@ class AsyncDocsManager(BaseDocsManager):
         ).items
 
     @beartype
-    async def create(self, **kwargs: DocsCreateArgs) -> ResourceCreatedResponse:
+    @rewrap_in_class(Doc)
+    async def create(self, **kwargs: DocsCreateArgs) -> Doc:
         """
         Create a new resource asynchronously.
 
@@ -418,8 +421,7 @@ class AsyncDocsManager(BaseDocsManager):
             BeartypeException: If any of the input arguments do not match their expected types. This is implicitly raised due to the use of the beartype decorator.
         """
         result = await self._create(**kwargs)
-        doc = Doc(**{**kwargs, **result})
-        return doc
+        return result
 
     @beartype
     async def delete(
