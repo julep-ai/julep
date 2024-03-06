@@ -80,6 +80,7 @@ async def create_session(
             agent_id=request.agent_id,
             user_id=request.user_id,
             situation=request.situation,
+            metadata=request.metadata,
         ),
     )
 
@@ -135,6 +136,7 @@ async def update_session(
                 "developer_id": str(x_developer_id),
                 "session_id": str(session_id),
                 "situation": request.situation,
+                "metadata": request.metadata or {},
             },
         )
 

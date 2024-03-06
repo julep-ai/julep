@@ -74,11 +74,6 @@ extend_agents_default_settings = {
 }
 
 
-queries_to_run = [
-    extend_agents_default_settings,
-]
-
-
 def up(client):
     client.run(extend_agents_default_settings["up"])
 

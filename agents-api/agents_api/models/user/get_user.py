@@ -14,6 +14,7 @@ def get_user_query(developer_id: UUID, user_id: UUID):
         about,
         created_at,
         updated_at,
+        metadata,
     ] := input[developer_id, id],
         *users {{
             user_id: id,
@@ -22,4 +23,5 @@ def get_user_query(developer_id: UUID, user_id: UUID):
             about,
             created_at,
             updated_at,
+            metadata,
         }}"""
