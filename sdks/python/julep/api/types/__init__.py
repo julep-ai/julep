@@ -3,6 +3,7 @@
 from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .agent_default_settings_preset import AgentDefaultSettingsPreset
+from .agent_metadata import AgentMetadata
 from .belief import Belief
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
@@ -17,10 +18,15 @@ from .chat_settings_response_format_schema import ChatSettingsResponseFormatSche
 from .chat_settings_response_format_type import ChatSettingsResponseFormatType
 from .chat_settings_stop import ChatSettingsStop
 from .completion_usage import CompletionUsage
+from .create_agent_request_metadata import CreateAgentRequestMetadata
 from .create_doc import CreateDoc
+from .create_doc_metadata import CreateDocMetadata
+from .create_session_request_metadata import CreateSessionRequestMetadata
 from .create_tool_request import CreateToolRequest
 from .create_tool_request_type import CreateToolRequestType
+from .create_user_request_metadata import CreateUserRequestMetadata
 from .doc import Doc
+from .doc_metadata import DocMetadata
 from .entity import Entity
 from .episode import Episode
 from .function_call_option import FunctionCallOption
@@ -48,17 +54,23 @@ from .resource_created_response import ResourceCreatedResponse
 from .resource_deleted_response import ResourceDeletedResponse
 from .resource_updated_response import ResourceUpdatedResponse
 from .session import Session
+from .session_metadata import SessionMetadata
 from .suggestion import Suggestion
 from .suggestion_target import SuggestionTarget
 from .tool import Tool
 from .tool_choice_option import ToolChoiceOption
 from .tool_type import ToolType
+from .update_agent_request_metadata import UpdateAgentRequestMetadata
+from .update_session_request_metadata import UpdateSessionRequestMetadata
+from .update_user_request_metadata import UpdateUserRequestMetadata
 from .user import User
+from .user_metadata import UserMetadata
 
 __all__ = [
     "Agent",
     "AgentDefaultSettings",
     "AgentDefaultSettingsPreset",
+    "AgentMetadata",
     "Belief",
     "ChatInputData",
     "ChatInputDataToolChoice",
@@ -73,10 +85,15 @@ __all__ = [
     "ChatSettingsResponseFormatType",
     "ChatSettingsStop",
     "CompletionUsage",
+    "CreateAgentRequestMetadata",
     "CreateDoc",
+    "CreateDocMetadata",
+    "CreateSessionRequestMetadata",
     "CreateToolRequest",
     "CreateToolRequestType",
+    "CreateUserRequestMetadata",
     "Doc",
+    "DocMetadata",
     "Entity",
     "Episode",
     "FunctionCallOption",
@@ -104,10 +121,15 @@ __all__ = [
     "ResourceDeletedResponse",
     "ResourceUpdatedResponse",
     "Session",
+    "SessionMetadata",
     "Suggestion",
     "SuggestionTarget",
     "Tool",
     "ToolChoiceOption",
     "ToolType",
+    "UpdateAgentRequestMetadata",
+    "UpdateSessionRequestMetadata",
+    "UpdateUserRequestMetadata",
     "User",
+    "UserMetadata",
 ]
