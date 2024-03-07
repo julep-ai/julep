@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .create_doc_metadata import CreateDocMetadata
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -16,6 +17,9 @@ class CreateDoc(pydantic.BaseModel):
         description="Title describing what this bit of information contains"
     )
     content: str = pydantic.Field(description="Information content")
+    metadata: typing.Optional[CreateDocMetadata] = pydantic.Field(
+        description="Optional metadata"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
