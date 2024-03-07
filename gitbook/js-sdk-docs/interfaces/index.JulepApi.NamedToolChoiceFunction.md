@@ -22,4 +22,4 @@ The name of the function to call.
 
 #### Defined in
 
-[src/api/api/types/NamedToolChoiceFunction.d.ts:6](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/NamedToolChoiceFunction.d.ts#L6)
+[src/api/api/types/NamedToolChoiceFunction.d.ts:6](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/NamedToolChoiceFunction.d.ts#L6)

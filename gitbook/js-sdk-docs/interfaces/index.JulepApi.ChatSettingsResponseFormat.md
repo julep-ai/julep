@@ -28,7 +28,7 @@ Regular expression pattern to use if `type` is `"regex"`
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsResponseFormat.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L16)
+[src/api/api/types/ChatSettingsResponseFormat.d.ts:16](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L16)
 
 ___
 
@@ -40,7 +40,7 @@ JSON Schema to use if `type` is `"json_object"`
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsResponseFormat.d.ts:18](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L18)
+[src/api/api/types/ChatSettingsResponseFormat.d.ts:18](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L18)
 
 ___
 
@@ -52,4 +52,4 @@ Must be one of `"text"`, `"regex"` or `"json_object"`.
 
 #### Defined in
 
-[src/api/api/types/ChatSettingsResponseFormat.d.ts:14](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L14)
+[src/api/api/types/ChatSettingsResponseFormat.d.ts:14](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatSettingsResponseFormat.d.ts#L14)

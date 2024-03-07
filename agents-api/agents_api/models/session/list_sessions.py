@@ -15,6 +15,7 @@ def list_sessions_query(developer_id: UUID, limit: int = 100, offset: int = 0):
             summary,
             updated_at,
             created_at,
+            metadata,
         ] :=
             input[developer_id],
             *sessions{{
@@ -24,6 +25,7 @@ def list_sessions_query(developer_id: UUID, limit: int = 100, offset: int = 0):
                 summary,
                 created_at,
                 updated_at: validity,
+                metadata,
                 @ "NOW"
             }},
             *session_lookup{{

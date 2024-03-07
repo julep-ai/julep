@@ -9,7 +9,7 @@
 
 ## ChatSettings
 
-[Show source in chat_settings.py:16](../../../../../../../julep/api/types/chat_settings.py#L16)
+[Show source in chat_settings.py:17](../../../../../../../julep/api/types/chat_settings.py#L17)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class ChatSettings(pydantic.BaseModel): ...
 
 ### ChatSettings().dict
 
-[Show source in chat_settings.py:82](../../../../../../../julep/api/types/chat_settings.py#L82)
+[Show source in chat_settings.py:89](../../../../../../../julep/api/types/chat_settings.py#L89)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ChatSettings().json
 
-[Show source in chat_settings.py:74](../../../../../../../julep/api/types/chat_settings.py#L74)
+[Show source in chat_settings.py:81](../../../../../../../julep/api/types/chat_settings.py#L81)
 
 #### Signature
 

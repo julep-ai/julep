@@ -28,19 +28,19 @@ A list of new input messages comprising the conversation so far.
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L7)
+[src/api/api/types/ChatInputData.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputData.d.ts#L7)
 
 ___
 
 ### toolChoice
 
-• `Optional` **toolChoice**: `string`
+• `Optional` **toolChoice**: [`ChatInputDataToolChoice`](../modules/index.JulepApi.md#chatinputdatatoolchoice)
 
 Can be one of existing tools given to the agent earlier or the ones included in the request
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L11)
+[src/api/api/types/ChatInputData.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputData.d.ts#L11)
 
 ___
 
@@ -52,4 +52,4 @@ ___
 
 #### Defined in
 
-[src/api/api/types/ChatInputData.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/ChatInputData.d.ts#L9)
+[src/api/api/types/ChatInputData.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/ChatInputData.d.ts#L9)

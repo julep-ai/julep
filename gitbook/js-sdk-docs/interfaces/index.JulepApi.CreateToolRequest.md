@@ -21,7 +21,7 @@ Function definition and parameters
 
 #### Defined in
 
-[src/api/api/types/CreateToolRequest.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateToolRequest.d.ts#L9)
+[src/api/api/types/CreateToolRequest.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/CreateToolRequest.d.ts#L9)
 
 ___
 
@@ -33,4 +33,4 @@ Whether this tool is a `function` or a `webhook` (Only `function` tool supported
 
 #### Defined in
 
-[src/api/api/types/CreateToolRequest.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/CreateToolRequest.d.ts#L7)
+[src/api/api/types/CreateToolRequest.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/CreateToolRequest.d.ts#L7)

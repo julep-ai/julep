@@ -14,6 +14,7 @@ def create_agent_query(
     about: str,
     instructions: list[Instruction] = [],
     model: str = "julep-ai/samantha-1-turbo",
+    metadata: dict = {},
     default_settings: dict = {},
 ):
     assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
@@ -37,8 +38,8 @@ def create_agent_query(
 
     # create the agent
     agent_query = f"""
-        ?[agent_id, developer_id, model, name, about] <- [
-            ["{agent_id_str}", "{developer_id}", "{model}", "{name}", "{about}"]
+        ?[agent_id, developer_id, model, name, about, metadata] <- [
+            ["{agent_id_str}", "{developer_id}", "{model}", "{name}", "{about}", {metadata}]
         ]
 
         :insert agents {{
@@ -47,6 +48,7 @@ def create_agent_query(
             model,
             name,
             about,
+            metadata,
         }}
         :returning
     """

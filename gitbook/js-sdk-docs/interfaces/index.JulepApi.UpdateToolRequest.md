@@ -31,4 +31,4 @@ Function definition and parameters
 
 #### Defined in
 
-[src/api/api/client/requests/UpdateToolRequest.d.ts:16](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/client/requests/UpdateToolRequest.d.ts#L16)
+[src/api/api/client/requests/UpdateToolRequest.d.ts:16](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/client/requests/UpdateToolRequest.d.ts#L16)
