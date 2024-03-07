@@ -159,8 +159,7 @@ class SamplingParams(SamplingParams):
             top_p=top_p,
             top_k=top_k,
             min_p=min_p,
-            # FIXME: This is broken for some reason
-            # seed=seed,
+            seed=seed,
             use_beam_search=use_beam_search,
             length_penalty=length_penalty,
             early_stopping=early_stopping,
@@ -184,6 +183,181 @@ class SamplingParams(SamplingParams):
         return True
 
 
+class Preset(str, Enum):
+    problem_solving = "problem_solving"
+    conversational = "conversational"
+    fun = "fun"
+    prose = "prose"
+    creative = "creative"
+    business = "business"
+    deterministic = "deterministic"
+    code = "code"
+    multilingual = "multilingual"
+
+    def get_settings(self):
+        return getattr(self, f"_get_settings_{self.name}", "_get_settings_default")()
+
+    def _get_settings_problem_solving(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.0,
+            temperature=0,
+            top_p=1.0,
+            min_p=0.0,
+            best_of=10,
+            top_k=-1,
+            use_beam_search=True,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+    def _get_settings_conversational(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.02,
+            temperature=0.7,
+            top_p=0.99,
+            min_p=0.01,
+            best_of=1,
+            top_k=-1,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+    def _get_settings_fun(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.05,
+            temperature=1.2,
+            top_p=1.0,
+            min_p=0.015,
+            best_of=2,
+            top_k=-1,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+    def _get_settings_prose(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.025,
+            temperature=0.9,
+            top_p=1.0,
+            min_p=0.02,
+            best_of=2,
+            top_k=50,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+    def _get_settings_creative(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.1,
+            temperature=1.2,
+            top_p=1.0,
+            min_p=0.02,
+            best_of=3,
+            top_k=10,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+    def _get_settings_business(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.1,
+            repetition_penalty=1.1,
+            temperature=0.5,
+            top_p=0.98,
+            min_p=0.05,
+            best_of=2,
+            top_k=5,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=1,
+        )
+
+    def _get_settings_deterministic(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.0,
+            temperature=0.0,
+            top_p=1.0,
+            min_p=0.0,
+            best_of=1,
+            top_k=-1,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=1,
+        )
+
+    def _get_settings_code(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.0,
+            temperature=0,
+            top_p=1.0,
+            min_p=0.0,
+            best_of=3,
+            top_k=-1,
+            use_beam_search=True,
+            length_penalty=1.0,
+            seed=1,
+        )
+
+    def _get_settings_multilingual(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.0,
+            temperature=None,
+            top_p=None,
+            min_p=None,
+            best_of=1,
+            top_k=-1,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+    def _get_settings_default(self):
+        return dict(
+            n=1,
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
+            repetition_penalty=1.0,
+            temperature=0.0,
+            top_p=0.99,
+            min_p=0.01,
+            best_of=1,
+            top_k=-1,
+            use_beam_search=False,
+            length_penalty=1.0,
+            seed=None,
+        )
+
+
 class ChatCompletionRequest(ChatCompletionRequest):
     model_config = ConfigDict(extra="forbid")
 
@@ -200,14 +374,10 @@ class ChatCompletionRequest(ChatCompletionRequest):
     frequency_penalty: float | None = 0.01  # Custom
     top_p: float | None = 0.99  # Custom
     min_p: float | None = 0.01  # Custom
+    preset: Preset | None = None
 
     def to_sampling_params(self) -> SamplingParams:
-        echo_without_generation = self.echo and self.max_tokens == 0
-
-        if self.logit_bias is not None:
-            raise ValueError("logit_bias is not supported currently.")
-
-        return SamplingParams(
+        settings = dict(
             n=self.n or 1,
             presence_penalty=self.presence_penalty or 0.0,
             frequency_penalty=self.frequency_penalty or 0.0,
@@ -215,6 +385,21 @@ class ChatCompletionRequest(ChatCompletionRequest):
             temperature=self.temperature or 0.0,
             top_p=self.top_p or 0.99,
             min_p=self.min_p or 0.01,
+            best_of=self.best_of,
+            top_k=self.top_k or -1,
+            use_beam_search=self.use_beam_search or False,
+            length_penalty=self.length_penalty or 1.0,
+            seed=self.seed,
+        )
+        if self.preset is not None:
+            settings = self.preset.get_settings()
+
+        echo_without_generation = self.echo and self.max_tokens == 0
+
+        if self.logit_bias is not None:
+            raise ValueError("logit_bias is not supported currently.")
+
+        return SamplingParams(
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
             max_tokens=(
@@ -222,14 +407,11 @@ class ChatCompletionRequest(ChatCompletionRequest):
                 if not echo_without_generation
                 else 1
             ),
-            best_of=self.best_of,
-            top_k=self.top_k or -1,
             ignore_eos=self.ignore_eos or False,
-            use_beam_search=self.use_beam_search or False,
             skip_special_tokens=self.skip_special_tokens or True,
             spaces_between_special_tokens=self.spaces_between_special_tokens or False,
             include_stop_str_in_output=self.include_stop_str_in_output or False,
-            length_penalty=self.length_penalty or 1.0,
+            **settings,
         )
 
 
@@ -242,6 +424,7 @@ class CompletionRequest(CompletionRequest):
     frequency_penalty: float | None = 0.01  # Custom
     top_p: float | None = 0.99  # Custom
     min_p: float | None = 0.01  # Custom
+    preset: Preset | None = None
 
     def to_sampling_params(self) -> SamplingParams:
         echo_without_generation = self.echo and self.max_tokens == 0
@@ -249,16 +432,24 @@ class CompletionRequest(CompletionRequest):
         if self.logit_bias is not None:
             raise ValueError("logit_bias is not supported currently.")
 
-        return SamplingParams(
+        settings = dict(
             n=self.n or 1,
-            best_of=self.best_of,
             presence_penalty=self.presence_penalty or 0.0,
             frequency_penalty=self.frequency_penalty or 0.0,
             repetition_penalty=self.repetition_penalty or 1.0,
             temperature=self.temperature or 0.0,
             top_p=self.top_p or 0.99,
-            top_k=self.top_k or -1,
             min_p=self.min_p or 0.01,
+            best_of=self.best_of,
+            top_k=self.top_k or -1,
+            use_beam_search=self.use_beam_search or False,
+            length_penalty=self.length_penalty or 1.0,
+            seed=self.seed,
+        )
+        if self.preset is not None:
+            settings = self.preset.get_settings()
+
+        return SamplingParams(
             stop=self.stop,
             stop_token_ids=self.stop_token_ids,
             ignore_eos=self.ignore_eos or False,
@@ -268,12 +459,11 @@ class CompletionRequest(CompletionRequest):
                 else 1
             ),
             logprobs=self.logprobs,
-            use_beam_search=self.use_beam_search or False,
             prompt_logprobs=self.logprobs if self.echo else None,
             skip_special_tokens=self.skip_special_tokens or True,
             spaces_between_special_tokens=self.spaces_between_special_tokens or False,
             include_stop_str_in_output=self.include_stop_str_in_output or False,
-            length_penalty=self.length_penalty or 1.0,
+            **settings,
         )
 
 

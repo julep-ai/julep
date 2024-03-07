@@ -22,7 +22,7 @@ A description of what the function does, used by the model to choose when and ho
 
 #### Defined in
 
-[src/api/api/types/FunctionDef.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/FunctionDef.d.ts#L7)
+[src/api/api/types/FunctionDef.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/FunctionDef.d.ts#L7)
 
 ___
 
@@ -34,7 +34,7 @@ The name of the function to be called. Must be a-z, A-Z, 0-9, or contain undersc
 
 #### Defined in
 
-[src/api/api/types/FunctionDef.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/FunctionDef.d.ts#L9)
+[src/api/api/types/FunctionDef.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/FunctionDef.d.ts#L9)
 
 ___
 
@@ -46,4 +46,4 @@ Parameters accepeted by this function
 
 #### Defined in
 
-[src/api/api/types/FunctionDef.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/FunctionDef.d.ts#L11)
+[src/api/api/types/FunctionDef.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/FunctionDef.d.ts#L11)

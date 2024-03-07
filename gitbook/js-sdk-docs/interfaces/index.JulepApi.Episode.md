@@ -30,7 +30,7 @@ Content of the memory
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:9](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L9)
+[src/api/api/types/Episode.d.ts:9](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L9)
 
 ___
 
@@ -42,7 +42,7 @@ Episode created at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:13](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L13)
+[src/api/api/types/Episode.d.ts:13](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L13)
 
 ___
 
@@ -54,7 +54,7 @@ Duration of the episode (in seconds)
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:19](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L19)
+[src/api/api/types/Episode.d.ts:19](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L19)
 
 ___
 
@@ -66,7 +66,7 @@ Episode happened at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:17](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L17)
+[src/api/api/types/Episode.d.ts:17](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L17)
 
 ___
 
@@ -78,7 +78,7 @@ Episode id (UUID)
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:21](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L21)
+[src/api/api/types/Episode.d.ts:21](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L21)
 
 ___
 
@@ -90,7 +90,7 @@ Episode last accessed at (RFC-3339 format)
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:15](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L15)
+[src/api/api/types/Episode.d.ts:15](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L15)
 
 ___
 
@@ -102,7 +102,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:7](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L7)
+[src/api/api/types/Episode.d.ts:7](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L7)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:5](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L5)
+[src/api/api/types/Episode.d.ts:5](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L5)
 
 ___
 
@@ -124,4 +124,4 @@ Weight (importance) of the memory on a scale of 0-100
 
 #### Defined in
 
-[src/api/api/types/Episode.d.ts:11](https://github.com/julep-ai/samantha-dev/blob/4200383/sdks/js/src/api/api/types/Episode.d.ts#L11)
+[src/api/api/types/Episode.d.ts:11](https://github.com/julep-ai/monorepo/blob/8b1493a/sdks/js/src/api/api/types/Episode.d.ts#L11)

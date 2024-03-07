@@ -143,4 +143,12 @@ exports.ChatSettings = core.serialization.object({
     "min_p",
     core.serialization.number().optional(),
   ),
+  preset: core.serialization
+    .lazy(() =>
+      __awaiter(void 0, void 0, void 0, function* () {
+        return (yield Promise.resolve().then(() => __importStar(require(".."))))
+          .ChatSettingsPreset;
+      }),
+    )
+    .optional(),
 });

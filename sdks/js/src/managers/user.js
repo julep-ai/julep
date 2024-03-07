@@ -32,7 +32,7 @@ class BaseUsersManager extends BaseManager {
    * @param {DocDict[]} [docs=[]]
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  _create(name, about, docs = []) {
+  _create({ name, about, docs = [] }) {
     const docsPrepared = docs.map((doc) => new CreateDoc(doc));
     return this.apiClient
       .createUser({ name, about, docsPrepared })
@@ -69,7 +69,7 @@ class BaseUsersManager extends BaseManager {
    * @param {string} [name]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  _update(userId, about, name) {
+  _update({ userId, about, name }) {
     if (!isValidUuid4(userId)) {
       throw new Error("id must be a valid UUID v4");
     }
@@ -89,13 +89,20 @@ class UsersManager extends BaseUsersManager {
   }
 
   /**
-   * @param {string} name
-   * @param {string} about
-   * @param {DocDict[]} [docs=[]]
+   * @typedef {Object} UserCreateArgs
+   * @property {string} name
+   * @property {string} about
+   * @property {DocDict[]} [docs]
+   */
+
+  /**
+   * @param {UserCreateArgs} args
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({ name, about, docs = [] }) {
-    return await this._create(name, about, docs);
+  async create(args) {
+    const result = await this._create(args);
+    const user = { ...args, ...result };
+    return user;
   }
 
   /**
@@ -118,14 +125,20 @@ class UsersManager extends BaseUsersManager {
   }
 
   /**
-   * @param {string | UUID} userId
-   * @param {string} [about]
-   * @param {string} [name]
+   * @typedef {Object} UserUpdateArgs
+   * @property {string | UUID} userId
+   * @property {string} [about]
+   * @property {string} [name]
+   */
+
+  /**
+   * @param {UserUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update({ userId, about, name } = {}) {
-    return await this._update(userId, about, name);
+  async update(args) {
+    const result = await this._update(args);
+    const updatedUser = { ...args, ...result };
+    return updatedUser;
   }
 }
-
 module.exports = { BaseUsersManager, UsersManager };

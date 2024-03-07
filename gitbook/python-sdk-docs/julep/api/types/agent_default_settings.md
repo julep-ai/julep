@@ -9,7 +9,7 @@
 
 ## AgentDefaultSettings
 
-[Show source in agent_default_settings.py:14](../../../../../../../julep/api/types/agent_default_settings.py#L14)
+[Show source in agent_default_settings.py:15](../../../../../../../julep/api/types/agent_default_settings.py#L15)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class AgentDefaultSettings(pydantic.BaseModel): ...
 
 ### AgentDefaultSettings().dict
 
-[Show source in agent_default_settings.py:42](../../../../../../../julep/api/types/agent_default_settings.py#L42)
+[Show source in agent_default_settings.py:49](../../../../../../../julep/api/types/agent_default_settings.py#L49)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### AgentDefaultSettings().json
 
-[Show source in agent_default_settings.py:34](../../../../../../../julep/api/types/agent_default_settings.py#L34)
+[Show source in agent_default_settings.py:41](../../../../../../../julep/api/types/agent_default_settings.py#L41)
 
 #### Signature
 

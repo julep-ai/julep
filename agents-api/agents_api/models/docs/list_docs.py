@@ -19,11 +19,13 @@ def list_docs_snippets_by_owner_query(
             snippet,
             snippet_idx,
             created_at,
+            metadata,
         ] := input[{owner_type}_id],
             *{owner_type}_docs {{
                 {owner_type}_id,
                 doc_id,
                 created_at,
+                metadata,
             }},
             *information_snippets {{
                 doc_id,

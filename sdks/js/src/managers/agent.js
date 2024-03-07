@@ -22,7 +22,7 @@ class BaseAgentsManager extends BaseManager {
    * @param {DocDict[]} [docs]
    * @returns {Promise<GetAgentMemoriesResponse>}
    */
-  async _create(
+  async _create({
     name,
     about,
     instructions,
@@ -31,13 +31,11 @@ class BaseAgentsManager extends BaseManager {
     defaultSettings = {},
     model = "julep-ai/samantha-1-turbo",
     docs = [],
-  ) {
+  } = {}) {
     // Ensure that only functions or tools are provided
     if (functions.length > 0 && tools.length > 0) {
       throw new Error("Only functions or tools can be provided");
     }
-
-    // Cast instructions to Instruction objects
     const instructionsList =
       typeof instructions[0] === "string"
         ? instructions.map((content) => ({ content, important: false }))
@@ -91,7 +89,10 @@ class BaseAgentsManager extends BaseManager {
    * @param {AgentDefaultSettings} [defaultSettings]
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async _update(agentId, about, instructions, name, model, defaultSettings) {
+  async _update(
+    agentId,
+    { about, instructions, name, model, defaultSettings } = {},
+  ) {
     if (!isValidUuid4(agentId)) {
       throw new Error("agentId must be a valid UUID v4");
     }
@@ -122,38 +123,26 @@ class AgentsManager extends BaseAgentsManager {
   async get(id) {
     return await this._get(id);
   }
+  /**
+   * @typedef {Object} AgentCreateArgs
+   * @property {string} name
+   * @property {string} about
+   * @property {Instruction[]} instructions
+   * @property {ToolDict[]} [tools]
+   * @property {FunctionDefDict[]} [functions]
+   * @property {DefaultSettingsDict} [defaultSettings]
+   * @property {ModelName} [model]
+   * @property {DocDict[]} [docs]
+   */
 
   /**
-   * @param {string} name
-   * @param {string} about
-   * @param {Instruction[]} instructions
-   * @param {ToolDict[]} [tools]
-   * @param {FunctionDefDict[]} [functions]
-   * @param {DefaultSettingsDict} [defaultSettings]
-   * @param {ModelName} [model]
-   * @param {DocDict[]} [docs]
+   * @param {AgentCreateArgs} args
    * @returns {Promise<ResourceCreatedResponse>}
    */
-  async create({
-    name,
-    about,
-    instructions = [],
-    tools = [],
-    functions = [],
-    defaultSettings = {},
-    model = "julep-ai/samantha-1-turbo",
-    docs = [],
-  }) {
-    return await this._create(
-      name,
-      about,
-      instructions,
-      tools,
-      functions,
-      defaultSettings,
-      model,
-      docs,
-    );
+  async create(args) {
+    const result = await this._create(args);
+    const agent = { ...args, ...result };
+    return agent;
   }
 
   /**
@@ -176,26 +165,23 @@ class AgentsManager extends BaseAgentsManager {
   }
 
   /**
-   * @param {string | UUID} agentId
+   * @typedef {Object} AgentUpdateArgs
+   * @param {UUID} agentId
    * @param {string} [about]
    * @param {Instruction[]} [instructions]
    * @param {string} [name]
    * @param {string} [model]
    * @param {AgentDefaultSettings} [defaultSettings]
+   */
+
+  /**
+   * @param {AgentUpdateArgs} args
    * @returns {Promise<ResourceUpdatedResponse>}
    */
-  async update(
-    agentId,
-    { about, instructions, name, model, defaultSettings } = {},
-  ) {
-    return await this._update(
-      agentId,
-      about,
-      instructions,
-      name,
-      model,
-      defaultSettings,
-    );
+  async update(agentId, args) {
+    const result = await this._update(agentId, args);
+    const agent = { ...args, ...result };
+    return agent;
   }
 }
 

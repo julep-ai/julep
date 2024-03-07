@@ -3,7 +3,6 @@ from uuid import uuid4
 from ward import test
 
 from julep.api.types import (
-    ResourceCreatedResponse,
     Doc,
 )
 
@@ -29,7 +28,7 @@ def _(client=client):
     response = client.docs.create(
         agent_id=uuid4(), doc={"title": "test title", "content": "test content"}
     )
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Doc)
 
 
 @test("user docs.create")
@@ -37,7 +36,7 @@ def _(client=client):
     response = client.docs.create(
         user_id=uuid4(), doc={"title": "test title", "content": "test content"}
     )
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Doc)
 
 
 @test("agent docs.delete")
@@ -77,7 +76,7 @@ async def _(client=async_client):
     response = await client.docs.create(
         agent_id=uuid4(), doc={"title": "test title", "content": "test content"}
     )
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Doc)
 
 
 @test("async user docs.create")
@@ -85,7 +84,7 @@ async def _(client=async_client):
     response = await client.docs.create(
         user_id=uuid4(), doc={"title": "test title", "content": "test content"}
     )
-    assert isinstance(response, ResourceCreatedResponse)
+    assert isinstance(response, Doc)
 
 
 @test("async agent docs.delete")

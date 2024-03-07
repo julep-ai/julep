@@ -3,6 +3,7 @@
 from .types import (
     Agent,
     AgentDefaultSettings,
+    AgentDefaultSettingsPreset,
     Belief,
     ChatInputData,
     ChatInputDataToolChoice,
@@ -11,6 +12,7 @@ from .types import (
     ChatResponse,
     ChatResponseFinishReason,
     ChatSettings,
+    ChatSettingsPreset,
     ChatSettingsResponseFormat,
     ChatSettingsResponseFormatSchema,
     ChatSettingsResponseFormatType,
@@ -59,6 +61,7 @@ from .environment import JulepApiEnvironment
 __all__ = [
     "Agent",
     "AgentDefaultSettings",
+    "AgentDefaultSettingsPreset",
     "Belief",
     "ChatInputData",
     "ChatInputDataToolChoice",
@@ -67,6 +70,7 @@ __all__ = [
     "ChatResponse",
     "ChatResponseFinishReason",
     "ChatSettings",
+    "ChatSettingsPreset",
     "ChatSettingsResponseFormat",
     "ChatSettingsResponseFormatSchema",
     "ChatSettingsResponseFormatType",

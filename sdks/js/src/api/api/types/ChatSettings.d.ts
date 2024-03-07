@@ -47,4 +47,6 @@ export interface ChatSettings {
   topP?: number;
   /** Minimum probability compared to leading token to be considered */
   minP?: number;
+  /** Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual) */
+  preset?: JulepApi.ChatSettingsPreset;
 }

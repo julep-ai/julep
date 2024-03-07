@@ -130,19 +130,23 @@ async def run_prompt(
 ) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
 
-    response = await openai_client.completions.create(
+    response = await openai_client.chat.completions.create(
         model=model,
-        prompt=prompt,
+        messages=[
+            {
+                "content": prompt,
+                "role": "user",
+            }
+        ],
         max_tokens=max_tokens,
         temperature=temperature,
         stop=["<", "<|"],
         stream=False,
     )
 
-    result = response.choices[0].text.strip()
-    processed = parser(result)
+    content = response.choices[0].message.content
 
-    return processed
+    return parser(content.strip() if content is not None else "")
 
 
 @activity.defn
