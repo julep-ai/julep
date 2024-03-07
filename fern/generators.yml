@@ -27,3 +27,10 @@ groups:
         output:
           location: local-file-system
           path: ../sdks/postman
+      - name: fernapi/fern-typescript-browser-sdk
+        version: 0.9.5
+        config:
+          namespaceExport: JulepApi
+        output:
+          location: local-file-system
+          path: ../sdks/js/src/api-web
