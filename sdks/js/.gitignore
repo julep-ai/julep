@@ -1,3 +1,6 @@
+# Remove fern generated .d.ts files
+*.d.ts
+
 # Logs
 logs
 *.log

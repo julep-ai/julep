@@ -51,5 +51,5 @@ exports.FunctionParameters = void 0;
 const core = __importStar(require("../../core"));
 exports.FunctionParameters = core.serialization.record(
   core.serialization.string(),
-  core.serialization.unknown(),
+  core.serialization.any(),
 );

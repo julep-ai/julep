@@ -118,4 +118,12 @@ exports.Agent = core.serialization.object({
       .optional(),
   ),
   model: core.serialization.string(),
+  metadata: core.serialization
+    .lazyObject(() =>
+      __awaiter(void 0, void 0, void 0, function* () {
+        return (yield Promise.resolve().then(() => __importStar(require(".."))))
+          .AgentMetadata;
+      }),
+    )
+    .optional(),
 });
