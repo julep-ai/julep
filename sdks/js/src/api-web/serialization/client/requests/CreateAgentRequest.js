@@ -131,4 +131,13 @@ exports.CreateAgentRequest = core.serialization.object({
       ),
     )
     .optional(),
+  metadata: core.serialization
+    .lazyObject(() =>
+      __awaiter(void 0, void 0, void 0, function* () {
+        return (yield Promise.resolve().then(() =>
+          __importStar(require("../..")),
+        )).CreateAgentRequestMetadata;
+      }),
+    )
+    .optional(),
 });
