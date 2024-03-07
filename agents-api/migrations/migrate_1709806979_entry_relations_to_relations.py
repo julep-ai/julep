@@ -26,5 +26,5 @@ def up(client):
 
 
 def down(client):
-    for q in queries_to_run:
+    for q in reversed(queries_to_run):
         client.run(q["down"])
