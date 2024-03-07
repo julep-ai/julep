@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "memories"
 CREATED_AT = 1709810233.271039
@@ -15,7 +15,7 @@ memories = {
         last_accessed_at: Float? default null,
         timestamp: Float default now(),
         sentiment: Int,
-        emotions: String[],
+        emotions: [String],
         duration: Float? default null,
         created_at: Float default now(),
         embedding: <F32; 768>? default null,
@@ -37,7 +37,7 @@ memory_lookup = {
     """,
     "down": """
     ::remove memory_lookup
-    """
+    """,
 }
 
 

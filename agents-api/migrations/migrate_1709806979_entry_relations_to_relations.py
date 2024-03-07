@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "entry_relations_to_relations"
 CREATED_AT = 1709806979.250619
@@ -7,11 +7,11 @@ CREATED_AT = 1709806979.250619
 entry_relations_to_relations = {
     "up": """
     ::rename
-      entry_relations -> relations,
+      entry_relations -> relations
     """,
     "down": """
     ::rename
-      relations -> entry_relations,
+      relations -> entry_relations
     """,
 }
 
