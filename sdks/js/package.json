@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/julep-ai/sdk#readme",
   "main": "src/index.js",
+  "browser": "src/index-web.js",
   "types": "src/index.d.ts",
   "dependencies": {
     "dotenv": "^16.4.5",
