@@ -7,8 +7,11 @@ from modal import Image, Secret, Stub, asgi_app, gpu
 ## Constants ##
 ###############
 
-MODEL_DIR = "/model"
-MODEL_NAME = "TheBloke/Nous-Hermes-2-Mixtral-8x7B-DPO-AWQ"
+MODEL_DIR = os.environ.get("MODEL_DIR", "/model")
+MODEL_NAME = os.environ.get("MODEL_NAME", "TheBloke/Nous-Hermes-2-Mixtral-8x7B-DPO-AWQ")
+
+MAX_NUM_SEQS = int(os.environ.get("MAX_NUM_SEQS", 1))
+MAX_MODEL_LEN = int(os.environ.get("MAX_MODEL_LEN", 4096))
 
 
 ###########
@@ -26,6 +29,7 @@ def download_model_to_folder():
         MODEL_NAME,
         local_dir=MODEL_DIR,
     )
+
     move_cache()
 
 
@@ -46,6 +50,9 @@ image = (
     .run_function(
         download_model_to_folder,
         timeout=60 * 20,
+        secrets=[
+            Secret.from_name("mixtral-configuration"),
+        ],
     )
 )
 
@@ -63,10 +70,13 @@ stub = Stub("mixtral-api", image=image)
     allow_concurrent_inputs=25,
     keep_warm=0,
     timeout=120,
-    secrets=[],
+    secrets=[
+        Secret.from_name("mixtral-configuration"),
+    ],
 )
 @asgi_app()
 def get_app():
+    from fastapi.responses import JSONResponse
     from vllm.engine.arg_utils import AsyncEngineArgs
     from vllm.engine.async_llm_engine import AsyncLLMEngine
     from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
@@ -76,14 +86,14 @@ def get_app():
 
     engine_args = AsyncEngineArgs(
         model=MODEL_NAME,
-        max_num_seqs=1,
+        max_num_seqs=MAX_NUM_SEQS,
         quantization="awq",
         enforce_eager=True,
         dtype="float16",
         kv_cache_dtype="fp8_e5m2",
         # enable_prefix_caching=True,
         gpu_memory_utilization=0.95,
-        max_model_len=4096,
+        max_model_len=MAX_MODEL_LEN,
     )
 
     served_model = "mixtral"
@@ -98,5 +108,17 @@ def get_app():
     openai_serving_completion = (
         vllm_api_server.openai_serving_completion
     ) = OpenAIServingCompletion(engine, served_model, lora_modules)
+
+    @vllm_api_server.app.middleware("http")
+    async def authentication(request, call_next):
+        valid_api_key = os.environ["API_KEY"]
+
+        if not request.url.path.startswith("/v1"):
+            return await call_next(request)
+
+        if request.headers.get("Authorization") != "Bearer " + valid_api_key:
+            return JSONResponse(content={"error": "Unauthorized"}, status_code=401)
+
+        return await call_next(request)
 
     return vllm_api_server.app
