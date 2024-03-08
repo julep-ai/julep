@@ -24,17 +24,27 @@ from .types.create_session_request_metadata import CreateSessionRequestMetadata
 from .types.create_tool_request import CreateToolRequest
 from .types.create_user_request_metadata import CreateUserRequestMetadata
 from .types.function_def import FunctionDef
+from .types.get_agent_docs_request_order import GetAgentDocsRequestOrder
+from .types.get_agent_docs_request_sort_by import GetAgentDocsRequestSortBy
 from .types.get_agent_docs_response import GetAgentDocsResponse
 from .types.get_agent_memories_response import GetAgentMemoriesResponse
 from .types.get_agent_tools_response import GetAgentToolsResponse
 from .types.get_history_response import GetHistoryResponse
 from .types.get_suggestions_response import GetSuggestionsResponse
+from .types.get_user_docs_request_order import GetUserDocsRequestOrder
+from .types.get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
 from .types.instruction import Instruction
 from .types.job_status import JobStatus
+from .types.list_agents_request_order import ListAgentsRequestOrder
+from .types.list_agents_request_sort_by import ListAgentsRequestSortBy
 from .types.list_agents_response import ListAgentsResponse
+from .types.list_sessions_request_order import ListSessionsRequestOrder
+from .types.list_sessions_request_sort_by import ListSessionsRequestSortBy
 from .types.list_sessions_response import ListSessionsResponse
+from .types.list_users_request_order import ListUsersRequestOrder
+from .types.list_users_request_sort_by import ListUsersRequestSortBy
 from .types.list_users_response import ListUsersResponse
 from .types.resource_created_response import ResourceCreatedResponse
 from .types.resource_updated_response import ResourceUpdatedResponse
@@ -73,15 +83,24 @@ class JulepApi:
         )
 
     def list_sessions(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
+        order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
         """
-        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -93,7 +112,9 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -159,15 +180,24 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def list_users(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListUsersRequestSortBy] = None,
+        order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
         """
-        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -179,7 +209,9 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -243,15 +275,24 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def list_agents(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
+        order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
         """
-        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -263,7 +304,9 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -615,7 +658,7 @@ class JulepApi:
 
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
-            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -1010,6 +1053,8 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
+        order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
         """
         Sorted (created_at descending)
@@ -1020,6 +1065,10 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -1035,7 +1084,9 @@ class JulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1095,6 +1146,8 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
+        order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
         """
         Sorted (created_at descending)
@@ -1105,6 +1158,10 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -1120,7 +1177,9 @@ class JulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1504,15 +1563,24 @@ class AsyncJulepApi:
         )
 
     async def list_sessions(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
+        order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
         """
-        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -1524,7 +1592,9 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1590,15 +1660,24 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def list_users(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListUsersRequestSortBy] = None,
+        order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
         """
-        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -1610,7 +1689,9 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1674,15 +1755,24 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def list_agents(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
+        order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
         """
-        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -1694,7 +1784,9 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -2046,7 +2138,7 @@ class AsyncJulepApi:
 
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
-            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -2441,6 +2533,8 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
+        order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
         """
         Sorted (created_at descending)
@@ -2451,6 +2545,10 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -2466,7 +2564,9 @@ class AsyncJulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -2526,6 +2626,8 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
+        order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
         """
         Sorted (created_at descending)
@@ -2536,6 +2638,10 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -2551,7 +2657,9 @@ class AsyncJulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
