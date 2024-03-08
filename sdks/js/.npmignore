@@ -1,4 +1,0 @@
-# Remove fern generated .d.ts files
-*.d.ts
-
-docs/
