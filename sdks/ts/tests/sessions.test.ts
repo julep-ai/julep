@@ -1,6 +1,6 @@
 // sessions.test.ts
 import { v4 as uuidv4 } from "uuid";
-import { describe, expect, test } from "@jest/globals";
+import { beforeAll, describe, expect, it, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures"; // Adjust path if necessary
 
@@ -41,7 +41,7 @@ describe("Sessions API", () => {
     expect(response.updatedAt).toBeDefined();
   });
 
-  /* 
+  /*
   it("sessions.delete", async () => {
     const response = await client.sessions.delete(uuidv4());
     expect(response).toBeNull();

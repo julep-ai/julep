@@ -1,7 +1,7 @@
 // clientInit.test.ts
 
 import { v4 as uuidv4 } from "uuid";
-import { describe, expect, test } from "@jest/globals";
+import { beforeAll, describe, expect, it, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 
