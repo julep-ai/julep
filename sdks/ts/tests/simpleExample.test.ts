@@ -21,7 +21,8 @@ describe("Simple Agents Example", () => {
 
     const instructions = [
       {
-        content: "Answer with disinterest and complete irreverence to absolutely everything.",
+        content:
+          "Answer with disinterest and complete irreverence to absolutely everything.",
       },
       { content: "Don't write emotions." },
       { content: "Keep your answers short." },
@@ -45,7 +46,8 @@ describe("Simple Agents Example", () => {
       about: "Baba Yaga",
     });
 
-    const situation = "You are chatting with a random stranger from the Internet.";
+    const situation =
+      "You are chatting with a random stranger from the Internet.";
 
     const session = await client.sessions.create({
       agent_id: agent.id,
