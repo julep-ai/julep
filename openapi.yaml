@@ -69,6 +69,7 @@ paths:
             type: integer
             default: 0
             minimum: 0
+        - $ref: '#/components/parameters/metadata_filter'
       responses:
         "200":
           content:
@@ -127,6 +128,7 @@ paths:
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
+        - $ref: '#/components/parameters/metadata_filter'
       responses:
         "200":
           content:
@@ -187,6 +189,7 @@ paths:
             type: integer
             default: 0
             minimum: 0
+        - $ref: '#/components/parameters/metadata_filter'
       responses:
         "200":
           description: List of agents (sorted created_at descending order) with limit+offset pagination
@@ -572,6 +575,7 @@ paths:
           description: ""
           schema:
             type: integer
+        - $ref: '#/components/parameters/metadata_filter'
       requestBody:
         content: {}
       responses:
@@ -632,6 +636,7 @@ paths:
           description: ""
           schema:
             type: integer
+        - $ref: '#/components/parameters/metadata_filter'
       requestBody:
         content: {}
       responses:
@@ -1410,120 +1415,104 @@ components:
         - response
         - finish_reason
         - id
-    Belief:
+    Memory:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
       properties:
         type:
           type: string
-          default: belief
           enum:
+            - episode
             - belief
-          description: Type of memory (`belief`)
-        subject:
+          description: Type of memory (`episode` or `belief`)
+        agent_id:
           type: string
           format: uuid
-          description: (Optional) ID of the subject user
+          description: ID of the agent
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user
         content:
           type: string
           description: Content of the memory
-        rationale:
-          type: string
-          description: 'Rationale: Why did the model decide to form this memory'
         weight:
           type: number
-          default: 1
+          default: 0
           minimum: 0
           maximum: 100
           description: Weight (importance) of the memory on a scale of 0-100
+        created_at:
+          type: string
+          format: date-time
+          description: Memory created at (RFC-3339 format)
+        last_accessed_at:
+          type: string
+          format: date-time
+          description: Memory last accessed at (RFC-3339 format)
+        timestamp:
+          type: string
+          description: Memory happened at (RFC-3339 format)
+          format: date-time
         sentiment:
           type: number
           default: 0
           minimum: -1
           maximum: 1
           description: Sentiment (valence) of the memory on a scale of -1 to 1
-        created_at:
-          type: string
-          format: date-time
-          description: Belief created at (RFC-3339 format)
-        id:
-          type: string
-          description: Belief id (UUID)
-          format: uuid
-      required:
-        - type
-        - content
-        - created_at
-        - weight
-        - sentiment
-        - id
-    Episode:
-      $schema: http://json-schema.org/draft-04/schema#
-      type: object
-      properties:
-        type:
-          type: string
-          default: episode
-          enum:
-            - episode
-          description: Type of memory (`episode`)
-        subject:
-          type: string
-          format: uuid
-          description: (Optional) ID of the subject user
-        content:
-          type: string
-          description: Content of the memory
-        weight:
-          type: number
-          default: 1
-          minimum: 0
-          maximum: 100
-          description: Weight (importance) of the memory on a scale of 0-100
-        created_at:
-          type: string
-          format: date-time
-          description: Episode created at (RFC-3339 format)
-        last_accessed_at:
-          type: string
-          format: date-time
-          description: Episode last accessed at (RFC-3339 format)
-        happened_at:
-          type: string
-          description: Episode happened at (RFC-3339 format)
-          format: date-time
         duration:
           type: number
-          description: Duration of the episode (in seconds)
+          description: Duration of the Memory (in seconds)
           minimum: 0
           default: 0
         id:
           type: string
-          description: Episode id (UUID)
+          description: Memory id (UUID)
           format: uuid
+        emotions:
+          type: array
+          items:
+            type: string
+            enum:
+              - admiration
+              - amusement
+              - anger
+              - annoyance
+              - approval
+              - caring
+              - confusion
+              - curiosity
+              - desire
+              - disappointment
+              - disapproval
+              - disgust
+              - embarrassment
+              - excitement
+              - fear
+              - gratitude
+              - grief
+              - joy
+              - love
+              - nervousness
+              - neutral
+              - optimism
+              - pride
+              - realization
+              - relief
+              - remorse
+              - sadness
+              - sarcasm
+              - surprise
       required:
         - type
         - content
         - created_at
-        - happened_at
         - weight
-        - last_accessed_at
         - id
-    Memory:
-      oneOf:
-        - $ref: '#/components/schemas/Belief'
-        - $ref: '#/components/schemas/Episode'
-        - $ref: '#/components/schemas/Entity'
-    Entity:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Entity id (UUID)
-          format: uuid
-      description: TBD
-      required:
-        - id
+        - agent_id
+        - user_id
+        - timestamp
+        - sentiment
     ChatSettings:
       type: object
       properties:
@@ -1658,16 +1647,6 @@ components:
         preset:
           type: string
           description: 'Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)'
-          enum:
-            - problem_solving
-            - conversational
-            - fun
-            - prose
-            - creative
-            - business
-            - deterministic
-            - code
-            - multilingual
     AgentDefaultSettings:
       type: object
       properties:
@@ -1727,16 +1706,6 @@ components:
         preset:
           type: string
           description: 'Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)'
-          enum:
-            - problem_solving
-            - conversational
-            - fun
-            - prose
-            - creative
-            - business
-            - deterministic
-            - code
-            - multilingual
     ChatInput:
       allOf:
         - $ref: '#/components/schemas/ChatInputData'
@@ -1930,6 +1899,11 @@ components:
         - name
         - created_at
         - state
+    MetadataFilter:
+      type: object
+      properties: {}
+      additionalProperties: true
+      description: Object metadata to filter by
   securitySchemes:
     api-key:
       type: apiKey
@@ -1994,5 +1968,12 @@ components:
       schema:
         type: string
         format: uuid
+    metadata_filter:
+      in: query
+      required: false
+      description: ""
+      schema:
+        type: object
+        additionalProperties: true
 security:
   - api-key: []
