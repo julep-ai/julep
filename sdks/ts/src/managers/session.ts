@@ -1,3 +1,4 @@
+import { isUndefined, omitBy } from "lodash";
 import {
   ChatInput,
   ChatMLMessage,
@@ -99,31 +100,32 @@ export class SessionsManager extends BaseManager {
   ): Promise<ChatResponse> {
     invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
 
+    const options = omitBy(
+      {
+        tools,
+        tool_choice,
+        frequency_penalty,
+        length_penalty,
+        logit_bias,
+        max_tokens,
+        presence_penalty,
+        repetition_penalty,
+        response_format,
+        seed,
+        stop,
+        stream,
+        temperature,
+        top_p,
+        recall,
+        remember,
+      },
+      isUndefined,
+    );
+
     const requestBody = {
       messages,
-      tools,
-      tool_choice,
-      frequency_penalty,
-      length_penalty,
-      logit_bias,
-      max_tokens,
-      presence_penalty,
-      repetition_penalty,
-      response_format,
-      seed,
-      stop,
-      stream,
-      temperature,
-      top_p,
-      recall,
-      remember,
+      ...options,
     };
-
-    for (const [key, value] of Object.entries(requestBody)) {
-      if (value === undefined) {
-        delete requestBody[key];
-      }
-    }
 
     return await this.apiClient.default.chat({ sessionId, requestBody });
   }

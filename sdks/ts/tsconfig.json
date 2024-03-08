@@ -9,16 +9,16 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
-    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
     "strict": false,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
 
   "include": ["./src/**/*.ts"],
 
-  "exclude": ["node_modules", "**/__mocks__"],
+  "exclude": ["node_modules", "**/__mocks__"]
 }
