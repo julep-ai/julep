@@ -36,7 +36,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateSessionRequest"
+              $ref: '#/components/schemas/CreateSessionRequest'
               description: Session options
         description: Session initialization options
       responses:
@@ -44,7 +44,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
           description: Session successfully created
       security:
         - api-key: []
@@ -78,7 +78,7 @@ paths:
             properties: {}
         - in: query
           name: sort_by
-          description: "Which field to sort by: `created_at` or `updated_at`"
+          description: 'Which field to sort by: `created_at` or `updated_at`'
           schema:
             type: string
             enum:
@@ -87,7 +87,7 @@ paths:
             default: created_at
         - in: query
           name: order
-          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
           schema:
             type: string
             enum:
@@ -105,7 +105,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Session"
+                      $ref: '#/components/schemas/Session'
                 required:
                   - items
           description: List of sessions (sorted created_at descending order) with limit+offset pagination
@@ -122,14 +122,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateUserRequest"
+              $ref: '#/components/schemas/CreateUserRequest'
         description: User create options
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
           description: User successfully created
       security:
         - api-key: []
@@ -161,7 +161,7 @@ paths:
             properties: {}
         - in: query
           name: sort_by
-          description: "Which field to sort by: `created_at` or `updated_at`"
+          description: 'Which field to sort by: `created_at` or `updated_at`'
           schema:
             type: string
             enum:
@@ -170,7 +170,7 @@ paths:
             default: created_at
         - in: query
           name: order
-          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
           schema:
             type: string
             enum:
@@ -188,7 +188,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/User"
+                      $ref: '#/components/schemas/User'
                 required:
                   - items
           description: List of users (sorted created_at descending order) with limit+offset pagination
@@ -205,14 +205,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAgentRequest"
+              $ref: '#/components/schemas/CreateAgentRequest'
         description: Agent create options
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
           description: Agent successfully created
       security:
         - api-key: []
@@ -246,7 +246,7 @@ paths:
             properties: {}
         - in: query
           name: sort_by
-          description: "Which field to sort by: `created_at` or `updated_at`"
+          description: 'Which field to sort by: `created_at` or `updated_at`'
           schema:
             type: string
             enum:
@@ -255,7 +255,7 @@ paths:
             default: created_at
         - in: query
           name: order
-          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
           schema:
             type: string
             enum:
@@ -273,7 +273,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Agent"
+                      $ref: '#/components/schemas/Agent'
                 required:
                   - items
       security:
@@ -290,7 +290,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Session"
+                $ref: '#/components/schemas/Session'
       security:
         - api-key: []
     delete:
@@ -304,7 +304,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -317,13 +317,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateSessionRequest"
+              $ref: '#/components/schemas/UpdateSessionRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
     parameters:
@@ -367,7 +367,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Suggestion"
+                      $ref: '#/components/schemas/Suggestion'
       security:
         - api-key: []
     parameters:
@@ -411,7 +411,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ChatMLMessage"
+                      $ref: '#/components/schemas/ChatMLMessage'
       security:
         - api-key: []
     parameters:
@@ -450,13 +450,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChatInput"
+              $ref: '#/components/schemas/ChatInput'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChatResponse"
+                $ref: '#/components/schemas/ChatResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/memories:
@@ -507,7 +507,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Memory"
+                      $ref: '#/components/schemas/Memory'
       security:
         - api-key: []
     parameters:
@@ -530,7 +530,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: '#/components/schemas/User'
       security:
         - api-key: []
     delete:
@@ -544,7 +544,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -557,13 +557,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateUserRequest"
+              $ref: '#/components/schemas/UpdateUserRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
     parameters:
@@ -586,7 +586,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Agent"
+                $ref: '#/components/schemas/Agent'
       security:
         - api-key: []
     delete:
@@ -600,7 +600,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -613,13 +613,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAgentRequest"
+              $ref: '#/components/schemas/UpdateAgentRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
     parameters:
@@ -656,7 +656,7 @@ paths:
             properties: {}
         - in: query
           name: sort_by
-          description: "Which field to sort by: `created_at` or `updated_at`"
+          description: 'Which field to sort by: `created_at` or `updated_at`'
           schema:
             type: string
             enum:
@@ -665,7 +665,7 @@ paths:
             default: created_at
         - in: query
           name: order
-          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
           schema:
             type: string
             enum:
@@ -685,7 +685,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Doc"
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
@@ -706,13 +706,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDoc"
+              $ref: '#/components/schemas/CreateDoc'
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
   /api/users/{user_id}/docs:
@@ -741,7 +741,7 @@ paths:
             properties: {}
         - in: query
           name: sort_by
-          description: "Which field to sort by: `created_at` or `updated_at`"
+          description: 'Which field to sort by: `created_at` or `updated_at`'
           schema:
             type: string
             enum:
@@ -750,7 +750,7 @@ paths:
             default: created_at
         - in: query
           name: order
-          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
           schema:
             type: string
             enum:
@@ -770,7 +770,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Doc"
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
@@ -791,13 +791,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDoc"
+              $ref: '#/components/schemas/CreateDoc'
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
   /api/users/{user_id}/docs/{doc_id}:
@@ -827,7 +827,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/docs/{doc_id}:
@@ -857,7 +857,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/memories/{memory_id}:
@@ -872,7 +872,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     parameters:
@@ -920,7 +920,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Tool"
+                      $ref: '#/components/schemas/Tool'
       security:
         - api-key: []
     parameters:
@@ -941,13 +941,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateToolRequest"
+              $ref: '#/components/schemas/CreateToolRequest'
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/tools/{tool_id}:
@@ -977,7 +977,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -990,13 +990,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateToolRequest"
+              $ref: '#/components/schemas/UpdateToolRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
   /api/jobs/{job_id}:
@@ -1011,7 +1011,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatus"
+                $ref: '#/components/schemas/JobStatus'
       security:
         - api-key: []
     parameters:
@@ -1063,10 +1063,11 @@ components:
         about:
           type: string
           description: About the agent
+          default: ""
         instructions:
           type: array
           items:
-            $ref: "#/components/schemas/Instruction"
+            $ref: '#/components/schemas/Instruction'
             description: Instruction for the agent
           description: List of instructions for the agent
         created_at:
@@ -1082,7 +1083,7 @@ components:
           description: Agent id (UUID)
           format: uuid
         default_settings:
-          $ref: "#/components/schemas/AgentDefaultSettings"
+          $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default settings for all sessions created by this agent
         model:
           type: string
@@ -1094,7 +1095,6 @@ components:
           description: Optional metadata
       required:
         - name
-        - about
         - id
         - model
     FunctionParameters:
@@ -1112,7 +1112,7 @@ components:
           type: string
           description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
         parameters:
-          $ref: "#/components/schemas/FunctionParameters"
+          $ref: '#/components/schemas/FunctionParameters'
           description: Parameters accepeted by this function
       required:
         - name
@@ -1128,7 +1128,7 @@ components:
           description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
         function:
           oneOf:
-            - $ref: "#/components/schemas/FunctionDef"
+            - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
         id:
           type: string
@@ -1190,7 +1190,7 @@ components:
         docs:
           type: array
           items:
-            $ref: "#/components/schemas/CreateDoc"
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the user
           description: List of docs about user
         metadata:
@@ -1231,19 +1231,20 @@ components:
         about:
           type: string
           description: About the agent
+          default: ""
         instructions:
           type: array
           items:
-            $ref: "#/components/schemas/Instruction"
+            $ref: '#/components/schemas/Instruction'
             description: Instruction
           description: List of instructions for the agent
         tools:
           type: array
           items:
-            $ref: "#/components/schemas/CreateToolRequest"
+            $ref: '#/components/schemas/CreateToolRequest'
           description: A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
         default_settings:
-          $ref: "#/components/schemas/AgentDefaultSettings"
+          $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
         model:
           type: string
@@ -1252,7 +1253,7 @@ components:
         docs:
           type: array
           items:
-            $ref: "#/components/schemas/CreateDoc"
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the agent
           description: List of docs about agent
         metadata:
@@ -1261,8 +1262,6 @@ components:
           description: Optional metadata
       required:
         - name
-        - about
-        - model
       description: A valid request payload for creating an agent
     UpdateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1275,8 +1274,6 @@ components:
           type: object
           properties: {}
           description: Optional metadata
-      required:
-        - situation
       description: A valid request payload for updating a session
     UpdateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1288,7 +1285,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: "#/components/schemas/Instruction"
+            $ref: '#/components/schemas/Instruction'
             description: Instruction
           description: List of instructions for the agent
         name:
@@ -1298,7 +1295,7 @@ components:
           type: string
           description: Name of the model that the agent is supposed to use
         default_settings:
-          $ref: "#/components/schemas/AgentDefaultSettings"
+          $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
         metadata:
           type: object
@@ -1392,6 +1389,7 @@ components:
             - assistant
             - system
             - function_call
+            - auto
           description: ChatML role (system|assistant|user|function_call)
         content:
           type: string
@@ -1405,8 +1403,8 @@ components:
           default: false
           description: Whether to continue this message or return a new one
       required:
-        - role
         - content
+        - role
     ChatInputData:
       type: object
       properties:
@@ -1415,18 +1413,18 @@ components:
           type: array
           minItems: 1
           items:
-            $ref: "#/components/schemas/InputChatMLMessage"
+            $ref: '#/components/schemas/InputChatMLMessage'
         tools:
           type: array
           nullable: true
           description: (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
           items:
-            $ref: "#/components/schemas/Tool"
+            $ref: '#/components/schemas/Tool'
         tool_choice:
           nullable: true
           oneOf:
-            - $ref: "#/components/schemas/ToolChoiceOption"
-            - $ref: "#/components/schemas/NamedToolChoice"
+            - $ref: '#/components/schemas/ToolChoiceOption'
+            - $ref: '#/components/schemas/NamedToolChoice'
           description: Can be one of existing tools given to the agent earlier or the ones included in the request
       required:
         - messages
@@ -1465,7 +1463,7 @@ components:
           enum:
             - none
             - auto
-        - $ref: "#/components/schemas/NamedToolChoice"
+        - $ref: '#/components/schemas/NamedToolChoice'
       type: string
     FunctionCallOption:
       type: object
@@ -1518,11 +1516,11 @@ components:
             type: array
             properties:
               items:
-                $ref: "#/components/schemas/ChatMLMessage"
+                $ref: '#/components/schemas/ChatMLMessage'
             items:
-              $ref: "#/components/schemas/ChatMLMessage"
+              $ref: '#/components/schemas/ChatMLMessage'
         usage:
-          $ref: "#/components/schemas/CompletionUsage"
+          $ref: '#/components/schemas/CompletionUsage'
         jobs:
           type: array
           items:
@@ -1627,12 +1625,9 @@ components:
         - type
         - content
         - created_at
-        - weight
         - id
         - agent_id
         - user_id
-        - timestamp
-        - sentiment
     ChatSettings:
       type: object
       properties:
@@ -1649,7 +1644,7 @@ components:
           minimum: 0
           maximum: 2
           nullable: true
-          description: "(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. "
+          description: '(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. '
         logit_bias:
           type: object
           default: null
@@ -1793,7 +1788,7 @@ components:
           minimum: 0
           maximum: 2
           nullable: true
-          description: "(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. "
+          description: '(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. '
         presence_penalty:
           type: number
           default: 0
@@ -1835,7 +1830,7 @@ components:
           default: 0.01
         preset:
           type: string
-          description: "Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)"
+          description: 'Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)'
           enum:
             - problem_solving
             - conversational
@@ -1848,9 +1843,9 @@ components:
             - multilingual
     ChatInput:
       allOf:
-        - $ref: "#/components/schemas/ChatInputData"
-        - $ref: "#/components/schemas/ChatSettings"
-        - $ref: "#/components/schemas/MemoryAccessOptions"
+        - $ref: '#/components/schemas/ChatInputData'
+        - $ref: '#/components/schemas/ChatSettings'
+        - $ref: '#/components/schemas/MemoryAccessOptions'
     Doc:
       type: object
       properties:
@@ -1927,7 +1922,7 @@ components:
           description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
         function:
           oneOf:
-            - $ref: "#/components/schemas/FunctionDef"
+            - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - type
@@ -1937,7 +1932,7 @@ components:
       properties:
         function:
           oneOf:
-            - $ref: "#/components/schemas/FunctionDef"
+            - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - function
@@ -2025,7 +2020,7 @@ components:
           maximum: 100
         state:
           type: string
-          description: "Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)"
+          description: 'Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)'
           enum:
             - pending
             - in_progress
@@ -2039,11 +2034,6 @@ components:
         - name
         - created_at
         - state
-    MetadataFilter:
-      type: object
-      properties: {}
-      additionalProperties: true
-      description: Object metadata to filter by
   securitySchemes:
     api-key:
       type: apiKey

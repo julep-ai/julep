@@ -472,7 +472,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\"\n}",
+          "raw": "{\n    \"name\": \"name\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -515,7 +515,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\"\n}",
+              "raw": "{\n    \"name\": \"name\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -657,7 +657,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"situation\": \"situation\"\n}",
+          "raw": "{}",
           "options": {
             "raw": {
               "language": "json"
@@ -707,7 +707,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"situation\": \"situation\"\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"

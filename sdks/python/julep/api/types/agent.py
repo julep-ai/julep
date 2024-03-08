@@ -16,7 +16,7 @@ except ImportError:
 
 class Agent(pydantic.BaseModel):
     name: str = pydantic.Field(description="Name of the agent")
-    about: str = pydantic.Field(description="About the agent")
+    about: typing.Optional[str] = pydantic.Field(description="About the agent")
     instructions: typing.Optional[typing.List[Instruction]] = pydantic.Field(
         description="List of instructions for the agent"
     )

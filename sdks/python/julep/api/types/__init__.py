@@ -57,7 +57,6 @@ from .memory import Memory
 from .memory_access_options import MemoryAccessOptions
 from .memory_emotions_item import MemoryEmotionsItem
 from .memory_type import MemoryType
-from .metadata_filter import MetadataFilter
 from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
 from .resource_created_response import ResourceCreatedResponse
@@ -134,7 +133,6 @@ __all__ = [
     "MemoryAccessOptions",
     "MemoryEmotionsItem",
     "MemoryType",
-    "MetadataFilter",
     "NamedToolChoice",
     "NamedToolChoiceFunction",
     "ResourceCreatedResponse",
