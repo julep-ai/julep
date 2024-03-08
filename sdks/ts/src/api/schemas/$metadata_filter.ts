@@ -2,12 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-/**
- * TBD
- */
-export type Entity = {
-  /**
-   * Entity id (UUID)
-   */
-  id: string;
-};
+export const $metadata_filter = {
+  properties: {},
+} as const;

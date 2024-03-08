@@ -52,13 +52,16 @@ export class DefaultService {
   }
   /**
    * List sessions
-   * List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+   * List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
    * @returns any List of sessions (sorted created_at descending order) with limit+offset pagination
    * @throws ApiError
    */
   public listSessions({
     limit = 10,
     offset,
+    metadataFilter,
+    sortBy = "created_at",
+    order = "desc",
   }: {
     /**
      * Number of sessions to return
@@ -68,6 +71,15 @@ export class DefaultService {
      * Number of sessions to skip (sorted created_at descending order)
      */
     offset?: number;
+    metadataFilter?: any;
+    /**
+     * Which field to sort by: `created_at` or `updated_at`
+     */
+    sortBy?: "created_at" | "updated_at";
+    /**
+     * Which order should the sort be: `asc` (ascending) or `desc` (descending)
+     */
+    order?: "asc" | "desc";
   }): CancelablePromise<{
     items: Array<Session>;
   }> {
@@ -77,6 +89,9 @@ export class DefaultService {
       query: {
         limit: limit,
         offset: offset,
+        metadata_filter: metadataFilter,
+        sort_by: sortBy,
+        order: order,
       },
     });
   }
@@ -103,13 +118,16 @@ export class DefaultService {
   }
   /**
    * List users
-   * List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+   * List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
    * @returns any List of users (sorted created_at descending order) with limit+offset pagination
    * @throws ApiError
    */
   public listUsers({
     limit = 10,
     offset,
+    metadataFilter,
+    sortBy = "created_at",
+    order = "desc",
   }: {
     /**
      * Number of items to return
@@ -119,6 +137,15 @@ export class DefaultService {
      * Number of items to skip (sorted created_at descending order)
      */
     offset?: number;
+    metadataFilter?: any;
+    /**
+     * Which field to sort by: `created_at` or `updated_at`
+     */
+    sortBy?: "created_at" | "updated_at";
+    /**
+     * Which order should the sort be: `asc` (ascending) or `desc` (descending)
+     */
+    order?: "asc" | "desc";
   }): CancelablePromise<{
     items: Array<User>;
   }> {
@@ -128,6 +155,9 @@ export class DefaultService {
       query: {
         limit: limit,
         offset: offset,
+        metadata_filter: metadataFilter,
+        sort_by: sortBy,
+        order: order,
       },
     });
   }
@@ -154,13 +184,16 @@ export class DefaultService {
   }
   /**
    * List agents
-   * List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+   * List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
    * @returns any List of agents (sorted created_at descending order) with limit+offset pagination
    * @throws ApiError
    */
   public listAgents({
     limit = 10,
     offset,
+    metadataFilter,
+    sortBy = "created_at",
+    order = "desc",
   }: {
     /**
      * Number of items to return
@@ -170,6 +203,15 @@ export class DefaultService {
      * Number of items to skip (sorted created_at descending order)
      */
     offset?: number;
+    metadataFilter?: any;
+    /**
+     * Which field to sort by: `created_at` or `updated_at`
+     */
+    sortBy?: "created_at" | "updated_at";
+    /**
+     * Which order should the sort be: `asc` (ascending) or `desc` (descending)
+     */
+    order?: "asc" | "desc";
   }): CancelablePromise<{
     items: Array<Agent>;
   }> {
@@ -179,6 +221,9 @@ export class DefaultService {
       query: {
         limit: limit,
         offset: offset,
+        metadata_filter: metadataFilter,
+        sort_by: sortBy,
+        order: order,
       },
     });
   }
@@ -484,11 +529,23 @@ export class DefaultService {
     agentId,
     limit,
     offset,
+    metadataFilter,
+    sortBy = "created_at",
+    order = "desc",
     requestBody,
   }: {
     agentId: string;
     limit?: number;
     offset?: number;
+    metadataFilter?: any;
+    /**
+     * Which field to sort by: `created_at` or `updated_at`
+     */
+    sortBy?: "created_at" | "updated_at";
+    /**
+     * Which order should the sort be: `asc` (ascending) or `desc` (descending)
+     */
+    order?: "asc" | "desc";
     requestBody?: any;
   }): CancelablePromise<{
     items?: Array<Doc>;
@@ -502,6 +559,9 @@ export class DefaultService {
       query: {
         limit: limit,
         offset: offset,
+        metadata_filter: metadataFilter,
+        sort_by: sortBy,
+        order: order,
       },
       body: requestBody,
     });
@@ -538,11 +598,23 @@ export class DefaultService {
     userId,
     limit,
     offset,
+    metadataFilter,
+    sortBy = "created_at",
+    order = "desc",
     requestBody,
   }: {
     userId: string;
     limit?: number;
     offset?: number;
+    metadataFilter?: any;
+    /**
+     * Which field to sort by: `created_at` or `updated_at`
+     */
+    sortBy?: "created_at" | "updated_at";
+    /**
+     * Which order should the sort be: `asc` (ascending) or `desc` (descending)
+     */
+    order?: "asc" | "desc";
     requestBody?: any;
   }): CancelablePromise<{
     items?: Array<Doc>;
@@ -556,6 +628,9 @@ export class DefaultService {
       query: {
         limit: limit,
         offset: offset,
+        metadata_filter: metadataFilter,
+        sort_by: sortBy,
+        order: order,
       },
       body: requestBody,
     });

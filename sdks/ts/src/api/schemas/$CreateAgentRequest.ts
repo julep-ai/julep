@@ -13,7 +13,6 @@ export const $CreateAgentRequest = {
     about: {
       type: "string",
       description: `About the agent`,
-      isRequired: true,
     },
     instructions: {
       type: "array",
@@ -34,7 +33,6 @@ export const $CreateAgentRequest = {
     model: {
       type: "string",
       description: `Name of the model that the agent is supposed to use`,
-      isRequired: true,
     },
     docs: {
       type: "array",

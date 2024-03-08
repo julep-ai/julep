@@ -9,7 +9,7 @@ export type UpdateSessionRequest = {
   /**
    * Updated situation for this session
    */
-  situation: string;
+  situation?: string;
   /**
    * Optional metadata
    */

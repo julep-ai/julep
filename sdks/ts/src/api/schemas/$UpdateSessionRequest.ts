@@ -8,7 +8,6 @@ export const $UpdateSessionRequest = {
     situation: {
       type: "string",
       description: `Updated situation for this session`,
-      isRequired: true,
     },
     metadata: {
       description: `Optional metadata`,

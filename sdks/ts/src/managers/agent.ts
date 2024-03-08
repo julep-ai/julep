@@ -39,7 +39,7 @@ export class AgentsManager extends BaseManager {
     default_settings?: AgentDefaultSettings;
     model?: string;
     docs?: Doc[];
-  }): Promise<Agent> {
+  }): Promise<Partial<Agent>> {
     const instructionsList =
       typeof instructions[0] === "string"
         ? instructions.map((content) => ({ ...content, important: false }))
@@ -60,7 +60,7 @@ export class AgentsManager extends BaseManager {
         requestBody,
       });
 
-    const agent: Agent = { ...result, ...requestBody };
+    const agent: Partial<Agent> = { ...result, ...requestBody };
     return agent;
   }
 
