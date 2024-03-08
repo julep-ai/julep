@@ -70,7 +70,8 @@ export class DocsManager extends BaseManager {
         limit,
         offset,
       });
-      return result.items;
+
+      return result.items || [];
     }
 
     if (userId) {
@@ -79,7 +80,8 @@ export class DocsManager extends BaseManager {
         limit,
         offset,
       });
-      return result.items;
+
+      return result.items || [];
     } else {
       throw new Error("No agentId or userId given");
     }

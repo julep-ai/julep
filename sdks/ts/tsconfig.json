@@ -12,8 +12,8 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noImplicitAny": true,
-    "strict": false,
-    "skipLibCheck": true,
+    "strict": true,
+    "skipLibCheck": false,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true
   },

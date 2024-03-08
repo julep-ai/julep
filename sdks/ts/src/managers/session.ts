@@ -52,7 +52,8 @@ export class SessionsManager extends BaseManager {
     offset = 0,
   }: { limit?: number; offset?: number } = {}): Promise<Array<Session>> {
     const result = await this.apiClient.default.listSessions({ limit, offset });
-    return result.items;
+
+    return result.items || [];
   }
 
   async delete(sessionId: string): Promise<void> {
@@ -142,7 +143,7 @@ export class SessionsManager extends BaseManager {
       offset,
     });
 
-    return result.items;
+    return result.items || [];
   }
 
   async history(
@@ -157,6 +158,6 @@ export class SessionsManager extends BaseManager {
       offset,
     });
 
-    return result.items;
+    return result.items || [];
   }
 }

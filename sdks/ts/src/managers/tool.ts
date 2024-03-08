@@ -24,7 +24,8 @@ export class ToolsManager extends BaseManager {
       limit,
       offset,
     });
-    return result.items;
+
+    return result.items || [];
   }
 
   async create({

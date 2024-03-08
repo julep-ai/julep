@@ -32,6 +32,6 @@ export class MemoriesManager extends BaseManager {
       offset,
     });
 
-    return response.items;
+    return response.items || [];
   }
 }
