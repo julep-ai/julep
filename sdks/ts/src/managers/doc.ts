@@ -18,24 +18,30 @@ export class DocsManager extends BaseManager {
     limit?: number;
     offset?: number;
   }) {
-    if (
-      (agentId && isValidUuid4(agentId)) ||
-      (userId && isValidUuid4(userId) && !(agentId && userId))
-    ) {
-      if (agentId) {
-        return this.apiClient.default
-          .getAgentDocs({ agentId, limit, offset })
-          .catch((error) => Promise.reject(error));
-      }
-      if (userId) {
-        return this.apiClient.default
-          .getUserDocs({ userId, limit, offset })
-          .catch((error) => Promise.reject(error));
-      }
+    invariant(
+      xor(agentId, userId),
+      "Only one of agentId or userId must be given",
+    );
+    agentId &&
+      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
+    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
+
+    if (agentId) {
+      return await this.apiClient.default.getAgentDocs({
+        agentId,
+        limit,
+        offset,
+      });
+    }
+
+    if (userId) {
+      return await this.apiClient.default.getUserDocs({
+        userId,
+        limit,
+        offset,
+      });
     } else {
-      throw new Error(
-        "One and only one of userId or agentId must be given and must be valid UUID v4",
-      );
+      throw new Error("No agentId or userId given");
     }
   }
 
@@ -74,6 +80,8 @@ export class DocsManager extends BaseManager {
         offset,
       });
       return result.items;
+    } else {
+      throw new Error("No agentId or userId given");
     }
   }
 
@@ -114,6 +122,8 @@ export class DocsManager extends BaseManager {
 
       const createdDoc: Doc = { ...result, ...doc };
       return createdDoc;
+    } else {
+      throw new Error("No agentId or userId given");
     }
   }
 
