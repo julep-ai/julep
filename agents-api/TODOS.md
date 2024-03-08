@@ -15,10 +15,10 @@ Todos for recursive summarization:
 
 2. Update the existing queries that query `entries` to use `timestamp` instead of `created_at` for SORTING ONLY
 
-3. Add `entry_relations` table
+3. Add `relations` table
   
   ```
-  :create entry_relations {
+  :create relations {
     head: Uuid,
     relation: String,  # "summary_of", "..."
     tail: Uuid,
@@ -28,7 +28,7 @@ Todos for recursive summarization:
 4. Add a query for creating summary entries by doing in transaction:
     - create entry with new_entry_id, role = system, name = "information"
     - source="summarizer", timestamp=<timestamp of last entry being summarized>+0.001
-    - create entry_relations with old_entry_ids as tail, relation = "summary_of"
+    - create relations with old_entry_ids as tail, relation = "summary_of"
 
 5. Create a prompt that summarizes entries
 

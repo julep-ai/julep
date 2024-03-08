@@ -283,7 +283,7 @@ def proc_mem_context_query(
                 token_count,
                 created_at,
             }},
-            not *entry_relations {{
+            not *relations {{
                 relation: "summary_of",
                 tail: entry_id,
             }},

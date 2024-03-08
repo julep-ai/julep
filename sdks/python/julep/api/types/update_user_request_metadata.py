@@ -11,12 +11,10 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class Entity(pydantic.BaseModel):
+class UpdateUserRequestMetadata(pydantic.BaseModel):
     """
-    TBD
+    Optional metadata
     """
-
-    id: str = pydantic.Field(description="Entity id (UUID)")
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

@@ -3,8 +3,6 @@
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
 
 try:
@@ -13,25 +11,10 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class Belief(pydantic.BaseModel):
-    type: typing_extensions.Literal["belief"]
-    subject: typing.Optional[str] = pydantic.Field(
-        description="(Optional) ID of the subject user"
-    )
-    content: str = pydantic.Field(description="Content of the memory")
-    rationale: typing.Optional[str] = pydantic.Field(
-        description="Rationale: Why did the model decide to form this memory"
-    )
-    weight: float = pydantic.Field(
-        description="Weight (importance) of the memory on a scale of 0-100"
-    )
-    sentiment: float = pydantic.Field(
-        description="Sentiment (valence) of the memory on a scale of -1 to 1"
-    )
-    created_at: dt.datetime = pydantic.Field(
-        description="Belief created at (RFC-3339 format)"
-    )
-    id: str = pydantic.Field(description="Belief id (UUID)")
+class UserMetadata(pydantic.BaseModel):
+    """
+    Optional metadata
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
