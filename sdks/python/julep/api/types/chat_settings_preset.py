@@ -8,7 +8,7 @@ T_Result = typing.TypeVar("T_Result")
 
 class ChatSettingsPreset(str, enum.Enum):
     """
-    Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
     """
 
     PROBLEM_SOLVING = "problem_solving"

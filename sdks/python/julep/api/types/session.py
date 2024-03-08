@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .session_metadata import SessionMetadata
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -30,6 +31,9 @@ class Session(pydantic.BaseModel):
     )
     updated_at: typing.Optional[dt.datetime] = pydantic.Field(
         description="Session updated at (RFC-3339 format)"
+    )
+    metadata: typing.Optional[SessionMetadata] = pydantic.Field(
+        description="Optional metadata"
     )
 
     def json(self, **kwargs: typing.Any) -> str:

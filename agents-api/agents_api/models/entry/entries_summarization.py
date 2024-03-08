@@ -29,7 +29,7 @@ def get_toplevel_entries_query(session_id: UUID):
             created_at,
             timestamp,
         }},
-        not *entry_relations {{
+        not *relations {{
             relation: "summary_of",
             tail: entry_id,
         }}
@@ -72,7 +72,7 @@ def entries_summarization_query(
             {relations}
         ]
 
-        :insert entry_relations {{
+        :insert relations {{
             head,
             relation,
             tail,

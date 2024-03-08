@@ -18,25 +18,41 @@ from .types.chat_response import ChatResponse
 from .types.chat_settings_preset import ChatSettingsPreset
 from .types.chat_settings_response_format import ChatSettingsResponseFormat
 from .types.chat_settings_stop import ChatSettingsStop
+from .types.create_agent_request_metadata import CreateAgentRequestMetadata
 from .types.create_doc import CreateDoc
+from .types.create_session_request_metadata import CreateSessionRequestMetadata
 from .types.create_tool_request import CreateToolRequest
+from .types.create_user_request_metadata import CreateUserRequestMetadata
 from .types.function_def import FunctionDef
+from .types.get_agent_docs_request_order import GetAgentDocsRequestOrder
+from .types.get_agent_docs_request_sort_by import GetAgentDocsRequestSortBy
 from .types.get_agent_docs_response import GetAgentDocsResponse
 from .types.get_agent_memories_response import GetAgentMemoriesResponse
 from .types.get_agent_tools_response import GetAgentToolsResponse
 from .types.get_history_response import GetHistoryResponse
 from .types.get_suggestions_response import GetSuggestionsResponse
+from .types.get_user_docs_request_order import GetUserDocsRequestOrder
+from .types.get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
 from .types.instruction import Instruction
 from .types.job_status import JobStatus
+from .types.list_agents_request_order import ListAgentsRequestOrder
+from .types.list_agents_request_sort_by import ListAgentsRequestSortBy
 from .types.list_agents_response import ListAgentsResponse
+from .types.list_sessions_request_order import ListSessionsRequestOrder
+from .types.list_sessions_request_sort_by import ListSessionsRequestSortBy
 from .types.list_sessions_response import ListSessionsResponse
+from .types.list_users_request_order import ListUsersRequestOrder
+from .types.list_users_request_sort_by import ListUsersRequestSortBy
 from .types.list_users_response import ListUsersResponse
 from .types.resource_created_response import ResourceCreatedResponse
 from .types.resource_updated_response import ResourceUpdatedResponse
 from .types.session import Session
 from .types.tool import Tool
+from .types.update_agent_request_metadata import UpdateAgentRequestMetadata
+from .types.update_session_request_metadata import UpdateSessionRequestMetadata
+from .types.update_user_request_metadata import UpdateUserRequestMetadata
 from .types.user import User
 
 try:
@@ -67,15 +83,24 @@ class JulepApi:
         )
 
     def list_sessions(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
+        order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
         """
-        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -87,7 +112,9 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -100,7 +127,12 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def create_session(
-        self, *, user_id: str, agent_id: str, situation: typing.Optional[str] = OMIT
+        self,
+        *,
+        user_id: str,
+        agent_id: str,
+        situation: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a session between an agent and a user
@@ -111,6 +143,8 @@ class JulepApi:
             - agent_id: str. Agent ID of agent to associate with this session
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
+
+            - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -128,6 +162,8 @@ class JulepApi:
         }
         if situation is not OMIT:
             _request["situation"] = situation
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
@@ -144,15 +180,24 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def list_users(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListUsersRequestSortBy] = None,
+        order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
         """
-        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -164,7 +209,9 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -182,6 +229,7 @@ class JulepApi:
         name: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+        metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new user
@@ -192,6 +240,8 @@ class JulepApi:
             - about: typing.Optional[str]. About the user
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
+
+            - metadata: typing.Optional[CreateUserRequestMetadata]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -207,6 +257,8 @@ class JulepApi:
             _request["about"] = about
         if docs is not OMIT:
             _request["docs"] = docs
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
@@ -223,15 +275,24 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def list_agents(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
+        order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
         """
-        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -243,7 +304,9 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -259,12 +322,13 @@ class JulepApi:
         self,
         *,
         name: str,
-        about: str,
+        about: typing.Optional[str] = OMIT,
         instructions: typing.Optional[typing.List[Instruction]] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        model: str,
+        model: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+        metadata: typing.Optional[CreateAgentRequestMetadata] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new agent
@@ -272,7 +336,7 @@ class JulepApi:
         Parameters:
             - name: str. Name of the agent
 
-            - about: str. About the agent
+            - about: typing.Optional[str]. About the agent
 
             - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
 
@@ -280,9 +344,11 @@ class JulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-            - model: str. Name of the model that the agent is supposed to use
+            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
+
+            - metadata: typing.Optional[CreateAgentRequestMetadata]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -291,23 +357,23 @@ class JulepApi:
         )
         client.create_agent(
             name="name",
-            about="about",
-            model="model",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {
-            "name": name,
-            "about": about,
-            "model": model,
-        }
+        _request: typing.Dict[str, typing.Any] = {"name": name}
+        if about is not OMIT:
+            _request["about"] = about
         if instructions is not OMIT:
             _request["instructions"] = instructions
         if tools is not OMIT:
             _request["tools"] = tools
         if default_settings is not OMIT:
             _request["default_settings"] = default_settings
+        if model is not OMIT:
+            _request["model"] = model
         if docs is not OMIT:
             _request["docs"] = docs
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
@@ -356,7 +422,11 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def update_session(
-        self, session_id: str, *, situation: str
+        self,
+        session_id: str,
+        *,
+        situation: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -364,7 +434,9 @@ class JulepApi:
         Parameters:
             - session_id: str.
 
-            - situation: str. Updated situation for this session
+            - situation: typing.Optional[str]. Updated situation for this session
+
+            - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -373,15 +445,19 @@ class JulepApi:
         )
         client.update_session(
             session_id="session_id",
-            situation="situation",
         )
         """
+        _request: typing.Dict[str, typing.Any] = {}
+        if situation is not OMIT:
+            _request["situation"] = situation
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
-            json=jsonable_encoder({"situation": situation}),
+            json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -581,7 +657,7 @@ class JulepApi:
 
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
-            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -759,6 +835,7 @@ class JulepApi:
         *,
         about: typing.Optional[str] = OMIT,
         name: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -769,6 +846,8 @@ class JulepApi:
             - about: typing.Optional[str]. About the user
 
             - name: typing.Optional[str]. Name of the user
+
+            - metadata: typing.Optional[UpdateUserRequestMetadata]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -784,6 +863,8 @@ class JulepApi:
             _request["about"] = about
         if name is not OMIT:
             _request["name"] = name
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
@@ -874,6 +955,7 @@ class JulepApi:
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+        metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -890,6 +972,8 @@ class JulepApi:
             - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+            - metadata: typing.Optional[UpdateAgentRequestMetadata]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -911,6 +995,8 @@ class JulepApi:
             _request["model"] = model
         if default_settings is not OMIT:
             _request["default_settings"] = default_settings
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
@@ -966,6 +1052,8 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
+        order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
         """
         Sorted (created_at descending)
@@ -976,6 +1064,10 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -991,7 +1083,9 @@ class JulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1051,6 +1145,8 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
+        order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
         """
         Sorted (created_at descending)
@@ -1061,6 +1157,10 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import JulepApi
 
@@ -1076,7 +1176,9 @@ class JulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1460,15 +1562,24 @@ class AsyncJulepApi:
         )
 
     async def list_sessions(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
+        order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
         """
-        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -1480,7 +1591,9 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1493,7 +1606,12 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def create_session(
-        self, *, user_id: str, agent_id: str, situation: typing.Optional[str] = OMIT
+        self,
+        *,
+        user_id: str,
+        agent_id: str,
+        situation: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a session between an agent and a user
@@ -1504,6 +1622,8 @@ class AsyncJulepApi:
             - agent_id: str. Agent ID of agent to associate with this session
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
+
+            - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -1521,6 +1641,8 @@ class AsyncJulepApi:
         }
         if situation is not OMIT:
             _request["situation"] = situation
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
@@ -1537,15 +1659,24 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def list_users(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListUsersRequestSortBy] = None,
+        order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
         """
-        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -1557,7 +1688,9 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1575,6 +1708,7 @@ class AsyncJulepApi:
         name: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+        metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new user
@@ -1585,6 +1719,8 @@ class AsyncJulepApi:
             - about: typing.Optional[str]. About the user
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
+
+            - metadata: typing.Optional[CreateUserRequestMetadata]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -1600,6 +1736,8 @@ class AsyncJulepApi:
             _request["about"] = about
         if docs is not OMIT:
             _request["docs"] = docs
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
@@ -1616,15 +1754,24 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def list_agents(
-        self, *, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
+        order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
         """
-        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
         Parameters:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -1636,7 +1783,9 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1652,12 +1801,13 @@ class AsyncJulepApi:
         self,
         *,
         name: str,
-        about: str,
+        about: typing.Optional[str] = OMIT,
         instructions: typing.Optional[typing.List[Instruction]] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        model: str,
+        model: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+        metadata: typing.Optional[CreateAgentRequestMetadata] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new agent
@@ -1665,7 +1815,7 @@ class AsyncJulepApi:
         Parameters:
             - name: str. Name of the agent
 
-            - about: str. About the agent
+            - about: typing.Optional[str]. About the agent
 
             - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
 
@@ -1673,9 +1823,11 @@ class AsyncJulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-            - model: str. Name of the model that the agent is supposed to use
+            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
+
+            - metadata: typing.Optional[CreateAgentRequestMetadata]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -1684,23 +1836,23 @@ class AsyncJulepApi:
         )
         await client.create_agent(
             name="name",
-            about="about",
-            model="model",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {
-            "name": name,
-            "about": about,
-            "model": model,
-        }
+        _request: typing.Dict[str, typing.Any] = {"name": name}
+        if about is not OMIT:
+            _request["about"] = about
         if instructions is not OMIT:
             _request["instructions"] = instructions
         if tools is not OMIT:
             _request["tools"] = tools
         if default_settings is not OMIT:
             _request["default_settings"] = default_settings
+        if model is not OMIT:
+            _request["model"] = model
         if docs is not OMIT:
             _request["docs"] = docs
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
@@ -1749,7 +1901,11 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def update_session(
-        self, session_id: str, *, situation: str
+        self,
+        session_id: str,
+        *,
+        situation: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -1757,7 +1913,9 @@ class AsyncJulepApi:
         Parameters:
             - session_id: str.
 
-            - situation: str. Updated situation for this session
+            - situation: typing.Optional[str]. Updated situation for this session
+
+            - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -1766,15 +1924,19 @@ class AsyncJulepApi:
         )
         await client.update_session(
             session_id="session_id",
-            situation="situation",
         )
         """
+        _request: typing.Dict[str, typing.Any] = {}
+        if situation is not OMIT:
+            _request["situation"] = situation
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
             ),
-            json=jsonable_encoder({"situation": situation}),
+            json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1974,7 +2136,7 @@ class AsyncJulepApi:
 
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
-            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -2152,6 +2314,7 @@ class AsyncJulepApi:
         *,
         about: typing.Optional[str] = OMIT,
         name: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -2162,6 +2325,8 @@ class AsyncJulepApi:
             - about: typing.Optional[str]. About the user
 
             - name: typing.Optional[str]. Name of the user
+
+            - metadata: typing.Optional[UpdateUserRequestMetadata]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2177,6 +2342,8 @@ class AsyncJulepApi:
             _request["about"] = about
         if name is not OMIT:
             _request["name"] = name
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
@@ -2267,6 +2434,7 @@ class AsyncJulepApi:
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+        metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -2283,6 +2451,8 @@ class AsyncJulepApi:
             - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+            - metadata: typing.Optional[UpdateAgentRequestMetadata]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2304,6 +2474,8 @@ class AsyncJulepApi:
             _request["model"] = model
         if default_settings is not OMIT:
             _request["default_settings"] = default_settings
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
@@ -2359,6 +2531,8 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
+        order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
         """
         Sorted (created_at descending)
@@ -2369,6 +2543,10 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -2384,7 +2562,9 @@ class AsyncJulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -2444,6 +2624,8 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
+        order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
         """
         Sorted (created_at descending)
@@ -2454,6 +2636,10 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+            - order: typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
         ---
         from julep.client import AsyncJulepApi
 
@@ -2469,7 +2655,9 @@ class AsyncJulepApi:
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
+            params=remove_none_from_dict(
+                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
