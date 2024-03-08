@@ -48,4 +48,4 @@ check = [
     "typecheck",
 ]
 test = "ward"
-codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/openapi_model.py"
+codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/openapi_model.py --use-operation-id-as-name --use-double-quotes --use-schema-description --target-python-version 3.10 --reuse-model --collapse-root-models --use-field-description --field-include-all-keys --use-unique-items-as-set --use-subclass-enum --use-union-operator --use-one-literal-as-default --use-annotated --enum-field-as-literal one --output-model-type pydantic_v2.BaseModel"
