@@ -17,7 +17,7 @@ export type CreateAgentRequest = {
   /**
    * About the agent
    */
-  about: string;
+  about?: string;
   /**
    * List of instructions for the agent
    */
@@ -33,7 +33,7 @@ export type CreateAgentRequest = {
   /**
    * Name of the model that the agent is supposed to use
    */
-  model: string;
+  model?: string;
   /**
    * List of docs about agent
    */

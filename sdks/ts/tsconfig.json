@@ -15,10 +15,10 @@
     "strict": true,
     "skipLibCheck": false,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
   },
 
   "include": ["./src/**/*.ts"],
 
-  "exclude": ["node_modules", "**/__mocks__"]
+  "exclude": ["node_modules", "**/__mocks__"],
 }

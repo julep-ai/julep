@@ -85,7 +85,7 @@ export type ChatSettings = {
    */
   min_p?: number;
   /**
-   * Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+   * Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
    */
   preset?:
     | "problem_solving"

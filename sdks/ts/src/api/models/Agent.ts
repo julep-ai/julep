@@ -12,7 +12,7 @@ export type Agent = {
   /**
    * About the agent
    */
-  about: string;
+  about?: string;
   /**
    * List of instructions for the agent
    */

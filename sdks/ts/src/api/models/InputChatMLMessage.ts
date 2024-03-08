@@ -6,7 +6,7 @@ export type InputChatMLMessage = {
   /**
    * ChatML role (system|assistant|user|function_call)
    */
-  role: "user" | "assistant" | "system" | "function_call";
+  role: "user" | "assistant" | "system" | "function_call" | "auto";
   /**
    * ChatML content
    */

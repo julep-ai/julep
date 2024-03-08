@@ -12,7 +12,6 @@ export const $Agent = {
     about: {
       type: "string",
       description: `About the agent`,
-      isRequired: true,
     },
     instructions: {
       type: "array",
