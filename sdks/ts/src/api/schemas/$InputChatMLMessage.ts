@@ -5,20 +5,20 @@
 export const $InputChatMLMessage = {
   properties: {
     role: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
     content: {
-      type: 'string',
+      type: "string",
       description: `ChatML content`,
       isRequired: true,
     },
     name: {
-      type: 'string',
+      type: "string",
       description: `ChatML name`,
     },
     continue: {
-      type: 'boolean',
+      type: "boolean",
       description: `Whether to continue this message or return a new one`,
     },
   },

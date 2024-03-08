@@ -34,6 +34,14 @@ export type AgentDefaultSettings = {
   /**
    * Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
    */
-  preset?: 'problem_solving' | 'conversational' | 'fun' | 'prose' | 'creative' | 'business' | 'deterministic' | 'code' | 'multilingual';
+  preset?:
+    | "problem_solving"
+    | "conversational"
+    | "fun"
+    | "prose"
+    | "creative"
+    | "business"
+    | "deterministic"
+    | "code"
+    | "multilingual";
 };
-

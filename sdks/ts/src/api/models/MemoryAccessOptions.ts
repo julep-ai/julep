@@ -12,4 +12,3 @@ export type MemoryAccessOptions = {
    */
   remember?: boolean;
 };
-

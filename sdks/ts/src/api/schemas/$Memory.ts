@@ -3,12 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Memory = {
-  type: 'one-of',
-  contains: [{
-    type: 'Belief',
-  }, {
-    type: 'Episode',
-  }, {
-    type: 'Entity',
-  }],
+  type: "one-of",
+  contains: [
+    {
+      type: "Belief",
+    },
+    {
+      type: "Episode",
+    },
+    {
+      type: "Entity",
+    },
+  ],
 } as const;

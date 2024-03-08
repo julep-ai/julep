@@ -6,23 +6,22 @@ export const $CreateUserRequest = {
   description: `A valid request payload for creating a user`,
   properties: {
     name: {
-      type: 'string',
+      type: "string",
       description: `Name of the user`,
     },
     about: {
-      type: 'string',
+      type: "string",
       description: `About the user`,
     },
     docs: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'CreateDoc',
+        type: "CreateDoc",
       },
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;

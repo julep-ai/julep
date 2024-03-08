@@ -5,22 +5,24 @@
 export const $Tool = {
   properties: {
     type: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
     function: {
-      type: 'one-of',
+      type: "one-of",
       description: `Function definition and parameters`,
-      contains: [{
-        type: 'FunctionDef',
-      }],
+      contains: [
+        {
+          type: "FunctionDef",
+        },
+      ],
       isRequired: true,
     },
     id: {
-      type: 'string',
+      type: "string",
       description: `Tool ID`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
   },
 } as const;

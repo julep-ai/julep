@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CreateDoc } from './CreateDoc';
+import type { CreateDoc } from "./CreateDoc";
 /**
  * A valid request payload for creating a user
  */
@@ -24,4 +24,3 @@ export type CreateUserRequest = {
    */
   metadata?: any;
 };
-

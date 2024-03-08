@@ -6,7 +6,7 @@ export type ChatMLMessage = {
   /**
    * ChatML role (system|assistant|user|function_call)
    */
-  role: 'user' | 'assistant' | 'system' | 'function_call';
+  role: "user" | "assistant" | "system" | "function_call";
   /**
    * ChatML content
    */
@@ -24,4 +24,3 @@ export type ChatMLMessage = {
    */
   id: string;
 };
-

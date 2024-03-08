@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ApiRequestOptions } from './ApiRequestOptions';
+import type { ApiRequestOptions } from "./ApiRequestOptions";
 
 type Resolver<T> = (options: ApiRequestOptions) => Promise<T>;
 type Headers = Record<string, string>;
@@ -11,7 +11,7 @@ export type OpenAPIConfig = {
   BASE: string;
   VERSION: string;
   WITH_CREDENTIALS: boolean;
-  CREDENTIALS: 'include' | 'omit' | 'same-origin';
+  CREDENTIALS: "include" | "omit" | "same-origin";
   TOKEN?: string | Resolver<string> | undefined;
   USERNAME?: string | Resolver<string> | undefined;
   PASSWORD?: string | Resolver<string> | undefined;
@@ -20,10 +20,10 @@ export type OpenAPIConfig = {
 };
 
 export const OpenAPI: OpenAPIConfig = {
-  BASE: 'https://api-alpha.julep.ai/api',
-  VERSION: '1.0.0',
+  BASE: "https://api-alpha.julep.ai/api",
+  VERSION: "1.0.0",
   WITH_CREDENTIALS: false,
-  CREDENTIALS: 'include',
+  CREDENTIALS: "include",
   TOKEN: undefined,
   USERNAME: undefined,
   PASSWORD: undefined,

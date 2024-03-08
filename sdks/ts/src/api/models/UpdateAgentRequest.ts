@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AgentDefaultSettings } from './AgentDefaultSettings';
-import type { Instruction } from './Instruction';
+import type { AgentDefaultSettings } from "./AgentDefaultSettings";
+import type { Instruction } from "./Instruction";
 /**
  * A valid request payload for updating an agent
  */
@@ -33,4 +33,3 @@ export type UpdateAgentRequest = {
    */
   metadata?: any;
 };
-

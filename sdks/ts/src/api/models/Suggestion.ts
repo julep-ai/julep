@@ -10,7 +10,7 @@ export type Suggestion = {
   /**
    * Whether the suggestion is for the `agent` or a `user`
    */
-  target: 'user' | 'agent';
+  target: "user" | "agent";
   /**
    * The content of the suggestion
    */
@@ -24,4 +24,3 @@ export type Suggestion = {
    */
   session_id: string;
 };
-

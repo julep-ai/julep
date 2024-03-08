@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { NamedToolChoice } from './NamedToolChoice';
+import type { NamedToolChoice } from "./NamedToolChoice";
 /**
  * Controls which (if any) function is called by the model.
  * `none` means the model will not call a function and instead generates a message.
@@ -12,5 +12,4 @@ import type { NamedToolChoice } from './NamedToolChoice';
  * `none` is the default when no functions are present. `auto` is the default if functions are present.
  *
  */
-export type ToolChoiceOption = ('none' | 'auto' | NamedToolChoice);
-
+export type ToolChoiceOption = "none" | "auto" | NamedToolChoice;

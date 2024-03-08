@@ -19,4 +19,3 @@ export type CompletionUsage = {
    */
   total_tokens: number;
 };
-

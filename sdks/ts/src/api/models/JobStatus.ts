@@ -34,6 +34,12 @@ export type JobStatus = {
   /**
    * Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)
    */
-  state: 'pending' | 'in_progress' | 'retrying' | 'succeeded' | 'aborted' | 'failed' | 'unknown';
+  state:
+    | "pending"
+    | "in_progress"
+    | "retrying"
+    | "succeeded"
+    | "aborted"
+    | "failed"
+    | "unknown";
 };
-

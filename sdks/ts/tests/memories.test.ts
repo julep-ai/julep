@@ -1,6 +1,8 @@
 // memories.test.ts
 
 import { v4 as uuidv4 } from "uuid";
+import { describe, expect, test } from "@jest/globals";
+
 import { setupClient } from "./fixtures";
 
 describe("Julep Client Tests", () => {
@@ -25,4 +27,3 @@ describe("Julep Client Tests", () => {
     expect(response[0]).toHaveProperty("createdAt");
   });
 });
-

@@ -6,13 +6,13 @@ export const $NamedToolChoice = {
   description: `Specifies a tool the model should use. Use to force the model to call a specific function.`,
   properties: {
     type: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
     function: {
       properties: {
         name: {
-          type: 'string',
+          type: "string",
           description: `The name of the function to call.`,
           isRequired: true,
         },

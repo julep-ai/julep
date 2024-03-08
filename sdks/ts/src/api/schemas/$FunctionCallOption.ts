@@ -7,7 +7,7 @@ export const $FunctionCallOption = {
   `,
   properties: {
     name: {
-      type: 'string',
+      type: "string",
       description: `The name of the function to call.`,
       isRequired: true,
     },

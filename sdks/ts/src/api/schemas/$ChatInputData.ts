@@ -5,27 +5,30 @@
 export const $ChatInputData = {
   properties: {
     messages: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'InputChatMLMessage',
+        type: "InputChatMLMessage",
       },
       isRequired: true,
     },
     tools: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'Tool',
+        type: "Tool",
       },
       isNullable: true,
     },
     tool_choice: {
-      type: 'one-of',
+      type: "one-of",
       description: `Can be one of existing tools given to the agent earlier or the ones included in the request`,
-      contains: [{
-        type: 'ToolChoiceOption',
-      }, {
-        type: 'NamedToolChoice',
-      }],
+      contains: [
+        {
+          type: "ToolChoiceOption",
+        },
+        {
+          type: "NamedToolChoice",
+        },
+      ],
       isNullable: true,
     },
   },

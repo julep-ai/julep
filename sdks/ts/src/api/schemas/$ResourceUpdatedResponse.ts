@@ -5,20 +5,20 @@
 export const $ResourceUpdatedResponse = {
   properties: {
     id: {
-      type: 'string',
+      type: "string",
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
     updated_at: {
-      type: 'string',
+      type: "string",
       isRequired: true,
-      format: 'date-time',
+      format: "date-time",
     },
     jobs: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'string',
-        format: 'uuid',
+        type: "string",
+        format: "uuid",
       },
     },
   },

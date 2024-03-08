@@ -5,42 +5,42 @@
 export const $JobStatus = {
   properties: {
     name: {
-      type: 'string',
+      type: "string",
       description: `Name of the job`,
       isRequired: true,
     },
     reason: {
-      type: 'string',
+      type: "string",
       description: `Reason for current state`,
     },
     created_at: {
-      type: 'string',
+      type: "string",
       description: `Job created at (RFC-3339 format)`,
       isRequired: true,
-      format: 'date-time',
+      format: "date-time",
     },
     updated_at: {
-      type: 'string',
+      type: "string",
       description: `Job updated at (RFC-3339 format)`,
-      format: 'date-time',
+      format: "date-time",
     },
     id: {
-      type: 'string',
+      type: "string",
       description: `Job id (UUID)`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
     has_progress: {
-      type: 'boolean',
+      type: "boolean",
       description: `Whether this Job supports progress updates`,
     },
     progress: {
-      type: 'number',
+      type: "number",
       description: `Progress percentage`,
       maximum: 100,
     },
     state: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
   },

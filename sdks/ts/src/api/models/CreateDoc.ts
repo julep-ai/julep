@@ -16,4 +16,3 @@ export type CreateDoc = {
    */
   metadata?: any;
 };
-

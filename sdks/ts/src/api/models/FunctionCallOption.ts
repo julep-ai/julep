@@ -12,4 +12,3 @@ export type FunctionCallOption = {
    */
   name: string;
 };
-

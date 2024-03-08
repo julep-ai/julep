@@ -5,11 +5,11 @@
 export const $MemoryAccessOptions = {
   properties: {
     recall: {
-      type: 'boolean',
+      type: "boolean",
       description: `Whether previous memories should be recalled or not`,
     },
     remember: {
-      type: 'boolean',
+      type: "boolean",
       description: `Whether this interaction should be recorded in memory or not`,
     },
   },

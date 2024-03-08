@@ -45,7 +45,7 @@ export type ChatSettings = {
     /**
      * Must be one of `"text"`, `"regex"` or `"json_object"`.
      */
-    type?: 'text' | 'json_object' | 'regex';
+    type?: "text" | "json_object" | "regex";
     /**
      * Regular expression pattern to use if `type` is `"regex"`
      */
@@ -66,7 +66,7 @@ export type ChatSettings = {
    * Up to 4 sequences where the API will stop generating further tokens.
    *
    */
-  stop?: (string | null | Array<string>);
+  stop?: string | null | Array<string>;
   /**
    * If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sent as data-only [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format) as they become available, with the stream terminated by a `data: [DONE]` message. [Example Python code](https://cookbook.openai.com/examples/how_to_stream_completions).
    *
@@ -87,6 +87,14 @@ export type ChatSettings = {
   /**
    * Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
    */
-  preset?: 'problem_solving' | 'conversational' | 'fun' | 'prose' | 'creative' | 'business' | 'deterministic' | 'code' | 'multilingual';
+  preset?:
+    | "problem_solving"
+    | "conversational"
+    | "fun"
+    | "prose"
+    | "creative"
+    | "business"
+    | "deterministic"
+    | "code"
+    | "multilingual";
 };
-

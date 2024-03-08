@@ -3,12 +3,16 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $ChatInput = {
-  type: 'all-of',
-  contains: [{
-    type: 'ChatInputData',
-  }, {
-    type: 'ChatSettings',
-  }, {
-    type: 'MemoryAccessOptions',
-  }],
+  type: "all-of",
+  contains: [
+    {
+      type: "ChatInputData",
+    },
+    {
+      type: "ChatSettings",
+    },
+    {
+      type: "MemoryAccessOptions",
+    },
+  ],
 } as const;

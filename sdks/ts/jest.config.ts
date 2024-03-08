@@ -1,10 +1,6 @@
-/**
- * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration
- */
+import type { Config } from "@jest/types";
 
-/** @type {import('jest').Config} */
-const config = {
+const config: Config.InitialOptions = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
@@ -82,7 +78,7 @@ const config = {
     "mjs",
     "cjs",
     //   "jsx",
-    //   "ts",
+    "ts",
     //   "tsx",
     "json",
     //   "node"
@@ -101,7 +97,7 @@ const config = {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-  // preset: undefined,
+  preset: "ts-jest",
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -188,4 +184,4 @@ const config = {
   watchman: true,
 };
 
-module.exports = config;
+export default config;

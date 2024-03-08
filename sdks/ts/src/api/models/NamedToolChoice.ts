@@ -9,7 +9,7 @@ export type NamedToolChoice = {
   /**
    * The type of the tool. Currently, only `function` is supported.
    */
-  type: 'function';
+  type: "function";
   function: {
     /**
      * The name of the function to call.
@@ -17,4 +17,3 @@ export type NamedToolChoice = {
     name: string;
   };
 };
-

@@ -3,6 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $memory_id = {
-  type: 'string',
-  format: 'uuid',
+  type: "string",
+  format: "uuid",
 } as const;

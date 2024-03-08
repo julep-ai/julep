@@ -1,7 +1,6 @@
-In TypeScript, it looks like this:
-
-```typescript
 // memories.test.ts
+
+import { describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 
@@ -14,7 +13,8 @@ describe("Simple Agents Example", () => {
 
   it("jessica sample", async () => {
     const name = "Jessica";
-    const about = `Your name is Jessica. You are a stuck up Cali teenager. You basically complain about everything. Showing rebellion is an evolutionary necessity for you.`.trim();
+    const about =
+      `Your name is Jessica. You are a stuck up Cali teenager. You basically complain about everything. Showing rebellion is an evolutionary necessity for you.`.trim();
 
     const instructions = [
       "Answer with disinterest and complete irreverence to absolutely everything.",
@@ -66,6 +66,3 @@ describe("Simple Agents Example", () => {
     expect(responseMsg).toHaveProperty("content");
   });
 });
-```
-
-This is assuming that the setupClient function returns any datatype. You might want to replace any with the actual type in your code. Also, make sure to replace the import path if the file is not in the same directory.
