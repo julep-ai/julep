@@ -48,6 +48,6 @@ describe("Julep Client Tests", () => {
 
   test("agents.delete", async () => {
     const response = await client.agents.delete(uuidv4());
-    expect(response).toBeNull();
+    expect(response).toBeUndefined();
   });
 });

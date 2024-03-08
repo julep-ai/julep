@@ -9,6 +9,7 @@ import { ToolsManager } from "./managers/tool";
 import { JulepApiClient } from "./api";
 import { JULEP_API_KEY, JULEP_API_URL } from "./env";
 import { patchCreate } from "./utils/openaiPatch";
+import { CustomHttpRequest } from "./utils/requestConstructor";
 
 interface ClientOptions {
   apiKey?: string;
@@ -39,7 +40,10 @@ export class Client {
       );
     }
 
-    this._apiClient = new JulepApiClient({ TOKEN: apiKey, BASE: baseUrl });
+    this._apiClient = new JulepApiClient(
+      { TOKEN: apiKey, BASE: baseUrl },
+      CustomHttpRequest,
+    );
 
     const openaiBaseUrl = new URL(baseUrl).origin;
     this._openaiClient = new OpenAI({ apiKey, baseURL: `${openaiBaseUrl}/v1` });

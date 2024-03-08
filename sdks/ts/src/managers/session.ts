@@ -1,5 +1,3 @@
-import { BaseManager } from "./base";
-import { isValidUuid4 } from "../utils/isValidUuid4";
 import {
   ChatInput,
   ChatMLMessage,
@@ -11,6 +9,15 @@ import {
   Session,
   Suggestion,
 } from "../api";
+import { invariant } from "../utils/invariant";
+import { isValidUuid4 } from "../utils/isValidUuid4";
+import { BaseManager } from "./base";
+
+export interface CreateSessionPayload {
+  userId: string;
+  agentId: string;
+  situation?: string;
+}
 
 export class SessionsManager extends BaseManager {
   async get(sessionId: string): Promise<Session> {
@@ -18,53 +25,46 @@ export class SessionsManager extends BaseManager {
   }
 
   async create({
-    user_id,
-    agent_id,
+    userId,
+    agentId,
     situation,
-  }: CreateSessionRequest): Promise<ResourceCreatedResponse> {
-    if (!isValidUuid4(user_id)) {
-      throw new Error(`userId must be a valid UUID v4. Got "${user_id}"`);
-    }
+  }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
+    invariant(
+      isValidUuid4(userId),
+      `userId must be a valid UUID v4. Got "${userId}"`,
+    );
 
-    if (!isValidUuid4(agent_id)) {
-      throw new Error(`agentId must be a valid UUID v4. Got "${agent_id}"`);
-    }
+    invariant(
+      isValidUuid4(agentId),
+      `agentId must be a valid UUID v4. Got "${agentId}"`,
+    );
 
-    const requestBody = { user_id, agent_id, situation };
+    const requestBody = { user_id: userId, agent_id: agentId, situation };
 
     return this.apiClient.default
       .createSession({ requestBody })
       .catch((error) => Promise.reject(error));
   }
 
-  async list(
-    limit: number,
-    offset: number,
-  ): Promise<{
-    items: Session[];
-  }> {
-    return this.apiClient.default
-      .listSessions({ limit, offset })
-      .catch((error) => Promise.reject(error));
+  async list({
+    limit = 100,
+    offset = 0,
+  }: { limit?: number; offset?: number } = {}): Promise<Array<Session>> {
+    const result = await this.apiClient.default.listSessions({ limit, offset });
+    return result.items;
   }
 
-  async delete(sessionId: string): Promise<ResourceDeletedResponse> {
-    if (!isValidUuid4(sessionId)) {
-      throw new Error("sessionId must be a valid UUID v4");
-    }
+  async delete(sessionId: string): Promise<void> {
+    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
 
-    return this.apiClient.default
-      .deleteSession({ sessionId })
-      .catch((error) => Promise.reject(error));
+    await this.apiClient.default.deleteSession({ sessionId });
   }
 
   async update(
     sessionId: string,
     { situation }: { situation: string },
   ): Promise<ResourceUpdatedResponse> {
-    if (!isValidUuid4(sessionId)) {
-      throw new Error("sessionId must be a valid UUID v4");
-    }
+    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
 
     const requestBody = { situation };
 
@@ -97,9 +97,7 @@ export class SessionsManager extends BaseManager {
       top_p,
     }: ChatInput,
   ): Promise<ChatResponse> {
-    if (!isValidUuid4(sessionId)) {
-      throw new Error("sessionId must be a valid UUID v4");
-    }
+    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
 
     const requestBody = {
       messages,
@@ -127,40 +125,36 @@ export class SessionsManager extends BaseManager {
       }
     }
 
-    return this.apiClient.default
-      .chat({ sessionId, requestBody })
-      .catch((error) => Promise.reject(error));
+    return await this.apiClient.default.chat({ sessionId, requestBody });
   }
 
   async suggestions(
     sessionId: string,
-    limit = 100,
-    offset = 0,
-  ): Promise<{
-    items?: Suggestion[];
-  }> {
-    if (!isValidUuid4(sessionId)) {
-      throw new Error("sessionId must be a valid UUID v4");
-    }
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
+  ): Promise<Array<Suggestion>> {
+    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
 
-    return this.apiClient.default
-      .getSuggestions({ sessionId, limit, offset })
-      .catch((error) => Promise.reject(error));
+    const result = await this.apiClient.default.getSuggestions({
+      sessionId,
+      limit,
+      offset,
+    });
+
+    return result.items;
   }
 
   async history(
     sessionId: string,
-    limit = 100,
-    offset = 0,
-  ): Promise<{
-    items?: ChatMLMessage[];
-  }> {
-    if (!isValidUuid4(sessionId)) {
-      throw new Error("sessionId must be a valid UUID v4");
-    }
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
+  ): Promise<Array<ChatMLMessage>> {
+    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
 
-    return this.apiClient.default
-      .getHistory({ sessionId, limit, offset })
-      .catch((error) => Promise.reject(error));
+    const result = await this.apiClient.default.getHistory({
+      sessionId,
+      limit,
+      offset,
+    });
+
+    return result.items;
   }
 }

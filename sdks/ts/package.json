@@ -26,7 +26,9 @@
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "dependencies": {
+    "@types/lodash": "^4.14.202",
     "dotenv": "^16.4.5",
+    "lodash": "^4.17.21",
     "openai": "^4.28.0",
     "qs": "^6.11.2",
     "url-join": "^4.0.1",

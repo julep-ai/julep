@@ -33,8 +33,7 @@ describe("User API", () => {
   });
 
   test("async users.update", async () => {
-    const response = await client.users.update({
-      userId: uuidv4(),
+    const response = await client.users.update(uuidv4(), {
       name: "test user",
       about: "test user about",
     });
@@ -45,6 +44,6 @@ describe("User API", () => {
   test("async users.delete", async () => {
     const response = await client.users.delete(uuidv4());
 
-    expect(response).toBeNull();
+    expect(response).toBeUndefined();
   });
 });

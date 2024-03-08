@@ -20,9 +20,8 @@ export class MemoriesManager extends BaseManager {
     limit?: number;
     offset?: number;
   }): Promise<Memory[]> {
-    invariant(!isValidUuid4(agentId), "agentId must be a valid UUID v4");
-    userId &&
-      invariant(!isValidUuid4(userId), "userId must be a valid UUID v4");
+    invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
+    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     const response = await this.apiClient.default.getAgentMemories({
       agentId,
