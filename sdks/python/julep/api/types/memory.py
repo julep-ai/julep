@@ -20,7 +20,7 @@ class Memory(pydantic.BaseModel):
     agent_id: str = pydantic.Field(description="ID of the agent")
     user_id: str = pydantic.Field(description="ID of the user")
     content: str = pydantic.Field(description="Content of the memory")
-    weight: float = pydantic.Field(
+    weight: typing.Optional[float] = pydantic.Field(
         description="Weight (importance) of the memory on a scale of 0-100"
     )
     created_at: dt.datetime = pydantic.Field(
@@ -29,10 +29,10 @@ class Memory(pydantic.BaseModel):
     last_accessed_at: typing.Optional[dt.datetime] = pydantic.Field(
         description="Memory last accessed at (RFC-3339 format)"
     )
-    timestamp: dt.datetime = pydantic.Field(
+    timestamp: typing.Optional[dt.datetime] = pydantic.Field(
         description="Memory happened at (RFC-3339 format)"
     )
-    sentiment: float = pydantic.Field(
+    sentiment: typing.Optional[float] = pydantic.Field(
         description="Sentiment (valence) of the memory on a scale of -1 to 1"
     )
     duration: typing.Optional[float] = pydantic.Field(

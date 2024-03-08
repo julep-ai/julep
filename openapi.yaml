@@ -1063,6 +1063,7 @@ components:
         about:
           type: string
           description: About the agent
+          default: ""
         instructions:
           type: array
           items:
@@ -1094,7 +1095,6 @@ components:
           description: Optional metadata
       required:
         - name
-        - about
         - id
         - model
     FunctionParameters:
@@ -1231,6 +1231,7 @@ components:
         about:
           type: string
           description: About the agent
+          default: ""
         instructions:
           type: array
           items:
@@ -1261,8 +1262,6 @@ components:
           description: Optional metadata
       required:
         - name
-        - about
-        - model
       description: A valid request payload for creating an agent
     UpdateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1275,8 +1274,6 @@ components:
           type: object
           properties: {}
           description: Optional metadata
-      required:
-        - situation
       description: A valid request payload for updating a session
     UpdateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1392,6 +1389,7 @@ components:
             - assistant
             - system
             - function_call
+            - auto
           description: ChatML role (system|assistant|user|function_call)
         content:
           type: string
@@ -1405,8 +1403,8 @@ components:
           default: false
           description: Whether to continue this message or return a new one
       required:
-        - role
         - content
+        - role
     ChatInputData:
       type: object
       properties:
@@ -1627,12 +1625,9 @@ components:
         - type
         - content
         - created_at
-        - weight
         - id
         - agent_id
         - user_id
-        - timestamp
-        - sentiment
     ChatSettings:
       type: object
       properties:
@@ -2039,11 +2034,6 @@ components:
         - name
         - created_at
         - state
-    MetadataFilter:
-      type: object
-      properties: {}
-      additionalProperties: true
-      description: Object metadata to filter by
   securitySchemes:
     api-key:
       type: apiKey

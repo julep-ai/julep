@@ -15,6 +15,7 @@ class InputChatMlMessageRole(str, enum.Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     FUNCTION_CALL = "function_call"
+    AUTO = "auto"
 
     def visit(
         self,
@@ -22,6 +23,7 @@ class InputChatMlMessageRole(str, enum.Enum):
         assistant: typing.Callable[[], T_Result],
         system: typing.Callable[[], T_Result],
         function_call: typing.Callable[[], T_Result],
+        auto: typing.Callable[[], T_Result],
     ) -> T_Result:
         if self is InputChatMlMessageRole.USER:
             return user()
@@ -31,3 +33,5 @@ class InputChatMlMessageRole(str, enum.Enum):
             return system()
         if self is InputChatMlMessageRole.FUNCTION_CALL:
             return function_call()
+        if self is InputChatMlMessageRole.AUTO:
+            return auto()
