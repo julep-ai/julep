@@ -5,15 +5,17 @@
 export const $CreateToolRequest = {
   properties: {
     type: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
     function: {
-      type: 'one-of',
+      type: "one-of",
       description: `Function definition and parameters`,
-      contains: [{
-        type: 'FunctionDef',
-      }],
+      contains: [
+        {
+          type: "FunctionDef",
+        },
+      ],
       isRequired: true,
     },
   },

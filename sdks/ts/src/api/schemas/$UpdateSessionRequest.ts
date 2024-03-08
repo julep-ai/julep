@@ -6,14 +6,13 @@ export const $UpdateSessionRequest = {
   description: `A valid request payload for updating a session`,
   properties: {
     situation: {
-      type: 'string',
+      type: "string",
       description: `Updated situation for this session`,
       isRequired: true,
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;

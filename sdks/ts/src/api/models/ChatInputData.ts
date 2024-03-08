@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { InputChatMLMessage } from './InputChatMLMessage';
-import type { NamedToolChoice } from './NamedToolChoice';
-import type { Tool } from './Tool';
-import type { ToolChoiceOption } from './ToolChoiceOption';
+import type { InputChatMLMessage } from "./InputChatMLMessage";
+import type { NamedToolChoice } from "./NamedToolChoice";
+import type { Tool } from "./Tool";
+import type { ToolChoiceOption } from "./ToolChoiceOption";
 export type ChatInputData = {
   /**
    * A list of new input messages comprising the conversation so far.
@@ -20,4 +20,3 @@ export type ChatInputData = {
    */
   tool_choice?: (ToolChoiceOption | NamedToolChoice) | null;
 };
-

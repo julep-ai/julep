@@ -10,4 +10,3 @@ export type ResourceUpdatedResponse = {
    */
   jobs?: Array<string>;
 };
-

@@ -6,7 +6,7 @@ export type Belief = {
   /**
    * Type of memory (`belief`)
    */
-  type: 'belief';
+  type: "belief";
   /**
    * (Optional) ID of the subject user
    */
@@ -36,4 +36,3 @@ export type Belief = {
    */
   id: string;
 };
-

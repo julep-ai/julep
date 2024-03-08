@@ -2,31 +2,31 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Agent } from '../models/Agent';
-import type { ChatInput } from '../models/ChatInput';
-import type { ChatMLMessage } from '../models/ChatMLMessage';
-import type { ChatResponse } from '../models/ChatResponse';
-import type { CreateAgentRequest } from '../models/CreateAgentRequest';
-import type { CreateDoc } from '../models/CreateDoc';
-import type { CreateSessionRequest } from '../models/CreateSessionRequest';
-import type { CreateToolRequest } from '../models/CreateToolRequest';
-import type { CreateUserRequest } from '../models/CreateUserRequest';
-import type { Doc } from '../models/Doc';
-import type { JobStatus } from '../models/JobStatus';
-import type { Memory } from '../models/Memory';
-import type { ResourceCreatedResponse } from '../models/ResourceCreatedResponse';
-import type { ResourceDeletedResponse } from '../models/ResourceDeletedResponse';
-import type { ResourceUpdatedResponse } from '../models/ResourceUpdatedResponse';
-import type { Session } from '../models/Session';
-import type { Suggestion } from '../models/Suggestion';
-import type { Tool } from '../models/Tool';
-import type { UpdateAgentRequest } from '../models/UpdateAgentRequest';
-import type { UpdateSessionRequest } from '../models/UpdateSessionRequest';
-import type { UpdateToolRequest } from '../models/UpdateToolRequest';
-import type { UpdateUserRequest } from '../models/UpdateUserRequest';
-import type { User } from '../models/User';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import type { BaseHttpRequest } from '../core/BaseHttpRequest';
+import type { Agent } from "../models/Agent";
+import type { ChatInput } from "../models/ChatInput";
+import type { ChatMLMessage } from "../models/ChatMLMessage";
+import type { ChatResponse } from "../models/ChatResponse";
+import type { CreateAgentRequest } from "../models/CreateAgentRequest";
+import type { CreateDoc } from "../models/CreateDoc";
+import type { CreateSessionRequest } from "../models/CreateSessionRequest";
+import type { CreateToolRequest } from "../models/CreateToolRequest";
+import type { CreateUserRequest } from "../models/CreateUserRequest";
+import type { Doc } from "../models/Doc";
+import type { JobStatus } from "../models/JobStatus";
+import type { Memory } from "../models/Memory";
+import type { ResourceCreatedResponse } from "../models/ResourceCreatedResponse";
+import type { ResourceDeletedResponse } from "../models/ResourceDeletedResponse";
+import type { ResourceUpdatedResponse } from "../models/ResourceUpdatedResponse";
+import type { Session } from "../models/Session";
+import type { Suggestion } from "../models/Suggestion";
+import type { Tool } from "../models/Tool";
+import type { UpdateAgentRequest } from "../models/UpdateAgentRequest";
+import type { UpdateSessionRequest } from "../models/UpdateSessionRequest";
+import type { UpdateToolRequest } from "../models/UpdateToolRequest";
+import type { UpdateUserRequest } from "../models/UpdateUserRequest";
+import type { User } from "../models/User";
+import type { CancelablePromise } from "../core/CancelablePromise";
+import type { BaseHttpRequest } from "../core/BaseHttpRequest";
 export class DefaultService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
@@ -41,13 +41,13 @@ export class DefaultService {
     /**
      * Session initialization options
      */
-    requestBody?: CreateSessionRequest,
+    requestBody?: CreateSessionRequest;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/sessions',
+      method: "POST",
+      url: "/sessions",
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -63,20 +63,20 @@ export class DefaultService {
     /**
      * Number of sessions to return
      */
-    limit?: number,
+    limit?: number;
     /**
      * Number of sessions to skip (sorted created_at descending order)
      */
-    offset?: number,
+    offset?: number;
   }): CancelablePromise<{
     items: Array<Session>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/sessions',
+      method: "GET",
+      url: "/sessions",
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
     });
   }
@@ -92,13 +92,13 @@ export class DefaultService {
     /**
      * User create options
      */
-    requestBody?: CreateUserRequest,
+    requestBody?: CreateUserRequest;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/users',
+      method: "POST",
+      url: "/users",
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -114,20 +114,20 @@ export class DefaultService {
     /**
      * Number of items to return
      */
-    limit?: number,
+    limit?: number;
     /**
      * Number of items to skip (sorted created_at descending order)
      */
-    offset?: number,
+    offset?: number;
   }): CancelablePromise<{
     items: Array<User>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/users',
+      method: "GET",
+      url: "/users",
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
     });
   }
@@ -143,13 +143,13 @@ export class DefaultService {
     /**
      * Agent create options
      */
-    requestBody?: CreateAgentRequest,
+    requestBody?: CreateAgentRequest;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/agents',
+      method: "POST",
+      url: "/agents",
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -165,20 +165,20 @@ export class DefaultService {
     /**
      * Number of items to return
      */
-    limit?: number,
+    limit?: number;
     /**
      * Number of items to skip (sorted created_at descending order)
      */
-    offset?: number,
+    offset?: number;
   }): CancelablePromise<{
     items: Array<Agent>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/agents',
+      method: "GET",
+      url: "/agents",
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
     });
   }
@@ -190,13 +190,13 @@ export class DefaultService {
   public getSession({
     sessionId,
   }: {
-    sessionId: string,
+    sessionId: string;
   }): CancelablePromise<Session> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/sessions/{session_id}',
+      method: "GET",
+      url: "/sessions/{session_id}",
       path: {
-        'session_id': sessionId,
+        session_id: sessionId,
       },
     });
   }
@@ -208,13 +208,13 @@ export class DefaultService {
   public deleteSession({
     sessionId,
   }: {
-    sessionId: string,
+    sessionId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/sessions/{session_id}',
+      method: "DELETE",
+      url: "/sessions/{session_id}",
       path: {
-        'session_id': sessionId,
+        session_id: sessionId,
       },
     });
   }
@@ -227,17 +227,17 @@ export class DefaultService {
     sessionId,
     requestBody,
   }: {
-    sessionId: string,
-    requestBody?: UpdateSessionRequest,
+    sessionId: string;
+    requestBody?: UpdateSessionRequest;
   }): CancelablePromise<ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: 'PUT',
-      url: '/sessions/{session_id}',
+      method: "PUT",
+      url: "/sessions/{session_id}",
       path: {
-        'session_id': sessionId,
+        session_id: sessionId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -251,21 +251,21 @@ export class DefaultService {
     limit = 10,
     offset,
   }: {
-    sessionId: string,
-    limit?: number,
-    offset?: number,
+    sessionId: string;
+    limit?: number;
+    offset?: number;
   }): CancelablePromise<{
     items?: Array<Suggestion>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/sessions/{session_id}/suggestions',
+      method: "GET",
+      url: "/sessions/{session_id}/suggestions",
       path: {
-        'session_id': sessionId,
+        session_id: sessionId,
       },
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
     });
   }
@@ -280,21 +280,21 @@ export class DefaultService {
     limit = 10,
     offset,
   }: {
-    sessionId: string,
-    limit?: number,
-    offset?: number,
+    sessionId: string;
+    limit?: number;
+    offset?: number;
   }): CancelablePromise<{
     items?: Array<ChatMLMessage>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/sessions/{session_id}/history',
+      method: "GET",
+      url: "/sessions/{session_id}/history",
       path: {
-        'session_id': sessionId,
+        session_id: sessionId,
       },
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
     });
   }
@@ -305,24 +305,24 @@ export class DefaultService {
    */
   public chat({
     sessionId,
-    accept = 'application/json',
+    accept = "application/json",
     requestBody,
   }: {
-    sessionId: string,
-    accept?: 'application/json' | 'text/event-stream',
-    requestBody?: ChatInput,
+    sessionId: string;
+    accept?: "application/json" | "text/event-stream";
+    requestBody?: ChatInput;
   }): CancelablePromise<ChatResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/sessions/{session_id}/chat',
+      method: "POST",
+      url: "/sessions/{session_id}/chat",
       path: {
-        'session_id': sessionId,
+        session_id: sessionId,
       },
       headers: {
-        'Accept': accept,
+        Accept: accept,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -339,30 +339,30 @@ export class DefaultService {
     limit,
     offset,
   }: {
-    agentId: string,
-    query: string,
+    agentId: string;
+    query: string;
     /**
      * episode, belief, entity
      */
-    types?: Array<string>,
-    userId?: string,
-    limit?: number,
-    offset?: number,
+    types?: Array<string>;
+    userId?: string;
+    limit?: number;
+    offset?: number;
   }): CancelablePromise<{
     items?: Array<Memory>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/agents/{agent_id}/memories',
+      method: "GET",
+      url: "/agents/{agent_id}/memories",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
       query: {
-        'query': query,
-        'types': types,
-        'user_id': userId,
-        'limit': limit,
-        'offset': offset,
+        query: query,
+        types: types,
+        user_id: userId,
+        limit: limit,
+        offset: offset,
       },
     });
   }
@@ -371,16 +371,12 @@ export class DefaultService {
    * @returns User
    * @throws ApiError
    */
-  public getUser({
-    userId,
-  }: {
-    userId: string,
-  }): CancelablePromise<User> {
+  public getUser({ userId }: { userId: string }): CancelablePromise<User> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/users/{user_id}',
+      method: "GET",
+      url: "/users/{user_id}",
       path: {
-        'user_id': userId,
+        user_id: userId,
       },
     });
   }
@@ -392,13 +388,13 @@ export class DefaultService {
   public deleteUser({
     userId,
   }: {
-    userId: string,
+    userId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/users/{user_id}',
+      method: "DELETE",
+      url: "/users/{user_id}",
       path: {
-        'user_id': userId,
+        user_id: userId,
       },
     });
   }
@@ -411,17 +407,17 @@ export class DefaultService {
     userId,
     requestBody,
   }: {
-    userId: string,
-    requestBody?: UpdateUserRequest,
+    userId: string;
+    requestBody?: UpdateUserRequest;
   }): CancelablePromise<ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: 'PUT',
-      url: '/users/{user_id}',
+      method: "PUT",
+      url: "/users/{user_id}",
       path: {
-        'user_id': userId,
+        user_id: userId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -429,16 +425,12 @@ export class DefaultService {
    * @returns Agent
    * @throws ApiError
    */
-  public getAgent({
-    agentId,
-  }: {
-    agentId: string,
-  }): CancelablePromise<Agent> {
+  public getAgent({ agentId }: { agentId: string }): CancelablePromise<Agent> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/agents/{agent_id}',
+      method: "GET",
+      url: "/agents/{agent_id}",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
     });
   }
@@ -450,13 +442,13 @@ export class DefaultService {
   public deleteAgent({
     agentId,
   }: {
-    agentId: string,
+    agentId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/agents/{agent_id}',
+      method: "DELETE",
+      url: "/agents/{agent_id}",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
     });
   }
@@ -469,17 +461,17 @@ export class DefaultService {
     agentId,
     requestBody,
   }: {
-    agentId: string,
-    requestBody?: UpdateAgentRequest,
+    agentId: string;
+    requestBody?: UpdateAgentRequest;
   }): CancelablePromise<ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: 'PUT',
-      url: '/agents/{agent_id}',
+      method: "PUT",
+      url: "/agents/{agent_id}",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -494,22 +486,22 @@ export class DefaultService {
     offset,
     requestBody,
   }: {
-    agentId: string,
-    limit?: number,
-    offset?: number,
-    requestBody?: any,
+    agentId: string;
+    limit?: number;
+    offset?: number;
+    requestBody?: any;
   }): CancelablePromise<{
     items?: Array<Doc>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/agents/{agent_id}/docs',
+      method: "GET",
+      url: "/agents/{agent_id}/docs",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
       body: requestBody,
     });
@@ -523,17 +515,17 @@ export class DefaultService {
     agentId,
     requestBody,
   }: {
-    agentId: string,
-    requestBody?: CreateDoc,
+    agentId: string;
+    requestBody?: CreateDoc;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/agents/{agent_id}/docs',
+      method: "POST",
+      url: "/agents/{agent_id}/docs",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -548,22 +540,22 @@ export class DefaultService {
     offset,
     requestBody,
   }: {
-    userId: string,
-    limit?: number,
-    offset?: number,
-    requestBody?: any,
+    userId: string;
+    limit?: number;
+    offset?: number;
+    requestBody?: any;
   }): CancelablePromise<{
     items?: Array<Doc>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/users/{user_id}/docs',
+      method: "GET",
+      url: "/users/{user_id}/docs",
       path: {
-        'user_id': userId,
+        user_id: userId,
       },
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
       body: requestBody,
     });
@@ -577,17 +569,17 @@ export class DefaultService {
     userId,
     requestBody,
   }: {
-    userId: string,
-    requestBody?: CreateDoc,
+    userId: string;
+    requestBody?: CreateDoc;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/users/{user_id}/docs',
+      method: "POST",
+      url: "/users/{user_id}/docs",
       path: {
-        'user_id': userId,
+        user_id: userId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -599,15 +591,15 @@ export class DefaultService {
     userId,
     docId,
   }: {
-    userId: string,
-    docId: string,
+    userId: string;
+    docId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/users/{user_id}/docs/{doc_id}',
+      method: "DELETE",
+      url: "/users/{user_id}/docs/{doc_id}",
       path: {
-        'user_id': userId,
-        'doc_id': docId,
+        user_id: userId,
+        doc_id: docId,
       },
     });
   }
@@ -620,15 +612,15 @@ export class DefaultService {
     agentId,
     docId,
   }: {
-    agentId: string,
-    docId: string,
+    agentId: string;
+    docId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/agents/{agent_id}/docs/{doc_id}',
+      method: "DELETE",
+      url: "/agents/{agent_id}/docs/{doc_id}",
       path: {
-        'agent_id': agentId,
-        'doc_id': docId,
+        agent_id: agentId,
+        doc_id: docId,
       },
     });
   }
@@ -641,15 +633,15 @@ export class DefaultService {
     agentId,
     memoryId,
   }: {
-    agentId: string,
-    memoryId: string,
+    agentId: string;
+    memoryId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/agents/{agent_id}/memories/{memory_id}',
+      method: "DELETE",
+      url: "/agents/{agent_id}/memories/{memory_id}",
       path: {
-        'agent_id': agentId,
-        'memory_id': memoryId,
+        agent_id: agentId,
+        memory_id: memoryId,
       },
     });
   }
@@ -665,22 +657,22 @@ export class DefaultService {
     offset,
     requestBody,
   }: {
-    agentId: string,
-    limit?: number,
-    offset?: number,
-    requestBody?: any,
+    agentId: string;
+    limit?: number;
+    offset?: number;
+    requestBody?: any;
   }): CancelablePromise<{
     items?: Array<Tool>;
   }> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/agents/{agent_id}/tools',
+      method: "GET",
+      url: "/agents/{agent_id}/tools",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
       query: {
-        'limit': limit,
-        'offset': offset,
+        limit: limit,
+        offset: offset,
       },
       body: requestBody,
     });
@@ -694,17 +686,17 @@ export class DefaultService {
     agentId,
     requestBody,
   }: {
-    agentId: string,
-    requestBody?: CreateToolRequest,
+    agentId: string;
+    requestBody?: CreateToolRequest;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
-      method: 'POST',
-      url: '/agents/{agent_id}/tools',
+      method: "POST",
+      url: "/agents/{agent_id}/tools",
       path: {
-        'agent_id': agentId,
+        agent_id: agentId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -716,15 +708,15 @@ export class DefaultService {
     agentId,
     toolId,
   }: {
-    agentId: string,
-    toolId: string,
+    agentId: string;
+    toolId: string;
   }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
-      method: 'DELETE',
-      url: '/agents/{agent_id}/tools/{tool_id}',
+      method: "DELETE",
+      url: "/agents/{agent_id}/tools/{tool_id}",
       path: {
-        'agent_id': agentId,
-        'tool_id': toolId,
+        agent_id: agentId,
+        tool_id: toolId,
       },
     });
   }
@@ -738,19 +730,19 @@ export class DefaultService {
     toolId,
     requestBody,
   }: {
-    agentId: string,
-    toolId: string,
-    requestBody?: UpdateToolRequest,
+    agentId: string;
+    toolId: string;
+    requestBody?: UpdateToolRequest;
   }): CancelablePromise<ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: 'PUT',
-      url: '/agents/{agent_id}/tools/{tool_id}',
+      method: "PUT",
+      url: "/agents/{agent_id}/tools/{tool_id}",
       path: {
-        'agent_id': agentId,
-        'tool_id': toolId,
+        agent_id: agentId,
+        tool_id: toolId,
       },
       body: requestBody,
-      mediaType: 'application/json',
+      mediaType: "application/json",
     });
   }
   /**
@@ -761,13 +753,13 @@ export class DefaultService {
   public getJobStatus({
     jobId,
   }: {
-    jobId: string,
+    jobId: string;
   }): CancelablePromise<JobStatus> {
     return this.httpRequest.request({
-      method: 'GET',
-      url: '/jobs/{job_id}',
+      method: "GET",
+      url: "/jobs/{job_id}",
       path: {
-        'job_id': jobId,
+        job_id: jobId,
       },
     });
   }

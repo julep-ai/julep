@@ -6,31 +6,30 @@ export const $UpdateAgentRequest = {
   description: `A valid request payload for updating an agent`,
   properties: {
     about: {
-      type: 'string',
+      type: "string",
       description: `About the agent`,
     },
     instructions: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'Instruction',
+        type: "Instruction",
       },
     },
     name: {
-      type: 'string',
+      type: "string",
       description: `Name of the agent`,
     },
     model: {
-      type: 'string',
+      type: "string",
       description: `Name of the model that the agent is supposed to use`,
     },
     default_settings: {
-      type: 'AgentDefaultSettings',
+      type: "AgentDefaultSettings",
       description: `Default model settings to start every session with`,
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;

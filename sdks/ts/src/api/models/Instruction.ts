@@ -12,4 +12,3 @@ export type Instruction = {
    */
   important?: boolean;
 };
-

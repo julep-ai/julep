@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FunctionParameters } from './FunctionParameters';
+import type { FunctionParameters } from "./FunctionParameters";
 export type FunctionDef = {
   /**
    * A description of what the function does, used by the model to choose when and how to call the function.
@@ -17,4 +17,3 @@ export type FunctionDef = {
    */
   parameters: FunctionParameters;
 };
-

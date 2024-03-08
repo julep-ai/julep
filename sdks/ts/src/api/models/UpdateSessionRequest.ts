@@ -15,4 +15,3 @@ export type UpdateSessionRequest = {
    */
   metadata?: any;
 };
-

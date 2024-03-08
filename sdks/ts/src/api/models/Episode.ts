@@ -6,7 +6,7 @@ export type Episode = {
   /**
    * Type of memory (`episode`)
    */
-  type: 'episode';
+  type: "episode";
   /**
    * (Optional) ID of the subject user
    */
@@ -40,4 +40,3 @@ export type Episode = {
    */
   id: string;
 };
-

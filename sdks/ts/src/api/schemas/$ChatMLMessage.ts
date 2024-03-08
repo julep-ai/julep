@@ -5,29 +5,29 @@
 export const $ChatMLMessage = {
   properties: {
     role: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
     content: {
-      type: 'string',
+      type: "string",
       description: `ChatML content`,
       isRequired: true,
     },
     name: {
-      type: 'string',
+      type: "string",
       description: `ChatML name`,
     },
     created_at: {
-      type: 'string',
+      type: "string",
       description: `Message created at (RFC-3339 format)`,
       isRequired: true,
-      format: 'date-time',
+      format: "date-time",
     },
     id: {
-      type: 'string',
+      type: "string",
       description: `Message ID`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
   },
 } as const;

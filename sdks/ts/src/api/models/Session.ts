@@ -36,4 +36,3 @@ export type Session = {
    */
   metadata?: any;
 };
-

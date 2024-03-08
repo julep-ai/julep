@@ -6,10 +6,10 @@ export const $Entity = {
   description: `TBD`,
   properties: {
     id: {
-      type: 'string',
+      type: "string",
       description: `Entity id (UUID)`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
   },
 } as const;

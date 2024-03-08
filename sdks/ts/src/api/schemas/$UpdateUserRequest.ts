@@ -6,17 +6,16 @@ export const $UpdateUserRequest = {
   description: `A valid request payload for updating a user`,
   properties: {
     about: {
-      type: 'string',
+      type: "string",
       description: `About the user`,
     },
     name: {
-      type: 'string',
+      type: "string",
       description: `Name of the user`,
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;

@@ -6,46 +6,45 @@ export const $CreateAgentRequest = {
   description: `A valid request payload for creating an agent`,
   properties: {
     name: {
-      type: 'string',
+      type: "string",
       description: `Name of the agent`,
       isRequired: true,
     },
     about: {
-      type: 'string',
+      type: "string",
       description: `About the agent`,
       isRequired: true,
     },
     instructions: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'Instruction',
+        type: "Instruction",
       },
     },
     tools: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'CreateToolRequest',
+        type: "CreateToolRequest",
       },
     },
     default_settings: {
-      type: 'AgentDefaultSettings',
+      type: "AgentDefaultSettings",
       description: `Default model settings to start every session with`,
     },
     model: {
-      type: 'string',
+      type: "string",
       description: `Name of the model that the agent is supposed to use`,
       isRequired: true,
     },
     docs: {
-      type: 'array',
+      type: "array",
       contains: {
-        type: 'CreateDoc',
+        type: "CreateDoc",
       },
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;

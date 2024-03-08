@@ -28,4 +28,3 @@ export type User = {
    */
   metadata?: any;
 };
-

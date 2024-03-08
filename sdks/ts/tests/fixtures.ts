@@ -11,10 +11,9 @@ const baseUrl: string = TEST_API_URL || "http://localhost:8080/api";
 const apiKey: string = TEST_API_KEY || "thisisnotarealapikey";
 
 const setupClient = (): Client => {
-
   const client = new Client({ apiKey, baseUrl });
 
   return client;
-}
+};
 
 export { setupClient };

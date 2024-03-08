@@ -5,30 +5,30 @@
 export const $Suggestion = {
   properties: {
     created_at: {
-      type: 'string',
+      type: "string",
       description: `Suggestion created at (RFC-3339 format)`,
-      format: 'date-time',
+      format: "date-time",
     },
     target: {
-      type: 'Enum',
+      type: "Enum",
       isRequired: true,
     },
     content: {
-      type: 'string',
+      type: "string",
       description: `The content of the suggestion`,
       isRequired: true,
     },
     message_id: {
-      type: 'string',
+      type: "string",
       description: `The message that produced it`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
     session_id: {
-      type: 'string',
+      type: "string",
       description: `Session this suggestion belongs to`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
   },
 } as const;

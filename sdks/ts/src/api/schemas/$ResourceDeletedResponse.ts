@@ -5,14 +5,14 @@
 export const $ResourceDeletedResponse = {
   properties: {
     id: {
-      type: 'string',
+      type: "string",
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
     deleted_at: {
-      type: 'string',
+      type: "string",
       isRequired: true,
-      format: 'date-time',
+      format: "date-time",
     },
   },
 } as const;

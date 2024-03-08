@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FunctionDef } from './FunctionDef';
+import type { FunctionDef } from "./FunctionDef";
 export type Tool = {
   /**
    * Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
    */
-  type: 'function' | 'webhook';
+  type: "function" | "webhook";
   /**
    * Function definition and parameters
    */
@@ -17,4 +17,3 @@ export type Tool = {
    */
   id: string;
 };
-

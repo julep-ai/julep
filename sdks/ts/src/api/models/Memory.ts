@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Belief } from './Belief';
-import type { Entity } from './Entity';
-import type { Episode } from './Episode';
-export type Memory = (Belief | Episode | Entity);
-
+import type { Belief } from "./Belief";
+import type { Entity } from "./Entity";
+import type { Episode } from "./Episode";
+export type Memory = Belief | Episode | Entity;

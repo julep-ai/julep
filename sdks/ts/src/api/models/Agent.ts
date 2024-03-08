@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AgentDefaultSettings } from './AgentDefaultSettings';
-import type { Instruction } from './Instruction';
+import type { AgentDefaultSettings } from "./AgentDefaultSettings";
+import type { Instruction } from "./Instruction";
 export type Agent = {
   /**
    * Name of the agent
@@ -42,4 +42,3 @@ export type Agent = {
    */
   metadata?: any;
 };
-

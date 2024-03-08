@@ -5,19 +5,18 @@
 export const $CreateDoc = {
   properties: {
     title: {
-      type: 'string',
+      type: "string",
       description: `Title describing what this bit of information contains`,
       isRequired: true,
     },
     content: {
-      type: 'string',
+      type: "string",
       description: `Information content`,
       isRequired: true,
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;

@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AgentDefaultSettings } from './AgentDefaultSettings';
-import type { CreateDoc } from './CreateDoc';
-import type { CreateToolRequest } from './CreateToolRequest';
-import type { Instruction } from './Instruction';
+import type { AgentDefaultSettings } from "./AgentDefaultSettings";
+import type { CreateDoc } from "./CreateDoc";
+import type { CreateToolRequest } from "./CreateToolRequest";
+import type { Instruction } from "./Instruction";
 /**
  * A valid request payload for creating an agent
  */
@@ -43,4 +43,3 @@ export type CreateAgentRequest = {
    */
   metadata?: any;
 };
-

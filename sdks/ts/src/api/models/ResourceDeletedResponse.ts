@@ -6,4 +6,3 @@ export type ResourceDeletedResponse = {
   id: string;
   deleted_at: string;
 };
-

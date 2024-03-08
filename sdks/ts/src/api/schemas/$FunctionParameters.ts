@@ -3,9 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $FunctionParameters = {
-  type: 'dictionary',
+  type: "dictionary",
   contains: {
-    properties: {
-    },
+    properties: {},
   },
 } as const;

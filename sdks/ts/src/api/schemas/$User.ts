@@ -5,33 +5,32 @@
 export const $User = {
   properties: {
     name: {
-      type: 'string',
+      type: "string",
       description: `Name of the user`,
     },
     about: {
-      type: 'string',
+      type: "string",
       description: `About the user`,
     },
     created_at: {
-      type: 'string',
+      type: "string",
       description: `User created at (RFC-3339 format)`,
-      format: 'date-time',
+      format: "date-time",
     },
     updated_at: {
-      type: 'string',
+      type: "string",
       description: `User updated at (RFC-3339 format)`,
-      format: 'date-time',
+      format: "date-time",
     },
     id: {
-      type: 'string',
+      type: "string",
       description: `User id (UUID)`,
       isRequired: true,
-      format: 'uuid',
+      format: "uuid",
     },
     metadata: {
       description: `Optional metadata`,
-      properties: {
-      },
+      properties: {},
     },
   },
 } as const;
