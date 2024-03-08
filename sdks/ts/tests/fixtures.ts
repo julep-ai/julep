@@ -1,6 +1,6 @@
 // fixtures.ts
 
-import { Client } from "../";
+import { Client } from "../src";
 import { config } from "dotenv";
 
 config();
