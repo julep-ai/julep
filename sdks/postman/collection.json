@@ -41,7 +41,7 @@
       "_type": "endpoint",
       "name": "List sessions",
       "request": {
-        "description": "List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)",
+        "description": "List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)",
         "url": {
           "raw": "{{baseUrl}}/sessions",
           "host": [
@@ -76,7 +76,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)",
+            "description": "List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)",
             "url": {
               "raw": "{{baseUrl}}/sessions",
               "host": [
@@ -205,7 +205,7 @@
       "_type": "endpoint",
       "name": "List users",
       "request": {
-        "description": "List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)",
+        "description": "List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)",
         "url": {
           "raw": "{{baseUrl}}/users",
           "host": [
@@ -240,7 +240,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)",
+            "description": "List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)",
             "url": {
               "raw": "{{baseUrl}}/users",
               "host": [
@@ -369,7 +369,7 @@
       "_type": "endpoint",
       "name": "List agents",
       "request": {
-        "description": "List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)",
+        "description": "List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)",
         "url": {
           "raw": "{{baseUrl}}/agents",
           "host": [
@@ -404,7 +404,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)",
+            "description": "List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)",
             "url": {
               "raw": "{{baseUrl}}/agents",
               "host": [
@@ -472,7 +472,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\"\n}",
+          "raw": "{\n    \"name\": \"name\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -515,7 +515,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\"\n}",
+              "raw": "{\n    \"name\": \"name\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -657,7 +657,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"situation\": \"situation\"\n}",
+          "raw": "{}",
           "options": {
             "raw": {
               "language": "json"
@@ -707,7 +707,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"situation\": \"situation\"\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1204,7 +1204,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"items\": [\n        {\n            \"type\": \"belief\",\n            \"subject\": \"subject\",\n            \"content\": \"content\",\n            \"rationale\": \"rationale\",\n            \"weight\": 1.1,\n            \"sentiment\": 1.1,\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"id\": \"id\"\n        }\n    ]\n}",
+          "body": "{\n    \"items\": [\n        {\n            \"type\": \"episode\",\n            \"agent_id\": \"agent_id\",\n            \"user_id\": \"user_id\",\n            \"content\": \"content\",\n            \"weight\": 1.1,\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"last_accessed_at\": \"2024-01-15T09:30:00Z\",\n            \"timestamp\": \"2024-01-15T09:30:00Z\",\n            \"sentiment\": 1.1,\n            \"duration\": 1.1,\n            \"id\": \"id\",\n            \"emotions\": [\n                \"admiration\"\n            ]\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]

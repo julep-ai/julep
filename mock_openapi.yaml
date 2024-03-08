@@ -15,7 +15,7 @@ externalDocs:
   description: Find out more about spec
   url: https://docs.julep.ai
 servers:
-  - url: http://localhost:8080
+  - url: https://api-alpha.julep.ai/api
     description: ""
     variables: {}
 tags:
@@ -36,7 +36,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateSessionRequest"
+              $ref: '#/components/schemas/CreateSessionRequest'
               description: Session options
         description: Session initialization options
       responses:
@@ -44,13 +44,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
           description: Session successfully created
       security:
         - api-key: []
     get:
       summary: List sessions
-      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListSessions
       tags: []
       parameters:
@@ -69,6 +69,31 @@ paths:
             type: integer
             default: 0
             minimum: 0
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           content:
@@ -80,7 +105,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Session"
+                      $ref: '#/components/schemas/Session'
                 required:
                   - items
           description: List of sessions (sorted created_at descending order) with limit+offset pagination
@@ -97,20 +122,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateUserRequest"
+              $ref: '#/components/schemas/CreateUserRequest'
         description: User create options
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
           description: User successfully created
       security:
         - api-key: []
     get:
       summary: List users
-      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListUsers
       tags: []
       parameters:
@@ -127,6 +152,31 @@ paths:
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           content:
@@ -138,7 +188,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/User"
+                      $ref: '#/components/schemas/User'
                 required:
                   - items
           description: List of users (sorted created_at descending order) with limit+offset pagination
@@ -155,20 +205,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAgentRequest"
+              $ref: '#/components/schemas/CreateAgentRequest'
         description: Agent create options
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
           description: Agent successfully created
       security:
         - api-key: []
     get:
       summary: List agents
-      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListAgents
       tags: []
       parameters:
@@ -187,6 +237,31 @@ paths:
             type: integer
             default: 0
             minimum: 0
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           description: List of agents (sorted created_at descending order) with limit+offset pagination
@@ -198,7 +273,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Agent"
+                      $ref: '#/components/schemas/Agent'
                 required:
                   - items
       security:
@@ -215,7 +290,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Session"
+                $ref: '#/components/schemas/Session'
       security:
         - api-key: []
     delete:
@@ -229,7 +304,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -242,13 +317,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateSessionRequest"
+              $ref: '#/components/schemas/UpdateSessionRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
     parameters:
@@ -292,7 +367,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Suggestion"
+                      $ref: '#/components/schemas/Suggestion'
       security:
         - api-key: []
     parameters:
@@ -336,7 +411,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ChatMLMessage"
+                      $ref: '#/components/schemas/ChatMLMessage'
       security:
         - api-key: []
     parameters:
@@ -375,13 +450,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChatInput"
+              $ref: '#/components/schemas/ChatInput'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChatResponse"
+                $ref: '#/components/schemas/ChatResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/memories:
@@ -432,7 +507,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Memory"
+                      $ref: '#/components/schemas/Memory'
       security:
         - api-key: []
     parameters:
@@ -455,7 +530,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: '#/components/schemas/User'
       security:
         - api-key: []
     delete:
@@ -469,7 +544,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -482,13 +557,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateUserRequest"
+              $ref: '#/components/schemas/UpdateUserRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
     parameters:
@@ -511,7 +586,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Agent"
+                $ref: '#/components/schemas/Agent'
       security:
         - api-key: []
     delete:
@@ -525,7 +600,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -538,13 +613,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAgentRequest"
+              $ref: '#/components/schemas/UpdateAgentRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
     parameters:
@@ -572,6 +647,31 @@ paths:
           description: ""
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       requestBody:
         content: {}
       responses:
@@ -585,7 +685,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Doc"
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
@@ -606,13 +706,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDoc"
+              $ref: '#/components/schemas/CreateDoc'
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
   /api/users/{user_id}/docs:
@@ -632,6 +732,31 @@ paths:
           description: ""
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       requestBody:
         content: {}
       responses:
@@ -645,7 +770,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Doc"
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
@@ -666,13 +791,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDoc"
+              $ref: '#/components/schemas/CreateDoc'
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
   /api/users/{user_id}/docs/{doc_id}:
@@ -702,7 +827,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/docs/{doc_id}:
@@ -732,7 +857,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/memories/{memory_id}:
@@ -747,7 +872,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     parameters:
@@ -795,7 +920,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Tool"
+                      $ref: '#/components/schemas/Tool'
       security:
         - api-key: []
     parameters:
@@ -816,13 +941,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateToolRequest"
+              $ref: '#/components/schemas/CreateToolRequest'
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceCreatedResponse"
+                $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
   /api/agents/{agent_id}/tools/{tool_id}:
@@ -852,7 +977,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceDeletedResponse"
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
@@ -865,13 +990,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateToolRequest"
+              $ref: '#/components/schemas/UpdateToolRequest'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceUpdatedResponse"
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
   /api/jobs/{job_id}:
@@ -886,7 +1011,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobStatus"
+                $ref: '#/components/schemas/JobStatus'
       security:
         - api-key: []
     parameters:
@@ -922,6 +1047,10 @@ components:
           type: string
           description: User id (UUID)
           format: uuid
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - id
     Agent:
@@ -934,10 +1063,11 @@ components:
         about:
           type: string
           description: About the agent
+          default: ""
         instructions:
           type: array
           items:
-            $ref: "#/components/schemas/Instruction"
+            $ref: '#/components/schemas/Instruction'
             description: Instruction for the agent
           description: List of instructions for the agent
         created_at:
@@ -953,15 +1083,18 @@ components:
           description: Agent id (UUID)
           format: uuid
         default_settings:
-          $ref: "#/components/schemas/AgentDefaultSettings"
+          $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default settings for all sessions created by this agent
         model:
           type: string
           description: The model to use with this agent
           default: julep-ai/samantha-1-turbo
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
-        - about
         - id
         - model
     FunctionParameters:
@@ -979,7 +1112,7 @@ components:
           type: string
           description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
         parameters:
-          $ref: "#/components/schemas/FunctionParameters"
+          $ref: '#/components/schemas/FunctionParameters'
           description: Parameters accepeted by this function
       required:
         - name
@@ -995,7 +1128,7 @@ components:
           description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
         function:
           oneOf:
-            - $ref: "#/components/schemas/FunctionDef"
+            - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
         id:
           type: string
@@ -1035,6 +1168,10 @@ components:
           type: string
           format: date-time
           description: Session updated at (RFC-3339 format)
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - id
         - user_id
@@ -1053,9 +1190,13 @@ components:
         docs:
           type: array
           items:
-            $ref: "#/components/schemas/CreateDoc"
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the user
           description: List of docs about user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1072,6 +1213,10 @@ components:
         situation:
           type: string
           description: A specific situation that sets the background for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - agent_id
         - user_id
@@ -1086,19 +1231,20 @@ components:
         about:
           type: string
           description: About the agent
+          default: ""
         instructions:
           type: array
           items:
-            $ref: "#/components/schemas/Instruction"
+            $ref: '#/components/schemas/Instruction'
             description: Instruction
           description: List of instructions for the agent
         tools:
           type: array
           items:
-            $ref: "#/components/schemas/CreateToolRequest"
+            $ref: '#/components/schemas/CreateToolRequest'
           description: A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
         default_settings:
-          $ref: "#/components/schemas/AgentDefaultSettings"
+          $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
         model:
           type: string
@@ -1107,13 +1253,15 @@ components:
         docs:
           type: array
           items:
-            $ref: "#/components/schemas/CreateDoc"
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the agent
           description: List of docs about agent
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
-        - about
-        - model
       description: A valid request payload for creating an agent
     UpdateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1122,8 +1270,10 @@ components:
         situation:
           type: string
           description: Updated situation for this session
-      required:
-        - situation
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating a session
     UpdateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1135,7 +1285,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: "#/components/schemas/Instruction"
+            $ref: '#/components/schemas/Instruction'
             description: Instruction
           description: List of instructions for the agent
         name:
@@ -1145,8 +1295,12 @@ components:
           type: string
           description: Name of the model that the agent is supposed to use
         default_settings:
-          $ref: "#/components/schemas/AgentDefaultSettings"
+          $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating an agent
     UpdateUserRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1158,6 +1312,10 @@ components:
         name:
           type: string
           description: Name of the user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating a user
     Suggestion:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1231,6 +1389,7 @@ components:
             - assistant
             - system
             - function_call
+            - auto
           description: ChatML role (system|assistant|user|function_call)
         content:
           type: string
@@ -1244,8 +1403,8 @@ components:
           default: false
           description: Whether to continue this message or return a new one
       required:
-        - role
         - content
+        - role
     ChatInputData:
       type: object
       properties:
@@ -1254,18 +1413,18 @@ components:
           type: array
           minItems: 1
           items:
-            $ref: "#/components/schemas/InputChatMLMessage"
+            $ref: '#/components/schemas/InputChatMLMessage'
         tools:
           type: array
           nullable: true
           description: (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
           items:
-            $ref: "#/components/schemas/Tool"
+            $ref: '#/components/schemas/Tool'
         tool_choice:
           nullable: true
           oneOf:
-            - $ref: "#/components/schemas/ToolChoiceOption"
-            - $ref: "#/components/schemas/NamedToolChoice"
+            - $ref: '#/components/schemas/ToolChoiceOption'
+            - $ref: '#/components/schemas/NamedToolChoice'
           description: Can be one of existing tools given to the agent earlier or the ones included in the request
       required:
         - messages
@@ -1304,7 +1463,7 @@ components:
           enum:
             - none
             - auto
-        - $ref: "#/components/schemas/NamedToolChoice"
+        - $ref: '#/components/schemas/NamedToolChoice'
       type: string
     FunctionCallOption:
       type: object
@@ -1357,11 +1516,11 @@ components:
             type: array
             properties:
               items:
-                $ref: "#/components/schemas/ChatMLMessage"
+                $ref: '#/components/schemas/ChatMLMessage'
             items:
-              $ref: "#/components/schemas/ChatMLMessage"
+              $ref: '#/components/schemas/ChatMLMessage'
         usage:
-          $ref: "#/components/schemas/CompletionUsage"
+          $ref: '#/components/schemas/CompletionUsage'
         jobs:
           type: array
           items:
@@ -1374,120 +1533,101 @@ components:
         - response
         - finish_reason
         - id
-    Belief:
+    Memory:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
       properties:
         type:
           type: string
-          default: belief
           enum:
+            - episode
             - belief
-          description: Type of memory (`belief`)
-        subject:
+          description: Type of memory (`episode` or `belief`)
+        agent_id:
           type: string
           format: uuid
-          description: (Optional) ID of the subject user
+          description: ID of the agent
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user
         content:
           type: string
           description: Content of the memory
-        rationale:
-          type: string
-          description: "Rationale: Why did the model decide to form this memory"
         weight:
           type: number
-          default: 1
+          default: 0
           minimum: 0
           maximum: 100
           description: Weight (importance) of the memory on a scale of 0-100
+        created_at:
+          type: string
+          format: date-time
+          description: Memory created at (RFC-3339 format)
+        last_accessed_at:
+          type: string
+          format: date-time
+          description: Memory last accessed at (RFC-3339 format)
+        timestamp:
+          type: string
+          description: Memory happened at (RFC-3339 format)
+          format: date-time
         sentiment:
           type: number
           default: 0
           minimum: -1
           maximum: 1
           description: Sentiment (valence) of the memory on a scale of -1 to 1
-        created_at:
-          type: string
-          format: date-time
-          description: Belief created at (RFC-3339 format)
-        id:
-          type: string
-          description: Belief id (UUID)
-          format: uuid
-      required:
-        - type
-        - content
-        - created_at
-        - weight
-        - sentiment
-        - id
-    Episode:
-      $schema: http://json-schema.org/draft-04/schema#
-      type: object
-      properties:
-        type:
-          type: string
-          default: episode
-          enum:
-            - episode
-          description: Type of memory (`episode`)
-        subject:
-          type: string
-          format: uuid
-          description: (Optional) ID of the subject user
-        content:
-          type: string
-          description: Content of the memory
-        weight:
-          type: number
-          default: 1
-          minimum: 0
-          maximum: 100
-          description: Weight (importance) of the memory on a scale of 0-100
-        created_at:
-          type: string
-          format: date-time
-          description: Episode created at (RFC-3339 format)
-        last_accessed_at:
-          type: string
-          format: date-time
-          description: Episode last accessed at (RFC-3339 format)
-        happened_at:
-          type: string
-          description: Episode happened at (RFC-3339 format)
-          format: date-time
         duration:
           type: number
-          description: Duration of the episode (in seconds)
+          description: Duration of the Memory (in seconds)
           minimum: 0
           default: 0
         id:
           type: string
-          description: Episode id (UUID)
+          description: Memory id (UUID)
           format: uuid
+        emotions:
+          type: array
+          items:
+            type: string
+            enum:
+              - admiration
+              - amusement
+              - anger
+              - annoyance
+              - approval
+              - caring
+              - confusion
+              - curiosity
+              - desire
+              - disappointment
+              - disapproval
+              - disgust
+              - embarrassment
+              - excitement
+              - fear
+              - gratitude
+              - grief
+              - joy
+              - love
+              - nervousness
+              - neutral
+              - optimism
+              - pride
+              - realization
+              - relief
+              - remorse
+              - sadness
+              - sarcasm
+              - surprise
       required:
         - type
         - content
         - created_at
-        - happened_at
-        - weight
-        - last_accessed_at
         - id
-    Memory:
-      oneOf:
-        - $ref: "#/components/schemas/Belief"
-        - $ref: "#/components/schemas/Episode"
-        - $ref: "#/components/schemas/Entity"
-    Entity:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Entity id (UUID)
-          format: uuid
-      description: TBD
-      required:
-        - id
+        - agent_id
+        - user_id
     ChatSettings:
       type: object
       properties:
@@ -1504,7 +1644,7 @@ components:
           minimum: 0
           maximum: 2
           nullable: true
-          description: "(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. "
+          description: '(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. '
         logit_bias:
           type: object
           default: null
@@ -1619,6 +1759,19 @@ components:
           minimum: 0
           example: 0.01
           default: 0.01
+        preset:
+          type: string
+          description: Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     AgentDefaultSettings:
       type: object
       properties:
@@ -1635,7 +1788,7 @@ components:
           minimum: 0
           maximum: 2
           nullable: true
-          description: "(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. "
+          description: '(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. '
         presence_penalty:
           type: number
           default: 0
@@ -1675,11 +1828,24 @@ components:
           minimum: 0
           example: 0.01
           default: 0.01
+        preset:
+          type: string
+          description: 'Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)'
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     ChatInput:
       allOf:
-        - $ref: "#/components/schemas/ChatInputData"
-        - $ref: "#/components/schemas/ChatSettings"
-        - $ref: "#/components/schemas/MemoryAccessOptions"
+        - $ref: '#/components/schemas/ChatInputData'
+        - $ref: '#/components/schemas/ChatSettings'
+        - $ref: '#/components/schemas/MemoryAccessOptions'
     Doc:
       type: object
       properties:
@@ -1697,6 +1863,10 @@ components:
           type: string
           description: Doc created at
           format: date-time
+        metadata:
+          type: object
+          properties: {}
+          description: optional metadata
       required:
         - title
         - content
@@ -1711,6 +1881,10 @@ components:
         content:
           type: string
           description: Information content
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - title
         - content
@@ -1748,7 +1922,7 @@ components:
           description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
         function:
           oneOf:
-            - $ref: "#/components/schemas/FunctionDef"
+            - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - type
@@ -1758,7 +1932,7 @@ components:
       properties:
         function:
           oneOf:
-            - $ref: "#/components/schemas/FunctionDef"
+            - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - function
@@ -1846,7 +2020,7 @@ components:
           maximum: 100
         state:
           type: string
-          description: "Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)"
+          description: 'Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)'
           enum:
             - pending
             - in_progress
@@ -1924,5 +2098,12 @@ components:
       schema:
         type: string
         format: uuid
+    metadata_filter:
+      in: query
+      required: false
+      description: ""
+      schema:
+        type: object
+        properties: {}
 security:
   - api-key: []

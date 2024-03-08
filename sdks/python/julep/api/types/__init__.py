@@ -4,7 +4,6 @@ from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .agent_default_settings_preset import AgentDefaultSettingsPreset
 from .agent_metadata import AgentMetadata
-from .belief import Belief
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .chat_ml_message import ChatMlMessage
@@ -27,27 +26,37 @@ from .create_tool_request_type import CreateToolRequestType
 from .create_user_request_metadata import CreateUserRequestMetadata
 from .doc import Doc
 from .doc_metadata import DocMetadata
-from .entity import Entity
-from .episode import Episode
 from .function_call_option import FunctionCallOption
 from .function_def import FunctionDef
 from .function_parameters import FunctionParameters
+from .get_agent_docs_request_order import GetAgentDocsRequestOrder
+from .get_agent_docs_request_sort_by import GetAgentDocsRequestSortBy
 from .get_agent_docs_response import GetAgentDocsResponse
 from .get_agent_memories_response import GetAgentMemoriesResponse
 from .get_agent_tools_response import GetAgentToolsResponse
 from .get_history_response import GetHistoryResponse
 from .get_suggestions_response import GetSuggestionsResponse
+from .get_user_docs_request_order import GetUserDocsRequestOrder
+from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
 from .input_chat_ml_message import InputChatMlMessage
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .instruction import Instruction
 from .job_status import JobStatus
 from .job_status_state import JobStatusState
+from .list_agents_request_order import ListAgentsRequestOrder
+from .list_agents_request_sort_by import ListAgentsRequestSortBy
 from .list_agents_response import ListAgentsResponse
+from .list_sessions_request_order import ListSessionsRequestOrder
+from .list_sessions_request_sort_by import ListSessionsRequestSortBy
 from .list_sessions_response import ListSessionsResponse
+from .list_users_request_order import ListUsersRequestOrder
+from .list_users_request_sort_by import ListUsersRequestSortBy
 from .list_users_response import ListUsersResponse
 from .memory import Memory
 from .memory_access_options import MemoryAccessOptions
+from .memory_emotions_item import MemoryEmotionsItem
+from .memory_type import MemoryType
 from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
 from .resource_created_response import ResourceCreatedResponse
@@ -71,7 +80,6 @@ __all__ = [
     "AgentDefaultSettings",
     "AgentDefaultSettingsPreset",
     "AgentMetadata",
-    "Belief",
     "ChatInputData",
     "ChatInputDataToolChoice",
     "ChatMlMessage",
@@ -94,27 +102,37 @@ __all__ = [
     "CreateUserRequestMetadata",
     "Doc",
     "DocMetadata",
-    "Entity",
-    "Episode",
     "FunctionCallOption",
     "FunctionDef",
     "FunctionParameters",
+    "GetAgentDocsRequestOrder",
+    "GetAgentDocsRequestSortBy",
     "GetAgentDocsResponse",
     "GetAgentMemoriesResponse",
     "GetAgentToolsResponse",
     "GetHistoryResponse",
     "GetSuggestionsResponse",
+    "GetUserDocsRequestOrder",
+    "GetUserDocsRequestSortBy",
     "GetUserDocsResponse",
     "InputChatMlMessage",
     "InputChatMlMessageRole",
     "Instruction",
     "JobStatus",
     "JobStatusState",
+    "ListAgentsRequestOrder",
+    "ListAgentsRequestSortBy",
     "ListAgentsResponse",
+    "ListSessionsRequestOrder",
+    "ListSessionsRequestSortBy",
     "ListSessionsResponse",
+    "ListUsersRequestOrder",
+    "ListUsersRequestSortBy",
     "ListUsersResponse",
     "Memory",
     "MemoryAccessOptions",
+    "MemoryEmotionsItem",
+    "MemoryType",
     "NamedToolChoice",
     "NamedToolChoiceFunction",
     "ResourceCreatedResponse",

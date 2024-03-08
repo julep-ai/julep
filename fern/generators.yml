@@ -2,19 +2,6 @@ default-group: local
 groups:
   local:
     generators:
-      - name: fernapi/fern-typescript-node-sdk
-        version: 0.12.5
-        config:
-          namespaceExport: JulepApi
-          skipResponseValidation: true
-          includeCredentialsOnCrossOriginRequests: true
-          # outputSourceFiles: true
-          allowCustomFetcher: true
-          treatUnknownAsAny: true
-          defaultTimeoutInSeconds: 300 # 5 minutes
-        output:
-          location: local-file-system
-          path: ../sdks/js/src/api
       - name: fernapi/fern-python-sdk
         version: 0.9.1
         config:
