@@ -17,7 +17,7 @@ export class ToolsManager extends BaseManager {
     }: {
       limit?: number;
       offset?: number;
-    },
+    } = {},
   ): Promise<Array<Tool>> {
     const result = await this.apiClient.default.getAgentTools({
       agentId,
@@ -39,7 +39,9 @@ export class ToolsManager extends BaseManager {
         agentId,
         requestBody: tool,
       });
+
     const newTool: Tool = { ...result, ...tool };
+
     return newTool;
   }
 

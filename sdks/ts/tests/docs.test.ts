@@ -51,7 +51,7 @@ describe("Julep Client Tests", () => {
       docId: uuidv4(),
     });
 
-    expect(response).toBeNull();
+    expect(response).toBeUndefined();
   });
 
   test("user docs.delete", async () => {
@@ -60,6 +60,6 @@ describe("Julep Client Tests", () => {
       docId: uuidv4(),
     });
 
-    expect(response).toBeNull();
+    expect(response).toBeUndefined();
   });
 });

@@ -41,12 +41,10 @@ describe("Sessions API", () => {
     expect(response.updatedAt).toBeDefined();
   });
 
-  /*
   it("sessions.delete", async () => {
     const response = await client.sessions.delete(uuidv4());
-    expect(response).toBeNull();
+    expect(response).toBeUndefined();
   });
-  */
 
   it("sessions.chat", async () => {
     const response = await client.sessions.chat(uuidv4().toString(), {

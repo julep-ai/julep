@@ -18,7 +18,7 @@ import { BaseManager } from "./base";
 
 export class AgentsManager extends BaseManager {
   async get(agentId: string): Promise<Agent> {
-    invariant(!isValidUuid4(agentId), "id must be a valid UUID v4");
+    invariant(isValidUuid4(agentId), "id must be a valid UUID v4");
 
     return await this.apiClient.default.getAgent({ agentId });
   }
@@ -39,11 +39,7 @@ export class AgentsManager extends BaseManager {
     default_settings?: AgentDefaultSettings;
     model?: string;
     docs?: Doc[];
-  }): Promise<ResourceCreatedResponse> {
-    // Ensure that only functions or tools are provided
-    if (tools.length > 0) {
-      throw new Error("Only functions or tools can be provided");
-    }
+  }): Promise<Agent> {
     const instructionsList =
       typeof instructions[0] === "string"
         ? instructions.map((content) => ({ ...content, important: false }))
@@ -59,21 +55,26 @@ export class AgentsManager extends BaseManager {
       docs,
     };
 
-    return this.apiClient.default
-      .createAgent({
+    const result: ResourceCreatedResponse =
+      await this.apiClient.default.createAgent({
         requestBody,
-      })
-      .catch((error: Error) => Promise.reject(error));
+      });
+
+    const agent: Agent = { ...result, ...requestBody };
+    return agent;
   }
 
-  async list(limit: number = 100, offset: number = 0): Promise<Array<Agent>> {
+  async list({
+    limit = 100,
+    offset = 0,
+  }: { limit?: number; offset?: number } = {}): Promise<Array<Agent>> {
     const result = await this.apiClient.default.listAgents({ limit, offset });
 
     return result.items;
   }
 
   async delete(agentId: string): Promise<void> {
-    invariant(!isValidUuid4(agentId), "id must be a valid UUID v4");
+    invariant(isValidUuid4(agentId), "id must be a valid UUID v4");
 
     await this.apiClient.default.deleteAgent({ agentId });
   }
@@ -93,10 +94,8 @@ export class AgentsManager extends BaseManager {
       model?: string;
       default_settings?: AgentDefaultSettings;
     } = {},
-  ): Promise<ResourceUpdatedResponse> {
-    if (!isValidUuid4(agentId)) {
-      throw new Error("agentId must be a valid UUID v4");
-    }
+  ): Promise<Partial<Agent>> {
+    invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
 
     // Cast instructions to Instruction objects
     const instructionsList = instructions
@@ -113,8 +112,10 @@ export class AgentsManager extends BaseManager {
       default_settings,
     };
 
-    return this.apiClient.default
-      .updateAgent({ agentId, requestBody })
-      .catch((error: Error) => Promise.reject(error));
+    const result: ResourceUpdatedResponse =
+      await this.apiClient.default.updateAgent({ agentId, requestBody });
+
+    const agent: Partial<Agent> = { ...result, ...requestBody };
+    return agent;
   }
 }

@@ -5,15 +5,15 @@ import type {
   ResourceUpdatedResponse,
   UpdateUserRequest,
 } from "../api";
+
+import { invariant } from "../utils/invariant";
 import { isValidUuid4 } from "../utils/isValidUuid4";
 
 import { BaseManager } from "./base";
 
 export class UsersManager extends BaseManager {
   async get(userId: string): Promise<User> {
-    if (!isValidUuid4(userId)) {
-      throw new Error("id must be a valid UUID v4");
-    }
+    invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
     const user = await this.apiClient.default.getUser({ userId });
     return user;
@@ -45,20 +45,16 @@ export class UsersManager extends BaseManager {
   }
 
   async delete(userId: string): Promise<void> {
-    if (!isValidUuid4(userId)) {
-      throw new Error("id must be a valid UUID v4");
-    }
+    invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
     await this.apiClient.default.deleteUser({ userId });
   }
 
   async update(
     userId: string,
-    { about, name }: UpdateUserRequest,
+    { about, name }: UpdateUserRequest = {},
   ): Promise<User> {
-    if (!isValidUuid4(userId)) {
-      throw new Error("id must be a valid UUID v4");
-    }
+    invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
     const requestBody = { about, name };
 

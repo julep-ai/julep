@@ -50,8 +50,8 @@ describe("Simple Agents Example", () => {
       "You are chatting with a random stranger from the Internet.";
 
     const session = await client.sessions.create({
-      agent_id: agent.id,
-      user_id: user.id,
+      agentId: agent.id,
+      userId: user.id,
       situation: situation,
     });
 

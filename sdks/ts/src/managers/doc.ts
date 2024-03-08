@@ -2,6 +2,7 @@ import type { Doc, ResourceCreatedResponse, CreateDoc } from "../api";
 
 import { invariant } from "../utils/invariant";
 import { isValidUuid4 } from "../utils/isValidUuid4";
+import { xor } from "../utils/xor";
 
 import { BaseManager } from "./base";
 
@@ -50,14 +51,12 @@ export class DocsManager extends BaseManager {
     offset?: number;
   } = {}): Promise<Array<Doc>> {
     invariant(
-      !(agentId && userId),
+      xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    invariant(
-      agentId && isValidUuid4(agentId),
-      "agentId must be a valid UUID v4",
-    );
-    invariant(userId && isValidUuid4(userId), "userId must be a valid UUID v4");
+    agentId &&
+      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
+    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       const result = await this.apiClient.default.getAgentDocs({
@@ -88,14 +87,12 @@ export class DocsManager extends BaseManager {
     doc: CreateDoc;
   }): Promise<Doc> {
     invariant(
-      !(agentId && userId),
+      xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    invariant(
-      agentId && isValidUuid4(agentId),
-      "agentId must be a valid UUID v4",
-    );
-    invariant(userId && isValidUuid4(userId), "userId must be a valid UUID v4");
+    agentId &&
+      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
+    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       const result: ResourceCreatedResponse =
@@ -130,14 +127,12 @@ export class DocsManager extends BaseManager {
     docId: string;
   }): Promise<void> {
     invariant(
-      !(agentId && userId),
+      xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    invariant(
-      agentId && isValidUuid4(agentId),
-      "agentId must be a valid UUID v4",
-    );
-    invariant(userId && isValidUuid4(userId), "userId must be a valid UUID v4");
+    agentId &&
+      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
+    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       await this.apiClient.default.deleteAgentDoc({ agentId, docId });
