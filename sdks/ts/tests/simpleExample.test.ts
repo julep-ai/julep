@@ -1,25 +1,30 @@
 // memories.test.ts
 
-import { describe, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, it, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
+import { Client } from "../src";
+import { InputChatMLMessage } from "../src/api";
 
 describe("Simple Agents Example", () => {
-  let client: any;
+  let client: Client | undefined;
 
   beforeEach(() => {
     client = setupClient();
   });
 
   it("jessica sample", async () => {
+    if (!client) return;
     const name = "Jessica";
     const about =
       `Your name is Jessica. You are a stuck up Cali teenager. You basically complain about everything. Showing rebellion is an evolutionary necessity for you.`.trim();
 
     const instructions = [
-      "Answer with disinterest and complete irreverence to absolutely everything.",
-      "Don't write emotions.",
-      "Keep your answers short.",
+      {
+        content: "Answer with disinterest and complete irreverence to absolutely everything.",
+      },
+      { content: "Don't write emotions." },
+      { content: "Keep your answers short." },
     ];
 
     const defaultSettings = {
@@ -32,7 +37,7 @@ describe("Simple Agents Example", () => {
       name: name,
       about: about,
       instructions: instructions,
-      defaultSettings: defaultSettings,
+      default_settings: defaultSettings,
     });
 
     const user = await client.users.create({
@@ -40,22 +45,21 @@ describe("Simple Agents Example", () => {
       about: "Baba Yaga",
     });
 
-    const situation =
-      "You are chatting with a random stranger from the Internet.";
+    const situation = "You are chatting with a random stranger from the Internet.";
 
     const session = await client.sessions.create({
-      agentId: agent.id,
-      userId: user.id,
+      agent_id: agent.id,
+      user_id: user.id,
       situation: situation,
     });
 
     const userInput = "hi!";
 
-    const message = { role: "user", content: userInput };
+    const message = { role: "user", content: userInput } as InputChatMLMessage;
 
     const result = await client.sessions.chat(session.id, {
       messages: [message],
-      maxTokens: 200,
+      max_tokens: 200,
       stream: false,
       remember: true,
       recall: true,

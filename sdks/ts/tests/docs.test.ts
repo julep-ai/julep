@@ -1,29 +1,30 @@
 // docs.test.ts
 
 import { v4 as uuidv4 } from "uuid";
-import { describe, expect, test } from "@jest/globals";
+import { beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
+import { Client } from "../src";
 
 describe("Julep Client Tests", () => {
-  let client: any;
+  let client: Client;
 
   beforeAll(() => {
     client = setupClient();
   });
 
   test("agent docs.get", async () => {
-    const response: any[] = await client.docs.get({ agentId: uuidv4() });
+    const response = await client.docs.get({ agentId: uuidv4() });
 
-    expect(response.length).toBeGreaterThan(0);
-    expect(response[0]).toHaveProperty("id");
+    expect(response?.items!.length).toBeGreaterThan(0);
+    expect(response?.items![0]).toHaveProperty("id");
   });
 
   test("user docs.get", async () => {
-    const response: any[] = await client.docs.get({ userId: uuidv4() });
+    const response = await client.docs.get({ userId: uuidv4() });
 
-    expect(response.length).toBeGreaterThan(0);
-    expect(response[0]).toHaveProperty("id");
+    expect(response?.items!.length).toBeGreaterThan(0);
+    expect(response?.items![0]).toHaveProperty("id");
   });
 
   test("agent docs.create", async () => {

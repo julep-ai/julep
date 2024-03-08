@@ -5,6 +5,10 @@ import type {
   AgentDefaultSettings,
   ResourceCreatedResponse,
   ResourceUpdatedResponse,
+  FunctionDef,
+  Doc,
+  CreateAgentRequest,
+  UpdateAgentRequest,
 } from "../api";
 
 import { invariant } from "../utils/invariant";
@@ -19,55 +23,50 @@ export class AgentsManager extends BaseManager {
     return await this.apiClient.default.getAgent({ agentId });
   }
 
-  // async _create({
-  //   name,
-  //   about,
-  //   instructions,
-  //   tools = [],
-  //   functions = [],
-  //   defaultSettings = {},
-  //   model = "julep-ai/samantha-1-turbo",
-  //   docs = [],
-  // }: {
-  //   name: string;
-  //   about: string;
-  //   instructions: Instruction[];
-  //   tools?: CreateToolRequest[];
-  //   functions?: FunctionDefDict[];
-  //   defaultSettings?: AgentDefaultSettings;
-  //   model?: string;
-  //   docs?: DocDict[];
-  // }): Promise<GetAgentMemoriesResponse> {
-  //   // Ensure that only functions or tools are provided
-  //   if (functions.length > 0 && tools.length > 0) {
-  //     throw new Error("Only functions or tools can be provided");
-  //   }
-  //   const instructionsList =
-  //     typeof instructions[0] === "string"
-  //       ? instructions.map((content) => ({ content, important: false }))
-  //       : instructions;
-
-  //   return this.apiClient
-  //     .createAgent({
-  //       name,
-  //       about,
-  //       instructions: instructionsList,
-  //       tools,
-  //       functions,
-  //       defaultSettings,
-  //       model,
-  //       docs,
-  //     })
-  //     .catch((error: Error) => Promise.reject(error));
-  // }
-
-  async list({
-    limit = 100,
-    offset = 0,
+  async create({
+    name,
+    about,
+    instructions,
+    tools,
+    default_settings,
+    model = "julep-ai/samantha-1-turbo",
+    docs = [],
   }: {
-    limit: number;
-    offset: number;
-  }): Promise<Array<Agent>> {
+    name: string;
+    about: string;
+    instructions: Instruction[];
+    tools?: CreateToolRequest[];
+    default_settings?: AgentDefaultSettings;
+    model?: string;
+    docs?: Doc[];
+  }): Promise<ResourceCreatedResponse> {
+    // Ensure that only functions or tools are provided
+    if (tools.length > 0) {
+      throw new Error("Only functions or tools can be provided");
+    }
+    const instructionsList =
+      typeof instructions[0] === "string"
+        ? instructions.map((content) => ({ ...content, important: false }))
+        : instructions;
+
+    const requestBody: CreateAgentRequest = {
+      name,
+      about,
+      instructions: instructionsList,
+      tools,
+      default_settings,
+      model,
+      docs,
+    };
+
+    return this.apiClient.default
+      .createAgent({
+        requestBody,
+      })
+      .catch((error: Error) => Promise.reject(error));
+  }
+
+  async list(limit: number = 100, offset: number = 0): Promise<Array<Agent>> {
     const result = await this.apiClient.default.listAgents({ limit, offset });
 
     return result.items;
@@ -79,41 +78,43 @@ export class AgentsManager extends BaseManager {
     await this.apiClient.default.deleteAgent({ agentId });
   }
 
-  // async _update(
-  //   agentId: string,
-  //   {
-  //     about,
-  //     instructions,
-  //     name,
-  //     model,
-  //     defaultSettings,
-  //   }: {
-  //     about?: string;
-  //     instructions?: Instruction[];
-  //     name?: string;
-  //     model?: string;
-  //     defaultSettings?: AgentDefaultSettings;
-  //   } = {},
-  // ): Promise<ResourceUpdatedResponse> {
-  //   if (!isValidUuid4(agentId)) {
-  //     throw new Error("agentId must be a valid UUID v4");
-  //   }
+  async update(
+    agentId: string,
+    {
+      about,
+      instructions,
+      name,
+      model,
+      default_settings,
+    }: {
+      about?: string;
+      instructions?: Instruction[];
+      name?: string;
+      model?: string;
+      default_settings?: AgentDefaultSettings;
+    } = {},
+  ): Promise<ResourceUpdatedResponse> {
+    if (!isValidUuid4(agentId)) {
+      throw new Error("agentId must be a valid UUID v4");
+    }
 
-  //   // Cast instructions to Instruction objects
-  //   const instructionsList = instructions
-  //     ? typeof instructions[0] === "string"
-  //       ? instructions.map((content) => ({ content, important: false }))
-  //       : instructions
-  //     : [];
+    // Cast instructions to Instruction objects
+    const instructionsList = instructions
+      ? typeof instructions[0] === "string"
+        ? instructions.map((content) => ({ ...content, important: false }))
+        : instructions
+      : [];
 
-  //   return this.apiClient
-  //     .updateAgent(agentId, {
-  //       about,
-  //       instructions: instructionsList,
-  //       name,
-  //       model,
-  //       defaultSettings,
-  //     })
-  //     .catch((error: Error) => Promise.reject(error));
-  // }
+    const requestBody: UpdateAgentRequest = {
+      about,
+      instructions: instructionsList,
+      name,
+      model,
+      default_settings,
+    };
+
+    return this.apiClient.default
+      .updateAgent({ agentId, requestBody })
+      .catch((error: Error) => Promise.reject(error));
+  }
 }
