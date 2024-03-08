@@ -50,7 +50,7 @@ paths:
         - api-key: []
     get:
       summary: List sessions
-      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListSessions
       tags: []
       parameters:
@@ -69,7 +69,31 @@ paths:
             type: integer
             default: 0
             minimum: 0
-        - $ref: '#/components/parameters/metadata_filter'
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           content:
@@ -111,7 +135,7 @@ paths:
         - api-key: []
     get:
       summary: List users
-      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListUsers
       tags: []
       parameters:
@@ -128,7 +152,31 @@ paths:
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
-        - $ref: '#/components/parameters/metadata_filter'
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           content:
@@ -170,7 +218,7 @@ paths:
         - api-key: []
     get:
       summary: List agents
-      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListAgents
       tags: []
       parameters:
@@ -189,7 +237,31 @@ paths:
             type: integer
             default: 0
             minimum: 0
-        - $ref: '#/components/parameters/metadata_filter'
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           description: List of agents (sorted created_at descending order) with limit+offset pagination
@@ -575,7 +647,31 @@ paths:
           description: ""
           schema:
             type: integer
-        - $ref: '#/components/parameters/metadata_filter'
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       requestBody:
         content: {}
       responses:
@@ -636,7 +732,31 @@ paths:
           description: ""
           schema:
             type: integer
-        - $ref: '#/components/parameters/metadata_filter'
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: 'Which order should the sort be: `asc` (ascending) or `desc` (descending)'
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       requestBody:
         content: {}
       responses:
@@ -1593,7 +1713,7 @@ components:
               description: JSON Schema to use if `type` is `"json_object"`
         seed:
           type: integer
-          minimum: -9223372036854775808
+          minimum: -9.223372036854776e+18
           maximum: 9.223372036854776e+18
           nullable: true
           description: |
@@ -1646,7 +1766,17 @@ components:
           default: 0.01
         preset:
           type: string
-          description: 'Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)'
+          description: Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     AgentDefaultSettings:
       type: object
       properties:
@@ -1706,6 +1836,16 @@ components:
         preset:
           type: string
           description: 'Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)'
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     ChatInput:
       allOf:
         - $ref: '#/components/schemas/ChatInputData'
@@ -1974,6 +2114,6 @@ components:
       description: ""
       schema:
         type: object
-        additionalProperties: true
+        properties: {}
 security:
   - api-key: []

@@ -15,7 +15,7 @@ externalDocs:
   description: Find out more about spec
   url: https://docs.julep.ai
 servers:
-  - url: http://localhost:8080
+  - url: https://api-alpha.julep.ai/api
     description: ""
     variables: {}
 tags:
@@ -50,7 +50,7 @@ paths:
         - api-key: []
     get:
       summary: List sessions
-      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListSessions
       tags: []
       parameters:
@@ -69,6 +69,31 @@ paths:
             type: integer
             default: 0
             minimum: 0
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: "Which field to sort by: `created_at` or `updated_at`"
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           content:
@@ -110,7 +135,7 @@ paths:
         - api-key: []
     get:
       summary: List users
-      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListUsers
       tags: []
       parameters:
@@ -127,6 +152,31 @@ paths:
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: "Which field to sort by: `created_at` or `updated_at`"
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           content:
@@ -168,7 +218,7 @@ paths:
         - api-key: []
     get:
       summary: List agents
-      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListAgents
       tags: []
       parameters:
@@ -187,6 +237,31 @@ paths:
             type: integer
             default: 0
             minimum: 0
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: "Which field to sort by: `created_at` or `updated_at`"
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         "200":
           description: List of agents (sorted created_at descending order) with limit+offset pagination
@@ -572,6 +647,31 @@ paths:
           description: ""
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: "Which field to sort by: `created_at` or `updated_at`"
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       requestBody:
         content: {}
       responses:
@@ -632,6 +732,31 @@ paths:
           description: ""
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          required: false
+          description: ""
+          schema:
+            type: object
+            properties: {}
+        - in: query
+          name: sort_by
+          description: "Which field to sort by: `created_at` or `updated_at`"
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: "Which order should the sort be: `asc` (ascending) or `desc` (descending)"
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       requestBody:
         content: {}
       responses:
@@ -922,6 +1047,10 @@ components:
           type: string
           description: User id (UUID)
           format: uuid
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - id
     Agent:
@@ -959,6 +1088,10 @@ components:
           type: string
           description: The model to use with this agent
           default: julep-ai/samantha-1-turbo
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
         - about
@@ -1035,6 +1168,10 @@ components:
           type: string
           format: date-time
           description: Session updated at (RFC-3339 format)
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - id
         - user_id
@@ -1056,6 +1193,10 @@ components:
             $ref: "#/components/schemas/CreateDoc"
             description: Snippet that has information about the user
           description: List of docs about user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1072,6 +1213,10 @@ components:
         situation:
           type: string
           description: A specific situation that sets the background for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - agent_id
         - user_id
@@ -1110,6 +1255,10 @@ components:
             $ref: "#/components/schemas/CreateDoc"
             description: Snippet that has information about the agent
           description: List of docs about agent
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
         - about
@@ -1122,6 +1271,10 @@ components:
         situation:
           type: string
           description: Updated situation for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - situation
       description: A valid request payload for updating a session
@@ -1147,6 +1300,10 @@ components:
         default_settings:
           $ref: "#/components/schemas/AgentDefaultSettings"
           description: Default model settings to start every session with
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating an agent
     UpdateUserRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1158,6 +1315,10 @@ components:
         name:
           type: string
           description: Name of the user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating a user
     Suggestion:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1374,120 +1535,104 @@ components:
         - response
         - finish_reason
         - id
-    Belief:
+    Memory:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
       properties:
         type:
           type: string
-          default: belief
           enum:
+            - episode
             - belief
-          description: Type of memory (`belief`)
-        subject:
+          description: Type of memory (`episode` or `belief`)
+        agent_id:
           type: string
           format: uuid
-          description: (Optional) ID of the subject user
+          description: ID of the agent
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user
         content:
           type: string
           description: Content of the memory
-        rationale:
-          type: string
-          description: "Rationale: Why did the model decide to form this memory"
         weight:
           type: number
-          default: 1
+          default: 0
           minimum: 0
           maximum: 100
           description: Weight (importance) of the memory on a scale of 0-100
+        created_at:
+          type: string
+          format: date-time
+          description: Memory created at (RFC-3339 format)
+        last_accessed_at:
+          type: string
+          format: date-time
+          description: Memory last accessed at (RFC-3339 format)
+        timestamp:
+          type: string
+          description: Memory happened at (RFC-3339 format)
+          format: date-time
         sentiment:
           type: number
           default: 0
           minimum: -1
           maximum: 1
           description: Sentiment (valence) of the memory on a scale of -1 to 1
-        created_at:
-          type: string
-          format: date-time
-          description: Belief created at (RFC-3339 format)
-        id:
-          type: string
-          description: Belief id (UUID)
-          format: uuid
-      required:
-        - type
-        - content
-        - created_at
-        - weight
-        - sentiment
-        - id
-    Episode:
-      $schema: http://json-schema.org/draft-04/schema#
-      type: object
-      properties:
-        type:
-          type: string
-          default: episode
-          enum:
-            - episode
-          description: Type of memory (`episode`)
-        subject:
-          type: string
-          format: uuid
-          description: (Optional) ID of the subject user
-        content:
-          type: string
-          description: Content of the memory
-        weight:
-          type: number
-          default: 1
-          minimum: 0
-          maximum: 100
-          description: Weight (importance) of the memory on a scale of 0-100
-        created_at:
-          type: string
-          format: date-time
-          description: Episode created at (RFC-3339 format)
-        last_accessed_at:
-          type: string
-          format: date-time
-          description: Episode last accessed at (RFC-3339 format)
-        happened_at:
-          type: string
-          description: Episode happened at (RFC-3339 format)
-          format: date-time
         duration:
           type: number
-          description: Duration of the episode (in seconds)
+          description: Duration of the Memory (in seconds)
           minimum: 0
           default: 0
         id:
           type: string
-          description: Episode id (UUID)
+          description: Memory id (UUID)
           format: uuid
+        emotions:
+          type: array
+          items:
+            type: string
+            enum:
+              - admiration
+              - amusement
+              - anger
+              - annoyance
+              - approval
+              - caring
+              - confusion
+              - curiosity
+              - desire
+              - disappointment
+              - disapproval
+              - disgust
+              - embarrassment
+              - excitement
+              - fear
+              - gratitude
+              - grief
+              - joy
+              - love
+              - nervousness
+              - neutral
+              - optimism
+              - pride
+              - realization
+              - relief
+              - remorse
+              - sadness
+              - sarcasm
+              - surprise
       required:
         - type
         - content
         - created_at
-        - happened_at
         - weight
-        - last_accessed_at
         - id
-    Memory:
-      oneOf:
-        - $ref: "#/components/schemas/Belief"
-        - $ref: "#/components/schemas/Episode"
-        - $ref: "#/components/schemas/Entity"
-    Entity:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Entity id (UUID)
-          format: uuid
-      description: TBD
-      required:
-        - id
+        - agent_id
+        - user_id
+        - timestamp
+        - sentiment
     ChatSettings:
       type: object
       properties:
@@ -1619,6 +1764,19 @@ components:
           minimum: 0
           example: 0.01
           default: 0.01
+        preset:
+          type: string
+          description: Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     AgentDefaultSettings:
       type: object
       properties:
@@ -1675,6 +1833,19 @@ components:
           minimum: 0
           example: 0.01
           default: 0.01
+        preset:
+          type: string
+          description: "Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)"
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     ChatInput:
       allOf:
         - $ref: "#/components/schemas/ChatInputData"
@@ -1697,6 +1868,10 @@ components:
           type: string
           description: Doc created at
           format: date-time
+        metadata:
+          type: object
+          properties: {}
+          description: optional metadata
       required:
         - title
         - content
@@ -1711,6 +1886,10 @@ components:
         content:
           type: string
           description: Information content
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - title
         - content
@@ -1860,6 +2039,11 @@ components:
         - name
         - created_at
         - state
+    MetadataFilter:
+      type: object
+      properties: {}
+      additionalProperties: true
+      description: Object metadata to filter by
   securitySchemes:
     api-key:
       type: apiKey
@@ -1924,5 +2108,12 @@ components:
       schema:
         type: string
         format: uuid
+    metadata_filter:
+      in: query
+      required: false
+      description: ""
+      schema:
+        type: object
+        properties: {}
 security:
   - api-key: []

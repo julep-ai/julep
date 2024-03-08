@@ -75,7 +75,17 @@ class ChatSettings(pydantic.BaseModel):
         description="Minimum probability compared to leading token to be considered"
     )
     preset: typing.Optional[ChatSettingsPreset] = pydantic.Field(
-        description="Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)"
+        description=(
+            "Generation preset name (problem_solving\n"
+            "conversational\n"
+            "fun\n"
+            "prose\n"
+            "creative\n"
+            "business\n"
+            "deterministic\n"
+            "code\n"
+            "multilingual)\n"
+        )
     )
 
     def json(self, **kwargs: typing.Any) -> str:
