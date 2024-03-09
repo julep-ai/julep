@@ -26,6 +26,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agents_api.rule=Path(`/api{path:.*}`)"
+      - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.forceSlash=false"
+      - "traefik.http.routers.agents_api.middlewares=agents_api-add_prefix@docker"
 
   worker:
     env_file:

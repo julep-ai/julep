@@ -25,6 +25,9 @@ services:
       - "8000:8000"
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.default.rule=Path(`/v1{path:.*}`)"
     deploy:
       resources:
         reservations:

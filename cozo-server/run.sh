@@ -16,5 +16,5 @@ ${APP_HOME:=.}/bin/cozo-bin server \
     --engine rocksdb \
     --path $MNT_DIR/${COZO_ROCKSDB_DIR} \
     --bind 0.0.0.0 \
-    --port ${PORT:=9070} \
+    --port ${COZO_PORT:=9070} \
     --token-table __tokens
