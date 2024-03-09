@@ -3,6 +3,11 @@ from uuid import UUID
 
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
+from ...autogen.openapi_model import Instruction
+from ...models.instructions.create_instructions import create_instructions_query
+from ...models.instructions.delete_instructions import (
+    delete_instructions_by_agent_query,
+)
 
 
 def update_agent_query(
@@ -11,6 +16,11 @@ def update_agent_query(
     default_settings: dict = {},
     **update_data,
 ) -> str:
+    instructions: list[Instruction] | None = update_data.pop("instructions")
+    del_instructions = delete_instructions_by_agent_query(agent_id=agent_id)
+    create_instructions = create_instructions_query(
+        agent_id=agent_id, instructions=instructions
+    )
     # Agent update query
     agent_id = str(agent_id)
     developer_id = str(developer_id)
@@ -25,6 +35,7 @@ def update_agent_query(
     )
 
     agent_update_query = f"""
+    {{
         # update the agent
         ?[{agent_update_cols}] <- {json.dumps(agent_update_vals)}
 
@@ -32,6 +43,7 @@ def update_agent_query(
             {agent_update_cols}
         }}
         :returning
+    }}
     """
 
     # Settings update query
@@ -43,12 +55,14 @@ def update_agent_query(
     )
 
     settings_update_query = f"""
+    {{
         # update the agent settings
         ?[{settings_cols}] <- {json.dumps(settings_vals)}
 
         :update agent_default_settings {{
             {settings_cols}
         }}
+    }}
     """
 
     # Combine the queries
@@ -57,7 +71,10 @@ def update_agent_query(
     if len(default_settings) != 0:
         queries.insert(0, settings_update_query)
 
-    combined_query = "}\n\n{".join(queries)
-    combined_query = f"{{ {combined_query} }}"
+    if instructions:
+        queries.insert(0, create_instructions)
+        queries.insert(0, del_instructions)
+
+    combined_query = "\n".join(queries)
 
     return combined_query
