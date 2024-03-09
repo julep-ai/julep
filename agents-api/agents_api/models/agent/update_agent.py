@@ -54,8 +54,8 @@ def update_agent_query(
     # Combine the queries
     queries = [agent_update_query]
 
-    if len(default_settings) == 0:
-        queries.append(settings_update_query)
+    if len(default_settings) != 0:
+        queries.insert(0, settings_update_query)
 
     combined_query = "}\n\n{".join(queries)
     combined_query = f"{{ {combined_query} }}"
