@@ -54,6 +54,7 @@ services:
         condition: service_started
 
   text-embeddings-inference:
+    container_name: text-embeddings-inference
     env_file:
       - path: .env
         required: true
@@ -64,6 +65,13 @@ services:
     ports:
       - "8082:80"
     shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   temporal:
     container_name: temporal
