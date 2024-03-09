@@ -5,3 +5,24 @@ include:
   - ./cozo-server/docker-compose.yml
   - ./model-api/docker-compose.yml
   - ./agents-api/docker-compose.yml
+
+services:
+  reverse-proxy:
+    image: traefik:v2.11
+    command: 
+      # - --api.insecure=true
+      - --providers.docker
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+      # - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      # - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      # - --entrypoints.websecure.address=:443
+      # - --certificatesresolvers.myresolver.acme.email=acme@jedrivisser.com
+      # - --certificatesresolvers.myresolver.acme.storage=acme.json
+      # - --certificatesresolvers.myresolver.acme.tlschallenge=true
+
+    ports:
+      # - 443:443
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
