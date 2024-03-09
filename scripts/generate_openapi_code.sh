@@ -11,11 +11,11 @@ cd sdks/python && \
     poetry run poe format && \
     cd -
 
-cd sdks/ts && \
-    npm run codegen && \
-    cd -
-
 cd agents-api && \
     poetry run poe codegen && \
     poetry run poe format && \
+    cd -
+
+cd sdks/ts && \
+    npm run codegen && \
     cd -
