@@ -419,7 +419,7 @@ async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> Tool
         items=[
             Tool(
                 type="function",
-                definition=FunctionDef(
+                function=FunctionDef(
                     description=row.get("description"),
                     name=row["name"],
                     parameters=row["parameters"],
