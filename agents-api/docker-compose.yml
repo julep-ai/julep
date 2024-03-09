@@ -29,9 +29,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.agents_api.rule=Path(`/api{path:.*}`)"
+      - "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Id=de719a8a-446f-42c4-87e5-c19d83eabe40"
+      - "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Email=developers@julep.ai"
       - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.prefixes=/api"
       - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.forceSlash=false"
-      - "traefik.http.routers.agents_api.middlewares=agents_api-add_prefix@docker"
+      - "traefik.http.middlewares.agents_api-chain.chain.middlewares=agents_api-add_prefix,agents_api-add_headers"
+      - "traefik.http.routers.agents_api.middlewares=agents_api-chain@docker"
 
   worker:
     env_file:
