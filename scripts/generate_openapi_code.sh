@@ -8,10 +8,12 @@ fern generate --local
 sed 's/  \//  \/api\//' openapi.yaml > mock_openapi.yaml
 
 cd sdks/python && \
+    poetry update && \
     poetry run poe format && \
     cd -
 
 cd agents-api && \
+    poetry update && \
     poetry run poe codegen && \
     poetry run poe format && \
     cd -
