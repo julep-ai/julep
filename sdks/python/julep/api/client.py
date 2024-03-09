@@ -46,6 +46,9 @@ from .types.list_sessions_response import ListSessionsResponse
 from .types.list_users_request_order import ListUsersRequestOrder
 from .types.list_users_request_sort_by import ListUsersRequestSortBy
 from .types.list_users_response import ListUsersResponse
+from .types.patch_agent_request_metadata import PatchAgentRequestMetadata
+from .types.patch_session_request_metadata import PatchSessionRequestMetadata
+from .types.patch_user_request_metadata import PatchUserRequestMetadata
 from .types.resource_created_response import ResourceCreatedResponse
 from .types.resource_updated_response import ResourceUpdatedResponse
 from .types.session import Session
@@ -501,6 +504,54 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def patch_session(
+        self,
+        session_id: str,
+        *,
+        situation: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - session_id: str.
+
+            - situation: typing.Optional[str]. Updated situation for this session
+
+            - metadata: typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.patch_session(
+            session_id="session_id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if situation is not OMIT:
+            _request["situation"] = situation
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def get_suggestions(
         self,
         session_id: str,
@@ -914,6 +965,59 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def patch_user(
+        self,
+        user_id: str,
+        *,
+        about: typing.Optional[str] = OMIT,
+        name: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[PatchUserRequestMetadata] = OMIT,
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - user_id: str.
+
+            - about: typing.Optional[str]. About the user
+
+            - name: typing.Optional[str]. Name of the user
+
+            - metadata: typing.Optional[PatchUserRequestMetadata]. Optional metadata
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.patch_user(
+            user_id="user_id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if about is not OMIT:
+            _request["about"] = about
+        if name is not OMIT:
+            _request["name"] = name
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def get_agent(self, agent_id: str) -> Agent:
         """
 
@@ -1040,6 +1144,74 @@ class JulepApi:
         )
         if 200 <= _response.status_code < 300:
             return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def patch_agent(
+        self,
+        agent_id: str,
+        *,
+        about: typing.Optional[str] = OMIT,
+        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        name: typing.Optional[str] = OMIT,
+        model: typing.Optional[str] = OMIT,
+        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+        metadata: typing.Optional[PatchAgentRequestMetadata] = OMIT,
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - agent_id: str.
+
+            - about: typing.Optional[str]. About the agent
+
+            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+
+            - name: typing.Optional[str]. Name of the agent
+
+            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
+
+            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+            - metadata: typing.Optional[PatchAgentRequestMetadata]. Optional metadata
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.patch_agent(
+            agent_id="agent_id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if about is not OMIT:
+            _request["about"] = about
+        if instructions is not OMIT:
+            _request["instructions"] = instructions
+        if name is not OMIT:
+            _request["name"] = name
+        if model is not OMIT:
+            _request["model"] = model
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -1504,6 +1676,52 @@ class JulepApi:
         )
         if 200 <= _response.status_code < 300:
             return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def patch_agent_tool(
+        self, agent_id: str, tool_id: str, *, function: FunctionDef
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - agent_id: str.
+
+            - tool_id: str.
+
+            - function: FunctionDef. Function definition and parameters
+        ---
+        from julep import FunctionDef
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.patch_agent_tool(
+            agent_id="agent_id",
+            tool_id="tool_id",
+            function=FunctionDef(
+                name="name",
+                parameters={},
+            ),
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"agents/{agent_id}/tools/{tool_id}",
+            ),
+            json=jsonable_encoder({"function": function}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -1980,6 +2198,54 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def patch_session(
+        self,
+        session_id: str,
+        *,
+        situation: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - session_id: str.
+
+            - situation: typing.Optional[str]. Updated situation for this session
+
+            - metadata: typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.patch_session(
+            session_id="session_id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if situation is not OMIT:
+            _request["situation"] = situation
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def get_suggestions(
         self,
         session_id: str,
@@ -2393,6 +2659,59 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def patch_user(
+        self,
+        user_id: str,
+        *,
+        about: typing.Optional[str] = OMIT,
+        name: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[PatchUserRequestMetadata] = OMIT,
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - user_id: str.
+
+            - about: typing.Optional[str]. About the user
+
+            - name: typing.Optional[str]. Name of the user
+
+            - metadata: typing.Optional[PatchUserRequestMetadata]. Optional metadata
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.patch_user(
+            user_id="user_id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if about is not OMIT:
+            _request["about"] = about
+        if name is not OMIT:
+            _request["name"] = name
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def get_agent(self, agent_id: str) -> Agent:
         """
 
@@ -2519,6 +2838,74 @@ class AsyncJulepApi:
         )
         if 200 <= _response.status_code < 300:
             return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def patch_agent(
+        self,
+        agent_id: str,
+        *,
+        about: typing.Optional[str] = OMIT,
+        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        name: typing.Optional[str] = OMIT,
+        model: typing.Optional[str] = OMIT,
+        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+        metadata: typing.Optional[PatchAgentRequestMetadata] = OMIT,
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - agent_id: str.
+
+            - about: typing.Optional[str]. About the agent
+
+            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+
+            - name: typing.Optional[str]. Name of the agent
+
+            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
+
+            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+            - metadata: typing.Optional[PatchAgentRequestMetadata]. Optional metadata
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.patch_agent(
+            agent_id="agent_id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if about is not OMIT:
+            _request["about"] = about
+        if instructions is not OMIT:
+            _request["instructions"] = instructions
+        if name is not OMIT:
+            _request["name"] = name
+        if model is not OMIT:
+            _request["model"] = model
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -2983,6 +3370,52 @@ class AsyncJulepApi:
         )
         if 200 <= _response.status_code < 300:
             return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def patch_agent_tool(
+        self, agent_id: str, tool_id: str, *, function: FunctionDef
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - agent_id: str.
+
+            - tool_id: str.
+
+            - function: FunctionDef. Function definition and parameters
+        ---
+        from julep import FunctionDef
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.patch_agent_tool(
+            agent_id="agent_id",
+            tool_id="tool_id",
+            function=FunctionDef(
+                name="name",
+                parameters={},
+            ),
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"agents/{agent_id}/tools/{tool_id}",
+            ),
+            json=jsonable_encoder({"function": function}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:

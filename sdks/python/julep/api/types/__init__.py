@@ -59,6 +59,9 @@ from .memory_emotions_item import MemoryEmotionsItem
 from .memory_type import MemoryType
 from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
+from .patch_agent_request_metadata import PatchAgentRequestMetadata
+from .patch_session_request_metadata import PatchSessionRequestMetadata
+from .patch_user_request_metadata import PatchUserRequestMetadata
 from .resource_created_response import ResourceCreatedResponse
 from .resource_deleted_response import ResourceDeletedResponse
 from .resource_updated_response import ResourceUpdatedResponse
@@ -135,6 +138,9 @@ __all__ = [
     "MemoryType",
     "NamedToolChoice",
     "NamedToolChoiceFunction",
+    "PatchAgentRequestMetadata",
+    "PatchSessionRequestMetadata",
+    "PatchUserRequestMetadata",
     "ResourceCreatedResponse",
     "ResourceDeletedResponse",
     "ResourceUpdatedResponse",
