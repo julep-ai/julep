@@ -20,10 +20,13 @@ from agents_api.routers import (
 )
 
 
-sentry_sdk.init(
-    dsn=sentry_dsn,
-    enable_tracing=True,
-)
+if not sentry_dsn:
+    print("Sentry DSN not found. Sentry will not be enabled.")
+else:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        enable_tracing=True,
+    )
 
 
 logger = logging.getLogger(__name__)
