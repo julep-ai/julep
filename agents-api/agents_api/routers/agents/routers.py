@@ -104,7 +104,7 @@ async def update_agent(
                 name=request.name,
                 about=request.about,
                 model=request.model or "julep-ai/samantha-1-turbo",
-                metadata=request.metadata or {},
+                metadata=request.metadata,
                 instructions=request.instructions,
             )
         )
