@@ -25,6 +25,15 @@ services:
       - "8000:8000"
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.default.rule=Path(`/v1{path:.*}`)"
+      - "traefik.http.middlewares.model_api-add_headers.headers.customrequestheaders.X-Developer-Id=de719a8a-446f-42c4-87e5-c19d83eabe40"
+      - "traefik.http.middlewares.model_api-add_headers.headers.customrequestheaders.X-Developer-Email=developers@julep.ai"
+      - "traefik.http.middlewares.model_api-chain.chain.middlewares=model_api-add_headers"
+      - "traefik.http.routers.model_api.middlewares=model_api-chain@docker"
+
+ 
     deploy:
       resources:
         reservations:
