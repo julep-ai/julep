@@ -6,13 +6,14 @@ def create_session_query(
     developer_id: UUID,
     agent_id: UUID,
     user_id: UUID,
-    situation: str,
+    situation: str | None,
     metadata: dict = {},
 ):
     session_id = str(session_id)
     agent_id = str(agent_id)
     user_id = str(user_id)
     developer_id = str(developer_id)
+    situation = situation or ""
 
     return f"""
     {{
