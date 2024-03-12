@@ -39,7 +39,7 @@ export class CustomHttpRequest extends AxiosHttpRequest {
         return updatedResponseBody as T;
       };
 
-      cancelableResponse.then(handleResponse).then(resolve).catch(reject);
+      cancelableResponse.then(handleResponse, reject).then(resolve, reject);
     });
   }
 }
