@@ -30,15 +30,27 @@ export class Client {
    * @param {string} [options.baseUrl=JULEP_API_URL] - Base URL for the Julep API.
    * @throws {Error} Throws an error if apiKey and baseUrl are not provided.
    */
-  constructor({ apiKey = JULEP_API_KEY, baseUrl = "https://api-alpha.julep.ai/api" }: ClientOptions = {}) {
+  constructor({
+    apiKey = JULEP_API_KEY,
+    baseUrl = "https://api-alpha.julep.ai/api",
+  }: ClientOptions = {}) {
     if (!apiKey || !baseUrl) {
-      throw new Error("apiKey and baseUrl must be provided or set as environment variables");
+      throw new Error(
+        "apiKey and baseUrl must be provided or set as environment variables",
+      );
     }
 
-    this._apiClient = new JulepApiClient({ TOKEN: apiKey, BASE: baseUrl }, CustomHttpRequest);
+    this._apiClient = new JulepApiClient(
+      { TOKEN: apiKey, BASE: baseUrl },
+      CustomHttpRequest,
+    );
 
     const openaiBaseUrl = new URL(baseUrl).origin;
-    this._openaiClient = new OpenAI({ apiKey, baseURL: `${openaiBaseUrl}/v1`, dangerouslyAllowBrowser: true });
+    this._openaiClient = new OpenAI({
+      apiKey,
+      baseURL: `${openaiBaseUrl}/v1`,
+      dangerouslyAllowBrowser: true,
+    });
 
     this.agents = new AgentsManager(this._apiClient);
     this.users = new UsersManager(this._apiClient);
