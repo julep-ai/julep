@@ -232,11 +232,7 @@ export class DefaultService {
    * @returns Session
    * @throws ApiError
    */
-  public getSession({
-    sessionId,
-  }: {
-    sessionId: string;
-  }): CancelablePromise<Session> {
+  public getSession({ sessionId }: { sessionId: string }): CancelablePromise<Session> {
     return this.httpRequest.request({
       method: "GET",
       url: "/sessions/{session_id}",
@@ -250,11 +246,7 @@ export class DefaultService {
    * @returns ResourceDeletedResponse
    * @throws ApiError
    */
-  public deleteSession({
-    sessionId,
-  }: {
-    sessionId: string;
-  }): CancelablePromise<ResourceDeletedResponse> {
+  public deleteSession({ sessionId }: { sessionId: string }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/sessions/{session_id}",
@@ -430,11 +422,7 @@ export class DefaultService {
    * @returns ResourceDeletedResponse
    * @throws ApiError
    */
-  public deleteUser({
-    userId,
-  }: {
-    userId: string;
-  }): CancelablePromise<ResourceDeletedResponse> {
+  public deleteUser({ userId }: { userId: string }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/users/{user_id}",
@@ -484,11 +472,7 @@ export class DefaultService {
    * @returns ResourceDeletedResponse
    * @throws ApiError
    */
-  public deleteAgent({
-    agentId,
-  }: {
-    agentId: string;
-  }): CancelablePromise<ResourceDeletedResponse> {
+  public deleteAgent({ agentId }: { agentId: string }): CancelablePromise<ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/agents/{agent_id}",
@@ -825,11 +809,7 @@ export class DefaultService {
    * @returns JobStatus
    * @throws ApiError
    */
-  public getJobStatus({
-    jobId,
-  }: {
-    jobId: string;
-  }): CancelablePromise<JobStatus> {
+  public getJobStatus({ jobId }: { jobId: string }): CancelablePromise<JobStatus> {
     return this.httpRequest.request({
       method: "GET",
       url: "/jobs/{job_id}",
