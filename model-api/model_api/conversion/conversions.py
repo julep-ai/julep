@@ -2,7 +2,11 @@ from io import StringIO
 import re
 
 from .datatypes import ChatML, ChatMLMessage
-from .exceptions import InvalidPromptException, InvalidFunctionName
+from .exceptions import (
+    InvalidPromptException,
+    InvalidFunctionName,
+    InvalidMessageFormat,
+)
 from ..protocol import RequestFunctionCall, FunctionCall, FunctionDef
 
 
@@ -38,25 +42,40 @@ def parse_message(message: str) -> ChatMLMessage:
 
 def message_role_to_prefix(message: ChatMLMessage) -> str | None:
     match (message.model_dump()):
-        # If empty <system> tag, then assume role="situation"
+        case {"role": "user", **rest}:
+            name = rest.get("name")
+            return f"person ({name})" if name else "person"
+
+        case {"role": "assistant", **rest}:
+            name = rest.get("name")
+            return f"me ({name})" if name else "me"
+
+        case {"role": "function_call", **rest}:
+            return "function_call"
+
         case {"role": "system", "name": "functions", **rest}:
             return "functions"
-        case {"role": "system", "name": None, **rest}:
-            return "situation"
-        case {"role": "system", **rest} if "name" not in message:
+
+        case {"role": "system", "name": "thought", **rest}:
+            return "thought"
+
+        case {"role": "system", "name": "information", **rest}:
+            return "information"
+
+        case {"role": "system", "name": "situation", **rest}:
             return "situation"
 
         case {"role": "system", "name": name, **rest}:
-            return name
-        case {"role": "user", **rest}:
-            name = rest.get("name", None)
-            return f"person ({name})" if name else "person"
-        case {"role": "assistant", "name": name, **rest}:
-            return f"me ({name})" if name else "me"
-        case {"role": "assistant", **rest}:
-            return "me"
-        case {"role": "function_call", **rest}:
-            return "function_call"
+            return name.lower()
+
+        # If empty <system> tag, then assume role="situation"
+        case {"role": "system", **rest}:
+            name = rest.get("name")
+            if not name:
+                return "situation"
+
+        case msg:
+            raise InvalidMessageFormat(msg)
 
 
 def _check_last_message(message: ChatMLMessage):
