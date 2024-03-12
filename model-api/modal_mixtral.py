@@ -102,10 +102,10 @@ def get_app():
     chat_template = None
 
     engine = vllm_api_server.engine = AsyncLLMEngine.from_engine_args(engine_args)
-    openai_serving_chat = vllm_api_server.openai_serving_chat = OpenAIServingChat(
+    vllm_api_server.openai_serving_chat = OpenAIServingChat(
         engine, served_model, response_role, lora_modules, chat_template
     )
-    openai_serving_completion = (
+    (
         vllm_api_server.openai_serving_completion
     ) = OpenAIServingCompletion(engine, served_model, lora_modules)
 
