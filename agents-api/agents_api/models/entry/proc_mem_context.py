@@ -62,6 +62,7 @@ def proc_mem_context_query(
                 session_id,
                 situation: content,
                 created_at,
+                @ "NOW"
             }},
             index = 0,  # Situation entry should be the first entry
             role = "system",
