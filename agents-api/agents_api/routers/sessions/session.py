@@ -10,6 +10,7 @@ from agents_api.env import summarization_tokens_threshold
 from agents_api.clients.temporal import run_summarization_task
 from agents_api.models.entry.add_entries import add_entries_query
 from agents_api.common.protocol.entries import Entry
+from agents_api.common.exceptions.sessions import SessionNotFoundError
 from agents_api.clients.worker.types import ChatML
 from agents_api.models.session.session_data import get_session_data
 from agents_api.models.entry.proc_mem_context import proc_mem_context_query
@@ -41,6 +42,8 @@ class BaseSession:
         # TODO: implement locking at some point
         # Get session data
         session_data = get_session_data(self.developer_id, self.session_id)
+        if session_data is None:
+            raise SessionNotFoundError(self.developer_id, self.session_id)
         # Assemble context
         init_context, final_settings = await self.forward(
             session_data, new_input, settings
@@ -55,7 +58,7 @@ class BaseSession:
         if not message.content:
             role = "function_call"
             content = message.tool_calls[0].function
-            content = content[content.index('{', 1):]
+            content = content[content.index("{", 1) :]
         else:
             role = message.role
             content = message.content
@@ -135,9 +138,7 @@ class BaseSession:
             else:
                 saved_function = json.loads(row["content"])
                 tool = Tool(type="function", function=saved_function, id=str(uuid4()))
-                tools.append(
-                    tool
-                )
+                tools.append(tool)
 
         if first_instruction_idx >= 0:
             entries.insert(
@@ -181,7 +182,7 @@ class BaseSession:
         ]
         tools = None
         if settings.tools:
-            tools = [tool.model_dump(mode='json') for tool in settings.tools]
+            tools = [tool.model_dump(mode="json") for tool in settings.tools]
         return await openai_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
@@ -200,7 +201,7 @@ class BaseSession:
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
-            tools=tools
+            tools=tools,
         )
 
     async def backward(
