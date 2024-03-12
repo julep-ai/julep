@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from agents_api.common.exceptions.sessions import SessionNotFoundError
+from agents_api.common.exceptions.agents import AgentNotFoundError
 from pycozo.client import QueryException
 from temporalio.service import RPCError
 
@@ -90,6 +91,14 @@ async def validation_error_handler(request: Request, exc: RPCError):
 
 @app.exception_handler(SessionNotFoundError)
 async def session_not_found_error_handler(request: Request, exc: SessionNotFoundError):
+    return JSONResponse(
+        status_code=404,
+        content={"error": {"message": str(exc)}},
+    )
+
+
+@app.exception_handler(AgentNotFoundError)
+async def agent_not_found_error_handler(request: Request, exc: AgentNotFoundError):
     return JSONResponse(
         status_code=404,
         content={"error": {"message": str(exc)}},
