@@ -760,3 +760,29 @@ def test_function_call_func_name_last_continue_function_call():
         "flag set to 'true' or set the flag to 'false'. "
         "You can either remove `functions` and/or `function_call` parameters."
     )
+
+
+def test_information_message():
+    messages = [
+        ChatMLMessage(
+            **{
+                "role": "system",
+                "name": "information",
+                "content": "I am talking to John",
+            }
+        )
+    ]
+
+    prompt = to_prompt(
+        messages,
+        bos="<|im_start|>",
+        eos="<|im_end|>",
+    )
+
+    assert (
+        prompt
+        == """<|im_start|>information
+I am talking to John<|im_end|>
+<|im_start|>me
+"""
+    )
