@@ -40,6 +40,8 @@ export class AgentsManager extends BaseManager {
     model?: string;
     docs?: Doc[];
   }): Promise<Partial<Agent>> {
+    // FIXME: Fix the type of return value
+    // The returned object must have an `id` (cannot be `undefined`)
     const instructionsList =
       typeof instructions[0] === "string"
         ? instructions.map((content) => ({ ...content, important: false }))
