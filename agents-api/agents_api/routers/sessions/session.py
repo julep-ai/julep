@@ -179,7 +179,9 @@ class BaseSession:
             {"name": msg.name, "role": msg.role, "content": msg.content}
             for msg in init_context
         ]
-
+        tools = None
+        if settings.tools:
+            tools = [tool.model_dump(mode='json') for tool in settings.tools]
         return await openai_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
@@ -198,7 +200,7 @@ class BaseSession:
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
-            tools=[tool.model_dump(mode='json') for tool in settings.tools]
+            tools=tools
         )
 
     async def backward(
