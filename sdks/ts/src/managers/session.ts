@@ -29,23 +29,41 @@ export class SessionsManager extends BaseManager {
     }
   }
 
-  async create({ userId, agentId, situation }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
+  async create({
+    userId,
+    agentId,
+    situation,
+  }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
     try {
-      invariant(isValidUuid4(userId), `userId must be a valid UUID v4. Got "${userId}"`);
+      invariant(
+        isValidUuid4(userId),
+        `userId must be a valid UUID v4. Got "${userId}"`,
+      );
 
-      invariant(isValidUuid4(agentId), `agentId must be a valid UUID v4. Got "${agentId}"`);
+      invariant(
+        isValidUuid4(agentId),
+        `agentId must be a valid UUID v4. Got "${agentId}"`,
+      );
 
       const requestBody = { user_id: userId, agent_id: agentId, situation };
 
-      return this.apiClient.default.createSession({ requestBody }).catch((error) => Promise.reject(error));
+      return this.apiClient.default
+        .createSession({ requestBody })
+        .catch((error) => Promise.reject(error));
     } catch (error) {
       throw error;
     }
   }
 
-  async list({ limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<Array<Session>> {
+  async list({
+    limit = 100,
+    offset = 0,
+  }: { limit?: number; offset?: number } = {}): Promise<Array<Session>> {
     try {
-      const result = await this.apiClient.default.listSessions({ limit, offset });
+      const result = await this.apiClient.default.listSessions({
+        limit,
+        offset,
+      });
 
       return result.items || [];
     } catch (error) {
@@ -63,12 +81,17 @@ export class SessionsManager extends BaseManager {
     }
   }
 
-  async update(sessionId: string, { situation }: { situation: string }): Promise<ResourceUpdatedResponse> {
+  async update(
+    sessionId: string,
+    { situation }: { situation: string },
+  ): Promise<ResourceUpdatedResponse> {
     try {
       invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
       const requestBody = { situation };
 
-      return this.apiClient.default.updateSession({ sessionId, requestBody }).catch((error) => Promise.reject(error));
+      return this.apiClient.default
+        .updateSession({ sessionId, requestBody })
+        .catch((error) => Promise.reject(error));
     } catch (error) {
       throw error;
     }
@@ -96,7 +119,7 @@ export class SessionsManager extends BaseManager {
       tool_choice,
       tools,
       top_p,
-    }: ChatInput
+    }: ChatInput,
   ): Promise<ChatResponse> {
     try {
       invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
@@ -120,7 +143,7 @@ export class SessionsManager extends BaseManager {
           recall,
           remember,
         },
-        isUndefined
+        isUndefined,
       );
 
       const requestBody = {
@@ -136,7 +159,7 @@ export class SessionsManager extends BaseManager {
 
   async suggestions(
     sessionId: string,
-    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
   ): Promise<Array<Suggestion>> {
     try {
       invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
@@ -155,7 +178,7 @@ export class SessionsManager extends BaseManager {
 
   async history(
     sessionId: string,
-    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {}
+    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
   ): Promise<Array<ChatMLMessage>> {
     try {
       invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");

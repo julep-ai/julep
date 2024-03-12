@@ -23,10 +23,15 @@ export class UsersManager extends BaseManager {
     }
   }
 
-  async create({ name, about, docs = [] }: CreateUserRequest = {}): Promise<User> {
+  async create({
+    name,
+    about,
+    docs = [],
+  }: CreateUserRequest = {}): Promise<User> {
     try {
       const requestBody = { name, about, docs };
-      const result: ResourceCreatedResponse = await this.apiClient.default.createUser({ requestBody });
+      const result: ResourceCreatedResponse =
+        await this.apiClient.default.createUser({ requestBody });
 
       const user: User = { ...result, ...requestBody };
       return user;
@@ -61,16 +66,20 @@ export class UsersManager extends BaseManager {
     }
   }
 
-  async update(userId: string, { about = "", name }: UpdateUserRequest = {}): Promise<User> {
+  async update(
+    userId: string,
+    { about = "", name }: UpdateUserRequest = {},
+  ): Promise<User> {
     try {
       invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
       const requestBody = { about, name };
 
-      const result: ResourceUpdatedResponse = await this.apiClient.default.updateUser({
-        userId,
-        requestBody,
-      });
+      const result: ResourceUpdatedResponse =
+        await this.apiClient.default.updateUser({
+          userId,
+          requestBody,
+        });
 
       const user: User = { ...result, ...requestBody };
       return user;
