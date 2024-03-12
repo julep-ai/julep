@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "target": "es2019",
-    "module": "commonjs",
+    "module": "ES2022",
     "moduleResolution": "node",
     "lib": ["es2019", "dom"],
     "types": ["jest", "node"],
@@ -20,5 +20,5 @@
 
   "include": ["./src/**/*.ts"],
 
-  "exclude": ["node_modules", "**/__mocks__"],
+  "exclude": ["node_modules", "**/__mocks__", "dist", "rollup.config.js"],
 }
