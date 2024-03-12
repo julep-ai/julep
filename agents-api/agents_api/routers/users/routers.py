@@ -81,7 +81,7 @@ async def update_user(
                 user_id=user_id,
                 name=request.name,
                 about=request.about,
-                metadata=request.metadata or {},
+                metadata=request.metadata,
             )
         )
 
