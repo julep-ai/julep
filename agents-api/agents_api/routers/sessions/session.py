@@ -1,4 +1,6 @@
+import json
 from typing import Callable
+from uuid import uuid4
 from openai.types.chat.chat_completion import ChatCompletion
 from dataclasses import dataclass
 from pydantic import UUID4
@@ -11,7 +13,7 @@ from agents_api.common.protocol.entries import Entry
 from agents_api.clients.worker.types import ChatML
 from agents_api.models.session.session_data import get_session_data
 from agents_api.models.entry.proc_mem_context import proc_mem_context_query
-from agents_api.autogen.openapi_model import InputChatMLMessage
+from agents_api.autogen.openapi_model import InputChatMLMessage, Tool
 from agents_api.clients.openai import client as openai_client
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
@@ -37,34 +39,35 @@ class BaseSession:
         self, new_input, settings: Settings
     ) -> tuple[ChatCompletion, Entry, Callable]:
         # TODO: implement locking at some point
-
         # Get session data
         session_data = get_session_data(self.developer_id, self.session_id)
-
         # Assemble context
         init_context, final_settings = await self.forward(
             session_data, new_input, settings
         )
-
         # Generate response
         response = await self.generate(init_context, final_settings)
-
         # Save response to session
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)
 
         message = response.choices[0].message
-
+        if not message.content:
+            role = "function_call"
+            content = message.tool_calls[0].function
+            content = content[content.index('{', 1):]
+        else:
+            role = message.role
+            content = message.content
         total_tokens = response.usage.total_tokens
         completion_tokens = response.usage.completion_tokens
         new_entry = Entry(
             session_id=self.session_id,
-            role=message.role,
+            role=role,
             name=None if session_data is None else session_data.agent_name,
-            content=message.content,
+            content=content,
             token_count=completion_tokens,
         )
-
         # Return response and the backward pass as a background task (dont await here)
         backward_pass = await self.backward(
             new_input, total_tokens, new_entry, final_settings
@@ -103,6 +106,7 @@ class BaseSession:
         instructions = "IMPORTANT INSTRUCTIONS:\n\n"
         first_instruction_idx = -1
         first_instruction_created_at = 0
+        tools = []
         for idx, row in client.run(
             proc_mem_context_query(
                 session_id=self.session_id,
@@ -111,7 +115,7 @@ class BaseSession:
                 doc_query_embedding=doc_query_embedding,
             )
         ).iterrows():
-            if row["name"] != "instruction":
+            if row["name"] not in ["instruction", "functions"]:
                 entries.append(
                     Entry(
                         **{
@@ -123,11 +127,17 @@ class BaseSession:
                         }
                     )
                 )
-            else:
+            elif row["name"] == "instruction":
                 if first_instruction_idx < 0:
                     first_instruction_idx = idx
                     first_instruction_created_at = row["created_at"]
                 instructions += f"- {row['content']}\n"
+            else:
+                saved_function = json.loads(row["content"])
+                tool = Tool(type="function", function=saved_function, id=str(uuid4()))
+                tools.append(
+                    tool
+                )
 
         if first_instruction_idx >= 0:
             entries.insert(
@@ -153,8 +163,10 @@ class BaseSession:
             for e in entries + new_input
             if e.content
         ]
+
+        # FIXME: This sometimes returns "The model `` does not exist."
         if session_data is not None:
-            settings.model = session_data.model
+            settings.model = session_data.model or "julep-ai/samantha-1-turbo"
 
         return messages, settings
 
@@ -186,6 +198,7 @@ class BaseSession:
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
+            tools=[tool.model_dump(mode='json') for tool in settings.tools]
         )
 
     async def backward(
