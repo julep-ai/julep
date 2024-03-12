@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./dist/compiled",
     "target": "es2019",
     "module": "ES2022",
     "moduleResolution": "node",
@@ -15,10 +15,10 @@
     "strict": true,
     "skipLibCheck": false,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
 
   "include": ["./src/**/*.ts"],
 
-  "exclude": ["node_modules", "**/__mocks__", "dist", "rollup.config.js"],
+  "exclude": ["node_modules", "**/__mocks__", "dist", "rollup.config.js"]
 }
