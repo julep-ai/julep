@@ -11,14 +11,14 @@ from .fixtures import async_client, client
 
 @test("agent docs.get")
 def _(client=client):
-    response = client.docs.get(agent_id=uuid4())
+    response = client.docs.list(agent_id=uuid4())
     assert len(response) > 0
     assert isinstance(response[0], Doc)
 
 
 @test("user docs.get")
 def _(client=client):
-    response = client.docs.get(user_id=uuid4())
+    response = client.docs.list(user_id=uuid4())
     assert len(response) > 0
     assert isinstance(response[0], Doc)
 
@@ -59,14 +59,14 @@ def _(client=client):
 
 @test("async agent docs.get")
 async def _(client=async_client):
-    response = await client.docs.get(agent_id=uuid4())
+    response = await client.docs.list(agent_id=uuid4())
     assert len(response) > 0
     assert isinstance(response[0], Doc)
 
 
 @test("async user docs.get")
 async def _(client=async_client):
-    response = await client.docs.get(user_id=uuid4())
+    response = await client.docs.list(user_id=uuid4())
     assert len(response) > 0
     assert isinstance(response[0], Doc)
 
