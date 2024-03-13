@@ -29,6 +29,7 @@ from agents_api.autogen.openapi_model import (
     ChatResponse,
     FinishReason,
     CompletionUsage,
+    Stop,
 )
 from .protocol import Settings
 from .session import RecursiveSummarizationSession
@@ -198,6 +199,11 @@ async def session_chat(
         developer_id=x_developer_id,
         session_id=session_id,
     )
+
+    stop = request.stop
+    if isinstance(request.stop, Stop):
+        stop = request.stop.root
+
     settings = Settings(
         model="",
         frequency_penalty=request.frequency_penalty,
@@ -208,7 +214,7 @@ async def session_chat(
         repetition_penalty=request.repetition_penalty,
         response_format=request.response_format,
         seed=request.seed,
-        stop=request.stop,
+        stop=stop,
         stream=request.stream,
         temperature=request.temperature,
         top_p=request.top_p,

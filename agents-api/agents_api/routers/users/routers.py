@@ -1,6 +1,7 @@
 from typing import Annotated
 from uuid import uuid4
 
+from pycozo.client import QueryException
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
@@ -8,6 +9,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
 from agents_api.common.utils.datetime import utcnow
+from agents_api.common.exceptions.users import UserNotFoundError, UserDocNotFoundError
 from agents_api.models.user.create_user import create_user_query
 from agents_api.models.user.list_users import list_users_query
 from agents_api.models.user.update_user import update_user_query
@@ -56,14 +58,20 @@ snippet_embed_instruction = "Encode this passage for retrieval: "
 async def delete_user(
     user_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
 ) -> ResourceDeletedResponse:
-    # TODO: add 404 handling
-    client.rm(
-        "users",
-        {
-            "user_id": str(user_id),
-            "developer_id": str(x_developer_id),
-        },
-    )
+    try:
+        client.rm(
+            "users",
+            {
+                "user_id": str(user_id),
+                "developer_id": str(x_developer_id),
+            },
+        )
+    except QueryException as e:
+        # the code is not so informative now, but it may be a good solution in the future
+        if e.code == "transact::assertion_failure":
+            raise UserNotFoundError(x_developer_id, user_id)
+
+        raise
 
     return ResourceDeletedResponse(id=user_id, deleted_at=utcnow())
 
@@ -94,6 +102,12 @@ async def update_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+    except QueryException as e:
+        # the code is not so informative now, but it may be a good solution in the future
+        if e.code == "transact::assertion_failure":
+            raise UserNotFoundError(x_developer_id, user_id)
+
+        raise
 
 
 @router.get("/users/{user_id}", tags=["users"])
@@ -118,6 +132,12 @@ async def get_user_details(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+    except QueryException as e:
+        # the code is not so informative now, but it may be a good solution in the future
+        if e.code == "transact::assertion_failure":
+            raise UserNotFoundError(x_developer_id, user_id)
+
+        raise
 
 
 @router.post("/users", status_code=HTTP_201_CREATED, tags=["users"])
@@ -257,12 +277,18 @@ async def delete_docs(user_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse:
             detail="Docs not found",
         )
 
-    client.run(
-        delete_docs_by_id_query(
-            owner_type="user",
-            owner_id=user_id,
-            doc_id=doc_id,
+    try:
+        client.run(
+            delete_docs_by_id_query(
+                owner_type="user",
+                owner_id=user_id,
+                doc_id=doc_id,
+            )
         )
-    )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise UserDocNotFoundError(user_id, doc_id)
+
+        raise
 
     return ResourceDeletedResponse(id=doc_id, deleted_at=utcnow())
