@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 from typing import Callable
 from uuid import uuid4
 from openai.types.chat.chat_completion import ChatCompletion
@@ -125,40 +126,56 @@ class BaseSession:
                 doc_query_embedding=doc_query_embedding,
             )
         ).iterrows():
-            if row["name"] not in ["instruction", "functions"]:
-                entries.append(
-                    Entry(
-                        **{
-                            "role": row["role"],
-                            "name": row["name"],
-                            "content": row["content"],
-                            "session_id": self.session_id,
-                            "created_at": row["created_at"],
-                        }
-                    )
-                )
-            elif row["name"] == "instruction":
-                if first_instruction_idx < 0:
-                    first_instruction_idx = idx
-                    first_instruction_created_at = row["created_at"]
-                instructions += f"- {row['content']}\n"
-            else:
+            # If a `functions` message is encountered, extract into tools list
+            if row["name"] == "functions":
                 # FIXME: This might also break if {role: system, name: functions, content} but content not valid json object
-                saved_function = json.loads(row["content"])
+                try:
+                    saved_function = json.loads(row["content"])
+                except JSONDecodeError as e:
+                    # FIXME: raise a proper error that can be caught by the router
+                    raise ValueError(str(e))
+                    
                 tool = Tool(type="function", function=saved_function, id=str(uuid4()))
                 tools.append(tool)
 
+                continue
+
+            # If `instruction` encoountered, extract and compile together (because of a quirk in how cozo queries work)
+            if row["name"] == "instruction":
+                if first_instruction_idx < 0:
+                    first_instruction_idx = idx
+                    first_instruction_created_at = row["created_at"]
+                    
+                instructions += f"- {row['content']}\n"
+
+                continue
+
+            # Else add to entries as is
+            entries.append(
+                Entry(
+                    **{
+                        "role": row["role"],
+                        "name": row["name"],
+                        "content": row["content"],
+                        "session_id": self.session_id,
+                        "created_at": row["created_at"],
+                    }
+                )
+            )
+
+        # If any instructions were found, add them as info block
         if first_instruction_idx >= 0:
             entries.insert(
                 first_instruction_idx,
                 Entry(
                     role="system",
-                    name="instruction",
+                    name="information",
                     content=instructions,
                     session_id=self.session_id,
                     created_at=first_instruction_created_at,
                 ),
             )
+            
         messages = [
             ChatML(
                 role=e.role.value if hasattr(e.role, "value") else e.role,
@@ -177,6 +194,7 @@ class BaseSession:
         if session_data is not None:
             settings.model = session_data.model or "julep-ai/samantha-1-turbo"
 
+        # Add tools to settings
         if tools:
             settings.tools = settings.tools or []
             settings.tools.extend(tools)
