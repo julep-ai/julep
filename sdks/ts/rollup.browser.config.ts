@@ -10,10 +10,9 @@ export default {
   input: "src/index.ts",
   output: [
     {
-      file: pkg.browser,
-      format: "iife",
-      sourcemap: "inline",
-      name: "Julep",
+      dir: pkg.browser.replace("index.js", ""),
+      format: "cjs",
+      sourcemap: true,
       strict: false,
     },
   ],
@@ -23,11 +22,14 @@ export default {
       clean: true,
       tsconfig: "./tsconfig.json",
     }),
+    commonjs({
+      transformMixedEsModules: true,
+      requireReturnsDefault: "auto",
+    }),
     nodeResolve({
       exportConditions: ["browser"],
       browser: true,
     }),
-    commonjs({ ignoreGlobal: true }),
     optimizeLodashImports(),
     strip(),
     json(),

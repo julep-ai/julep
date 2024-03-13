@@ -1,6 +1,6 @@
 {
   "name": "@julep/sdk",
-  "version": "0.2.6-alpha-12",
+  "version": "0.2.8",
   "description": "Julep is a platform for creating agents with long-term memory",
   "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
   "author": {
@@ -18,7 +18,8 @@
   "homepage": "https://github.com/julep-ai/sdk#readme",
   "main": "./dist/cjs/index.js",
   "module": "./dist/es/index.js",
-  "browser": "./dist/bundle.js",
+  "browser": "./dist/browser/index.js",
+  "bundle": "./dist/bundle.js",
   "dependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/lodash": "^4.17.0",
@@ -58,16 +59,18 @@
   },
   "scripts": {
     "build:node": "rollup --config rollup.config.ts --configPlugin typescript --bundleConfigAsCjs",
+    "build:bundle": "npx rollup --config rollup.bundle.config.ts --configPlugin typescript --bundleConfigAsCjs",
     "build:browser": "npx rollup --config rollup.browser.config.ts --configPlugin typescript --bundleConfigAsCjs",
-    "build": "npm run build:node && npm run build:browser",
+    "build": "npm run build:node && npm run build:browser && npm run build:bundle",
     "mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080",
     "start_mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
-    "kill_mock_api": "kill $(pgrep -f 'prism .*')",
+    "kill_mock_api": "kill $(pgrep -f 'prism .*') || echo bye",
     "format": "prettier -w .",
     "openapi-codegen": "openapi -c axios --name JulepApiClient --useOptions --indent 2 -i <(yq -o=json '.' ../../openapi.yaml) -o src/api --exportSchemas true --useUnionTypes true",
     "codegen": "npm run openapi-codegen && npm run format",
     "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts",
     "test-inspect": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "prepublishOnly": "npm run build",
     "test": "npm run format && npm run start_mock_api && sleep 1 && jest && npm run kill_mock_api"
   },
   "files": ["dist"]
