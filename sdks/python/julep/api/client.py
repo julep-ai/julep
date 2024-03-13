@@ -90,6 +90,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
         order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
@@ -100,6 +101,8 @@ class JulepApi:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -116,7 +119,13 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -187,6 +196,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListUsersRequestSortBy] = None,
         order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
@@ -197,6 +207,8 @@ class JulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -213,7 +225,13 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -282,6 +300,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
         order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
@@ -292,6 +311,8 @@ class JulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -308,7 +329,13 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1224,6 +1251,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
         order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
@@ -1236,6 +1264,8 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1256,7 +1286,13 @@ class JulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1317,6 +1353,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
         order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
@@ -1329,6 +1366,8 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1349,7 +1388,13 @@ class JulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1784,6 +1829,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
         order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
@@ -1794,6 +1840,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1810,7 +1858,13 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1881,6 +1935,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListUsersRequestSortBy] = None,
         order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
@@ -1891,6 +1946,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1907,7 +1964,13 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1976,6 +2039,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
         order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
@@ -1986,6 +2050,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -2002,7 +2068,13 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2918,6 +2990,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
         order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
@@ -2930,6 +3003,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -2950,7 +3025,13 @@ class AsyncJulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -3011,6 +3092,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
         order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
@@ -3023,6 +3105,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -3043,7 +3127,13 @@ class AsyncJulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
