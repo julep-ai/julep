@@ -19,5 +19,5 @@ cd agents-api && \
     cd -
 
 cd sdks/ts && \
-    npm run codegen && \
+    npm i && npm run codegen && \
     cd -
