@@ -50,12 +50,16 @@ export class DocsManager extends BaseManager {
     userId,
     limit = 100,
     offset = 0,
+    metadataFilter = {},
   }: {
     agentId?: string;
     userId?: string;
     limit?: number;
     offset?: number;
+    metadataFilter?: { [key: string]: any };
   } = {}): Promise<Array<Doc>> {
+    const metadataFilterString: string = JSON.stringify(metadataFilter);
+
     invariant(
       xor(agentId, userId),
       "Only one of agentId or userId must be given",
@@ -69,6 +73,7 @@ export class DocsManager extends BaseManager {
         agentId,
         limit,
         offset,
+        metadataFilter: metadataFilterString,
       });
 
       return result.items || [];
@@ -79,6 +84,7 @@ export class DocsManager extends BaseManager {
         userId,
         limit,
         offset,
+        metadataFilter: metadataFilterString,
       });
 
       return result.items || [];
