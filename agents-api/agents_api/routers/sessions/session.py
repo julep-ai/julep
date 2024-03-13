@@ -143,6 +143,7 @@ class BaseSession:
                     first_instruction_created_at = row["created_at"]
                 instructions += f"- {row['content']}\n"
             else:
+                # FIXME: This might also break if {role: system, name: functions, content} but content not valid json object
                 saved_function = json.loads(row["content"])
                 tool = Tool(type="function", function=saved_function, id=str(uuid4()))
                 tools.append(tool)
@@ -176,6 +177,10 @@ class BaseSession:
         if session_data is not None:
             settings.model = session_data.model or "julep-ai/samantha-1-turbo"
 
+        if tools:
+            settings.tools = settings.tools or []
+            settings.tools.extend(tools)
+            
         return messages, settings
 
     async def generate(
