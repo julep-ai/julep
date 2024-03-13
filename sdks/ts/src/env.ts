@@ -1,9 +1,6 @@
 // env.ts
-import { config } from "dotenv";
 
 if (typeof process !== "undefined" && process && process.cwd!) {
-  config();
-
   if (!process.env.JULEP_API_KEY) {
     process.env.JULEP_API_KEY = "";
   }

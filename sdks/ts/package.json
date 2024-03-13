@@ -1,15 +1,8 @@
 {
   "name": "@julep/sdk",
-  "version": "0.2.5",
+  "version": "0.2.6-alpha",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "keywords": [
-    "julep-ai",
-    "julep",
-    "agents",
-    "llms",
-    "memory",
-    "ai"
-  ],
+  "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
   "author": {
     "name": "Julep",
     "email": "developers@julep.ai"
@@ -23,19 +16,40 @@
     "url": "https://github.com/julep-ai/sdk/issues"
   },
   "homepage": "https://github.com/julep-ai/sdk#readme",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/es/index.js",
+  "types": "src/index.ts",
+  "browser": "dist/browser.js",
+  "exports": {
+    ".": {
+      "import": "./dist/es/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
   "dependencies": {
     "@types/lodash": "^4.14.202",
+    "debug": "^4.3.4",
     "dotenv": "^16.4.5",
+    "follow-redirects": "^1.15.5",
+    "formdata-node": "^6.0.3",
     "lodash": "^4.17.21",
     "openai": "^4.28.0",
     "qs": "^6.11.2",
+    "rollup": "^4.13.0",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "supports-color": "^9.4.0",
     "url-join": "^4.0.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "@optimize-lodash/rollup-plugin": "^4.0.4",
+    "@rollup/plugin-auto-install": "^3.0.5",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-run": "^3.0.2",
+    "@rollup/plugin-strip": "^3.0.4",
     "@types/jest": "^29.5.12",
     "@types/url-join": "^4.0.3",
     "@types/uuid": "^9.0.8",
@@ -49,6 +63,7 @@
     "typescript": "^5.4.2"
   },
   "scripts": {
+    "build": "npx tsc -p tsconfig.json && rollup -c",
     "mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080",
     "start_mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
     "kill_mock_api": "kill $(pgrep -f 'prism .*')",
