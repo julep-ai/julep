@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated
 from uuid import uuid4
 
@@ -9,12 +8,14 @@ from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
 from agents_api.clients.cozo import client
+from agents_api.common.utils.datetime import utcnow
 from agents_api.models.session.get_session import get_session_query
 from agents_api.models.session.create_session import create_session_query
 from agents_api.models.session.list_sessions import list_sessions_query
 from agents_api.models.session.delete_session import delete_session_query
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.models.entry.get_entries import get_entries_query
+from agents_api.models.session.update_session import update_session_query
 from agents_api.autogen.openapi_model import (
     CreateSessionRequest,
     UpdateSessionRequest,
@@ -120,7 +121,7 @@ async def delete_session(
             detail="Session not found",
         )
 
-    return ResourceDeletedResponse(id=session_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=session_id, deleted_at=utcnow())
 
 
 @router.put("/sessions/{session_id}", tags=["sessions"])
@@ -130,19 +131,18 @@ async def update_session(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
-        resp = client.update(
-            "sessions",
-            {
-                "developer_id": str(x_developer_id),
-                "session_id": str(session_id),
-                "situation": request.situation,
-                "metadata": request.metadata or {},
-            },
+        resp = client.run(
+            update_session_query(
+                session_id=session_id,
+                developer_id=x_developer_id,
+                situation=request.situation,
+                metadata=request.metadata,
+            )
         )
 
         return ResourceUpdatedResponse(
             id=resp["session_id"][0],
-            updated_at=resp["updated_at"][0],
+            updated_at=resp["updated_at"][0][0],
         )
     except (IndexError, KeyError):
         raise HTTPException(

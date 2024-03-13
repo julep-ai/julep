@@ -1,13 +1,15 @@
-from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends
 import json
 from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from typing import Annotated
 from uuid import uuid4
+from pycozo.client import QueryException
 
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
+from agents_api.common.utils.datetime import utcnow
+from agents_api.common.exceptions.agents import AgentNotFoundError
 from agents_api.models.agent.create_agent import create_agent_query
 from agents_api.models.agent.list_agents import list_agents_query
 from agents_api.models.agent.delete_agent import delete_agent_query
@@ -81,10 +83,13 @@ instruction_embed_instruction = "Embed this historical text chunk for retrieval:
 async def delete_agent(
     agent_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
 ) -> ResourceDeletedResponse:
-    # TODO: add 404 handling
-    client.run(delete_agent_query(x_developer_id, agent_id))
+    # TODO: maybe add better 404 handling, than catching QueryException
+    try:
+        client.run(delete_agent_query(x_developer_id, agent_id))
+    except QueryException:
+        raise AgentNotFoundError(x_developer_id, agent_id)
 
-    return ResourceDeletedResponse(id=agent_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=agent_id, deleted_at=utcnow())
 
 
 @router.put("/agents/{agent_id}", tags=["agents"])
@@ -104,7 +109,7 @@ async def update_agent(
                 name=request.name,
                 about=request.about,
                 model=request.model or "julep-ai/samantha-1-turbo",
-                metadata=request.metadata or {},
+                metadata=request.metadata,
                 instructions=request.instructions,
             )
         )
@@ -364,7 +369,7 @@ async def delete_docs(agent_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse
         )
     )
 
-    return ResourceDeletedResponse(id=doc_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=doc_id, deleted_at=utcnow())
 
 
 @router.post("/agents/{agent_id}/tools", tags=["agents"])
@@ -452,7 +457,7 @@ async def delete_tool(agent_id: UUID4, tool_id: UUID4) -> ResourceDeletedRespons
         )
     )
 
-    return ResourceDeletedResponse(id=tool_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=tool_id, deleted_at=utcnow())
 
 
 @router.put("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
@@ -491,7 +496,7 @@ async def delete_memories(agent_id: UUID4, memory_id: UUID4) -> ResourceDeletedR
         status_code=status.HTTP_404_NOT_FOUND,
     )
 
-    return ResourceDeletedResponse(id=memory_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=memory_id, deleted_at=utcnow())
 
 
 # @router.get("/agents/{agent_id}/memories", tags=["agents"])

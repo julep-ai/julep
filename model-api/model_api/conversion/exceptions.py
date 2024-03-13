@@ -10,3 +10,8 @@ class InvalidPromptException(BaseException):
 class InvalidFunctionName(BaseException):
     def __init__(self, msg: str):
         super().__init__(f"Invalid function name: {msg}")
+
+
+class InvalidMessageFormat(BaseException):
+    def __init__(self, msg: str):
+        super().__init__(f"Invalid message format: {msg}")
