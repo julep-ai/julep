@@ -105,9 +105,10 @@ def get_app():
     vllm_api_server.openai_serving_chat = OpenAIServingChat(
         engine, served_model, response_role, lora_modules, chat_template
     )
-    (
-        vllm_api_server.openai_serving_completion
-    ) = OpenAIServingCompletion(engine, served_model, lora_modules)
+
+    vllm_api_server.openai_serving_completion = OpenAIServingCompletion(
+        engine, served_model, lora_modules
+    )
 
     @vllm_api_server.app.middleware("http")
     async def authentication(request, call_next):
