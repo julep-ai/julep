@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, status, Depends
 import json
-from pydantic import UUID4, BaseModel
-from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, status, Depends
 from pycozo.client import QueryException
+from pydantic import UUID4, BaseModel
+from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
@@ -271,7 +273,16 @@ async def list_agents(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
+    metadata_filter: str = "{}",
 ) -> AgentList:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
     return AgentList(
         items=[
             Agent(**row.to_dict())
@@ -280,6 +291,7 @@ async def list_agents(
                     developer_id=x_developer_id,
                     limit=limit,
                     offset=offset,
+                    metadata_filter=metadata_filter,
                 )
             ).iterrows()
         ]
@@ -326,7 +338,24 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
 
 
 @router.get("/agents/{agent_id}/docs", tags=["agents"])
-async def list_docs(agent_id: UUID4, limit: int = 100, offset: int = 0) -> DocsList:
+async def list_docs(
+    agent_id: UUID4, limit: int = 100, offset: int = 0, metadata_filter: str = "{}"
+) -> DocsList:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
+    # TODO: Implement metadata filter
+    if metadata_filter:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="metadata_filter is not implemented",
+        )
+
     resp = client.run(
         list_docs_snippets_by_owner_query(
             owner_type="agent",
