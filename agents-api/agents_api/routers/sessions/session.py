@@ -134,7 +134,7 @@ class BaseSession:
                 except JSONDecodeError as e:
                     # FIXME: raise a proper error that can be caught by the router
                     raise ValueError(str(e))
-                    
+
                 tool = Tool(type="function", function=saved_function, id=str(uuid4()))
                 tools.append(tool)
 
@@ -145,7 +145,7 @@ class BaseSession:
                 if first_instruction_idx < 0:
                     first_instruction_idx = idx
                     first_instruction_created_at = row["created_at"]
-                    
+
                 instructions += f"- {row['content']}\n"
 
                 continue
@@ -175,7 +175,7 @@ class BaseSession:
                     created_at=first_instruction_created_at,
                 ),
             )
-            
+
         messages = [
             ChatML(
                 role=e.role.value if hasattr(e.role, "value") else e.role,
@@ -198,7 +198,7 @@ class BaseSession:
         if tools:
             settings.tools = settings.tools or []
             settings.tools.extend(tools)
-            
+
         return messages, settings
 
     async def generate(
