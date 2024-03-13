@@ -55,13 +55,20 @@ class BaseSession:
         #     await self.add_to_session(new_input, response)
 
         message = response.choices[0].message
-        if not message.content:
+        role = message.role
+        content = message.content
+
+        # Unpack tool calls if present
+        if not message.content and message.tool_calls:
             role = "function_call"
             content = message.tool_calls[0].function
+
+            # FIXME: what?? why is this happening?? could be a bug in the model api
             content = content[content.index("{", 1) :]
+
         else:
-            role = message.role
-            content = message.content
+            raise ValueError("No content in response")
+
         total_tokens = response.usage.total_tokens
         completion_tokens = response.usage.completion_tokens
         new_entry = Entry(
