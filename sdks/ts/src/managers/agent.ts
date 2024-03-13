@@ -39,7 +39,7 @@ export class AgentsManager extends BaseManager {
     default_settings?: AgentDefaultSettings;
     model?: string;
     docs?: Doc[];
-  }): Promise<Partial<Agent>> {
+  }): Promise<Partial<Agent> & { id: string }> {
     // FIXME: Fix the type of return value
     // The returned object must have an `id` (cannot be `undefined`)
     const instructionsList =
@@ -62,7 +62,10 @@ export class AgentsManager extends BaseManager {
         requestBody,
       });
 
-    const agent: Partial<Agent> = { ...result, ...requestBody };
+    const agent: Partial<Agent> & { id: string } = {
+      ...result,
+      ...requestBody,
+    };
     return agent;
   }
 
@@ -96,7 +99,7 @@ export class AgentsManager extends BaseManager {
       model?: string;
       default_settings?: AgentDefaultSettings;
     } = {},
-  ): Promise<Partial<Agent>> {
+  ): Promise<Partial<Agent> & { id: string }> {
     invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
 
     // Cast instructions to Instruction objects
@@ -117,7 +120,10 @@ export class AgentsManager extends BaseManager {
     const result: ResourceUpdatedResponse =
       await this.apiClient.default.updateAgent({ agentId, requestBody });
 
-    const agent: Partial<Agent> = { ...result, ...requestBody };
+    const agent: Partial<Agent> & { id: string } = {
+      ...result,
+      ...requestBody,
+    };
     return agent;
   }
 }
