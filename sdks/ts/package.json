@@ -1,8 +1,15 @@
 {
   "name": "@julep/sdk",
-  "version": "0.2.6-alpha",
+  "version": "0.2.6-alpha-12",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
+  "keywords": [
+    "julep-ai",
+    "julep",
+    "agents",
+    "llms",
+    "memory",
+    "ai"
+  ],
   "author": {
     "name": "Julep",
     "email": "developers@julep.ai"
@@ -16,18 +23,11 @@
     "url": "https://github.com/julep-ai/sdk/issues"
   },
   "homepage": "https://github.com/julep-ai/sdk#readme",
-  "main": "dist/cjs/index.js",
-  "module": "dist/es/index.js",
-  "types": "src/index.ts",
-  "browser": "dist/browser.js",
-  "exports": {
-    ".": {
-      "import": "./dist/es/index.js",
-      "require": "./dist/cjs/index.js"
-    }
-  },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/es/index.js",
   "dependencies": {
-    "@types/lodash": "^4.14.202",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/lodash": "^4.17.0",
     "debug": "^4.3.4",
     "dotenv": "^16.4.5",
     "follow-redirects": "^1.15.5",
@@ -63,7 +63,7 @@
     "typescript": "^5.4.2"
   },
   "scripts": {
-    "build": "npx tsc -p tsconfig.json && rollup -c",
+    "build": "rollup --config rollup.config.ts --configPlugin typescript --bundleConfigAsCjs",
     "mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080",
     "start_mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
     "kill_mock_api": "kill $(pgrep -f 'prism .*')",
@@ -73,5 +73,8 @@
     "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts",
     "test-inspect": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test": "npm run format && npm run start_mock_api && sleep 1 && jest && npm run kill_mock_api"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

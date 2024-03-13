@@ -1,24 +1,22 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/compiled",
-    "target": "es2019",
-    "module": "ES2022",
-    "moduleResolution": "node",
-    "lib": ["es2019", "dom"],
-    "types": ["jest", "node"],
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": false,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noImplicitAny": true,
-    "strict": true,
-    "skipLibCheck": false,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "noEmitOnError": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "pretty": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2015",
+    "resolveJsonModule": true,
+    "declarationDir": "./",
+    "declaration": true,
+    "outDir": "types"
   },
-
   "include": ["./src/**/*.ts"],
-
-  "exclude": ["node_modules", "**/__mocks__", "dist", "rollup.config.js"]
+  "exclude": ["node_modules", "**/__mocks__", "dist", "tests"]
 }
