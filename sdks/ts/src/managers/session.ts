@@ -83,15 +83,13 @@ export class SessionsManager extends BaseManager {
 
   async update(
     sessionId: string,
-    { situation }: { situation: string },
+    { situation, metadata = {} }: { situation: string; metadata?: any },
   ): Promise<ResourceUpdatedResponse> {
     try {
       invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
-      const requestBody = { situation };
+      const requestBody = { situation, metadata };
 
-      return this.apiClient.default
-        .updateSession({ sessionId, requestBody })
-        .catch((error) => Promise.reject(error));
+      return this.apiClient.default.updateSession({ sessionId, requestBody });
     } catch (error) {
       throw error;
     }
