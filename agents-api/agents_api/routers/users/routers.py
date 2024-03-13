@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated
 from uuid import uuid4
 
@@ -8,6 +7,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
+from agents_api.common.utils.datetime import utcnow
 from agents_api.models.user.create_user import create_user_query
 from agents_api.models.user.list_users import list_users_query
 from agents_api.models.user.update_user import update_user_query
@@ -65,7 +65,7 @@ async def delete_user(
         },
     )
 
-    return ResourceDeletedResponse(id=user_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=user_id, deleted_at=utcnow())
 
 
 @router.put("/users/{user_id}", tags=["users"])
@@ -81,7 +81,7 @@ async def update_user(
                 user_id=user_id,
                 name=request.name,
                 about=request.about,
-                metadata=request.metadata or {},
+                metadata=request.metadata,
             )
         )
 
@@ -265,4 +265,4 @@ async def delete_docs(user_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse:
         )
     )
 
-    return ResourceDeletedResponse(id=doc_id, deleted_at=datetime.now())
+    return ResourceDeletedResponse(id=doc_id, deleted_at=utcnow())

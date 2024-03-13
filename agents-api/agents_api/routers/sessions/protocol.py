@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from agents_api.autogen.openapi_model import ResponseFormat, Preset
+from agents_api.autogen.openapi_model import ResponseFormat, Preset, Tool
 
 
 class Settings(BaseModel):
@@ -20,3 +20,4 @@ class Settings(BaseModel):
     recall: bool | None = Field(default=True)
     min_p: float | None = Field(default=0.01)
     preset: Preset | None = Field(default=None)
+    tools: list[Tool] | None = Field(default=None)
