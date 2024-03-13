@@ -10,16 +10,11 @@ export default {
   input: "src/index.ts",
   output: [
     {
-      dir: pkg.main.replace("index.js", ""),
-      format: "cjs",
-      exports: "named",
-      sourcemap: true,
+      file: pkg.bundle,
+      format: "iife",
+      sourcemap: "inline",
+      name: "Julep",
       strict: false,
-    },
-    {
-      dir: pkg.module.replace("index.js", ""),
-      format: "es",
-      sourcemap: true,
     },
   ],
   plugins: [
@@ -33,7 +28,8 @@ export default {
       requireReturnsDefault: "auto",
     }),
     nodeResolve({
-      exportConditions: ["node"], // , browser: true
+      exportConditions: ["browser"],
+      browser: true,
     }),
     optimizeLodashImports(),
     strip(),
