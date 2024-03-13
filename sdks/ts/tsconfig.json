@@ -15,8 +15,8 @@
     "resolveJsonModule": true,
     "declarationDir": "./",
     "declaration": true,
-    "outDir": "types"
+    "outDir": "types",
   },
   "include": ["./src/**/*.ts"],
-  "exclude": ["node_modules", "**/__mocks__", "dist", "tests"]
+  "exclude": ["node_modules", "**/__mocks__", "dist", "tests"],
 }

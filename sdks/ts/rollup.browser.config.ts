@@ -10,16 +10,11 @@ export default {
   input: "src/index.ts",
   output: [
     {
-      dir: pkg.main.replace("index.js", ""),
-      format: "cjs",
-      exports: "named",
-      sourcemap: true,
+      file: pkg.browser,
+      format: "iife",
+      sourcemap: "inline",
+      name: "Julep",
       strict: false,
-    },
-    {
-      dir: pkg.module.replace("index.js", ""),
-      format: "es",
-      sourcemap: true,
     },
   ],
   plugins: [
@@ -29,7 +24,8 @@ export default {
       tsconfig: "./tsconfig.json",
     }),
     nodeResolve({
-      exportConditions: ["node"], // , browser: true
+      exportConditions: ["browser"],
+      browser: true,
     }),
     commonjs({ ignoreGlobal: true }),
     optimizeLodashImports(),

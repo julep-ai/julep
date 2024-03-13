@@ -35,10 +35,15 @@ export class Client {
     baseUrl = JULEP_API_URL || "https://api-alpha.julep.ai/api",
   }: ClientOptions = {}) {
     if (!apiKey || !baseUrl) {
-      throw new Error("apiKey and baseUrl must be provided or set as environment variables");
+      throw new Error(
+        "apiKey and baseUrl must be provided or set as environment variables",
+      );
     }
 
-    this._apiClient = new JulepApiClient({ TOKEN: apiKey, BASE: baseUrl }, CustomHttpRequest);
+    this._apiClient = new JulepApiClient(
+      { TOKEN: apiKey, BASE: baseUrl },
+      CustomHttpRequest,
+    );
 
     const openaiBaseUrl = new URL(baseUrl).origin;
     this._openaiClient = new OpenAI({

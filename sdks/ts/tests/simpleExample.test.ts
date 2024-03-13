@@ -1,6 +1,6 @@
 // memories.test.ts
 
-import { beforeEach, describe, expect, it, test } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
