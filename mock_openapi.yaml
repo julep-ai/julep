@@ -59,9 +59,9 @@ paths:
           description: Number of sessions to return
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of sessions to skip (sorted created_at descending order)
@@ -144,9 +144,9 @@ paths:
           description: Number of items to return
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
@@ -227,9 +227,9 @@ paths:
           description: Number of items to return
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
@@ -367,9 +367,9 @@ paths:
           description: ""
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: ""
@@ -411,9 +411,9 @@ paths:
           description: ""
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: ""
