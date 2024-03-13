@@ -63,7 +63,7 @@ export class DefaultService {
   public listSessions({
     limit = 100,
     offset,
-    metadataFilter,
+    metadataFilter = "{}",
     sortBy = "created_at",
     order = "desc",
   }: {
@@ -75,7 +75,10 @@ export class DefaultService {
      * Number of sessions to skip (sorted created_at descending order)
      */
     offset?: number;
-    metadataFilter?: any;
+    /**
+     * JSON object that should be used to filter objects by metadata
+     */
+    metadataFilter?: string;
     /**
      * Which field to sort by: `created_at` or `updated_at`
      */
@@ -129,7 +132,7 @@ export class DefaultService {
   public listUsers({
     limit = 100,
     offset,
-    metadataFilter,
+    metadataFilter = "{}",
     sortBy = "created_at",
     order = "desc",
   }: {
@@ -141,7 +144,10 @@ export class DefaultService {
      * Number of items to skip (sorted created_at descending order)
      */
     offset?: number;
-    metadataFilter?: any;
+    /**
+     * JSON object that should be used to filter objects by metadata
+     */
+    metadataFilter?: string;
     /**
      * Which field to sort by: `created_at` or `updated_at`
      */
@@ -195,7 +201,7 @@ export class DefaultService {
   public listAgents({
     limit = 100,
     offset,
-    metadataFilter,
+    metadataFilter = "{}",
     sortBy = "created_at",
     order = "desc",
   }: {
@@ -207,7 +213,10 @@ export class DefaultService {
      * Number of items to skip (sorted created_at descending order)
      */
     offset?: number;
-    metadataFilter?: any;
+    /**
+     * JSON object that should be used to filter objects by metadata
+     */
+    metadataFilter?: string;
     /**
      * Which field to sort by: `created_at` or `updated_at`
      */
@@ -599,7 +608,7 @@ export class DefaultService {
     agentId,
     limit,
     offset,
-    metadataFilter,
+    metadataFilter = "{}",
     sortBy = "created_at",
     order = "desc",
     requestBody,
@@ -607,7 +616,10 @@ export class DefaultService {
     agentId: string;
     limit?: number;
     offset?: number;
-    metadataFilter?: any;
+    /**
+     * JSON object that should be used to filter objects by metadata
+     */
+    metadataFilter?: string;
     /**
      * Which field to sort by: `created_at` or `updated_at`
      */
@@ -668,7 +680,7 @@ export class DefaultService {
     userId,
     limit,
     offset,
-    metadataFilter,
+    metadataFilter = "{}",
     sortBy = "created_at",
     order = "desc",
     requestBody,
@@ -676,7 +688,10 @@ export class DefaultService {
     userId: string;
     limit?: number;
     offset?: number;
-    metadataFilter?: any;
+    /**
+     * JSON object that should be used to filter objects by metadata
+     */
+    metadataFilter?: string;
     /**
      * Which field to sort by: `created_at` or `updated_at`
      */
