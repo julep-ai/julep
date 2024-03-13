@@ -71,11 +71,11 @@ paths:
             minimum: 0
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -154,11 +154,11 @@ paths:
             type: integer
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -239,11 +239,11 @@ paths:
             minimum: 0
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -712,11 +712,11 @@ paths:
             type: integer
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -797,11 +797,11 @@ paths:
             type: integer
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -2245,12 +2245,6 @@ components:
       schema:
         type: string
         format: uuid
-    metadata_filter:
-      in: query
-      required: false
-      description: ""
-      schema:
-        type: object
-        properties: {}
+  requestBodies: {}
 security:
   - api-key: []
