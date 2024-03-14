@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .function_parameters import FunctionParameters
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -11,15 +12,15 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class MemoryAccessOptions(pydantic.BaseModel):
-    recall: typing.Optional[bool] = pydantic.Field(
-        description="Whether previous memories should be recalled or not"
+class PartialFunctionDef(pydantic.BaseModel):
+    description: typing.Optional[str] = pydantic.Field(
+        description="A description of what the function does, used by the model to choose when and how to call the function."
     )
-    record: typing.Optional[bool] = pydantic.Field(
-        description="Whether this interaction should be recorded in history or not"
+    name: typing.Optional[str] = pydantic.Field(
+        description="The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64."
     )
-    remember: typing.Optional[bool] = pydantic.Field(
-        description="Whether this interaction should form memories or not"
+    parameters: typing.Optional[FunctionParameters] = pydantic.Field(
+        description="Parameters accepeted by this function"
     )
 
     def json(self, **kwargs: typing.Any) -> str:

@@ -379,6 +379,24 @@ export class DefaultService {
     });
   }
   /**
+   * Delete session history (does NOT delete related memories)
+   * @returns ResourceDeletedResponse
+   * @throws ApiError
+   */
+  public deleteSessionHistory({
+    sessionId,
+  }: {
+    sessionId: string;
+  }): CancelablePromise<ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/sessions/{session_id}/history",
+      path: {
+        session_id: sessionId,
+      },
+    });
+  }
+  /**
    * Interact with the session
    * @returns ChatResponse
    * @throws ApiError
