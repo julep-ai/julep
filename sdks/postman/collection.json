@@ -1095,6 +1095,96 @@
     },
     {
       "_type": "endpoint",
+      "name": "Delete session history (does NOT delete related memories)",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/sessions/:session_id/history",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "sessions",
+            ":session_id",
+            "history"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "session_id",
+              "description": "",
+              "value": "session_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "DELETE",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/sessions/:session_id/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                ":session_id",
+                "history"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "session_id",
+                  "description": "",
+                  "value": "session_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null,
+            "body": null
+          },
+          "description": null,
+          "body": "",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
       "name": "Interact with the session",
       "request": {
         "description": "",
@@ -3242,7 +3332,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"function\": {\n        \"name\": \"name\",\n        \"parameters\": {}\n    }\n}",
+          "raw": "{\n    \"function\": {}\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3299,7 +3389,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"function\": {\n        \"name\": \"name\",\n        \"parameters\": {}\n    }\n}",
+              "raw": "{\n    \"function\": {}\n}",
               "options": {
                 "raw": {
                   "language": "json"

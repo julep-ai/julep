@@ -14,5 +14,12 @@ export const $ResourceDeletedResponse = {
       isRequired: true,
       format: "date-time",
     },
+    jobs: {
+      type: "array",
+      contains: {
+        type: "string",
+        format: "uuid",
+      },
+    },
   },
 } as const;

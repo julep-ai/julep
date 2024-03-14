@@ -5,13 +5,8 @@
 export const $PatchToolRequest = {
   properties: {
     function: {
-      type: "one-of",
+      type: "PartialFunctionDef",
       description: `Function definition and parameters`,
-      contains: [
-        {
-          type: "FunctionDef",
-        },
-      ],
       isRequired: true,
     },
   },

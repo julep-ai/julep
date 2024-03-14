@@ -534,7 +534,7 @@ async def update_tool(
 
     try:
         resp = [
-            row.to_dict() 
+            row.to_dict()
             for _, row in client.run(
                 update_tool_by_id_query(
                     agent_id=agent_id,
