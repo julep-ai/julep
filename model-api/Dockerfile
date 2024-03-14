@@ -31,4 +31,5 @@ ENV TP_SIZE 1
 ENV MAX_MODEL_LEN 8192
 ENV MAX_NUM_SEQS 1
 ENV GPU_MEMORY_UTILIZATION 0.95
-ENTRYPOINT python3 -m model_api --model $MODEL_NAME --tensor-parallel-size $TP_SIZE --enforce-eager --dtype bfloat16 --gpu-memory-utilization $GPU_MEMORY_UTILIZATION --max-model-len $MAX_MODEL_LEN --max-num-seqs $MAX_NUM_SEQS
+ENV DTYPE bfloat16
+ENTRYPOINT python3 -m model_api --model $MODEL_NAME --tensor-parallel-size $TP_SIZE --enforce-eager --gpu-memory-utilization $GPU_MEMORY_UTILIZATION --max-model-len $MAX_MODEL_LEN --max-num-seqs $MAX_NUM_SEQS --dtype $DTYPE
