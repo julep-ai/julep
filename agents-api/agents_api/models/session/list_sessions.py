@@ -11,7 +11,7 @@ def list_sessions_query(
 ):
     metadata_filter_str = ", ".join(
         [
-            f'metadata->{json.dumps(k)} == {json.dumps(v)}'
+            f"metadata->{json.dumps(k)} == {json.dumps(v)}"
             for k, v in metadata_filter.items()
         ]
     )

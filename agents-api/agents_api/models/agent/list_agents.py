@@ -10,7 +10,10 @@ def list_agents_query(
     metadata_filter: dict[str, Any] = {},
 ):
     metadata_filter_str = ", ".join(
-        [f'metadata->{json.dumps(k)} == {json.dumps(v)}' for k, v in metadata_filter.items()]
+        [
+            f"metadata->{json.dumps(k)} == {json.dumps(v)}"
+            for k, v in metadata_filter.items()
+        ]
     )
 
     return f"""

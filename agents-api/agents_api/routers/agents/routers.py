@@ -64,6 +64,7 @@ from agents_api.autogen.openapi_model import (
     Tool,
     FunctionDef,
     Instruction,
+    UpdateToolRequest,
 )
 
 
@@ -520,26 +521,26 @@ async def delete_tool(agent_id: UUID4, tool_id: UUID4) -> ResourceDeletedRespons
 
 @router.put("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
 async def update_tool(
-    agent_id: UUID4, tool_id: UUID4, request: FunctionDef
+    agent_id: UUID4, tool_id: UUID4, request: UpdateToolRequest
 ) -> ResourceUpdatedResponse:
     embeddings = await embed(
         [
             function_embed_instruction
-            + request.description
+            + request.function.description
             + "\nParameters: "
-            + json.dumps(request.parameters.model_dump())
+            + json.dumps(request.function.parameters.model_dump())
         ],
         join_inputs=True,
     )
 
     try:
         resp = [
-            row.to_dict() 
+            row.to_dict()
             for _, row in client.run(
                 update_tool_by_id_query(
                     agent_id=agent_id,
                     tool_id=tool_id,
-                    function=request,
+                    function=request.function,
                     embedding=embeddings[0] if embeddings else [],
                 )
             ).iterrows()
