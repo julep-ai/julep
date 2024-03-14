@@ -114,10 +114,7 @@ async def list_sessions(
     )
 
     return SessionList(
-        items=[
-            Session(**row.to_dict())
-            for _, row in client.run(query).iterrows()
-        ]
+        items=[Session(**row.to_dict()) for _, row in client.run(query).iterrows()]
     )
 
 
