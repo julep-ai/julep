@@ -38,15 +38,30 @@ describe("Tools API", () => {
 
   test("tools.update", async () => {
     const agentId = uuidv4();
-    const toolId = uuidv4();
+
+    const createResponse = await client.tools.create({
+      agentId,
+      tool: {
+        type: "function",
+        function: {
+          description: "test description",
+          name: "test name",
+          parameters: { test_arg: "test val" },
+        },
+      },
+    });
+    const toolId = createResponse.id;
 
     const response = await client.tools.update({
       agentId,
       toolId,
-      function: {
-        description: "test description",
-        name: "test name",
-        parameters: { test_arg: "test val" },
+      tool: {
+        type: "function",
+        function: {
+          description: "changed description",
+          name: "changed name",
+          parameters: { test_arg: "test val" },
+        },
       },
     });
 
@@ -55,9 +70,23 @@ describe("Tools API", () => {
   });
 
   test("tools.delete", async () => {
+    const agentId = uuidv4();
+
+    const createResponse = await client.tools.create({
+      agentId,
+      tool: {
+        type: "function",
+        function: {
+          description: "test description",
+          name: "test name",
+          parameters: { test_arg: "test val" },
+        },
+      },
+    });
+
     const response = await client.tools.delete({
-      agentId: uuidv4(),
-      toolId: uuidv4(),
+      agentId,
+      toolId: createResponse.id,
     });
 
     expect(response).toBeUndefined();

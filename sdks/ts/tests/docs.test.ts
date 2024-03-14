@@ -8,9 +8,20 @@ import { Client } from "../src";
 
 describe("Julep Client Tests", () => {
   let client: Client;
+  let agent: any;
+  let user: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     client = setupClient();
+    agent = await client.agents.create({
+      name: "test agent",
+      about: "test about",
+      instructions: [],
+    });
+    user = await client.users.create({
+      name: "test user",
+      about: "test about",
+    });
   });
 
   test("agent docs.get", async () => {
@@ -21,7 +32,7 @@ describe("Julep Client Tests", () => {
   });
 
   test("user docs.get", async () => {
-    const response = await client.docs.get({ userId: uuidv4() });
+    const response = await client.docs.get({ userId: user.id });
 
     expect(response?.items!.length).toBeGreaterThan(0);
     expect(response?.items![0]).toHaveProperty("id");
@@ -29,7 +40,7 @@ describe("Julep Client Tests", () => {
 
   test("agent docs.create", async () => {
     const response = await client.docs.create({
-      agentId: uuidv4(),
+      agentId: agent.id,
       doc: { title: "test title", content: "test content" },
     });
 
@@ -38,7 +49,7 @@ describe("Julep Client Tests", () => {
 
   test("user docs.create", async () => {
     const response = await client.docs.create({
-      userId: uuidv4(),
+      userId: user.id,
       doc: { title: "test title", content: "test content" },
     });
 
@@ -46,18 +57,28 @@ describe("Julep Client Tests", () => {
   });
 
   test("agent docs.delete", async () => {
+    const createResponse = await client.docs.create({
+      agentId: agent.id,
+      doc: { title: "test title", content: "test content" },
+    });
+
     const response = await client.docs.delete({
-      agentId: uuidv4(),
-      docId: uuidv4(),
+      agentId: agent.id,
+      docId: createResponse.id,
     });
 
     expect(response).toBeUndefined();
   });
 
   test("user docs.delete", async () => {
+    const createResponse = await client.docs.create({
+      userId: user.id,
+      doc: { title: "test title", content: "test content" },
+    });
+
     const response = await client.docs.delete({
-      userId: uuidv4(),
-      docId: uuidv4(),
+      userId: user.id,
+      docId: createResponse.id,
     });
 
     expect(response).toBeUndefined();

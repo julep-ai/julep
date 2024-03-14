@@ -33,7 +33,14 @@ describe("Julep Client Tests", () => {
   });
 
   test("agents.update", async () => {
-    const agentId = uuidv4();
+    const createResponse = await client.agents.create({
+      name: "test agent",
+      about: "test agent about",
+      instructions: [{ content: "test agent instructions" }],
+      default_settings: { temperature: 0.5 },
+    });
+
+    const agentId = createResponse.id;
 
     const response = await client.agents.update(agentId, {
       name: "test user",
