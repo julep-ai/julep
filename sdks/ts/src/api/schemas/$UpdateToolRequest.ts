@@ -5,13 +5,8 @@
 export const $UpdateToolRequest = {
   properties: {
     function: {
-      type: "one-of",
+      type: "FunctionDef",
       description: `Function definition and parameters`,
-      contains: [
-        {
-          type: "FunctionDef",
-        },
-      ],
       isRequired: true,
     },
   },
