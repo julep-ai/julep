@@ -42,12 +42,13 @@ def list_sessions_query(
                 metadata,
                 @ "NOW"
             }},
-            {metadata_filter_str},
             *session_lookup{{
                 agent_id,
                 user_id,
                 session_id: id,
-            }}, updated_at = to_int(validity)
+            }},
+            updated_at = to_int(validity),
+            {metadata_filter_str}
 
         :limit {limit}
         :offset {offset}
