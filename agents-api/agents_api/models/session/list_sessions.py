@@ -10,7 +10,10 @@ def list_sessions_query(
     metadata_filter: dict[str, Any] = {},
 ):
     metadata_filter_str = ", ".join(
-        [f'metadata->"{json.dumps(k)}" == {v}' for k, v in metadata_filter.items()]
+        [
+            f'metadata->{json.dumps(k)} == {json.dumps(v)}'
+            for k, v in metadata_filter.items()
+        ]
     )
 
     return f"""
@@ -39,12 +42,13 @@ def list_sessions_query(
                 metadata,
                 @ "NOW"
             }},
-            {metadata_filter_str}
             *session_lookup{{
                 agent_id,
                 user_id,
                 session_id: id,
-            }}, updated_at = to_int(validity)
+            }},
+            updated_at = to_int(validity),
+            {metadata_filter_str}
 
         :limit {limit}
         :offset {offset}
