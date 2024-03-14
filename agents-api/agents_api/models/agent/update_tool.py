@@ -15,13 +15,12 @@ def update_tool_by_id_query(
 
     name = function["name"]
     description = function["description"]
-    parameters = ParametersDict(**function["parameters"]).model_dump(exclude_none=True)
+    # parameters = ParametersDict(**function["parameters"]).model_dump(exclude_none=True)
+    parameters = function.get("parameters", {})
 
     return f"""
-        input[agent_id, tool_id] <- [[to_uuid("{agent_id}"), to_uuid("{tool_id}")]]
-        
-        ?[name, description, parameters, embedding, updated_at] <- [
-            ["{name}", "{description}", {parameters}, vec({embedding}), {utcnow()}]
+        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
+            [to_uuid("{agent_id}"), to_uuid("{tool_id}"), "{name}", "{description}", {parameters}, vec({embedding}), now()]
         ]
 
         :update agent_functions {{

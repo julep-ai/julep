@@ -25,9 +25,7 @@ def create_function_query(
         "created_at": created_at,
         "name": function["name"],
         "description": function["description"],
-        "parameters": ParametersDict(**function["parameters"]).model_dump(
-            exclude_none=True
-        ),
+        "parameters": function.get("parameters", {}),
     }
 
     function_cols, function_rows = cozo_process_mutate_data(function_data)
