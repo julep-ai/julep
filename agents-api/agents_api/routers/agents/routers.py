@@ -522,7 +522,7 @@ async def delete_tool(agent_id: UUID4, tool_id: UUID4) -> ResourceDeletedRespons
 async def update_tool(
     agent_id: UUID4, tool_id: UUID4, request: FunctionDef
 ) -> ResourceUpdatedResponse:
-    embedding = await embed(
+    embeddings = await embed(
         [
             function_embed_instruction
             + request.description
@@ -533,13 +533,21 @@ async def update_tool(
     )
 
     try:
-        return client.run(
-            update_tool_by_id_query(
-                agent_id=agent_id,
-                tool_id=tool_id,
-                function=request,
-                embedding=embedding,
-            )
+        resp = [
+            row.to_dict() 
+            for _, row in client.run(
+                update_tool_by_id_query(
+                    agent_id=agent_id,
+                    tool_id=tool_id,
+                    function=request,
+                    embedding=embeddings[0] if embeddings else [],
+                )
+            ).iterrows()
+        ][0]
+
+        return ResourceUpdatedResponse(
+            id=resp["tool_id"],
+            updated_at=resp["updated_at"],
         )
     except (IndexError, KeyError):
         raise HTTPException(
