@@ -109,14 +109,14 @@ async def list_sessions(
             detail="metadata_filter is not a valid JSON",
         )
 
+    query = list_sessions_query(
+        x_developer_id, limit, offset, metadata_filter=metadata_filter
+    )
+
     return SessionList(
         items=[
             Session(**row.to_dict())
-            for _, row in client.run(
-                list_sessions_query(
-                    x_developer_id, limit, offset, metadata_filter=metadata_filter
-                ),
-            ).iterrows()
+            for _, row in client.run(query).iterrows()
         ]
     )
 
