@@ -14,9 +14,4 @@ describe("Client Request Tests", () => {
   it("test client instantiation", async () => {
     expect(client).toBeDefined();
   });
-
-  // it("test client request", async () => {
-  //   const response = await client.agents.get(uuidv4());
-  //   expect(response).toBeDefined();
-  // });
 });
