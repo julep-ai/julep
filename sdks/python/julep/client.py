@@ -2,6 +2,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from beartype import beartype
+import httpx
 from openai import AsyncOpenAI, OpenAI
 from openai.resources.chat.chat import AsyncChat, Chat
 from openai.resources.completions import AsyncCompletions, Completions
@@ -79,6 +80,8 @@ class Client:
         self,
         api_key: Optional[str] = JULEP_API_KEY,
         base_url: Optional[str] = JULEP_API_URL,
+        timeout: int = 300,
+        _httpx_client: Optional[httpx.Client] = None,
         *args,
         **kwargs,
     ):
@@ -109,7 +112,19 @@ class Client:
             base_url is not None
         ), "base_url must be provided or set as env var JULEP_API_URL"
 
-        self._api_client = JulepApi(api_key=api_key, base_url=base_url, *args, **kwargs)
+        # Create an httpz client that follows redirects and has a timeout
+        httpx_client = _httpx_client or httpx.Client(
+            timeout=timeout,
+            follow_redirects=True,
+        )
+
+        self._api_client = JulepApi(
+            api_key=api_key,
+            base_url=base_url,
+            httpx_client=httpx_client,
+            *args,
+            **kwargs,
+        )
 
         self.agents = AgentsManager(api_client=self._api_client)
         self.users = UsersManager(api_client=self._api_client)

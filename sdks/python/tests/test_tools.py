@@ -27,7 +27,12 @@ def _(client=client):
             "function": {
                 "description": "test description",
                 "name": "test name",
-                "parameters": {"test_arg": "test val"},
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "test_arg": {"type": "string", "default": "test val"},
+                    },
+                },
             },
         },
     )
@@ -44,7 +49,12 @@ def _(client=client):
         function={
             "description": "test description",
             "name": "test name",
-            "parameters": {"test_arg": "test val"},
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "test_arg": {"type": "string", "default": "test val"},
+                },
+            },
         },
     )
 
@@ -77,7 +87,12 @@ async def _(client=async_client):
             "function": {
                 "description": "test description",
                 "name": "test name",
-                "parameters": {"test_arg": "test val"},
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "test_arg": {"type": "string", "default": "test val"},
+                    },
+                },
             },
         },
     )
@@ -94,7 +109,12 @@ async def _(client=async_client):
         function={
             "description": "test description",
             "name": "test name",
-            "parameters": {"test_arg": "test val"},
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "test_arg": {"type": "string", "default": "test val"},
+                },
+            },
         },
     )
 
