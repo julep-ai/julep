@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FunctionDef } from "./FunctionDef";
+import type { PartialFunctionDef } from "./PartialFunctionDef";
 export type PatchToolRequest = {
   /**
    * Function definition and parameters
    */
-  function: FunctionDef;
+  function: PartialFunctionDef;
 };
