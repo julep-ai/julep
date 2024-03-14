@@ -56,17 +56,21 @@ export class SessionsManager extends BaseManager {
   async list({
     limit = 100,
     offset = 0,
-  }: { limit?: number; offset?: number } = {}): Promise<Array<Session>> {
-    try {
-      const result = await this.apiClient.default.listSessions({
-        limit,
-        offset,
-      });
+    metadataFilter = {},
+  }: {
+    limit?: number;
+    offset?: number;
+    metadataFilter?: { [key: string]: any };
+  } = {}): Promise<Array<Session>> {
+    const metadataFilterString: string = JSON.stringify(metadataFilter);
 
-      return result.items || [];
-    } catch (error) {
-      throw error;
-    }
+    const result = await this.apiClient.default.listSessions({
+      limit,
+      offset,
+      metadataFilter: metadataFilterString,
+    });
+
+    return result.items || [];
   }
 
   async delete(sessionId: string): Promise<void> {

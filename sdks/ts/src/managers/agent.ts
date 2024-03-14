@@ -71,8 +71,19 @@ export class AgentsManager extends BaseManager {
   async list({
     limit = 100,
     offset = 0,
-  }: { limit?: number; offset?: number } = {}): Promise<Array<Agent>> {
-    const result = await this.apiClient.default.listAgents({ limit, offset });
+    metadataFilter = {},
+  }: {
+    limit?: number;
+    offset?: number;
+    metadataFilter?: { [key: string]: any };
+  } = {}): Promise<Array<Agent>> {
+    const metadataFilterString: string = JSON.stringify(metadataFilter);
+
+    const result = await this.apiClient.default.listAgents({
+      limit,
+      offset,
+      metadataFilter: metadataFilterString,
+    });
 
     return result.items;
   }

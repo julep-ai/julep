@@ -1,8 +1,9 @@
+import json
+from typing import Optional, TypedDict
 from uuid import UUID
 
-from typing import Optional, TypedDict
 from beartype import beartype
-from beartype.typing import Awaitable, List, Union, Dict
+from beartype.typing import Any, Awaitable, Dict, List, Union
 
 from ..api.types import (
     ResourceCreatedResponse,
@@ -190,7 +191,10 @@ class BaseSessionsManager(BaseManager):
         )
 
     def _list_items(
-        self, limit: Optional[int] = None, offset: Optional[int] = None
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        metadata_filter: str = "{}",
     ) -> Union[ListSessionsResponse, Awaitable[ListSessionsResponse]]:
         """
         List items with optional pagination.
@@ -208,6 +212,7 @@ class BaseSessionsManager(BaseManager):
         return self.api_client.list_sessions(
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter,
         )
 
     def _delete(self, session_id: Union[str, UUID]) -> Union[None, Awaitable[None]]:
@@ -495,6 +500,7 @@ class SessionsManager(BaseSessionsManager):
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[Session]:
         """
         Retrieve a list of Session objects with optional pagination.
@@ -511,9 +517,12 @@ class SessionsManager(BaseSessionsManager):
             Raises:
                 BeartypeException: If the input arguments do not match their annotated types.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         return self._list_items(
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter_string,
         ).items
 
     @beartype
@@ -795,6 +804,7 @@ class AsyncSessionsManager(BaseSessionsManager):
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[Session]:
         """
         Asynchronously retrieves a list of sessions with optional pagination.
@@ -808,10 +818,13 @@ class AsyncSessionsManager(BaseSessionsManager):
         Returns:
             List[Session]: A list of `Session` objects containing session data.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         return (
             await self._list_items(
                 limit=limit,
                 offset=offset,
+                metadata_filter=metadata_filter_string,
             )
         ).items
 
