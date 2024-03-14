@@ -186,6 +186,7 @@ async def list_users(
                     developer_id=x_developer_id,
                     limit=limit,
                     offset=offset,
+                    metadata_filter=metadata_filter,
                 ),
             ).iterrows()
         ]
