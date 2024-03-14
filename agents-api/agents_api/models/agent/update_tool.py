@@ -1,8 +1,6 @@
 from uuid import UUID
 
-from ...common.utils.datetime import utcnow
 from ...autogen.openapi_model import FunctionDef
-from ...common.protocol.functions import ParametersDict
 
 
 def update_tool_by_id_query(
