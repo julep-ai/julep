@@ -41,7 +41,12 @@ export class Client {
     }
 
     this._apiClient = new JulepApiClient(
-      { TOKEN: apiKey, BASE: baseUrl },
+      {
+        TOKEN: apiKey,
+        BASE: baseUrl,
+        WITH_CREDENTIALS: true,
+        HEADERS: { "Content-Type": "application/json" },
+      },
       CustomHttpRequest,
     );
 
