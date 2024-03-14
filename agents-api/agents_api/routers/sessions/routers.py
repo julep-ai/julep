@@ -1,3 +1,5 @@
+import json
+from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
@@ -97,12 +99,23 @@ async def list_sessions(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
+    metadata_filter: str = "{}",
 ) -> SessionList:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
     return SessionList(
         items=[
             Session(**row.to_dict())
             for _, row in client.run(
-                list_sessions_query(x_developer_id, limit, offset),
+                list_sessions_query(
+                    x_developer_id, limit, offset, metadata_filter=metadata_filter
+                ),
             ).iterrows()
         ]
     )

@@ -1,8 +1,9 @@
+import json
+from typing import Optional, TypedDict
 from uuid import UUID
 
-from typing import Optional, TypedDict
 from beartype import beartype
-from beartype.typing import Awaitable, List, Union
+from beartype.typing import Any, Awaitable, Dict, List, Union
 
 from ..api.types import (
     CreateDoc,
@@ -33,8 +34,8 @@ class BaseDocsManager(BaseManager):
     Typical usage example:
 
         docs_manager = BaseDocsManager(api_client)
-        agent_docs = docs_manager._get(agent_id="some-agent-uuid")
-        user_docs = docs_manager._get(user_id="some-user-uuid")
+        agent_docs = docs_manager._list(agent_id="some-agent-uuid")
+        user_docs = docs_manager._list(user_id="some-user-uuid")
         created_doc = docs_manager._create(agent_id="some-agent-uuid", doc={"key": "value"})
         docs_manager._delete(user_id="some-user-uuid", doc_id="some-doc-uuid")
 
@@ -42,7 +43,7 @@ class BaseDocsManager(BaseManager):
         api_client: A client instance used to make API calls to the document management system.
 
     Methods:
-        _get(agent_id: Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]],
+        _list(agent_id: Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]],
              limit: Optional[int]=None, offset: Optional[int]=None) -> Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]
             Retrieves docsrmation for either an agent or user.
             Must provide exactly one valid UUID v4 for either `agent_id` or `user_id`.
@@ -57,12 +58,13 @@ class BaseDocsManager(BaseManager):
             Must provide exactly one valid UUID v4 for either `agent_id` or `user_id`, and a valid UUID for `doc_id`.
     """
 
-    def _get(
+    def _list(
         self,
         agent_id: Optional[Union[str, UUID]],
         user_id: Optional[Union[str, UUID]],
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]:
         """
         Retrieve docsrmation for an agent or user based on their ID.
@@ -83,6 +85,8 @@ class BaseDocsManager(BaseManager):
         Raises:
             AssertionError: If both `agent_id` and `user_id` are provided or neither is provided, or if the provided IDs are not valid UUID v4.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         assert (
             (agent_id and is_valid_uuid4(agent_id))
             or (user_id and is_valid_uuid4(user_id))
@@ -94,6 +98,7 @@ class BaseDocsManager(BaseManager):
                 agent_id=agent_id,
                 limit=limit,
                 offset=offset,
+                metadata_filter=metadata_filter_string,
             )
 
         if user_id is not None:
@@ -101,6 +106,7 @@ class BaseDocsManager(BaseManager):
                 user_id=user_id,
                 limit=limit,
                 offset=offset,
+                metadata_filter=metadata_filter_string,
             )
 
     def _create(
@@ -238,13 +244,14 @@ class DocsManager(BaseDocsManager):
     """
 
     @beartype
-    def get(
+    def list(
         self,
         *,
         agent_id: Optional[Union[str, UUID]] = None,
         user_id: Optional[Union[str, UUID]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[Doc]:
         """
         Retrieve a list of documents based on specified criteria.
@@ -263,11 +270,12 @@ class DocsManager(BaseDocsManager):
         Note:
             The `@beartype` decorator is used to ensure that the input arguments are of the expected types. If an argument is passed that does not match the expected type, a type error will be raised.
         """
-        return self._get(
+        return self._list(
             agent_id=agent_id,
             user_id=user_id,
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter,
         ).items
 
     @beartype
@@ -334,7 +342,7 @@ class AsyncDocsManager(BaseDocsManager):
         Inherited from BaseDocsManager.
 
     Methods:
-        async get(self, *, agent_id: Optional[Union[str, UUID]] = None, user_id: Optional[Union[str, UUID]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Doc]:
+        async list(self, *, agent_id: Optional[Union[str, UUID]] = None, user_id: Optional[Union[str, UUID]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Doc]:
             Asynchronously get a list of documents, with optional filtering based on agent_id, user_id, and pagination options limit and offset.
             Args:
                 agent_id (Optional[Union[str, UUID]]): The agent's identifier to filter documents.
@@ -365,13 +373,14 @@ class AsyncDocsManager(BaseDocsManager):
     """
 
     @beartype
-    async def get(
+    async def list(
         self,
         *,
         agent_id: Optional[Union[str, UUID]] = None,
         user_id: Optional[Union[str, UUID]] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[Doc]:
         """
         Asynchronously get a list of documents.
@@ -395,11 +404,12 @@ class AsyncDocsManager(BaseDocsManager):
             BeartypeDecorHintPepParamException: If any of the parameters do not adhere to the declared types.
         """
         return (
-            await self._get(
+            await self._list(
                 agent_id=agent_id,
                 user_id=user_id,
                 limit=limit,
                 offset=offset,
+                metadata_filter=metadata_filter,
             )
         ).items
 

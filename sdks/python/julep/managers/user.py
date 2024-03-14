@@ -1,8 +1,9 @@
+import json
 from uuid import UUID
 from typing import Optional, TypedDict
 
 from beartype import beartype
-from beartype.typing import Awaitable, List, Union
+from beartype.typing import Any, Awaitable, Dict, List, Union
 
 from .utils import rewrap_in_class
 
@@ -113,7 +114,10 @@ class BaseUsersManager(BaseManager):
         )
 
     def _list_items(
-        self, limit: Optional[int] = None, offset: Optional[int] = None
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        metadata_filter: str = "{}",
     ) -> Union[ListUsersResponse, Awaitable[ListUsersResponse]]:
         """
         Fetch a list of users, with optional pagination parameters.
@@ -129,6 +133,7 @@ class BaseUsersManager(BaseManager):
         return self.api_client.list_users(
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter,
         )
 
     def _delete(self, user_id: Union[str, UUID]) -> Union[None, Awaitable[None]]:
@@ -256,6 +261,7 @@ class UsersManager(BaseUsersManager):
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[User]:
         """
         Lists the users optionally applying limit and offset.
@@ -272,9 +278,12 @@ class UsersManager(BaseUsersManager):
         Raises:
             BeartypeException: If the type of `limit` or `offset` is not as expected.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         return self._list_items(
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter_string,
         ).items
 
     @beartype
@@ -396,6 +405,7 @@ class AsyncUsersManager(BaseUsersManager):
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[User]:
         """
         Asynchronously lists users with optional limits and offsets.
@@ -416,10 +426,13 @@ class AsyncUsersManager(BaseUsersManager):
         Note:
             The actual exception raised by the `beartype` decorator or during the users' retrieval will depend on the implementation detail of the `self._list_items` method and the `beartype` configuration.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         return (
             await self._list_items(
                 limit,
                 offset,
+                metadata_filter=metadata_filter_string,
             )
         ).items
 

@@ -43,17 +43,20 @@ export class UsersManager extends BaseManager {
   async list({
     limit = 10,
     offset = 0,
+    metadataFilter = {},
   }: {
     limit?: number;
     offset?: number;
+    metadataFilter?: { [key: string]: any };
   } = {}): Promise<Array<User>> {
-    try {
-      const result = await this.apiClient.default.listUsers({ limit, offset });
+    const metadataFilterString: string = JSON.stringify(metadataFilter);
+    const result = await this.apiClient.default.listUsers({
+      limit,
+      offset,
+      metadataFilter: metadataFilterString,
+    });
 
-      return result.items;
-    } catch (error) {
-      throw error;
-    }
+    return result.items;
   }
 
   async delete(userId: string): Promise<void> {

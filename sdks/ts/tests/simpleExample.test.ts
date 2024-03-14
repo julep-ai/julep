@@ -44,6 +44,12 @@ describe("Simple Agents Example", () => {
     const user = await client.users.create({
       name: "John Wick",
       about: "Baba Yaga",
+      metadata: { age: 40 },
+    });
+
+    // ensure that the user is created
+    await client.users.list({
+      metadataFilter: { age: 40 },
     });
 
     const situation =
