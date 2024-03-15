@@ -2,7 +2,6 @@ import json
 from uuid import uuid4, UUID
 
 from ...autogen.openapi_model import FunctionDef
-from ...common.protocol.functions import ParametersDict
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
@@ -23,9 +22,9 @@ def create_function_query(
         "agent_id": agent_id,
         "tool_id": tool_id,
         "created_at": created_at,
-        "name": function["name"],
-        "description": function["description"],
-        "parameters": function.get("parameters", {}),
+        "name": json.dumps(function["name"]),
+        "description": json.dumps(function["description"]),
+        "parameters": json.dumps(function.get("parameters", {})),
     }
 
     function_cols, function_rows = cozo_process_mutate_data(function_data)
@@ -59,11 +58,9 @@ def create_multiple_functions_query(
             "agent_id": agent_id,
             "created_at": created_at,
             "tool_id": str(uuid4()),
-            "name": function["name"],
-            "description": function["description"],
-            "parameters": ParametersDict(**function["parameters"]).model_dump(
-                exclude_none=True
-            ),
+            "name": json.dumps(function["name"]),
+            "description": json.dumps(function["description"]),
+            "parameters": json.dumps(function["parameters"]),
         }
 
         function_cols, new_function_rows = cozo_process_mutate_data(function_data)

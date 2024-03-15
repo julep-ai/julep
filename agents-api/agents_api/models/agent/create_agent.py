@@ -19,6 +19,7 @@ def create_agent_query(
 ):
     assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
     agent_id_str = str(agent_id)
+    developer_id_str = str(developer_id)
 
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
@@ -36,10 +37,13 @@ def create_agent_query(
         }}
     """
 
+    query_cols = json.dumps(
+        [agent_id_str, developer_id_str, model, name, about, metadata]
+    )
     # create the agent
     agent_query = f"""
         ?[agent_id, developer_id, model, name, about, metadata] <- [
-            ["{agent_id_str}", "{developer_id}", "{model}", "{name}", "{about}", {metadata}]
+            {query_cols}
         ]
 
         :insert agents {{

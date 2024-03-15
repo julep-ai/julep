@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, HTTPException, status
 from .protocol import Model, ModelRequest
 from agents_api.clients.cozo import client
@@ -10,7 +11,7 @@ router = APIRouter()
 async def get_models(request: ModelRequest) -> Model:
     query = f"""
     input[model_name] <- [[
-        "{request.model}",
+        {json.dumps(request.model)},
     ]]
 
     ?[
@@ -42,9 +43,9 @@ async def get_models(request: ModelRequest) -> Model:
 async def create_models(model: Model):
     query = f"""
     ?[model_name, max_length, default_settings] <- [[
-        "{model.model}",
+        {json.dumps(model.model)},
         {model.max_length},
-        {model.default_settings},
+        {json.dumps(model.default_settings)},
     ]]
 
     :put models {{
