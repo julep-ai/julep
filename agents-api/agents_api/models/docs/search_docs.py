@@ -1,4 +1,3 @@
-import json
 from typing import Literal
 from uuid import UUID
 
@@ -20,7 +19,7 @@ def search_docs_snippets_by_embedding_query(
             query_embedding,
         ] <- [[
             to_uuid("{owner_id}"),
-            vec({json.dumps(query_embedding)}),
+            vec({query_embedding}),
         ]]
 
         candidate[

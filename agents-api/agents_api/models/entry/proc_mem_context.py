@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 
 
@@ -33,9 +32,9 @@ def proc_mem_context_query(
         # (This is temporary to this query)
         input[session_id, tool_query, instruction_query, doc_query] <- [[
             to_uuid("{session_id}"),
-            vec({json.dumps(tool_query_embedding)}),
-            vec({json.dumps(instruction_query_embedding)}),
-            vec({json.dumps(doc_query_embedding)}),
+            vec({tool_query_embedding}),
+            vec({instruction_query_embedding}),
+            vec({doc_query_embedding}),
         ]]
 
         ?[session_id, tool_query, instruction_query, doc_query, agent_id, user_id] :=

@@ -1,5 +1,6 @@
-from datetime import datetime
+import json
 from ...common.protocol.entries import Entry
+from ...common.utils.datetime import utcnow
 
 
 def add_entries_query(entries: list[Entry]) -> str:
@@ -8,10 +9,15 @@ def add_entries_query(entries: list[Entry]) -> str:
 
     entries_lst = []
     for e in entries:
-        ts = datetime.utcnow().timestamp()
+        ts = utcnow().timestamp()
+        source = json.dumps(e.source)
+        role = json.dumps(e.role)
+        name = json.dumps(e.name or "null")
+        content = json.dumps(_aux_content(e))
+        tokenizer = json.dumps(e.tokenizer)
         if e.content:
             entries_lst.append(
-                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), "{e.source}", "{e.role}", "{e.name or "null"}", "{_aux_content(e)}", {e.token_count}, "{e.tokenizer}", {ts}, {ts}]'
+                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), {source}, {role}, {name}, {content}, {e.token_count}, {tokenizer}, {ts}, {ts}]'
             )
 
     if not len(entries_lst):

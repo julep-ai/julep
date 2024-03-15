@@ -1,3 +1,4 @@
+import json
 from uuid import UUID, uuid4
 
 from agents_api.autogen.openapi_model import FunctionDef
@@ -14,10 +15,12 @@ def create_tools_query(
     functions_input = []
 
     for function, embedding in zip(functions, embeddings):
+        function_name = json.dumps(function.name)
+        function_description = json.dumps(function.description)
         tool_id = uuid4()
         parameters = function.parameters.model_dump_json()
         functions_input.append(
-            f"""[to_uuid("{agent_id}"), to_uuid("{tool_id}"), "{function.name}", "{function.description}", {parameters}, vec({embedding}), now()]"""
+            f"""[to_uuid("{agent_id}"), to_uuid("{tool_id}"), {function_name}, {function_description}, {parameters}, vec({embedding}), now()]"""
         )
 
     records = "\n".join(functions_input)
