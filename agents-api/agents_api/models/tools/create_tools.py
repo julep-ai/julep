@@ -22,9 +22,9 @@ def create_function_query(
         "agent_id": agent_id,
         "tool_id": tool_id,
         "created_at": created_at,
-        "name": json.dumps(function["name"]),
-        "description": json.dumps(function["description"]),
-        "parameters": json.dumps(function.get("parameters", {})),
+        "name": function["name"],
+        "description": function["description"],
+        "parameters": function.get("parameters", {}),
     }
 
     function_cols, function_rows = cozo_process_mutate_data(function_data)
@@ -58,9 +58,9 @@ def create_multiple_functions_query(
             "agent_id": agent_id,
             "created_at": created_at,
             "tool_id": str(uuid4()),
-            "name": json.dumps(function["name"]),
-            "description": json.dumps(function["description"]),
-            "parameters": json.dumps(function["parameters"]),
+            "name": function["name"],
+            "description": function["description"],
+            "parameters": function["parameters"],
         }
 
         function_cols, new_function_rows = cozo_process_mutate_data(function_data)
