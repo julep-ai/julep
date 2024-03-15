@@ -1,15 +1,21 @@
-from fastapi import APIRouter, HTTPException, status, Depends
 import json
-from pydantic import UUID4, BaseModel
-from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
+from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, status, Depends
 from pycozo.client import QueryException
+from pydantic import UUID4, BaseModel
+from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
 from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
 from agents_api.common.utils.datetime import utcnow
-from agents_api.common.exceptions.agents import AgentNotFoundError
+from agents_api.common.exceptions.agents import (
+    AgentNotFoundError,
+    AgentToolNotFoundError,
+    AgentDocNotFoundError,
+)
 from agents_api.models.agent.create_agent import create_agent_query
 from agents_api.models.agent.list_agents import list_agents_query
 from agents_api.models.agent.delete_agent import delete_agent_query
@@ -58,6 +64,7 @@ from agents_api.autogen.openapi_model import (
     Tool,
     FunctionDef,
     Instruction,
+    UpdateToolRequest,
 )
 
 
@@ -86,8 +93,11 @@ async def delete_agent(
     # TODO: maybe add better 404 handling, than catching QueryException
     try:
         client.run(delete_agent_query(x_developer_id, agent_id))
-    except QueryException:
-        raise AgentNotFoundError(x_developer_id, agent_id)
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentNotFoundError(x_developer_id, agent_id)
+
+        raise
 
     return ResourceDeletedResponse(id=agent_id, deleted_at=utcnow())
 
@@ -150,6 +160,11 @@ async def update_agent(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Agent not found",
         )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentNotFoundError(x_developer_id, agent_id)
+
+        raise
 
 
 @router.get("/agents/{agent_id}", tags=["agents"])
@@ -183,6 +198,11 @@ async def get_agent_details(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Agent not found",
         )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentNotFoundError(x_developer_id, agent_id)
+
+        raise
 
 
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
@@ -271,7 +291,16 @@ async def list_agents(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
+    metadata_filter: str = "{}",
 ) -> AgentList:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
     return AgentList(
         items=[
             Agent(**row.to_dict())
@@ -280,6 +309,7 @@ async def list_agents(
                     developer_id=x_developer_id,
                     limit=limit,
                     offset=offset,
+                    metadata_filter=metadata_filter,
                 )
             ).iterrows()
         ]
@@ -326,7 +356,24 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
 
 
 @router.get("/agents/{agent_id}/docs", tags=["agents"])
-async def list_docs(agent_id: UUID4, limit: int = 100, offset: int = 0) -> DocsList:
+async def list_docs(
+    agent_id: UUID4, limit: int = 100, offset: int = 0, metadata_filter: str = "{}"
+) -> DocsList:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
+    # TODO: Implement metadata filter
+    if metadata_filter:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="metadata_filter is not implemented",
+        )
+
     resp = client.run(
         list_docs_snippets_by_owner_query(
             owner_type="agent",
@@ -361,13 +408,19 @@ async def delete_docs(agent_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse
             detail="Docs not found",
         )
 
-    client.run(
-        delete_docs_by_id_query(
-            owner_type="agent",
-            owner_id=agent_id,
-            doc_id=doc_id,
+    try:
+        client.run(
+            delete_docs_by_id_query(
+                owner_type="agent",
+                owner_id=agent_id,
+                doc_id=doc_id,
+            )
         )
-    )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentDocNotFoundError(agent_id, doc_id)
+
+        raise
 
     return ResourceDeletedResponse(id=doc_id, deleted_at=utcnow())
 
@@ -450,44 +503,63 @@ async def delete_tool(agent_id: UUID4, tool_id: UUID4) -> ResourceDeletedRespons
             detail="Tool not found",
         )
 
-    client.run(
-        delete_function_by_id_query(
-            agent_id=agent_id,
-            tool_id=tool_id,
+    try:
+        client.run(
+            delete_function_by_id_query(
+                agent_id=agent_id,
+                tool_id=tool_id,
+            )
         )
-    )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentToolNotFoundError(agent_id, tool_id)
+
+        raise
 
     return ResourceDeletedResponse(id=tool_id, deleted_at=utcnow())
 
 
 @router.put("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
 async def update_tool(
-    agent_id: UUID4, tool_id: UUID4, request: FunctionDef
+    agent_id: UUID4, tool_id: UUID4, request: UpdateToolRequest
 ) -> ResourceUpdatedResponse:
-    embedding = await embed(
+    embeddings = await embed(
         [
             function_embed_instruction
-            + request.description
+            + request.function.description
             + "\nParameters: "
-            + json.dumps(request.parameters.model_dump())
+            + json.dumps(request.function.parameters.model_dump())
         ],
         join_inputs=True,
     )
 
     try:
-        return client.run(
-            update_tool_by_id_query(
-                agent_id=agent_id,
-                tool_id=tool_id,
-                function=request,
-                embedding=embedding,
-            )
+        resp = [
+            row.to_dict()
+            for _, row in client.run(
+                update_tool_by_id_query(
+                    agent_id=agent_id,
+                    tool_id=tool_id,
+                    function=request.function,
+                    embedding=embeddings[0] if embeddings else [],
+                )
+            ).iterrows()
+        ][0]
+
+        return ResourceUpdatedResponse(
+            id=resp["tool_id"],
+            updated_at=resp["updated_at"],
         )
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Agent or tool not found",
         )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentToolNotFoundError(agent_id, tool_id)
+
+        raise
 
 
 @router.delete("/agents/{agent_id}/memories/{memory_id}", tags=["agents"])

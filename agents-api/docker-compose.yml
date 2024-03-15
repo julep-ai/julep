@@ -45,6 +45,8 @@ services:
           - ./**/*.pyc
         - action: rebuild
           path: poetry.lock
+        - action: rebuild
+          path: Dockerfile
 
   worker:
     env_file:
@@ -62,6 +64,18 @@ services:
         condition: service_started
       temporal:
         condition: service_started
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./agents_api
+          target: /app/agents_api
+          ignore:
+          - ./**/*.pyc
+        - action: rebuild
+          path: poetry.lock
+        - action: rebuild
+          path: Dockerfile.worker
 
   text-embeddings-inference:
     container_name: text-embeddings-inference
@@ -99,6 +113,11 @@ services:
     volumes:
       - temporal_data:/home/temporal
 
+    develop:
+      watch:
+        - action: rebuild
+          path: Dockerfile.temporal
+
   cozo-migrate:
     env_file:
       - path: .env
@@ -114,6 +133,14 @@ services:
       context: .
       dockerfile: Dockerfile.migration
     restart: "no" # Make sure to double quote this
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./migrations
+          target: /app/migrations
+        - action: rebuild
+          path: Dockerfile.migration
 
 volumes:
   temporal_data:

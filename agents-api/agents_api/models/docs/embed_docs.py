@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 
 
@@ -12,7 +11,7 @@ def embed_docs_snippets_query(
 
     records = "\n".join(
         [
-            f'[to_uuid("{doc_id}"), {snippet_idx}, vec({json.dumps(embedding)})],'
+            f'[to_uuid("{doc_id}"), {snippet_idx}, vec({embedding})],'
             for snippet_idx, embedding in zip(snippet_indices, embeddings)
         ]
     )

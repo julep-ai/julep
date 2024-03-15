@@ -1,8 +1,9 @@
+import json
+from typing import Optional, TypedDict
 from uuid import UUID
 
-from typing import Optional, TypedDict
 from beartype import beartype
-from beartype.typing import Awaitable, List, Literal, Union
+from beartype.typing import Any, Awaitable, Dict, List, Literal, Union
 
 from ..api.types import (
     Agent,
@@ -207,7 +208,10 @@ class BaseAgentsManager(BaseManager):
         )
 
     def _list_items(
-        self, limit: Optional[int] = None, offset: Optional[int] = None
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        metadata_filter: str = "{}",
     ) -> Union[ListAgentsResponse, Awaitable[ListAgentsResponse]]:
         """
         Lists items with optional pagination.
@@ -224,6 +228,7 @@ class BaseAgentsManager(BaseManager):
         return self.api_client.list_agents(
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter,
         )
 
     def _delete(self, agent_id: Union[str, UUID]) -> Union[None, Awaitable[None]]:
@@ -409,6 +414,7 @@ class AgentsManager(BaseAgentsManager):
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[Agent]:
         """
         List the Agent objects, possibly with pagination.
@@ -427,9 +433,12 @@ class AgentsManager(BaseAgentsManager):
           BeartypeDecorHintPepParamViolation: If the function is called with incorrect types
                                               for the `limit` or `offset` parameters.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         return self._list_items(
             limit=limit,
             offset=offset,
+            metadata_filter=metadata_filter_string,
         ).items
 
     @beartype
@@ -598,6 +607,7 @@ class AsyncAgentsManager(BaseAgentsManager):
         *,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
+        metadata_filter: Dict[str, Any] = {},
     ) -> List[Agent]:
         """
         Asynchronously lists agents with optional limit and offset.
@@ -612,10 +622,13 @@ class AsyncAgentsManager(BaseAgentsManager):
         Returns:
             List[Agent]: A list of agent items collected based on the provided 'limit' and 'offset' parameters.
         """
+        metadata_filter_string = json.dumps(metadata_filter)
+
         return (
             await self._list_items(
                 limit=limit,
                 offset=offset,
+                metadata_filter=metadata_filter_string,
             )
         ).items
 

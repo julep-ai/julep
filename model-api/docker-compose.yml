@@ -15,6 +15,12 @@ services:
       - HF_TOKEN=${HF_TOKEN}
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
       - SENTRY_DSN=${SENTRY_DSN}
+      - MODEL_NAME=${MODEL_NAME}
+      - TP_SIZE=${TP_SIZE}
+      - MAX_MODEL_LEN=${MAX_MODEL_LEN}
+      - MAX_NUM_SEQS=${MAX_NUM_SEQS}
+      - GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION}
+      - DTYPE=${DTYPE}
     container_name: model-api
     build:
       context: .
@@ -33,7 +39,15 @@ services:
       - "traefik.http.middlewares.model_api-chain.chain.middlewares=model_api-add_headers"
       - "traefik.http.routers.model_api.middlewares=model_api-chain@docker"
 
- 
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./model_api
+          target: /app/model_api
+          ignore:
+          - ./**/*.pyc
+        - action: rebuild
+          path: poetry.lock
     deploy:
       resources:
         reservations:

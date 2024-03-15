@@ -14,6 +14,9 @@ except ImportError:
 class ResourceDeletedResponse(pydantic.BaseModel):
     id: str
     deleted_at: dt.datetime
+    jobs: typing.Optional[typing.List[str]] = pydantic.Field(
+        description="IDs (if any) of jobs created as part of this request"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

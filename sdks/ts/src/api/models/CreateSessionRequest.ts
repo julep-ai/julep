@@ -1,0 +1,25 @@
+/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+/**
+ * A valid request payload for creating a session
+ */
+export type CreateSessionRequest = {
+  /**
+   * User ID of user to associate with this session
+   */
+  user_id: string;
+  /**
+   * Agent ID of agent to associate with this session
+   */
+  agent_id: string;
+  /**
+   * A specific situation that sets the background for this session
+   */
+  situation?: string;
+  /**
+   * Optional metadata
+   */
+  metadata?: any;
+};

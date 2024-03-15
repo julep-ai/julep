@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, HTTPException, status
 from pydantic import UUID4
 from .protocol import UpsertBeliefRequest, Belief, IndexRequest
@@ -110,7 +111,7 @@ async def create_belief(request: UpsertBeliefRequest):
         [
             to_uuid("{request.belief_id}"),
             to_uuid("{request.character_id}"),
-            "{request.belief}",
+            {json.dumps(request.belief)},
             {request.embedding},
         ]
     ]

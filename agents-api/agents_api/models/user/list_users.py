@@ -1,7 +1,21 @@
+import json
+from typing import Any
 from uuid import UUID
 
 
-def list_users_query(developer_id: UUID, limit: int = 100, offset: int = 0):
+def list_users_query(
+    developer_id: UUID,
+    limit: int = 100,
+    offset: int = 0,
+    metadata_filter: dict[str, Any] = {},
+):
+    metadata_filter_str = ", ".join(
+        [
+            f"metadata->{json.dumps(k)} == {json.dumps(v)}"
+            for k, v in metadata_filter.items()
+        ]
+    )
+
     return f"""
     input[developer_id] <- [[to_uuid("{developer_id}")]]
 
@@ -13,7 +27,7 @@ def list_users_query(developer_id: UUID, limit: int = 100, offset: int = 0):
         updated_at,
         metadata,
     ] :=
-        input[developer_id], 
+        input[developer_id],
         *users {{
             user_id: id,
             developer_id,
@@ -22,8 +36,9 @@ def list_users_query(developer_id: UUID, limit: int = 100, offset: int = 0):
             created_at,
             updated_at,
             metadata,
-        }}
-    
+        }},
+        {metadata_filter_str}
+
     :limit {limit}
     :offset {offset}
     :sort -created_at
