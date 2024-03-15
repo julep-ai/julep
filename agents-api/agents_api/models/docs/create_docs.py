@@ -41,7 +41,7 @@ def create_docs_query(
             to_uuid("{owner_id}"),
             to_uuid("{id}"),
             {created_at},
-            {metadata},
+            {json.dumps(metadata)},
         ]]
 
         :insert {owner_type}_docs {{
@@ -60,6 +60,6 @@ def create_docs_query(
             to_uuid("{owner_id}"),
             to_uuid("{id}"),
             {created_at},
-            {metadata},
+            {json.dumps(metadata)},
         ]]
     }}"""

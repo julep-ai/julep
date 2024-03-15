@@ -1,7 +1,21 @@
+import json
+from typing import Any
 from uuid import UUID
 
 
-def list_sessions_query(developer_id: UUID, limit: int = 100, offset: int = 0):
+def list_sessions_query(
+    developer_id: UUID,
+    limit: int = 100,
+    offset: int = 0,
+    metadata_filter: dict[str, Any] = {},
+):
+    metadata_filter_str = ", ".join(
+        [
+            f"metadata->{json.dumps(k)} == {json.dumps(v)}"
+            for k, v in metadata_filter.items()
+        ]
+    )
+
     return f"""
         input[developer_id] <- [[
             to_uuid("{developer_id}"),
@@ -32,7 +46,9 @@ def list_sessions_query(developer_id: UUID, limit: int = 100, offset: int = 0):
                 agent_id,
                 user_id,
                 session_id: id,
-            }}, updated_at = to_int(validity)
+            }},
+            updated_at = to_int(validity),
+            {metadata_filter_str}
 
         :limit {limit}
         :offset {offset}

@@ -59,9 +59,9 @@ paths:
           description: Number of sessions to return
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of sessions to skip (sorted created_at descending order)
@@ -71,11 +71,11 @@ paths:
             minimum: 0
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -144,9 +144,9 @@ paths:
           description: Number of items to return
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
@@ -154,11 +154,11 @@ paths:
             type: integer
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -227,9 +227,9 @@ paths:
           description: Number of items to return
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
@@ -239,11 +239,11 @@ paths:
             minimum: 0
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -367,9 +367,9 @@ paths:
           description: ""
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: ""
@@ -411,9 +411,9 @@ paths:
           description: ""
           schema:
             type: integer
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: ""
@@ -443,6 +443,20 @@ paths:
           type: string
           format: uuid
         required: true
+    delete:
+      summary: Delete session history (does NOT delete related memories)
+      description: ""
+      operationId: DeleteSessionHistory
+      tags: []
+      parameters: []
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
+      security:
+        - api-key: []
   /sessions/{session_id}/chat:
     parameters:
       - in: path
@@ -712,11 +726,11 @@ paths:
             type: integer
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -797,11 +811,11 @@ paths:
             type: integer
         - in: query
           name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
           required: false
-          description: ""
           schema:
-            type: object
-            properties: {}
+            type: string
+            default: '{}'
         - in: query
           name: sort_by
           description: 'Which field to sort by: `created_at` or `updated_at`'
@@ -1979,9 +1993,13 @@ components:
           type: boolean
           description: Whether previous memories should be recalled or not
           default: true
+        record:
+          type: boolean
+          description: Whether this interaction should be recorded in history or not
+          default: true
         remember:
           type: boolean
-          description: Whether this interaction should be recorded in memory or not
+          description: Whether this interaction should form memories or not
           default: true
     Instruction:
       type: object
@@ -2015,8 +2033,7 @@ components:
       type: object
       properties:
         function:
-          oneOf:
-            - $ref: '#/components/schemas/FunctionDef'
+          $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - function
@@ -2067,6 +2084,13 @@ components:
         deleted_at:
           type: string
           format: date-time
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs (if any) of jobs created as part of this request
+          uniqueItems: true
       required:
         - id
         - deleted_at
@@ -2176,11 +2200,22 @@ components:
       type: object
       properties:
         function:
-          oneOf:
-            - $ref: '#/components/schemas/FunctionDef'
+          $ref: '#/components/schemas/PartialFunctionDef'
           description: Function definition and parameters
       required:
         - function
+    PartialFunctionDef:
+      type: object
+      properties:
+        description:
+          type: string
+          description: A description of what the function does, used by the model to choose when and how to call the function.
+        name:
+          type: string
+          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        parameters:
+          $ref: '#/components/schemas/FunctionParameters'
+          description: Parameters accepeted by this function
   securitySchemes:
     api-key:
       type: apiKey
@@ -2245,12 +2280,6 @@ components:
       schema:
         type: string
         format: uuid
-    metadata_filter:
-      in: query
-      required: false
-      description: ""
-      schema:
-        type: object
-        properties: {}
+  requestBodies: {}
 security:
   - api-key: []

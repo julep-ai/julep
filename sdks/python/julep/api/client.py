@@ -46,6 +46,7 @@ from .types.list_sessions_response import ListSessionsResponse
 from .types.list_users_request_order import ListUsersRequestOrder
 from .types.list_users_request_sort_by import ListUsersRequestSortBy
 from .types.list_users_response import ListUsersResponse
+from .types.partial_function_def import PartialFunctionDef
 from .types.patch_agent_request_metadata import PatchAgentRequestMetadata
 from .types.patch_session_request_metadata import PatchSessionRequestMetadata
 from .types.patch_user_request_metadata import PatchUserRequestMetadata
@@ -90,6 +91,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
         order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
@@ -100,6 +102,8 @@ class JulepApi:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -116,7 +120,13 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -187,6 +197,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListUsersRequestSortBy] = None,
         order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
@@ -197,6 +208,8 @@ class JulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -213,7 +226,13 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -282,6 +301,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
         order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
@@ -292,6 +312,8 @@ class JulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -308,7 +330,13 @@ class JulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -640,6 +668,39 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def delete_session_history(self, session_id: str) -> None:
+        """
+
+
+        Parameters:
+            - session_id: str.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.delete_session_history(
+            session_id="session_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"sessions/{session_id}/history",
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def chat(
         self,
         session_id: str,
@@ -662,6 +723,7 @@ class JulepApi:
         min_p: typing.Optional[float] = OMIT,
         preset: typing.Optional[ChatSettingsPreset] = OMIT,
         recall: typing.Optional[bool] = OMIT,
+        record: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
     ) -> ChatResponse:
         """
@@ -712,7 +774,9 @@ class JulepApi:
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
-            - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
+            - record: typing.Optional[bool]. Whether this interaction should be recorded in history or not
+
+            - remember: typing.Optional[bool]. Whether this interaction should form memories or not
         ---
         from julep import InputChatMlMessage, InputChatMlMessageRole
         from julep.client import JulepApi
@@ -766,6 +830,8 @@ class JulepApi:
             _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
+        if record is not OMIT:
+            _request["record"] = record
         if remember is not OMIT:
             _request["remember"] = remember
         _response = self._client_wrapper.httpx_client.request(
@@ -1224,6 +1290,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
         order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
@@ -1236,6 +1303,8 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1256,7 +1325,13 @@ class JulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1317,6 +1392,7 @@ class JulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
         order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
@@ -1329,6 +1405,8 @@ class JulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1349,7 +1427,13 @@ class JulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1683,7 +1767,7 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def patch_agent_tool(
-        self, agent_id: str, tool_id: str, *, function: FunctionDef
+        self, agent_id: str, tool_id: str, *, function: PartialFunctionDef
     ) -> ResourceUpdatedResponse:
         """
 
@@ -1693,9 +1777,9 @@ class JulepApi:
 
             - tool_id: str.
 
-            - function: FunctionDef. Function definition and parameters
+            - function: PartialFunctionDef. Function definition and parameters
         ---
-        from julep import FunctionDef
+        from julep import PartialFunctionDef
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -1704,10 +1788,7 @@ class JulepApi:
         client.patch_agent_tool(
             agent_id="agent_id",
             tool_id="tool_id",
-            function=FunctionDef(
-                name="name",
-                parameters={},
-            ),
+            function=PartialFunctionDef(),
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1784,6 +1865,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
         order: typing.Optional[ListSessionsRequestOrder] = None,
     ) -> ListSessionsResponse:
@@ -1794,6 +1876,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int]. Number of sessions to return
 
             - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1810,7 +1894,13 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1881,6 +1971,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListUsersRequestSortBy] = None,
         order: typing.Optional[ListUsersRequestOrder] = None,
     ) -> ListUsersResponse:
@@ -1891,6 +1982,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -1907,7 +2000,13 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1976,6 +2075,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
         order: typing.Optional[ListAgentsRequestOrder] = None,
     ) -> ListAgentsResponse:
@@ -1986,6 +2086,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int]. Number of items to return
 
             - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -2002,7 +2104,13 @@ class AsyncJulepApi:
             "GET",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2334,6 +2442,39 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def delete_session_history(self, session_id: str) -> None:
+        """
+
+
+        Parameters:
+            - session_id: str.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.delete_session_history(
+            session_id="session_id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"sessions/{session_id}/history",
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def chat(
         self,
         session_id: str,
@@ -2356,6 +2497,7 @@ class AsyncJulepApi:
         min_p: typing.Optional[float] = OMIT,
         preset: typing.Optional[ChatSettingsPreset] = OMIT,
         recall: typing.Optional[bool] = OMIT,
+        record: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
     ) -> ChatResponse:
         """
@@ -2406,7 +2548,9 @@ class AsyncJulepApi:
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
-            - remember: typing.Optional[bool]. Whether this interaction should be recorded in memory or not
+            - record: typing.Optional[bool]. Whether this interaction should be recorded in history or not
+
+            - remember: typing.Optional[bool]. Whether this interaction should form memories or not
         ---
         from julep import InputChatMlMessage, InputChatMlMessageRole
         from julep.client import AsyncJulepApi
@@ -2460,6 +2604,8 @@ class AsyncJulepApi:
             _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
+        if record is not OMIT:
+            _request["record"] = record
         if remember is not OMIT:
             _request["remember"] = remember
         _response = await self._client_wrapper.httpx_client.request(
@@ -2918,6 +3064,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
         order: typing.Optional[GetAgentDocsRequestOrder] = None,
     ) -> GetAgentDocsResponse:
@@ -2930,6 +3077,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -2950,7 +3099,13 @@ class AsyncJulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -3011,6 +3166,7 @@ class AsyncJulepApi:
         *,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
+        metadata_filter: typing.Optional[str] = None,
         sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
         order: typing.Optional[GetUserDocsRequestOrder] = None,
     ) -> GetUserDocsResponse:
@@ -3023,6 +3179,8 @@ class AsyncJulepApi:
             - limit: typing.Optional[int].
 
             - offset: typing.Optional[int].
+
+            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
 
             - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
 
@@ -3043,7 +3201,13 @@ class AsyncJulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
             ),
             params=remove_none_from_dict(
-                {"limit": limit, "offset": offset, "sort_by": sort_by, "order": order}
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "metadata_filter": metadata_filter,
+                    "sort_by": sort_by,
+                    "order": order,
+                }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -3377,7 +3541,7 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def patch_agent_tool(
-        self, agent_id: str, tool_id: str, *, function: FunctionDef
+        self, agent_id: str, tool_id: str, *, function: PartialFunctionDef
     ) -> ResourceUpdatedResponse:
         """
 
@@ -3387,9 +3551,9 @@ class AsyncJulepApi:
 
             - tool_id: str.
 
-            - function: FunctionDef. Function definition and parameters
+            - function: PartialFunctionDef. Function definition and parameters
         ---
-        from julep import FunctionDef
+        from julep import PartialFunctionDef
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -3398,10 +3562,7 @@ class AsyncJulepApi:
         await client.patch_agent_tool(
             agent_id="agent_id",
             tool_id="tool_id",
-            function=FunctionDef(
-                name="name",
-                parameters={},
-            ),
+            function=PartialFunctionDef(),
         )
         """
         _response = await self._client_wrapper.httpx_client.request(

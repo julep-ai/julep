@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 
 
@@ -12,7 +11,7 @@ def embed_instructions_query(
 
     records = "\n".join(
         [
-            f'[to_uuid("{agent_id}"), {instruction_idx}, vec({json.dumps(embedding)})],'
+            f'[to_uuid("{agent_id}"), {instruction_idx}, vec({embedding})],'
             for instruction_idx, embedding in zip(instruction_indices, embeddings)
         ]
     )

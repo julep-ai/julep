@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 
 
@@ -18,7 +17,7 @@ def search_instructions_query(
             query_embedding,
         ] <- [[
             to_uuid("{agent_id}"),
-            vec({json.dumps(query_embedding)}),
+            vec({query_embedding}),
         ]]
 
         # Keep instructions that are important

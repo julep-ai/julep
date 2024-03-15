@@ -1,3 +1,5 @@
+import json
+from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
@@ -29,6 +31,7 @@ from agents_api.autogen.openapi_model import (
     ChatResponse,
     FinishReason,
     CompletionUsage,
+    Stop,
 )
 from .protocol import Settings
 from .session import RecursiveSummarizationSession
@@ -96,14 +99,22 @@ async def list_sessions(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
+    metadata_filter: str = "{}",
 ) -> SessionList:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
+    query = list_sessions_query(
+        x_developer_id, limit, offset, metadata_filter=metadata_filter
+    )
+
     return SessionList(
-        items=[
-            Session(**row.to_dict())
-            for _, row in client.run(
-                list_sessions_query(x_developer_id, limit, offset),
-            ).iterrows()
-        ]
+        items=[Session(**row.to_dict()) for _, row in client.run(query).iterrows()]
     )
 
 
@@ -198,6 +209,11 @@ async def session_chat(
         developer_id=x_developer_id,
         session_id=session_id,
     )
+
+    stop = request.stop
+    if isinstance(request.stop, Stop):
+        stop = request.stop.root
+
     settings = Settings(
         model="",
         frequency_penalty=request.frequency_penalty,
@@ -208,7 +224,7 @@ async def session_chat(
         repetition_penalty=request.repetition_penalty,
         response_format=request.response_format,
         seed=request.seed,
-        stop=request.stop,
+        stop=stop,
         stream=request.stream,
         temperature=request.temperature,
         top_p=request.top_p,

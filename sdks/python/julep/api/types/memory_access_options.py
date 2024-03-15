@@ -15,8 +15,11 @@ class MemoryAccessOptions(pydantic.BaseModel):
     recall: typing.Optional[bool] = pydantic.Field(
         description="Whether previous memories should be recalled or not"
     )
+    record: typing.Optional[bool] = pydantic.Field(
+        description="Whether this interaction should be recorded in history or not"
+    )
     remember: typing.Optional[bool] = pydantic.Field(
-        description="Whether this interaction should be recorded in memory or not"
+        description="Whether this interaction should form memories or not"
     )
 
     def json(self, **kwargs: typing.Any) -> str:

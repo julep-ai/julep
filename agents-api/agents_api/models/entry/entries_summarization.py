@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 from ...common.protocol.entries import Entry
 
@@ -48,10 +49,16 @@ def entries_summarization_query(
         ]
     )
 
+    source = json.dumps(new_entry.source)
+    role = json.dumps(new_entry.role)
+    name = json.dumps(new_entry.name)
+    content = json.dumps(new_entry.content)
+    tokenizer = json.dumps(new_entry.tokenizer)
+
     return f"""
     {{
         ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at, timestamp] <- [
-            [to_uuid("{new_entry.id}"), to_uuid("{session_id}"), "{new_entry.source}", "{new_entry.role}", "{new_entry.name}", "{new_entry.content}", {new_entry.token_count}, "{new_entry.tokenizer}", {new_entry.created_at}, {new_entry.timestamp}]
+            [to_uuid("{new_entry.id}"), to_uuid("{session_id}"), {source}, {role}, {name}, {content}, {new_entry.token_count}, {tokenizer}, {new_entry.created_at}, {new_entry.timestamp}]
         ]
 
         :insert entries {{
