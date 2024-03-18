@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import UUID
 from ...common.protocol.entries import Entry
 
