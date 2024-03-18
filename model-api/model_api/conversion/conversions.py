@@ -110,6 +110,7 @@ def _validate_message(message: ChatMLMessage, continue_: bool, is_last: bool):
         "information",
         "functions",
         "instruction",
+        None,
     }
 
     if msg_role == "system" and message.name not in allowed_system_names:
