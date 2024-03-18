@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from typing import Any
 from uuid import UUID
 

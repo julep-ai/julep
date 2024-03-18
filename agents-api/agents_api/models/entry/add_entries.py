@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from ...common.protocol.entries import Entry
 from ...common.utils.datetime import utcnow
 
@@ -12,7 +12,7 @@ def add_entries_query(entries: list[Entry]) -> str:
         ts = utcnow().timestamp()
         source = json.dumps(e.source)
         role = json.dumps(e.role)
-        name = json.dumps(e.name or "null")
+        name = json.dumps(e.name)
         content = json.dumps(_aux_content(e))
         tokenizer = json.dumps(e.tokenizer)
         if e.content:

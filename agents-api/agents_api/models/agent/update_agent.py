@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import UUID
 
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -22,9 +22,6 @@ def update_agent_query(
         agent_id=agent_id, instructions=instructions
     )
     # Agent update query
-    agent_id = str(agent_id)
-    developer_id = str(developer_id)
-
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
