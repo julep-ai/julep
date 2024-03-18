@@ -82,7 +82,7 @@ def proc_mem_context_query(
             index = 1,
             role = "system",
             name = "information",
-            content = concat('About me (', agent_name, '), the agent: ', about),
+            content = concat('About me (', agent_name, ') ', about),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
             num_chars > 0
@@ -100,7 +100,7 @@ def proc_mem_context_query(
             index = 2,
             role = "system",
             name = "information",
-            content = concat('About the user (', user_name, ')', about),
+            content = concat('About the user ', if(length(user_name) > 0, concat('(', user_name, ') '), ""), about),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
             num_chars > 0
