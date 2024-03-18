@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import UUID
 
 from ...autogen.openapi_model import FunctionDef
@@ -8,8 +8,6 @@ def update_tool_by_id_query(
     agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
 ) -> str:
     # Agent update query
-    agent_id = str(agent_id)
-    tool_id = str(tool_id)
     function = function.model_dump()
 
     name = json.dumps(function["name"])

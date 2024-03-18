@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import UUID
 
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -6,9 +6,6 @@ from ...common.utils.datetime import utcnow
 
 
 def update_user_query(developer_id: UUID, user_id: UUID, **update_data) -> str:
-    user_id = str(user_id)
-    developer_id = str(developer_id)
-
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},

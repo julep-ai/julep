@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import uuid4, UUID
 
 from ...autogen.openapi_model import FunctionDef
@@ -11,8 +11,6 @@ def create_function_query(
     id: UUID,
     function: FunctionDef,
 ):
-    agent_id = str(agent_id)
-    tool_id = str(id)
     created_at = utcnow().timestamp()
 
     # Process function definitions
@@ -20,7 +18,7 @@ def create_function_query(
 
     function_data = {
         "agent_id": agent_id,
-        "tool_id": tool_id,
+        "tool_id": id,
         "created_at": created_at,
         "name": function["name"],
         "description": function["description"],
@@ -57,7 +55,7 @@ def create_multiple_functions_query(
         function_data = {
             "agent_id": agent_id,
             "created_at": created_at,
-            "tool_id": str(uuid4()),
+            "tool_id": uuid4(),
             "name": function["name"],
             "description": function["description"],
             "parameters": function["parameters"],
