@@ -65,14 +65,10 @@ def message_role_to_prefix(message: ChatMLMessage) -> str | None:
         case {"role": "system", "name": "situation", **rest}:
             return "situation"
 
-        case {"role": "system", "name": name, **rest}:
-            return name.lower()
-
         # If empty <system> tag, then assume role="situation"
         case {"role": "system", **rest}:
             name = rest.get("name")
-            if not name:
-                return "situation"
+            return name.lower() if name else "situation"
 
         case msg:
             raise InvalidMessageFormat(msg)
