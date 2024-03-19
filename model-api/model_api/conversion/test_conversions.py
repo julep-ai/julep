@@ -786,3 +786,28 @@ I am talking to John<|im_end|>
 <|im_start|>me
 """
     )
+
+
+def test_situation_name_is_none():
+    messages = [
+        ChatMLMessage(
+            **{
+                "role": "system",
+                "content": "I am talking to John",
+            }
+        )
+    ]
+
+    prompt = to_prompt(
+        messages,
+        bos="<|im_start|>",
+        eos="<|im_end|>",
+    )
+
+    assert (
+        prompt
+        == """<|im_start|>situation
+I am talking to John<|im_end|>
+<|im_start|>me
+"""
+    )
