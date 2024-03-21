@@ -416,7 +416,7 @@ class ChatCompletionRequest(ChatCompletionRequest):
     
     @validator("max_tokens")
     def set_max_tokens(cls, max_tokens):
-        return max_tokens or DEFAULT_MAX_TOKENS
+        return max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS
     
     @validator("stream")
     def set_stream(cls, stream):
