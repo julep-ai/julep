@@ -26,7 +26,7 @@ class Settings(BaseModel):
 
     @validator("max_tokens")
     def set_max_tokens(cls, max_tokens):
-        return max_tokens or 200
+        return max_tokens if max_tokens is not None else 200
 
     @validator("stream")
     def set_stream(cls, stream):
