@@ -1,44 +1,56 @@
-from uuid import uuid4
-
 from ward import test
 
 from julep.api.types import User
 
-from .fixtures import async_client, client
-
-
-@test("users.get")
-def _(client=client):
-    response = client.users.get(uuid4())
-    assert isinstance(response, User)
-
-
-@test("async users.get")
-async def _(client=async_client):
-    response = await client.users.get(uuid4())
-    assert isinstance(response, User)
+from .fixtures import (
+    async_client,
+    client,
+    mock_user,
+    mock_user_update,
+    test_user,
+)
 
 
 @test("users.create")
-def _(client=client):
-    response = client.users.create(
-        name="test user",
-        about="test user about",
-    )
-
-    assert isinstance(response, User)
-    assert response.created_at
+def _(user=test_user):
+    assert isinstance(user, User)
+    assert hasattr(user, "created_at")
+    assert user.name == mock_user["name"]
+    assert user.about == mock_user["about"]
 
 
-@test("async users.create")
+@test("async users.create, users.get, users.update & users.delete")
 async def _(client=async_client):
-    response = await client.users.create(
-        name="test user",
-        about="test user about",
-    )
+    user = await client.users.create(**mock_user)
+
+    assert isinstance(user, User)
+    assert hasattr(user, "created_at")
+    assert user.name == mock_user["name"]
+    assert user.about == mock_user["about"]
+
+    try:
+        response = await client.users.get(user.id)
+        assert isinstance(response, User)
+        assert response.id == user.id
+        assert response.name == user.name
+        assert response.about == user.about
+
+        updated = await client.users.update(user_id=user.id, **mock_user_update)
+        assert updated.name == mock_user_update["name"]
+        assert updated.about == mock_user_update["about"]
+
+    finally:
+        response = await client.users.delete(user_id=user.id)
+        assert response is None
+
+
+@test("users.get")
+def _(client=client, user=test_user):
+    response = client.users.get(user.id)
 
     assert isinstance(response, User)
-    assert response.created_at
+    assert response.name == mock_user["name"]
+    assert response.about == mock_user["about"]
 
 
 @test("users.list")
@@ -56,42 +68,22 @@ async def _(client=async_client):
 
 
 @test("users.update")
-def _(client=client):
+def _(client=client, user=test_user):
     response = client.users.update(
-        user_id=uuid4(),
-        name="test user",
-        about="test user about",
+        user_id=user.id,
+        **mock_user_update,
     )
 
     assert isinstance(response, User)
-    assert response.updated_at
-
-
-@test("async users.update")
-async def _(client=async_client):
-    response = await client.users.update(
-        user_id=uuid4(),
-        name="test user",
-        about="test user about",
-    )
-
-    assert isinstance(response, User)
-    assert response.updated_at
+    assert hasattr(response, "updated_at")
+    assert response.name == mock_user_update["name"]
+    assert response.about == mock_user_update["about"]
 
 
 @test("users.delete")
-def _(client=client):
+def _(client=client, user=test_user):
     response = client.users.delete(
-        user_id=uuid4(),
-    )
-
-    assert response is None
-
-
-@test("async users.delete")
-async def _(client=async_client):
-    response = await client.users.delete(
-        user_id=uuid4(),
+        user_id=user.id,
     )
 
     assert response is None
