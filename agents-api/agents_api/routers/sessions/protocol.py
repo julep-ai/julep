@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator, ConfigDict
 from agents_api.autogen.openapi_model import ResponseFormat, Preset, Tool
 
 
 class Settings(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
+
     model: str
     frequency_penalty: float | None = Field(default=0)
     length_penalty: float | None = Field(default=1.0)
@@ -21,3 +23,11 @@ class Settings(BaseModel):
     min_p: float | None = Field(default=0.01)
     preset: Preset | None = Field(default=None)
     tools: list[Tool] | None = Field(default=None)
+
+    @validator("max_tokens")
+    def set_max_tokens(cls, max_tokens):
+        return max_tokens or 200
+
+    @validator("stream")
+    def set_stream(cls, stream):
+        return stream or False
