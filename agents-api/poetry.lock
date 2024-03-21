@@ -390,13 +390,13 @@ develop = ["coverage", "invoke", "path.py", "pylint", "pytest (>=3.2)", "pytest-
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.25.4"
+version = "0.25.5"
 description = "Datamodel Code Generator"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "datamodel_code_generator-0.25.4-py3-none-any.whl", hash = "sha256:cbf179517c610dce81589203d72b52e6ab848d78cb57264c1e5d929a9cc9d9a4"},
-    {file = "datamodel_code_generator-0.25.4.tar.gz", hash = "sha256:8e64c94a3bc92c69a6f56de84f0d61f70fd65c2e0ac95a27ce66837bd04c5492"},
+    {file = "datamodel_code_generator-0.25.5-py3-none-any.whl", hash = "sha256:3b62b42c8ebf2bb98cfbc24467b523c5b76780c585b72f4ac2fc1f1f576702ab"},
+    {file = "datamodel_code_generator-0.25.5.tar.gz", hash = "sha256:545f897481a94781e32b3c26a452ce049320b091310729f7fc6fa780f6a87898"},
 ]
 
 [package.dependencies]
@@ -603,13 +603,13 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0.dev0)"]
 
 [[package]]
 name = "google-auth"
-version = "2.28.2"
+version = "2.29.0"
 description = "Google Authentication Library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-auth-2.28.2.tar.gz", hash = "sha256:80b8b4969aa9ed5938c7828308f20f035bc79f9d8fb8120bf9dc8db20b41ba30"},
-    {file = "google_auth-2.28.2-py2.py3-none-any.whl", hash = "sha256:9fd67bbcd40f16d9d42f950228e9cf02a2ded4ae49198b27432d0cded5a74c38"},
+    {file = "google-auth-2.29.0.tar.gz", hash = "sha256:672dff332d073227550ffc7457868ac4218d6c500b155fe6cc17d2b13602c360"},
+    {file = "google_auth-2.29.0-py2.py3-none-any.whl", hash = "sha256:d452ad095688cd52bae0ad6fafe027f6a6d6f560e810fec20914e17a09526415"},
 ]
 
 [package.dependencies]
@@ -626,13 +626,13 @@ requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 
 [[package]]
 name = "google-cloud-aiplatform"
-version = "1.43.0"
+version = "1.44.0"
 description = "Vertex AI API client library"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "google-cloud-aiplatform-1.43.0.tar.gz", hash = "sha256:bd73af311a827e79bd2094a508e9343a2fa71b8ae5d8fa1178d0a96d034b421b"},
-    {file = "google_cloud_aiplatform-1.43.0-py2.py3-none-any.whl", hash = "sha256:8aa1bdcde1bec85ea53db26b638744f7bad91f3af27c2ab8a3ea32079fb709e3"},
+    {file = "google-cloud-aiplatform-1.44.0.tar.gz", hash = "sha256:65876e8080ed3c4b3ec79c9a4090faab558fc369e3e4e75fa7a43d9813680cb2"},
+    {file = "google_cloud_aiplatform-1.44.0-py2.py3-none-any.whl", hash = "sha256:3670d961ce8c3da3d4bc3451b0e73221a461ebc7805ca16a51df99cbfd3785b0"},
 ]
 
 [package.dependencies]
@@ -651,16 +651,16 @@ autologging = ["mlflow (>=1.27.0,<=2.1.1)"]
 cloud-profiler = ["tensorboard-plugin-profile (>=2.4.0,<3.0.0dev)", "tensorflow (>=2.4.0,<3.0.0dev)", "werkzeug (>=2.0.0,<2.1.0dev)"]
 datasets = ["pyarrow (>=10.0.1)", "pyarrow (>=3.0.0,<8.0dev)"]
 endpoint = ["requests (>=2.28.1)"]
-full = ["cloudpickle (<3.0)", "docker (>=5.0.3)", "explainable-ai-sdk (>=1.0.0)", "fastapi (>=0.71.0,<0.103.1)", "google-cloud-bigquery", "google-cloud-bigquery-storage", "google-cloud-logging (<4.0)", "google-vizier (>=0.1.6)", "httpx (>=0.23.0,<0.25.0)", "lit-nlp (==0.4.0)", "mlflow (>=1.27.0,<=2.1.1)", "numpy (>=1.15.0)", "pandas (>=1.0.0)", "pandas (>=1.0.0,<2.2.0)", "pyarrow (>=10.0.1)", "pyarrow (>=3.0.0,<8.0dev)", "pyarrow (>=6.0.1)", "pydantic (<2)", "pyyaml (==5.3.1)", "ray[default] (>=2.4,<2.5.dev0 || >2.9.0,!=2.9.1,!=2.9.2,<=2.9.3)", "ray[default] (>=2.5,<=2.9.3)", "requests (>=2.28.1)", "starlette (>=0.17.1)", "tensorflow (>=2.3.0,<2.15.0)", "tensorflow (>=2.3.0,<3.0.0dev)", "urllib3 (>=1.21.1,<1.27)", "uvicorn[standard] (>=0.16.0)"]
+full = ["cloudpickle (<3.0)", "docker (>=5.0.3)", "explainable-ai-sdk (>=1.0.0)", "fastapi (>=0.71.0,<0.103.1)", "google-cloud-bigquery", "google-cloud-bigquery-storage", "google-cloud-logging (<4.0)", "google-vizier (>=0.1.6)", "httpx (>=0.23.0,<0.25.0)", "immutabledict", "lit-nlp (==0.4.0)", "mlflow (>=1.27.0,<=2.1.1)", "numpy (>=1.15.0)", "pandas (>=1.0.0)", "pandas (>=1.0.0,<2.2.0)", "pyarrow (>=10.0.1)", "pyarrow (>=3.0.0,<8.0dev)", "pyarrow (>=6.0.1)", "pydantic (<2)", "pyyaml (==5.3.1)", "ray[default] (>=2.4,<2.5.dev0 || >2.9.0,!=2.9.1,!=2.9.2,<=2.9.3)", "ray[default] (>=2.5,<=2.9.3)", "requests (>=2.28.1)", "starlette (>=0.17.1)", "tensorflow (>=2.3.0,<2.15.0)", "tensorflow (>=2.3.0,<3.0.0dev)", "urllib3 (>=1.21.1,<1.27)", "uvicorn[standard] (>=0.16.0)"]
 lit = ["explainable-ai-sdk (>=1.0.0)", "lit-nlp (==0.4.0)", "pandas (>=1.0.0)", "tensorflow (>=2.3.0,<3.0.0dev)"]
 metadata = ["numpy (>=1.15.0)", "pandas (>=1.0.0)"]
 pipelines = ["pyyaml (==5.3.1)"]
 prediction = ["docker (>=5.0.3)", "fastapi (>=0.71.0,<0.103.1)", "httpx (>=0.23.0,<0.25.0)", "starlette (>=0.17.1)", "uvicorn[standard] (>=0.16.0)"]
 preview = ["cloudpickle (<3.0)", "google-cloud-logging (<4.0)"]
 private-endpoints = ["requests (>=2.28.1)", "urllib3 (>=1.21.1,<1.27)"]
-ray = ["google-cloud-bigquery", "google-cloud-bigquery-storage", "pandas (>=1.0.0,<2.2.0)", "pyarrow (>=6.0.1)", "pydantic (<2)", "ray[default] (>=2.4,<2.5.dev0 || >2.9.0,!=2.9.1,!=2.9.2,<=2.9.3)", "ray[default] (>=2.5,<=2.9.3)"]
+ray = ["google-cloud-bigquery", "google-cloud-bigquery-storage", "immutabledict", "pandas (>=1.0.0,<2.2.0)", "pyarrow (>=6.0.1)", "pydantic (<2)", "ray[default] (>=2.4,<2.5.dev0 || >2.9.0,!=2.9.1,!=2.9.2,<=2.9.3)", "ray[default] (>=2.5,<=2.9.3)"]
 tensorboard = ["tensorflow (>=2.3.0,<2.15.0)"]
-testing = ["bigframes", "cloudpickle (<3.0)", "docker (>=5.0.3)", "explainable-ai-sdk (>=1.0.0)", "fastapi (>=0.71.0,<0.103.1)", "google-api-core (>=2.11,<3.0.0)", "google-cloud-bigquery", "google-cloud-bigquery-storage", "google-cloud-logging (<4.0)", "google-vizier (>=0.1.6)", "grpcio-testing", "httpx (>=0.23.0,<0.25.0)", "ipython", "kfp (>=2.6.0,<3.0.0)", "lit-nlp (==0.4.0)", "mlflow (>=1.27.0,<=2.1.1)", "numpy (>=1.15.0)", "pandas (>=1.0.0)", "pandas (>=1.0.0,<2.2.0)", "pyarrow (>=10.0.1)", "pyarrow (>=3.0.0,<8.0dev)", "pyarrow (>=6.0.1)", "pydantic (<2)", "pyfakefs", "pytest-asyncio", "pytest-xdist", "pyyaml (==5.3.1)", "ray[default] (>=2.4,<2.5.dev0 || >2.9.0,!=2.9.1,!=2.9.2,<=2.9.3)", "ray[default] (>=2.5,<=2.9.3)", "requests (>=2.28.1)", "requests-toolbelt (<1.0.0)", "scikit-learn", "starlette (>=0.17.1)", "tensorboard-plugin-profile (>=2.4.0,<3.0.0dev)", "tensorflow (>=2.3.0,<2.15.0)", "tensorflow (>=2.3.0,<3.0.0dev)", "tensorflow (>=2.3.0,<=2.12.0)", "tensorflow (>=2.4.0,<3.0.0dev)", "torch (>=2.0.0,<2.1.0)", "urllib3 (>=1.21.1,<1.27)", "uvicorn[standard] (>=0.16.0)", "werkzeug (>=2.0.0,<2.1.0dev)", "xgboost", "xgboost-ray"]
+testing = ["bigframes", "cloudpickle (<3.0)", "docker (>=5.0.3)", "explainable-ai-sdk (>=1.0.0)", "fastapi (>=0.71.0,<0.103.1)", "google-api-core (>=2.11,<3.0.0)", "google-cloud-bigquery", "google-cloud-bigquery-storage", "google-cloud-logging (<4.0)", "google-vizier (>=0.1.6)", "grpcio-testing", "httpx (>=0.23.0,<0.25.0)", "immutabledict", "ipython", "kfp (>=2.6.0,<3.0.0)", "lit-nlp (==0.4.0)", "mlflow (>=1.27.0,<=2.1.1)", "numpy (>=1.15.0)", "pandas (>=1.0.0)", "pandas (>=1.0.0,<2.2.0)", "pyarrow (>=10.0.1)", "pyarrow (>=3.0.0,<8.0dev)", "pyarrow (>=6.0.1)", "pydantic (<2)", "pyfakefs", "pytest-asyncio", "pytest-xdist", "pyyaml (==5.3.1)", "ray[default] (>=2.4,<2.5.dev0 || >2.9.0,!=2.9.1,!=2.9.2,<=2.9.3)", "ray[default] (>=2.5,<=2.9.3)", "requests (>=2.28.1)", "requests-toolbelt (<1.0.0)", "scikit-learn", "starlette (>=0.17.1)", "tensorboard-plugin-profile (>=2.4.0,<3.0.0dev)", "tensorflow (==2.13.0)", "tensorflow (>=2.3.0,<2.15.0)", "tensorflow (>=2.3.0,<3.0.0dev)", "tensorflow (>=2.4.0,<3.0.0dev)", "torch (>=2.0.0,<2.1.0)", "urllib3 (>=1.21.1,<1.27)", "uvicorn[standard] (>=0.16.0)", "werkzeug (>=2.0.0,<2.1.0dev)", "xgboost", "xgboost-ray"]
 vizier = ["google-vizier (>=0.1.6)"]
 xai = ["tensorflow (>=2.3.0,<3.0.0dev)"]
 
@@ -733,13 +733,13 @@ protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4
 
 [[package]]
 name = "google-cloud-storage"
-version = "2.15.0"
+version = "2.16.0"
 description = "Google Cloud Storage API client library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-cloud-storage-2.15.0.tar.gz", hash = "sha256:7560a3c48a03d66c553dc55215d35883c680fe0ab44c23aa4832800ccc855c74"},
-    {file = "google_cloud_storage-2.15.0-py2.py3-none-any.whl", hash = "sha256:5d9237f88b648e1d724a0f20b5cde65996a37fe51d75d17660b1404097327dd2"},
+    {file = "google-cloud-storage-2.16.0.tar.gz", hash = "sha256:dda485fa503710a828d01246bd16ce9db0823dc51bbca742ce96a6817d58669f"},
+    {file = "google_cloud_storage-2.16.0-py2.py3-none-any.whl", hash = "sha256:91a06b96fb79cf9cdfb4e759f178ce11ea885c79938f89590344d079305f5852"},
 ]
 
 [package.dependencies]
@@ -1162,13 +1162,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "julep"
-version = "0.2.8"
+version = "0.2.9"
 description = "Julep is a platform for creating agents with long-term memory"
 optional = false
 python-versions = ">=3.8,<3.14"
 files = [
-    {file = "julep-0.2.8-py3-none-any.whl", hash = "sha256:f366e425d27ff29de5dd2cad9765b0f61851759fa35fdd7cd60dde7def08547a"},
-    {file = "julep-0.2.8.tar.gz", hash = "sha256:9a3edf51fa6c217ab30183a1ef734a17fcea214a47b064f9fe00660d44a5aa5a"},
+    {file = "julep-0.2.9-py3-none-any.whl", hash = "sha256:e0fb82ba0ecbb4ee62689f0d7a89497c0c7fd9e7f6d30f8e959589fea50b0cd1"},
+    {file = "julep-0.2.9.tar.gz", hash = "sha256:7b9007a7dee23cdde24befe0498401e591ca346b9c3d4a48faee490148a970b3"},
 ]
 
 [package.dependencies]
@@ -1513,13 +1513,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.14.0"
+version = "1.14.2"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.14.0-py3-none-any.whl", hash = "sha256:5c9fd3a59f5cbdb4020733ddf79a22f6b7a36d561968cb3f3dd255cdd263d9fe"},
-    {file = "openai-1.14.0.tar.gz", hash = "sha256:e287057adf0ec3315abc32ddcc968d095879abd9b68bf51c0402dab13ab5ae9b"},
+    {file = "openai-1.14.2-py3-none-any.whl", hash = "sha256:a48b3c4d635b603952189ac5a0c0c9b06c025b80eb2900396939f02bb2104ac3"},
+    {file = "openai-1.14.2.tar.gz", hash = "sha256:e5642f7c02cf21994b08477d7bb2c1e46d8f335d72c26f0396c5f89b15b5b153"},
 ]
 
 [package.dependencies]
@@ -2048,24 +2048,24 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "pytype"
-version = "2024.3.11"
+version = "2024.3.19"
 description = "Python type inferencer"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytype-2024.3.11-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:badcf1774e65b2654a44add37c2c85c4079f28eb05d6eb6b7b76fd5672c1d123"},
-    {file = "pytype-2024.3.11-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a3e04d81939f1b954779c490ec765aea1b5b2420d97565d9145b61bcd440792c"},
-    {file = "pytype-2024.3.11-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a73d337ac2b9db10111d1eb69f58efd9f77542f36296d21fd73f2624b1b84714"},
-    {file = "pytype-2024.3.11-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:67dcc2606dbecf26ceaa2cf1b434a49f6a4df92e6fcb8f9ce493e6dc579577ac"},
-    {file = "pytype-2024.3.11-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5a5070f2f661f043301faf79a6cd79a5f097fbd98559d6ebbefdd60469844123"},
-    {file = "pytype-2024.3.11-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:13c43363a9e953de2c3ab7a31890d153e11fe494a92c268c688616b2f0c42e99"},
-    {file = "pytype-2024.3.11-cp38-cp38-macosx_11_0_x86_64.whl", hash = "sha256:a028e42df99cb0e94fa8c18220e11b53018a584bbca4ae9fca93f814cb8b8608"},
-    {file = "pytype-2024.3.11-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c34011340b10bcde2a7d219d7b8f8310a41f890b8110b3935864bedd9e4ad299"},
-    {file = "pytype-2024.3.11-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0bc7f3447c9a3a0602fa14bfd502ccfe17499bf598d6306588b413a6cb2d031e"},
-    {file = "pytype-2024.3.11-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:7cdeb7706e7d121ef59795696d0b70921e5c460568d4e7444660689f55670a1e"},
-    {file = "pytype-2024.3.11-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3338849e0e2dc8d784169b125b55ee84c51b1cf4433f4f3646fbad579958b1a1"},
-    {file = "pytype-2024.3.11-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:100f223b692032b17026b15911a6da7b6bb7b48494a3fb5e566a0ce733355b07"},
-    {file = "pytype-2024.3.11.tar.gz", hash = "sha256:ee3ad1dcbbdf7233583163ddb70b1166e2e70189e2f5c7ec46127a4f275d5d72"},
+    {file = "pytype-2024.3.19-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:ef3e0de4f076a2adefde21e703cc25495e7b705e4cb2caa819375a33e238002f"},
+    {file = "pytype-2024.3.19-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ad12c110a4ec0a4132a6b26a2f28d513400f08f4751e32df18f880a68d055740"},
+    {file = "pytype-2024.3.19-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9aa97b2dcd9945dea98f0a7a454626033f67f078156754d9ff657fcae2c42f60"},
+    {file = "pytype-2024.3.19-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:ac3240ead0f7e5ce6fb74e4c7516c5db5ddacf5ef69851ac488321d53fefa1c6"},
+    {file = "pytype-2024.3.19-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ff874303b49cfcc4c08c7ea9b24495f134e4d9904f2cc1286c213c5932fd1fd9"},
+    {file = "pytype-2024.3.19-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2e1d69460cc5762954215a76f4dcc997d66875ea59e8db2b5edf26dbafa42b5e"},
+    {file = "pytype-2024.3.19-cp38-cp38-macosx_11_0_x86_64.whl", hash = "sha256:0fdb883c88c55a7aa990266c920715f84c17405c9c3e090dc5505bdf67253482"},
+    {file = "pytype-2024.3.19-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:80c694440aa6e4bc0e31fbec83d3b2bc6f7f0118fe59fda099641a466b4aed2a"},
+    {file = "pytype-2024.3.19-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e2f9e8663bb1ded66d5854bb46f4947eb9bb25af42511a5ef5784f61b3bca3e5"},
+    {file = "pytype-2024.3.19-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:e535b7caa8788a572177368721cc15492a988e6d9a2b401ed3bb3c43a4e88b4e"},
+    {file = "pytype-2024.3.19-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0245a209d521b59b919c09f7509a77f680f223108af8cccd3404533ba7aef7ba"},
+    {file = "pytype-2024.3.19-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:acddb21ca98ff922cf6894c5da398a14e12d62f81b7749ed5abd7d014f8d6f38"},
+    {file = "pytype-2024.3.19.tar.gz", hash = "sha256:07e66d9f907efd7e343364b7026ee6a06f477dc8d67aa7aaecca1e9cc3d45d20"},
 ]
 
 [package.dependencies]
@@ -2234,13 +2234,13 @@ files = [
 
 [[package]]
 name = "sentry-sdk"
-version = "1.42.0"
+version = "1.43.0"
 description = "Python client for Sentry (https://sentry.io)"
 optional = false
 python-versions = "*"
 files = [
-    {file = "sentry-sdk-1.42.0.tar.gz", hash = "sha256:4a8364b8f7edbf47f95f7163e48334c96100d9c098f0ae6606e2e18183c223e6"},
-    {file = "sentry_sdk-1.42.0-py2.py3-none-any.whl", hash = "sha256:a654ee7e497a3f5f6368b36d4f04baeab1fe92b3105f7f6965d6ef0de35a9ba4"},
+    {file = "sentry-sdk-1.43.0.tar.gz", hash = "sha256:41df73af89d22921d8733714fb0fc5586c3461907e06688e6537d01a27e0e0f6"},
+    {file = "sentry_sdk-1.43.0-py2.py3-none-any.whl", hash = "sha256:8d768724839ca18d7b4c7463ef7528c40b7aa2bfbf7fe554d5f9a7c044acfd36"},
 ]
 
 [package.dependencies]
@@ -2255,6 +2255,7 @@ asyncpg = ["asyncpg (>=0.23)"]
 beam = ["apache-beam (>=2.12)"]
 bottle = ["bottle (>=0.12.13)"]
 celery = ["celery (>=3)"]
+celery-redbeat = ["celery-redbeat (>=2)"]
 chalice = ["chalice (>=1.16.0)"]
 clickhouse-driver = ["clickhouse-driver (>=0.2.0)"]
 django = ["django (>=1.8)"]
