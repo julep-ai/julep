@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Literal, TypeAlias, Union
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, validator
 from vllm.entrypoints.openai.protocol import (
     CompletionRequest,
     ChatCompletionRequest,
@@ -359,7 +359,7 @@ class Preset(str, Enum):
 
 
 class ChatCompletionRequest(ChatCompletionRequest):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
     functions: list[FunctionDef] | None = None
     function_call: RequestFunctionCall | None = None
@@ -413,6 +413,14 @@ class ChatCompletionRequest(ChatCompletionRequest):
             include_stop_str_in_output=self.include_stop_str_in_output or False,
             **settings,
         )
+    
+    @validator("max_tokens")
+    def set_max_tokens(cls, max_tokens):
+        return max_tokens or DEFAULT_MAX_TOKENS
+    
+    @validator("stream")
+    def set_stream(cls, stream):
+        return stream or False
 
 
 class CompletionRequest(CompletionRequest):
