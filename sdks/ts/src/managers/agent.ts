@@ -25,7 +25,7 @@ export class AgentsManager extends BaseManager {
   async create({
     name,
     about,
-    instructions,
+    instructions = [],
     tools,
     default_settings,
     model = "julep-ai/samantha-1-turbo",
@@ -56,10 +56,9 @@ export class AgentsManager extends BaseManager {
       docs,
     };
 
-    const result: ResourceCreatedResponse =
-      await this.apiClient.default.createAgent({
-        requestBody,
-      });
+    const result: ResourceCreatedResponse = await this.apiClient.default.createAgent({
+      requestBody,
+    });
 
     const agent: Partial<Agent> & { id: string } = {
       ...result,
@@ -108,7 +107,7 @@ export class AgentsManager extends BaseManager {
       name?: string;
       model?: string;
       default_settings?: AgentDefaultSettings;
-    } = {},
+    } = {}
   ): Promise<Partial<Agent> & { id: string }> {
     invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
 
@@ -127,8 +126,7 @@ export class AgentsManager extends BaseManager {
       default_settings,
     };
 
-    const result: ResourceUpdatedResponse =
-      await this.apiClient.default.updateAgent({ agentId, requestBody });
+    const result: ResourceUpdatedResponse = await this.apiClient.default.updateAgent({ agentId, requestBody });
 
     const agent: Partial<Agent> & { id: string } = {
       ...result,
