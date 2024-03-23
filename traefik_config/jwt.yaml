@@ -1,0 +1,20 @@
+http:
+  middlewares:
+    my-jwt:
+      plugin:
+        jwt:
+          OpaAllowField: allow
+          OpaBody: true
+          PayloadFields:
+            - exp
+            - iat
+            - email
+          Required: true
+          Keys:
+            - $PUBLIC_KEY
+          OpaHeaders:
+            Authorization: $API_KEY
+          JwtHeaders:
+            X-Developer-Id: sub
+            X-Developer-Email: email
+          OpaHttpStatusField: allow_status_code

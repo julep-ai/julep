@@ -29,11 +29,12 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.agents_api.rule=Path(`/api{path:.*}`)"
-      - "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Id=00000000-0000-0000-0000-000000000000"
-      - "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Email=developers@julep.ai"
+      #- "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Id=00000000-0000-0000-0000-000000000000"
+      #- "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Email=developers@julep.ai"
       - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.prefixes=/api"
       - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.forceSlash=false"
-      - "traefik.http.middlewares.agents_api-chain.chain.middlewares=agents_api-add_prefix,agents_api-add_headers"
+      - "traefik.http.middlewares.agents_api-chain.chain.middlewares=agents_api-add_prefix"
+      #- "traefik.http.routers.agents_api.middlewares=agents_api-chain@docker,my-jwt@file"
       - "traefik.http.routers.agents_api.middlewares=agents_api-chain@docker"
 
     develop:
