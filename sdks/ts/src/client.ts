@@ -42,8 +42,7 @@ export class Client {
     this._apiClient = new JulepApiClient({
       TOKEN: apiKey,
       BASE: baseUrl,
-      WITH_CREDENTIALS: true,
-      HEADERS: { "Content-Type": "application/json" },
+      WITH_CREDENTIALS: false,
     });
 
     const openaiBaseUrl = new URL(baseUrl).origin;
