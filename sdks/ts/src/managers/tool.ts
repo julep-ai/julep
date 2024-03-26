@@ -3,6 +3,7 @@ import {
   UpdateToolRequest,
   ResourceCreatedResponse,
   ResourceUpdatedResponse,
+  FunctionDef,
 } from "../api"; // Import necessary types from your project
 
 import { BaseManager } from "./base";
@@ -32,7 +33,10 @@ export class ToolsManager extends BaseManager {
     tool,
   }: {
     agentId: string;
-    tool: Tool;
+    tool: {
+      type: "function" | "webhook";
+      function: FunctionDef;
+    };
   }): Promise<Tool> {
     const result: ResourceCreatedResponse =
       await this.apiClient.default.createAgentTool({

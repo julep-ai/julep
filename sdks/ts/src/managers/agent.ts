@@ -25,7 +25,7 @@ export class AgentsManager extends BaseManager {
   async create({
     name,
     about,
-    instructions,
+    instructions = [],
     tools,
     default_settings,
     model = "julep-ai/samantha-1-turbo",

@@ -10,6 +10,8 @@ from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
 from agents_api.clients.cozo import client
+from pycozo.client import QueryException
+from agents_api.common.exceptions.sessions import SessionNotFoundError
 from agents_api.common.utils.datetime import utcnow
 from agents_api.models.session.get_session import get_session_query
 from agents_api.models.session.create_session import create_session_query
@@ -17,6 +19,7 @@ from agents_api.models.session.list_sessions import list_sessions_query
 from agents_api.models.session.delete_session import delete_session_query
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.models.entry.get_entries import get_entries_query
+from agents_api.models.entry.delete_entries import delete_entries_query
 from agents_api.models.session.update_session import update_session_query
 from agents_api.autogen.openapi_model import (
     CreateSessionRequest,
@@ -196,6 +199,26 @@ async def get_history(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found",
         )
+
+
+@router.delete(
+    "/sessions/{session_id}/history", status_code=HTTP_202_ACCEPTED, tags=["sessions"]
+)
+async def delete_history(
+    session_id: UUID4,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+) -> ResourceDeletedResponse:
+    try:
+        client.run(delete_entries_query(session_id=session_id))
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise SessionNotFoundError(
+                developer_id=x_developer_id, session_id=session_id
+            )
+
+        raise
+
+    return ResourceDeletedResponse(id=session_id, deleted_at=utcnow())
 
 
 @router.post("/sessions/{session_id}/chat", tags=["sessions"])
