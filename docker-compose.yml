@@ -25,8 +25,8 @@ services:
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
       - --providers.file.directory=/traefik_config
       - --providers.file.watch=true
-      - --experimental.plugins.jwt.moduleName=github.com/traefik-plugins/traefik-jwt-plugin
-      - --experimental.plugins.jwt.version=v0.7.1
+      - --experimental.plugins.jwt.moduleName=github.com/julep-ai/traefik-jwt-plugin
+      - --experimental.plugins.jwt.version=v0.0.1
       #
       # Only needed for debugging ssl certificates
       # - "--log.level=DEBUG"
