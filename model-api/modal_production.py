@@ -81,7 +81,7 @@ stub = Stub("model-api", image=image)
 
 
 @stub.function(
-    gpu=gpu.A100(size="80GB"),
+    gpu=gpu.A100(size="40GB"),
     container_idle_timeout=600,
     allow_concurrent_inputs=25,
     keep_warm=0,
