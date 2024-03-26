@@ -65,7 +65,9 @@ describe("Tools API", () => {
     });
 
     expect(response).toHaveProperty("updated_at");
-    expect(response.function.description).toBe(mockToolUpdate.function.description);
+    expect(response.function.description).toBe(
+      mockToolUpdate.function.description,
+    );
     expect(response.function.name).toBe(mockToolUpdate.function.name);
   });
 
@@ -77,7 +79,9 @@ describe("Tools API", () => {
     expect(tool).toBeDefined();
     expect(tool!.id).toBe(testTool.id);
     expect(tool!.function.name).toBe(mockToolUpdate.function.name);
-    expect(tool!.function.description).toBe(mockToolUpdate.function.description);
+    expect(tool!.function.description).toBe(
+      mockToolUpdate.function.description,
+    );
   });
 
   test("tools.delete", async () => {
