@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from typing import Callable, Literal
 from uuid import UUID
 
@@ -15,8 +15,6 @@ def create_docs_query(
     split_fn: Callable[[str], list[str]] = lambda x: x.split("\n\n"),
     metadata: dict = {},
 ):
-    owner_id = str(owner_id)
-    id = str(id)
     created_at: float = utcnow().timestamp()
 
     snippets = split_fn(content)

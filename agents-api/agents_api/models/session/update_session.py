@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import UUID
 
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -19,9 +19,6 @@ def update_session_query(
     developer_id: UUID,
     **update_data,
 ) -> str:
-    session_id = str(session_id)
-    developer_id = str(developer_id)
-
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},

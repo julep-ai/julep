@@ -1,4 +1,4 @@
-import json
+from ...common.utils import json
 from uuid import UUID
 
 from ...autogen.openapi_model import Instruction
@@ -9,7 +9,6 @@ def create_instructions_query(
     agent_id: UUID,
     instructions: list[Instruction] = [],
 ):
-    agent_id = str(agent_id)
     instructions = [i.model_dump() for i in instructions]
 
     instruction_cols, instruction_rows = "", []

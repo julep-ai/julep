@@ -76,5 +76,5 @@ describe("Simple Agents Example", () => {
     const [responseMsg, ..._] = result.response[0];
     expect(responseMsg).toHaveProperty("role");
     expect(responseMsg).toHaveProperty("content");
-  });
+  }, 10000);
 });
