@@ -23,6 +23,10 @@ services:
       - --certificatesresolvers.letsencrypt.acme.email=developers@julep.ai
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --providers.file.directory=/traefik_config
+      - --providers.file.watch=true
+      - --experimental.plugins.jwt.moduleName=github.com/traefik-plugins/traefik-jwt-plugin
+      - --experimental.plugins.jwt.version=v0.7.1
       #
       # Only needed for debugging ssl certificates
       # - "--log.level=DEBUG"
@@ -34,6 +38,7 @@ services:
     volumes:
       - ./letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik_config:/traefik_config
 
     develop:
       watch:
