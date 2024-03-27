@@ -1,0 +1,119 @@
+providers:
+  file:
+    filename: "/etc/traefik/traefik.yml"
+
+enable: true
+entryPoints:
+  web:
+    address: ":$PORT"
+
+ping: true
+accesslog: true
+log:
+  level: DEBUG
+
+http:
+  routers:
+    model-api:
+      entryPoints:
+        - web
+      rule: Path(`/v1{path:.*}`)
+      middlewares:
+        - model-api-chain
+      service: service-model-api
+
+    agents-api:
+      entryPoints:
+        - web
+      rule: Path(`/api{path:.*}`)
+      middlewares:
+        - agents-api-chain
+        - agents-api-add-prefix
+      service: service-agents-api
+
+    foo:
+      entryPoints:
+        - web
+      service: service-foo
+      rule: Host(`0.0.0.0`) && Path(`/api{path:.*}`)
+      middlewares:
+        - foo-chain
+
+  middlewares:
+    model-api-chain:
+      chain:
+        middlewares:
+          - my-jwt
+          - model-api-add-headers
+
+    agents-api-add-headers:
+      headers:
+        customrequestheaders:
+          - Authorization: $AGENTS_API_KEY
+    
+    model-api-add-headers:
+      headers:
+        customrequestheaders:
+          - Authorization: $MODEL_API_KEY
+    
+    foo-add-headers:
+      headers:
+        customrequestheaders:
+          - Authorization: $API_KEY
+    
+    foo-chain:
+      chain:
+        middlewares:
+          - my-jwt
+          - foo-add-headers
+
+    agents-api-chain:
+      chain:
+        middlewares:
+          - my-jwt
+          - agents-api-add-headers
+
+    agents-api-add-prefix:
+      stripprefix:
+        prefixes:
+          - /api
+        forceSlash: false
+
+    my-jwt:
+      plugin:
+        jwt:
+          Alg: HS512
+          OpaAllowField: allow
+          OpaBody: true
+          PayloadFields:
+            - exp
+            - iat
+            - email
+          Required: true
+          Keys:
+            - $SHARED_KEY
+          JwtHeaders:
+            X-Developer-Id: sub
+            X-Developer-Email: email
+          OpaHttpStatusField: allow_status_code
+
+  services:
+    service-foo:
+      loadBalancer:
+        servers:
+          - url: http://dev.julep.ai
+    
+    service-model-api: 
+      loadBalancer:
+        servers:
+          - url: $MODEL_API_URL
+    
+    service-agents-api:
+      loadBalancer:
+        servers:
+          - url: $AGENTS_API_URL
+
+experimental:
+  localPlugins:
+    jwt:
+      moduleName: github.com/julep-ai/traefik-jwt-plugin
