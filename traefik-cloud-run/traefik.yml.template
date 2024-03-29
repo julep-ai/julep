@@ -39,14 +39,6 @@ http:
         - agents-api-add-prefix
       service: service-agents-api
 
-    foo:
-      entryPoints:
-        - web
-      service: service-foo
-      rule: Host(`0.0.0.0`) && Path(`/api{path:.*}`)
-      middlewares:
-        - foo-chain
-
   middlewares:
     model-api-chain:
       chain:
@@ -63,17 +55,6 @@ http:
       headers:
         customrequestheaders:
           - Authorization: $MODEL_API_KEY
-    
-    foo-add-headers:
-      headers:
-        customrequestheaders:
-          - Authorization: $API_KEY
-    
-    foo-chain:
-      chain:
-        middlewares:
-          - my-jwt
-          - foo-add-headers
 
     agents-api-chain:
       chain:
@@ -86,6 +67,7 @@ http:
         prefixes:
           - /api
           - /jwt
+          - /jwt/api
         forceSlash: false
 
     my-jwt:
@@ -107,11 +89,6 @@ http:
           OpaHttpStatusField: allow_status_code
 
   services:
-    service-foo:
-      loadBalancer:
-        servers:
-          - url: http://dev.julep.ai
-    
     service-model-api: 
       loadBalancer:
         servers:
