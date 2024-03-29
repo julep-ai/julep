@@ -49,12 +49,12 @@ http:
     agents-api-add-headers:
       headers:
         customrequestheaders:
-          - Authorization: $AGENTS_API_KEY
+          X-Auth-Key: $AGENTS_API_KEY
     
     model-api-add-headers:
       headers:
         customrequestheaders:
-          - Authorization: $MODEL_API_KEY
+          X-Auth-Key: $MODEL_API_KEY
 
     agents-api-chain:
       chain:
