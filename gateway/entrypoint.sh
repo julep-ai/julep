@@ -9,5 +9,8 @@ do
     fi
 done
 
+# Generate the Traefik configuration file
 envsubst < /etc/traefik/traefik.yml.template > /etc/traefik/traefik.yml
-exec traefik
+
+# Forward all arguments to the traefik binary
+exec traefik "$@"
