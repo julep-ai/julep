@@ -14,15 +14,6 @@ log:
 
 http:
   routers:
-    model-api-jwt: 
-      entryPoints:
-        - web
-      rule: Path(`/jwt/v1{path:.*}`)
-      middlewares: 
-        - model-api-chain 
-        - agents-api-add-prefix
-      service: service-model-api
-
     model-api:
       entryPoints:
         - web
@@ -31,13 +22,31 @@ http:
         - model-api-chain
       service: service-model-api
 
+    model-api-jwt:
+      entryPoints:
+        - web
+      rule: Path(`/jwt/v1{path:.*}`)
+      middlewares:
+        - model-api-chain
+        - model-api-strip-prefix-jwt
+      service: service-model-api
+
     agents-api:
       entryPoints:
         - web
       rule: Path(`/api{path:.*}`)
       middlewares:
         - agents-api-chain
-        - agents-api-add-prefix
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+
+    agents-api-jwt:
+      entryPoints:
+        - web
+      rule: Path(`/jwt/api{path:.*}`)
+      middlewares:
+        - agents-api-chain
+        - agents-api-strip-prefix-jwt_api
       service: service-agents-api
 
   middlewares:
@@ -63,11 +72,21 @@ http:
           - my-jwt
           - agents-api-add-headers
 
-    agents-api-add-prefix:
+    model-api-strip-prefix-jwt:
+      stripprefix:
+        prefixes:
+          - /jwt
+        forceSlash: false
+
+    agents-api-strip-prefix-api:
       stripprefix:
         prefixes:
           - /api
-          - /jwt
+        forceSlash: false
+
+    agents-api-strip-prefix-api_jwt:
+      stripprefix:
+        prefixes:
           - /jwt/api
         forceSlash: false
 
@@ -92,11 +111,13 @@ http:
   services:
     service-model-api: 
       loadBalancer:
+        passHostHeader: false
         servers:
           - url: $MODEL_API_URL
     
     service-agents-api:
       loadBalancer:
+        passHostHeader: false
         servers:
           - url: $AGENTS_API_URL
 
