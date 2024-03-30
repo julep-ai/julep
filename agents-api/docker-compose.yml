@@ -9,7 +9,7 @@ services:
   agents-api:
     env_file:
       - path: .env
-        required: true
+        required: false
       - path: ../.env
         required: false
 
@@ -43,7 +43,7 @@ services:
           path: ./agents_api
           target: /app/agents_api
           ignore:
-          - ./**/*.pyc
+            - ./**/*.pyc
         - action: rebuild
           path: poetry.lock
         - action: rebuild
@@ -52,9 +52,9 @@ services:
   worker:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     build:
       context: .
@@ -72,7 +72,7 @@ services:
           path: ./agents_api
           target: /app/agents_api
           ignore:
-          - ./**/*.pyc
+            - ./**/*.pyc
         - action: rebuild
           path: poetry.lock
         - action: rebuild
@@ -82,9 +82,9 @@ services:
     container_name: text-embeddings-inference
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     image: ghcr.io/huggingface/text-embeddings-inference:1.0
     ports:
@@ -102,9 +102,9 @@ services:
     container_name: temporal
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     build:
       context: .
@@ -122,9 +122,9 @@ services:
   cozo-migrate:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     container_name: cozo-migrate
     depends_on:

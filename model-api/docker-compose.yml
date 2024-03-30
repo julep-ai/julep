@@ -4,18 +4,17 @@ services:
   model-api:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
     environment:
-      - API_KEY=${API_KEY}
-      - API_KEY_HEADER_NAME=${API_KEY_HEADER_NAME}
+      - MODEL_API_KEY=${MODEL_API_KEY}
+      - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}
       - SKIP_CHECK_DEVELOPER_HEADERS=${SKIP_CHECK_DEVELOPER_HEADERS}
       - MODEL_NAME=${MODEL_NAME}
       - HF_TOKEN=${HF_TOKEN}
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
       - SENTRY_DSN=${SENTRY_DSN}
-      - MODEL_NAME=${MODEL_NAME}
       - TP_SIZE=${TP_SIZE}
       - MAX_MODEL_LEN=${MAX_MODEL_LEN}
       - MAX_NUM_SEQS=${MAX_NUM_SEQS}
@@ -45,7 +44,7 @@ services:
           path: ./model_api
           target: /app/model_api
           ignore:
-          - ./**/*.pyc
+            - ./**/*.pyc
         - action: rebuild
           path: poetry.lock
     deploy:
