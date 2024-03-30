@@ -2,9 +2,9 @@ name: julep-agents-api
 version: "3"
 
 include:
-  - ../model-api/docker-compose.yml
-  - ../cozo-server/docker-compose.yml
-
+  # - ../model-api/docker-compose.yml
+  # - ../cozo-server/docker-compose.yml
+  # TODO: figure out why this doesn't work on dev + test on prod
 services:
   agents-api:
     env_file:
