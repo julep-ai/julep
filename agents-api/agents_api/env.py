@@ -1,3 +1,4 @@
+from pprint import pprint
 from environs import Env
 
 
@@ -6,7 +7,7 @@ env.read_env()
 
 
 cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
-cozo_auth: str = env.str("COZO_AUTH", default=None)
+cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
 prediction_project: str = env.str("PREDICTION_PROJECT", default=None)
 prediction_endpoint_id: str = env.str("PREDICTION_ENDPOINT_ID", default=None)
 prediction_location: str = env.str("PREDICTION_LOCATION", default="us-central1")
@@ -59,3 +60,28 @@ temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:723
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
+
+environment = dict(
+    cozo_host=cozo_host,
+    cozo_auth=cozo_auth,
+    generation_url=generation_url,
+    generation_auth_token=generation_auth_token,
+    summarization_ratio_threshold=summarization_ratio_threshold,
+    summarization_tokens_threshold=summarization_tokens_threshold,
+    worker_url=worker_url,
+    endpoint_base=endpoint_base,
+    sentry_dsn=sentry_dsn,
+    temporal_endpoint=temporal_endpoint,
+    temporal_task_queue=temporal_task_queue,
+    api_key=api_key,
+    api_key_header_name=api_key_header_name,
+    skip_check_developer_headers=skip_check_developer_headers,
+    embedding_service_url=embedding_service_url,
+    truncate_embed_text=truncate_embed_text,
+    temporal_worker_url=temporal_worker_url,
+    temporal_namespace=temporal_namespace,
+)
+
+print("Environment variables:")
+pprint(environment)
+print()
