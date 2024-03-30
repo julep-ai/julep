@@ -1,0 +1,48 @@
+name: julep-gateway
+version: "3"
+
+include:
+  - ../model-api/docker-compose.yml
+  - ../agents-api/docker-compose.yml
+
+services:
+  gateway:
+    env_file:
+      - path: .env
+        required: true
+      - path: ../.env
+        required: false
+
+    environment:
+      - SHARED_KEY=${SHARED_KEY}
+      - AGENTS_API_KEY=${AGENTS_API_KEY}
+      - MODEL_API_KEY=${MODEL_API_KEY}
+      - MODEL_API_URL=${MODEL_API_URL}
+      - AGENTS_API_URL=${AGENTS_API_URL}
+
+    container_name: gateway
+    depends_on:
+      model-api:
+        condition: service_started
+      agents-api:
+        condition: service_started
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 443:443
+      - 80:80
+
+    volumes:
+      - ./letsencrypt:/letsencrypt
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./traefik.yml.template
+          target: /etc/traefik
+        - action: sync+restart
+          path: ./entrypoint.sh
+          target: /
+        - action: rebuild
+          path: Dockerfile
