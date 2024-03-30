@@ -37,16 +37,14 @@ services:
       - 443:443
       - 80:80
 
-    # command:
-    #   - --entrypoints.websecure.address=:443
-    #   - --entrypoints.websecure.http.tls.domains[0].main=dev.julep.ai
-    #   - --entrypoints.websecure.http.tls.certResolver=letsencrypt
-    #   - --entrypoints.web.http.redirections.entryPoint.to=websecure
-    #   - --entrypoints.web.http.redirections.entryPoint.scheme=https
-    #   - --certificatesresolvers.letsencrypt.acme.email=developers@julep.ai
-    #   - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-    #   - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
-    #   #
+    command:
+      - --entrypoints.web.address=:443
+      - --entrypoints.web.http.tls.domains[0].main=dev.julep.ai
+      - --entrypoints.web.http.tls.certResolver=letsencrypt
+      - --certificatesresolvers.letsencrypt.acme.email=developers@julep.ai
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+
     #   # Only needed for debugging ssl certificates
     #   # - "--log.level=DEBUG"
     #   # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"

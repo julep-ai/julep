@@ -22,4 +22,5 @@ RUN apk add gettext
 RUN mkdir -p /etc/traefik
 COPY traefik.yml.template /etc/traefik/
 COPY entrypoint.sh /entrypoint.sh
+
 ENTRYPOINT ["/entrypoint.sh"]
