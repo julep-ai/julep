@@ -41,8 +41,8 @@ temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue")
 
 # auth
-api_key: str = env.str("API_KEY")
-api_key_header_name: str = env.str("API_KEY_HEADER_NAME", default="X-Auth-Key")
+api_key: str = env.str("AGENTS_API_KEY")
+api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 skip_check_developer_headers: bool = env.bool(
     "SKIP_CHECK_DEVELOPER_HEADERS", default=False
 )

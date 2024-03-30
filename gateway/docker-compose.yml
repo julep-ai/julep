@@ -9,16 +9,20 @@ services:
   gateway:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     environment:
-      - SHARED_KEY=${SHARED_KEY}
-      - AGENTS_API_KEY=${AGENTS_API_KEY}
-      - MODEL_API_KEY=${MODEL_API_KEY}
+      - GATEWAY_PORT=8090
+      - JWT_SHARED_KEY=${JWT_SHARED_KEY}
       - MODEL_API_URL=${MODEL_API_URL}
+      - MODEL_API_KEY=${MODEL_API_KEY}
+      - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}
       - AGENTS_API_URL=${AGENTS_API_URL}
+      - AGENTS_API_KEY=${AGENTS_API_KEY}
+      - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME}
+      - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
 
     container_name: gateway
     depends_on:
@@ -31,7 +35,21 @@ services:
       dockerfile: Dockerfile
     ports:
       - 443:443
-      - 80:80
+      - 8090:8090
+
+    # command:
+    #   - --entrypoints.websecure.address=:443
+    #   - --entrypoints.websecure.http.tls.domains[0].main=dev.julep.ai
+    #   - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+    #   - --entrypoints.web.http.redirections.entryPoint.to=websecure
+    #   - --entrypoints.web.http.redirections.entryPoint.scheme=https
+    #   - --certificatesresolvers.letsencrypt.acme.email=developers@julep.ai
+    #   - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    #   - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+    #   #
+    #   # Only needed for debugging ssl certificates
+    #   # - "--log.level=DEBUG"
+    #   # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
 
     volumes:
       - ./letsencrypt:/letsencrypt
@@ -40,9 +58,9 @@ services:
       watch:
         - action: sync+restart
           path: ./traefik.yml.template
-          target: /etc/traefik
+          target: /etc/traefik/traefik.yml.template
         - action: sync+restart
           path: ./entrypoint.sh
-          target: /
+          target: /entrypoint.sh
         - action: rebuild
           path: Dockerfile

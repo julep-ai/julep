@@ -5,12 +5,12 @@ providers:
 enable: true
 entryPoints:
   web:
-    address: ":$PORT"
+    address: ":$GATEWAY_PORT"
 
 ping: true
 accesslog: true
 log:
-  level: DEBUG
+  level: $TRAEFIK_LOG_LEVEL
 
 http:
   routers:
@@ -22,6 +22,7 @@ http:
         - model-api-chain 
         - agents-api-add-prefix
       service: service-model-api
+
     model-api:
       entryPoints:
         - web
@@ -49,12 +50,12 @@ http:
     agents-api-add-headers:
       headers:
         customrequestheaders:
-          X-Auth-Key: $AGENTS_API_KEY
+          $AGENTS_API_KEY_HEADER_NAME: $AGENTS_API_KEY
     
     model-api-add-headers:
       headers:
         customrequestheaders:
-          X-Auth-Key: $MODEL_API_KEY
+          $MODEL_API_KEY_HEADER_NAME: $MODEL_API_KEY
 
     agents-api-chain:
       chain:
@@ -82,7 +83,7 @@ http:
             - email
           Required: true
           Keys:
-            - $SHARED_KEY
+            - $JWT_SHARED_KEY
           JwtHeaders:
             X-Developer-Id: sub
             X-Developer-Email: email
