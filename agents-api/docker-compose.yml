@@ -70,11 +70,9 @@ services:
 
   text-embeddings-inference:
     container_name: text-embeddings-inference
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    environment:
+      - DTYPE=float16
+      - MODEL_ID=BAAI/llm-embedder
 
     image: ghcr.io/huggingface/text-embeddings-inference:1.0
     ports:
