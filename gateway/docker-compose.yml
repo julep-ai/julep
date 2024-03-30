@@ -1,0 +1,60 @@
+name: julep-gateway
+version: "3"
+
+include:
+  - ../model-api/docker-compose.yml
+  - ../agents-api/docker-compose.yml
+
+services:
+  gateway:
+    env_file:
+      - path: .env
+        required: false
+      - path: ../.env
+        required: true
+
+    environment:
+      - GATEWAY_PORT=80
+      - JWT_SHARED_KEY=${JWT_SHARED_KEY}
+      - MODEL_API_URL=${MODEL_API_URL}
+      - MODEL_API_KEY=${MODEL_API_KEY}
+      - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}
+      - AGENTS_API_URL=${AGENTS_API_URL}
+      - AGENTS_API_KEY=${AGENTS_API_KEY}
+      - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME}
+      - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
+
+    container_name: gateway
+    depends_on:
+      model-api:
+        condition: service_started
+      agents-api:
+        condition: service_started
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 443:443
+      - 80:80
+
+    command:
+      # - --entrypoints.web.address=:443
+      # - --entrypoints.web.http.tls.domains[0].main=dev.julep.ai
+      # - --entrypoints.web.http.tls.certResolver=letsencrypt
+      # - --certificatesresolvers.letsencrypt.acme.email=developers@julep.ai
+      # - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      # - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+
+    volumes:
+      - ./letsencrypt:/letsencrypt
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./traefik.yml.template
+          target: /etc/traefik/traefik.yml.template
+        - action: sync+restart
+          path: ./entrypoint.sh
+          target: /entrypoint.sh
+        - action: rebuild
+          path: Dockerfile
