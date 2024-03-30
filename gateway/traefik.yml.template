@@ -107,6 +107,8 @@ http:
             X-Developer-Id: sub
             X-Developer-Email: email
           OpaHttpStatusField: allow_status_code
+          KeysWhitelist:
+            - eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwOTc3MjBjNS1hYjg0LTQzOGMtYjhiMC02OGUwZWFiZDMxZmYiLCJlbWFpbCI6ImVAbWFpbC5jb20iLCJpYXQiOjE3MTE4MDcwNDEsImV4cCI6MTcyMDQ0NzA0MX0.torXnwO-bzLJLQLiFCh90i1oOhMgDcpzcIySZ6Cu22noUxXVTfIIVS2yqYSJ3pVztl_eu1FxvVz1XGnQ1_5xRw
 
   services:
     service-model-api: 
