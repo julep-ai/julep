@@ -2,5 +2,6 @@
 ngrok*
 .env*
 .env
+*.env
 *.pyc
 */node_modules/

@@ -119,7 +119,7 @@ class Client:
         )
 
         self._api_client = JulepApi(
-            api_key=api_key,
+            api_key=f"Bearer {api_key}",
             base_url=base_url,
             httpx_client=httpx_client,
             *args,
@@ -240,7 +240,7 @@ class AsyncClient:
         ), "base_url must be provided or set as env var JULEP_API_URL"
 
         self._api_client = AsyncJulepApi(
-            api_key=api_key, base_url=base_url, *args, **kwargs
+            api_key=f"Bearer {api_key}", base_url=base_url, *args, **kwargs
         )
 
         self.agents = AsyncAgentsManager(api_client=self._api_client)

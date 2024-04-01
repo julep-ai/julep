@@ -5,9 +5,9 @@ services:
   cozo-server:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
       - COZO_PORT=${COZO_PORT}
