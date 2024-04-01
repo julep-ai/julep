@@ -2,14 +2,14 @@ name: julep-agents-api
 version: "3"
 
 include:
-  - ../model-api/docker-compose.yml
-  - ../cozo-server/docker-compose.yml
-
+  # - ../model-api/docker-compose.yml
+  # - ../cozo-server/docker-compose.yml
+  # TODO: figure out why this doesn't work on dev + test on prod
 services:
   agents-api:
     env_file:
       - path: .env
-        required: true
+        required: false
       - path: ../.env
         required: false
 
@@ -26,16 +26,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.agents_api.rule=Path(`/api{path:.*}`)"
-      #- "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Id=00000000-0000-0000-0000-000000000000"
-      #- "traefik.http.middlewares.agents_api-add_headers.headers.customrequestheaders.X-Developer-Email=developers@julep.ai"
-      - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.prefixes=/api"
-      - "traefik.http.middlewares.agents_api-add_prefix.stripprefix.forceSlash=false"
-      - "traefik.http.middlewares.agents_api-chain.chain.middlewares=agents_api-add_prefix"
-      #- "traefik.http.routers.agents_api.middlewares=agents_api-chain@docker,my-jwt@file"
-      - "traefik.http.routers.agents_api.middlewares=agents_api-chain@docker"
 
     develop:
       watch:
@@ -43,7 +33,7 @@ services:
           path: ./agents_api
           target: /app/agents_api
           ignore:
-          - ./**/*.pyc
+            - ./**/*.pyc
         - action: rebuild
           path: poetry.lock
         - action: rebuild
@@ -52,9 +42,9 @@ services:
   worker:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     build:
       context: .
@@ -72,7 +62,7 @@ services:
           path: ./agents_api
           target: /app/agents_api
           ignore:
-          - ./**/*.pyc
+            - ./**/*.pyc
         - action: rebuild
           path: poetry.lock
         - action: rebuild
@@ -80,11 +70,9 @@ services:
 
   text-embeddings-inference:
     container_name: text-embeddings-inference
-    env_file:
-      - path: .env
-        required: true
-      - path: ../.env
-        required: false
+    environment:
+      - DTYPE=float16
+      - MODEL_ID=BAAI/llm-embedder
 
     image: ghcr.io/huggingface/text-embeddings-inference:1.0
     ports:
@@ -102,9 +90,9 @@ services:
     container_name: temporal
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     build:
       context: .
@@ -122,9 +110,9 @@ services:
   cozo-migrate:
     env_file:
       - path: .env
-        required: true
-      - path: ../.env
         required: false
+      - path: ../.env
+        required: true
 
     container_name: cozo-migrate
     depends_on:

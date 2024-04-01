@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "julep"
-version = "0.2.10"
+version = "0.2.11"
 description = "Julep is a platform for creating agents with long-term memory"
 authors = ["Julep Developers <developers@julep.ai>"]
 license = "ISC"
@@ -26,6 +26,7 @@ ipython = "<8.13"
 pyright = "^1.1.348"
 handsdown = "^2.1.0"
 jupyterlab = "^4.1.0"
+pyjwt = "^2.8.0"
 
 [build-system]
 requires = ["poetry-core"]

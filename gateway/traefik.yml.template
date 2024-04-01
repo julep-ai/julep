@@ -1,0 +1,130 @@
+providers:
+  file:
+    filename: "/etc/traefik/traefik.yml"
+
+enable: true
+entryPoints:
+  web:
+    address: ":$GATEWAY_PORT"
+
+ping: true
+accesslog: true
+log:
+  level: $TRAEFIK_LOG_LEVEL
+
+http:
+  routers:
+    model-api:
+      entryPoints:
+        - web
+      rule: Path(`/v1{path:.*}`)
+      middlewares:
+        - model-api-chain
+      service: service-model-api
+
+    model-api-jwt:
+      entryPoints:
+        - web
+      rule: Path(`/jwt/v1{path:.*}`)
+      middlewares:
+        - model-api-chain
+        - model-api-strip-prefix-jwt
+      service: service-model-api
+
+    agents-api:
+      entryPoints:
+        - web
+      rule: Path(`/api{path:.*}`)
+      middlewares:
+        - agents-api-chain
+        - agents-api-strip-prefix-api
+      service: service-agents-api
+
+    agents-api-jwt:
+      entryPoints:
+        - web
+      rule: Path(`/jwt/api{path:.*}`)
+      middlewares:
+        - agents-api-chain
+        - agents-api-strip-prefix-jwt_api
+      service: service-agents-api
+
+  middlewares:
+    model-api-chain:
+      chain:
+        middlewares:
+          - my-jwt
+          - model-api-add-headers
+
+    agents-api-add-headers:
+      headers:
+        customrequestheaders:
+          $AGENTS_API_KEY_HEADER_NAME: $AGENTS_API_KEY
+    
+    model-api-add-headers:
+      headers:
+        customrequestheaders:
+          $MODEL_API_KEY_HEADER_NAME: $MODEL_API_KEY
+
+    agents-api-chain:
+      chain:
+        middlewares:
+          - my-jwt
+          - agents-api-add-headers
+
+    model-api-strip-prefix-jwt:
+      stripprefix:
+        prefixes:
+          - /jwt
+        forceSlash: false
+
+    agents-api-strip-prefix-api:
+      stripprefix:
+        prefixes:
+          - /api
+        forceSlash: false
+
+    agents-api-strip-prefix-api_jwt:
+      stripprefix:
+        prefixes:
+          - /jwt/api
+        forceSlash: false
+
+    my-jwt:
+      plugin:
+        jwt:
+          Alg: HS512
+          OpaAllowField: allow
+          OpaBody: true
+          PayloadFields:
+            - exp
+            - iat
+            - email
+          Required: true
+          Keys:
+            - $JWT_SHARED_KEY
+          JwtHeaders:
+            X-Developer-Id: sub
+            X-Developer-Email: email
+          OpaHttpStatusField: allow_status_code
+          KeysWhitelist:
+            - 
+
+
+  services:
+    service-model-api: 
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $MODEL_API_URL
+    
+    service-agents-api:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $AGENTS_API_URL
+
+experimental:
+  localPlugins:
+    jwt:
+      moduleName: github.com/julep-ai/traefik-jwt-plugin
