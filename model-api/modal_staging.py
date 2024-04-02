@@ -12,7 +12,7 @@ import model_api  # noqa: F401
 ###############
 
 MODEL_DIR = "/model"
-BASE_MODEL = "julep-ai/samantha-1-turbo"
+BASE_MODEL = "julep-ai/samantha-1-turbo-awq"
 
 
 ###########
@@ -96,9 +96,9 @@ stub = Stub("model-api", image=image)
 def get_app():
     from model_api.web import create_app
 
-    assert os.environ["API_KEY"]
+    assert os.environ["MODEL_API_KEY"]
     REVISION = os.environ["REVISION"]
-    BLOCK_SIZE = os.environ["BLOCK_SIZE"]
+    BLOCK_SIZE = os.environ["MODEL_BLOCK_SIZE"]
     MAX_MODEL_LEN = os.environ["MAX_MODEL_LEN"]
     MODEL_NAME = os.environ["MODEL_NAME"]
 
