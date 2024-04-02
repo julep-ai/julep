@@ -46,7 +46,7 @@ http:
       rule: Path(`/jwt/api{path:.*}`)
       middlewares:
         - agents-api-chain
-        - agents-api-strip-prefix-jwt_api
+        - agents-api-strip-prefix-jwt-api
       service: service-agents-api
 
   middlewares:
@@ -84,7 +84,7 @@ http:
           - /api
         forceSlash: false
 
-    agents-api-strip-prefix-api_jwt:
+    agents-api-strip-prefix-jwt-api:
       stripprefix:
         prefixes:
           - /jwt/api
