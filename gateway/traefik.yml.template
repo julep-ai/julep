@@ -20,6 +20,7 @@ http:
       rule: Path(`/v1{path:.*}`)
       middlewares:
         - model-api-chain
+        - corsHeaders
       service: service-model-api
 
     model-api-jwt:
@@ -29,6 +30,7 @@ http:
       middlewares:
         - model-api-chain
         - model-api-strip-prefix-jwt
+        - corsHeaders
       service: service-model-api
 
     agents-api:
@@ -38,6 +40,7 @@ http:
       middlewares:
         - agents-api-chain
         - agents-api-strip-prefix-api
+        - corsHeaders
       service: service-agents-api
 
     agents-api-jwt:
@@ -47,9 +50,17 @@ http:
       middlewares:
         - agents-api-chain
         - agents-api-strip-prefix-jwt-api
+        - corsHeaders
       service: service-agents-api
 
   middlewares:
+    corsHeaders:
+      headers:
+        accessControlAllowMethods: "*"
+        accessControlAllowHeaders: "*"
+        accessControlAllowOriginList: "*"
+        addVaryHeader: true
+
     model-api-chain:
       chain:
         middlewares:
