@@ -28,7 +28,7 @@ scikit-learn = "=1.4.0"
 black = "^23.12.1"
 pytest = "^8.0.0"
 pytest-mock = "^3.12.0"
-modal = "^0.56.4964"
+modal = "^0.62.24"
 ipython = "^8.21.0"
 ruff = "^0.1.9"
 poethepoet = "^0.24.4"
@@ -41,6 +41,7 @@ ipympl = "^0.9.3"
 mplcursors = "^0.5.3"
 datasets = "^2.17.0"
 imbalanced-learn = "^0.12.0"
+pyjwt = "^2.8.0"
 
 [build-system]
 requires = ["poetry-core"]
