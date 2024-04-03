@@ -41,7 +41,7 @@ image = (
     Image.from_registry("nvidia/cuda:12.1.1-base-ubuntu22.04", add_python="3.10")
     .apt_install()
     .pip_install(
-        "vllm<0.4",
+        "vllm==0.4.0",
         "huggingface-hub",
         "hf-transfer",
     )
