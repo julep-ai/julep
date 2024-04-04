@@ -134,6 +134,7 @@ TIMEOUT_KEEP_ALIVE = 30  # seconds.
 AGENT_NAME = "Samantha"
 
 
+# QUESTION: Can we have a detailed explanation of the logprobs creation process?
 def create_logprobs(
     token_ids: list[int],
     id_logprobs: list[dict[int, float]],
@@ -158,6 +159,7 @@ def create_logprobs(
     return logprobs
 
 
+# QUESTION: Please clarify how the maximum context length is determined for different model configurations.
 async def check_length(request, prompt, model_config):
     if hasattr(model_config.hf_config, "max_sequence_length"):
         context_len = model_config.hf_config.max_sequence_length
@@ -304,6 +306,7 @@ def _write_metrics(
     )
 
 
+# QUESTION: Could the logic for handling unsupported features (echo, suffix, logit_bias) be simplified or modularized?
 @app.post("/v1/completions")
 async def completions(
     raw_request: Request,
@@ -553,6 +556,7 @@ async def completions(
     return response
 
 
+# QUESTION: How does the chat completion process differ from the standard completion process, and why are certain features unsupported here?
 @app.post("/v1/chat/completions")
 async def chat_completions(
     raw_request: Request,
@@ -954,6 +958,7 @@ async def me():
     return {"status": "ok"}
 
 
+# QUESTION: How does the MetricsMiddleware work, and what metrics are being excluded from tracking?
 app.add_middleware(
     MetricsMiddleware,
     exclude_paths=["/metrics", "/docs", "/status"],
@@ -962,6 +967,7 @@ app.add_middleware(
 app.add_route("/metrics", metrics)
 
 
+# QUESTION: Please explain the CORS policy applied here and its implications for cross-origin requests.
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -990,6 +996,7 @@ app.add_middleware(
 # )
 
 
+# QUESTION: Can we have an explanation on how the app configuration is dynamically set based on command-line arguments?
 def create_app(args=None):
     global engine, engine_model_config, tokenizer, served_model
 
