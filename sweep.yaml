@@ -1,0 +1,7 @@
+branch: dev
+blocked_dirs:
+- sdks/
+- finetune/
+- gitbook/
+- platform/
+- .github/
