@@ -413,11 +413,11 @@ class ChatCompletionRequest(ChatCompletionRequest):
             include_stop_str_in_output=self.include_stop_str_in_output or False,
             **settings,
         )
-    
+
     @validator("max_tokens")
     def set_max_tokens(cls, max_tokens):
         return max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS
-    
+
     @validator("stream")
     def set_stream(cls, stream):
         return stream or False
