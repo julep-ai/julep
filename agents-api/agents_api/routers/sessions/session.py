@@ -203,8 +203,6 @@ class BaseSession:
     async def generate(
         self, init_context: list[ChatML], settings: Settings
     ) -> ChatCompletion:
-        # TODO: how to use response_format ?
-
         init_context = [
             {"name": msg.name, "role": msg.role, "content": msg.content}
             for msg in init_context
@@ -231,6 +229,7 @@ class BaseSession:
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
             tools=tools,
+            response_format=settings.response_format,
         )
 
     async def backward(
@@ -257,8 +256,6 @@ class BaseSession:
         entries.append(new_entry)
         client.run(add_entries_query(entries))
 
-        # TODO: Add a job_id to the background task and,
-        # return it as part of the response.
         if total_tokens >= summarization_tokens_threshold:
             return run_summarization_task
 
