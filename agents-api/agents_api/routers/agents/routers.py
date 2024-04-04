@@ -569,9 +569,3 @@ async def delete_memories(agent_id: UUID4, memory_id: UUID4) -> ResourceDeletedR
     )
 
     return ResourceDeletedResponse(id=memory_id, deleted_at=utcnow())
-
-
-# @router.get("/agents/{agent_id}/memories", tags=["agents"])
-# async def list_memories(agent_id: UUID4) -> list[Any]:
-#     # TODO: implement later
-#     return []
