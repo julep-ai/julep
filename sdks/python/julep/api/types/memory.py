@@ -4,8 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
-from .memory_emotions_item import MemoryEmotionsItem
-from .memory_type import MemoryType
+from .memory_entities_item import MemoryEntitiesItem
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -14,15 +13,9 @@ except ImportError:
 
 
 class Memory(pydantic.BaseModel):
-    type: MemoryType = pydantic.Field(
-        description="Type of memory (`episode` or `belief`)"
-    )
     agent_id: str = pydantic.Field(description="ID of the agent")
     user_id: str = pydantic.Field(description="ID of the user")
     content: str = pydantic.Field(description="Content of the memory")
-    weight: typing.Optional[float] = pydantic.Field(
-        description="Weight (importance) of the memory on a scale of 0-100"
-    )
     created_at: dt.datetime = pydantic.Field(
         description="Memory created at (RFC-3339 format)"
     )
@@ -35,11 +28,10 @@ class Memory(pydantic.BaseModel):
     sentiment: typing.Optional[float] = pydantic.Field(
         description="Sentiment (valence) of the memory on a scale of -1 to 1"
     )
-    duration: typing.Optional[float] = pydantic.Field(
-        description="Duration of the Memory (in seconds)"
-    )
     id: str = pydantic.Field(description="Memory id (UUID)")
-    emotions: typing.Optional[typing.List[MemoryEmotionsItem]]
+    entities: typing.List[MemoryEntitiesItem] = pydantic.Field(
+        description="List of entities mentioned in the memory"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

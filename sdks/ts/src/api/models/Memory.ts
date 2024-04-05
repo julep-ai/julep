@@ -4,10 +4,6 @@
 /* eslint-disable */
 export type Memory = {
   /**
-   * Type of memory (`episode` or `belief`)
-   */
-  type: "episode" | "belief";
-  /**
    * ID of the agent
    */
   agent_id: string;
@@ -19,10 +15,6 @@ export type Memory = {
    * Content of the memory
    */
   content: string;
-  /**
-   * Weight (importance) of the memory on a scale of 0-100
-   */
-  weight?: number;
   /**
    * Memory created at (RFC-3339 format)
    */
@@ -40,42 +32,11 @@ export type Memory = {
    */
   sentiment?: number;
   /**
-   * Duration of the Memory (in seconds)
-   */
-  duration?: number;
-  /**
    * Memory id (UUID)
    */
   id: string;
-  emotions?: Array<
-    | "admiration"
-    | "amusement"
-    | "anger"
-    | "annoyance"
-    | "approval"
-    | "caring"
-    | "confusion"
-    | "curiosity"
-    | "desire"
-    | "disappointment"
-    | "disapproval"
-    | "disgust"
-    | "embarrassment"
-    | "excitement"
-    | "fear"
-    | "gratitude"
-    | "grief"
-    | "joy"
-    | "love"
-    | "nervousness"
-    | "neutral"
-    | "optimism"
-    | "pride"
-    | "realization"
-    | "relief"
-    | "remorse"
-    | "sadness"
-    | "sarcasm"
-    | "surprise"
-  >;
+  /**
+   * List of entities mentioned in the memory
+   */
+  entities: Array<any>;
 };

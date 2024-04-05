@@ -1398,7 +1398,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"items\": [\n        {\n            \"type\": \"episode\",\n            \"agent_id\": \"agent_id\",\n            \"user_id\": \"user_id\",\n            \"content\": \"content\",\n            \"weight\": 1.1,\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"last_accessed_at\": \"2024-01-15T09:30:00Z\",\n            \"timestamp\": \"2024-01-15T09:30:00Z\",\n            \"sentiment\": 1.1,\n            \"duration\": 1.1,\n            \"id\": \"id\",\n            \"emotions\": [\n                \"admiration\"\n            ]\n        }\n    ]\n}",
+          "body": "{\n    \"items\": [\n        {\n            \"agent_id\": \"agent_id\",\n            \"user_id\": \"user_id\",\n            \"content\": \"content\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"last_accessed_at\": \"2024-01-15T09:30:00Z\",\n            \"timestamp\": \"2024-01-15T09:30:00Z\",\n            \"sentiment\": 1.1,\n            \"id\": \"id\",\n            \"entities\": [\n                {}\n            ]\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
