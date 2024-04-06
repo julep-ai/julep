@@ -4,10 +4,6 @@
 /* eslint-disable */
 export const $Memory = {
   properties: {
-    type: {
-      type: "Enum",
-      isRequired: true,
-    },
     agent_id: {
       type: "string",
       description: `ID of the agent`,
@@ -24,11 +20,6 @@ export const $Memory = {
       type: "string",
       description: `Content of the memory`,
       isRequired: true,
-    },
-    weight: {
-      type: "number",
-      description: `Weight (importance) of the memory on a scale of 0-100`,
-      maximum: 100,
     },
     created_at: {
       type: "string",
@@ -52,21 +43,18 @@ export const $Memory = {
       maximum: 1,
       minimum: -1,
     },
-    duration: {
-      type: "number",
-      description: `Duration of the Memory (in seconds)`,
-    },
     id: {
       type: "string",
       description: `Memory id (UUID)`,
       isRequired: true,
       format: "uuid",
     },
-    emotions: {
+    entities: {
       type: "array",
       contains: {
-        type: "Enum",
+        properties: {},
       },
+      isRequired: true,
     },
   },
 } as const;

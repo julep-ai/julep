@@ -55,8 +55,7 @@ from .list_users_request_sort_by import ListUsersRequestSortBy
 from .list_users_response import ListUsersResponse
 from .memory import Memory
 from .memory_access_options import MemoryAccessOptions
-from .memory_emotions_item import MemoryEmotionsItem
-from .memory_type import MemoryType
+from .memory_entities_item import MemoryEntitiesItem
 from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
 from .partial_function_def import PartialFunctionDef
@@ -135,8 +134,7 @@ __all__ = [
     "ListUsersResponse",
     "Memory",
     "MemoryAccessOptions",
-    "MemoryEmotionsItem",
-    "MemoryType",
+    "MemoryEntitiesItem",
     "NamedToolChoice",
     "NamedToolChoiceFunction",
     "PartialFunctionDef",

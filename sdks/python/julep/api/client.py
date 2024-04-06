@@ -827,7 +827,6 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            # type: ignore
             _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
@@ -859,7 +858,6 @@ class JulepApi:
         agent_id: str,
         *,
         query: str,
-        types: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         user_id: typing.Optional[str] = None,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
@@ -871,8 +869,6 @@ class JulepApi:
             - agent_id: str.
 
             - query: str.
-
-            - types: typing.Optional[typing.Union[str, typing.List[str]]]. episode, belief, entity
 
             - user_id: typing.Optional[str].
 
@@ -896,13 +892,7 @@ class JulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
             ),
             params=remove_none_from_dict(
-                {
-                    "query": query,
-                    "types": types,
-                    "user_id": user_id,
-                    "limit": limit,
-                    "offset": offset,
-                }
+                {"query": query, "user_id": user_id, "limit": limit, "offset": offset}
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2602,7 +2592,6 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            # type: ignore
             _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
@@ -2634,7 +2623,6 @@ class AsyncJulepApi:
         agent_id: str,
         *,
         query: str,
-        types: typing.Optional[typing.Union[str, typing.List[str]]] = None,
         user_id: typing.Optional[str] = None,
         limit: typing.Optional[int] = None,
         offset: typing.Optional[int] = None,
@@ -2646,8 +2634,6 @@ class AsyncJulepApi:
             - agent_id: str.
 
             - query: str.
-
-            - types: typing.Optional[typing.Union[str, typing.List[str]]]. episode, belief, entity
 
             - user_id: typing.Optional[str].
 
@@ -2671,13 +2657,7 @@ class AsyncJulepApi:
                 f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
             ),
             params=remove_none_from_dict(
-                {
-                    "query": query,
-                    "types": types,
-                    "user_id": user_id,
-                    "limit": limit,
-                    "offset": offset,
-                }
+                {"query": query, "user_id": user_id, "limit": limit, "offset": offset}
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,

@@ -432,17 +432,12 @@ export class DefaultService {
   public getAgentMemories({
     agentId,
     query,
-    types,
     userId,
     limit,
     offset,
   }: {
     agentId: string;
     query: string;
-    /**
-     * episode, belief, entity
-     */
-    types?: Array<string>;
     userId?: string;
     limit?: number;
     offset?: number;
@@ -457,7 +452,6 @@ export class DefaultService {
       },
       query: {
         query: query,
-        types: types,
         user_id: userId,
         limit: limit,
         offset: offset,
