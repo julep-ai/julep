@@ -1,4 +1,4 @@
-from typing import Any, Callable, Literal, Optional, Protocol
+from typing import Callable, Literal, Optional, Protocol
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -31,19 +31,6 @@ class BaseTask(BaseModel):
 
 class BaseTaskArgs(BaseModel):
     ...
-
-
-class AddPrinciplesTaskArgs(BaseTaskArgs):
-    scores: dict[str, Any]
-    full: bool = False
-    name: Optional[str] = None
-    user_id: Optional[UUID] = None
-    character_id: Optional[UUID] = None
-
-
-class AddPrinciplesTask(BaseTask):
-    name: Literal["add_principles.v1"]
-    args: AddPrinciplesTaskArgs
 
 
 class MemoryManagementTaskArgs(BaseTaskArgs):

@@ -975,25 +975,6 @@ app.add_middleware(
     allow_methods="*",
     allow_headers="*",
 )
-# app.add_middleware(
-#     BaseHTTPMiddleware,
-#     dispatch=make_logging_middleware(
-#         exclude_urls=["/status", "/docs", "/openapi.json"]
-#     ),
-# )
-# # TODO: should we enable this middleware for completion endpoints only?
-# app.add_middleware(
-#     BaseHTTPMiddleware,
-#     dispatch=make_billing_middleware(
-#         exclude_urls=[
-#             "/status",
-#             "/v1/models",
-#             "/docs",
-#             "/openapi.json",
-#             "/metrics",
-#         ]
-#     ),
-# )
 
 
 # QUESTION: Can we have an explanation on how the app configuration is dynamically set based on command-line arguments?
@@ -1037,7 +1018,5 @@ def create_app(args=None):
         tokenizer_mode=engine_args.tokenizer_mode,
         trust_remote_code=engine_args.trust_remote_code,
     )
-    # TODO: this no longer works, as metrics were re-implemented in new vllm version, need to fix this somehow
-    # add_global_metrics_labels(model_name=engine_args.model)
 
     return app

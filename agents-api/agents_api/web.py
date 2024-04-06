@@ -69,13 +69,8 @@ register_exceptions(app)
 
 app.include_router(agents.router)
 app.include_router(sessions.router)
-# app.include_router(embedder.router)
 app.include_router(users.router)
 app.include_router(jobs.router)
-# app.include_router(entries.router)
-# app.include_router(models.router)
-# app.include_router(personality.router)
-# app.include_router(beliefs.router)
 
 
 @app.exception_handler(RPCError)
@@ -116,6 +111,4 @@ def main(
 
 
 if __name__ == "__main__":
-    # init_models()
-
     fire.Fire(main)
