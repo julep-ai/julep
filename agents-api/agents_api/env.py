@@ -24,17 +24,6 @@ summarization_tokens_threshold: int = env.int(
 )
 worker_url: str = env.str("WORKER_URL", default=None)
 
-# principles you API
-client_id: str = env.str("PRINCIPLES_YOU_CLIENT_ID", default=None)
-client_secret: str = env.str("PRINCIPLES_YOU_CLIENT_SECRET", default=None)
-endpoint_base: str = env.str(
-    "PRINCIPLES_YOU_ENDPOINT_BASE", default="https://app.stg40.principles.com"
-)
-cogito_endpoint: str = env.str(
-    "PRINCIPLES_YOU_COGITO_ENDPOINT",
-    default="principles-stg-primary.auth.us-east-1.amazoncognito.com/oauth2/token",
-)
-
 sentry_dsn: str = env.str("SENTRY_DSN", default=None)
 
 # Temporal
@@ -69,7 +58,6 @@ environment = dict(
     summarization_ratio_threshold=summarization_ratio_threshold,
     summarization_tokens_threshold=summarization_tokens_threshold,
     worker_url=worker_url,
-    endpoint_base=endpoint_base,
     sentry_dsn=sentry_dsn,
     temporal_endpoint=temporal_endpoint,
     temporal_task_queue=temporal_task_queue,
