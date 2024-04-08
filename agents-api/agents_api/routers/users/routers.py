@@ -21,6 +21,7 @@ from agents_api.models.docs.create_docs import (
 )
 from agents_api.models.docs.list_docs import (
     list_docs_snippets_by_owner_query,
+    ensure_owner_exists_query,
 )
 from agents_api.models.docs.delete_docs import (
     delete_docs_by_id_query,
@@ -270,6 +271,9 @@ async def list_docs(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="metadata_filter is not implemented",
         )
+    
+    if not len(list(client.run(ensure_owner_exists_query("user", user_id)).iterrows())):
+        raise UserNotFoundError("", user_id)
 
     resp = client.run(
         list_docs_snippets_by_owner_query(

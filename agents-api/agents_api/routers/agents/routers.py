@@ -28,6 +28,7 @@ from agents_api.models.docs.create_docs import (
 )
 from agents_api.models.docs.list_docs import (
     list_docs_snippets_by_owner_query,
+    ensure_owner_exists_query,
 )
 from agents_api.models.docs.delete_docs import (
     delete_docs_by_id_query,
@@ -374,6 +375,9 @@ async def list_docs(
             detail="metadata_filter is not implemented",
         )
 
+    if not len(list(client.run(ensure_owner_exists_query("agent", agent_id)).iterrows())):
+        raise AgentNotFoundError("", agent_id)
+
     resp = client.run(
         list_docs_snippets_by_owner_query(
             owner_type="agent",
@@ -465,6 +469,9 @@ async def create_tool(
 
 @router.get("/agents/{agent_id}/tools", tags=["agents"])
 async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> ToolList:
+    if not len(list(client.run(ensure_owner_exists_query("agent", agent_id)).iterrows())):
+        raise AgentNotFoundError("", agent_id)
+
     resp = client.run(
         list_functions_by_agent_query(
             agent_id=agent_id,
