@@ -6,6 +6,12 @@ from temporalio.client import Client, TLSConfig
 from temporalio.worker import Worker
 
 from ..activities.summarization import summarization
+from ..activities.co_density import co_density
+from ..activities.dialog_insights import dialog_insights
+from ..activities.mem_mgmt import mem_mgmt
+from ..activities.mem_rating import mem_rating
+from ..activities.relationship_summary import relationship_summary
+from ..activities.salient_questions import salient_questions
 from ..env import (
     temporal_endpoint,
     temporal_task_queue,
@@ -14,6 +20,12 @@ from ..env import (
     temporal_client_cert,
 )
 from ..workflows.summarization import SummarizationWorkflow
+from ..workflows.co_density import CoDensityWorkflow
+from ..workflows.dialog_insights import DialogInsightsWorkflow
+from ..workflows.mem_mgmt import MemMgmtWorkflow
+from ..workflows.mem_rating import MemRatingWorkflow
+from ..workflows.relationship_summary import RelationshipSummaryWorkflow
+from ..workflows.salient_questions import SalientQuestionsWorkflow
 
 
 async def main():
@@ -37,8 +49,24 @@ async def main():
     worker = Worker(
         client,
         task_queue=temporal_task_queue,
-        workflows=[SummarizationWorkflow],
-        activities=[summarization],
+        workflows=[
+            SummarizationWorkflow,
+            CoDensityWorkflow,
+            DialogInsightsWorkflow,
+            MemMgmtWorkflow,
+            MemRatingWorkflow,
+            RelationshipSummaryWorkflow,
+            SalientQuestionsWorkflow,
+        ],
+        activities=[
+            summarization,
+            co_density,
+            dialog_insights,
+            mem_mgmt,
+            mem_rating,
+            relationship_summary,
+            salient_questions,
+        ],
     )
 
     await worker.run()
