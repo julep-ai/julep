@@ -1,3 +1,6 @@
+"""
+This module initializes the FastAPI application, registers routes, sets up middleware, and configures exception handlers.
+"""
 import fire
 import uvicorn
 import logging
@@ -34,6 +37,15 @@ logger = logging.getLogger(__name__)
 
 
 def make_exception_handler(status: int):
+    """
+    Creates a custom exception handler for the application.
+
+    Parameters:
+    - status (int): The HTTP status code to return for this exception.
+
+    Returns:
+    A callable exception handler that logs the exception and returns a JSON response with the specified status code.
+    """
     async def _handler(request: Request, exc):
         exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
         logger.exception(exc)
@@ -44,6 +56,12 @@ def make_exception_handler(status: int):
 
 
 def register_exceptions(app: FastAPI):
+    """
+    Registers custom exception handlers for the FastAPI application.
+
+    Parameters:
+    - app (FastAPI): The FastAPI application instance to register the exception handlers for.
+    """
     app.add_exception_handler(
         RequestValidationError,
         make_exception_handler(status.HTTP_422_UNPROCESSABLE_ENTITY),
@@ -110,5 +128,6 @@ def main(
     )
 
 
+# Check if the script is being run directly and, if so, start the Uvicorn server with the specified configuration.
 if __name__ == "__main__":
     fire.Fire(main)
