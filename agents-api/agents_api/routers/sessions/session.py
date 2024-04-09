@@ -191,7 +191,7 @@ class BaseSession:
 
         # FIXME: This sometimes returns "The model `` does not exist."
         if session_data is not None:
-            settings.model = session_data.model or "julep-ai/samantha-1-turbo"
+            settings.model = session_data.model
 
         # Add tools to settings
         if tools:
@@ -210,6 +210,8 @@ class BaseSession:
         tools = None
         if settings.tools:
             tools = [tool.model_dump(mode="json") for tool in settings.tools]
+        from pprint import pprint
+        pprint(openai_client.base_url)
         return await openai_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
@@ -217,14 +219,14 @@ class BaseSession:
             stop=settings.stop,
             temperature=settings.temperature,
             frequency_penalty=settings.frequency_penalty,
-            extra_body=dict(
-                repetition_penalty=settings.repetition_penalty,
-                best_of=1,
-                top_k=1,
-                length_penalty=settings.length_penalty,
-                logit_bias=settings.logit_bias,
-                preset=settings.preset.name if settings.preset else None,
-            ),
+            # extra_body=dict(
+            #     repetition_penalty=settings.repetition_penalty,
+            #     best_of=1,
+            #     top_k=1,
+            #     length_penalty=settings.length_penalty,
+            #     logit_bias=settings.logit_bias,
+            #     preset=settings.preset.name if settings.preset else None,
+            # ),
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,

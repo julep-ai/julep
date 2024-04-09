@@ -12,6 +12,7 @@ from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.exceptions.agents import (
+    AgentModelNotValid,
     AgentNotFoundError,
     AgentToolNotFoundError,
     AgentDocNotFoundError,
@@ -119,7 +120,7 @@ async def update_agent(
                 ).model_dump(),
                 name=request.name,
                 about=request.about,
-                model=request.model or "julep-ai/samantha-1-turbo",
+                model=request.model,
                 metadata=request.metadata,
                 instructions=request.instructions,
             )
@@ -211,21 +212,23 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    resp = client.run(
-        create_agent_query(
-            agent_id=uuid4(),
-            developer_id=x_developer_id,
-            name=request.name,
-            about=request.about,
-            instructions=request.instructions,
-            model=request.model,
-            default_settings=(
-                request.default_settings or AgentDefaultSettings()
-            ).model_dump(),
-            metadata=request.metadata or {},
-        ),
-    )
-
+    try:
+        resp = client.run(
+            create_agent_query(
+                agent_id=uuid4(),
+                developer_id=x_developer_id,
+                name=request.name,
+                about=request.about,
+                instructions=request.instructions,
+                model=request.model,
+                default_settings=(
+                    request.default_settings or AgentDefaultSettings()
+                ).model_dump(),
+                metadata=request.metadata or {},
+            ),
+        )
+    except AssertionError as e:
+        raise AgentModelNotValid(request.model)
     new_agent_id = resp["agent_id"][0]
     res = ResourceCreatedResponse(
         id=new_agent_id,

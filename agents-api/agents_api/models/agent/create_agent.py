@@ -6,18 +6,20 @@ from ...common.utils.cozo import cozo_process_mutate_data
 
 from ..instructions.create_instructions import create_instructions_query
 
+from ...model_registry import ALL_AVAILABLE_MODELS
 
 def create_agent_query(
     agent_id: UUID,
     developer_id: UUID,
     name: str,
     about: str,
+    model: str,
     instructions: list[Instruction] = [],
-    model: str = "julep-ai/samantha-1-turbo",
     metadata: dict = {},
     default_settings: dict = {},
 ):
-    assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
+    # assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo", "gpt-4"]
+    assert model in ALL_AVAILABLE_MODELS.keys()
 
     settings_cols, settings_vals = cozo_process_mutate_data(
         {

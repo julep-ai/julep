@@ -5,3 +5,7 @@ ngrok*
 *.env
 *.pyc
 */node_modules/
+.devcontainer
+node_modules/
+package-lock.json
+package.json
