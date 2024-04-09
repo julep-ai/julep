@@ -6,6 +6,8 @@ enable: true
 entryPoints:
   web:
     address: ":$GATEWAY_PORT"
+  metrics:
+    address: 127.0.0.1:8082
 
 ping: true
 accesslog: true
@@ -14,24 +16,24 @@ log:
 
 http:
   routers:
-    model-api:
+    model-serving:
       entryPoints:
         - web
       rule: Path(`/v1{path:.*}`)
       middlewares:
-        - model-api-chain
+        - model-serving-chain
         - corsHeaders
-      service: service-model-api
+      service: service-model-serving
 
-    model-api-jwt:
+    model-serving-jwt:
       entryPoints:
         - web
       rule: Path(`/jwt/v1{path:.*}`)
       middlewares:
-        - model-api-chain
-        - model-api-strip-prefix-jwt
+        - model-serving-chain
+        - model-serving-strip-prefix-jwt
         - corsHeaders
-      service: service-model-api
+      service: service-model-serving
 
     agents-api:
       entryPoints:
@@ -61,18 +63,18 @@ http:
         accessControlAllowOriginList: "*"
         addVaryHeader: true
 
-    model-api-chain:
+    model-serving-chain:
       chain:
         middlewares:
           - my-jwt
-          - model-api-add-headers
+          - model-serving-add-headers
 
     agents-api-add-headers:
       headers:
         customrequestheaders:
           $AGENTS_API_KEY_HEADER_NAME: $AGENTS_API_KEY
     
-    model-api-add-headers:
+    model-serving-add-headers:
       headers:
         customrequestheaders:
           $MODEL_API_KEY_HEADER_NAME: $MODEL_API_KEY
@@ -83,7 +85,7 @@ http:
           - my-jwt
           - agents-api-add-headers
 
-    model-api-strip-prefix-jwt:
+    model-serving-strip-prefix-jwt:
       stripprefix:
         prefixes:
           - /jwt
@@ -118,12 +120,12 @@ http:
             X-Developer-Id: sub
             X-Developer-Email: email
           OpaHttpStatusField: allow_status_code
-          KeysWhitelist:
-            - 
+          # KeysWhitelist:
+          #   -
 
 
   services:
-    service-model-api: 
+    service-model-serving:
       loadBalancer:
         passHostHeader: false
         servers:
@@ -139,3 +141,12 @@ experimental:
   localPlugins:
     jwt:
       moduleName: github.com/julep-ai/traefik-jwt-plugin
+
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+    entryPoint: metrics
+    headerLabels:
+      apiuser: Authorization

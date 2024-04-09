@@ -6,3 +6,4 @@ include:
   - ./model-serving/docker-compose.yml
   - ./agents-api/docker-compose.yml
   - ./gateway/docker-compose.yml
+  - ./monitoring/docker-compose.yml
