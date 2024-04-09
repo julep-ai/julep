@@ -1,11 +1,19 @@
+"""
+This module is responsible for loading and providing access to environment variables used throughout the agents-api application.
+It utilizes the environs library for environment variable parsing.
+"""
 from pprint import pprint
 from environs import Env
 
 
+# Initialize the Env object for environment variable parsing.
 env = Env()
 env.read_env()
 
+# Debug mode
+debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
 
+# Base URL for the COZO service. Defaults to the local development URL if not specified.
 cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
 cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
 prediction_project: str = env.str("PREDICTION_PROJECT", default=None)
@@ -50,7 +58,9 @@ temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
 
+# Consolidate environment variables into a dictionary for easy access and debugging.
 environment = dict(
+    debug=debug,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,
     generation_url=generation_url,
@@ -70,6 +80,8 @@ environment = dict(
     temporal_namespace=temporal_namespace,
 )
 
-print("Environment variables:")
-pprint(environment)
-print()
+if debug:
+    # Print the loaded environment variables for debugging purposes.
+    print("Environment variables:")
+    pprint(environment)
+    print()
