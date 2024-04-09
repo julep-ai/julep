@@ -1,6 +1,7 @@
 from ...common.utils import json
 from typing import Any
 from uuid import UUID
+from ...clients.worker.worker import client
 
 
 def list_users_query(
@@ -16,8 +17,10 @@ def list_users_query(
         ]
     )
 
-    return f"""
+    query_string = f"""
     input[developer_id] <- [[to_uuid("{developer_id}")]]
+    result = client.run(query_string)
+    return result
 
     ?[
         id,
