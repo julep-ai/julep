@@ -4,13 +4,13 @@ from uuid import UUID
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 from ...autogen.openapi_model import Instruction
-from ...models.instructions.create_instructions import create_instructions_query
-from ...models.instructions.delete_instructions import (
+from ..instructions.create_instructions import create_instructions_query
+from ..instructions.delete_instructions import (
     delete_instructions_by_agent_query,
 )
 
 
-def update_agent_query(
+def patch_agent_query(
     agent_id: UUID,
     developer_id: UUID,
     default_settings: dict = {},
@@ -36,7 +36,7 @@ def update_agent_query(
         # update the agent
         ?[{agent_update_cols}] <- {json.dumps(agent_update_vals)}
 
-        :put agents {{
+        :update agents {{
             {agent_update_cols}
         }}
         :returning
@@ -56,7 +56,7 @@ def update_agent_query(
         # update the agent settings
         ?[{settings_cols}] <- {json.dumps(settings_vals)}
 
-        :put agent_default_settings {{
+        :update agent_default_settings {{
             {settings_cols}
         }}
     }}

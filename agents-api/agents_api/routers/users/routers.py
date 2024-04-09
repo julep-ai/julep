@@ -15,6 +15,7 @@ from agents_api.common.exceptions.users import UserNotFoundError, UserDocNotFoun
 from agents_api.models.user.create_user import create_user_query
 from agents_api.models.user.list_users import list_users_query
 from agents_api.models.user.update_user import update_user_query
+from agents_api.models.user.patch_user import patch_user_query
 from agents_api.models.user.get_user import get_user_query
 from agents_api.models.docs.create_docs import (
     create_docs_query,
@@ -42,6 +43,7 @@ from agents_api.autogen.openapi_model import (
     ResourceUpdatedResponse,
     CreateDoc,
     Doc,
+    PatchUserRequest,
 )
 
 
@@ -88,6 +90,40 @@ async def update_user(
     try:
         resp = client.run(
             update_user_query(
+                developer_id=x_developer_id,
+                user_id=user_id,
+                name=request.name,
+                about=request.about,
+                metadata=request.metadata,
+            )
+        )
+
+        return ResourceUpdatedResponse(
+            id=resp["user_id"][0],
+            updated_at=resp["updated_at"][0],
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    except QueryException as e:
+        # the code is not so informative now, but it may be a good solution in the future
+        if e.code == "transact::assertion_failure":
+            raise UserNotFoundError(x_developer_id, user_id)
+
+        raise
+
+
+@router.patch("/users/{user_id}", tags=["users"])
+async def patch_user(
+    user_id: UUID4,
+    request: PatchUserRequest,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+) -> ResourceUpdatedResponse:
+    try:
+        resp = client.run(
+            patch_user_query(
                 developer_id=x_developer_id,
                 user_id=user_id,
                 name=request.name,

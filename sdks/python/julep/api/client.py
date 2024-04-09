@@ -35,7 +35,6 @@ from .types.get_user_docs_request_order import GetUserDocsRequestOrder
 from .types.get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
-from .types.instruction import Instruction
 from .types.job_status import JobStatus
 from .types.list_agents_request_order import ListAgentsRequestOrder
 from .types.list_agents_request_sort_by import ListAgentsRequestSortBy
@@ -354,7 +353,7 @@ class JulepApi:
         *,
         name: str,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: typing.Optional[str] = OMIT,
@@ -369,7 +368,7 @@ class JulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - tools: typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
 
@@ -1112,7 +1111,7 @@ class JulepApi:
         agent_id: str,
         *,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -1126,7 +1125,7 @@ class JulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - name: typing.Optional[str]. Name of the agent
 
@@ -1212,7 +1211,7 @@ class JulepApi:
         agent_id: str,
         *,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -1226,7 +1225,7 @@ class JulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - name: typing.Optional[str]. Name of the agent
 
@@ -2119,7 +2118,7 @@ class AsyncJulepApi:
         *,
         name: str,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: typing.Optional[str] = OMIT,
@@ -2134,7 +2133,7 @@ class AsyncJulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - tools: typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
 
@@ -2877,7 +2876,7 @@ class AsyncJulepApi:
         agent_id: str,
         *,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -2891,7 +2890,7 @@ class AsyncJulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - name: typing.Optional[str]. Name of the agent
 
@@ -2977,7 +2976,7 @@ class AsyncJulepApi:
         agent_id: str,
         *,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -2991,7 +2990,7 @@ class AsyncJulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - name: typing.Optional[str]. Name of the agent
 

@@ -1157,7 +1157,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction for the agent
           description: List of instructions for the agent
         created_at:
@@ -1325,7 +1325,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         tools:
@@ -1375,7 +1375,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         name:
@@ -1949,18 +1949,6 @@ components:
           type: boolean
           description: Whether this interaction should form memories or not
           default: true
-    Instruction:
-      type: object
-      properties:
-        content:
-          type: string
-          description: Content of the instruction
-        important:
-          type: boolean
-          description: Whether this instruction should be marked as important (only up to 3 instructions per agent can be marked important)
-          default: false
-      required:
-        - content
     CreateToolRequest:
       type: object
       properties:
@@ -2115,7 +2103,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         name:

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AgentDefaultSettings } from "./AgentDefaultSettings";
-import type { Instruction } from "./Instruction";
 export type Agent = {
   /**
    * Name of the agent
@@ -16,7 +15,7 @@ export type Agent = {
   /**
    * List of instructions for the agent
    */
-  instructions?: Array<Instruction>;
+  instructions?: Array<string>;
   /**
    * Agent created at (RFC-3339 format)
    */

@@ -20,9 +20,12 @@ from agents_api.models.agent.create_agent import create_agent_query
 from agents_api.models.agent.list_agents import list_agents_query
 from agents_api.models.agent.delete_agent import delete_agent_query
 from agents_api.models.agent.update_agent import update_agent_query
+from agents_api.models.agent.patch_agent import patch_agent_query
 from agents_api.models.agent.get_agent import get_agent_query
 from agents_api.models.agent.create_tools import create_tools_query
 from agents_api.models.agent.update_tool import update_tool_by_id_query
+from agents_api.models.agent.patch_tool import patch_tool_by_id_query
+
 from agents_api.models.docs.create_docs import (
     create_docs_query,
 )
@@ -66,6 +69,8 @@ from agents_api.autogen.openapi_model import (
     FunctionDef,
     Instruction,
     UpdateToolRequest,
+    PatchToolRequest,
+    PatchAgentRequest,
 )
 
 
@@ -112,6 +117,71 @@ async def update_agent(
     try:
         resp = client.run(
             update_agent_query(
+                agent_id=agent_id,
+                developer_id=x_developer_id,
+                default_settings=(
+                    request.default_settings or AgentDefaultSettings()
+                ).model_dump(),
+                name=request.name,
+                about=request.about,
+                model=request.model or "julep-ai/samantha-1-turbo",
+                metadata=request.metadata,
+                instructions=request.instructions,
+            )
+        )
+
+        updated_agent_id = resp["agent_id"][0]
+        res = ResourceUpdatedResponse(
+            id=updated_agent_id,
+            updated_at=resp["updated_at"][0],
+        )
+
+        if request.instructions:
+            indices, instructions = list(zip(*enumerate(request.instructions)))
+            embeddings = await embed(
+                [
+                    instruction_embed_instruction + instruction.content
+                    for instruction in instructions
+                ]
+            )
+            query = "\n".join(
+                [
+                    delete_instructions_by_agent_query(agent_id=updated_agent_id),
+                    create_instructions_query(
+                        agent_id=updated_agent_id,
+                        instructions=request.instructions,
+                    ),
+                    embed_instructions_query(
+                        agent_id=updated_agent_id,
+                        instruction_indices=indices,
+                        embeddings=embeddings,
+                    ),
+                ]
+            )
+            client.run(query)
+
+        return res
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found",
+        )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentNotFoundError(x_developer_id, agent_id)
+
+        raise
+
+
+@router.patch("/agents/{agent_id}", tags=["agents"])
+async def patch_agent(
+    agent_id: UUID4,
+    request: PatchAgentRequest,
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+) -> ResourceUpdatedResponse:
+    try:
+        resp = client.run(
+            patch_agent_query(
                 agent_id=agent_id,
                 developer_id=x_developer_id,
                 default_settings=(
@@ -545,6 +615,49 @@ async def update_tool(
             row.to_dict()
             for _, row in client.run(
                 update_tool_by_id_query(
+                    agent_id=agent_id,
+                    tool_id=tool_id,
+                    function=request.function,
+                    embedding=embeddings[0] if embeddings else [],
+                )
+            ).iterrows()
+        ][0]
+
+        return ResourceUpdatedResponse(
+            id=resp["tool_id"],
+            updated_at=resp["updated_at"],
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent or tool not found",
+        )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise AgentToolNotFoundError(agent_id, tool_id)
+
+        raise
+
+
+@router.patch("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
+async def patch_tool(
+    agent_id: UUID4, tool_id: UUID4, request: PatchToolRequest
+) -> ResourceUpdatedResponse:
+    embeddings = await embed(
+        [
+            function_embed_instruction
+            + request.function.description
+            + "\nParameters: "
+            + json.dumps(request.function.parameters.model_dump())
+        ],
+        join_inputs=True,
+    )
+
+    try:
+        resp = [
+            row.to_dict()
+            for _, row in client.run(
+                patch_tool_by_id_query(
                     agent_id=agent_id,
                     tool_id=tool_id,
                     function=request.function,
