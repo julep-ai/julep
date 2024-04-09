@@ -16,7 +16,8 @@ export const $Agent = {
     instructions: {
       type: "array",
       contains: {
-        type: "Instruction",
+        type: "string",
+        description: `Instruction for the agent`,
       },
     },
     created_at: {

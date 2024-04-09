@@ -41,7 +41,6 @@ from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
 from .input_chat_ml_message import InputChatMlMessage
 from .input_chat_ml_message_role import InputChatMlMessageRole
-from .instruction import Instruction
 from .job_status import JobStatus
 from .job_status_state import JobStatusState
 from .list_agents_request_order import ListAgentsRequestOrder
@@ -120,7 +119,6 @@ __all__ = [
     "GetUserDocsResponse",
     "InputChatMlMessage",
     "InputChatMlMessageRole",
-    "Instruction",
     "JobStatus",
     "JobStatusState",
     "ListAgentsRequestOrder",
