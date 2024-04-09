@@ -654,17 +654,6 @@ class MemoryAccessOptions(BaseModel):
     """
 
 
-class Instruction(BaseModel):
-    content: str
-    """
-    Content of the instruction
-    """
-    important: bool | None = False
-    """
-    Whether this instruction should be marked as important (only up to 3 instructions per agent can be marked important)
-    """
-
-
 class CreateToolRequest(BaseModel):
     type: Type
     """
@@ -787,7 +776,7 @@ class PatchAgentRequest(BaseModel):
     """
     About the agent
     """
-    instructions: List[Instruction] | None = None
+    instructions: List[str] | None = None
     """
     List of instructions for the agent
     """
@@ -848,7 +837,7 @@ class Agent(BaseModel):
     """
     About the agent
     """
-    instructions: List[Instruction] | None = None
+    instructions: List[str] | None = None
     """
     List of instructions for the agent
     """
@@ -914,7 +903,7 @@ class CreateAgentRequest(BaseModel):
     """
     About the agent
     """
-    instructions: List[Instruction] | None = None
+    instructions: List[str] | None = None
     """
     List of instructions for the agent
     """
@@ -949,7 +938,7 @@ class UpdateAgentRequest(BaseModel):
     """
     About the agent
     """
-    instructions: List[Instruction] | None = None
+    instructions: List[str] | None = None
     """
     List of instructions for the agent
     """
