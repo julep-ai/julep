@@ -1,8 +1,8 @@
-name: julep-cozo-server
+name: julep-memory-store
 version: "3"
 
 services:
-  cozo-server:
+  memory-store:
     env_file:
       - path: .env
         required: false
@@ -12,7 +12,7 @@ services:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
       - COZO_PORT=${COZO_PORT}
       - MNT_DIR=/data
-    container_name: cozo-server
+    container_name: memory-store
     volumes:
       - cozo_data:/data
     build:
