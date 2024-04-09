@@ -1,7 +1,7 @@
-name: julep-model-api
+name: julep-model-serving
 
 services:
-  model-api:
+  model-serving:
     env_file:
       - path: .env
         required: false
@@ -20,7 +20,7 @@ services:
       - MAX_NUM_SEQS=${MAX_NUM_SEQS}
       - GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION}
       - DTYPE=${DTYPE}
-    container_name: model-api
+    container_name: model-serving
     build:
       context: .
       shm_size: "2gb"
