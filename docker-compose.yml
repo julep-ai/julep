@@ -2,7 +2,7 @@ name: julep
 version: "3"
 
 include:
-  - ./cozo-server/docker-compose.yml
-  - ./model-api/docker-compose.yml
+  - ./memory-store/docker-compose.yml
+  - ./model-serving/docker-compose.yml
   - ./agents-api/docker-compose.yml
   - ./gateway/docker-compose.yml

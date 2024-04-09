@@ -1,7 +1,9 @@
 branch: dev
 blocked_dirs:
-- sdks/
-- finetune/
-- gitbook/
-- platform/
-- .github/
+  - .github/
+  - agents-api/notebooks/
+  - docs/python-sdk-docs/julep/api/
+  - docs/js-sdk-docs/
+  - sdks/python/julep/api/
+  - sdks/ts/src/api/
+  - sdks/postman/
