@@ -2,7 +2,7 @@ name: julep-gateway
 version: "3"
 
 include:
-  - ../model-api/docker-compose.yml
+  - ../model-serving/docker-compose.yml
   - ../agents-api/docker-compose.yml
 
 services:
