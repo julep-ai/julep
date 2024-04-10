@@ -47,12 +47,6 @@ from agents_api.models.tools.embed_tools import embed_functions_query
 from agents_api.models.tools.list_tools import list_functions_by_agent_query
 from agents_api.models.tools.get_tools import get_function_by_id_query
 from agents_api.models.tools.delete_tools import delete_function_by_id_query
-from agents_api.models.instructions.create_instructions import create_instructions_query
-from agents_api.models.instructions.list_instructions import list_instructions_query
-from agents_api.models.instructions.embed_instructions import embed_instructions_query
-from agents_api.models.instructions.delete_instructions import (
-    delete_instructions_by_agent_query,
-)
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.autogen.openapi_model import (
     Agent,
@@ -67,7 +61,6 @@ from agents_api.autogen.openapi_model import (
     CreateToolRequest,
     Tool,
     FunctionDef,
-    Instruction,
     UpdateToolRequest,
     PatchToolRequest,
     PatchAgentRequest,
@@ -126,7 +119,7 @@ async def update_agent(
                 about=request.about,
                 model=request.model or "julep-ai/samantha-1-turbo",
                 metadata=request.metadata,
-                instructions=request.instructions,
+                instructions=request.instructions or [],
             )
         )
 
@@ -135,30 +128,6 @@ async def update_agent(
             id=updated_agent_id,
             updated_at=resp["updated_at"][0],
         )
-
-        if request.instructions:
-            indices, instructions = list(zip(*enumerate(request.instructions)))
-            embeddings = await embed(
-                [
-                    instruction_embed_instruction + instruction.content
-                    for instruction in instructions
-                ]
-            )
-            query = "\n".join(
-                [
-                    delete_instructions_by_agent_query(agent_id=updated_agent_id),
-                    create_instructions_query(
-                        agent_id=updated_agent_id,
-                        instructions=request.instructions,
-                    ),
-                    embed_instructions_query(
-                        agent_id=updated_agent_id,
-                        instruction_indices=indices,
-                        embeddings=embeddings,
-                    ),
-                ]
-            )
-            client.run(query)
 
         return res
     except (IndexError, KeyError):
@@ -201,30 +170,6 @@ async def patch_agent(
             updated_at=resp["updated_at"][0],
         )
 
-        if request.instructions:
-            indices, instructions = list(zip(*enumerate(request.instructions)))
-            embeddings = await embed(
-                [
-                    instruction_embed_instruction + instruction.content
-                    for instruction in instructions
-                ]
-            )
-            query = "\n".join(
-                [
-                    delete_instructions_by_agent_query(agent_id=updated_agent_id),
-                    create_instructions_query(
-                        agent_id=updated_agent_id,
-                        instructions=request.instructions,
-                    ),
-                    embed_instructions_query(
-                        agent_id=updated_agent_id,
-                        instruction_indices=indices,
-                        embeddings=embeddings,
-                    ),
-                ]
-            )
-            client.run(query)
-
         return res
     except (IndexError, KeyError):
         raise HTTPException(
@@ -253,15 +198,6 @@ async def get_agent_details(
                 )
             ).iterrows()
         ][0]
-
-        instructions_resp = [
-            Instruction(**row.to_dict())
-            for _, row in client.run(
-                list_instructions_query(agent_id=agent_id)
-            ).iterrows()
-        ]
-        if instructions_resp:
-            resp["instructions"] = instructions_resp
 
         return Agent(**resp)
     except (IndexError, KeyError):
@@ -316,22 +252,6 @@ async def create_agent(
                     )
                     for info in request.docs
                 ]
-            )
-        )
-
-    if request.instructions:
-        indices, instructions = list(zip(*enumerate(request.instructions)))
-        embeddings = await embed(
-            [
-                instruction_embed_instruction + instruction.content
-                for instruction in instructions
-            ]
-        )
-        client.run(
-            embed_instructions_query(
-                agent_id=new_agent_id,
-                instruction_indices=indices,
-                embeddings=embeddings,
             )
         )
 

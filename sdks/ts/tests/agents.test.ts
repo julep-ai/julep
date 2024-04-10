@@ -10,14 +10,14 @@ const client = setupClient();
 const mockAgent = {
   name: "test agent",
   about: "test agent about",
-  instructions: [{ content: "test agent instructions" }],
+  instructions: ["test agent instructions"],
   default_settings: { temperature: 0.5 },
 };
 
 const mockAgentUpdate = {
   name: "updated agent",
   about: "updated agent about",
-  instructions: [{ content: "updated agent instructions" }],
+  instructions: ["updated agent instructions"],
   default_settings: { temperature: 0.5 },
 };
 

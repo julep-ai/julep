@@ -4,41 +4,31 @@ from uuid import UUID
 def proc_mem_context_query(
     session_id: UUID,
     tool_query_embedding: list[float],
-    instruction_query_embedding: list[float],
     doc_query_embedding: list[float],
     tools_confidence: float = 0.7,
-    instructions_confidence: float = 0.7,
     docs_confidence: float = 0.7,
     k_tools: int = 3,
-    k_instructions: int = 10,
     k_docs: int = 2,
 ):
     VECTOR_SIZE = 768
     session_id = str(session_id)
-    assert (
-        len(tool_query_embedding)
-        == len(instruction_query_embedding)
-        == len(doc_query_embedding)
-        == VECTOR_SIZE
-    )
+    assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
 
     tools_radius: float = 1.0 - tools_confidence
-    instructions_radius: float = 1.0 - instructions_confidence
     docs_radius: float = 1.0 - docs_confidence
 
     return f"""
     {{
         # Input table for the query
         # (This is temporary to this query)
-        input[session_id, tool_query, instruction_query, doc_query] <- [[
+        input[session_id, tool_query, doc_query] <- [[
             to_uuid("{session_id}"),
             vec({tool_query_embedding}),
-            vec({instruction_query_embedding}),
             vec({doc_query_embedding}),
         ]]
 
-        ?[session_id, tool_query, instruction_query, doc_query, agent_id, user_id] :=
-            input[session_id, tool_query, instruction_query, doc_query],
+        ?[session_id, tool_query, doc_query, agent_id, user_id] :=
+            input[session_id, tool_query, doc_query],
             *session_lookup{{
                 session_id,
                 agent_id,
@@ -50,7 +40,6 @@ def proc_mem_context_query(
             agent_id: Uuid,
             user_id: Uuid,
             tool_query: <F32; {VECTOR_SIZE}>,
-            instruction_query: <F32; {VECTOR_SIZE}>,
             doc_query: <F32; {VECTOR_SIZE}>,
         }}
     }} {{
@@ -107,57 +96,6 @@ def proc_mem_context_query(
 
         # Save in temp table
         :create _preamble {{
-            role: String,
-            name: String?,
-            content: String,
-            token_count: Int,
-            created_at: Float,
-            index: Float,
-        }}
-    }} {{
-        # Collect all instructions
-
-        # Keep all important ones
-        ?[role, name, content, token_count, created_at, index] :=
-            *_input{{agent_id}},
-            *agent_instructions {{
-                agent_id,
-                instruction_idx,
-                content,
-                important,
-                created_at,
-            }},
-            important = true,
-            role = "system",
-            name = "instruction",
-            num_chars = length(content),
-            token_count = to_int(num_chars / 3.5),
-            index = 3 + (instruction_idx * 0.01)
-
-        # Search for rest of instructions
-        ?[role, name, content, token_count, created_at, index] :=
-            *_input{{agent_id, instruction_query}},
-            ~agent_instructions:embedding_space {{
-                agent_id,
-                instruction_idx,
-                content,
-                created_at,
-                important |
-                query: instruction_query,
-                k: {k_instructions},
-                ef: 128,
-                radius: {instructions_radius:.2f},
-                bind_distance: distance,
-                filter: important == false,
-            }},
-            role = "system",
-            name = "instruction",
-            num_chars = length(content),
-            token_count = to_int(num_chars / 3.5),
-            index = 3 + (instruction_idx * 0.01)
-
-        # Save in temp table
-        :create _instructions {{
             role: String,
             name: String?,
             content: String,
@@ -303,13 +241,23 @@ def proc_mem_context_query(
         # Combine all
         ?[role, name, content, token_count, created_at, index] :=
             *_preamble{{
-                role, name, content, token_count, created_at, index
+                role, name, content, token_count, created_at, index,
             }},
 
+        # Now let's get instructions
         ?[role, name, content, token_count, created_at, index] :=
-            *_instructions{{
-                role, name, content, token_count, created_at, index
+            *_input{{agent_id}},
+            *agents{{
+                agent_id,
+                instructions,
+                created_at,
             }},
+            role = "system",
+            name = "instruction",
+            index = 3,
+            content = instruction,
+            token_count = round(length(instruction) / 3.5),
+            instruction in instructions,
 
         ?[role, name, content, token_count, created_at, index] :=
             *_tools{{

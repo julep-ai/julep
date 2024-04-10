@@ -5,12 +5,11 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
-from ...autogen.openapi_model import FunctionDef, Instruction
+from ...autogen.openapi_model import FunctionDef
 from ...common.protocol.entries import Entry
 from ..docs.create_docs import create_docs_query
 from ..docs.embed_docs import embed_docs_snippets_query
 from ..agent.create_agent import create_agent_query
-from ..instructions.embed_instructions import embed_instructions_query
 from ..session.create_session import create_session_query
 from ..tools.create_tools import create_function_query
 from ..tools.embed_tools import embed_functions_query
@@ -128,8 +127,8 @@ def _():
         source="api_request",
     )
 
-    test_instruction1 = Instruction(content="test instruction", important=False)
-    test_instruction2 = Instruction(content="test instruction", important=True)
+    test_instruction1 = "test instruction"
+    test_instruction2 = "test instruction"
     test_function = FunctionDef(
         name="test function",
         description="test function description",
@@ -180,11 +179,6 @@ def _():
             title=test_user_doc,
             content=test_user_doc,
         ),
-        embed_instructions_query(
-            agent_id=agent_id,
-            instruction_indices=[0],
-            embeddings=[[1.0] * 768],
-        ),
         embed_functions_query(
             agent_id=agent_id,
             tool_ids=[tool_id],
@@ -208,7 +202,6 @@ def _():
     query = proc_mem_context_query(
         session_id=session_id,
         tool_query_embedding=[0.9] * 768,
-        instruction_query_embedding=[0.9] * 768,
         doc_query_embedding=[0.9] * 768,
     )
 
