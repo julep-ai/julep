@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, validator
 from agents_api.autogen.openapi_model import Role
 
 EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
@@ -15,10 +15,16 @@ class Entry(BaseModel):
     source: EntrySource = Field(default="api_request")
     role: Role
     name: str | None = None
-    content: str
+    content: Any
     tokenizer: str = Field(default="character_count")
     created_at: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
     timestamp: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
+
+    @validator('content')
+    def validate_content(cls, content):
+        if not isinstance(content, (str)):
+            raise ValueError("CompletionResponse not in expected format. Must be a str")
+        return content
 
     @computed_field
     @property

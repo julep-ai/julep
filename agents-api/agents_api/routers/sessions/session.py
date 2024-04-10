@@ -62,10 +62,9 @@ class BaseSession:
         # Unpack tool calls if present
         if not message.content and message.tool_calls:
             role = "function_call"
-            content = message.tool_calls[0].function
-
+            content = message.tool_calls[0].function.model_dump()
+            content = json.dumps(content)
             # FIXME: what?? why is this happening?? could be a bug in the model api
-            content = content[content.index("{", 1) :]
         elif not message.content:
             raise ValueError("No content in response")
 
