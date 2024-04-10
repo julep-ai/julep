@@ -4,16 +4,13 @@ from ...common.utils.datetime import utcnow
 
 
 def add_entries_query(entries: list[Entry]) -> str:
-    def _aux_content(e: Entry):
-        return e.content.replace('"', "'")
-
     entries_lst = []
     for e in entries:
         ts = utcnow().timestamp()
         source = json.dumps(e.source)
         role = json.dumps(e.role)
         name = json.dumps(e.name)
-        content = json.dumps(_aux_content(e))
+        content = json.dumps(e.content)
         tokenizer = json.dumps(e.tokenizer)
         if e.content:
             entries_lst.append(
