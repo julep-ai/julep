@@ -209,8 +209,6 @@ class BaseSession:
         tools = None
         if settings.tools:
             tools = [tool.model_dump(mode="json") for tool in settings.tools]
-        from pprint import pprint
-        pprint(openai_client.base_url)
         return await openai_client.chat.completions.create(
             model=settings.model,
             messages=init_context,

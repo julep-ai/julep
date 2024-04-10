@@ -81,6 +81,11 @@ CLAUDE_MODELS: Dict[str, int] = {
     "claude-3-haiku-20240307": 180000,
 }
 
+JULEP_MODELS = {
+    "julep-ai/samantha-1-turbo": 32768,
+    "julep-ai/samantha-1-turbo-awq": 32768
+}
+
 CHAT_MODELS = {
     **GPT4_MODELS,
     **TURBO_MODELS,
@@ -88,6 +93,7 @@ CHAT_MODELS = {
 }
 
 ALL_AVAILABLE_MODELS = {
+    **JULEP_MODELS,
     **GPT4_MODELS,
     **TURBO_MODELS,
     **GPT3_5_MODELS,
