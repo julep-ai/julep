@@ -141,10 +141,4 @@ def up(client):
 
 def down(client):
     for query in reversed(queries_to_run):
-        import pdb
-
-        try:
-            client.run(query["down"])
-        except Exception as e:
-            pdb.set_trace()
-            raise e
+        client.run(query["down"])

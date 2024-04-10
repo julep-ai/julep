@@ -17,7 +17,8 @@ export const $CreateAgentRequest = {
     instructions: {
       type: "array",
       contains: {
-        type: "Instruction",
+        type: "string",
+        description: `Instruction`,
       },
     },
     tools: {
