@@ -2,7 +2,6 @@ from uuid import UUID
 
 import pandas as pd
 
-from ...autogen.openapi_model import Instruction
 from ...clients.cozo import client
 from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data

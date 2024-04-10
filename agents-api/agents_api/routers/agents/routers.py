@@ -82,7 +82,6 @@ class ToolList(BaseModel):
 router = APIRouter()
 snippet_embed_instruction = "Encode this passage for retrieval: "
 function_embed_instruction = "Transform this tool description for retrieval: "
-instruction_embed_instruction = "Embed this historical text chunk for retrieval: "
 
 
 @router.delete("/agents/{agent_id}", status_code=HTTP_202_ACCEPTED, tags=["agents"])
@@ -165,30 +164,6 @@ async def patch_agent(
             id=updated_agent_id,
             updated_at=resp["updated_at"][0],
         )
-
-        if request.instructions:
-            indices, instructions = list(zip(*enumerate(request.instructions)))
-            embeddings = await embed(
-                [
-                    instruction_embed_instruction + instruction.content
-                    for instruction in instructions
-                ]
-            )
-            query = "\n".join(
-                [
-                    delete_instructions_by_agent_query(agent_id=updated_agent_id),
-                    create_instructions_query(
-                        agent_id=updated_agent_id,
-                        instructions=request.instructions,
-                    ),
-                    embed_instructions_query(
-                        agent_id=updated_agent_id,
-                        instruction_indices=indices,
-                        embeddings=embeddings,
-                    ),
-                ]
-            )
-            client.run(query)
 
         return res
     except (IndexError, KeyError):
