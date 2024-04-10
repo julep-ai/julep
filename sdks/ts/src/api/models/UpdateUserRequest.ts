@@ -9,11 +9,11 @@ export type UpdateUserRequest = {
   /**
    * About the user
    */
-  about?: string;
+  about: string;
   /**
    * Name of the user
    */
-  name?: string;
+  name: string;
   /**
    * Optional metadata
    */

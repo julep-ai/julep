@@ -1,6 +1,5 @@
 import type {
   Agent,
-  Instruction,
   CreateToolRequest,
   AgentDefaultSettings,
   ResourceCreatedResponse,
@@ -33,7 +32,7 @@ export class AgentsManager extends BaseManager {
   }: {
     name: string;
     about: string;
-    instructions: Instruction[];
+    instructions: string[];
     tools?: CreateToolRequest[];
     default_settings?: AgentDefaultSettings;
     model?: string;
@@ -41,15 +40,11 @@ export class AgentsManager extends BaseManager {
   }): Promise<Partial<Agent> & { id: string }> {
     // FIXME: Fix the type of return value
     // The returned object must have an `id` (cannot be `undefined`)
-    const instructionsList =
-      typeof instructions[0] === "string"
-        ? instructions.map((content) => ({ ...content, important: false }))
-        : instructions;
 
     const requestBody: CreateAgentRequest = {
       name,
       about,
-      instructions: instructionsList,
+      instructions: instructions,
       tools,
       default_settings,
       model,
@@ -104,7 +99,7 @@ export class AgentsManager extends BaseManager {
       default_settings,
     }: {
       about?: string;
-      instructions?: Instruction[];
+      instructions?: string[];
       name?: string;
       model?: string;
       default_settings?: AgentDefaultSettings;
@@ -112,16 +107,9 @@ export class AgentsManager extends BaseManager {
   ): Promise<Partial<Agent> & { id: string }> {
     invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
 
-    // Cast instructions to Instruction objects
-    const instructionsList = instructions
-      ? typeof instructions[0] === "string"
-        ? instructions.map((content) => ({ ...content, important: false }))
-        : instructions
-      : [];
-
     const requestBody: UpdateAgentRequest = {
       about,
-      instructions: instructionsList,
+      instructions: instructions,
       name,
       model,
       default_settings,
