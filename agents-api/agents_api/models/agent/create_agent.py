@@ -2,12 +2,9 @@ from uuid import UUID
 
 import pandas as pd
 
-from ...autogen.openapi_model import Instruction
 from ...clients.cozo import client
 from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
-
-from ..instructions.create_instructions import create_instructions_query
 
 
 def create_agent_query(
@@ -15,7 +12,7 @@ def create_agent_query(
     developer_id: UUID,
     name: str,
     about: str,
-    instructions: list[Instruction] = [],
+    instructions: list[str] = [],
     model: str = "julep-ai/samantha-1-turbo",
     metadata: dict = {},
     default_settings: dict = {},
@@ -38,10 +35,12 @@ def create_agent_query(
         }}
     """
 
-    query_cols = json.dumps([agent_id, developer_id, model, name, about, metadata])
+    query_cols = json.dumps(
+        [agent_id, developer_id, model, name, about, metadata, instructions]
+    )
     # create the agent
     agent_query = f"""
-        ?[agent_id, developer_id, model, name, about, metadata] <- [
+        ?[agent_id, developer_id, model, name, about, metadata, instructions] <- [
             {query_cols}
         ]
 
@@ -52,6 +51,7 @@ def create_agent_query(
             name,
             about,
             metadata,
+            instructions,
         }}
         :returning
     """
@@ -63,8 +63,5 @@ def create_agent_query(
 
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
-
-    if instructions:
-        query = create_instructions_query(agent_id, instructions) + "\n\n" + query
 
     return client.run(query)

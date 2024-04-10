@@ -17,9 +17,7 @@ mock_agent = {
     "name": "test agent",
     "about": "test agent about",
     "instructions": [
-        {
-            "content": "test agent instructions",
-        }
+        "test agent instructions",
     ],
     "default_settings": {"temperature": 0.5},
 }
@@ -28,9 +26,7 @@ mock_agent_update = {
     "name": "updated agent",
     "about": "updated agent about",
     "instructions": [
-        {
-            "content": "updated agent instructions",
-        }
+        "updated agent instructions",
     ],
 }
 

@@ -10,7 +10,6 @@ from ..api.types import (
     AgentDefaultSettings,
     CreateDoc,
     CreateToolRequest,
-    Instruction,
     ResourceCreatedResponse,
     ListAgentsResponse,
     ResourceUpdatedResponse,
@@ -25,7 +24,6 @@ from .types import (
     FunctionDefDict,
     DefaultSettingsDict,
     DocDict,
-    InstructionDict,
 )
 
 
@@ -42,7 +40,7 @@ ModelName = Literal[
 class AgentCreateArgs(TypedDict):
     name: str
     about: str
-    instructions: Union[List[str], List[InstructionDict]]
+    instructions: List[str]
     tools: List[ToolDict] = []
     functions: List[FunctionDefDict] = []
     default_settings: DefaultSettingsDict = {}
@@ -52,7 +50,7 @@ class AgentCreateArgs(TypedDict):
 
 class AgentUpdateArgs(TypedDict):
     about: Optional[str] = None
-    instructions: Optional[Union[List[str], List[InstructionDict]]] = None
+    instructions: Optional[List[str]] = None
     name: Optional[str] = None
     model: Optional[str] = None
     default_settings: Optional[DefaultSettingsDict] = None
@@ -75,12 +73,12 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 The agent object or an awaitable that resolves to the agent object.
 
-        _create(self, name: str, about: str, instructions: Union[List[str], List[InstructionDict]], tools: List[ToolDict] = [], functions: List[FunctionDefDict] = [], default_settings: DefaultSettingsDict = {}, model: ModelName = 'julep-ai/samantha-1-turbo', docs: List[DocDict] = []) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
+        _create(self, name: str, about: str, instructions: List[str], tools: List[ToolDict] = [], functions: List[FunctionDefDict] = [], default_settings: DefaultSettingsDict = {}, model: ModelName = 'julep-ai/samantha-1-turbo', docs: List[DocDict] = []) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
             Creates an agent with the given specifications.
             Args:
                 name (str): The name of the new agent.
                 about (str): Description about the new agent.
-                instructions (Union[List[str], List[InstructionDict]]): List of instructions or instruction dictionaries for the new agent.
+                instructions (List[str]): List of instructions or instruction dictionaries for the new agent.
                 tools (List[ToolDict], optional): List of tool dictionaries. Defaults to an empty list.
                 functions (List[FunctionDefDict], optional): List of function definition dictionaries. Defaults to an empty list.
                 default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the new agent. Defaults to an empty dictionary.
@@ -104,12 +102,12 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 None or an awaitable that resolves to None.
 
-        _update(self, agent_id: Union[str, UUID], about: Optional[str] = None, instructions: Optional[Union[List[str], List[InstructionDict]]] = None, name: Optional[str] = None, model: Optional[str] = None, default_settings: Optional[DefaultSettingsDict] = None) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        _update(self, agent_id: Union[str, UUID], about: Optional[str] = None, instructions: Optional[List[str]] = None, name: Optional[str] = None, model: Optional[str] = None, default_settings: Optional[DefaultSettingsDict] = None) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
             Updates the specified fields of an agent.
             Args:
                 agent_id (Union[str, UUID]): The UUID of the agent to update.
                 about (Optional[str], optional): The new description about the agent.
-                instructions (Optional[Union[List[str], List[InstructionDict]]], optional): The new list of instructions or instruction dictionaries.
+                instructions (Optional[List[str]], optional): The new list of instructions or instruction dictionaries.
                 name (Optional[str], optional): The new name for the agent.
                 model (Optional[str], optional): The new model name for the agent.
                 default_settings (Optional[DefaultSettingsDict], optional): The new default settings dictionary for the agent.
@@ -137,7 +135,7 @@ class BaseAgentsManager(BaseManager):
         self,
         name: str,
         about: str,
-        instructions: Union[List[str], List[InstructionDict]],
+        instructions: List[str],
         tools: List[ToolDict] = [],
         functions: List[FunctionDefDict] = [],
         default_settings: DefaultSettingsDict = {},
@@ -151,7 +149,7 @@ class BaseAgentsManager(BaseManager):
         Args:
             name (str): Name of the agent.
             about (str): Information about the agent.
-            instructions (Union[List[str], List[InstructionDict]]): List of instructions as either string or dictionaries for the agent.
+            instructions (List[str]): List of instructions as either string or dictionaries for the agent.
             tools (List[ToolDict], optional): List of tool configurations for the agent. Defaults to an empty list.
             functions (List[FunctionDefDict], optional): List of function definitions for the agent. Defaults to an empty list.
             default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the agent. Defaults to an empty dict.
@@ -169,13 +167,6 @@ class BaseAgentsManager(BaseManager):
             It assumes the input data for instructions, tools, and docs will have the proper format,
             and items in the 'instructions' list will be converted to Instruction instances.
         """
-        instructions: List[Instruction] = [
-            Instruction(content=content, important=False)
-            if isinstance(content, str)
-            else Instruction(**content)
-            for content in instructions
-        ]
-
         # Ensure that only functions or tools are provided
         assert not (functions and tools), "Only functions or tools can be provided"
 
@@ -253,7 +244,7 @@ class BaseAgentsManager(BaseManager):
         self,
         agent_id: Union[str, UUID],
         about: Optional[str] = None,
-        instructions: Optional[Union[List[str], List[InstructionDict]]] = None,
+        instructions: List[str] = None,
         name: Optional[str] = None,
         model: Optional[str] = None,
         default_settings: Optional[DefaultSettingsDict] = None,
@@ -264,7 +255,7 @@ class BaseAgentsManager(BaseManager):
             Args:
                 agent_id (Union[str, UUID]): The unique identifier for the agent, which can be a string or UUID object.
                 about (Optional[str], optional): A brief description of the agent. Defaults to None.
-                instructions (Optional[Union[List[str], List[InstructionDict]]], optional): A list of either strings or instruction dictionaries that will be converted into Instruction objects. Defaults to None.
+                instructions (Optional[List[str]], optional): A list of either strings or instruction dictionaries that will be converted into Instruction objects. Defaults to None.
                 name (Optional[str], optional): The name of the agent. Defaults to None.
                 model (Optional[str], optional): The model identifier for the agent. Defaults to None.
                 default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
@@ -279,14 +270,6 @@ class BaseAgentsManager(BaseManager):
                 This method asserts that the agent_id must be a valid UUID v4. The instructions and default_settings, if provided, are converted into their respective object types before making the update API call.
         """
         assert is_valid_uuid4(agent_id), "id must be a valid UUID v4"
-
-        if instructions is not None:
-            instructions: List[Instruction] = [
-                Instruction(content=content, important=False)
-                if isinstance(content, str)
-                else Instruction(**content)
-                for content in instructions
-            ]
 
         if default_settings is not None:
             default_settings: AgentDefaultSettings = AgentDefaultSettings(
@@ -319,13 +302,13 @@ class AgentsManager(BaseAgentsManager):
             Returns:
                 Agent: The agent with the corresponding identifier.
 
-        create(*, name: str, about: str, instructions: Union[List[str], List[InstructionDict]], tools: List[ToolDict]=[], functions: List[FunctionDefDict]=[], default_settings: DefaultSettingsDict={}, model: ModelName='julep-ai/samantha-1-turbo', docs: List[DocDict]=[]) -> ResourceCreatedResponse:
+        create(*, name: str, about: str, instructions: List[str], tools: List[ToolDict]=[], functions: List[FunctionDefDict]=[], default_settings: DefaultSettingsDict={}, model: ModelName='julep-ai/samantha-1-turbo', docs: List[DocDict]=[]) -> ResourceCreatedResponse:
             Creates a new agent with the provided details.
 
             Args:
                 name (str): The name of the agent.
                 about (str): A description of the agent.
-                instructions (Union[List[str], List[InstructionDict]]): A list of instructions or dictionaries defining instructions.
+                instructions (List[str]): A list of instructions or dictionaries defining instructions.
                 tools (List[ToolDict], optional): A list of dictionaries defining tools. Defaults to an empty list.
                 functions (List[FunctionDefDict], optional): A list of dictionaries defining functions. Defaults to an empty list.
                 default_settings (DefaultSettingsDict, optional): A dictionary of default settings. Defaults to an empty dictionary.
@@ -351,13 +334,13 @@ class AgentsManager(BaseAgentsManager):
             Args:
                 agent_id (Union[str, UUID]): The unique identifier of the agent to be deleted.
 
-        update(*, agent_id: Union[str, UUID], about: Optional[str]=None, instructions: Optional[Union[List[str], List[InstructionDict]]]=None, name: Optional[str]=None, model: Optional[str]=None, default_settings: Optional[DefaultSettingsDict]=None) -> ResourceUpdatedResponse:
+        update(*, agent_id: Union[str, UUID], about: Optional[str]=None, instructions: Optional[List[str]]=None, name: Optional[str]=None, model: Optional[str]=None, default_settings: Optional[DefaultSettingsDict]=None) -> ResourceUpdatedResponse:
             Updates an existing agent with new details.
 
             Args:
                 agent_id (Union[str, UUID]): The unique identifier of the agent to be updated.
                 about (Optional[str], optional): A new description of the agent. Defaults to None (no change).
-                instructions (Optional[Union[List[str], List[InstructionDict]]], optional): A new list of instructions or dictionaries defining instructions. Defaults to None (no change).
+                instructions (Optional[List[str]], optional): A new list of instructions or dictionaries defining instructions. Defaults to None (no change).
                 name (Optional[str], optional): A new name for the agent. Defaults to None (no change).
                 model (Optional[str], optional): A new model name to be used. Defaults to None (no change).
                 default_settings (Optional[DefaultSettingsDict], optional): A new dictionary of default settings. Defaults to None (no change).
@@ -392,7 +375,7 @@ class AgentsManager(BaseAgentsManager):
         Args:
             name (str): The name of the resource.
             about (str): A description of the resource.
-            instructions (Union[List[str], List[InstructionDict]]): A list of instructions or dictionaries with instruction details.
+            instructions (List[str]): A list of instructions or dictionaries with instruction details.
             tools (List[ToolDict], optional): A list of dictionaries with tool details. Defaults to an empty list.
             functions (List[FunctionDefDict], optional): A list of dictionaries with function definition details. Defaults to an empty list.
             default_settings (DefaultSettingsDict, optional): A dictionary with default settings. Defaults to an empty dictionary.
@@ -469,7 +452,7 @@ class AgentsManager(BaseAgentsManager):
         Args:
             agent_id (Union[str, UUID]): The identifier of the agent, either as a string or a UUID object.
             about (Optional[str], optional): A brief description of the agent. Defaults to None.
-            instructions (Optional[Union[List[str], List[InstructionDict]]], optional): A list of instructions or instruction dictionaries to update the agent with. Defaults to None.
+            instructions (Optional[List[str]], optional): A list of instructions or instruction dictionaries to update the agent with. Defaults to None.
             name (Optional[str], optional): The new name to assign to the agent. Defaults to None.
             model (Optional[str], optional): The model identifier to associate with the agent. Defaults to None.
             default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
@@ -511,7 +494,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             Args:
                 name (str): The name of the agent to create.
                 about (str): A description of the agent.
-                instructions (Union[List[str], List[InstructionDict]]): The instructions for operating the agent.
+                instructions (List[str]): The instructions for operating the agent.
                 tools (List[ToolDict], optional): An optional list of tools for the agent.
                 functions (List[FunctionDefDict], optional): An optional list of functions the agent can perform.
                 default_settings (DefaultSettingsDict, optional): Optional default settings for the agent.
@@ -546,7 +529,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             Args:
                 agent_id (Union[str, UUID]): The unique identifier of the agent to update.
                 about (Optional[str], optional): An optional new description for the agent.
-                instructions (Optional[Union[List[str], List[InstructionDict]]], optional): Optional new instructions for the agent.
+                instructions (Optional[List[str]], optional): Optional new instructions for the agent.
                 name (Optional[str], optional): An optional new name for the agent.
                 model (Optional[str], optional): Optional new model associated with the agent.
                 default_settings (Optional[DefaultSettingsDict], optional): Optional new default settings for the agent.
@@ -585,7 +568,7 @@ class AsyncAgentsManager(BaseAgentsManager):
         Args:
             name (str): The name of the resource to create.
             about (str): Information or description about the resource.
-            instructions (Union[List[str], List[InstructionDict]]): A list of strings or dictionaries detailing the instructions for the resource.
+            instructions (List[str]): A list of strings or dictionaries detailing the instructions for the resource.
             tools (List[ToolDict], optional): A list of dictionaries representing the tools associated with the resource. Defaults to an empty list.
             functions (List[FunctionDefDict], optional): A list of dictionaries defining functions that can be performed with the resource. Defaults to an empty list.
             default_settings (DefaultSettingsDict, optional): A dictionary with default settings for the resource. Defaults to an empty dictionary.
@@ -660,7 +643,7 @@ class AsyncAgentsManager(BaseAgentsManager):
         Args:
             agent_id (Union[str, UUID]): Unique identifier for the agent. It can be a string or a UUID object.
             about (Optional[str]): Additional information about the agent. Default is None.
-            instructions (Optional[Union[List[str], List[InstructionDict]]]): A list of instructions or instruction dictionaries. Default is None.
+            instructions (Optional[List[str]]): A list of instructions or instruction dictionaries. Default is None.
             name (Optional[str]): The name of the agent. Default is None.
             model (Optional[str]): The model identifier or name. Default is None.
             default_settings (Optional[DefaultSettingsDict]): Dictionary with default settings for the agent. Default is None.

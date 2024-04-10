@@ -10,7 +10,7 @@ export type UpdateAgentRequest = {
   /**
    * About the agent
    */
-  about?: string;
+  about: string;
   /**
    * List of instructions for the agent
    */
@@ -18,7 +18,7 @@ export type UpdateAgentRequest = {
   /**
    * Name of the agent
    */
-  name?: string;
+  name: string;
   /**
    * Name of the model that the agent is supposed to use
    */

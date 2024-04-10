@@ -118,8 +118,8 @@ http:
             X-Developer-Id: sub
             X-Developer-Email: email
           OpaHttpStatusField: allow_status_code
-          KeysWhitelist:
-            - 
+          # KeysWhitelist:
+          #   -
 
 
   services:
