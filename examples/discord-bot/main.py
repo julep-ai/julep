@@ -56,20 +56,14 @@ def init_agent():
         "length_penalty": 1.0,
         "max_tokens": 150
     }
-    instructions = [{
-        "content": "You will use emojis",
-        "important": True
-    }, {
-        "content": "You will express yourself using GIFs as much as you can.",
-        "important": True
-    }, {
-        "content":
+    instructions = [
+        "You will use emojis",
+        "You will express yourself using GIFs as much as you can.",
         "You will use your emotions and the context of the conversation to search for relevant GIFs.",
-        "important": True
-    }]
+    ]
     agent = client.agents.create(name=name,
                                  about=about,
-                                 instructions=[],
+                                 instructions=instructions,
                                  default_settings=default_settings,
                                  model="julep-ai/samantha-1-turbo",
                                  tools=[gif_tool])

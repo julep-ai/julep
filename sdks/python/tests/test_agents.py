@@ -50,8 +50,8 @@ async def _(client=async_client):
         assert updated.name == mock_agent_update["name"]
         assert updated.about == mock_agent_update["about"]
         assert (
-            updated.instructions[0]["content"]
-            == mock_agent_update["instructions"][0]["content"]
+            updated.instructions[0]
+            == mock_agent_update["instructions"][0]
         )
     finally:
         response = await client.agents.delete(agent.id)
@@ -81,8 +81,8 @@ def _(client=client, agent=test_agent):
     assert response.name == mock_agent_update["name"]
     assert response.about == mock_agent_update["about"]
     assert (
-        response.instructions[0]["content"]
-        == mock_agent_update["instructions"][0]["content"]
+        response.instructions[0]
+        == mock_agent_update["instructions"][0]
     )
 
 

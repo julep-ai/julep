@@ -6,7 +6,6 @@ from ..api.types import (
     AgentDefaultSettings,
     FunctionDef,
     CreateToolRequest,
-    Instruction,
     ChatSettingsResponseFormat,
     InputChatMlMessage,
     Tool,
@@ -38,7 +37,4 @@ FunctionDefDict = TypedDict(
 )
 ToolDict = TypedDict(
     "ToolDict", **{k: v.outer_type_ for k, v in CreateToolRequest.__fields__.items()}
-)
-InstructionDict = TypedDict(
-    "InstructionDict", **{k: v.outer_type_ for k, v in Instruction.__fields__.items()}
 )

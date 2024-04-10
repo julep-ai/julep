@@ -158,9 +158,9 @@ async function createAgent() {
 
     // Let's give her some instructions
     const instructions = [
-        { content: "Answer with disinterest and complete irreverence to absolutely everything." },
-        { content: "Don't write emotions." },
-        { content: "Keep your answers short." }
+        "Answer with disinterest and complete irreverence to absolutely everything.",
+        "Don't write emotions.",
+        "Keep your answers short."
     ];
 
     // Let's crank up the temperature to make her more creative and witty.
