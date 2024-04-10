@@ -5,6 +5,7 @@ from uuid import uuid4
 
 
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
+import pandas as pd
 from pydantic import BaseModel
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
@@ -81,15 +82,13 @@ async def create_session(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     session_id = uuid4()
-    resp = (
-        create_session_query(
-            session_id=session_id,
-            developer_id=x_developer_id,
-            agent_id=request.agent_id,
-            user_id=request.user_id,
-            situation=request.situation,
-            metadata=request.metadata or {},
-        ),
+    resp: pd.DataFrame = create_session_query(
+        session_id=session_id,
+        developer_id=x_developer_id,
+        agent_id=request.agent_id,
+        user_id=request.user_id,
+        situation=request.situation,
+        metadata=request.metadata or {},
     )
 
     return ResourceCreatedResponse(

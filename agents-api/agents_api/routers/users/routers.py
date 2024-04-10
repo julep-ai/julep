@@ -3,8 +3,9 @@ from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
-from pycozo.client import QueryException
 from fastapi import APIRouter, HTTPException, status, Depends
+import pandas as pd
+from pycozo.client import QueryException
 from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
@@ -178,14 +179,12 @@ async def create_user(
     request: CreateUserRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    resp = (
-        create_user_query(
-            developer_id=x_developer_id,
-            user_id=uuid4(),
-            name=request.name,
-            about=request.about,
-            metadata=request.metadata or {},
-        ),
+    resp = create_user_query(
+        developer_id=x_developer_id,
+        user_id=uuid4(),
+        name=request.name,
+        about=request.about,
+        metadata=request.metadata or {},
     )
 
     new_user_id = resp["user_id"][0]
@@ -195,19 +194,15 @@ async def create_user(
     )
 
     if request.docs:
-        "\n".join(
-            [
-                create_docs_query(
-                    owner_type="user",
-                    owner_id=new_user_id,
-                    id=uuid4(),
-                    title=info.title,
-                    content=info.content,
-                    metadata=info.metadata or {},
-                )
-                for info in request.docs
-            ]
-        )
+        for info in request.docs:
+            create_docs_query(
+                owner_type="user",
+                owner_id=new_user_id,
+                id=uuid4(),
+                title=info.title,
+                content=info.content,
+                metadata=info.metadata or {},
+            )
 
     return res
 
@@ -243,7 +238,7 @@ async def list_users(
 @router.post("/users/{user_id}/docs", tags=["users"])
 async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
-    resp = create_docs_query(
+    resp: pd.DataFrame = create_docs_query(
         owner_type="user",
         owner_id=user_id,
         id=doc_id,

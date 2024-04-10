@@ -4,11 +4,11 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status, Depends
+import pandas as pd
 from pycozo.client import QueryException
 from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
-from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.exceptions.agents import (
@@ -90,7 +90,7 @@ async def delete_agent(
 ) -> ResourceDeletedResponse:
     # TODO: maybe add better 404 handling, than catching QueryException
     try:
-        delete_agent_query(client, x_developer_id, agent_id)
+        delete_agent_query(x_developer_id, agent_id)
     except QueryException as e:
         if e.code == "transact::assertion_failure":
             raise AgentNotFoundError(x_developer_id, agent_id)
@@ -291,7 +291,7 @@ async def list_agents(
 @router.post("/agents/{agent_id}/docs", tags=["agents"])
 async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
-    resp = create_docs_query(
+    resp: pd.DataFrame = create_docs_query(
         owner_type="agent",
         owner_id=agent_id,
         id=doc_id,
