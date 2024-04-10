@@ -2,9 +2,9 @@ name: julep-agents-api
 version: "3"
 
 include:
-  # - ../model-api/docker-compose.yml
-  # - ../cozo-server/docker-compose.yml
-  # TODO: figure out why this doesn't work on dev + test on prod
+  # - ../model-serving/docker-compose.yml
+  # - ../memory-store/docker-compose.yml
+  # TODO: figure out why this doesn't work
 services:
   agents-api:
     env_file:
@@ -15,9 +15,9 @@ services:
 
     container_name: agents-api
     depends_on:
-      model-api:
+      model-serving:
         condition: service_started
-      cozo-server:
+      memory-store:
         condition: service_started
       worker:
         condition: service_started
@@ -116,7 +116,7 @@ services:
 
     container_name: cozo-migrate
     depends_on:
-      cozo-server:
+      memory-store:
         condition: service_started
     build:
       context: .
