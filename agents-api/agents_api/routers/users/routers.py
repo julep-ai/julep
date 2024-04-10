@@ -307,7 +307,7 @@ async def list_docs(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="metadata_filter is not implemented",
         )
-    
+
     if not len(list(client.run(ensure_owner_exists_query("user", user_id)).iterrows())):
         raise UserNotFoundError("", user_id)
 

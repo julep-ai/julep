@@ -445,7 +445,9 @@ async def list_docs(
             detail="metadata_filter is not implemented",
         )
 
-    if not len(list(client.run(ensure_owner_exists_query("agent", agent_id)).iterrows())):
+    if not len(
+        list(client.run(ensure_owner_exists_query("agent", agent_id)).iterrows())
+    ):
         raise AgentNotFoundError("", agent_id)
 
     resp = client.run(
@@ -539,7 +541,9 @@ async def create_tool(
 
 @router.get("/agents/{agent_id}/tools", tags=["agents"])
 async def list_tools(agent_id: UUID4, limit: int = 100, offset: int = 0) -> ToolList:
-    if not len(list(client.run(ensure_owner_exists_query("agent", agent_id)).iterrows())):
+    if not len(
+        list(client.run(ensure_owner_exists_query("agent", agent_id)).iterrows())
+    ):
         raise AgentNotFoundError("", agent_id)
 
     resp = client.run(
