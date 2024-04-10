@@ -12,11 +12,7 @@ def proc_mem_context_query(
 ):
     VECTOR_SIZE = 768
     session_id = str(session_id)
-    assert (
-        len(tool_query_embedding)
-        == len(doc_query_embedding)
-        == VECTOR_SIZE
-    )
+    assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
 
     tools_radius: float = 1.0 - tools_confidence
     docs_radius: float = 1.0 - docs_confidence

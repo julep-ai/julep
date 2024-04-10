@@ -170,30 +170,6 @@ async def patch_agent(
             updated_at=resp["updated_at"][0],
         )
 
-        if request.instructions:
-            indices, instructions = list(zip(*enumerate(request.instructions)))
-            embeddings = await embed(
-                [
-                    instruction_embed_instruction + instruction.content
-                    for instruction in instructions
-                ]
-            )
-            query = "\n".join(
-                [
-                    delete_instructions_by_agent_query(agent_id=updated_agent_id),
-                    create_instructions_query(
-                        agent_id=updated_agent_id,
-                        instructions=request.instructions,
-                    ),
-                    embed_instructions_query(
-                        agent_id=updated_agent_id,
-                        instruction_indices=indices,
-                        embeddings=embeddings,
-                    ),
-                ]
-            )
-            client.run(query)
-
         return res
     except (IndexError, KeyError):
         raise HTTPException(

@@ -58,5 +58,6 @@ def patch_agent_query(
     if len(default_settings) != 0:
         queries.insert(0, settings_update_query)
 
-    return "\n".join(queries)
+    combined_query = "\n".join(queries)
 
+    return combined_query

@@ -202,7 +202,6 @@ def _():
     query = proc_mem_context_query(
         session_id=session_id,
         tool_query_embedding=[0.9] * 768,
-        instruction_query_embedding=[0.9] * 768,
         doc_query_embedding=[0.9] * 768,
     )
 
