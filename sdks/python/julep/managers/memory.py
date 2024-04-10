@@ -71,7 +71,6 @@ class BaseMemoriesManager(BaseManager):
         return self.api_client.get_agent_memories(
             agent_id=agent_id,
             query=query,
-            types=types,
             user_id=user_id,
             limit=limit,
             offset=offset,

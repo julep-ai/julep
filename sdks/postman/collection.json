@@ -657,7 +657,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{}",
+          "raw": "{\n    \"situation\": \"situation\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -707,7 +707,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n    \"situation\": \"situation\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1531,7 +1531,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{}",
+          "raw": "{\n    \"about\": \"about\",\n    \"name\": \"name\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1581,7 +1581,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n    \"about\": \"about\",\n    \"name\": \"name\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1915,7 +1915,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{}",
+          "raw": "{\n    \"about\": \"about\",\n    \"name\": \"name\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1965,7 +1965,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n    \"about\": \"about\",\n    \"name\": \"name\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

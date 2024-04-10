@@ -5,13 +5,14 @@ CREATED_AT = 1712405369.263776
 
 update_agents_relation_query = dict(
     up="""
-    ?[agent_id, name, about, model, created_at, updated_at, developer_id, instructions] := *agents{
+    ?[agent_id, name, about, model, created_at, updated_at, developer_id, instructions, metadata] := *agents{
         agent_id,
         name,
         about,
         model,
         created_at,
         updated_at,
+        metadata,
     },
     developer_id = rand_uuid_v4(),
     instructions = []
@@ -26,16 +27,18 @@ update_agents_relation_query = dict(
         model: String default 'julep-ai/samantha-1-turbo',
         created_at: Float default now(),
         updated_at: Float default now(),
+        metadata: Json default {},
     }
     """,
     down="""
-    ?[agent_id, name, about, model, created_at, updated_at, developer_id] := *agents{
+    ?[agent_id, name, about, model, created_at, updated_at, developer_id, metadata] := *agents{
         agent_id,
         name,
         about,
         model,
         created_at,
         updated_at,
+        metadata,
     }, developer_id = rand_uuid_v4()
 
     :replace agents {
@@ -47,6 +50,7 @@ update_agents_relation_query = dict(
         model: String default 'julep-ai/samantha-1-turbo',
         created_at: Float default now(),
         updated_at: Float default now(),
+        metadata: Json default {},
     }
     """,
 )

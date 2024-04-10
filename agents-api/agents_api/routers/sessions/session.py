@@ -98,14 +98,12 @@ class BaseSession:
 
         (
             tool_query_embedding,
-            instruction_query_embedding,
             doc_query_embedding,
         ) = await embed(
             [
                 instruction + string_to_embed
                 for instruction in [
                     tool_query_instruction,
-                    instruction_query_instruction,
                     doc_query_instruction,
                 ]
             ],
@@ -121,7 +119,6 @@ class BaseSession:
             proc_mem_context_query(
                 session_id=self.session_id,
                 tool_query_embedding=tool_query_embedding,
-                instruction_query_embedding=instruction_query_embedding,
                 doc_query_embedding=doc_query_embedding,
             )
         ).iterrows():

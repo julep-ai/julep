@@ -9,13 +9,11 @@ export class MemoriesManager extends BaseManager {
     agentId,
     query,
     userId,
-    types = ["belief", "episode", "entity"],
     limit = 100,
     offset = 0,
   }: {
     agentId: string;
     query: string;
-    types: string[];
     userId?: string;
     limit?: number;
     offset?: number;
@@ -26,7 +24,6 @@ export class MemoriesManager extends BaseManager {
     const response = await this.apiClient.default.getAgentMemories({
       agentId,
       query,
-      types,
       userId,
       limit,
       offset,

@@ -8,10 +8,12 @@ export const $UpdateUserRequest = {
     about: {
       type: "string",
       description: `About the user`,
+      isRequired: true,
     },
     name: {
       type: "string",
       description: `Name of the user`,
+      isRequired: true,
     },
     metadata: {
       description: `Optional metadata`,

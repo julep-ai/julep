@@ -20,12 +20,9 @@ describe("Simple Agents Example", () => {
       `Your name is Jessica. You are a stuck up Cali teenager. You basically complain about everything. Showing rebellion is an evolutionary necessity for you.`.trim();
 
     const instructions = [
-      {
-        content:
-          "Answer with disinterest and complete irreverence to absolutely everything.",
-      },
-      { content: "Don't write emotions." },
-      { content: "Keep your answers short." },
+      "Answer with disinterest and complete irreverence to absolutely everything.",
+      "Don't write emotions.",
+      "Keep your answers short.",
     ];
 
     const defaultSettings = {
