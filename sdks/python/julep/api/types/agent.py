@@ -6,7 +6,6 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from .agent_default_settings import AgentDefaultSettings
 from .agent_metadata import AgentMetadata
-from .instruction import Instruction
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -17,7 +16,7 @@ except ImportError:
 class Agent(pydantic.BaseModel):
     name: str = pydantic.Field(description="Name of the agent")
     about: typing.Optional[str] = pydantic.Field(description="About the agent")
-    instructions: typing.Optional[typing.List[Instruction]] = pydantic.Field(
+    instructions: typing.Optional[typing.List[str]] = pydantic.Field(
         description="List of instructions for the agent"
     )
     created_at: typing.Optional[dt.datetime] = pydantic.Field(

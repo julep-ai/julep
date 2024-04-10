@@ -12,7 +12,8 @@ export const $UpdateAgentRequest = {
     instructions: {
       type: "array",
       contains: {
-        type: "Instruction",
+        type: "string",
+        description: `Instruction`,
       },
     },
     name: {

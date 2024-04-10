@@ -7,9 +7,9 @@ from ...common.utils.cozo import cozo_process_mutate_data
 
 def create_instructions_query(
     agent_id: UUID,
-    instructions: list[Instruction] = [],
+    instructions: list[Instruction] | None = [],
 ):
-    instructions = [i.model_dump() for i in instructions]
+    instructions = [i.model_dump() for i in instructions or []]
 
     instruction_cols, instruction_rows = "", []
 

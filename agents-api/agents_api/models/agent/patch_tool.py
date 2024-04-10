@@ -4,7 +4,7 @@ from uuid import UUID
 from ...autogen.openapi_model import FunctionDef
 
 
-def update_tool_by_id_query(
+def patch_tool_by_id_query(
     agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
 ) -> str:
     # Agent update query
@@ -19,7 +19,7 @@ def update_tool_by_id_query(
             [to_uuid("{agent_id}"), to_uuid("{tool_id}"), {name}, {description}, {parameters}, vec({embedding}), now()]
         ]
 
-        :put agent_functions {{
+        :update agent_functions {{
             agent_id,
             tool_id,
             name,
