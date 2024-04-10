@@ -1,11 +1,15 @@
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+
 
 def embed_docs_snippets_query(
     doc_id: UUID,
     snippet_indices: list[int],
     embeddings: list[list[float]],
-):
+) -> pd.DataFrame:
     doc_id = str(doc_id)
     assert len(snippet_indices) == len(embeddings)
 
@@ -16,7 +20,7 @@ def embed_docs_snippets_query(
         ]
     )
 
-    return f"""
+    query = f"""
     {{
         ?[doc_id, snippet_idx, embedding] <- [
             {records}
@@ -29,3 +33,5 @@ def embed_docs_snippets_query(
         }}
         :returning
     }}"""
+
+    return client.run(query)

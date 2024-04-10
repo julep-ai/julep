@@ -1,6 +1,9 @@
-from ...common.utils import json
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
@@ -18,7 +21,7 @@ def patch_session_query(
     session_id: UUID,
     developer_id: UUID,
     **update_data,
-) -> str:
+) -> pd.DataFrame:
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -56,4 +59,4 @@ def patch_session_query(
     }}
     """
 
-    return session_update_query
+    return client.run(session_update_query)

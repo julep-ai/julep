@@ -1,7 +1,10 @@
-from ...common.utils import json
 from uuid import UUID
 
+import pandas as pd
+
 from ...autogen.openapi_model import Instruction
+from ...clients.cozo import client
+from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 from ..instructions.create_instructions import create_instructions_query
@@ -16,7 +19,7 @@ def create_agent_query(
     model: str = "julep-ai/samantha-1-turbo",
     metadata: dict = {},
     default_settings: dict = {},
-):
+) -> pd.DataFrame:
     assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
 
     settings_cols, settings_vals = cozo_process_mutate_data(
@@ -64,4 +67,4 @@ def create_agent_query(
     if instructions:
         query = create_instructions_query(agent_id, instructions) + "\n\n" + query
 
-    return query
+    return client.run(query)

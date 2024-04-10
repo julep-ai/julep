@@ -1,11 +1,15 @@
 from uuid import UUID
 
+import pandas as pd
 
-def delete_function_by_id_query(agent_id: UUID, tool_id: UUID):
+from ...clients.cozo import client
+
+
+def delete_function_by_id_query(agent_id: UUID, tool_id: UUID) -> pd.DataFrame:
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
-    return f"""
+    query = f"""
     {{
         # Delete function
         ?[tool_id, agent_id] <- [[
@@ -19,3 +23,5 @@ def delete_function_by_id_query(agent_id: UUID, tool_id: UUID):
         }}
         :returning
     }}"""
+
+    return client.run(query)

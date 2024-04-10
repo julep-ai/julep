@@ -1,8 +1,10 @@
 from textwrap import dedent
-from temporalio import activity
-from agents_api.clients.openai import client as openai_client
+from typing import Callable
 
-from .types import *
+from temporalio import activity
+
+from ..clients.openai import client as openai_client
+from .types import MemoryDensityTaskArgs
 
 
 def make_prompt(args: MemoryDensityTaskArgs):
@@ -92,7 +94,7 @@ async def co_density(memory: str) -> None:
 
     # assert len(entries) > 0, "no need to summarize on empty entries list"
 
-    response = await run_prompt(memory=memory)
+    await run_prompt(memory=memory)
 
     # new_entry = Entry(
     #     session_id=session_id,

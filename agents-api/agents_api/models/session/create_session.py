@@ -1,5 +1,9 @@
-from ...common.utils import json
 from uuid import UUID
+
+import pandas as pd
+
+from ...clients.cozo import client
+from ...common.utils import json
 
 
 def create_session_query(
@@ -9,8 +13,8 @@ def create_session_query(
     user_id: UUID,
     situation: str | None,
     metadata: dict = {},
-):
-    return f"""
+) -> pd.DataFrame:
+    query = f"""
     {{
         # Create a new session lookup
         ?[session_id, agent_id, user_id] <- [[
@@ -41,3 +45,5 @@ def create_session_query(
         }}
         :returning
      }}"""
+
+    return client.run(query)

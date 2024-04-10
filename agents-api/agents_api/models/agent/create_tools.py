@@ -1,14 +1,17 @@
-from ...common.utils import json
 from uuid import UUID, uuid4
 
-from agents_api.autogen.openapi_model import FunctionDef
+import pandas as pd
+
+from ...autogen.openapi_model import FunctionDef
+from ...clients.cozo import client
+from ...common.utils import json
 
 
 def create_tools_query(
     agent_id: UUID,
     functions: list[FunctionDef],
     embeddings: list[list[float]],
-) -> str:
+) -> pd.DataFrame:
     assert len(functions) == len(embeddings)
 
     functions_input = []
@@ -24,7 +27,7 @@ def create_tools_query(
 
     records = "\n".join(functions_input)
 
-    return f"""
+    query = f"""
         ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
             {records}
         ]
@@ -40,3 +43,5 @@ def create_tools_query(
         }}
         :returning
     """
+
+    return client.run(query)

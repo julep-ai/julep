@@ -1,8 +1,12 @@
 from uuid import UUID
 
+import pandas as pd
 
-def delete_entries_query(session_id: UUID):
-    return f"""
+from ...clients.cozo import client
+
+
+def delete_entries_query(session_id: UUID) -> pd.DataFrame:
+    query = f"""
     {{
         input[session_id] <- [[
             to_uuid("{session_id}"),
@@ -43,3 +47,5 @@ def delete_entries_query(session_id: UUID):
             timestamp,
         }}
     }}"""
+
+    return client.run(query)

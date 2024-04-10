@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+import json
 from typing import Literal, Union
 from uuid import UUID, uuid4
 
@@ -16,7 +16,7 @@ class Entry(BaseModel):
     session_id: UUID
     source: EntrySource = Field(default="api_request")
     role: Role
-    name: Optional[str] = None
+    name: str | None = None
     content: Content
     tokenizer: str = Field(default="character_count")
     created_at: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
@@ -26,7 +26,11 @@ class Entry(BaseModel):
     @property
     def token_count(self) -> int:
         if self.tokenizer == "character_count":
-            content_length = len(self.content) if isinstance(self.content, str) else len(json.dumps(self.content))
+            content_length = (
+                len(self.content)
+                if isinstance(self.content, str)
+                else len(json.dumps(self.content))
+            )
             return int(content_length // 3.5)
 
         raise NotImplementedError(f"Unknown tokenizer: {self.tokenizer}")
