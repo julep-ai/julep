@@ -42,7 +42,7 @@ export const $CreateAgentRequest = {
       },
     },
     metadata: {
-      description: `Optional metadata`,
+      description: `(Optional) metadata`,
       properties: {},
     },
   },

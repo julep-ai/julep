@@ -35,7 +35,7 @@ from .utils import is_valid_uuid4
 
 
 class SessionCreateArgs(TypedDict):
-    user_id: Union[str, UUID]
+    user_id: Optional[Union[str, UUID]]
     agent_id: Union[str, UUID]
     situation: Optional[str]
 
@@ -69,8 +69,8 @@ class BaseSessionsManager(BaseManager):
             Create a new session with specified user and agent identifiers.
 
             Args:
-                user_id (Union[str, UUID]): The unique identifier for the user.
                 agent_id (Union[str, UUID]): The unique identifier for the agent.
+                user_id (Optional[Union[str, UUID]]): The unique identifier for the user.
                 situation (Optional[str]): An optional description of the situation for the session.
 
             Returns:
@@ -159,8 +159,8 @@ class BaseSessionsManager(BaseManager):
 
     def _create(
         self,
-        user_id: Union[str, UUID],
         agent_id: Union[str, UUID],
+        user_id: Optional[Union[str, UUID]] = None,
         situation: Optional[str] = None,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
@@ -170,8 +170,8 @@ class BaseSessionsManager(BaseManager):
         This internal method is responsible for creating a session using the API client. It validates that both the user and agent IDs are valid UUID v4 strings before proceeding with session creation.
 
         Args:
-            user_id (Union[str, UUID]): The user's identifier which could be a string or a UUID object.
             agent_id (Union[str, UUID]): The agent's identifier which could be a string or a UUID object.
+            user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
             situation (Optional[str], optional): An optional description of the situation.
 
         Returns:
@@ -180,9 +180,10 @@ class BaseSessionsManager(BaseManager):
         Raises:
             AssertionError: If either `user_id` or `agent_id` is not a valid UUID v4.
         """
-        assert is_valid_uuid4(user_id) and is_valid_uuid4(
-            agent_id
-        ), "id must be a valid UUID v4"
+        assert is_valid_uuid4(agent_id), "agent_id must be a valid UUID v4"
+
+        if user_id is not None:
+            assert is_valid_uuid4(user_id), "user_id must be a valid UUID v4"
 
         return self.api_client.create_session(
             user_id=user_id,

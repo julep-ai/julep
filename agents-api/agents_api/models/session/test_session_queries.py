@@ -44,6 +44,23 @@ def _():
     )
 
 
+@test("model: create session no user")
+def _():
+    client = cozo_client()
+    session_id = uuid4()
+    agent_id = uuid4()
+    developer_id = uuid4()
+
+    create_session_query(
+        session_id=session_id,
+        user_id=None,
+        developer_id=developer_id,
+        agent_id=agent_id,
+        situation="test session about",
+        client=client,
+    )
+
+
 @test("model: get session not exists")
 def _():
     client = cozo_client()
