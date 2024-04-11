@@ -798,7 +798,7 @@ class AsyncSessionsManager(BaseSessionsManager):
             BeartypeException: If any of the input arguments do not match their expected types.
             Any exception raised by the internal _create method.
         """
-        result = await self._create(**kwargs)
+        result = await self._create(**kwargs, metadata=metadata)
         return result
 
     @beartype
