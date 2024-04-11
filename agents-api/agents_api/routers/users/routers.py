@@ -3,8 +3,9 @@ from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
-from pycozo.client import QueryException
 from fastapi import APIRouter, HTTPException, status, Depends
+import pandas as pd
+from pycozo.client import QueryException
 from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
@@ -88,14 +89,12 @@ async def update_user(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
-        resp = client.run(
-            update_user_query(
-                developer_id=x_developer_id,
-                user_id=user_id,
-                name=request.name,
-                about=request.about,
-                metadata=request.metadata,
-            )
+        resp = update_user_query(
+            developer_id=x_developer_id,
+            user_id=user_id,
+            name=request.name,
+            about=request.about,
+            metadata=request.metadata,
         )
 
         return ResourceUpdatedResponse(
@@ -122,14 +121,12 @@ async def patch_user(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
-        resp = client.run(
-            patch_user_query(
-                developer_id=x_developer_id,
-                user_id=user_id,
-                name=request.name,
-                about=request.about,
-                metadata=request.metadata,
-            )
+        resp = patch_user_query(
+            developer_id=x_developer_id,
+            user_id=user_id,
+            name=request.name,
+            about=request.about,
+            metadata=request.metadata,
         )
 
         return ResourceUpdatedResponse(
@@ -157,11 +154,9 @@ async def get_user_details(
     try:
         resp = [
             row.to_dict()
-            for _, row in client.run(
-                get_user_query(
-                    developer_id=x_developer_id,
-                    user_id=user_id,
-                )
+            for _, row in get_user_query(
+                developer_id=x_developer_id,
+                user_id=user_id,
             ).iterrows()
         ][0]
 
@@ -184,14 +179,12 @@ async def create_user(
     request: CreateUserRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    resp = client.run(
-        create_user_query(
-            developer_id=x_developer_id,
-            user_id=uuid4(),
-            name=request.name,
-            about=request.about,
-            metadata=request.metadata or {},
-        ),
+    resp = create_user_query(
+        developer_id=x_developer_id,
+        user_id=uuid4(),
+        name=request.name,
+        about=request.about,
+        metadata=request.metadata or {},
     )
 
     new_user_id = resp["user_id"][0]
@@ -201,21 +194,15 @@ async def create_user(
     )
 
     if request.docs:
-        client.run(
-            "\n".join(
-                [
-                    create_docs_query(
-                        owner_type="user",
-                        owner_id=new_user_id,
-                        id=uuid4(),
-                        title=info.title,
-                        content=info.content,
-                        metadata=info.metadata or {},
-                    )
-                    for info in request.docs
-                ]
+        for info in request.docs:
+            create_docs_query(
+                owner_type="user",
+                owner_id=new_user_id,
+                id=uuid4(),
+                title=info.title,
+                content=info.content,
+                metadata=info.metadata or {},
             )
-        )
 
     return res
 
@@ -238,13 +225,11 @@ async def list_users(
     return UserList(
         items=[
             User(**row.to_dict())
-            for _, row in client.run(
-                list_users_query(
-                    developer_id=x_developer_id,
-                    limit=limit,
-                    offset=offset,
-                    metadata_filter=metadata_filter,
-                ),
+            for _, row in list_users_query(
+                developer_id=x_developer_id,
+                limit=limit,
+                offset=offset,
+                metadata_filter=metadata_filter,
             ).iterrows()
         ]
     )
@@ -253,15 +238,13 @@ async def list_users(
 @router.post("/users/{user_id}/docs", tags=["users"])
 async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
-    resp = client.run(
-        create_docs_query(
-            owner_type="user",
-            owner_id=user_id,
-            id=doc_id,
-            title=request.title,
-            content=request.content,
-            metadata=request.metadata or {},
-        )
+    resp: pd.DataFrame = create_docs_query(
+        owner_type="user",
+        owner_id=user_id,
+        id=doc_id,
+        title=request.title,
+        content=request.content,
+        metadata=request.metadata or {},
     )
 
     doc_id = resp["doc_id"][0]
@@ -278,12 +261,10 @@ async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResp
         ]
     )
 
-    client.run(
-        embed_docs_snippets_query(
-            doc_id=doc_id,
-            snippet_indices=indices,
-            embeddings=embeddings,
-        )
+    embed_docs_snippets_query(
+        doc_id=doc_id,
+        snippet_indices=indices,
+        embeddings=embeddings,
     )
 
     return res
@@ -308,14 +289,12 @@ async def list_docs(
             detail="metadata_filter is not implemented",
         )
 
-    if not len(list(client.run(ensure_owner_exists_query("user", user_id)).iterrows())):
+    if not len(list(ensure_owner_exists_query("user", user_id).iterrows())):
         raise UserNotFoundError("", user_id)
 
-    resp = client.run(
-        list_docs_snippets_by_owner_query(
-            owner_type="user",
-            owner_id=user_id,
-        )
+    resp = list_docs_snippets_by_owner_query(
+        owner_type="user",
+        owner_id=user_id,
     )
 
     return DocsList(
@@ -334,12 +313,11 @@ async def list_docs(
 
 @router.delete("/users/{user_id}/docs/{doc_id}", tags=["users"])
 async def delete_docs(user_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse:
-    resp = client.run(
-        get_docs_snippets_by_id_query(
-            owner_type="user",
-            doc_id=doc_id,
-        )
+    resp = get_docs_snippets_by_id_query(
+        owner_type="user",
+        doc_id=doc_id,
     )
+
     if not resp.size:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -347,13 +325,12 @@ async def delete_docs(user_id: UUID4, doc_id: UUID4) -> ResourceDeletedResponse:
         )
 
     try:
-        client.run(
-            delete_docs_by_id_query(
-                owner_type="user",
-                owner_id=user_id,
-                doc_id=doc_id,
-            )
+        delete_docs_by_id_query(
+            owner_type="user",
+            owner_id=user_id,
+            doc_id=doc_id,
         )
+
     except QueryException as e:
         if e.code == "transact::assertion_failure":
             raise UserDocNotFoundError(user_id, doc_id)

@@ -1,16 +1,21 @@
-from ...common.utils import json
 from uuid import UUID
+
+import pandas as pd
+
+from ...clients.cozo import client
+
+from ...common.utils import json
 
 
 def create_user_query(
     user_id: UUID, developer_id: UUID, name: str, about: str, metadata: dict = {}
-):
+) -> pd.DataFrame:
     user_id = str(user_id)
     name = json.dumps(name)
     about = json.dumps(about)
     metadata = json.dumps(metadata)
 
-    return f"""
+    query = f"""
     {{
         # Then create the user
         ?[user_id, developer_id, name, about, metadata] <- [
@@ -26,3 +31,5 @@ def create_user_query(
         }}
         :returning
     }}"""
+
+    return client.run(query)

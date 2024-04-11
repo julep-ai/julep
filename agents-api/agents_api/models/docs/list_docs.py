@@ -1,14 +1,18 @@
 from typing import Literal
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+
 
 def ensure_owner_exists_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
-):
+) -> pd.DataFrame:
     owner_id = str(owner_id)
 
-    return f"""{{
+    query = f"""{{
         input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
 
         ?[
@@ -19,6 +23,8 @@ def ensure_owner_exists_query(
             }}
     }}"""
 
+    return client.run(query)
+
 
 def list_docs_snippets_by_owner_query(
     owner_type: Literal["user", "agent"],
@@ -26,7 +32,7 @@ def list_docs_snippets_by_owner_query(
 ):
     owner_id = str(owner_id)
 
-    return f"""
+    query = f"""
     {{
         input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
 
@@ -52,3 +58,5 @@ def list_docs_snippets_by_owner_query(
                 snippet,
             }}
     }}"""
+
+    return client.run(query)
