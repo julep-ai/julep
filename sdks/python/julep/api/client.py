@@ -825,7 +825,6 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            # type: ignore
             _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
@@ -2586,7 +2585,6 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            # type: ignore
             _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
