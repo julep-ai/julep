@@ -162,6 +162,7 @@ class BaseSessionsManager(BaseManager):
         user_id: Union[str, UUID],
         agent_id: Union[str, UUID],
         situation: Optional[str] = None,
+        metadata: dict = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -188,6 +189,7 @@ class BaseSessionsManager(BaseManager):
             user_id=user_id,
             agent_id=agent_id,
             situation=situation,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -778,6 +780,7 @@ class AsyncSessionsManager(BaseSessionsManager):
     @beartype
     @rewrap_in_class(Session)
     async def create(self, **kwargs: SessionCreateArgs) -> Session:
+        metadata = kwargs.pop('metadata', {})
         """
         Asynchronously create a resource with the specified user and agent identifiers.
 
