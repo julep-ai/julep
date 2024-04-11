@@ -79,6 +79,7 @@ class BaseUsersManager(BaseManager):
         name: str,
         about: str,
         docs: List[DocDict] = [],
+        metadata: dict = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast docs to a list of CreateDoc objects
         """
@@ -111,6 +112,7 @@ class BaseUsersManager(BaseManager):
             name=name,
             about=about,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
