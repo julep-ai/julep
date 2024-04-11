@@ -1,6 +1,7 @@
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
@@ -8,7 +9,12 @@ from ...common.utils import json
 
 
 def create_user_query(
-    user_id: UUID, developer_id: UUID, name: str, about: str, metadata: dict = {}
+    user_id: UUID,
+    developer_id: UUID,
+    name: str,
+    about: str,
+    metadata: dict = {},
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     user_id = str(user_id)
     name = json.dumps(name)

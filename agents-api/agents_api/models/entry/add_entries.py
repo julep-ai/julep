@@ -1,4 +1,5 @@
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 from ...common.protocol.entries import Entry
@@ -6,7 +7,9 @@ from ...common.utils import json
 from ...common.utils.datetime import utcnow
 
 
-def add_entries_query(entries: list[Entry]) -> pd.DataFrame:
+def add_entries_query(
+    entries: list[Entry], client: CozoClient = client
+) -> pd.DataFrame:
     entries_lst = []
     for e in entries:
         ts = utcnow().timestamp()

@@ -2,6 +2,7 @@ from typing import Any
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
@@ -13,6 +14,7 @@ def list_users_query(
     limit: int = 100,
     offset: int = 0,
     metadata_filter: dict[str, Any] = {},
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     metadata_filter_str = ", ".join(
         [
