@@ -584,7 +584,7 @@ class AsyncAgentsManager(BaseAgentsManager):
         Raises:
             The exceptions that may be raised are not specified in the signature and depend on the implementation of the _create method.
         """
-        result = await self._create(**kwargs)
+        result = await self._create(**kwargs, metadata=metadata)
         return result
 
     @beartype
