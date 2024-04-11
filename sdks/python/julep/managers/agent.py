@@ -196,6 +196,7 @@ class BaseAgentsManager(BaseManager):
             default_settings=default_settings,
             model=model,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -369,6 +370,7 @@ class AgentsManager(BaseAgentsManager):
     @beartype
     @rewrap_in_class(Agent)
     def create(self, **kwargs: AgentCreateArgs) -> Agent:
+        metadata = kwargs.pop('metadata', {})
         """
         Creates a new resource with the specified details.
 
@@ -560,6 +562,7 @@ class AsyncAgentsManager(BaseAgentsManager):
     @beartype
     @rewrap_in_class(Agent)
     async def create(self, **kwargs: AgentCreateArgs) -> Agent:
+        metadata = kwargs.pop('metadata', {})
         """
         Create a new resource asynchronously with specified details.
 
