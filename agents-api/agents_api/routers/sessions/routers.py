@@ -5,11 +5,11 @@ from uuid import uuid4
 
 
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
+import pandas as pd
 from pydantic import BaseModel
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
-from agents_api.clients.cozo import client
 from pycozo.client import QueryException
 from agents_api.common.exceptions.sessions import SessionNotFoundError
 from agents_api.common.utils.datetime import utcnow
@@ -64,8 +64,8 @@ async def get_session(
     try:
         res = [
             row.to_dict()
-            for _, row in client.run(
-                get_session_query(developer_id=x_developer_id, session_id=session_id),
+            for _, row in get_session_query(
+                developer_id=x_developer_id, session_id=session_id
             ).iterrows()
         ][0]
         return Session(**res)
@@ -82,15 +82,13 @@ async def create_session(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     session_id = uuid4()
-    resp = client.run(
-        create_session_query(
-            session_id=session_id,
-            developer_id=x_developer_id,
-            agent_id=request.agent_id,
-            user_id=request.user_id,
-            situation=request.situation,
-            metadata=request.metadata or {},
-        ),
+    resp: pd.DataFrame = create_session_query(
+        session_id=session_id,
+        developer_id=x_developer_id,
+        agent_id=request.agent_id,
+        user_id=request.user_id,
+        situation=request.situation,
+        metadata=request.metadata or {},
     )
 
     return ResourceCreatedResponse(
@@ -114,12 +112,12 @@ async def list_sessions(
             detail="metadata_filter is not a valid JSON",
         )
 
-    query = list_sessions_query(
+    query_results = list_sessions_query(
         x_developer_id, limit, offset, metadata_filter=metadata_filter
     )
 
     return SessionList(
-        items=[Session(**row.to_dict()) for _, row in client.run(query).iterrows()]
+        items=[Session(**row.to_dict()) for _, row in query_results.iterrows()]
     )
 
 
@@ -130,7 +128,7 @@ async def delete_session(
     session_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
 ) -> ResourceDeletedResponse:
     try:
-        client.run(delete_session_query(x_developer_id, session_id))
+        delete_session_query(x_developer_id, session_id)
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -147,13 +145,11 @@ async def update_session(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
-        resp = client.run(
-            update_session_query(
-                session_id=session_id,
-                developer_id=x_developer_id,
-                situation=request.situation,
-                metadata=request.metadata,
-            )
+        resp = update_session_query(
+            session_id=session_id,
+            developer_id=x_developer_id,
+            situation=request.situation,
+            metadata=request.metadata,
         )
 
         return ResourceUpdatedResponse(
@@ -174,13 +170,11 @@ async def patch_session(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
-        resp = client.run(
-            patch_session_query(
-                session_id=session_id,
-                developer_id=x_developer_id,
-                situation=request.situation,
-                metadata=request.metadata,
-            )
+        resp = patch_session_query(
+            session_id=session_id,
+            developer_id=x_developer_id,
+            situation=request.situation,
+            metadata=request.metadata,
         )
 
         return ResourceUpdatedResponse(
@@ -213,8 +207,8 @@ async def get_history(
 ) -> ChatMLMessageList:
     try:
         items = []
-        for _, row in client.run(
-            get_entries_query(session_id=session_id, limit=limit, offset=offset),
+        for _, row in get_entries_query(
+            session_id=session_id, limit=limit, offset=offset
         ).iterrows():
             row_dict = row.to_dict()
             row_dict["id"] = row_dict["entry_id"]
@@ -238,7 +232,7 @@ async def delete_history(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
     try:
-        client.run(delete_entries_query(session_id=session_id))
+        delete_entries_query(session_id=session_id)
     except QueryException as e:
         if e.code == "transact::assertion_failure":
             raise SessionNotFoundError(

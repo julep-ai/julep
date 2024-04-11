@@ -1,5 +1,9 @@
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+
 
 def proc_mem_context_query(
     session_id: UUID,
@@ -9,7 +13,7 @@ def proc_mem_context_query(
     docs_confidence: float = 0.7,
     k_tools: int = 3,
     k_docs: int = 2,
-):
+) -> pd.DataFrame:
     VECTOR_SIZE = 768
     session_id = str(session_id)
     assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
@@ -17,7 +21,7 @@ def proc_mem_context_query(
     tools_radius: float = 1.0 - tools_confidence
     docs_radius: float = 1.0 - docs_confidence
 
-    return f"""
+    query = f"""
     {{
         # Input table for the query
         # (This is temporary to this query)
@@ -277,3 +281,5 @@ def proc_mem_context_query(
         :sort index, created_at
     }}
     """
+
+    return client.run(query)

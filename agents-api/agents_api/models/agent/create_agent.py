@@ -1,6 +1,9 @@
-from ...common.utils import json
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
@@ -13,7 +16,7 @@ def create_agent_query(
     model: str = "julep-ai/samantha-1-turbo",
     metadata: dict = {},
     default_settings: dict = {},
-):
+) -> pd.DataFrame:
     assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
 
     settings_cols, settings_vals = cozo_process_mutate_data(
@@ -59,4 +62,6 @@ def create_agent_query(
     ]
 
     query = "}\n\n{\n".join(queries)
-    return f"{{ {query} }}"
+    query = f"{{ {query} }}"
+
+    return client.run(query)

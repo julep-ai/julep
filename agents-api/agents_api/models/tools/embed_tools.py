@@ -1,11 +1,15 @@
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+
 
 def embed_functions_query(
     agent_id: UUID,
     tool_ids: list[UUID],
     embeddings: list[list[float]],
-):
+) -> pd.DataFrame:
     agent_id = str(agent_id)
     tool_ids = [str(id) for id in tool_ids]
     assert len(tool_ids) == len(embeddings)
@@ -17,7 +21,7 @@ def embed_functions_query(
         ]
     )
 
-    return f"""
+    query = f"""
     {{
         ?[agent_id, tool_id, embedding] <- [
             {records}
@@ -28,3 +32,5 @@ def embed_functions_query(
         }}
         :returning
     }}"""
+
+    return client.run(query)

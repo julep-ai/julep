@@ -1,8 +1,10 @@
 from textwrap import dedent
-from temporalio import activity
-from agents_api.clients.openai import client as openai_client
+from typing import Callable
 
-from .types import *
+from temporalio import activity
+
+from ..clients.openai import client as openai_client
+from .types import RelationshipSummaryTaskArgs
 
 
 def make_prompt(args: RelationshipSummaryTaskArgs):
@@ -80,7 +82,7 @@ async def relationship_summary(
 
     # assert len(entries) > 0, "no need to summarize on empty entries list"
 
-    response = await run_prompt(statements=statements, person1=person1, person2=person2)
+    await run_prompt(statements=statements, person1=person1, person2=person2)
 
     # new_entry = Entry(
     #     session_id=session_id,

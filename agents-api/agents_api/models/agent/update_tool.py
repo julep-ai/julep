@@ -1,12 +1,15 @@
-from ...common.utils import json
 from uuid import UUID
 
+import pandas as pd
+
 from ...autogen.openapi_model import FunctionDef
+from ...clients.cozo import client
+from ...common.utils import json
 
 
 def update_tool_by_id_query(
     agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
-) -> str:
+) -> pd.DataFrame:
     # Agent update query
     function = function.model_dump()
 
@@ -14,7 +17,7 @@ def update_tool_by_id_query(
     description = json.dumps(function["description"])
     parameters = json.dumps(function.get("parameters", {}))
 
-    return f"""
+    query = f"""
         ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
             [to_uuid("{agent_id}"), to_uuid("{tool_id}"), {name}, {description}, {parameters}, vec({embedding}), now()]
         ]
@@ -30,3 +33,5 @@ def update_tool_by_id_query(
         }}
         :returning
     """
+
+    return client.run(query)

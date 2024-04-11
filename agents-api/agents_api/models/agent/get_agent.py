@@ -1,8 +1,12 @@
 from uuid import UUID
 
+import pandas as pd
 
-def get_agent_query(developer_id: UUID, agent_id: UUID):
-    return f"""
+from ...clients.cozo import client
+
+
+def get_agent_query(developer_id: UUID, agent_id: UUID) -> pd.DataFrame:
+    query = f"""
     {{
         input[agent_id, developer_id] <- [[to_uuid("{agent_id}"), to_uuid("{developer_id}")]]
 
@@ -49,3 +53,5 @@ def get_agent_query(developer_id: UUID, agent_id: UUID):
             }}
     }}
     """
+
+    return client.run(query)

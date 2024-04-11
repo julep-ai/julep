@@ -1,23 +1,25 @@
-from ...common.utils import json
+import pandas as pd
+
+from ...clients.cozo import client
 from ...common.protocol.entries import Entry
+from ...common.utils import json
 from ...common.utils.datetime import utcnow
 
 
-def add_entries_query(entries: list[Entry]) -> str:
-    def _aux_content(e: Entry):
-        return e.content.replace('"', "'")
-
+def add_entries_query(entries: list[Entry]) -> pd.DataFrame:
     entries_lst = []
     for e in entries:
         ts = utcnow().timestamp()
         source = json.dumps(e.source)
         role = json.dumps(e.role)
         name = json.dumps(e.name)
-        content = json.dumps(_aux_content(e))
+        content: str = (
+            e.content if isinstance(e.content, str) else json.dumps(e.content)
+        )
         tokenizer = json.dumps(e.tokenizer)
         if e.content:
             entries_lst.append(
-                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), {source}, {role}, {name}, {content}, {e.token_count}, {tokenizer}, {ts}, {ts}]'
+                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), {source}, {role}, {name}, __"{content}"__, {e.token_count}, {tokenizer}, {ts}, {ts}]'
             )
 
     if not len(entries_lst):
@@ -47,4 +49,4 @@ def add_entries_query(entries: list[Entry]) -> str:
     }}
     """
 
-    return query
+    return client.run(query)

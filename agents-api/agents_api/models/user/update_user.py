@@ -1,11 +1,15 @@
-from ...common.utils import json
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+
+from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
 
-def update_user_query(developer_id: UUID, user_id: UUID, **update_data) -> str:
+def update_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.DataFrame:
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -15,7 +19,7 @@ def update_user_query(developer_id: UUID, user_id: UUID, **update_data) -> str:
         }
     )
 
-    return f"""
+    query = f"""
         # update the user
         ?[{user_update_cols}] <- {json.dumps(user_update_vals)}
 
@@ -24,3 +28,5 @@ def update_user_query(developer_id: UUID, user_id: UUID, **update_data) -> str:
         }}
         :returning
     """
+
+    return client.run(query)
