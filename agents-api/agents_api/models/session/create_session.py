@@ -1,6 +1,7 @@
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 from ...common.utils import json
@@ -13,6 +14,7 @@ def create_session_query(
     user_id: UUID,
     situation: str | None,
     metadata: dict = {},
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     query = f"""
     {{

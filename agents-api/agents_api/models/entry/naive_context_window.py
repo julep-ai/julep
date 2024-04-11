@@ -1,11 +1,14 @@
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
 
-def naive_context_window_query(session_id: UUID) -> pd.DataFrame:
+def naive_context_window_query(
+    session_id: UUID, client: CozoClient = client
+) -> pd.DataFrame:
     session_id = str(session_id)
 
     query = f"""

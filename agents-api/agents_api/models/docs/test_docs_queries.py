@@ -24,7 +24,7 @@ def cozo_client(migrations_dir: str = "./migrations"):
     return client
 
 
-@test("create docs")
+@test("model: create docs")
 def _():
     client = cozo_client()
 
@@ -32,15 +32,14 @@ def _():
         owner_id = uuid4()
         id = uuid4()
 
-        query = create_docs_query(
-            owner_type, owner_id, id, title="Hello", content="World"
+        result = create_docs_query(
+            owner_type, owner_id, id, title="Hello", content="World", client=client
         )
 
-        result = client.run(query)
         assert result["created_at"][0]
 
 
-@test("get docs")
+@test("model: get docs")
 def _():
     client = cozo_client()
 
@@ -48,19 +47,16 @@ def _():
         owner_id = uuid4()
         id = uuid4()
 
-        create_query = create_docs_query(
-            owner_type, owner_id, id, title="Hello", content="World"
+        create_docs_query(
+            owner_type, owner_id, id, title="Hello", content="World", client=client
         )
 
-        client.run(create_query)
+        result = get_docs_snippets_by_id_query(owner_type, id, client=client)
 
-        query = get_docs_snippets_by_id_query(owner_type, id)
-
-        result = client.run(query)
         assert len(result) == 1, "Only 1 should have been found"
 
 
-@test("delete docs")
+@test("model: delete docs")
 def _():
     client = cozo_client()
 
@@ -68,15 +64,12 @@ def _():
         owner_id = uuid4()
         id = uuid4()
 
-        create_query = create_docs_query(
-            owner_type, owner_id, id, title="Hello", content="World"
+        create_docs_query(
+            owner_type, owner_id, id, title="Hello", content="World", client=client
         )
 
-        client.run(create_query)
+        result = delete_docs_by_id_query(owner_type, owner_id, id, client=client)
 
-        query = delete_docs_by_id_query(owner_type, owner_id, id)
-
-        result = client.run(query)
         delete_info = next(
             (row for row in result.to_dict("records") if row["_kind"] == "deleted"),
             None,
@@ -85,7 +78,7 @@ def _():
         assert delete_info is not None, "Delete operation found the row"
 
 
-@test("list docs")
+@test("model: list docs")
 def _():
     client = cozo_client()
 
@@ -93,19 +86,16 @@ def _():
         owner_id = uuid4()
         id = uuid4()
 
-        create_query = create_docs_query(
-            owner_type, owner_id, id, title="Hello", content="World"
+        create_docs_query(
+            owner_type, owner_id, id, title="Hello", content="World", client=client
         )
 
-        client.run(create_query)
+        result = list_docs_snippets_by_owner_query(owner_type, owner_id, client=client)
 
-        query = list_docs_snippets_by_owner_query(owner_type, owner_id)
-
-        result = client.run(query)
         assert len(result) == 1, "Only 1 should have been found"
 
 
-@test("search docs")
+@test("model: search docs")
 def _():
     client = cozo_client()
 
@@ -113,11 +103,9 @@ def _():
         owner_id = uuid4()
         id = uuid4()
 
-        create_query = create_docs_query(
-            owner_type, owner_id, id, title="Hello", content="World"
+        create_docs_query(
+            owner_type, owner_id, id, title="Hello", content="World", client=client
         )
-
-        client.run(create_query)
 
         ### Add embedding to the snippet
         client.update(
@@ -128,17 +116,14 @@ def _():
         ### Search
         query_embedding = [0.99] * 768
 
-        query = search_docs_snippets_by_embedding_query(
-            owner_type,
-            owner_id,
-            query_embedding,
+        result = search_docs_snippets_by_embedding_query(
+            owner_type, owner_id, query_embedding, client=client
         )
 
-        result = client.run(query)
         assert len(result) == 1, "Only 1 should have been found"
 
 
-@test("embed docs")
+@test("model: embed docs")
 def _():
     client = cozo_client()
 
@@ -152,26 +137,19 @@ def _():
             "Hello Apple",
         ]
 
-        create_query = create_docs_query(
+        create_docs_query(
             owner_type,
             owner_id,
             id,
             title="Hi",
             content="\n\n".join(snippets),
             split_fn=lambda x: x.split("\n\n"),
+            client=client,
         )
-
-        client.run(create_query)
 
         ### Add embedding to the snippet
         snippet_indices = [*range(len(snippets))]
 
         embeddings = [[1.0] * 768 for _ in snippets]
 
-        query = embed_docs_snippets_query(
-            id,
-            snippet_indices,
-            embeddings,
-        )
-
-        client.run(query)
+        embed_docs_snippets_query(id, snippet_indices, embeddings, client=client)

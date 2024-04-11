@@ -1,6 +1,7 @@
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 from ...common.utils import json
@@ -16,6 +17,7 @@ def create_agent_query(
     model: str = "julep-ai/samantha-1-turbo",
     metadata: dict = {},
     default_settings: dict = {},
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
 
