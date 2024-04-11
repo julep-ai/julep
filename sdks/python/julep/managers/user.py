@@ -380,6 +380,7 @@ class AsyncUsersManager(BaseUsersManager):
     @beartype
     @rewrap_in_class(User)
     async def create(self, **kwargs: UserCreateArgs) -> User:
+        metadata = kwargs.pop('metadata', {})
         """
         Asynchronously create a new resource with the provided name, description, and documents.
 
@@ -396,7 +397,7 @@ class AsyncUsersManager(BaseUsersManager):
         Raises:
             BeartypeException: If any of the parameters do not match their annotated types.
         """
-        result = await self._create(**kwargs)
+        result = await self._create(**kwargs, metadata=metadata)
         return result
 
     @beartype
