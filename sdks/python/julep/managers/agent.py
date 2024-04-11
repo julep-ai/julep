@@ -141,6 +141,7 @@ class BaseAgentsManager(BaseManager):
         default_settings: DefaultSettingsDict = {},
         model: ModelName = "julep-ai/samantha-1-turbo",
         docs: List[DocDict] = [],
+        metadata: dict = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -155,6 +156,7 @@ class BaseAgentsManager(BaseManager):
             default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the agent. Defaults to an empty dict.
             model (ModelName, optional): The model name identifier. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): List of document configurations for the agent. Defaults to an empty list.
+            metadata (dict, optional): Additional metadata for the agent. Defaults to an empty dictionary.
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response object indicating the resource has been created or a future of the response object if the creation is being awaited.
@@ -584,7 +586,7 @@ class AsyncAgentsManager(BaseAgentsManager):
         Raises:
             The exceptions that may be raised are not specified in the signature and depend on the implementation of the _create method.
         """
-        result = await self._create(**kwargs, metadata=metadata)
+        result = await self._create(**kwargs)
         return result
 
     @beartype
