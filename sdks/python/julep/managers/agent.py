@@ -390,7 +390,7 @@ class AgentsManager(BaseAgentsManager):
         Note:
             This function is decorated with `@beartype`, which will perform runtime type checking on the arguments.
         """
-        result = self._create(**kwargs)
+        result = self._create(**kwargs, metadata=metadata)
         return result
 
     @beartype
