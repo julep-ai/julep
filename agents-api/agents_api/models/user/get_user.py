@@ -1,11 +1,16 @@
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
 
-def get_user_query(developer_id: UUID, user_id: UUID) -> pd.DataFrame:
+def get_user_query(
+    developer_id: UUID,
+    user_id: UUID,
+    client: CozoClient = client,
+) -> pd.DataFrame:
     user_id = str(user_id)
     developer_id = str(developer_id)
 
