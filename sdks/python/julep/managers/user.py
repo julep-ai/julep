@@ -1,7 +1,6 @@
 import json
 from uuid import UUID
 from typing import Optional, TypedDict
-
 from beartype import beartype
 from beartype.typing import Any, Awaitable, Dict, List, Union
 
@@ -23,12 +22,14 @@ from .types import DocDict
 class UserCreateArgs(TypedDict):
     name: str
     about: str
-    docs: List[str]
+    docs: List[str] = []
+    metadata: Dict[str, Any] = {}
 
 
 class UserUpdateArgs(TypedDict):
     about: Optional[str] = None
     name: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class BaseUsersManager(BaseManager):
@@ -79,6 +80,7 @@ class BaseUsersManager(BaseManager):
         name: str,
         about: str,
         docs: List[DocDict] = [],
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast docs to a list of CreateDoc objects
         """
@@ -91,6 +93,7 @@ class BaseUsersManager(BaseManager):
             about (str): A brief description about the new resource.
             docs (List[DocDict], optional): A list of dictionaries with documentation-related information. Each dictionary
                 must conform to the structure expected by CreateDoc. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response indicating the resource has been
@@ -111,6 +114,7 @@ class BaseUsersManager(BaseManager):
             name=name,
             about=about,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -158,6 +162,7 @@ class BaseUsersManager(BaseManager):
         user_id: Union[str, UUID],
         about: Optional[str] = None,
         name: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update user details for a given user ID.
@@ -168,6 +173,7 @@ class BaseUsersManager(BaseManager):
             user_id (Union[str, UUID]): The ID of the user to be updated. Must be a valid UUID v4.
             about (Optional[str], optional): The new information about the user. Defaults to None.
             name (Optional[str], optional): The new name for the user. Defaults to None.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The response indicating successful update or an Awaitable that resolves to such a response.
@@ -180,6 +186,7 @@ class BaseUsersManager(BaseManager):
             user_id=user_id,
             about=about,
             name=name,
+            metadata=metadata,
         )
 
 

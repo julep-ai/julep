@@ -20,6 +20,7 @@ mock_agent = {
         "test agent instructions",
     ],
     "default_settings": {"temperature": 0.5},
+    "metadata": {"test": "test"},
 }
 
 mock_agent_update = {
@@ -28,24 +29,29 @@ mock_agent_update = {
     "instructions": [
         "updated agent instructions",
     ],
+    "metadata": {"test": "test"},
 }
 
 mock_user = {
     "name": "test user",
     "about": "test user about",
+    "metadata": {"test": "test"},
 }
 
 mock_user_update = {
     "name": "updated user",
     "about": "updated user about",
+    "metadata": {"test": "test"},
 }
 
 mock_session = {
     "situation": "test situation",
+    "metadata": {"test": "test"},
 }
 
 mock_session_update = {
     "situation": "updated situation",
+    "metadata": {"test": "test"},
 }
 
 mock_tool = {
@@ -80,6 +86,7 @@ mock_tool_update = {
 mock_doc = {
     "title": "test title",
     "content": "test content",
+    "metadata": {"test": "test"},
 }
 
 
