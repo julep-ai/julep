@@ -1,16 +1,20 @@
 from uuid import UUID
 
+import pandas as pd
+
+from ...clients.cozo import client
+
 
 def search_functions_by_embedding_query(
     agent_id: UUID,
     query_embedding: list[float],
     k: int = 3,
     confidence: float = 0.8,
-):
+) -> pd.DataFrame:
     agent_id = str(agent_id)
     radius: float = 1.0 - confidence
 
-    return f"""
+    query = f"""
         input[
             agent_id,
             query_embedding,
@@ -57,3 +61,5 @@ def search_functions_by_embedding_query(
 
         :sort distance
     """
+
+    return client.run(query)

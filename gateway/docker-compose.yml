@@ -26,7 +26,7 @@ services:
 
     container_name: gateway
     depends_on:
-      model-api:
+      model-serving:
         condition: service_started
       agents-api:
         condition: service_started
@@ -51,10 +51,10 @@ services:
     develop:
       watch:
         - action: sync+restart
-          path: ./traefik.yml.template
-          target: /etc/traefik/traefik.yml.template
-        - action: sync+restart
           path: ./entrypoint.sh
           target: /entrypoint.sh
+        - action: rebuild
+          path: ./traefik.yml.template
+          target: /etc/traefik/traefik.yml.template
         - action: rebuild
           path: Dockerfile

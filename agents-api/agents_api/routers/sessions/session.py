@@ -5,7 +5,6 @@ from uuid import uuid4
 from openai.types.chat.chat_completion import ChatCompletion
 from dataclasses import dataclass
 from pydantic import UUID4
-from agents_api.clients.cozo import client
 from agents_api.clients.embed import embed
 from agents_api.env import summarization_tokens_threshold
 from agents_api.clients.temporal import run_summarization_task
@@ -97,14 +96,12 @@ class BaseSession:
 
         (
             tool_query_embedding,
-            instruction_query_embedding,
             doc_query_embedding,
         ) = await embed(
             [
                 instruction + string_to_embed
                 for instruction in [
                     tool_query_instruction,
-                    instruction_query_instruction,
                     doc_query_instruction,
                 ]
             ],
@@ -116,13 +113,10 @@ class BaseSession:
         first_instruction_idx = -1
         first_instruction_created_at = 0
         tools = []
-        for idx, row in client.run(
-            proc_mem_context_query(
-                session_id=self.session_id,
-                tool_query_embedding=tool_query_embedding,
-                instruction_query_embedding=instruction_query_embedding,
-                doc_query_embedding=doc_query_embedding,
-            )
+        for idx, row in proc_mem_context_query(
+            session_id=self.session_id,
+            tool_query_embedding=tool_query_embedding,
+            doc_query_embedding=doc_query_embedding,
         ).iterrows():
             # If a `functions` message is encountered, extract into tools list
             if row["name"] == "functions":
@@ -254,7 +248,7 @@ class BaseSession:
             )
 
         entries.append(new_entry)
-        client.run(add_entries_query(entries))
+        add_entries_query(entries)
 
         if total_tokens >= summarization_tokens_threshold:
             return run_summarization_task

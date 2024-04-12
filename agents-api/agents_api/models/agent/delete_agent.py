@@ -1,8 +1,12 @@
 from uuid import UUID
 
+import pandas as pd
 
-def delete_agent_query(developer_id: UUID, agent_id: UUID):
-    return f"""
+from ...clients.cozo import client
+
+
+def delete_agent_query(developer_id: UUID, agent_id: UUID) -> pd.DataFrame:
+    query = f"""
     {{
         # Delete default agent settings
         ?[agent_id] <- [["{agent_id}"]]
@@ -19,3 +23,5 @@ def delete_agent_query(developer_id: UUID, agent_id: UUID):
             agent_id
         }}
     }}"""
+
+    return client.run(query)

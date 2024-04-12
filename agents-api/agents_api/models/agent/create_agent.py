@@ -2,10 +2,11 @@ from agents_api.common.exceptions.agents import AgentModelNotValid
 from ...common.utils import json
 from uuid import UUID
 
-from ...autogen.openapi_model import Instruction
-from ...common.utils.cozo import cozo_process_mutate_data
+import pandas as pd
 
-from ..instructions.create_instructions import create_instructions_query
+from ...clients.cozo import client
+from ...common.utils import json
+from ...common.utils.cozo import cozo_process_mutate_data
 
 from ...model_registry import ALL_AVAILABLE_MODELS
 
@@ -15,11 +16,10 @@ def create_agent_query(
     name: str,
     about: str,
     model: str,
-    instructions: list[Instruction] = [],
+    instructions: list[str] = [],
     metadata: dict = {},
     default_settings: dict = {},
-):
-    # assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo", "gpt-4"]
+) -> pd.DataFrame:
     if model not in ALL_AVAILABLE_MODELS.keys():
         raise AgentModelNotValid(model)
 
@@ -39,10 +39,12 @@ def create_agent_query(
         }}
     """
 
-    query_cols = json.dumps([agent_id, developer_id, model, name, about, metadata])
+    query_cols = json.dumps(
+        [agent_id, developer_id, model, name, about, metadata, instructions]
+    )
     # create the agent
     agent_query = f"""
-        ?[agent_id, developer_id, model, name, about, metadata] <- [
+        ?[agent_id, developer_id, model, name, about, metadata, instructions] <- [
             {query_cols}
         ]
 
@@ -53,6 +55,7 @@ def create_agent_query(
             name,
             about,
             metadata,
+            instructions,
         }}
         :returning
     """
@@ -65,7 +68,4 @@ def create_agent_query(
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
 
-    if instructions:
-        query = create_instructions_query(agent_id, instructions) + "\n\n" + query
-
-    return query
+    return client.run(query)

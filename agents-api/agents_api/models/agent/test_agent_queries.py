@@ -5,8 +5,6 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
-from ...autogen.openapi_model import Instruction
-
 from .create_agent import create_agent_query
 from .delete_agent import delete_agent_query
 from .get_agent import get_agent_query
@@ -53,9 +51,7 @@ def _():
         name="test agent",
         about="test agent about",
         instructions=[
-            Instruction(
-                content="test instruction",
-            )
+            "test instruction",
         ],
     )
 

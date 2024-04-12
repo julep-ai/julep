@@ -8,16 +8,19 @@ export const $UpdateAgentRequest = {
     about: {
       type: "string",
       description: `About the agent`,
+      isRequired: true,
     },
     instructions: {
       type: "array",
       contains: {
-        type: "Instruction",
+        type: "string",
+        description: `Instruction`,
       },
     },
     name: {
       type: "string",
       description: `Name of the agent`,
+      isRequired: true,
     },
     model: {
       type: "string",

@@ -46,6 +46,7 @@ def make_exception_handler(status: int):
     Returns:
     A callable exception handler that logs the exception and returns a JSON response with the specified status code.
     """
+
     async def _handler(request: Request, exc):
         exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
         logger.exception(exc)
