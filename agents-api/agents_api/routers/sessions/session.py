@@ -15,7 +15,7 @@ from agents_api.clients.worker.types import ChatML
 from agents_api.models.session.session_data import get_session_data
 from agents_api.models.entry.proc_mem_context import proc_mem_context_query
 from agents_api.autogen.openapi_model import InputChatMLMessage, Tool
-from agents_api.clients.openai import client as openai_client
+from agents_api.model_registry import get_model_client
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
@@ -205,7 +205,8 @@ class BaseSession:
         tools = None
         if settings.tools:
             tools = [tool.model_dump(mode="json") for tool in settings.tools]
-        res = await openai_client.chat.completions.create(
+        model_client = get_model_client(settings.model)
+        res = await model_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
             max_tokens=settings.max_tokens,

@@ -2,6 +2,8 @@
 Model Registry maintains a list of supported models and their configs.
 """
 from typing import Dict, List, Optional
+from agents_api.clients.model import julep_client, openai_client
+
 
 GPT4_MODELS: Dict[str, int] = {
     # stable model names:
@@ -81,6 +83,13 @@ CLAUDE_MODELS: Dict[str, int] = {
     "claude-3-haiku-20240307": 180000,
 }
 
+OPENAI_MODELS = {
+    **GPT4_MODELS,
+    **TURBO_MODELS,
+    **GPT3_5_MODELS,
+    **GPT3_MODELS
+}
+
 JULEP_MODELS = {
     "julep-ai/samantha-1-turbo": 32768,
     "julep-ai/samantha-1-turbo-awq": 32768
@@ -114,12 +123,14 @@ def validate_request():
     function that validates the config based on the model
     """
     pass
-# TODO: switch and prepare API endpoint based on the model
-def prepare_request():
+
+def get_model_client(model: str) -> str:
     """
-    method that given the request in extended openai format
+    Returns the model serving URL based on the model
     """
-    pass
+    if model in JULEP_MODELS:
+        return julep_client
+    return openai_client
 
 # TODO: implement and use this to work with the response from different model formats
 def parse_response():

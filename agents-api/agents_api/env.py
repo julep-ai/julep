@@ -22,8 +22,9 @@ prediction_location: str = env.str("PREDICTION_LOCATION", default="us-central1")
 prediction_api_endpoint: str = env.str(
     "PREDICTION_API_ENDPOINT", default="us-central1-aiplatform.googleapis.com"
 )
-generation_url: str = env.str("GENERATION_URL", default=None)
-generation_auth_token: str = env.str("GENERATION_AUTH_TOKEN", default=None)
+model_api_key: str = env.str("MODEL_API_KEY", default=None)
+model_inference_url: str = env.str("MODEL_INFERENCE_URL", default=None)
+openai_api_key: str = env.str("OPENAI_API_KEY", default=None)
 summarization_ratio_threshold: float = env.float(
     "MAX_TOKENS_RATIO_TO_SUMMARIZE", default=0.5
 )
@@ -63,8 +64,6 @@ environment = dict(
     debug=debug,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,
-    generation_url=generation_url,
-    generation_auth_token=generation_auth_token,
     summarization_ratio_threshold=summarization_ratio_threshold,
     summarization_tokens_threshold=summarization_tokens_threshold,
     worker_url=worker_url,
