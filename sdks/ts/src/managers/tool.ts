@@ -2,7 +2,6 @@ import {
   Tool,
   UpdateToolRequest,
   ResourceCreatedResponse,
-  ResourceUpdatedResponse,
   FunctionDef,
 } from "../api"; // Import necessary types from your project
 
@@ -53,17 +52,22 @@ export class ToolsManager extends BaseManager {
     agentId,
     toolId,
     tool,
+    overwrite = false,
   }: {
     agentId: string;
     toolId: string;
     tool: UpdateToolRequest;
+    overwrite?: boolean;
   }): Promise<Tool> {
-    const result: ResourceUpdatedResponse =
-      await this.apiClient.default.updateAgentTool({
-        agentId,
-        toolId,
-        requestBody: tool,
-      });
+    const updateFn = overwrite
+      ? this.apiClient.default.updateAgentTool
+      : this.apiClient.default.patchAgentTool;
+
+    const result = await updateFn({
+      agentId,
+      toolId,
+      requestBody: tool,
+    });
 
     const updatedTool: Tool = { type: "function", ...result, ...tool };
     return updatedTool;

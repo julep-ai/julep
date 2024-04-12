@@ -3,7 +3,6 @@ import type {
   CreateToolRequest,
   AgentDefaultSettings,
   ResourceCreatedResponse,
-  ResourceUpdatedResponse,
   Doc,
   CreateAgentRequest,
   UpdateAgentRequest,
@@ -97,31 +96,39 @@ export class AgentsManager extends BaseManager {
       name,
       model,
       default_settings,
+      overwrite = false,
     }: {
       about?: string;
       instructions?: string[];
       name?: string;
       model?: string;
       default_settings?: AgentDefaultSettings;
+      overwrite?: boolean;
     } = {},
   ): Promise<Partial<Agent> & { id: string }> {
     invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
 
     const requestBody: UpdateAgentRequest = {
+      // @ts-ignore
       about,
       instructions: instructions,
+      // @ts-ignore
       name,
       model,
       default_settings,
     };
 
-    const result: ResourceUpdatedResponse =
-      await this.apiClient.default.updateAgent({ agentId, requestBody });
+    const updateFn = overwrite
+      ? this.apiClient.default.updateAgent
+      : this.apiClient.default.patchAgent;
+
+    const result = await updateFn({ agentId, requestBody });
 
     const agent: Partial<Agent> & { id: string } = {
       ...result,
       ...requestBody,
     };
+
     return agent;
   }
 }

@@ -1,10 +1,4 @@
-import type {
-  User,
-  CreateUserRequest,
-  ResourceCreatedResponse,
-  ResourceUpdatedResponse,
-  UpdateUserRequest,
-} from "../api";
+import type { User, CreateUserRequest, ResourceCreatedResponse } from "../api";
 
 import { invariant } from "../utils/invariant";
 import { isValidUuid4 } from "../utils/isValidUuid4";
@@ -71,18 +65,30 @@ export class UsersManager extends BaseManager {
 
   async update(
     userId: string,
-    { about = "", name }: UpdateUserRequest = {},
+    {
+      about,
+      name,
+      overwrite = false,
+    }: {
+      about?: string;
+      name?: string;
+      overwrite?: boolean;
+    },
   ): Promise<User> {
     try {
       invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
+      const updateFn = overwrite
+        ? this.apiClient.default.updateUser
+        : this.apiClient.default.patchUser;
+
       const requestBody = { about, name };
 
-      const result: ResourceUpdatedResponse =
-        await this.apiClient.default.updateUser({
-          userId,
-          requestBody,
-        });
+      const result = await updateFn({
+        userId,
+        // @ts-ignore
+        requestBody,
+      });
 
       const user: User = { ...result, ...requestBody };
       return user;
