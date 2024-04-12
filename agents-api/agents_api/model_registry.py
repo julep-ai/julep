@@ -101,31 +101,30 @@ ALL_AVAILABLE_MODELS = {
     **CLAUDE_MODELS,
 }
 
-
+# TODO: implement
 def validate_configuration():
     """
     function that validates the config based on the model
     """
     pass
 
-
+# TODO: implement
 def validate_request():
     """
     function that validates the config based on the model
     """
     pass
-
+# TODO: switch and prepare API endpoint based on the model
 def prepare_request():
     """
     method that given the request in extended openai format
     """
     pass
 
+# TODO: implement and use this to work with the response from different model formats
 def parse_response():
     """
     method that converts the response from the provider back into the openai format
     """
     pass
-
-
 

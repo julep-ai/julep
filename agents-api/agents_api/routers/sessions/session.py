@@ -209,7 +209,7 @@ class BaseSession:
         tools = None
         if settings.tools:
             tools = [tool.model_dump(mode="json") for tool in settings.tools]
-        return await openai_client.chat.completions.create(
+        res = await openai_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
             max_tokens=settings.max_tokens,
@@ -230,6 +230,7 @@ class BaseSession:
             tools=tools,
             response_format=settings.response_format,
         )
+        return res
 
     async def backward(
         self,

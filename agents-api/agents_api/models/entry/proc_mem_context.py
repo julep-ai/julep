@@ -6,7 +6,7 @@ def proc_mem_context_query(
     tool_query_embedding: list[float],
     instruction_query_embedding: list[float],
     doc_query_embedding: list[float],
-    tools_confidence: float = 0.7,
+    tools_confidence: float = 0,
     instructions_confidence: float = 0.7,
     docs_confidence: float = 0.7,
     k_tools: int = 3,

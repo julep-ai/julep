@@ -212,23 +212,20 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    try:
-        resp = client.run(
-            create_agent_query(
-                agent_id=uuid4(),
-                developer_id=x_developer_id,
-                name=request.name,
-                about=request.about,
-                instructions=request.instructions,
-                model=request.model,
-                default_settings=(
-                    request.default_settings or AgentDefaultSettings()
-                ).model_dump(),
-                metadata=request.metadata or {},
-            ),
-        )
-    except AssertionError as e:
-        raise AgentModelNotValid(request.model)
+    resp = client.run(
+        create_agent_query(
+            agent_id=uuid4(),
+            developer_id=x_developer_id,
+            name=request.name,
+            about=request.about,
+            instructions=request.instructions,
+            model=request.model,
+            default_settings=(
+                request.default_settings or AgentDefaultSettings()
+            ).model_dump(),
+            metadata=request.metadata or {},
+        ),
+    )
     new_agent_id = resp["agent_id"][0]
     res = ResourceCreatedResponse(
         id=new_agent_id,

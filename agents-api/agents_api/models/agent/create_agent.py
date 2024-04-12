@@ -1,3 +1,4 @@
+from agents_api.common.exceptions.agents import AgentModelNotValid
 from ...common.utils import json
 from uuid import UUID
 
@@ -19,7 +20,8 @@ def create_agent_query(
     default_settings: dict = {},
 ):
     # assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo", "gpt-4"]
-    assert model in ALL_AVAILABLE_MODELS.keys()
+    if model not in ALL_AVAILABLE_MODELS.keys():
+        raise AgentModelNotValid(model)
 
     settings_cols, settings_vals = cozo_process_mutate_data(
         {

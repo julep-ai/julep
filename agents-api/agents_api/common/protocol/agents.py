@@ -11,6 +11,3 @@ class AgentDefaultSettings(BaseModel):
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
     min_p: float = 0.01
-
-
-# ModelType = Literal["julep-ai/samantha-1", "julep-ai/samantha-1-turbo", "gpt-4"]

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Any
+from typing import Literal, str
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, computed_field, validator
@@ -15,16 +15,11 @@ class Entry(BaseModel):
     source: EntrySource = Field(default="api_request")
     role: Role
     name: str | None = None
-    content: Any
+    content: str
     tokenizer: str = Field(default="character_count")
     created_at: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
     timestamp: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
 
-    @validator('content')
-    def validate_content(cls, content):
-        if not isinstance(content, (str)):
-            raise ValueError("CompletionResponse not in expected format. Must be a str")
-        return content
 
     @computed_field
     @property
