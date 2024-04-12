@@ -1,14 +1,13 @@
 from datetime import datetime
 import json
-from typing import Literal, Union
+from typing import Literal
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, validator
 from agents_api.autogen.openapi_model import Role
 
 EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
 Tokenizer = Literal["character_count"]
-Content = Union[str, dict]
 
 
 class Entry(BaseModel):
@@ -17,7 +16,7 @@ class Entry(BaseModel):
     source: EntrySource = Field(default="api_request")
     role: Role
     name: str | None = None
-    content: Content
+    content: str
     tokenizer: str = Field(default="character_count")
     created_at: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
     timestamp: float = Field(default_factory=lambda: datetime.utcnow().timestamp())
