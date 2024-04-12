@@ -72,8 +72,8 @@ export const $ChatSettings = {
       Determinism is not guaranteed, and you should refer to the \`system_fingerprint\` response parameter to monitor changes in the backend.
       `,
       isNullable: true,
-      maximum: 9223372036854776000,
-      minimum: -9223372036854776000,
+      maximum: 9999,
+      minimum: -1,
     },
     stop: {
       type: "one-of",

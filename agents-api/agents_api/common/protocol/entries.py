@@ -1,8 +1,9 @@
 from datetime import datetime
+import json
 from typing import Literal
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, validator
 from agents_api.autogen.openapi_model import Role
 
 EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
@@ -24,9 +25,15 @@ class Entry(BaseModel):
     @property
     def token_count(self) -> int:
         if self.tokenizer == "character_count":
-            return int(len(self.content) // 3.5)
+            content_length = (
+                len(self.content)
+                if isinstance(self.content, str)
+                else len(json.dumps(self.content))
+            )
+            return int(content_length // 3.5)
 
         raise NotImplementedError(f"Unknown tokenizer: {self.tokenizer}")
 
     class Config:
+        use_enum_values = True
         use_enum_values = True  # <--

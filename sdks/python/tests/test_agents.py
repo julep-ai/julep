@@ -49,10 +49,7 @@ async def _(client=async_client):
         updated = await client.agents.update(agent_id=agent.id, **mock_agent_update)
         assert updated.name == mock_agent_update["name"]
         assert updated.about == mock_agent_update["about"]
-        assert (
-            updated.instructions[0]["content"]
-            == mock_agent_update["instructions"][0]["content"]
-        )
+        assert updated.instructions[0] == mock_agent_update["instructions"][0]
     finally:
         response = await client.agents.delete(agent.id)
         assert response is None
@@ -80,10 +77,7 @@ def _(client=client, agent=test_agent):
     assert hasattr(response, "updated_at")
     assert response.name == mock_agent_update["name"]
     assert response.about == mock_agent_update["about"]
-    assert (
-        response.instructions[0]["content"]
-        == mock_agent_update["instructions"][0]["content"]
-    )
+    assert response.instructions[0] == mock_agent_update["instructions"][0]
 
 
 @test("agents.delete")

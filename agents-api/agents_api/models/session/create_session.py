@@ -1,22 +1,30 @@
-from ...common.utils import json
 from uuid import UUID
+
+import pandas as pd
+from pycozo.client import Client as CozoClient
+
+from ...clients.cozo import client
+from ...common.utils import json
 
 
 def create_session_query(
     session_id: UUID,
     developer_id: UUID,
     agent_id: UUID,
-    user_id: UUID,
+    user_id: UUID | None,
     situation: str | None,
     metadata: dict = {},
-):
-    return f"""
+    client: CozoClient = client,
+) -> pd.DataFrame:
+    user_create_query = f'to_uuid("{user_id}")' if user_id else "null"
+
+    query = f"""
     {{
         # Create a new session lookup
         ?[session_id, agent_id, user_id] <- [[
             to_uuid("{session_id}"),
             to_uuid("{agent_id}"),
-            to_uuid("{user_id}"),
+            {user_create_query},
         ]]
 
         :insert session_lookup {{
@@ -41,3 +49,5 @@ def create_session_query(
         }}
         :returning
      }}"""
+
+    return client.run(query)

@@ -35,7 +35,6 @@ from .types.get_user_docs_request_order import GetUserDocsRequestOrder
 from .types.get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .types.get_user_docs_response import GetUserDocsResponse
 from .types.input_chat_ml_message import InputChatMlMessage
-from .types.instruction import Instruction
 from .types.job_status import JobStatus
 from .types.list_agents_request_order import ListAgentsRequestOrder
 from .types.list_agents_request_sort_by import ListAgentsRequestSortBy
@@ -142,7 +141,7 @@ class JulepApi:
     def create_session(
         self,
         *,
-        user_id: str,
+        user_id: typing.Optional[str] = OMIT,
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
@@ -151,7 +150,7 @@ class JulepApi:
         Create a session between an agent and a user
 
         Parameters:
-            - user_id: str. User ID of user to associate with this session
+            - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
 
             - agent_id: str. Agent ID of agent to associate with this session
 
@@ -165,14 +164,12 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_session(
-            user_id="user_id",
             agent_id="agent_id",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {
-            "user_id": user_id,
-            "agent_id": agent_id,
-        }
+        _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
+        if user_id is not OMIT:
+            _request["user_id"] = user_id
         if situation is not OMIT:
             _request["situation"] = situation
         if metadata is not OMIT:
@@ -263,7 +260,7 @@ class JulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
 
-            - metadata: typing.Optional[CreateUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
         ---
         from julep.client import JulepApi
 
@@ -354,7 +351,7 @@ class JulepApi:
         *,
         name: str,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: typing.Optional[str] = OMIT,
@@ -369,7 +366,7 @@ class JulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - tools: typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
 
@@ -379,7 +376,7 @@ class JulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 
-            - metadata: typing.Optional[CreateAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
         ---
         from julep.client import JulepApi
 
@@ -456,7 +453,7 @@ class JulepApi:
         self,
         session_id: str,
         *,
-        situation: typing.Optional[str] = OMIT,
+        situation: str,
         metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -465,7 +462,7 @@ class JulepApi:
         Parameters:
             - session_id: str.
 
-            - situation: typing.Optional[str]. Updated situation for this session
+            - situation: str. Updated situation for this session
 
             - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
         ---
@@ -476,11 +473,10 @@ class JulepApi:
         )
         client.update_session(
             session_id="session_id",
+            situation="situation",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {}
-        if situation is not OMIT:
-            _request["situation"] = situation
+        _request: typing.Dict[str, typing.Any] = {"situation": situation}
         if metadata is not OMIT:
             _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
@@ -827,7 +823,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # type: ignore
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -941,8 +937,8 @@ class JulepApi:
         self,
         user_id: str,
         *,
-        about: typing.Optional[str] = OMIT,
-        name: typing.Optional[str] = OMIT,
+        about: str,
+        name: str,
         metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -951,9 +947,9 @@ class JulepApi:
         Parameters:
             - user_id: str.
 
-            - about: typing.Optional[str]. About the user
+            - about: str. About the user
 
-            - name: typing.Optional[str]. Name of the user
+            - name: str. Name of the user
 
             - metadata: typing.Optional[UpdateUserRequestMetadata]. Optional metadata
         ---
@@ -964,13 +960,11 @@ class JulepApi:
         )
         client.update_user(
             user_id="user_id",
+            about="about",
+            name="name",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
-        if name is not OMIT:
-            _request["name"] = name
+        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
         if metadata is not OMIT:
             _request["metadata"] = metadata
         _response = self._client_wrapper.httpx_client.request(
@@ -1111,9 +1105,9 @@ class JulepApi:
         self,
         agent_id: str,
         *,
-        about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
-        name: typing.Optional[str] = OMIT,
+        about: str,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
+        name: str,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
@@ -1124,11 +1118,11 @@ class JulepApi:
         Parameters:
             - agent_id: str.
 
-            - about: typing.Optional[str]. About the agent
+            - about: str. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
-            - name: typing.Optional[str]. Name of the agent
+            - name: str. Name of the agent
 
             - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
@@ -1143,15 +1137,13 @@ class JulepApi:
         )
         client.update_agent(
             agent_id="agent_id",
+            about="about",
+            name="name",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
+        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
         if instructions is not OMIT:
             _request["instructions"] = instructions
-        if name is not OMIT:
-            _request["name"] = name
         if model is not OMIT:
             _request["model"] = model
         if default_settings is not OMIT:
@@ -1212,7 +1204,7 @@ class JulepApi:
         agent_id: str,
         *,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -1226,7 +1218,7 @@ class JulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - name: typing.Optional[str]. Name of the agent
 
@@ -1907,7 +1899,7 @@ class AsyncJulepApi:
     async def create_session(
         self,
         *,
-        user_id: str,
+        user_id: typing.Optional[str] = OMIT,
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
@@ -1916,7 +1908,7 @@ class AsyncJulepApi:
         Create a session between an agent and a user
 
         Parameters:
-            - user_id: str. User ID of user to associate with this session
+            - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
 
             - agent_id: str. Agent ID of agent to associate with this session
 
@@ -1930,14 +1922,12 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_session(
-            user_id="user_id",
             agent_id="agent_id",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {
-            "user_id": user_id,
-            "agent_id": agent_id,
-        }
+        _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
+        if user_id is not OMIT:
+            _request["user_id"] = user_id
         if situation is not OMIT:
             _request["situation"] = situation
         if metadata is not OMIT:
@@ -2028,7 +2018,7 @@ class AsyncJulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
 
-            - metadata: typing.Optional[CreateUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2119,7 +2109,7 @@ class AsyncJulepApi:
         *,
         name: str,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: typing.Optional[str] = OMIT,
@@ -2134,7 +2124,7 @@ class AsyncJulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - tools: typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
 
@@ -2144,7 +2134,7 @@ class AsyncJulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 
-            - metadata: typing.Optional[CreateAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2221,7 +2211,7 @@ class AsyncJulepApi:
         self,
         session_id: str,
         *,
-        situation: typing.Optional[str] = OMIT,
+        situation: str,
         metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -2230,7 +2220,7 @@ class AsyncJulepApi:
         Parameters:
             - session_id: str.
 
-            - situation: typing.Optional[str]. Updated situation for this session
+            - situation: str. Updated situation for this session
 
             - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
         ---
@@ -2241,11 +2231,10 @@ class AsyncJulepApi:
         )
         await client.update_session(
             session_id="session_id",
+            situation="situation",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {}
-        if situation is not OMIT:
-            _request["situation"] = situation
+        _request: typing.Dict[str, typing.Any] = {"situation": situation}
         if metadata is not OMIT:
             _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
@@ -2592,7 +2581,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # type: ignore
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -2706,8 +2695,8 @@ class AsyncJulepApi:
         self,
         user_id: str,
         *,
-        about: typing.Optional[str] = OMIT,
-        name: typing.Optional[str] = OMIT,
+        about: str,
+        name: str,
         metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -2716,9 +2705,9 @@ class AsyncJulepApi:
         Parameters:
             - user_id: str.
 
-            - about: typing.Optional[str]. About the user
+            - about: str. About the user
 
-            - name: typing.Optional[str]. Name of the user
+            - name: str. Name of the user
 
             - metadata: typing.Optional[UpdateUserRequestMetadata]. Optional metadata
         ---
@@ -2729,13 +2718,11 @@ class AsyncJulepApi:
         )
         await client.update_user(
             user_id="user_id",
+            about="about",
+            name="name",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
-        if name is not OMIT:
-            _request["name"] = name
+        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
         if metadata is not OMIT:
             _request["metadata"] = metadata
         _response = await self._client_wrapper.httpx_client.request(
@@ -2876,9 +2863,9 @@ class AsyncJulepApi:
         self,
         agent_id: str,
         *,
-        about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
-        name: typing.Optional[str] = OMIT,
+        about: str,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
+        name: str,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
@@ -2889,11 +2876,11 @@ class AsyncJulepApi:
         Parameters:
             - agent_id: str.
 
-            - about: typing.Optional[str]. About the agent
+            - about: str. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
-            - name: typing.Optional[str]. Name of the agent
+            - name: str. Name of the agent
 
             - model: typing.Optional[str]. Name of the model that the agent is supposed to use
 
@@ -2908,15 +2895,13 @@ class AsyncJulepApi:
         )
         await client.update_agent(
             agent_id="agent_id",
+            about="about",
+            name="name",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
+        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
         if instructions is not OMIT:
             _request["instructions"] = instructions
-        if name is not OMIT:
-            _request["name"] = name
         if model is not OMIT:
             _request["model"] = model
         if default_settings is not OMIT:
@@ -2977,7 +2962,7 @@ class AsyncJulepApi:
         agent_id: str,
         *,
         about: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+        instructions: typing.Optional[typing.List[str]] = OMIT,
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -2991,7 +2976,7 @@ class AsyncJulepApi:
 
             - about: typing.Optional[str]. About the agent
 
-            - instructions: typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+            - instructions: typing.Optional[typing.List[str]]. List of instructions for the agent
 
             - name: typing.Optional[str]. Name of the agent
 

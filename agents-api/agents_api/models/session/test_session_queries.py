@@ -26,7 +26,7 @@ def cozo_client(migrations_dir: str = "./migrations"):
     return client
 
 
-@test("create session")
+@test("model: create session")
 def _():
     client = cozo_client()
     session_id = uuid4()
@@ -34,34 +34,49 @@ def _():
     user_id = uuid4()
     developer_id = uuid4()
 
-    query = create_session_query(
+    create_session_query(
         session_id=session_id,
         user_id=user_id,
         developer_id=developer_id,
         agent_id=agent_id,
         situation="test session about",
+        client=client,
     )
 
-    client.run(query)
+
+@test("model: create session no user")
+def _():
+    client = cozo_client()
+    session_id = uuid4()
+    agent_id = uuid4()
+    developer_id = uuid4()
+
+    create_session_query(
+        session_id=session_id,
+        user_id=None,
+        developer_id=developer_id,
+        agent_id=agent_id,
+        situation="test session about",
+        client=client,
+    )
 
 
-@test("get session not exists")
+@test("model: get session not exists")
 def _():
     client = cozo_client()
     session_id = uuid4()
     developer_id = uuid4()
 
-    query = get_session_query(
+    result = get_session_query(
         session_id=session_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0
 
 
-@test("get session exists")
+@test("model: get session exists")
 def _():
     client = cozo_client()
     session_id = uuid4()
@@ -69,27 +84,25 @@ def _():
     user_id = uuid4()
     developer_id = uuid4()
 
-    query = create_session_query(
+    result = create_session_query(
         session_id=session_id,
         user_id=user_id,
         agent_id=agent_id,
         developer_id=developer_id,
         situation="test session about",
+        client=client,
     )
 
-    client.run(query)
-
-    query = get_session_query(
+    result = get_session_query(
         session_id=session_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 1
 
 
-@test("get session data")
+@test("model: get session data")
 def _():
     # Setup client for user and agent
     client = cozo_client()
@@ -100,48 +113,44 @@ def _():
     developer_id = uuid4()
 
     # Create a user
-    client.run(
-        create_user_query(
-            user_id=user_id,
-            developer_id=developer_id,
-            about="test user about",
-            name="test user name",
-        )
+    create_user_query(
+        user_id=user_id,
+        developer_id=developer_id,
+        about="test user about",
+        name="test user name",
+        client=client,
     )
 
     # Create an agent
-    client.run(
-        create_agent_query(
-            agent_id=agent_id,
-            developer_id=developer_id,
-            about="test agent about",
-            name="test agent name",
-        )
+    create_agent_query(
+        agent_id=agent_id,
+        developer_id=developer_id,
+        about="test agent about",
+        name="test agent name",
+        client=client,
     )
 
     # Create a session
 
-    query = create_session_query(
+    result = create_session_query(
         session_id=session_id,
         user_id=user_id,
         agent_id=agent_id,
         developer_id=developer_id,
         situation="test session about",
+        client=client,
     )
 
-    client.run(query)
-
-    query = session_data_query(
+    result = session_data_query(
         session_id=session_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["user_about"]) == 1
 
 
-@test("delete session")
+@test("model: delete session")
 def _():
     # Setup client for user and agent
     client = cozo_client()
@@ -152,51 +161,46 @@ def _():
     developer_id = uuid4()
 
     # Create a user
-    client.run(
-        create_user_query(
-            user_id=user_id,
-            developer_id=developer_id,
-            about="test user about",
-            name="test user name",
-        )
+    create_user_query(
+        user_id=user_id,
+        developer_id=developer_id,
+        about="test user about",
+        name="test user name",
+        client=client,
     )
 
     # Create an agent
-    client.run(
-        create_agent_query(
-            agent_id=agent_id,
-            developer_id=developer_id,
-            about="test agent about",
-            name="test agent name",
-        )
+    create_agent_query(
+        agent_id=agent_id,
+        developer_id=developer_id,
+        about="test agent about",
+        name="test agent name",
+        client=client,
     )
 
     # Create a session
-    query = create_session_query(
+    result = create_session_query(
         session_id=session_id,
         user_id=user_id,
         agent_id=agent_id,
         developer_id=developer_id,
         situation="test session about",
+        client=client,
     )
-
-    client.run(query)
 
     # Delete the session
-    query = delete_session_query(
+    result = delete_session_query(
         session_id=session_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    client.run(query)
 
     # Check that the session is deleted
-    query = get_session_query(
+    result = get_session_query(
         session_id=session_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0
 
@@ -212,36 +216,33 @@ def _():
     user_id = uuid4()
 
     # Create a user
-    client.run(
-        create_user_query(
-            user_id=user_id,
-            developer_id=developer_id,
-            about="test user about",
-            name="test user name",
-        )
+    create_user_query(
+        user_id=user_id,
+        developer_id=developer_id,
+        about="test user about",
+        name="test user name",
+        client=client,
     )
 
     # Create an agent
-    client.run(
-        create_agent_query(
-            developer_id=developer_id,
-            agent_id=agent_id,
-            about="test agent about",
-            name="test agent name",
-        )
+    create_agent_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        about="test agent about",
+        name="test agent name",
+        client=client,
     )
 
     # Create a session
 
-    query = create_session_query(
+    create_session_query(
         developer_id=developer_id,
         session_id=session_id,
         user_id=user_id,
         agent_id=agent_id,
         situation="test session about",
+        client=client,
     )
-
-    client.run(query)
 
     session_data = get_session_data(
         developer_id=developer_id,
@@ -258,10 +259,9 @@ def _():
     client = cozo_client()
     developer_id = uuid4()
 
-    query = list_sessions_query(
+    result = list_sessions_query(
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0

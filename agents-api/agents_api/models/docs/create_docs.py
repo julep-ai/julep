@@ -1,7 +1,11 @@
-from ...common.utils import json
 from typing import Callable, Literal
 from uuid import UUID
 
+import pandas as pd
+from pycozo.client import Client as CozoClient
+
+from ...clients.cozo import client
+from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
@@ -14,7 +18,8 @@ def create_docs_query(
     content: str,
     split_fn: Callable[[str], list[str]] = lambda x: x.split("\n\n"),
     metadata: dict = {},
-):
+    client: CozoClient = client,
+) -> pd.DataFrame:
     created_at: float = utcnow().timestamp()
 
     snippets = split_fn(content)
@@ -32,7 +37,7 @@ def create_docs_query(
 
         snippet_rows += new_snippet_rows
 
-    return f"""
+    query = f"""
     {{
         # Create the docs
         ?[{owner_type}_id, doc_id, created_at, metadata] <- [[
@@ -61,3 +66,5 @@ def create_docs_query(
             {json.dumps(metadata)},
         ]]
     }}"""
+
+    return client.run(query)

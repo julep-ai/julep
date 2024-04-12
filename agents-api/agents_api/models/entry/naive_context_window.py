@@ -1,10 +1,17 @@
 from uuid import UUID
 
+import pandas as pd
+from pycozo.client import Client as CozoClient
 
-def naive_context_window_query(session_id: UUID):
+from ...clients.cozo import client
+
+
+def naive_context_window_query(
+    session_id: UUID, client: CozoClient = client
+) -> pd.DataFrame:
     session_id = str(session_id)
 
-    return f"""
+    query = f"""
     {{
         # In this query, we are going to collect all session entries for a `session_id`.
         # - filter(source=="api_request" or source=="api_response")
@@ -30,3 +37,5 @@ def naive_context_window_query(session_id: UUID):
         :sort timestamp
     }}
     """
+
+    return client.run(query)

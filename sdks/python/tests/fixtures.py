@@ -17,9 +17,7 @@ mock_agent = {
     "name": "test agent",
     "about": "test agent about",
     "instructions": [
-        {
-            "content": "test agent instructions",
-        }
+        "test agent instructions",
     ],
     "default_settings": {"temperature": 0.5},
 }
@@ -28,9 +26,7 @@ mock_agent_update = {
     "name": "updated agent",
     "about": "updated agent about",
     "instructions": [
-        {
-            "content": "updated agent instructions",
-        }
+        "updated agent instructions",
     ],
 }
 
@@ -143,6 +139,15 @@ async def test_user_async(client=async_client) -> User:
 def test_session(client=client, user=test_user, agent=test_agent) -> Session:
     response = client.sessions.create(
         user_id=user.id,
+        agent_id=agent.id,
+        **mock_session,
+    )
+    return response
+
+
+@fixture
+def test_session_no_user(client=client, agent=test_agent) -> Session:
+    response = client.sessions.create(
         agent_id=agent.id,
         **mock_session,
     )

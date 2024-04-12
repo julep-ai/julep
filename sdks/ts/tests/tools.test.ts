@@ -32,7 +32,7 @@ describe("Tools API", () => {
     testAgent = await client.agents.create({
       name: "test agent",
       about: "test agent about",
-      instructions: [{ content: "test agent instructions" }],
+      instructions: ["test agent instructions"],
       default_settings: { temperature: 0.5 },
     });
   });

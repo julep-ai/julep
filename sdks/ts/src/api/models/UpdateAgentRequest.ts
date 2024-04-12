@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AgentDefaultSettings } from "./AgentDefaultSettings";
-import type { Instruction } from "./Instruction";
 /**
  * A valid request payload for updating an agent
  */
@@ -11,15 +10,15 @@ export type UpdateAgentRequest = {
   /**
    * About the agent
    */
-  about?: string;
+  about: string;
   /**
    * List of instructions for the agent
    */
-  instructions?: Array<Instruction>;
+  instructions?: Array<string>;
   /**
    * Name of the agent
    */
-  name?: string;
+  name: string;
   /**
    * Name of the model that the agent is supposed to use
    */

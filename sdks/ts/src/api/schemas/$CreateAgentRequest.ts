@@ -17,7 +17,8 @@ export const $CreateAgentRequest = {
     instructions: {
       type: "array",
       contains: {
-        type: "Instruction",
+        type: "string",
+        description: `Instruction`,
       },
     },
     tools: {
@@ -41,7 +42,7 @@ export const $CreateAgentRequest = {
       },
     },
     metadata: {
-      description: `Optional metadata`,
+      description: `(Optional) metadata`,
       properties: {},
     },
   },

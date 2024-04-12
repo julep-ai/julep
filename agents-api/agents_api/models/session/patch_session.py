@@ -17,7 +17,7 @@ _fields = [
 ]
 
 
-def update_session_query(
+def patch_session_query(
     session_id: UUID,
     developer_id: UUID,
     **update_data,
@@ -51,7 +51,7 @@ def update_session_query(
             }},
             updated_at = [floor(now()), true]
 
-        :put sessions {{
+        :update sessions {{
             {all_fields}, updated_at
         }}
 

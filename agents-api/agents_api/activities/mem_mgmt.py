@@ -1,9 +1,11 @@
 from textwrap import dedent
 from typing import Callable
-from temporalio import activity
-from agents_api.clients.openai import client as openai_client
+from uuid import UUID
 
-from .types import *
+from temporalio import activity
+
+from ..clients.openai import client as openai_client
+from .types import ChatML, MemoryManagementTaskArgs
 
 
 example_previous_memory = """
@@ -166,7 +168,7 @@ async def mem_mgmt(
 
     # assert len(entries) > 0, "no need to summarize on empty entries list"
 
-    response = await run_prompt(dialog, session_id, previous_memories)
+    await run_prompt(dialog, session_id, previous_memories)
 
     # new_entry = Entry(
     #     session_id=session_id,

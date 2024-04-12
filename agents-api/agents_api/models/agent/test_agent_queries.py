@@ -5,8 +5,6 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
-from ...autogen.openapi_model import Instruction
-
 from .create_agent import create_agent_query
 from .delete_agent import delete_agent_query
 from .get_agent import get_agent_query
@@ -25,160 +23,137 @@ def cozo_client(migrations_dir: str = "./migrations"):
     return client
 
 
-@test("create agent")
+@test("model: create agent")
 def _():
     client = cozo_client()
     agent_id = uuid4()
     developer_id = uuid4()
 
-    query = create_agent_query(
+    create_agent_query(
         agent_id=agent_id,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
+        client=client,
     )
 
-    client.run(query)
 
-
-@test("create agent with instructions")
+@test("model: create agent with instructions")
 def _():
     client = cozo_client()
     agent_id = uuid4()
     developer_id = uuid4()
 
-    query = create_agent_query(
+    create_agent_query(
         agent_id=agent_id,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
         instructions=[
-            Instruction(
-                content="test instruction",
-            )
+            "test instruction",
         ],
+        client=client,
     )
 
-    client.run(query)
 
-
-@test("get agent not exists")
+@test("model: get agent not exists")
 def _():
     client = cozo_client()
     agent_id = uuid4()
     developer_id = uuid4()
 
-    query = get_agent_query(
-        agent_id=agent_id,
-        developer_id=developer_id,
+    result = get_agent_query(
+        agent_id=agent_id, developer_id=developer_id, client=client
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0
 
 
-@test("get agent exists")
+@test("model: get agent exists")
 def _():
     client = cozo_client()
     agent_id = uuid4()
     developer_id = uuid4()
 
-    query = create_agent_query(
+    result = create_agent_query(
         agent_id=agent_id,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
         default_settings={"temperature": 1.5},
+        client=client,
     )
 
-    client.run(query)
-
-    query = get_agent_query(
-        agent_id=agent_id,
-        developer_id=developer_id,
+    result = get_agent_query(
+        agent_id=agent_id, developer_id=developer_id, client=client
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 1
     assert "temperature" in result["default_settings"][0]
     assert result["default_settings"][0]["temperature"] == 1.5
 
 
-@test("delete agent")
+@test("model: delete agent")
 def _():
     client = cozo_client()
     agent_id = uuid4()
     developer_id = uuid4()
 
     # Create the agent
-    query = create_agent_query(
+    result = create_agent_query(
         agent_id=agent_id,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
+        client=client,
     )
-
-    client.run(query)
 
     # Delete the agent
-    query = delete_agent_query(
-        agent_id=agent_id,
-        developer_id=developer_id,
+    result = delete_agent_query(
+        agent_id=agent_id, developer_id=developer_id, client=client
     )
-
-    client.run(query)
 
     # Check that the agent is deleted
-    query = get_agent_query(
-        agent_id=agent_id,
-        developer_id=developer_id,
+    result = get_agent_query(
+        agent_id=agent_id, developer_id=developer_id, client=client
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0
 
 
-@test("update agent")
+@test("model: update agent")
 def _():
     client = cozo_client()
     agent_id = uuid4()
     developer_id = uuid4()
 
-    create_query = create_agent_query(
+    create_agent_query(
         agent_id=agent_id,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
+        client=client,
     )
 
-    client.run(create_query)
-
-    update_query = update_agent_query(
+    result = update_agent_query(
         agent_id=agent_id,
         developer_id=developer_id,
         name="updated agent",
         about="updated agent about",
         default_settings={"temperature": 1.5},
+        client=client,
     )
 
-    result = client.run(update_query)
     data = result.iloc[0].to_dict()
 
     assert data["updated_at"] > data["created_at"]
 
 
-@test("list agents")
+@test("model: list agents")
 def _():
     client = cozo_client()
     developer_id = uuid4()
 
-    query = list_agents_query(
-        developer_id=developer_id,
-    )
-
-    result = client.run(query)
+    result = list_agents_query(developer_id=developer_id, client=client)
 
     assert len(result["id"]) == 0

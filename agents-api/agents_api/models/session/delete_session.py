@@ -1,11 +1,20 @@
 from uuid import UUID
 
+import pandas as pd
+from pycozo.client import Client as CozoClient
 
-def delete_session_query(developer_id: UUID, session_id: UUID):
+from ...clients.cozo import client
+
+
+def delete_session_query(
+    developer_id: UUID,
+    session_id: UUID,
+    client: CozoClient = client,
+) -> pd.DataFrame:
     session_id = str(session_id)
     developer_id = str(developer_id)
 
-    return f"""
+    query = f"""
     {{
         input[session_id] <- [[
             to_uuid("{session_id}"),
@@ -49,3 +58,5 @@ def delete_session_query(developer_id: UUID, session_id: UUID):
         }}
     }}
     """
+
+    return client.run(query)

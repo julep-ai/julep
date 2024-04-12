@@ -1,6 +1,11 @@
 from typing import Literal
 from uuid import UUID
 
+import pandas as pd
+from pycozo.client import Client as CozoClient
+
+from ...clients.cozo import client
+
 
 def search_docs_snippets_by_embedding_query(
     owner_type: Literal["user", "agent"],
@@ -8,11 +13,12 @@ def search_docs_snippets_by_embedding_query(
     query_embedding: list[float],
     k: int = 3,
     confidence: float = 0.8,
-):
+    client: CozoClient = client,
+) -> pd.DataFrame:
     owner_id = str(owner_id)
     radius: float = 1.0 - confidence
 
-    return f"""
+    query = f"""
     {{
         input[
             {owner_type}_id,
@@ -55,3 +61,5 @@ def search_docs_snippets_by_embedding_query(
 
         :sort distance
     }}"""
+
+    return client.run(query)

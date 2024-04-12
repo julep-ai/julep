@@ -28,14 +28,8 @@ def agent(client=client):
         name="Samantha",
         about="about Samantha",
         instructions=[
-            {
-                "content": "non-important content",
-                "important": False,
-            },
-            {
-                "content": "important content",
-                "important": True,
-            },
+            "non-important content",
+            "important content",
         ],
         functions=[
             {

@@ -1157,7 +1157,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction for the agent
           description: List of instructions for the agent
         created_at:
@@ -1286,7 +1286,7 @@ components:
         metadata:
           type: object
           properties: {}
-          description: Optional metadata
+          description: (Optional) metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1294,7 +1294,7 @@ components:
       properties:
         user_id:
           type: string
-          description: User ID of user to associate with this session
+          description: (Optional) User ID of user to associate with this session
           format: uuid
         agent_id:
           type: string
@@ -1309,7 +1309,6 @@ components:
           description: Optional metadata
       required:
         - agent_id
-        - user_id
       description: A valid request payload for creating a session
     CreateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1325,7 +1324,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         tools:
@@ -1349,7 +1348,7 @@ components:
         metadata:
           type: object
           properties: {}
-          description: Optional metadata
+          description: (Optional) metadata
       required:
         - name
       description: A valid request payload for creating an agent
@@ -1365,6 +1364,8 @@ components:
           properties: {}
           description: Optional metadata
       description: A valid request payload for updating a session
+      required:
+        - situation
     UpdateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -1375,7 +1376,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         name:
@@ -1392,6 +1393,9 @@ components:
           properties: {}
           description: Optional metadata
       description: A valid request payload for updating an agent
+      required:
+        - about
+        - name
     UpdateUserRequest:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -1407,6 +1411,9 @@ components:
           properties: {}
           description: Optional metadata
       description: A valid request payload for updating a user
+      required:
+        - about
+        - name
     Suggestion:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -1754,8 +1761,8 @@ components:
               description: JSON Schema to use if `type` is `"json_object"`
         seed:
           type: integer
-          minimum: -9223372036854775808
-          maximum: 9.223372036854776e+18
+          minimum: -1
+          maximum: 9999
           nullable: true
           description: |
             This feature is in Beta.
@@ -1949,18 +1956,6 @@ components:
           type: boolean
           description: Whether this interaction should form memories or not
           default: true
-    Instruction:
-      type: object
-      properties:
-        content:
-          type: string
-          description: Content of the instruction
-        important:
-          type: boolean
-          description: Whether this instruction should be marked as important (only up to 3 instructions per agent can be marked important)
-          default: false
-      required:
-        - content
     CreateToolRequest:
       type: object
       properties:
@@ -2115,7 +2110,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         name:

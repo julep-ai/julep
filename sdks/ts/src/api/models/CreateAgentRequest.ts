@@ -5,7 +5,6 @@
 import type { AgentDefaultSettings } from "./AgentDefaultSettings";
 import type { CreateDoc } from "./CreateDoc";
 import type { CreateToolRequest } from "./CreateToolRequest";
-import type { Instruction } from "./Instruction";
 /**
  * A valid request payload for creating an agent
  */
@@ -21,7 +20,7 @@ export type CreateAgentRequest = {
   /**
    * List of instructions for the agent
    */
-  instructions?: Array<Instruction>;
+  instructions?: Array<string>;
   /**
    * A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
    */
@@ -39,7 +38,7 @@ export type CreateAgentRequest = {
    */
   docs?: Array<CreateDoc>;
   /**
-   * Optional metadata
+   * (Optional) metadata
    */
   metadata?: any;
 };
