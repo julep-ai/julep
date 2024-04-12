@@ -6,6 +6,8 @@ enable: true
 entryPoints:
   web:
     address: ":$GATEWAY_PORT"
+
+  # Should only be available via localhost
   metrics:
     address: 127.0.0.1:8082
 
@@ -120,9 +122,6 @@ http:
             X-Developer-Id: sub
             X-Developer-Email: email
           OpaHttpStatusField: allow_status_code
-          # KeysWhitelist:
-          #   -
-
 
   services:
     service-model-serving:
@@ -142,11 +141,12 @@ experimental:
     jwt:
       moduleName: github.com/julep-ai/traefik-jwt-plugin
 
-metrics:
-  prometheus:
-    addEntryPointsLabels: true
-    addRoutersLabels: true
-    addServicesLabels: true
-    entryPoint: metrics
-    headerLabels:
-      apiuser: Authorization
+### TODO: Enable after testing
+# metrics:
+#   prometheus:
+#     addEntryPointsLabels: true
+#     addRoutersLabels: true
+#     addServicesLabels: true
+#     entryPoint: metrics
+#     headerLabels:
+#       apiuser: Authorization
