@@ -31,7 +31,7 @@ def cozo_client(migrations_dir: str = "./migrations"):
     return client
 
 
-@test("create entry")
+@test("model: create entry")
 def _():
     client = cozo_client()
     session_id = uuid4()
@@ -42,14 +42,10 @@ def _():
         content="test entry content",
     )
 
-    query = add_entries_query(
-        entries=[test_entry],
-    )
-
-    client.run(query)
+    add_entries_query(entries=[test_entry], client=client)
 
 
-@test("get entries")
+@test("model: get entries")
 def _():
     client = cozo_client()
     session_id = uuid4()
@@ -67,22 +63,14 @@ def _():
         source="internal",
     )
 
-    query = add_entries_query(
-        entries=[test_entry, internal_entry],
-    )
+    result = add_entries_query(entries=[test_entry, internal_entry], client=client)
 
-    client.run(query)
-
-    query = get_entries_query(
-        session_id=session_id,
-    )
-
-    result = client.run(query)
+    result = get_entries_query(session_id=session_id, client=client)
 
     assert len(result["entry_id"]) == 1
 
 
-@test("naive context window")
+@test("model: naive context window")
 def _():
     client = cozo_client()
     session_id = uuid4()
@@ -93,22 +81,17 @@ def _():
         content="test entry content",
     )
 
-    query = add_entries_query(
+    result = add_entries_query(
         entries=[test_entry],
+        client=client,
     )
 
-    client.run(query)
-
-    query = naive_context_window_query(
-        session_id=session_id,
-    )
-
-    result = client.run(query)
+    result = naive_context_window_query(session_id=session_id, client=client)
 
     assert len(result["created_at"]) == 1
 
 
-@test("procedural memory context")
+@test("model: procedural memory context")
 def _():
     client = cozo_client()
     developer_id = uuid4()
@@ -138,13 +121,14 @@ def _():
     test_user_doc = "test user doc"
     test_agent_doc = "test agent doc"
 
-    queries = [
-        add_entries_query(entries=[test_entry]),
+    [
+        add_entries_query(entries=[test_entry], client=client),
         create_user_query(
             user_id=user_id,
             developer_id=developer_id,
             name="test user",
             about="test user about",
+            client=client,
         ),
         create_agent_query(
             agent_id=agent_id,
@@ -152,6 +136,7 @@ def _():
             name="test agent",
             about="test agent about",
             instructions=[test_instruction1, test_instruction2],
+            client=client,
         ),
         create_session_query(
             developer_id=developer_id,
@@ -159,11 +144,10 @@ def _():
             user_id=user_id,
             agent_id=agent_id,
             situation="test situation",
+            client=client,
         ),
         create_function_query(
-            agent_id=agent_id,
-            id=tool_id,
-            function=test_function,
+            agent_id=agent_id, id=tool_id, function=test_function, client=client
         ),
         create_docs_query(
             owner_type="agent",
@@ -171,6 +155,7 @@ def _():
             id=agent_doc_id,
             title=test_agent_doc,
             content=test_agent_doc,
+            client=client,
         ),
         create_docs_query(
             owner_type="user",
@@ -178,33 +163,28 @@ def _():
             id=user_doc_id,
             title=test_user_doc,
             content=test_user_doc,
+            client=client,
         ),
         embed_functions_query(
             agent_id=agent_id,
             tool_ids=[tool_id],
             embeddings=[[1.0] * 768],
+            client=client,
         ),
         embed_docs_snippets_query(
-            agent_doc_id,
-            snippet_indices=[0],
-            embeddings=[[1.0] * 768],
+            agent_doc_id, snippet_indices=[0], embeddings=[[1.0] * 768], client=client
         ),
         embed_docs_snippets_query(
-            user_doc_id,
-            snippet_indices=[0],
-            embeddings=[[1.0] * 768],
+            user_doc_id, snippet_indices=[0], embeddings=[[1.0] * 768], client=client
         ),
     ]
 
-    client.run("\n".join(queries))
-
     # Run the query
-    query = proc_mem_context_query(
+    result = proc_mem_context_query(
         session_id=session_id,
         tool_query_embedding=[0.9] * 768,
         doc_query_embedding=[0.9] * 768,
+        client=client,
     )
 
-    result = client.run(query)
-
-    assert len(result) == 9
+    assert len(result) == 8

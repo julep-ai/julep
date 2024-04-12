@@ -2,6 +2,7 @@ from typing import Literal
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
@@ -9,6 +10,7 @@ from ...clients.cozo import client
 def ensure_owner_exists_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     owner_id = str(owner_id)
 
@@ -29,6 +31,7 @@ def ensure_owner_exists_query(
 def list_docs_snippets_by_owner_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
+    client: CozoClient = client,
 ):
     owner_id = str(owner_id)
 

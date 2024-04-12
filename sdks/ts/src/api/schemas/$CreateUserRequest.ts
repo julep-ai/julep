@@ -20,7 +20,7 @@ export const $CreateUserRequest = {
       },
     },
     metadata: {
-      description: `Optional metadata`,
+      description: `(Optional) metadata`,
       properties: {},
     },
   },

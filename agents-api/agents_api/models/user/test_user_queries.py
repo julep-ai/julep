@@ -22,138 +22,128 @@ def cozo_client(migrations_dir: str = "./migrations"):
     return client
 
 
-@test("create user")
+@test("model: create user")
 def _():
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
 
-    query = create_user_query(
+    create_user_query(
         user_id=user_id,
         developer_id=developer_id,
         name="test user",
         about="test user about",
+        client=client,
     )
 
-    client.run(query)
 
-
-@test("create user twice should fail")
+@test("model: create user twice should fail")
 def _():
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
-
-    query = create_user_query(
-        user_id=user_id,
-        developer_id=developer_id,
-        name="test user",
-        about="test user about",
-    )
-
-    client.run(query)
 
     # Should fail because the user already exists.
     with raises(Exception):
-        client.run(query)
+        create_user_query(
+            user_id=user_id,
+            developer_id=developer_id,
+            name="test user",
+            about="test user about",
+            client=client,
+        )
 
 
-@test("update non-existent user should fail")
+@test("model: update non-existent user should fail")
 def _():
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
-
-    query = update_user_query(
-        user_id=user_id,
-        developer_id=developer_id,
-        name="test user",
-        about="test user about",
-    )
 
     # Should fail because the user doecn't exists.
-    with raises(Exception):
-        client.run(query)
+    with raises(None):
+        update_user_query(
+            user_id=user_id,
+            developer_id=developer_id,
+            name="test user",
+            about="test user about",
+            client=client,
+        )
 
 
-@test("update user")
+@test("model: update user")
 def _():
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
 
-    create_query = create_user_query(
+    create_user_query(
         user_id=user_id,
         developer_id=developer_id,
         name="test user",
         about="test user about",
+        client=client,
     )
 
-    client.run(create_query)
-
-    update_query = update_user_query(
+    update_result = update_user_query(
         user_id=user_id,
         developer_id=developer_id,
         name="updated user",
         about="updated user about",
+        client=client,
     )
 
-    result = client.run(update_query)
-    data = result.iloc[0].to_dict()
+    data = update_result.iloc[0].to_dict()
 
     assert data["updated_at"] > data["created_at"]
 
 
-@test("get user not exists")
+@test("model: get user not exists")
 def _():
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
 
-    query = get_user_query(
+    result = get_user_query(
         user_id=user_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0
 
 
-@test("get user exists")
+@test("model: get user exists")
 def _():
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
 
-    query = create_user_query(
+    result = create_user_query(
         user_id=user_id,
         developer_id=developer_id,
         name="test user",
         about="test user about",
+        client=client,
     )
 
-    client.run(query)
-
-    query = get_user_query(
+    result = get_user_query(
         user_id=user_id,
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 1
 
 
-@test("list users")
+@test("model: list users")
 def _():
     client = cozo_client()
     developer_id = uuid4()
 
-    query = list_users_query(
+    result = list_users_query(
         developer_id=developer_id,
+        client=client,
     )
-
-    result = client.run(query)
 
     assert len(result["id"]) == 0

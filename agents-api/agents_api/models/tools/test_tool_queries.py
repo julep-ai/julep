@@ -8,9 +8,9 @@ from ward import test
 from ...autogen.openapi_model import FunctionDef
 from .create_tools import create_function_query, create_multiple_functions_query
 from .delete_tools import delete_function_by_id_query
+from .embed_tools import embed_functions_query
 from .get_tools import get_function_by_id_query
 from .list_tools import list_functions_by_agent_query
-from .embed_tools import embed_functions_query
 from .search_tools import search_functions_by_embedding_query
 
 
@@ -25,7 +25,7 @@ def cozo_client(migrations_dir: str = "./migrations"):
     return client
 
 
-@test("create function")
+@test("model: create function")
 def _():
     client = cozo_client()
 
@@ -37,13 +37,12 @@ def _():
         parameters={"type": "object", "properties": {}},
     )
 
-    query = create_function_query(agent_id, tool_id, function)
+    result = create_function_query(agent_id, tool_id, function, client=client)
 
-    result = client.run(query)
     assert result["created_at"][0]
 
 
-@test("create multiple functions")
+@test("model: create multiple functions")
 def _():
     client = cozo_client()
 
@@ -55,14 +54,15 @@ def _():
     )
     num_functions = 10
 
-    query = create_multiple_functions_query(agent_id, [function] * num_functions)
+    result = create_multiple_functions_query(
+        agent_id, [function] * num_functions, client=client
+    )
 
-    result = client.run(query)
     assert result["created_at"][0]
     assert len(result["tool_id"]) == num_functions
 
 
-@test("delete function")
+@test("model: delete function")
 def _():
     client = cozo_client()
 
@@ -75,14 +75,11 @@ def _():
         parameters={"type": "object", "properties": {}},
     )
 
-    create_query = create_function_query(agent_id, tool_id, function)
-
-    client.run(create_query)
+    create_function_query(agent_id, tool_id, function, client=client)
 
     # Delete function
-    query = delete_function_by_id_query(agent_id, tool_id)
+    result = delete_function_by_id_query(agent_id, tool_id, client=client)
 
-    result = client.run(query)
     delete_info = next(
         (row for row in result.to_dict("records") if row["_kind"] == "deleted"), None
     )
@@ -90,7 +87,7 @@ def _():
     assert delete_info is not None, "Delete operation did not find the row"
 
 
-@test("get function")
+@test("model: get function")
 def _():
     client = cozo_client()
 
@@ -103,18 +100,15 @@ def _():
         parameters={"type": "object", "properties": {}},
     )
 
-    create_query = create_function_query(agent_id, tool_id, function)
-
-    client.run(create_query)
+    create_function_query(agent_id, tool_id, function, client=client)
 
     # Get function
-    query = get_function_by_id_query(agent_id, tool_id)
+    result = get_function_by_id_query(agent_id, tool_id, client=client)
 
-    result = client.run(query)
     assert len(result["tool_id"]) == 1, "Get operation did not find the row"
 
 
-@test("list functions")
+@test("model: list functions")
 def _():
     client = cozo_client()
 
@@ -127,17 +121,15 @@ def _():
     num_functions = 10
 
     # Create functions
-    create_query = create_multiple_functions_query(agent_id, [function] * num_functions)
-    client.run(create_query)
+    create_multiple_functions_query(agent_id, [function] * num_functions, client=client)
 
     # List functions
-    query = list_functions_by_agent_query(agent_id)
-    result = client.run(query)
+    result = list_functions_by_agent_query(agent_id, client=client)
 
     assert len(result["tool_id"]) == num_functions
 
 
-@test("embed functions")
+@test("model: embed functions")
 def _():
     client = cozo_client()
 
@@ -150,16 +142,14 @@ def _():
     )
 
     # Create function
-    create_query = create_function_query(agent_id, tool_id, function)
-    client.run(create_query)
+    create_function_query(agent_id, tool_id, function, client=client)
 
     # embed functions
     embedding = [1.0] * 768
-    query = embed_functions_query(agent_id, [tool_id], [embedding])
-    client.run(query)
+    embed_functions_query(agent_id, [tool_id], [embedding], client=client)
 
 
-@test("search functions")
+@test("model: search functions")
 def _():
     client = cozo_client()
 
@@ -172,21 +162,19 @@ def _():
     )
 
     # Create function
-    create_query = create_function_query(agent_id, tool_id, function)
-    client.run(create_query)
+    create_function_query(agent_id, tool_id, function, client=client)
 
     # embed functions
     embedding = [1.0] * 768
-    embed_query = embed_functions_query(agent_id, [tool_id], [embedding])
-    client.run(embed_query)
+    embed_functions_query(agent_id, [tool_id], [embedding], client=client)
 
     ### Search
     query_embedding = [0.99] * 768
 
-    query = search_functions_by_embedding_query(
+    result = search_functions_by_embedding_query(
         agent_id,
         query_embedding,
+        client=client,
     )
 
-    result = client.run(query)
     assert len(result) == 1, "Only 1 should have been found"

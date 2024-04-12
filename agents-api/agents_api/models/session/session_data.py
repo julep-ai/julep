@@ -1,13 +1,20 @@
 from uuid import UUID
 
+import pandas as pd
+from pycozo.client import Client as CozoClient
+
 from ...clients.cozo import client
 from ...common.protocol.sessions import SessionData
 
 
-def session_data_query(developer_id: UUID, session_id: UUID):
+def session_data_query(
+    developer_id: UUID,
+    session_id: UUID,
+    client: CozoClient = client,
+) -> pd.DataFrame:
     session_id = str(session_id)
 
-    return f"""
+    query = f"""
     input[developer_id, session_id] <- [[
         to_uuid("{developer_id}"),
         to_uuid("{session_id}"),
@@ -82,12 +89,14 @@ def session_data_query(developer_id: UUID, session_id: UUID):
         }}
     """
 
+    result = client.run(query)
+    return result
+
 
 def get_session_data(
-    developer_id: UUID, session_id: UUID, client=client
+    developer_id: UUID, session_id: UUID, client: CozoClient = client
 ) -> SessionData | None:
-    query = session_data_query(developer_id, session_id)
-    result = client.run(query)
+    result = session_data_query(developer_id, session_id, client=client)
     if result.empty:
         return None
 

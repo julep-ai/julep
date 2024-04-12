@@ -3,6 +3,7 @@ from ...common.utils import json
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 from ...common.utils import json
@@ -19,6 +20,7 @@ def create_agent_query(
     instructions: list[str] = [],
     metadata: dict = {},
     default_settings: dict = {},
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     if model not in ALL_AVAILABLE_MODELS.keys():
         raise AgentModelNotValid(model)

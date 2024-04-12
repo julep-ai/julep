@@ -1,6 +1,7 @@
 from uuid import UUID
 
 import pandas as pd
+from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
@@ -13,6 +14,7 @@ def proc_mem_context_query(
     docs_confidence: float = 0.7,
     k_tools: int = 3,
     k_docs: int = 2,
+    client: CozoClient = client,
 ) -> pd.DataFrame:
     VECTOR_SIZE = 768
     session_id = str(session_id)

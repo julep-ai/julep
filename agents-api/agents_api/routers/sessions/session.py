@@ -61,9 +61,11 @@ class BaseSession:
         # Unpack tool calls if present
         if not message.content and message.tool_calls:
             role = "function_call"
-            content = message.tool_calls[0].function.model_dump()
-            content = json.dumps(content)
+            function_call = message.tool_calls[0].function.model_dump()
+            content = json.dumps(function_call)
             # FIXME: what?? why is this happening?? could be a bug in the model api
+            # this is only a hack for samantha-1-turbo
+            # content = content[content.index("{", 1) :]
         elif not message.content:
             raise ValueError("No content in response")
 
