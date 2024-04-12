@@ -4,7 +4,6 @@ import pandas as pd
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
@@ -15,6 +14,8 @@ def update_agent_query(
     client: CozoClient = client,
     **update_data,
 ) -> pd.DataFrame:
+    agent_id = str(agent_id)
+    developer_id = str(developer_id)
     update_data["instructions"] = update_data.get("instructions", [])
 
     # Agent update query
@@ -29,10 +30,10 @@ def update_agent_query(
     agent_update_query = f"""
     {{
         # update the agent
-        input[{agent_update_cols}] <- {json.dumps(agent_update_vals)}
+        input[{agent_update_cols}] <- $agent_update_vals
         original[created_at] := *agents{{
-            developer_id: to_uuid("{developer_id}"),
-            agent_id: to_uuid("{agent_id}"),
+            developer_id: to_uuid($developer_id),
+            agent_id: to_uuid($agent_id),
             created_at,
         }},
 
@@ -61,7 +62,7 @@ def update_agent_query(
     settings_update_query = f"""
     {{
         # update the agent settings
-        ?[{settings_cols}] <- {json.dumps(settings_vals)}
+        ?[{settings_cols}] <- $settings_vals
 
         :put agent_default_settings {{
             {settings_cols}
@@ -77,4 +78,7 @@ def update_agent_query(
 
     combined_query = "\n".join(queries)
 
-    return client.run(combined_query)
+    return client.run(
+        combined_query,
+        {"agent_update_vals": agent_update_vals, "settings_vals": settings_vals, "agent_id": agent_id, "developer_id": developer_id},
+    )

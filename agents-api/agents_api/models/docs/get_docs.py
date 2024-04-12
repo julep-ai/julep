@@ -16,7 +16,7 @@ def get_docs_snippets_by_id_query(
 
     query = f"""
     {{
-        input[doc_id] <- [[to_uuid("{doc_id}")]]
+        input[doc_id] <- [[to_uuid($doc_id)]]
 
         ?[
             {owner_type}_id,
@@ -43,4 +43,4 @@ def get_docs_snippets_by_id_query(
             }}
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"doc_id": doc_id})

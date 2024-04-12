@@ -9,10 +9,10 @@ from ...clients.cozo import client
 def get_entries_query(
     session_id: UUID, limit: int = 100, offset: int = 0, client: CozoClient = client
 ) -> pd.DataFrame:
-    query = f"""
-    {{
+    query = """
+    {
         input[session_id] <- [[
-            to_uuid("{session_id}"),
+            to_uuid($session_id),
         ]]
 
         ?[
@@ -26,7 +26,7 @@ def get_entries_query(
             created_at,
             timestamp,
         ] := input[session_id],
-            *entries{{
+            *entries{
                 session_id,
                 entry_id,
                 role,
@@ -36,12 +36,14 @@ def get_entries_query(
                 token_count,
                 created_at,
                 timestamp,
-            }},
+            },
             source == "api_request" || source == "api_response",
 
         :sort timestamp
-        :limit {limit}
-        :offset {offset}
-    }}"""
+        :limit $limit
+        :offset $offset
+    }"""
 
-    return client.run(query)
+    return client.run(
+        query, {"session_id": str(session_id), "limit": limit, "offset": offset}
+    )

@@ -19,7 +19,7 @@ def delete_docs_by_id_query(
     query = f"""
     {{
         # Delete snippets
-        input[doc_id] <- [[to_uuid("{doc_id}")]]
+        input[doc_id] <- [[to_uuid($doc_id)]]
         ?[doc_id, snippet_idx] :=
             input[doc_id],
             *information_snippets {{
@@ -34,8 +34,8 @@ def delete_docs_by_id_query(
     }} {{
         # Delete the docs
         ?[doc_id, {owner_type}_id] <- [[
-            to_uuid("{doc_id}"),
-            to_uuid("{owner_id}"),
+            to_uuid($doc_id),
+            to_uuid($owner_id),
         ]]
 
         :delete {owner_type}_docs {{
@@ -45,4 +45,4 @@ def delete_docs_by_id_query(
         :returning
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"doc_id": doc_id, "owner_id": owner_id})

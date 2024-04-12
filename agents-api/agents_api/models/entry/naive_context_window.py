@@ -11,18 +11,18 @@ def naive_context_window_query(
 ) -> pd.DataFrame:
     session_id = str(session_id)
 
-    query = f"""
-    {{
+    query = """
+    {
         # In this query, we are going to collect all session entries for a `session_id`.
         # - filter(source=="api_request" or source=="api_response")
 
         input[session_id] <- [[
-            to_uuid("{session_id}"),
+            to_uuid($session_id),
         ]]
 
         ?[role, name, content, token_count, created_at, timestamp] :=
             input[session_id],
-            *entries{{
+            *entries{
                 session_id,
                 source,
                 role,
@@ -31,11 +31,11 @@ def naive_context_window_query(
                 token_count,
                 created_at,
                 timestamp,
-            }},
+            },
             source == "api_request" || source == "api_response",
 
         :sort timestamp
-    }}
+    }
     """
 
-    return client.run(query)
+    return client.run(query, {"session_id": session_id})

@@ -4,7 +4,6 @@ import pandas as pd
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
@@ -24,29 +23,25 @@ def create_agent_query(
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
             **default_settings,
-            "agent_id": agent_id,
+            "agent_id": str(agent_id),
         }
     )
 
     # Create default agent settings
     default_settings_query = f"""
-        ?[{settings_cols}] <- {json.dumps(settings_vals)}
+        ?[{settings_cols}] <- $settings_vals
 
         :insert agent_default_settings {{
             {settings_cols}
         }}
     """
-
-    query_cols = json.dumps(
-        [agent_id, developer_id, model, name, about, metadata, instructions]
-    )
     # create the agent
-    agent_query = f"""
+    agent_query = """
         ?[agent_id, developer_id, model, name, about, metadata, instructions] <- [
-            {query_cols}
+            [$agent_id, $developer_id, $model, $name, $about, $metadata, $instructions]
         ]
 
-        :insert agents {{
+        :insert agents {
             developer_id,
             agent_id =>
             model,
@@ -54,7 +49,7 @@ def create_agent_query(
             about,
             metadata,
             instructions,
-        }}
+        }
         :returning
     """
 
@@ -66,4 +61,16 @@ def create_agent_query(
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "settings_vals": settings_vals,
+            "agent_id": str(agent_id),
+            "developer_id": str(developer_id),
+            "model": model,
+            "name": name,
+            "about": about,
+            "metadata": metadata,
+            "instructions": instructions,
+        },
+    )

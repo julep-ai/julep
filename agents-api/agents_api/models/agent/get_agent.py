@@ -9,9 +9,9 @@ from ...clients.cozo import client
 def get_agent_query(
     developer_id: UUID, agent_id: UUID, client: CozoClient = client
 ) -> pd.DataFrame:
-    query = f"""
-    {{
-        input[agent_id, developer_id] <- [[to_uuid("{agent_id}"), to_uuid("{developer_id}")]]
+    query = """
+    {
+        input[agent_id, developer_id] <- [[to_uuid($agent_id), to_uuid($developer_id)]]
 
         ?[
             id,
@@ -23,7 +23,7 @@ def get_agent_query(
             metadata,
             default_settings,
         ] := input[id, developer_id],
-            *agents {{
+            *agents {
                 developer_id,
                 agent_id: id,
                 model,
@@ -32,8 +32,8 @@ def get_agent_query(
                 created_at,
                 updated_at,
                 metadata,
-            }},
-            *agent_default_settings {{
+            },
+            *agent_default_settings {
                 agent_id: id,
                 frequency_penalty,
                 presence_penalty,
@@ -43,8 +43,8 @@ def get_agent_query(
                 temperature,
                 min_p,
                 preset,
-            }},
-            default_settings = {{
+            },
+            default_settings = {
                 "frequency_penalty": frequency_penalty,
                 "presence_penalty": presence_penalty,
                 "length_penalty": length_penalty,
@@ -53,8 +53,8 @@ def get_agent_query(
                 "temperature": temperature,
                 "min_p": min_p,
                 "preset": preset,
-            }}
-    }}
+            }
+    }
     """
 
-    return client.run(query)
+    return client.run(query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})

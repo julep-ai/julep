@@ -15,7 +15,7 @@ def ensure_owner_exists_query(
     owner_id = str(owner_id)
 
     query = f"""{{
-        input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
+        input[{owner_type}_id] <- [[to_uuid($owner_id)]]
 
         ?[
             {owner_type}_id,
@@ -25,7 +25,7 @@ def ensure_owner_exists_query(
             }}
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"owner_id": owner_id})
 
 
 def list_docs_snippets_by_owner_query(
@@ -37,7 +37,7 @@ def list_docs_snippets_by_owner_query(
 
     query = f"""
     {{
-        input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
+        input[{owner_type}_id] <- [[to_uuid($owner_id)]]
 
         ?[
             {owner_type}_id,
@@ -62,4 +62,4 @@ def list_docs_snippets_by_owner_query(
             }}
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"owner_id": owner_id})
