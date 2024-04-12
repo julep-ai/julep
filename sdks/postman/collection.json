@@ -144,7 +144,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"user_id\": \"user_id\",\n    \"agent_id\": \"agent_id\"\n}",
+          "raw": "{\n    \"agent_id\": \"agent_id\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -187,7 +187,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"user_id\": \"user_id\",\n    \"agent_id\": \"agent_id\"\n}",
+              "raw": "{\n    \"agent_id\": \"agent_id\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
