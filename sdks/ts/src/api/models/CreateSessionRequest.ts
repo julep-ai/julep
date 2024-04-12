@@ -7,9 +7,9 @@
  */
 export type CreateSessionRequest = {
   /**
-   * User ID of user to associate with this session
+   * (Optional) User ID of user to associate with this session
    */
-  user_id: string;
+  user_id?: string;
   /**
    * Agent ID of agent to associate with this session
    */

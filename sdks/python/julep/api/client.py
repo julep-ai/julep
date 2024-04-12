@@ -141,7 +141,7 @@ class JulepApi:
     def create_session(
         self,
         *,
-        user_id: str,
+        user_id: typing.Optional[str] = OMIT,
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
@@ -150,7 +150,7 @@ class JulepApi:
         Create a session between an agent and a user
 
         Parameters:
-            - user_id: str. User ID of user to associate with this session
+            - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
 
             - agent_id: str. Agent ID of agent to associate with this session
 
@@ -164,14 +164,12 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_session(
-            user_id="user_id",
             agent_id="agent_id",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {
-            "user_id": user_id,
-            "agent_id": agent_id,
-        }
+        _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
+        if user_id is not OMIT:
+            _request["user_id"] = user_id
         if situation is not OMIT:
             _request["situation"] = situation
         if metadata is not OMIT:
@@ -262,7 +260,7 @@ class JulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
 
-            - metadata: typing.Optional[CreateUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
         ---
         from julep.client import JulepApi
 
@@ -378,7 +376,7 @@ class JulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 
-            - metadata: typing.Optional[CreateAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
         ---
         from julep.client import JulepApi
 
@@ -825,8 +823,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            # type: ignore
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # type: ignore
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -1902,7 +1899,7 @@ class AsyncJulepApi:
     async def create_session(
         self,
         *,
-        user_id: str,
+        user_id: typing.Optional[str] = OMIT,
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
@@ -1911,7 +1908,7 @@ class AsyncJulepApi:
         Create a session between an agent and a user
 
         Parameters:
-            - user_id: str. User ID of user to associate with this session
+            - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
 
             - agent_id: str. Agent ID of agent to associate with this session
 
@@ -1925,14 +1922,12 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_session(
-            user_id="user_id",
             agent_id="agent_id",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {
-            "user_id": user_id,
-            "agent_id": agent_id,
-        }
+        _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
+        if user_id is not OMIT:
+            _request["user_id"] = user_id
         if situation is not OMIT:
             _request["situation"] = situation
         if metadata is not OMIT:
@@ -2023,7 +2018,7 @@ class AsyncJulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
 
-            - metadata: typing.Optional[CreateUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2139,7 +2134,7 @@ class AsyncJulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 
-            - metadata: typing.Optional[CreateAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2586,8 +2581,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            # type: ignore
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # type: ignore
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
