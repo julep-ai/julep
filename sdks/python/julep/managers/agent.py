@@ -39,8 +39,8 @@ ModelName = Literal[
 
 class AgentCreateArgs(TypedDict):
     name: str
-    about: str
-    instructions: List[str]
+    about: Optional[str]
+    instructions: Optional[List[str]]
     tools: List[ToolDict] = []
     functions: List[FunctionDefDict] = []
     default_settings: DefaultSettingsDict = {}
@@ -54,6 +54,7 @@ class AgentUpdateArgs(TypedDict):
     name: Optional[str] = None
     model: Optional[str] = None
     default_settings: Optional[DefaultSettingsDict] = None
+    overwrite: bool = False
 
 
 class BaseAgentsManager(BaseManager):
@@ -134,8 +135,8 @@ class BaseAgentsManager(BaseManager):
     def _create(
         self,
         name: str,
-        about: str,
-        instructions: List[str],
+        about: str = "",
+        instructions: List[str] = [],
         tools: List[ToolDict] = [],
         functions: List[FunctionDefDict] = [],
         default_settings: DefaultSettingsDict = {},
@@ -248,6 +249,7 @@ class BaseAgentsManager(BaseManager):
         name: Optional[str] = None,
         model: Optional[str] = None,
         default_settings: Optional[DefaultSettingsDict] = None,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update the agent's properties.
@@ -259,6 +261,7 @@ class BaseAgentsManager(BaseManager):
                 name (Optional[str], optional): The name of the agent. Defaults to None.
                 model (Optional[str], optional): The model identifier for the agent. Defaults to None.
                 default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
+                overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
             Returns:
                 Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: An object representing the response for the resource updated, which can also be an awaitable in asynchronous contexts.
@@ -276,7 +279,11 @@ class BaseAgentsManager(BaseManager):
                 **default_settings
             )
 
-        return self.api_client.update_agent(
+        updateFn = (
+            self.api_client.update_agent if overwrite else self.api_client.patch_agent
+        )
+
+        return updateFn(
             agent_id=agent_id,
             about=about,
             instructions=instructions,
@@ -456,6 +463,7 @@ class AgentsManager(BaseAgentsManager):
             name (Optional[str], optional): The new name to assign to the agent. Defaults to None.
             model (Optional[str], optional): The model identifier to associate with the agent. Defaults to None.
             default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
+            overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
         Returns:
             ResourceUpdatedResponse: An object representing the response to the update request.
@@ -463,6 +471,7 @@ class AgentsManager(BaseAgentsManager):
         Note:
             This method is decorated with `beartype`, which means it enforces type annotations at runtime.
         """
+
         result = self._update(agent_id=agent_id, **kwargs)
         return result
 
@@ -647,6 +656,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             name (Optional[str]): The name of the agent. Default is None.
             model (Optional[str]): The model identifier or name. Default is None.
             default_settings (Optional[DefaultSettingsDict]): Dictionary with default settings for the agent. Default is None.
+            overwrite (bool): Whether to overwrite the existing agent settings. Default is False.
 
         Returns:
             ResourceUpdatedResponse: An object containing the details of the update response.

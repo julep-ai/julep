@@ -43,6 +43,7 @@ class SessionCreateArgs(TypedDict):
 class SessionUpdateArgs(TypedDict):
     session_id: Union[str, UUID]
     situation: str
+    overwrite: bool = False
 
 
 class BaseSessionsManager(BaseManager):
@@ -240,6 +241,7 @@ class BaseSessionsManager(BaseManager):
         self,
         session_id: Union[str, UUID],
         situation: str,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update a session with a given situation.
@@ -247,7 +249,7 @@ class BaseSessionsManager(BaseManager):
         Args:
             session_id (Union[str, UUID]): The session identifier, which can be a string-formatted UUID or an actual UUID object.
             situation (str): A string describing the current situation.
-
+            overwrite (bool, optional): Whether to overwrite the existing situation. Defaults to False.
         Returns:
             Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The response from the update operation, which can be either synchronous or asynchronous.
 
@@ -256,7 +258,13 @@ class BaseSessionsManager(BaseManager):
         """
         assert is_valid_uuid4(session_id), "id must be a valid UUID v4"
 
-        return self.api_client.update_session(
+        updateFn = (
+            self.api_client.update_session
+            if overwrite
+            else self.api_client.patch_session
+        )
+
+        return updateFn(
             session_id=session_id,
             situation=situation,
         )
@@ -558,6 +566,7 @@ class SessionsManager(BaseSessionsManager):
             session_id (Union[str, UUID]): The session identifier, which can be a UUID or a
                 string that uniquely identifies the session.
             situation (str): A string that represents the new situation for the resource update.
+            overwrite (bool, optional): A flag to indicate whether to overwrite the existing
 
         Returns:
             Session: The updated Session object.

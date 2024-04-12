@@ -107,6 +107,7 @@ class BaseToolsManager(BaseManager):
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
         function: FunctionDefDict,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update the tool definition for a given agent.
@@ -115,6 +116,7 @@ class BaseToolsManager(BaseManager):
                 agent_id (Union[str, UUID]): The unique identifier for the agent, either in string or UUID format.
                 tool_id (Union[str, UUID]): The unique identifier for the tool, either in string or UUID format.
                 function (FunctionDefDict): A dictionary containing the function definition that conforms with the required API schema.
+                overwrite (bool): A flag to indicate whether to overwrite the existing function definition. Defaults to False.
 
             Returns:
                 Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The updated resource response sync or async.
@@ -128,7 +130,13 @@ class BaseToolsManager(BaseManager):
 
         function: FunctionDef = FunctionDef(**function)
 
-        return self.api_client.update_agent_tool(
+        updateFn = (
+            self.api_client.update_agent_tool
+            if overwrite
+            else self.api_client.patch_agent_tool
+        )
+
+        return updateFn(
             agent_id=agent_id,
             tool_id=tool_id,
             function=function,
@@ -314,6 +322,7 @@ class ToolsManager(BaseToolsManager):
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
         function: FunctionDefDict,
+        overwrite: bool = False,
     ) -> ResourceUpdatedResponse:
         """
         Update a specific tool definition for an agent.
@@ -322,6 +331,7 @@ class ToolsManager(BaseToolsManager):
             agent_id (Union[str, UUID]): The unique identifier of the agent.
             tool_id (Union[str, UUID]): The unique identifier of the tool to be updated.
             function (FunctionDefDict): A dictionary containing the new definition of the tool.
+            overwrite (bool): A flag indicating whether to overwrite the existing definition.
 
         Returns:
             ResourceUpdatedResponse: An object representing the update operation response.
@@ -338,6 +348,7 @@ class ToolsManager(BaseToolsManager):
             agent_id=agent_id,
             tool_id=tool_id,
             function=function,
+            overwrite=overwrite,
         )
 
 
