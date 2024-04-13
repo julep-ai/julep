@@ -13,6 +13,18 @@ def patch_agent_query(
     default_settings: dict = {},
     **update_data,
 ) -> pd.DataFrame:
+    """Patches agent data based on provided updates.
+
+    Parameters:
+    agent_id (UUID): The unique identifier for the agent.
+    developer_id (UUID): The unique identifier for the developer.
+    default_settings (dict, optional): Default settings to apply to the agent.
+    **update_data: Arbitrary keyword arguments representing data to update.
+
+    Returns:
+    pd.DataFrame: The result of the query execution.
+    """
+    # Construct the query for updating agent information in the database.
     # Agent update query
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
@@ -35,6 +47,7 @@ def patch_agent_query(
     }}
     """
 
+    # Construct the query for updating agent's default settings in the database.
     # Settings update query
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
@@ -54,6 +67,7 @@ def patch_agent_query(
     }}
     """
 
+    # Combine agent and settings update queries if default settings are provided.
     # Combine the queries
     queries = [agent_update_query]
 
