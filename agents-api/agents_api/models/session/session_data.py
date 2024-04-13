@@ -12,6 +12,17 @@ def session_data_query(
     session_id: UUID,
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    """Constructs and executes a datalog query to retrieve session data from the 'cozodb' database.
+
+    Parameters:
+        developer_id (UUID): The developer's unique identifier.
+        session_id (UUID): The session's unique identifier.
+        client (CozoClient): The database client used to execute the query.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the query results.
+    """
+    # This query retrieves detailed session information, including metadata and default settings for agents involved in the session.
     query = """
     input[developer_id, session_id] <- [[
         to_uuid($developer_id),
@@ -93,7 +104,20 @@ def session_data_query(
 def get_session_data(
     developer_id: UUID, session_id: UUID, client: CozoClient = client
 ) -> SessionData | None:
+    """Calls `session_data_query` to get session data and processes the result.
+
+    If data is found, returns a `SessionData` object; otherwise, returns `None`.
+
+    Parameters:
+        developer_id (UUID): The developer's unique identifier.
+        session_id (UUID): The session's unique identifier.
+        client (CozoClient): The database client used to execute the query.
+
+    Returns:
+        SessionData | None: A SessionData object if data is found, otherwise `None`.
+    """
     result = session_data_query(developer_id, session_id, client=client)
+    # Check if the query returned any data; return `None` if not.
     if result.empty:
         return None
 
