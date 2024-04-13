@@ -23,13 +23,13 @@ This exception is used to indicate that a specific session, identified by its se
 """
 class SessionNotFoundError(BaseSessionException):
     """
-Initializes a new instance of the SessionNotFoundError.
+    Initializes a new instance of the SessionNotFoundError.
 
-Args:
-    developer_id (UUID | str): The unique identifier of the developer attempting to access the session.
-    session_id (UUID | str): The unique identifier of the session that was not found.
-"""
-def __init__(self, developer_id: UUID | str, session_id: UUID | str):
+    Args:
+        developer_id (UUID | str): The unique identifier of the developer attempting to access the session.
+        session_id (UUID | str): The unique identifier of the session that was not found.
+    """
+    def __init__(self, developer_id: UUID | str, session_id: UUID | str):
         super().__init__(
             f"Session {str(session_id)} not found for developer {str(developer_id)}",
             http_code=404,
