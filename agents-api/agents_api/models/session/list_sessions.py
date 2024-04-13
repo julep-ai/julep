@@ -1,3 +1,5 @@
+"""This module contains functions for querying session data from the 'cozodb' database."""
+
 from typing import Any
 from uuid import UUID
 
@@ -15,6 +17,18 @@ def list_sessions_query(
     metadata_filter: dict[str, Any] = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    """Lists sessions from the 'cozodb' database based on the provided filters.
+
+    Parameters:
+        developer_id (UUID): The developer's ID to filter sessions by.
+        limit (int): The maximum number of sessions to return.
+        offset (int): The offset from which to start listing sessions.
+        metadata_filter (dict[str, Any]): A dictionary of metadata fields to filter sessions by.
+        client (CozoClient): The database client instance to use for the query.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the queried session data.
+    """
     metadata_filter_str = ", ".join(
         [
             f"metadata->{json.dumps(k)} == {json.dumps(v)}"
@@ -61,6 +75,7 @@ def list_sessions_query(
         :sort -created_at
     """
 
+    # Execute the datalog query and return the results as a pandas DataFrame.
     return client.run(
         query, {"developer_id": str(developer_id), "limit": limit, "offset": offset}
     )
