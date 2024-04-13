@@ -1,3 +1,4 @@
+"""This module contains functions for querying document-related data from the 'cozodb' database using datalog queries."""
 from typing import Literal
 from uuid import UUID
 
@@ -14,9 +15,12 @@ def ensure_owner_exists_query(
 ) -> pd.DataFrame:
     owner_id = str(owner_id)
 
+    # Query to check if an owner (user or agent) exists in the database
     query = f"""{{
-        input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
+        # Convert owner_id to UUID and set as input
+        input[{owner_type}_id] <- [[to_uuid($owner_id)]]
 
+        # Retrieve owner_id if it exists in the database
         ?[
             {owner_type}_id,
         ] := input[{owner_type}_id],
@@ -25,7 +29,7 @@ def ensure_owner_exists_query(
             }}
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"owner_id": owner_id})
 
 
 def list_docs_snippets_by_owner_query(
@@ -35,10 +39,13 @@ def list_docs_snippets_by_owner_query(
 ):
     owner_id = str(owner_id)
 
+    # Query to retrieve document snippets by owner (user or agent)
     query = f"""
     {{
-        input[{owner_type}_id] <- [[to_uuid("{owner_id}")]]
+        # Convert owner_id to UUID and set as input
+        input[{owner_type}_id] <- [[to_uuid($owner_id)]]
 
+        # Retrieve documents and snippets associated with the owner
         ?[
             {owner_type}_id,
             doc_id,
@@ -62,4 +69,4 @@ def list_docs_snippets_by_owner_query(
             }}
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"owner_id": owner_id})

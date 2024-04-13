@@ -3,7 +3,6 @@ from uuid import UUID
 import pandas as pd
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
@@ -14,12 +13,24 @@ def patch_agent_query(
     default_settings: dict = {},
     **update_data,
 ) -> pd.DataFrame:
+    """Patches agent data based on provided updates.
+
+    Parameters:
+    agent_id (UUID): The unique identifier for the agent.
+    developer_id (UUID): The unique identifier for the developer.
+    default_settings (dict, optional): Default settings to apply to the agent.
+    **update_data: Arbitrary keyword arguments representing data to update.
+
+    Returns:
+    pd.DataFrame: The result of the query execution.
+    """
+    # Construct the query for updating agent information in the database.
     # Agent update query
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
-            "agent_id": agent_id,
-            "developer_id": developer_id,
+            "agent_id": str(agent_id),
+            "developer_id": str(developer_id),
             "updated_at": utcnow().timestamp(),
         }
     )
@@ -27,7 +38,7 @@ def patch_agent_query(
     agent_update_query = f"""
     {{
         # update the agent
-        ?[{agent_update_cols}] <- {json.dumps(agent_update_vals)}
+        ?[{agent_update_cols}] <- $agent_update_vals
 
         :update agents {{
             {agent_update_cols}
@@ -36,6 +47,7 @@ def patch_agent_query(
     }}
     """
 
+    # Construct the query for updating agent's default settings in the database.
     # Settings update query
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
@@ -47,7 +59,7 @@ def patch_agent_query(
     settings_update_query = f"""
     {{
         # update the agent settings
-        ?[{settings_cols}] <- {json.dumps(settings_vals)}
+        ?[{settings_cols}] <- $settings_vals
 
         :update agent_default_settings {{
             {settings_cols}
@@ -55,6 +67,7 @@ def patch_agent_query(
     }}
     """
 
+    # Combine agent and settings update queries if default settings are provided.
     # Combine the queries
     queries = [agent_update_query]
 
@@ -63,4 +76,7 @@ def patch_agent_query(
 
     combined_query = "\n".join(queries)
 
-    return client.run(combined_query)
+    return client.run(
+        combined_query,
+        {"agent_update_vals": agent_update_vals, "settings_vals": settings_vals},
+    )

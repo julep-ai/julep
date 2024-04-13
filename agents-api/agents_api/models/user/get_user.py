@@ -11,11 +11,12 @@ def get_user_query(
     user_id: UUID,
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    # Convert UUIDs to strings for query compatibility.
     user_id = str(user_id)
     developer_id = str(developer_id)
 
-    query = f"""
-    input[developer_id, user_id] <- [[to_uuid("{developer_id}"), to_uuid("{user_id}")]]
+    query = """
+    input[developer_id, user_id] <- [[to_uuid($developer_id), to_uuid($user_id)]]
 
     ?[
         id,
@@ -25,7 +26,7 @@ def get_user_query(
         updated_at,
         metadata,
     ] := input[developer_id, id],
-        *users {{
+        *users {
             user_id: id,
             developer_id,
             name,
@@ -33,6 +34,6 @@ def get_user_query(
             created_at,
             updated_at,
             metadata,
-        }}"""
+        }"""
 
-    return client.run(query)
+    return client.run(query, {"developer_id": developer_id, "user_id": user_id})

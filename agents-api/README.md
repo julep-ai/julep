@@ -1,85 +1,164 @@
-# Memory API
+# agents-api
 
-## Deploy
+## Schema
 
-From `monorepo/agents-api` folder run
-```gcloud run deploy julep-memory-api --source . --region=us-central1```
+### Relation `agent_default_settings`
+┌───┬────────────────────┬────────┬─────────┬─────────────┐
+│   │ column             │ is_key │ type    │ has_default │
+├───┼────────────────────┼────────┼─────────┼─────────────┤
+│ 0 │ agent_id           │ True   │ Uuid    │ False       │
+│ 1 │ frequency_penalty  │ False  │ Float   │ True        │
+│ 2 │ presence_penalty   │ False  │ Float   │ True        │
+│ 3 │ length_penalty     │ False  │ Float   │ True        │
+│ 4 │ repetition_penalty │ False  │ Float   │ True        │
+│ 5 │ top_p              │ False  │ Float   │ True        │
+│ 6 │ temperature        │ False  │ Float   │ True        │
+│ 7 │ min_p              │ False  │ Float   │ True        │
+│ 8 │ preset             │ False  │ String? │ True        │
+└───┴────────────────────┴────────┴─────────┴─────────────┘
 
-## Running temporal
+### Relation `agent_docs`
+┌───┬────────────┬────────┬───────┬─────────────┐
+│   │ column     │ is_key │ type  │ has_default │
+├───┼────────────┼────────┼───────┼─────────────┤
+│ 0 │ agent_id   │ True   │ Uuid  │ False       │
+│ 1 │ doc_id     │ True   │ Uuid  │ False       │
+│ 2 │ created_at │ False  │ Float │ True        │
+│ 3 │ metadata   │ False  │ Json  │ True        │
+└───┴────────────┴────────┴───────┴─────────────┘
 
-1. Start the temporal dev server
-   `temporal server start-dev --db-filename temporal.db`
-2. Start the worker
-   `python -m agents_api.worker`
+### Relation `agent_functions`
+┌───┬───────────────────┬────────┬────────────┬─────────────┐
+│   │ column            │ is_key │ type       │ has_default │
+├───┼───────────────────┼────────┼────────────┼─────────────┤
+│ 0 │ agent_id          │ True   │ Uuid       │ False       │
+│ 1 │ tool_id           │ True   │ Uuid       │ False       │
+│ 2 │ name              │ False  │ String     │ False       │
+│ 3 │ description       │ False  │ String     │ False       │
+│ 4 │ parameters        │ False  │ Json       │ False       │
+│ 5 │ embed_instruction │ False  │ String     │ True        │
+│ 6 │ embedding         │ False  │ <F32;768>? │ True        │
+│ 7 │ updated_at        │ False  │ Float      │ True        │
+│ 8 │ created_at        │ False  │ Float      │ True        │
+└───┴───────────────────┴────────┴────────────┴─────────────┘
 
----
+### Relation `agents`
+┌───┬──────────────┬────────┬──────────┬─────────────┐
+│   │ column       │ is_key │ type     │ has_default │
+├───┼──────────────┼────────┼──────────┼─────────────┤
+│ 0 │ developer_id │ True   │ Uuid     │ False       │
+│ 1 │ agent_id     │ True   │ Uuid     │ False       │
+│ 2 │ name         │ False  │ String   │ False       │
+│ 3 │ about        │ False  │ String   │ False       │
+│ 4 │ instructions │ False  │ ### Relation `String` │ True        │
+│ 5 │ model        │ False  │ String   │ True        │
+│ 6 │ created_at   │ False  │ Float    │ True        │
+│ 7 │ updated_at   │ False  │ Float    │ True        │
+│ 8 │ metadata     │ False  │ Json     │ True        │
+└───┴──────────────┴────────┴──────────┴─────────────┘
 
-## Rough notes
+### Relation `entries`
+┌───┬─────────────┬────────┬─────────┬─────────────┐
+│   │ column      │ is_key │ type    │ has_default │
+├───┼─────────────┼────────┼─────────┼─────────────┤
+│ 0 │ session_id  │ True   │ Uuid    │ False       │
+│ 1 │ entry_id    │ True   │ Uuid    │ True        │
+│ 2 │ source      │ True   │ String  │ False       │
+│ 3 │ role        │ True   │ String  │ False       │
+│ 4 │ name        │ True   │ String? │ True        │
+│ 5 │ content     │ False  │ String  │ False       │
+│ 6 │ token_count │ False  │ Int     │ False       │
+│ 7 │ tokenizer   │ False  │ String  │ False       │
+│ 8 │ created_at  │ False  │ Float   │ True        │
+│ 9 │ timestamp   │ False  │ Float   │ True        │
+└───┴─────────────┴────────┴─────────┴─────────────┘
 
-#### DIRECTORY CONVENTION
+### Relation `information_snippets`
+┌───┬───────────────────┬────────┬────────────┬─────────────┐
+│   │ column            │ is_key │ type       │ has_default │
+├───┼───────────────────┼────────┼────────────┼─────────────┤
+│ 0 │ doc_id            │ True   │ Uuid       │ False       │
+│ 1 │ snippet_idx       │ True   │ Int        │ False       │
+│ 2 │ title             │ False  │ String     │ False       │
+│ 3 │ snippet           │ False  │ String     │ False       │
+│ 4 │ embed_instruction │ False  │ String     │ True        │
+│ 5 │ embedding         │ False  │ <F32;768>? │ True        │
+└───┴───────────────────┴────────┴────────────┴─────────────┘
 
-- `agents_api/models/{relation_prefix}/`
+### Relation `memories`
+┌───┬──────────────────┬────────┬────────────┬─────────────┐
+│   │ column           │ is_key │ type       │ has_default │
+├───┼──────────────────┼────────┼────────────┼─────────────┤
+│ 0 │ memory_id        │ True   │ Uuid       │ False       │
+│ 1 │ content          │ False  │ String     │ False       │
+│ 2 │ last_accessed_at │ False  │ Float?     │ True        │
+│ 3 │ timestamp        │ False  │ Float      │ True        │
+│ 4 │ sentiment        │ False  │ Int        │ True        │
+│ 5 │ entities         │ False  │ ### Relation `Json`     │ True        │
+│ 6 │ created_at       │ False  │ Float      │ True        │
+│ 7 │ embedding        │ False  │ <F32;768>? │ True        │
+└───┴──────────────────┴────────┴────────────┴─────────────┘
 
-  - `__init__.py`
-  - `schema.py` # DDL
-  - `{create|read|update|delete}_something.py` # DML
+### Relation `memory_lookup`
+┌───┬───────────┬────────┬───────┬─────────────┐
+│   │ column    │ is_key │ type  │ has_default │
+├───┼───────────┼────────┼───────┼─────────────┤
+│ 0 │ agent_id  │ True   │ Uuid  │ False       │
+│ 1 │ user_id   │ True   │ Uuid? │ True        │
+│ 2 │ memory_id │ True   │ Uuid  │ False       │
+└───┴───────────┴────────┴───────┴─────────────┘
 
-- one query per file
+### Relation `relations`
+┌───┬──────────┬────────┬────────┬─────────────┐
+│   │ column   │ is_key │ type   │ has_default │
+├───┼──────────┼────────┼────────┼─────────────┤
+│ 0 │ head     │ True   │ Uuid   │ False       │
+│ 1 │ relation │ True   │ String │ False       │
+│ 2 │ tail     │ True   │ Uuid   │ False       │
+└───┴──────────┴────────┴────────┴─────────────┘
 
-- _relation_prefix_ should be singular like `agent`, `user`, etc
-- for example: `agent/` will include:
-  - `agents`
-  - `agent_jobs`
-  - ...
+### Relation `session_lookup`
+┌───┬────────────┬────────┬───────┬─────────────┐
+│   │ column     │ is_key │ type  │ has_default │
+├───┼────────────┼────────┼───────┼─────────────┤
+│ 0 │ agent_id   │ True   │ Uuid  │ False       │
+│ 1 │ user_id    │ True   │ Uuid? │ True        │
+│ 2 │ session_id │ True   │ Uuid  │ False       │
+└───┴────────────┴────────┴───────┴─────────────┘
 
-## Phases
+### Relation `sessions`
+┌───┬──────────────┬────────┬──────────┬─────────────┐
+│   │ column       │ is_key │ type     │ has_default │
+├───┼──────────────┼────────┼──────────┼─────────────┤
+│ 0 │ developer_id │ True   │ Uuid     │ False       │
+│ 1 │ session_id   │ True   │ Uuid     │ False       │
+│ 2 │ updated_at   │ True   │ Validity │ True        │
+│ 3 │ situation    │ False  │ String   │ False       │
+│ 4 │ summary      │ False  │ String?  │ True        │
+│ 5 │ created_at   │ False  │ Float    │ True        │
+│ 6 │ metadata     │ False  │ Json     │ True        │
+└───┴──────────────┴────────┴──────────┴─────────────┘
 
-**CURRENT**: phase 1 (WIP)
+### Relation `user_docs`
+┌───┬────────────┬────────┬───────┬─────────────┐
+│   │ column     │ is_key │ type  │ has_default │
+├───┼────────────┼────────┼───────┼─────────────┤
+│ 0 │ user_id    │ True   │ Uuid  │ False       │
+│ 1 │ doc_id     │ True   │ Uuid  │ False       │
+│ 2 │ created_at │ False  │ Float │ True        │
+│ 3 │ metadata   │ False  │ Json  │ True        │
+└───┴────────────┴────────┴───────┴─────────────┘
 
-### phase 1 (naive):
+### Relation `users`
+┌───┬──────────────┬────────┬────────┬─────────────┐
+│   │ column       │ is_key │ type   │ has_default │
+├───┼──────────────┼────────┼────────┼─────────────┤
+│ 0 │ developer_id │ True   │ Uuid   │ False       │
+│ 1 │ user_id      │ True   │ Uuid   │ False       │
+│ 2 │ name         │ False  │ String │ False       │
+│ 3 │ about        │ False  │ String │ False       │
+│ 4 │ created_at   │ False  │ Float  │ True        │
+│ 5 │ updated_at   │ False  │ Float  │ True        │
+│ 6 │ metadata     │ False  │ Json   │ True        │
+└───┴──────────────┴────────┴────────┴─────────────┘
 
-- all entries { source == "api_user" || source == "api_response" }
-- use entries.tokenizer = "char_count"
-- entries.token_count = len(json.dumps({name, role, content})) // 3.5
-- entries.source can be one of "api_user" | "api_response"
-
-> finalized relations
->
-> - agents
-> - users
-> - sessions
-> - session_lookup
-> - entries
-
-### phase 1.5 (add instructions, tools etc NAIVELY)
-
-- meaning no vector search, just dump em all
-  > finalized relations
-  >
-  > - instructions
-  > - tools
-
-### phase 2 (procedural):
-
-- all entries + vector_search(tools, instructions)
-- need to embed and store
-
-### phase 3 (remo):
-
-- all entries that are root nodes in summarization chain
-
-### phase 4 (docs):
-
--
-
-### phase 5 (add lm cache + models + tokenizer):
-
--
-
-### phase 6 (episodic mem):
-
--
-
-### phase 7 (implicit mem):
-
--

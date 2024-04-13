@@ -10,33 +10,55 @@ from ...common.utils.datetime import utcnow
 def add_entries_query(
     entries: list[Entry], client: CozoClient = client
 ) -> pd.DataFrame:
+    """
+    Adds a list of Entry objects and a CozoClient object to a pandas DataFrame.
+
+    Parameters:
+        entries (list[Entry]): A list of Entry objects to be processed.
+        client (CozoClient): The CozoClient object used for database operations.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the entries data ready for insertion into the 'cozodb' database.
+    """
+    # Iterate over each entry in the provided list, processing them for database insertion.
     entries_lst = []
+
     for e in entries:
         ts = utcnow().timestamp()
-        source = json.dumps(e.source)
-        role = json.dumps(e.role)
-        name = json.dumps(e.name)
+        source = e.source
+        role = e.role
+        # Convert the content of each entry to a string, serializing JSON objects.
         content: str = (
             e.content if isinstance(e.content, str) else json.dumps(e.content)
         )
-        tokenizer = json.dumps(e.tokenizer)
+        # Append entries with non-empty content to the list for database insertion.
         if e.content:
             entries_lst.append(
-                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), {source}, {role}, {name}, __"{content}"__, {e.token_count}, {tokenizer}, {ts}, {ts}]'
+                [
+                    str(e.id),
+                    str(e.session_id),
+                    source,
+                    role,
+                    e.name or "",
+                    content,
+                    e.token_count,
+                    e.tokenizer,
+                    ts,
+                    ts,
+                ]
             )
 
+    # If no entries are provided or all entries have empty content, return an empty DataFrame.
     if not len(entries_lst):
-        return "?[] <- [[]]"
+        return pd.DataFrame(data={})
 
-    entries_query = ",\n".join(entries_lst)
+    # Construct a datalog query to insert the processed entries into the 'cozodb' database.
+    # Refer to the schema for the 'entries' relation in the README.md for column names and types.
+    query = """
+    {
+        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at, timestamp] <- $entries_lst
 
-    query = f"""
-    {{
-        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at, timestamp] <- [
-            {entries_query}
-        ]
-
-        :insert entries {{
+        :insert entries {
             entry_id,
             session_id,
             source,
@@ -47,9 +69,9 @@ def add_entries_query(
             tokenizer,
             created_at,
             timestamp,
-        }}
+        }
         :returning
-    }}
+    }
     """
 
-    return client.run(query)
+    return client.run(query, {"entries_lst": entries_lst})
