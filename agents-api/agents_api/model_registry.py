@@ -3,7 +3,6 @@ Model Registry maintains a list of supported models and their configs.
 """
 from typing import Dict, List, Optional
 from agents_api.clients.model import julep_client, openai_client
-from agents_api.common.exceptions.agents import AgentModelNotValid
 
 
 GPT4_MODELS: Dict[str, int] = {
@@ -133,8 +132,6 @@ def get_model_client(model: str) -> str:
         return julep_client
     elif model in OPENAI_MODELS:
         return openai_client
-    else:
-        raise AgentModelNotValid(model)
 
 # TODO: implement and use this to work with the response from different model formats
 def parse_response():
