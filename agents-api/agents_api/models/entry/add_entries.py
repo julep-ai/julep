@@ -11,10 +11,11 @@ def add_entries_query(
     entries: list[Entry], client: CozoClient = client
 ) -> pd.DataFrame:
     entries_lst = []
+
     for e in entries:
         ts = utcnow().timestamp()
-        source = json.dumps(e.source)
-        role = json.dumps(e.role)
+        source = e.source
+        role = e.role
         content: str = (
             e.content if isinstance(e.content, str) else json.dumps(e.content)
         )

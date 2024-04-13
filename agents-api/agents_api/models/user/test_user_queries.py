@@ -53,6 +53,14 @@ def _():
             client=client,
         )
 
+        create_user_query(
+            user_id=user_id,
+            developer_id=developer_id,
+            name="test user",
+            about="test user about",
+            client=client,
+        )
+
 
 @test("model: update non-existent user should fail")
 def _():
@@ -61,7 +69,7 @@ def _():
     developer_id = uuid4()
 
     # Should fail because the user doecn't exists.
-    with raises(None):
+    with raises(Exception):
         update_user_query(
             user_id=user_id,
             developer_id=developer_id,

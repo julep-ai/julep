@@ -11,10 +11,6 @@ def get_entries_query(
 ) -> pd.DataFrame:
     query = """
     {
-        input[session_id] <- [[
-            to_uuid($session_id),
-        ]]
-
         ?[
             session_id,
             entry_id,
@@ -25,25 +21,27 @@ def get_entries_query(
             token_count,
             created_at,
             timestamp,
-        ] := input[session_id],
-            *entries{
-                session_id,
-                entry_id,
-                role,
-                name,
-                content,
-                source,
-                token_count,
-                created_at,
-                timestamp,
-            },
-            source == "api_request" || source == "api_response",
+        ] := *entries{
+            session_id,
+            entry_id,
+            role,
+            name,
+            content,
+            source,
+            token_count,
+            created_at,
+            timestamp,
+        },
+        source in ["api_request", "api_response"],
+        session_id = to_uuid($session_id),
 
         :sort timestamp
         :limit $limit
         :offset $offset
     }"""
 
-    return client.run(
+    results = client.run(
         query, {"session_id": str(session_id), "limit": limit, "offset": offset}
     )
+
+    return results
