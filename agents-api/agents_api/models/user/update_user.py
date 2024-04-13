@@ -42,12 +42,14 @@ def update_user_query(
             developer_id = to_uuid($developer_id),
             user_id = to_uuid($user_id),
 
+        # Assertion to ensure the user exists before updating.
         :assert some
     """
 
     # Constructs the update operation for the user, setting new values and updating 'updated_at'.
     query = f"""
         # update the user
+        # This line updates the user's information based on the provided columns and values.
         input[{user_update_cols}] <- $user_update_vals
         original[created_at] := *users{{
             developer_id: to_uuid($developer_id),
