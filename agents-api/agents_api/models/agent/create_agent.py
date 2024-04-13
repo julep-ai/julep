@@ -51,6 +51,7 @@ def create_agent_query(
 
     # Construct a query to insert default settings for the new agent
     # Create default agent settings
+    # Construct a query to insert default settings for the new agent
     default_settings_query = f"""
         ?[{settings_cols}] <- $settings_vals
 
