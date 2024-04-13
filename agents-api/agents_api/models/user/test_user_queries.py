@@ -1,3 +1,4 @@
+"""This module contains tests for user-related queries against the 'cozodb' database. It includes tests for creating, updating, and retrieving user information."""
 # Tests for user queries
 from uuid import uuid4
 
@@ -12,6 +13,7 @@ from .update_user import update_user_query
 
 
 def cozo_client(migrations_dir: str = "./migrations"):
+    """Initializes a new Cozo client for testing, applying all migrations to ensure the database schema is up to date."""
     # Create a new client for each test
     # and initialize the schema.
     client = Client()
@@ -24,6 +26,7 @@ def cozo_client(migrations_dir: str = "./migrations"):
 
 @test("model: create user")
 def _():
+    """Test that a user can be successfully created."""
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
@@ -39,10 +42,12 @@ def _():
 
 @test("model: create user twice should fail")
 def _():
+    """Test that attempting to create the same user twice results in a failure."""
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
 
+    # Expect an exception to be raised as creating the same user twice should not be allowed.
     # Should fail because the user already exists.
     with raises(Exception):
         create_user_query(
@@ -64,6 +69,7 @@ def _():
 
 @test("model: update non-existent user should fail")
 def _():
+    """Test that attempting to update a non-existent user results in a failure."""
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
@@ -81,6 +87,7 @@ def _():
 
 @test("model: update user")
 def _():
+    """Test that an existing user's information can be successfully updated."""
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
@@ -93,6 +100,7 @@ def _():
         client=client,
     )
 
+    # Verify that the 'updated_at' timestamp is greater than the 'created_at' timestamp, indicating a successful update.
     update_result = update_user_query(
         user_id=user_id,
         developer_id=developer_id,
@@ -108,10 +116,12 @@ def _():
 
 @test("model: get user not exists")
 def _():
+    """Test that retrieving a non-existent user returns an empty result."""
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
 
+    # Ensure that the query for an existing user returns exactly one result.
     result = get_user_query(
         user_id=user_id,
         developer_id=developer_id,
@@ -123,6 +133,7 @@ def _():
 
 @test("model: get user exists")
 def _():
+    """Test that retrieving an existing user returns the correct user information."""
     client = cozo_client()
     user_id = uuid4()
     developer_id = uuid4()
@@ -146,6 +157,7 @@ def _():
 
 @test("model: list users")
 def _():
+    """Test that listing users returns a collection of user information."""
     client = cozo_client()
     developer_id = uuid4()
 
