@@ -151,6 +151,7 @@ def _():
 
 @test("model: list agents")
 def _():
+    """Tests listing all agents associated with a developer in the database. Verifies that the correct list of agents is retrieved."""
     client = cozo_client()
     developer_id = uuid4()
 
