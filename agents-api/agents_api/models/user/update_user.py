@@ -22,16 +22,13 @@ def update_user_query(
     )
 
     assertion_query = f"""
-        input[developer_id, user_id] <- [[
-            to_uuid("{developer_id}"), to_uuid("{user_id}"),
-        ]]
-
         ?[developer_id, user_id] :=
-            input[developer_id, user_id],
             *users {{
                 developer_id,
                 user_id,
-            }}
+            }},
+            developer_id = to_uuid($developer_id),
+            user_id = to_uuid($user_id),
 
         :assert some
     """
