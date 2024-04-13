@@ -28,9 +28,9 @@ def proc_mem_context_query(
         # Input table for the query
         # (This is temporary to this query)
         input[session_id, tool_query, doc_query] <- [[
-            to_uuid("{session_id}"),
-            vec({tool_query_embedding}),
-            vec({doc_query_embedding}),
+            to_uuid($session_id),
+            $tool_query_embedding,
+            $doc_query_embedding,
         ]]
 
         ?[session_id, tool_query, doc_query, agent_id, user_id] :=
@@ -122,9 +122,9 @@ def proc_mem_context_query(
                 parameters,
                 updated_at: created_at |
                 query: tool_query,
-                k: {k_tools},
+                k: $k_tools,
                 ef: 128,
-                radius: {tools_radius:.2f},
+                radius: $tools_radius,
                 bind_distance: distance,
             }},
 
@@ -166,9 +166,9 @@ def proc_mem_context_query(
                 title,
                 snippet |
                 query: doc_query,
-                k: {k_docs},
+                k: $k_docs,
                 ef: 128,
-                radius: {docs_radius:.2f},
+                radius: $docs_radius,
                 bind_distance: distance,
             }},
             role = "system",
@@ -192,9 +192,9 @@ def proc_mem_context_query(
                 title,
                 snippet |
                 query: doc_query,
-                k: {k_docs},
+                k: $k_docs,
                 ef: 128,
-                radius: {docs_radius:.2f},
+                radius: $docs_radius,
                 bind_distance: distance,
             }},
             role = "system",
@@ -284,4 +284,15 @@ def proc_mem_context_query(
     }}
     """
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "session_id": session_id,
+            "tool_query_embedding": tool_query_embedding,
+            "doc_query_embedding": doc_query_embedding,
+            "k_tools": k_tools,
+            "tools_radius": round(tools_radius, 2),
+            "k_docs": k_docs,
+            "docs_radius": round(docs_radius, 2),
+        },
+    )

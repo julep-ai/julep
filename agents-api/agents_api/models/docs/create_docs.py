@@ -5,7 +5,6 @@ import pandas as pd
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
@@ -28,7 +27,7 @@ def create_docs_query(
     for snippet_idx, snippet in enumerate(snippets):
         snippet_cols, new_snippet_rows = cozo_process_mutate_data(
             dict(
-                doc_id=id,
+                doc_id=str(id),
                 snippet_idx=snippet_idx,
                 title=title,
                 snippet=snippet,
@@ -41,10 +40,10 @@ def create_docs_query(
     {{
         # Create the docs
         ?[{owner_type}_id, doc_id, created_at, metadata] <- [[
-            to_uuid("{owner_id}"),
-            to_uuid("{id}"),
-            {created_at},
-            {json.dumps(metadata)},
+            to_uuid($owner_id),
+            to_uuid($id),
+            $created_at,
+            $metadata,
         ]]
 
         :insert {owner_type}_docs {{
@@ -52,7 +51,7 @@ def create_docs_query(
         }}
     }} {{
         # create the snippets
-        ?[{snippet_cols}] <- {json.dumps(snippet_rows)}
+        ?[{snippet_cols}] <- $snippet_rows
 
         :insert information_snippets {{
             {snippet_cols}
@@ -60,11 +59,20 @@ def create_docs_query(
     }} {{
         # return the docs
         ?[{owner_type}_id, doc_id, created_at, metadata] <- [[
-            to_uuid("{owner_id}"),
-            to_uuid("{id}"),
-            {created_at},
-            {json.dumps(metadata)},
+            to_uuid($owner_id),
+            to_uuid($id),
+            $created_at,
+            $metadata,
         ]]
     }}"""
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "owner_id": str(owner_id),
+            "id": str(id),
+            "created_at": created_at,
+            "metadata": metadata,
+            "snippet_rows": snippet_rows,
+        },
+    )

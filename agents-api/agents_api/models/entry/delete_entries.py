@@ -6,10 +6,10 @@ from ...clients.cozo import client
 
 
 def delete_entries_query(session_id: UUID) -> pd.DataFrame:
-    query = f"""
-    {{
+    query = """
+    {
         input[session_id] <- [[
-            to_uuid("{session_id}"),
+            to_uuid($session_id),
         ]]
 
         ?[
@@ -23,7 +23,7 @@ def delete_entries_query(session_id: UUID) -> pd.DataFrame:
             created_at,
             timestamp,
         ] := input[session_id],
-            *entries{{
+            *entries{
                 session_id,
                 entry_id,
                 role,
@@ -33,9 +33,9 @@ def delete_entries_query(session_id: UUID) -> pd.DataFrame:
                 token_count,
                 created_at,
                 timestamp,
-            }}
+            }
         
-        :delete entries {{
+        :delete entries {
             session_id,
             entry_id,
             role,
@@ -45,7 +45,7 @@ def delete_entries_query(session_id: UUID) -> pd.DataFrame:
             token_count,
             created_at,
             timestamp,
-        }}
-    }}"""
+        }
+    }"""
 
-    return client.run(query)
+    return client.run(query, {"session_id": str(session_id)})

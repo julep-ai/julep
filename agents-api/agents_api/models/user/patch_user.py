@@ -3,7 +3,6 @@ from uuid import UUID
 import pandas as pd
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
@@ -12,15 +11,15 @@ def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.Dat
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
-            "user_id": user_id,
-            "developer_id": developer_id,
+            "user_id": str(user_id),
+            "developer_id": str(developer_id),
             "updated_at": utcnow().timestamp(),
         }
     )
 
     query = f"""
         # update the user
-        ?[{user_update_cols}] <- {json.dumps(user_update_vals)}
+        ?[{user_update_cols}] <- $user_update_vals
 
         :update users {{
             {user_update_cols}
@@ -28,4 +27,4 @@ def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.Dat
         :returning
     """
 
-    return client.run(query)
+    return client.run(query, {"user_update_vals": user_update_vals})

@@ -4,7 +4,6 @@ import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
 from ...clients.cozo import client
-from ...common.utils import json
 
 
 def create_tools_query(
@@ -14,25 +13,28 @@ def create_tools_query(
 ) -> pd.DataFrame:
     assert len(functions) == len(embeddings)
 
-    functions_input = []
+    functions_input: list[list] = []
 
     for function, embedding in zip(functions, embeddings):
-        function_name = json.dumps(function.name)
-        function_description = json.dumps(function.description)
-        tool_id = uuid4()
         parameters = function.parameters.model_dump_json()
         functions_input.append(
-            f"""[to_uuid("{agent_id}"), to_uuid("{tool_id}"), {function_name}, {function_description}, {parameters}, vec({embedding}), now()]"""
+            [
+                str(agent_id),
+                str(uuid4()),
+                function.name,
+                function.description or "",
+                parameters,
+                embedding,
+            ]
         )
 
-    records = "\n".join(functions_input)
+    query = """
+        input[agent_id, tool_id, name, description, parameters, embedding] <- $records
+        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] :=
+            input[agent_id, tool_id, name, description, parameters, embedding],
+            updated_at = now(),
 
-    query = f"""
-        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
-            {records}
-        ]
-
-        :insert agent_functions {{
+        :insert agent_functions {
             agent_id,
             tool_id,
             name,
@@ -40,8 +42,8 @@ def create_tools_query(
             parameters,
             embedding,
             updated_at,
-        }}
+        }
         :returning
     """
 
-    return client.run(query)
+    return client.run(query, {"records": functions_input})

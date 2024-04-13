@@ -4,7 +4,6 @@ import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
 from ...clients.cozo import client
-from ...common.utils import json
 
 
 def patch_tool_by_id_query(
@@ -12,17 +11,27 @@ def patch_tool_by_id_query(
 ) -> pd.DataFrame:
     # Agent update query
     function = function.model_dump()
-
-    name = json.dumps(function["name"])
-    description = json.dumps(function["description"])
-    parameters = json.dumps(function.get("parameters", {}))
-
-    query = f"""
-        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
-            [to_uuid("{agent_id}"), to_uuid("{tool_id}"), {name}, {description}, {parameters}, vec({embedding}), now()]
+    params = {
+        "input": [
+            [
+                str(agent_id),
+                str(tool_id),
+                function["name"],
+                function["description"],
+                function.get("parameters", {}),
+                embedding,
+            ]
         ]
+    }
 
-        :update agent_functions {{
+    query = """
+        input[agent_id, tool_id, name, description, parameters, embedding] <- $input
+
+        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] := 
+            input[agent_id, tool_id, name, description, parameters, embedding],
+            updated_at = now()
+
+        :update agent_functions {
             agent_id,
             tool_id,
             name,
@@ -30,8 +39,8 @@ def patch_tool_by_id_query(
             parameters,
             embedding,
             updated_at,
-        }}
+        }
         :returning
     """
 
-    return client.run(query)
+    return client.run(query, params)

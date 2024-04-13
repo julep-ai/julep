@@ -11,32 +11,38 @@ def add_entries_query(
     entries: list[Entry], client: CozoClient = client
 ) -> pd.DataFrame:
     entries_lst = []
+
     for e in entries:
         ts = utcnow().timestamp()
-        source = json.dumps(e.source)
-        role = json.dumps(e.role)
-        name = json.dumps(e.name)
+        source = e.source
+        role = e.role
         content: str = (
             e.content if isinstance(e.content, str) else json.dumps(e.content)
         )
-        tokenizer = json.dumps(e.tokenizer)
         if e.content:
             entries_lst.append(
-                f'[to_uuid("{e.id}"), to_uuid("{e.session_id}"), {source}, {role}, {name}, __"{content}"__, {e.token_count}, {tokenizer}, {ts}, {ts}]'
+                [
+                    str(e.id),
+                    str(e.session_id),
+                    source,
+                    role,
+                    e.name or "",
+                    content,
+                    e.token_count,
+                    e.tokenizer,
+                    ts,
+                    ts,
+                ]
             )
 
     if not len(entries_lst):
-        return "?[] <- [[]]"
+        return pd.DataFrame(data={})
 
-    entries_query = ",\n".join(entries_lst)
+    query = """
+    {
+        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at, timestamp] <- $entries_lst
 
-    query = f"""
-    {{
-        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at, timestamp] <- [
-            {entries_query}
-        ]
-
-        :insert entries {{
+        :insert entries {
             entry_id,
             session_id,
             source,
@@ -47,9 +53,9 @@ def add_entries_query(
             tokenizer,
             created_at,
             timestamp,
-        }}
+        }
         :returning
-    }}
+    }
     """
 
-    return client.run(query)
+    return client.run(query, {"entries_lst": entries_lst})
