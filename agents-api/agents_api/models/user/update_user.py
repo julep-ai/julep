@@ -11,8 +11,20 @@ from ...common.utils.cozo import cozo_process_mutate_data
 def update_user_query(
     developer_id: UUID, user_id: UUID, client: CozoClient = client, **update_data
 ) -> pd.DataFrame:
+    """Updates user information in the 'cozodb' database.
+
+    Parameters:
+        developer_id (UUID): The developer's unique identifier.
+        user_id (UUID): The user's unique identifier.
+        client (CozoClient): The Cozo database client instance.
+        **update_data: Arbitrary keyword arguments representing the data to update.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the result of the update operation.
+    """
     user_id = str(user_id)
     developer_id = str(developer_id)
+    # Prepares the update data by filtering out None values and adding user_id and developer_id.
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -33,6 +45,7 @@ def update_user_query(
         :assert some
     """
 
+    # Constructs the update operation for the user, setting new values and updating 'updated_at'.
     query = f"""
         # update the user
         input[{user_update_cols}] <- $user_update_vals
@@ -56,6 +69,7 @@ def update_user_query(
     """
 
     query = "{" + assertion_query + "} {" + query + "}"
+    # Combines the assertion and update queries.
 
     return client.run(
         query,
