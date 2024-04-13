@@ -19,6 +19,8 @@ client (CozoClient, optional): The Cozo client to interact with the database. De
 Returns:
 pd.DataFrame: A DataFrame containing the results of the embedding operation.
 """
+
+
 def embed_docs_snippets_query(
     doc_id: UUID,
     snippet_indices: list[int],

@@ -25,6 +25,8 @@ Parameters:
 Returns:
 - pd.DataFrame: The result of the query execution.
 """
+
+
 def create_session_query(
     session_id: UUID,
     developer_id: UUID,
@@ -34,14 +36,16 @@ def create_session_query(
     metadata: dict = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    situation: str = situation or ""
+
     # Construct the datalog query for creating a new session and its lookup.
     query = """
     {
         # This section creates a new session lookup to ensure uniqueness and manage session metadata.
         ?[session_id, agent_id, user_id] <- [[
-            to_uuid($session_id),
-            to_uuid($agent_id),
-            to_uuid($user_id),
+            $session_id,
+            $agent_id,
+            $user_id,
         ]]
 
         :insert session_lookup {
@@ -52,8 +56,8 @@ def create_session_query(
     } {
         # Insert the new session data into the 'session' table with the specified columns.
         ?[session_id, developer_id, situation, metadata] <- [[
-            to_uuid($session_id),
-            to_uuid($developer_id),
+            $session_id,
+            $developer_id,
             $situation,
             $metadata,
         ]]
@@ -74,7 +78,7 @@ def create_session_query(
         {
             "session_id": str(session_id),
             "agent_id": str(agent_id),
-            "user_id": str(user_id),
+            "user_id": str(user_id) if user_id else None,
             "developer_id": str(developer_id),
             "situation": situation,
             "metadata": metadata,

@@ -25,6 +25,8 @@ Parameters:
 Returns:
 - pd.DataFrame: A DataFrame containing the result of the update operation.
 """
+
+
 def update_agent_query(
     agent_id: UUID,
     developer_id: UUID,
@@ -37,12 +39,12 @@ def update_agent_query(
     update_data["instructions"] = update_data.get("instructions", [])
 
     # Assertion query to check if the agent exists
-    assertion_query = f"""
+    assertion_query = """
         ?[developer_id, agent_id] :=
-            *agents {{
+            *agents {
                 developer_id,
                 agent_id,
-            }},
+            },
             developer_id = to_uuid($developer_id),
             agent_id = to_uuid($agent_id),
         # Assertion to ensure the agent exists before updating.
@@ -115,5 +117,10 @@ def update_agent_query(
 
     return client.run(
         combined_query,
-        {"agent_update_vals": agent_update_vals, "settings_vals": settings_vals, "agent_id": agent_id, "developer_id": developer_id},
+        {
+            "agent_update_vals": agent_update_vals,
+            "settings_vals": settings_vals,
+            "agent_id": agent_id,
+            "developer_id": developer_id,
+        },
     )

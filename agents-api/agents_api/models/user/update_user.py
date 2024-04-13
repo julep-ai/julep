@@ -33,12 +33,12 @@ def update_user_query(
         }
     )
 
-    assertion_query = f"""
+    assertion_query = """
         ?[developer_id, user_id] :=
-            *users {{
+            *users {
                 developer_id,
                 user_id,
-            }},
+            },
             developer_id = to_uuid($developer_id),
             user_id = to_uuid($user_id),
 

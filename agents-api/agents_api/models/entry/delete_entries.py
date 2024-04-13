@@ -8,10 +8,10 @@ from ...clients.cozo import client
 def delete_entries_query(session_id: UUID) -> pd.DataFrame:
     """
     Constructs and returns a datalog query for deleting entries associated with a given session ID from the 'cozodb' database.
-    
+
     Parameters:
     - session_id (UUID): The unique identifier of the session whose entries are to be deleted.
-    
+
     Returns:
     - pd.DataFrame: A DataFrame containing the results of the deletion query.
     """

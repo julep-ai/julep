@@ -98,7 +98,9 @@ def session_data_query(
         }
     """
 
-    return client.run(query, {"developer_id": str(developer_id), "session_id": str(session_id)})
+    return client.run(
+        query, {"developer_id": str(developer_id), "session_id": str(session_id)}
+    )
 
 
 def get_session_data(
