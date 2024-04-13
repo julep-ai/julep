@@ -84,7 +84,7 @@ def patch_session_query(
     """
 
     # Execute the constructed datalog query and return the result as a pandas DataFrame.
-    query = "{" + assertion_query + "} {" + session_update_query + "}"
+    query = "{" + assertion_query + "}" + session_update_query
 
     return client.run(
         query,
