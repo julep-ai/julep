@@ -71,6 +71,19 @@ async def _(client=async_client):
 def _(client=client, user=test_user):
     response = client.users.update(
         user_id=user.id,
+        name=mock_user_update["name"],
+    )
+
+    assert isinstance(response, User)
+    assert hasattr(response, "updated_at")
+    assert response.name == mock_user_update["name"]
+
+
+@test("users.update with overwrite")
+def _(client=client, user=test_user):
+    response = client.users.update(
+        user_id=user.id,
+        overwrite=True,
         **mock_user_update,
     )
 

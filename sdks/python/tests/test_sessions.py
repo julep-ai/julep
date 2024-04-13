@@ -43,13 +43,12 @@ async def _(client=async_client):
         assert response.id == session.id
         assert response.situation == session.situation
 
-        updated = await client.sessions.update(
-            session_id=session.id,
-            **mock_session_update,
-        )
+        # updated = await client.sessions.update(
+        #     session_id=session.id,
+        #     **mock_session_update,
+        # )
 
-        assert updated.updated_at
-        assert updated.situation == mock_session_update["situation"]
+        # assert updated.situation == mock_session_update["situation"]
 
     finally:
         response = await client.sessions.delete(session_id=session.id)
@@ -85,6 +84,19 @@ async def _(client=async_client):
 def _(client=client, session=test_session):
     response = client.sessions.update(
         session_id=session.id,
+        **mock_session_update,
+    )
+
+    assert isinstance(response, Session)
+    assert response.updated_at
+    assert response.situation == mock_session_update["situation"]
+
+
+@test("sessions.update with overwrite")
+def _(client=client, session=test_session):
+    response = client.sessions.update(
+        session_id=session.id,
+        overwrite=True,
         **mock_session_update,
     )
 

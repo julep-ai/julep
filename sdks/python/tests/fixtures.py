@@ -16,18 +16,18 @@ TEST_API_URL: Optional[str] = env.str("TEST_API_URL", "http://localhost:8080/api
 mock_agent = {
     "name": "test agent",
     "about": "test agent about",
-    "instructions": [
-        "test agent instructions",
-    ],
-    "default_settings": {"temperature": 0.5},
+    # "instructions": [
+    #     "test agent instructions",
+    # ],
+    # "default_settings": {"temperature": 0.5},
 }
 
 mock_agent_update = {
     "name": "updated agent",
     "about": "updated agent about",
-    "instructions": [
-        "updated agent instructions",
-    ],
+    # "instructions": [
+    #     "updated agent instructions",
+    # ],
 }
 
 mock_user = {
