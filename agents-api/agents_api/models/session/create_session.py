@@ -37,7 +37,7 @@ def create_session_query(
     # Construct the datalog query for creating a new session and its lookup.
     query = """
     {
-        # Create a new session lookup
+        # This section creates a new session lookup to ensure uniqueness and manage session metadata.
         ?[session_id, agent_id, user_id] <- [[
             to_uuid($session_id),
             to_uuid($agent_id),
@@ -50,7 +50,7 @@ def create_session_query(
             session_id,
         }
     } {
-        # Create a new session
+        # Insert the new session data into the 'session' table with the specified columns.
         ?[session_id, developer_id, situation, metadata] <- [[
             to_uuid($session_id),
             to_uuid($developer_id),
@@ -64,6 +64,7 @@ def create_session_query(
             situation,
             metadata,
         }
+        # Specify the data to return after the query execution, typically the newly created session's ID.
         :returning
      }"""
 
