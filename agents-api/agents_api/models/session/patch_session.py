@@ -1,3 +1,5 @@
+"""This module contains functions for patching session data in the 'cozodb' database using datalog queries."""
+
 from uuid import UUID
 
 import pandas as pd
@@ -21,6 +23,28 @@ def patch_session_query(
     developer_id: UUID,
     **update_data,
 ) -> pd.DataFrame:
+    """Patch session data in the 'cozodb' database.
+
+    Parameters:
+    - session_id (UUID): The unique identifier for the session to be updated.
+    - developer_id (UUID): The unique identifier for the developer making the update.
+    - **update_data: Arbitrary keyword arguments representing the data to update.
+
+    Returns:
+    pd.DataFrame: A pandas DataFrame containing the result of the update operation.
+    """
+    assertion_query = f"""
+        ?[session_id, developer_id] :=
+            *sessions {{
+                session_id,
+                developer_id,
+            }},
+            session_id = to_uuid($session_id),
+            developer_id = to_uuid($developer_id),
+        # Assertion to ensure the session exists before updating.
+        :assert some
+    """
+
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -37,6 +61,7 @@ def patch_session_query(
         )
     )
 
+    # Constructing a datalog query for updating session data based on provided parameters.
     session_update_query = f"""
     {{
         input[{session_update_cols}] <- $session_update_vals
@@ -58,8 +83,11 @@ def patch_session_query(
     }}
     """
 
+    # Execute the constructed datalog query and return the result as a pandas DataFrame.
+    query = "{" + assertion_query + "}" + session_update_query
+
     return client.run(
-        session_update_query,
+        query,
         {
             "session_update_vals": session_update_vals,
             "session_id": str(session_id),
