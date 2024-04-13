@@ -1,4 +1,10 @@
-import type { User, CreateUserRequest, ResourceCreatedResponse } from "../api";
+import type {
+  User,
+  CreateUserRequest,
+  ResourceCreatedResponse,
+  PatchUserRequest,
+  UpdateUserRequest,
+} from "../api";
 
 import { invariant } from "../utils/invariant";
 import { isValidUuid4 } from "../utils/isValidUuid4";
@@ -65,33 +71,46 @@ export class UsersManager extends BaseManager {
 
   async update(
     userId: string,
-    {
-      about,
-      name,
-      overwrite = false,
-    }: {
-      about?: string;
-      name?: string;
-      overwrite?: boolean;
-    },
+    request: UpdateUserRequest,
+    overwrite: true,
+  ): Promise<User>;
+
+  async update(
+    userId: string,
+    request: PatchUserRequest,
+    overwrite?: false,
+  ): Promise<User>;
+
+  async update(
+    userId: string,
+    { about, name }: PatchUserRequest | UpdateUserRequest,
+    overwrite = false,
   ): Promise<User> {
     try {
       invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
-      const updateFn = overwrite
-        ? this.apiClient.default.updateUser
-        : this.apiClient.default.patchUser;
+      // Tests won't pass if ternary is used
+      //   const updateFn = overwrite
+      //     ? this.apiClient.default.updateUser
+      //     : this.apiClient.default.patchUser;
 
-      const requestBody = { about, name };
-
-      const result = await updateFn({
-        userId,
-        // @ts-ignore
-        requestBody,
-      });
-
-      const user: User = { ...result, ...requestBody };
-      return user;
+      if (overwrite) {
+        const requestBody = { name: name!, about: about! };
+        const result = await this.apiClient.default.updateUser({
+          userId,
+          requestBody,
+        });
+        const user: User = { ...result, ...requestBody };
+        return user;
+      } else {
+        const requestBody = { name, about };
+        const result = await this.apiClient.default.patchUser({
+          userId,
+          requestBody,
+        });
+        const user: User = { ...result, ...requestBody };
+        return user;
+      }
     } catch (error) {
       throw error;
     }

@@ -71,6 +71,16 @@ describe("Sessions API", () => {
     expect(response).toHaveProperty("updated_at");
   });
 
+  it("sessions.update with overwrite", async () => {
+    const response = await client.sessions.update(
+      testSessionId,
+      mockSessionUpdate,
+      true,
+    );
+
+    expect(response).toHaveProperty("updated_at");
+  });
+
   it("sessions.list", async () => {
     const response = await client.sessions.list();
 

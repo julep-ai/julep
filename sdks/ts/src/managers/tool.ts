@@ -48,29 +48,34 @@ export class ToolsManager extends BaseManager {
     return newTool;
   }
 
-  async update({
-    agentId,
-    toolId,
-    tool,
-    overwrite = false,
-  }: {
-    agentId: string;
-    toolId: string;
-    tool: UpdateToolRequest;
-    overwrite?: boolean;
-  }): Promise<Tool> {
-    const updateFn = overwrite
-      ? this.apiClient.default.updateAgentTool
-      : this.apiClient.default.patchAgentTool;
-
-    const result = await updateFn({
+  async update(
+    {
       agentId,
       toolId,
-      requestBody: tool,
-    });
-
-    const updatedTool: Tool = { type: "function", ...result, ...tool };
-    return updatedTool;
+      tool,
+    }: {
+      agentId: string;
+      toolId: string;
+      tool: UpdateToolRequest;
+    },
+    overwrite = false,
+  ): Promise<Tool> {
+    if (overwrite) {
+      const result = await this.apiClient.default.updateAgentTool({
+        agentId,
+        toolId,
+        requestBody: tool,
+      });
+      const updatedTool: Tool = { type: "function", ...result, ...tool };
+      return updatedTool;
+    } else {
+      const result = await this.apiClient.default.patchAgentTool({
+        agentId,
+        toolId,
+      });
+      const updatedTool: Tool = { type: "function", ...result, ...tool };
+      return updatedTool;
+    }
   }
 
   async delete({

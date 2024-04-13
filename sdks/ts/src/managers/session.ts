@@ -85,21 +85,18 @@ export class SessionsManager extends BaseManager {
 
   async update(
     sessionId: string,
-    {
-      situation,
-      metadata = {},
-      overwrite = false,
-    }: { situation: string; metadata?: any; overwrite?: boolean },
+    { situation, metadata = {} }: { situation: string; metadata?: any },
+    overwrite = false,
   ): Promise<ResourceUpdatedResponse> {
     try {
       invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
       const requestBody = { situation, metadata };
 
-      const updateFn = overwrite
-        ? this.apiClient.default.updateSession
-        : this.apiClient.default.patchSession;
-
-      return updateFn({ sessionId, requestBody });
+      if (overwrite) {
+        return this.apiClient.default.updateSession({ sessionId, requestBody });
+      } else {
+        return this.apiClient.default.patchSession({ sessionId, requestBody });
+      }
     } catch (error) {
       throw error;
     }
