@@ -36,6 +36,19 @@ def update_agent_query(
     developer_id = str(developer_id)
     update_data["instructions"] = update_data.get("instructions", [])
 
+    # Assertion query to check if the agent exists
+    assertion_query = f"""
+        ?[developer_id, agent_id] :=
+            *agents {{
+                developer_id,
+                agent_id,
+            }},
+            developer_id = to_uuid($developer_id),
+            agent_id = to_uuid($agent_id),
+        # Assertion to ensure the agent exists before updating.
+        :assert some
+    """
+
     # Construct the agent update part of the query with dynamic columns and values based on `update_data`.
     # Agent update query
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
@@ -97,7 +110,8 @@ def update_agent_query(
     if len(default_settings) != 0:
         queries.insert(0, settings_update_query)
 
-    combined_query = "\n".join(queries)
+    # Combine the assertion query with the update queries
+    combined_query = "{" + assertion_query + "} " + "\n".join(queries)
 
     return client.run(
         combined_query,
