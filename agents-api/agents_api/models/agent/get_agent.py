@@ -75,4 +75,6 @@ def get_agent_query(
 
     # Execute the constructed datalog query using the provided CozoClient.
     # The result is returned as a pandas DataFrame.
-    return client.run(query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})
+    return client.run(
+        query, {"agent_id": str(agent_id), "developer_id": str(developer_id)}
+    )

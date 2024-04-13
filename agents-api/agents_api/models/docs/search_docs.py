@@ -23,6 +23,8 @@ Parameters:
 Returns:
 - pd.DataFrame: A DataFrame containing the search results.
 """
+
+
 def search_docs_snippets_by_embedding_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,

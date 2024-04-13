@@ -20,21 +20,21 @@ def create_docs_query(
     client: CozoClient = client,
 ) -> pd.DataFrame:
     """
-  Constructs and executes a datalog query to create a new document and its associated snippets in the 'cozodb' database.
+    Constructs and executes a datalog query to create a new document and its associated snippets in the 'cozodb' database.
 
-  Parameters:
-  - owner_type (Literal["user", "agent"]): The type of the owner of the document.
-  - owner_id (UUID): The UUID of the document owner.
-  - id (UUID): The UUID of the document to be created.
-  - title (str): The title of the document.
-  - content (str): The content of the document, which will be split into snippets.
-  - split_fn (Callable[[str], list[str]]): A function to split the content into snippets. Defaults to splitting by double newlines.
-  - metadata (dict): Metadata associated with the document. Defaults to an empty dictionary.
-  - client (CozoClient): The Cozo client instance to execute the query. Defaults to a pre-configured client instance.
+    Parameters:
+    - owner_type (Literal["user", "agent"]): The type of the owner of the document.
+    - owner_id (UUID): The UUID of the document owner.
+    - id (UUID): The UUID of the document to be created.
+    - title (str): The title of the document.
+    - content (str): The content of the document, which will be split into snippets.
+    - split_fn (Callable[[str], list[str]]): A function to split the content into snippets. Defaults to splitting by double newlines.
+    - metadata (dict): Metadata associated with the document. Defaults to an empty dictionary.
+    - client (CozoClient): The Cozo client instance to execute the query. Defaults to a pre-configured client instance.
 
-  Returns:
-  pd.DataFrame: A DataFrame containing the results of the query execution.
-  """
+    Returns:
+    pd.DataFrame: A DataFrame containing the results of the query execution.
+    """
     created_at: float = utcnow().timestamp()
 
     snippets = split_fn(content)

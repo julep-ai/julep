@@ -21,6 +21,8 @@ Parameters:
 Returns:
 - pd.DataFrame: A DataFrame containing the results of the deletion query.
 """
+
+
 def delete_agent_query(
     developer_id: UUID, agent_id: UUID, client: CozoClient = client
 ) -> pd.DataFrame:
@@ -42,4 +44,6 @@ def delete_agent_query(
         }
     }"""
 
-    return client.run(query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})
+    return client.run(
+        query, {"agent_id": str(agent_id), "developer_id": str(developer_id)}
+    )

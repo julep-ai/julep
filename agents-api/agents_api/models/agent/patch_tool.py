@@ -12,13 +12,13 @@ def patch_tool_by_id_query(
     """
     # Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.
-    
+
     Parameters:
     - agent_id (UUID): The unique identifier of the agent.
     - tool_id (UUID): The unique identifier of the tool to be updated.
     - function (FunctionDef): The function definition containing the new tool information.
     - embedding (list[float]): The embedding vector associated with the tool.
-    
+
     Returns:
     - pd.DataFrame: A DataFrame containing the result of the update operation.
     """

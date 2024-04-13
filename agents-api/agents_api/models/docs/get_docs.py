@@ -20,6 +20,8 @@ Parameters:
 Returns:
     pd.DataFrame: A DataFrame containing the document snippets and related metadata.
 """
+
+
 def get_docs_snippets_by_id_query(
     owner_type: Literal["user", "agent"],
     doc_id: UUID,

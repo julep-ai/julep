@@ -20,6 +20,8 @@ Parameters:
 Returns:
 - pd.DataFrame: A pandas DataFrame containing the results of the query execution.
 """
+
+
 def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.DataFrame:
     # Prepare data for mutation by filtering out None values and adding system-generated fields.
     user_update_cols, user_update_vals = cozo_process_mutate_data(
