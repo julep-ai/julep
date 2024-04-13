@@ -73,7 +73,7 @@ def update_session_query(
     }}
     """
 
-    combined_query = "{" + assertion_query + "} {" + session_update_query + "}"
+    combined_query = "{" + assertion_query + "}" + session_update_query
 
     return client.run(
         combined_query,
