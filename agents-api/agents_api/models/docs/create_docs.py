@@ -56,7 +56,8 @@ def create_docs_query(
     # Construct the datalog query for creating the document and its snippets.
     query = f"""
     {{
-        # Create the docs
+        # This query creates a new document and its associated snippets in the database.
+        # Section to create the document in the database
         ?[{owner_type}_id, doc_id, created_at, metadata] <- [[
             to_uuid($owner_id),
             to_uuid($id),
@@ -68,14 +69,14 @@ def create_docs_query(
             {owner_type}_id, doc_id, created_at, metadata,
         }}
     }} {{
-        # create the snippets
+        # Section to create and associate snippets with the document
         ?[{snippet_cols}] <- $snippet_rows
 
         :insert information_snippets {{
             {snippet_cols}
         }}
     }} {{
-        # return the docs
+        # Section to return the created document and its snippets
         ?[{owner_type}_id, doc_id, created_at, metadata] <- [[
             to_uuid($owner_id),
             to_uuid($id),
