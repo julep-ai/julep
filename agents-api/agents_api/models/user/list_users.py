@@ -16,6 +16,20 @@ def list_users_query(
     metadata_filter: dict[str, Any] = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    """
+    Queries the 'cozodb' database to list users associated with a specific developer.
+
+    Parameters:
+    - developer_id (UUID): The unique identifier of the developer.
+    - limit (int): The maximum number of users to return. Defaults to 100.
+    - offset (int): The number of users to skip before starting to collect the result set. Defaults to 0.
+    - metadata_filter (dict[str, Any]): A dictionary representing filters to apply on user metadata.
+    - client (CozoClient): The database client used to run the query. Defaults to an instance of CozoClient.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the queried user data.
+    """
+    # Construct a filter string for the metadata based on the provided dictionary.
     metadata_filter_str = ", ".join(
         [
             f"metadata->{json.dumps(k)} == {json.dumps(v)}"
@@ -23,6 +37,7 @@ def list_users_query(
         ]
     )
 
+    # Define the datalog query for retrieving user information based on the specified filters and sorting them by creation date in descending order.
     query = f"""
     input[developer_id] <- [[to_uuid($developer_id)]]
 
@@ -51,6 +66,7 @@ def list_users_query(
     :sort -created_at
     """
 
+    # Execute the datalog query with the specified parameters and return the results as a DataFrame.
     return client.run(
         query, {"developer_id": str(developer_id), "limit": limit, "offset": offset}
     )
