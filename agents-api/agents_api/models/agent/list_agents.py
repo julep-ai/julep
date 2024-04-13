@@ -28,7 +28,7 @@ def list_agents_query(
     Returns:
         A pandas DataFrame containing the query results.
     """
-        # Transforms the metadata_filter dictionary into a string representation for the datalog query.
+    # Transforms the metadata_filter dictionary into a string representation for the datalog query.
     metadata_filter_str = ", ".join(
         [
             f"metadata->{json.dumps(k)} == {json.dumps(v)}"
@@ -36,7 +36,7 @@ def list_agents_query(
         ]
     )
 
-        # Datalog query to retrieve agent information based on filters, sorted by creation date in descending order.
+    # Datalog query to retrieve agent information based on filters, sorted by creation date in descending order.
     query = f"""
     {{
         input[developer_id] <- [[to_uuid($developer_id)]]

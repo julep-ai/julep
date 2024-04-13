@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class AgentDefaultSettings(BaseModel):
     """Defines default settings for an agent. These settings control various aspects of the agent's behavior during operation."""
+
     """Temperature setting influencing the randomness of the agent's responses. Higher values lead to more random responses."""
     temperature: float = 0.0
     """Top-p sampling setting controlling the nucleus of the probability distribution to sample from."""

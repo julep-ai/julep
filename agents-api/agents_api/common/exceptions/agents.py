@@ -6,13 +6,15 @@ from . import BaseCommonException
 
 class BaseAgentException(BaseCommonException):
     """Base exception class for all agent-related exceptions."""
+
     pass
 
 
 class AgentNotFoundError(BaseAgentException):
     """Exception raised when a requested agent cannot be found."""
+
     def __init__(self, developer_id: UUID | str, agent_id: UUID | str):
-                # Initialize the exception with a message indicating the missing agent and developer ID.
+        # Initialize the exception with a message indicating the missing agent and developer ID.
         super().__init__(
             f"Agent {str(agent_id)} not found for developer {str(developer_id)}",
             http_code=404,
@@ -21,8 +23,9 @@ class AgentNotFoundError(BaseAgentException):
 
 class AgentToolNotFoundError(BaseAgentException):
     """Exception raised when a requested tool associated with an agent cannot be found."""
+
     def __init__(self, agent_id: UUID | str, tool_id: UUID | str):
-                # Initialize the exception with a message indicating the missing tool and agent ID.
+        # Initialize the exception with a message indicating the missing tool and agent ID.
         super().__init__(
             f"Tool {str(tool_id)} not found for agent {str(agent_id)}", http_code=404
         )
@@ -30,8 +33,9 @@ class AgentToolNotFoundError(BaseAgentException):
 
 class AgentDocNotFoundError(BaseAgentException):
     """Exception raised when a requested document associated with an agent cannot be found."""
+
     def __init__(self, agent_id: UUID | str, doc_id: UUID | str):
-                # Initialize the exception with a message indicating the missing document and agent ID.
+        # Initialize the exception with a message indicating the missing document and agent ID.
         super().__init__(
             f"Doc {str(doc_id)} not found for agent {str(agent_id)}", http_code=404
         )

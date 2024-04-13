@@ -6,11 +6,13 @@ from typing import Any
 
 class CustomJSONEncoder(json.JSONEncoder):
     """A custom JSON encoder subclass that handles None values and UUIDs for JSON serialization. It allows specifying a default value for None objects during initialization."""
+
     def __init__(self, *args, **kwargs):
         """Initializes the custom JSON encoder.
         Parameters:
         *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments. The 'default_empty_value' keyword argument specifies the default value to use for None objects during serialization."""
+        **kwargs: Arbitrary keyword arguments. The 'default_empty_value' keyword argument specifies the default value to use for None objects during serialization.
+        """
         self._default_empty_value = kwargs.pop("default_empty_value")
         super().__init__(*args, **kwargs)
 
@@ -26,7 +28,8 @@ class CustomJSONEncoder(json.JSONEncoder):
         """Provides a default serialization for objects that the standard JSON encoder cannot serialize.
         Parameters:
         obj: The object to serialize.
-        Returns: A serializable object or raises a TypeError if the object is not serializable."""
+        Returns: A serializable object or raises a TypeError if the object is not serializable.
+        """
         if obj is None:
             return self._default_empty_value
 

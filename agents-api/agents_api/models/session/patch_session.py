@@ -33,12 +33,12 @@ def patch_session_query(
     Returns:
     pd.DataFrame: A pandas DataFrame containing the result of the update operation.
     """
-    assertion_query = f"""
+    assertion_query = """
         ?[session_id, developer_id] :=
-            *sessions {{
+            *sessions {
                 session_id,
                 developer_id,
-            }},
+            },
             session_id = to_uuid($session_id),
             developer_id = to_uuid($developer_id),
         # Assertion to ensure the session exists before updating.

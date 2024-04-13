@@ -10,7 +10,6 @@ from pycozo.client import Client as CozoClient
 from ...clients.cozo import client
 
 
-
 """
 Constructs and executes a datalog query to create a new user in the CozoDB database.
 
@@ -25,6 +24,8 @@ Parameters:
 Returns:
     pd.DataFrame: A DataFrame containing the result of the query execution.
 """
+
+
 def create_user_query(
     user_id: UUID,
     developer_id: UUID,

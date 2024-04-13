@@ -22,12 +22,12 @@ def update_session_query(
     **update_data,
 ) -> pd.DataFrame:
     # Process the update data to prepare it for the query.
-    assertion_query = f"""
+    assertion_query = """
     ?[session_id, developer_id] := 
-        *sessions {{
+        *sessions {
             session_id,
             developer_id,
-        }},
+        },
         session_id = to_uuid($session_id),
         developer_id = to_uuid($developer_id),
     # Assertion to ensure the session exists before updating.
@@ -40,7 +40,7 @@ def update_session_query(
         }
     )
 
-        # Prepare lists of columns for the query.
+    # Prepare lists of columns for the query.
     session_update_cols_lst = session_update_cols.split(",")
     all_fields_lst = list(set(session_update_cols_lst).union(set(_fields)))
     all_fields = ", ".join(all_fields_lst)

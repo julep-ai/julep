@@ -18,6 +18,8 @@ Parameters:
 Returns:
 - pd.DataFrame: A DataFrame containing the queried top-level entries.
 """
+
+
 def get_toplevel_entries_query(session_id: UUID) -> pd.DataFrame:
     query = """
         # Construct a datalog query to retrieve entries not summarized by any other entry.
@@ -70,11 +72,15 @@ Parameters:
 Returns:
 - pd.DataFrame: A DataFrame containing the result of the insertion operation.
 """
+
+
 def entries_summarization_query(
     session_id: UUID, new_entry: Entry, old_entry_ids: list[UUID]
 ) -> pd.DataFrame:
-        # Prepare relations data for insertion, marking the new entry as a summary of the old entries.
-    relations = [[str(new_entry.id), "summary_of", str(old_id)] for old_id in old_entry_ids]
+    # Prepare relations data for insertion, marking the new entry as a summary of the old entries.
+    relations = [
+        [str(new_entry.id), "summary_of", str(old_id)] for old_id in old_entry_ids
+    ]
     # Create a list of relations indicating which entries the new entry summarizes.
 
     # Convert the new entry's source information into JSON format for storage.
