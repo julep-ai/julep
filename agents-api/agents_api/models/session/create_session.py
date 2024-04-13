@@ -1,3 +1,7 @@
+"""
+This module contains the functionality for creating a new session in the 'cozodb' database.
+It constructs and executes a datalog query to insert session data.
+"""
 from uuid import UUID
 
 import pandas as pd
@@ -6,6 +10,21 @@ from pycozo.client import Client as CozoClient
 from ...clients.cozo import client
 
 
+"""
+Constructs and executes a datalog query to create a new session in the database.
+
+Parameters:
+- session_id (UUID): The unique identifier for the session.
+- developer_id (UUID): The unique identifier for the developer.
+- agent_id (UUID): The unique identifier for the agent.
+- user_id (UUID | None): The unique identifier for the user, if applicable.
+- situation (str | None): The situation/context of the session.
+- metadata (dict): Additional metadata for the session.
+- client (CozoClient): The database client used to execute the query.
+
+Returns:
+- pd.DataFrame: The result of the query execution.
+"""
 def create_session_query(
     session_id: UUID,
     developer_id: UUID,
@@ -15,6 +34,7 @@ def create_session_query(
     metadata: dict = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    # Construct the datalog query for creating a new session and its lookup.
     query = """
     {
         # Create a new session lookup
@@ -47,6 +67,7 @@ def create_session_query(
         :returning
      }"""
 
+    # Execute the constructed query with the provided parameters and return the result.
     return client.run(
         query,
         {
