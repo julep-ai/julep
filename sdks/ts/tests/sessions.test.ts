@@ -63,10 +63,7 @@ describe("Sessions API", () => {
   });
 
   it("sessions.update", async () => {
-    const response = await client.sessions.update(
-      testSessionId,
-      mockSessionUpdate,
-    );
+    const response = await client.sessions.update(testSessionId, mockSessionUpdate);
 
     expect(response).toHaveProperty("updated_at");
   });
@@ -91,28 +88,11 @@ describe("Sessions API", () => {
             name: "test name",
           },
         ],
-        //   tools: [
-        //     {
-        //       type: "function",
-        //       function: {
-        //         description: "test description",
-        //         name: "test name",
-        //         parameters: { testArg: "test val" },
-        //       },
-        //       id: uuidv4().toString(),
-        //     },
-        //   ],
-        //   toolChoice: "auto",
         max_tokens: 1000,
         presence_penalty: 0.5,
         repetition_penalty: 0.5,
-        // seed: 1,
-        //   stop: ["<"],
-        //   stream: false,
         temperature: 0.7,
         top_p: 0.9,
-        recall: false,
-        remember: false,
       });
 
       expect(response.response).toBeDefined();
@@ -121,24 +101,23 @@ describe("Sessions API", () => {
     }
   }, 5000);
 
-  // it("sessions.suggestions", async () => {
-  //   const response = await client.sessions.suggestions(testSessionId, {
-  //     limit: 10,
-  //     offset: 10,
-  //   });
+  //   it("sessions.suggestions", async () => {
+  //     const response = await client.sessions.suggestions(testSessionId);
 
-  //   expect(response.length).toBeGreaterThan(0);
-  // });
-
-  //   it("sessions.history", async () => {
-  //     const response = await client.sessions.history(testSessionId, {
-  //       limit: 10,
-  //       offset: 10,
-  //     });
-
-  //     console.error("res", response);
   //     expect(response.length).toBeGreaterThan(0);
   //   });
+
+  it("sessions.history", async () => {
+    const response = await client.sessions.history(testSessionId);
+
+    expect(response.length).toBeGreaterThan(0);
+  });
+
+  it("sessions.deleteHistory", async () => {
+    const response = await client.sessions.deleteHistory(testSessionId);
+
+    expect(response).toBeUndefined();
+  });
 
   it("sessions.delete", async () => {
     const response = await client.sessions.delete(testSessionId);
