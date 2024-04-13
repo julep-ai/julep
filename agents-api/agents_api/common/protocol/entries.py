@@ -40,4 +40,3 @@ class Entry(BaseModel):
     class Config:
         """Configuration settings for the Entry model, ensuring enum values are used."""
         use_enum_values = True  # Ensures that enum values are used in serialization
-        use_enum_values = True  # <--
