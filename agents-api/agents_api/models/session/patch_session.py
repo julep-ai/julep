@@ -33,6 +33,18 @@ def patch_session_query(
     Returns:
     pd.DataFrame: A pandas DataFrame containing the result of the update operation.
     """
+    assertion_query = f"""
+        ?[session_id, developer_id] :=
+            *sessions {{
+                session_id,
+                developer_id,
+            }},
+            session_id = to_uuid($session_id),
+            developer_id = to_uuid($developer_id),
+        # Assertion to ensure the session exists before updating.
+        :assert some
+    """
+
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -72,8 +84,10 @@ def patch_session_query(
     """
 
     # Execute the constructed datalog query and return the result as a pandas DataFrame.
+    query = "{" + assertion_query + "} {" + session_update_query + "}"
+
     return client.run(
-        session_update_query,
+        query,
         {
             "session_update_vals": session_update_vals,
             "session_id": str(session_id),
