@@ -11,6 +11,7 @@ def get_user_query(
     user_id: UUID,
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    # Convert UUIDs to strings for query compatibility.
     user_id = str(user_id)
     developer_id = str(developer_id)
 
