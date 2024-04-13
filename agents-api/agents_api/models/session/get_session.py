@@ -14,10 +14,10 @@ def get_session_query(
     session_id = str(session_id)
     developer_id = str(developer_id)
 
-    query = f"""
+    query = """
     input[developer_id, session_id] <- [[
-        to_uuid("{developer_id}"),
-        to_uuid("{session_id}"),
+        to_uuid($developer_id),
+        to_uuid($session_id),
     ]]
 
     ?[
@@ -30,7 +30,7 @@ def get_session_query(
         created_at,
         metadata,
     ] := input[developer_id, id],
-        *sessions{{
+        *sessions{
             developer_id,
             session_id: id,
             situation,
@@ -39,11 +39,11 @@ def get_session_query(
             updated_at: validity,
             metadata,
             @ "NOW"
-        }},
-        *session_lookup{{
+        },
+        *session_lookup{
             agent_id,
             user_id,
             session_id: id,
-        }}, updated_at = to_int(validity)"""
+        }, updated_at = to_int(validity)"""
 
-    return client.run(query)
+    return client.run(query, {"session_id": session_id, "developer_id": developer_id})

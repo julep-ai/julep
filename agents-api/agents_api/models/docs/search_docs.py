@@ -24,8 +24,8 @@ def search_docs_snippets_by_embedding_query(
             {owner_type}_id,
             query_embedding,
         ] <- [[
-            to_uuid("{owner_id}"),
-            vec({query_embedding}),
+            to_uuid($owner_id),
+            vec($query_embedding),
         ]]
 
         candidate[
@@ -52,9 +52,9 @@ def search_docs_snippets_by_embedding_query(
                 title,
                 snippet |
                 query: query_embedding,
-                k: {k},
+                k: $k,
                 ef: 128,
-                radius: {radius},
+                radius: $radius,
                 bind_distance: distance,
                 bind_vector: vector,
             }}
@@ -62,4 +62,12 @@ def search_docs_snippets_by_embedding_query(
         :sort distance
     }}"""
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "owner_id": owner_id,
+            "query_embedding": query_embedding,
+            "k": k,
+            "radius": radius,
+        },
+    )

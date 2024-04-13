@@ -5,13 +5,14 @@ from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
 def update_user_query(
     developer_id: UUID, user_id: UUID, client: CozoClient = client, **update_data
 ) -> pd.DataFrame:
+    user_id = str(user_id)
+    developer_id = str(developer_id)
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -20,12 +21,24 @@ def update_user_query(
         }
     )
 
+    assertion_query = f"""
+        ?[developer_id, user_id] :=
+            *users {{
+                developer_id,
+                user_id,
+            }},
+            developer_id = to_uuid($developer_id),
+            user_id = to_uuid($user_id),
+
+        :assert some
+    """
+
     query = f"""
         # update the user
-        input[{user_update_cols}] <- {json.dumps(user_update_vals)}
+        input[{user_update_cols}] <- $user_update_vals
         original[created_at] := *users{{
-            developer_id: to_uuid("{developer_id}"),
-            user_id: to_uuid("{user_id}"),
+            developer_id: to_uuid($developer_id),
+            user_id: to_uuid($user_id),
             created_at,
         }},
 
@@ -42,4 +55,13 @@ def update_user_query(
         :returning
     """
 
-    return client.run(query)
+    query = "{" + assertion_query + "} {" + query + "}"
+
+    return client.run(
+        query,
+        {
+            "user_update_vals": user_update_vals,
+            "developer_id": developer_id,
+            "user_id": user_id,
+        },
+    )

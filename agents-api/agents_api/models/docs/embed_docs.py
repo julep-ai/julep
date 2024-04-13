@@ -15,25 +15,21 @@ def embed_docs_snippets_query(
     doc_id = str(doc_id)
     assert len(snippet_indices) == len(embeddings)
 
-    records = "\n".join(
-        [
-            f'[to_uuid("{doc_id}"), {snippet_idx}, vec({embedding})],'
-            for snippet_idx, embedding in zip(snippet_indices, embeddings)
-        ]
-    )
+    records = [
+        [doc_id, snippet_idx, embedding]
+        for snippet_idx, embedding in zip(snippet_indices, embeddings)
+    ]
 
-    query = f"""
-    {{
-        ?[doc_id, snippet_idx, embedding] <- [
-            {records}
-        ]
+    query = """
+    {
+        ?[doc_id, snippet_idx, embedding] <- $records
 
-        :update information_snippets {{
+        :update information_snippets {
             doc_id,
             snippet_idx,
             embedding,
-        }}
+        }
         :returning
-    }}"""
+    }"""
 
-    return client.run(query)
+    return client.run(query, {"records": records})

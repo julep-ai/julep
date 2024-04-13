@@ -3,7 +3,6 @@ from uuid import UUID
 import pandas as pd
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
@@ -40,12 +39,12 @@ def update_session_query(
 
     session_update_query = f"""
     {{
-        input[{session_update_cols}, session_id, developer_id] <- [
-            [{json.dumps(session_update_vals[0]).strip("[]")}, to_uuid("{session_id}"), to_uuid("{developer_id}")]
-        ]
+        input[{session_update_cols}] <- $session_update_vals
+        ids[session_id, developer_id] <- [[$session_id, $developer_id]]
         
         ?[{all_fields}, updated_at] :=
-            input[{session_update_cols}, session_id, developer_id],
+            input[{session_update_cols}],
+            ids[session_id, developer_id],
             *sessions{{
                 {rest_fields}, @ "NOW"
             }},
@@ -59,4 +58,11 @@ def update_session_query(
     }}
     """
 
-    return client.run(session_update_query)
+    return client.run(
+        session_update_query,
+        {
+            "session_update_vals": session_update_vals,
+            "session_id": str(session_id),
+            "developer_id": str(developer_id),
+        },
+    )

@@ -5,7 +5,6 @@ from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 
-from ...common.utils import json
 
 
 def create_user_query(
@@ -16,26 +15,30 @@ def create_user_query(
     metadata: dict = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
-    user_id = str(user_id)
-    name = json.dumps(name)
-    about = json.dumps(about)
-    metadata = json.dumps(metadata)
-
-    query = f"""
-    {{
+    query = """
+    {
         # Then create the user
         ?[user_id, developer_id, name, about, metadata] <- [
-            [to_uuid("{user_id}"), to_uuid("{developer_id}"), {name}, {about}, {metadata}]
+            [to_uuid($user_id), to_uuid($developer_id), $name, $about, $metadata]
         ]
 
-        :insert users {{
+        :insert users {
             developer_id,
             user_id =>
             name,
             about,
             metadata,
-        }}
+        }
         :returning
-    }}"""
+    }"""
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "user_id": str(user_id),
+            "developer_id": str(developer_id),
+            "name": name,
+            "about": about,
+            "metadata": metadata,
+        },
+    )

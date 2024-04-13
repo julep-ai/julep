@@ -24,7 +24,7 @@ def list_users_query(
     )
 
     query = f"""
-    input[developer_id] <- [[to_uuid("{developer_id}")]]
+    input[developer_id] <- [[to_uuid($developer_id)]]
 
     ?[
         id,
@@ -46,9 +46,11 @@ def list_users_query(
         }},
         {metadata_filter_str}
 
-    :limit {limit}
-    :offset {offset}
+    :limit $limit
+    :offset $offset
     :sort -created_at
     """
 
-    return client.run(query)
+    return client.run(
+        query, {"developer_id": str(developer_id), "limit": limit, "offset": offset}
+    )
