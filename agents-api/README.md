@@ -162,3 +162,47 @@
 │ 6 │ metadata     │ False  │ Json   │ True        │
 └───┴──────────────┴────────┴────────┴─────────────┘
 
+# Overview
+
+The `agents-api` project serves as the foundation of the agent management system, defining the structure and capabilities of the API that manages agents. It includes operations such as creating, updating, listing, and deleting agents, as well as managing documents and tools associated with these agents.
+
+# Modules Description
+
+## Models
+
+The `models` module encapsulates all data interactions with the CozoDB database, providing a structured way to perform CRUD operations and other specific data manipulations across various entities.
+
+## Routers
+
+The `routers` module handles HTTP routing for different parts of the application, directing incoming HTTP requests to the appropriate handler functions.
+
+## Dependencies
+
+This module contains components crucial for the operation of the agents-api, including authentication, developer identification, and custom exception handling.
+
+## Common Utilities
+
+The `utils` module offers a collection of utility functions designed to support various aspects of the application, including interactions with the Cozo API client, date and time operations, and custom JSON utilities.
+
+## Activities
+
+The `activities` module facilitates various activities related to agent interactions, such as memory management, generating insights from dialogues, and summarizing relationships.
+
+## Clients
+
+The `clients` module contains client classes and functions for interacting with various external services and APIs, providing a simplified interface for the rest of the application.
+
+## Workers
+
+This module is responsible for handling background tasks and jobs for the Agents API application, enhancing the application's performance and scalability.
+
+# Getting Started
+
+To set up the project for development:
+
+1. Clone the repository.
+2. Install dependencies.
+3. Run the application.
+
+This guide provides a brief overview for new contributors to get started with the project development.
+
