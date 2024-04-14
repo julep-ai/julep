@@ -3,6 +3,7 @@
 ## Schema
 
 ### Relation `agent_default_settings`
+```
 ┌───┬────────────────────┬────────┬─────────┬─────────────┐
 │   │ column             │ is_key │ type    │ has_default │
 ├───┼────────────────────┼────────┼─────────┼─────────────┤
@@ -16,8 +17,10 @@
 │ 7 │ min_p              │ False  │ Float   │ True        │
 │ 8 │ preset             │ False  │ String? │ True        │
 └───┴────────────────────┴────────┴─────────┴─────────────┘
+```
 
 ### Relation `agent_docs`
+```
 ┌───┬────────────┬────────┬───────┬─────────────┐
 │   │ column     │ is_key │ type  │ has_default │
 ├───┼────────────┼────────┼───────┼─────────────┤
@@ -26,8 +29,10 @@
 │ 2 │ created_at │ False  │ Float │ True        │
 │ 3 │ metadata   │ False  │ Json  │ True        │
 └───┴────────────┴────────┴───────┴─────────────┘
+```
 
 ### Relation `agent_functions`
+```
 ┌───┬───────────────────┬────────┬────────────┬─────────────┐
 │   │ column            │ is_key │ type       │ has_default │
 ├───┼───────────────────┼────────┼────────────┼─────────────┤
@@ -41,8 +46,10 @@
 │ 7 │ updated_at        │ False  │ Float      │ True        │
 │ 8 │ created_at        │ False  │ Float      │ True        │
 └───┴───────────────────┴────────┴────────────┴─────────────┘
+```
 
 ### Relation `agents`
+```
 ┌───┬──────────────┬────────┬──────────┬─────────────┐
 │   │ column       │ is_key │ type     │ has_default │
 ├───┼──────────────┼────────┼──────────┼─────────────┤
@@ -50,14 +57,16 @@
 │ 1 │ agent_id     │ True   │ Uuid     │ False       │
 │ 2 │ name         │ False  │ String   │ False       │
 │ 3 │ about        │ False  │ String   │ False       │
-│ 4 │ instructions │ False  │ ### Relation `String` │ True        │
+│ 4 │ instructions │ False  │ [String] │ True        │
 │ 5 │ model        │ False  │ String   │ True        │
 │ 6 │ created_at   │ False  │ Float    │ True        │
 │ 7 │ updated_at   │ False  │ Float    │ True        │
 │ 8 │ metadata     │ False  │ Json     │ True        │
 └───┴──────────────┴────────┴──────────┴─────────────┘
+```
 
 ### Relation `entries`
+```
 ┌───┬─────────────┬────────┬─────────┬─────────────┐
 │   │ column      │ is_key │ type    │ has_default │
 ├───┼─────────────┼────────┼─────────┼─────────────┤
@@ -72,8 +81,10 @@
 │ 8 │ created_at  │ False  │ Float   │ True        │
 │ 9 │ timestamp   │ False  │ Float   │ True        │
 └───┴─────────────┴────────┴─────────┴─────────────┘
+```
 
 ### Relation `information_snippets`
+```
 ┌───┬───────────────────┬────────┬────────────┬─────────────┐
 │   │ column            │ is_key │ type       │ has_default │
 ├───┼───────────────────┼────────┼────────────┼─────────────┤
@@ -84,8 +95,10 @@
 │ 4 │ embed_instruction │ False  │ String     │ True        │
 │ 5 │ embedding         │ False  │ <F32;768>? │ True        │
 └───┴───────────────────┴────────┴────────────┴─────────────┘
+```
 
 ### Relation `memories`
+```
 ┌───┬──────────────────┬────────┬────────────┬─────────────┐
 │   │ column           │ is_key │ type       │ has_default │
 ├───┼──────────────────┼────────┼────────────┼─────────────┤
@@ -94,12 +107,14 @@
 │ 2 │ last_accessed_at │ False  │ Float?     │ True        │
 │ 3 │ timestamp        │ False  │ Float      │ True        │
 │ 4 │ sentiment        │ False  │ Int        │ True        │
-│ 5 │ entities         │ False  │ ### Relation `Json`     │ True        │
+│ 5 │ entities         │ False  │ [Json]     │ True        │
 │ 6 │ created_at       │ False  │ Float      │ True        │
 │ 7 │ embedding        │ False  │ <F32;768>? │ True        │
 └───┴──────────────────┴────────┴────────────┴─────────────┘
+```
 
 ### Relation `memory_lookup`
+```
 ┌───┬───────────┬────────┬───────┬─────────────┐
 │   │ column    │ is_key │ type  │ has_default │
 ├───┼───────────┼────────┼───────┼─────────────┤
@@ -107,8 +122,10 @@
 │ 1 │ user_id   │ True   │ Uuid? │ True        │
 │ 2 │ memory_id │ True   │ Uuid  │ False       │
 └───┴───────────┴────────┴───────┴─────────────┘
+```
 
 ### Relation `relations`
+```
 ┌───┬──────────┬────────┬────────┬─────────────┐
 │   │ column   │ is_key │ type   │ has_default │
 ├───┼──────────┼────────┼────────┼─────────────┤
@@ -116,8 +133,10 @@
 │ 1 │ relation │ True   │ String │ False       │
 │ 2 │ tail     │ True   │ Uuid   │ False       │
 └───┴──────────┴────────┴────────┴─────────────┘
+```
 
 ### Relation `session_lookup`
+```
 ┌───┬────────────┬────────┬───────┬─────────────┐
 │   │ column     │ is_key │ type  │ has_default │
 ├───┼────────────┼────────┼───────┼─────────────┤
@@ -125,8 +144,10 @@
 │ 1 │ user_id    │ True   │ Uuid? │ True        │
 │ 2 │ session_id │ True   │ Uuid  │ False       │
 └───┴────────────┴────────┴───────┴─────────────┘
+```
 
 ### Relation `sessions`
+```
 ┌───┬──────────────┬────────┬──────────┬─────────────┐
 │   │ column       │ is_key │ type     │ has_default │
 ├───┼──────────────┼────────┼──────────┼─────────────┤
@@ -138,8 +159,10 @@
 │ 5 │ created_at   │ False  │ Float    │ True        │
 │ 6 │ metadata     │ False  │ Json     │ True        │
 └───┴──────────────┴────────┴──────────┴─────────────┘
+```
 
 ### Relation `user_docs`
+```
 ┌───┬────────────┬────────┬───────┬─────────────┐
 │   │ column     │ is_key │ type  │ has_default │
 ├───┼────────────┼────────┼───────┼─────────────┤
@@ -148,8 +171,10 @@
 │ 2 │ created_at │ False  │ Float │ True        │
 │ 3 │ metadata   │ False  │ Json  │ True        │
 └───┴────────────┴────────┴───────┴─────────────┘
+```
 
 ### Relation `users`
+```
 ┌───┬──────────────┬────────┬────────┬─────────────┐
 │   │ column       │ is_key │ type   │ has_default │
 ├───┼──────────────┼────────┼────────┼─────────────┤
@@ -161,4 +186,4 @@
 │ 5 │ updated_at   │ False  │ Float  │ True        │
 │ 6 │ metadata     │ False  │ Json   │ True        │
 └───┴──────────────┴────────┴────────┴─────────────┘
-
+```
