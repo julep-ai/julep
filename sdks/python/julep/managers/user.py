@@ -5,7 +5,7 @@ from typing import Optional, TypedDict
 from beartype import beartype
 from beartype.typing import Any, Awaitable, Dict, List, Union
 
-from .utils import rewrap_in_class
+from .utils import rewrap_in_class, NotSet
 
 from ..api.types import (
     User,
@@ -23,12 +23,14 @@ from .types import DocDict
 class UserCreateArgs(TypedDict):
     name: str
     about: str
-    docs: List[str]
+    docs: List[str] = []
+    metadata: Dict[str, Any] = {}
 
 
 class UserUpdateArgs(TypedDict):
-    about: Optional[str] = None
     name: Optional[str] = None
+    about: Optional[str] = None
+    metadata: Dict[str, Any] = {}
     overwrite: bool = False
 
 
@@ -80,6 +82,7 @@ class BaseUsersManager(BaseManager):
         name: str,
         about: str,
         docs: List[DocDict] = [],
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast docs to a list of CreateDoc objects
         """
@@ -157,8 +160,9 @@ class BaseUsersManager(BaseManager):
     def _update(
         self,
         user_id: Union[str, UUID],
-        about: Optional[str] = None,
-        name: Optional[str] = None,
+        about: Optional[str] = NotSet,
+        name: Optional[str] = NotSet,
+        metadata: Dict[str, Any] = NotSet,
         overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
@@ -183,11 +187,15 @@ class BaseUsersManager(BaseManager):
             self.api_client.update_user if overwrite else self.api_client.patch_user
         )
 
-        return updateFn(
+        update_data = dict(
             user_id=user_id,
             about=about,
             name=name,
         )
+
+        update_data = {k: v for k, v in update_data.items() if v is not NotSet}
+
+        return updateFn(**update_data)
 
 
 class UsersManager(BaseUsersManager):
@@ -296,7 +304,6 @@ class UsersManager(BaseUsersManager):
     @beartype
     def delete(
         self,
-        *,
         user_id: Union[str, UUID],
     ) -> None:
         """
@@ -447,7 +454,6 @@ class AsyncUsersManager(BaseUsersManager):
     @beartype
     async def delete(
         self,
-        *,
         user_id: Union[str, UUID],
     ) -> None:
         """

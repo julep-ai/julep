@@ -457,6 +457,11 @@ class AsyncDocsManager(BaseDocsManager):
         Note:
             The `@beartype` decorator is used to enforce type checking on the function arguments.
         """
+
+        # Assert either user_id or agent_id is provided
+        if not agent_id and not user_id:
+            raise ValueError("Either agent_id or user_id must be provided.")
+
         return await self._delete(
             agent_id=agent_id,
             user_id=user_id,

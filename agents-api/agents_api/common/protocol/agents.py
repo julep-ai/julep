@@ -22,4 +22,6 @@ class AgentDefaultSettings(BaseModel):
     min_p: float = 0.01
 
 
-ModelType = Literal["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
+ModelType = Literal[
+    "julep-ai/samantha-1", "julep-ai/samantha-1-turbo", "julep-ai/samantha-1-turbo-awq"
+]

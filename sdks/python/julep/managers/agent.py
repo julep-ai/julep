@@ -18,7 +18,7 @@ from ..api.types import (
 from .utils import rewrap_in_class
 
 from .base import BaseManager
-from .utils import is_valid_uuid4
+from .utils import is_valid_uuid4, NotSet
 from .types import (
     ToolDict,
     FunctionDefDict,
@@ -30,6 +30,7 @@ from .types import (
 ###########
 ## TYPES ##
 ###########
+
 
 ModelName = Literal[
     "julep-ai/samantha-1",
@@ -46,6 +47,7 @@ class AgentCreateArgs(TypedDict):
     default_settings: DefaultSettingsDict = {}
     model: ModelName = "julep-ai/samantha-1-turbo"
     docs: List[DocDict] = []
+    metadata: Dict[str, Any] = {}
 
 
 class AgentUpdateArgs(TypedDict):
@@ -54,6 +56,7 @@ class AgentUpdateArgs(TypedDict):
     name: Optional[str] = None
     model: Optional[str] = None
     default_settings: Optional[DefaultSettingsDict] = None
+    metadata: Optional[Dict[str, Any]] = None
     overwrite: bool = False
 
 
@@ -85,6 +88,7 @@ class BaseAgentsManager(BaseManager):
                 default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the new agent. Defaults to an empty dictionary.
                 model (ModelName, optional): The model name for the new agent. Defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): List of document dictionaries for the new agent. Defaults to an empty list.
+                metadata (Dict[str, Any], optional): Dictionary of metadata for the new agent. Defaults to an empty dictionary.
             Returns:
                 The response indicating creation or an awaitable that resolves to the creation response.
 
@@ -142,6 +146,7 @@ class BaseAgentsManager(BaseManager):
         default_settings: DefaultSettingsDict = {},
         model: ModelName = "julep-ai/samantha-1-turbo",
         docs: List[DocDict] = [],
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -197,6 +202,7 @@ class BaseAgentsManager(BaseManager):
             default_settings=default_settings,
             model=model,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -244,11 +250,12 @@ class BaseAgentsManager(BaseManager):
     def _update(
         self,
         agent_id: Union[str, UUID],
-        about: Optional[str] = None,
-        instructions: List[str] = None,
-        name: Optional[str] = None,
-        model: Optional[str] = None,
-        default_settings: Optional[DefaultSettingsDict] = None,
+        about: Optional[str] = NotSet,
+        instructions: List[str] = NotSet,
+        name: Optional[str] = NotSet,
+        model: Optional[str] = NotSet,
+        default_settings: Optional[DefaultSettingsDict] = NotSet,
+        metadata: Dict[str, Any] = NotSet,
         overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
@@ -283,14 +290,19 @@ class BaseAgentsManager(BaseManager):
             self.api_client.update_agent if overwrite else self.api_client.patch_agent
         )
 
-        return updateFn(
+        update_payload = dict(
             agent_id=agent_id,
             about=about,
             instructions=instructions,
             name=name,
             model=model,
             default_settings=default_settings,
+            metadata=metadata,
         )
+
+        update_payload = {k: v for k, v in update_payload.items() if v is not NotSet}
+
+        return updateFn(**update_payload)
 
 
 class AgentsManager(BaseAgentsManager):
