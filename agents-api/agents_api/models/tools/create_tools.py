@@ -5,7 +5,6 @@ from pycozo.client import Client as CozoClient
 
 from ...autogen.openapi_model import FunctionDef
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 
@@ -22,8 +21,8 @@ def create_function_query(
     function = function.model_dump()
 
     function_data = {
-        "agent_id": agent_id,
-        "tool_id": id,
+        "agent_id": str(agent_id),
+        "tool_id": str(id),
         "created_at": created_at,
         "name": function["name"],
         "description": function["description"],
@@ -35,7 +34,7 @@ def create_function_query(
     query = f"""
     {{
         # Create functions
-        ?[{function_cols}] <- {json.dumps(function_rows)}
+        ?[{function_cols}] <- $function_rows
 
         :insert agent_functions {{
             {function_cols}
@@ -43,7 +42,7 @@ def create_function_query(
         :returning
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"function_rows": function_rows})
 
 
 def create_multiple_functions_query(
@@ -63,7 +62,7 @@ def create_multiple_functions_query(
         function_data = {
             "agent_id": agent_id,
             "created_at": created_at,
-            "tool_id": uuid4(),
+            "tool_id": str(uuid4()),
             "name": function["name"],
             "description": function["description"],
             "parameters": function["parameters"],
@@ -75,7 +74,7 @@ def create_multiple_functions_query(
     query = f"""
     {{
         # Create functions
-        ?[{function_cols}] <- {json.dumps(function_rows)}
+        ?[{function_cols}] <- $function_rows
 
         :insert agent_functions {{
             {function_cols}
@@ -83,4 +82,4 @@ def create_multiple_functions_query(
         :returning
     }}"""
 
-    return client.run(query)
+    return client.run(query, {"function_rows": function_rows})

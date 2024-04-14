@@ -12,6 +12,7 @@ from .fixtures import (
     async_client,
     client,
     test_session,
+    test_session_no_user,
     mock_session,
     mock_session_update,
     setup_agent_async,
@@ -55,6 +56,15 @@ async def _(client=async_client):
         assert response is None
         await client.agents.delete(agent_id=agent.id)
         await client.users.delete(user_id=user.id)
+
+
+@test("sessions.create no user")
+def _(client=client, session=test_session_no_user):
+    assert isinstance(session, Session)
+    assert session.id
+
+    response = client.sessions.delete(session_id=session.id)
+    assert response is None
 
 
 @test("sessions.get")
@@ -178,6 +188,15 @@ def _(client=client, session=test_session):
 #     )
 #     assert len(response) > 0
 #     assert isinstance(response[0], ChatMlMessage)
+
+
+@test("sessions.delete_history")
+def _(client=client, session=test_session):
+    response = client.sessions.delete_history(
+        session_id=session.id,
+    )
+
+    assert response is None
 
 
 @test("sessions.delete")

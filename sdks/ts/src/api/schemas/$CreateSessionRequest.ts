@@ -7,8 +7,7 @@ export const $CreateSessionRequest = {
   properties: {
     user_id: {
       type: "string",
-      description: `User ID of user to associate with this session`,
-      isRequired: true,
+      description: `(Optional) User ID of user to associate with this session`,
       format: "uuid",
     },
     agent_id: {

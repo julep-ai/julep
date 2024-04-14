@@ -146,6 +146,15 @@ def test_session(client=client, user=test_user, agent=test_agent) -> Session:
 
 
 @fixture
+def test_session_no_user(client=client, agent=test_agent) -> Session:
+    response = client.sessions.create(
+        agent_id=agent.id,
+        **mock_session,
+    )
+    return response
+
+
+@fixture
 async def test_session_async(
     client=async_client, user=test_user, agent=test_agent
 ) -> Session:

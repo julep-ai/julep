@@ -1286,7 +1286,7 @@ components:
         metadata:
           type: object
           properties: {}
-          description: Optional metadata
+          description: (Optional) metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1294,7 +1294,7 @@ components:
       properties:
         user_id:
           type: string
-          description: User ID of user to associate with this session
+          description: (Optional) User ID of user to associate with this session
           format: uuid
         agent_id:
           type: string
@@ -1309,7 +1309,6 @@ components:
           description: Optional metadata
       required:
         - agent_id
-        - user_id
       description: A valid request payload for creating a session
     CreateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1349,7 +1348,7 @@ components:
         metadata:
           type: object
           properties: {}
-          description: Optional metadata
+          description: (Optional) metadata
       required:
         - name
       description: A valid request payload for creating an agent

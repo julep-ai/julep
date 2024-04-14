@@ -20,7 +20,7 @@ export type CreateUserRequest = {
    */
   docs?: Array<CreateDoc>;
   /**
-   * Optional metadata
+   * (Optional) metadata
    */
   metadata?: any;
 };

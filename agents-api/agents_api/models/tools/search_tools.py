@@ -16,22 +16,22 @@ def search_functions_by_embedding_query(
     agent_id = str(agent_id)
     radius: float = 1.0 - confidence
 
-    query = f"""
+    query = """
         input[
             agent_id,
             query_embedding,
         ] <- [[
-            to_uuid("{agent_id}"),
-            vec({query_embedding}),
+            to_uuid($agent_id),
+            vec($query_embedding),
         ]]
 
         candidate[
             tool_id
         ] := input[agent_id, _],
-            *agent_functions {{
+            *agent_functions {
                 agent_id,
                 tool_id
-            }}
+            }
 
         ?[
             agent_id,
@@ -45,7 +45,7 @@ def search_functions_by_embedding_query(
             vector,
         ] := input[agent_id, query_embedding],
             candidate[tool_id],
-            ~agent_functions:embedding_space {{
+            ~agent_functions:embedding_space {
                 agent_id,
                 tool_id,
                 name,
@@ -54,14 +54,22 @@ def search_functions_by_embedding_query(
                 updated_at,
                 created_at |
                 query: query_embedding,
-                k: {k},
+                k: $k,
                 ef: 128,
-                radius: {radius},
+                radius: $radius,
                 bind_distance: distance,
                 bind_vector: vector,
-            }}
+            }
 
         :sort distance
     """
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "agent_id": agent_id,
+            "query_embedding": query_embedding,
+            "k": k,
+            "radius": radius,
+        },
+    )

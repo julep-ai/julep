@@ -35,7 +35,7 @@ from .utils import is_valid_uuid4
 
 
 class SessionCreateArgs(TypedDict):
-    user_id: Union[str, UUID]
+    user_id: Optional[Union[str, UUID]]
     agent_id: Union[str, UUID]
     situation: Optional[str]
 
@@ -70,8 +70,8 @@ class BaseSessionsManager(BaseManager):
             Create a new session with specified user and agent identifiers.
 
             Args:
-                user_id (Union[str, UUID]): The unique identifier for the user.
                 agent_id (Union[str, UUID]): The unique identifier for the agent.
+                user_id (Optional[Union[str, UUID]]): The unique identifier for the user.
                 situation (Optional[str]): An optional description of the situation for the session.
 
             Returns:
@@ -140,6 +140,15 @@ class BaseSessionsManager(BaseManager):
 
             Returns:
                 Union[GetHistoryResponse, Awaitable[GetHistoryResponse]]: The history response for the session or an awaitable yielding it.
+
+        _delete_history(session_id):
+            Delete the history of a session.
+
+            Args:
+                session_id (Union[str, UUID]): The unique identifier for the session.
+
+            Returns:
+                Union[None, Awaitable[None]]: None or an awaitable yielding None if the operation is successful.
     """
 
     def _get(self, id: Union[str, UUID]) -> Union[Session, Awaitable[Session]]:
@@ -160,8 +169,8 @@ class BaseSessionsManager(BaseManager):
 
     def _create(
         self,
-        user_id: Union[str, UUID],
         agent_id: Union[str, UUID],
+        user_id: Optional[Union[str, UUID]] = None,
         situation: Optional[str] = None,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
@@ -171,8 +180,8 @@ class BaseSessionsManager(BaseManager):
         This internal method is responsible for creating a session using the API client. It validates that both the user and agent IDs are valid UUID v4 strings before proceeding with session creation.
 
         Args:
-            user_id (Union[str, UUID]): The user's identifier which could be a string or a UUID object.
             agent_id (Union[str, UUID]): The agent's identifier which could be a string or a UUID object.
+            user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
             situation (Optional[str], optional): An optional description of the situation.
 
         Returns:
@@ -181,9 +190,10 @@ class BaseSessionsManager(BaseManager):
         Raises:
             AssertionError: If either `user_id` or `agent_id` is not a valid UUID v4.
         """
-        assert is_valid_uuid4(user_id) and is_valid_uuid4(
-            agent_id
-        ), "id must be a valid UUID v4"
+        assert is_valid_uuid4(agent_id), "agent_id must be a valid UUID v4"
+
+        if user_id is not None:
+            assert is_valid_uuid4(user_id), "user_id must be a valid UUID v4"
 
         return self.api_client.create_session(
             user_id=user_id,
@@ -397,6 +407,27 @@ class BaseSessionsManager(BaseManager):
             offset=offset,
         )
 
+    def _delete_history(
+        self,
+        session_id: Union[str, UUID],
+    ) -> Union[None, Awaitable[None]]:
+        """
+        Delete the history of a session.
+
+        Args:
+            session_id (Union[str, UUID]): The unique identifier for the session.
+
+        Returns:
+            Union[None, Awaitable[None]]: The result of the delete operation, which can be either
+            None or an Awaitable that resolves to None, depending on whether this is a synchronous
+            or asynchronous call.
+
+        Raises:
+            AssertionError: If the `session_id` is not a valid UUID v4.
+        """
+        assert is_valid_uuid4(session_id), "id must be a valid UUID v4"
+        return self.api_client.delete_session_history(session_id=session_id)
+
 
 class SessionsManager(BaseSessionsManager):
     """
@@ -460,6 +491,8 @@ class SessionsManager(BaseSessionsManager):
         ) -> List[ChatMlMessage]:
             Retrieves the chat history for a given session, supported by
             optional pagination parameters.
+
+        delete_history (session_id: Union[str, UUID]) -> None:
 
     Each method is decorated with `@beartype` for runtime type enforcement.
     """
@@ -713,6 +746,22 @@ class SessionsManager(BaseSessionsManager):
             offset=offset,
         ).items
 
+    @beartype
+    def delete_history(self, session_id: Union[str, UUID]) -> None:
+        """
+        Delete the history of a session.
+
+        Args:
+            session_id (Union[str, UUID]): The unique identifier for the session.
+
+        Returns:
+            None: The result of the delete operation.
+
+        Raises:
+            AssertionError: If the `session_id` is not a valid UUID v4.
+        """
+        return self._delete_history(session_id=session_id)
+
 
 class AsyncSessionsManager(BaseSessionsManager):
     """
@@ -749,6 +798,8 @@ class AsyncSessionsManager(BaseSessionsManager):
 
         async history(*, session_id: Union[str, UUID], limit: Optional[int]=None, offset: Optional[int]=None) -> List[ChatMlMessage]:
             Retrieves the history of messages in a session, optionally limited and paginated.
+
+        async delete_history(session_id: Union[str, UUID]) -> None:
 
     Note:
         The `@beartype` decorator is used for runtime type checking of the arguments.
@@ -1031,3 +1082,19 @@ class AsyncSessionsManager(BaseSessionsManager):
                 offset=offset,
             )
         ).items
+
+    @beartype
+    async def delete_history(self, session_id: Union[str, UUID]) -> None:
+        """
+        Delete the history of a session asynchronously.
+
+        Args:
+            session_id (Union[str, UUID]): The unique identifier for the session.
+
+        Returns:
+            None: The result of the delete operation.
+
+        Raises:
+            AssertionError: If the `session_id` is not a valid UUID v4.
+        """
+        return await self._delete_history(session_id=session_id)

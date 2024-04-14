@@ -14,9 +14,9 @@ def list_functions_by_agent_query(
 ) -> pd.DataFrame:
     agent_id = str(agent_id)
 
-    query = f"""
-    {{
-        input[agent_id] <- [[to_uuid("{agent_id}")]]
+    query = """
+    {
+        input[agent_id] <- [[to_uuid($agent_id)]]
 
         ?[
             agent_id,
@@ -27,7 +27,7 @@ def list_functions_by_agent_query(
             updated_at,
             created_at,
         ] := input[agent_id],
-            *agent_functions {{
+            *agent_functions {
                 agent_id,
                 tool_id,
                 name,
@@ -35,10 +35,10 @@ def list_functions_by_agent_query(
                 parameters,
                 updated_at,
                 created_at,
-            }}
+            }
 
-        :limit {limit}
-        :offset {offset}
-    }}"""
+        :limit $limit
+        :offset $offset
+    }"""
 
-    return client.run(query)
+    return client.run(query, {"agent_id": agent_id, "limit": limit, "offset": offset})

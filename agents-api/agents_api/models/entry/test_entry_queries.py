@@ -1,3 +1,7 @@
+"""
+This module contains tests for entry queries against the CozoDB database.
+It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
+"""
 # Tests for entry queries
 from uuid import uuid4
 
@@ -16,10 +20,10 @@ from ..tools.embed_tools import embed_functions_query
 from ..user.create_user import create_user_query
 from .add_entries import add_entries_query
 from .get_entries import get_entries_query
-from .naive_context_window import naive_context_window_query
 from .proc_mem_context import proc_mem_context_query
 
 
+# Initializes a new CozoDB client for testing, applying all migrations.
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
@@ -33,6 +37,10 @@ def cozo_client(migrations_dir: str = "./migrations"):
 
 @test("model: create entry")
 def _():
+    """
+    Tests the addition of a new entry to the database.
+    Verifies that the entry can be successfully added using the add_entries_query function.
+    """
     client = cozo_client()
     session_id = uuid4()
 
@@ -47,6 +55,10 @@ def _():
 
 @test("model: get entries")
 def _():
+    """
+    Tests the retrieval of entries from the database.
+    Verifies that entries matching specific criteria can be successfully retrieved.
+    """
     client = cozo_client()
     session_id = uuid4()
 
@@ -63,36 +75,20 @@ def _():
         source="internal",
     )
 
-    result = add_entries_query(entries=[test_entry, internal_entry], client=client)
+    add_entries_query(entries=[test_entry, internal_entry], client=client)
 
     result = get_entries_query(session_id=session_id, client=client)
 
+    # Asserts that only one entry is retrieved, matching the session_id.
     assert len(result["entry_id"]) == 1
-
-
-@test("model: naive context window")
-def _():
-    client = cozo_client()
-    session_id = uuid4()
-
-    test_entry = Entry(
-        session_id=session_id,
-        role="user",
-        content="test entry content",
-    )
-
-    result = add_entries_query(
-        entries=[test_entry],
-        client=client,
-    )
-
-    result = naive_context_window_query(session_id=session_id, client=client)
-
-    assert len(result["created_at"]) == 1
 
 
 @test("model: procedural memory context")
 def _():
+    """
+    Tests the procedural memory context in the database.
+    Verifies the functionality of retrieving relevant memory context based on embeddings.
+    """
     client = cozo_client()
     developer_id = uuid4()
     user_id = uuid4()
@@ -102,6 +98,7 @@ def _():
     user_doc_id = uuid4()
     agent_doc_id = uuid4()
 
+    # Setup: Creates a user, agent, session, function, and documents, then embeds tools and document snippets.
     # Create stuff
     test_entry = Entry(
         session_id=session_id,
@@ -179,6 +176,7 @@ def _():
         ),
     ]
 
+    # Executes the procedural memory context query to retrieve relevant memory context based on embeddings.
     # Run the query
     result = proc_mem_context_query(
         session_id=session_id,

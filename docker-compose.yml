@@ -6,3 +6,6 @@ include:
   - ./model-serving/docker-compose.yml
   - ./agents-api/docker-compose.yml
   - ./gateway/docker-compose.yml
+
+  # TODO: Enable after testing
+  # - ./monitoring/docker-compose.yml
