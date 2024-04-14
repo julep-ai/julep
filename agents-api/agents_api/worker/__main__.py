@@ -1,3 +1,7 @@
+"""
+This script initializes and runs a Temporal worker that listens for tasks on a specified queue.
+It supports various workflows and activities related to agents' operations.
+"""
 #!/usr/bin/env python3
 
 import asyncio
@@ -29,8 +33,13 @@ from ..workflows.salient_questions import SalientQuestionsWorkflow
 
 
 async def main():
+    """
+    Initializes the Temporal client and worker with TLS configuration (if provided),
+    then starts the worker to listen for tasks on the configured task queue.
+    """
     print(f"Starting worker on [{temporal_endpoint}]...")
 
+    # Set up TLS configuration if both private key and client certificate are provided
     tls_config = False
 
     if temporal_private_key and temporal_client_cert:
@@ -39,6 +48,7 @@ async def main():
             client_private_key=temporal_private_key.encode(),
         )
 
+    # Connect to the Temporal service using the provided endpoint, namespace, and TLS configuration (if any)
     client = await Client.connect(
         temporal_endpoint,
         namespace=temporal_namespace,
@@ -46,6 +56,7 @@ async def main():
     )
 
     print(f"Queue: {temporal_task_queue}")
+    # Initialize the worker with the specified task queue, workflows, and activities
     worker = Worker(
         client,
         task_queue=temporal_task_queue,
@@ -69,6 +80,7 @@ async def main():
         ],
     )
 
+    # Start the worker to listen for and process tasks
     await worker.run()
 
 
