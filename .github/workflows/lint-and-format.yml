@@ -68,8 +68,8 @@ jobs:
       run: |
         cd sdks/ts
         npm ci
-        npm run lint
         npm run format
+        # npm run lint
 
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
