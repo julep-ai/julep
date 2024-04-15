@@ -22,7 +22,7 @@ mock_agent = {
         "test agent instructions",
     ],
     "default_settings": {"temperature": 0.5},
-    "metadata": {"type": "test"},
+    "metadata": {"test": "test"},
 }
 
 mock_agent_update = {
@@ -31,7 +31,7 @@ mock_agent_update = {
     "instructions": [
         "updated agent instructions",
     ],
-    "metadata": {"type": "test"},
+    "metadata": {"test": "test"},
 }
 
 mock_user = {

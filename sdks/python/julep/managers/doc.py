@@ -23,6 +23,7 @@ class DocsCreateArgs(TypedDict):
     agent_id: Optional[Union[str, UUID]]
     user_id: Optional[Union[str, UUID]]
     doc: DocDict
+    metadata: Dict[str, Any] = {}
 
 
 class BaseDocsManager(BaseManager):
@@ -114,6 +115,7 @@ class BaseDocsManager(BaseManager):
         doc: DocDict,
         agent_id: Optional[Union[str, UUID]] = None,
         user_id: Optional[Union[str, UUID]] = None,
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         """
         Create a new resource with docsrmation for either an agent or a user, but not both.

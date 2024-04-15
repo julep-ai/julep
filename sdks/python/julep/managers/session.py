@@ -37,12 +37,14 @@ from .utils import is_valid_uuid4
 class SessionCreateArgs(TypedDict):
     user_id: Optional[Union[str, UUID]]
     agent_id: Union[str, UUID]
-    situation: Optional[str]
+    situation: Optional[str] = None
+    metadata: Dict[str, Any] = {}
 
 
 class SessionUpdateArgs(TypedDict):
     session_id: Union[str, UUID]
-    situation: str
+    situation: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
     overwrite: bool = False
 
 
@@ -172,6 +174,7 @@ class BaseSessionsManager(BaseManager):
         agent_id: Union[str, UUID],
         user_id: Optional[Union[str, UUID]] = None,
         situation: Optional[str] = None,
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -183,6 +186,7 @@ class BaseSessionsManager(BaseManager):
             agent_id (Union[str, UUID]): The agent's identifier which could be a string or a UUID object.
             user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
             situation (Optional[str], optional): An optional description of the situation.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response from the API client upon successful session creation, which can be a synchronous `ResourceCreatedResponse` or an asynchronous `Awaitable` of it.
@@ -199,6 +203,7 @@ class BaseSessionsManager(BaseManager):
             user_id=user_id,
             agent_id=agent_id,
             situation=situation,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -250,7 +255,8 @@ class BaseSessionsManager(BaseManager):
     def _update(
         self,
         session_id: Union[str, UUID],
-        situation: str,
+        situation: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
         overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
@@ -277,6 +283,7 @@ class BaseSessionsManager(BaseManager):
         return updateFn(
             session_id=session_id,
             situation=situation,
+            metadata=metadata,
         )
 
     def _chat(

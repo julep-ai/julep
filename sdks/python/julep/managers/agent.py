@@ -77,7 +77,7 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 The agent object or an awaitable that resolves to the agent object.
 
-        _create(self, name: str, about: str, instructions: List[str], tools: List[ToolDict] = [], functions: List[FunctionDefDict] = [], default_settings: DefaultSettingsDict = {}, model: ModelName = 'julep-ai/samantha-1-turbo', docs: List[DocDict] = []) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
+        _create(self, name: str, about: str, instructions: List[str], tools: List[ToolDict] = [], functions: List[FunctionDefDict] = [], default_settings: DefaultSettingsDict = {}, model: ModelName = 'julep-ai/samantha-1-turbo', docs: List[DocDict] = [], metadata: Dict[str, Any] = {}) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
             Creates an agent with the given specifications.
             Args:
                 name (str): The name of the new agent.
@@ -107,7 +107,7 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 None or an awaitable that resolves to None.
 
-        _update(self, agent_id: Union[str, UUID], about: Optional[str] = None, instructions: Optional[List[str]] = None, name: Optional[str] = None, model: Optional[str] = None, default_settings: Optional[DefaultSettingsDict] = None) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        _update(self, agent_id: Union[str, UUID], about: Optional[str] = None, instructions: Optional[List[str]] = None, name: Optional[str] = None, model: Optional[str] = None, default_settings: Optional[DefaultSettingsDict] = None, metadata: Dict[str, Any] = {}) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
             Updates the specified fields of an agent.
             Args:
                 agent_id (Union[str, UUID]): The UUID of the agent to update.
@@ -116,6 +116,7 @@ class BaseAgentsManager(BaseManager):
                 name (Optional[str], optional): The new name for the agent.
                 model (Optional[str], optional): The new model name for the agent.
                 default_settings (Optional[DefaultSettingsDict], optional): The new default settings dictionary for the agent.
+                metadata (Dict[str, Any])
             Returns:
                 The response indicating successful update or an awaitable that resolves to the update response.
     """
@@ -161,6 +162,7 @@ class BaseAgentsManager(BaseManager):
             default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the agent. Defaults to an empty dict.
             model (ModelName, optional): The model name identifier. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): List of document configurations for the agent. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response object indicating the resource has been created or a future of the response object if the creation is being awaited.
@@ -268,6 +270,7 @@ class BaseAgentsManager(BaseManager):
                 name (Optional[str], optional): The name of the agent. Defaults to None.
                 model (Optional[str], optional): The model identifier for the agent. Defaults to None.
                 default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
+                metadata (Dict[str, Any])
                 overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
             Returns:
@@ -333,6 +336,7 @@ class AgentsManager(BaseAgentsManager):
                 default_settings (DefaultSettingsDict, optional): A dictionary of default settings. Defaults to an empty dictionary.
                 model (ModelName, optional): The model name to be used. Defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): A list of dictionaries defining documentation. Defaults to an empty list.
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceCreatedResponse: The response indicating the resource (agent) was successfully created.
@@ -363,6 +367,7 @@ class AgentsManager(BaseAgentsManager):
                 name (Optional[str], optional): A new name for the agent. Defaults to None (no change).
                 model (Optional[str], optional): A new model name to be used. Defaults to None (no change).
                 default_settings (Optional[DefaultSettingsDict], optional): A new dictionary of default settings. Defaults to None (no change).
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceUpdatedResponse: The response indicating the resource (agent) was successfully updated.
@@ -400,6 +405,7 @@ class AgentsManager(BaseAgentsManager):
             default_settings (DefaultSettingsDict, optional): A dictionary with default settings. Defaults to an empty dictionary.
             model (ModelName, optional): The name of the model to use. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): A list of dictionaries with documentation details. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Agent: An instance of the Agent with the specified details
@@ -475,6 +481,7 @@ class AgentsManager(BaseAgentsManager):
             name (Optional[str], optional): The new name to assign to the agent. Defaults to None.
             model (Optional[str], optional): The model identifier to associate with the agent. Defaults to None.
             default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
+            metadata (Dict[str, Any])
             overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
         Returns:
@@ -521,6 +528,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 default_settings (DefaultSettingsDict, optional): Optional default settings for the agent.
                 model (ModelName, optional): The model name to associate with the agent, defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): An optional list of documents associated with the agent.
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceCreatedResponse: A response indicating the agent was created successfully.
@@ -554,6 +562,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 name (Optional[str], optional): An optional new name for the agent.
                 model (Optional[str], optional): Optional new model associated with the agent.
                 default_settings (Optional[DefaultSettingsDict], optional): Optional new default settings for the agent.
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceUpdatedResponse: A response indicating the agent was updated successfully.
@@ -595,6 +604,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             default_settings (DefaultSettingsDict, optional): A dictionary with default settings for the resource. Defaults to an empty dictionary.
             model (ModelName, optional): The model identifier to use for the resource. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): A list of dictionaries containing documentation for the resource. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Agent: An instance of the Agent with the specified details
@@ -668,6 +678,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             name (Optional[str]): The name of the agent. Default is None.
             model (Optional[str]): The model identifier or name. Default is None.
             default_settings (Optional[DefaultSettingsDict]): Dictionary with default settings for the agent. Default is None.
+            metadata (Dict[str, Any])
             overwrite (bool): Whether to overwrite the existing agent settings. Default is False.
 
         Returns:

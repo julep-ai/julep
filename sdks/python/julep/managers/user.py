@@ -1,7 +1,6 @@
 import json
 from uuid import UUID
 from typing import Optional, TypedDict
-
 from beartype import beartype
 from beartype.typing import Any, Awaitable, Dict, List, Union
 
@@ -29,8 +28,8 @@ class UserCreateArgs(TypedDict):
 
 class UserUpdateArgs(TypedDict):
     name: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
     about: Optional[str] = None
-    metadata: Dict[str, Any] = {}
     overwrite: bool = False
 
 
@@ -95,6 +94,7 @@ class BaseUsersManager(BaseManager):
             about (str): A brief description about the new resource.
             docs (List[DocDict], optional): A list of dictionaries with documentation-related information. Each dictionary
                 must conform to the structure expected by CreateDoc. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response indicating the resource has been
@@ -115,6 +115,7 @@ class BaseUsersManager(BaseManager):
             name=name,
             about=about,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -174,7 +175,9 @@ class BaseUsersManager(BaseManager):
             user_id (Union[str, UUID]): The ID of the user to be updated. Must be a valid UUID v4.
             about (Optional[str], optional): The new information about the user. Defaults to None.
             name (Optional[str], optional): The new name for the user. Defaults to None.
+            metadata (Dict[str, Any])
             overwrite (bool, optional): Whether to overwrite the existing user data. Defaults to False.
+
         Returns:
             Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The response indicating successful update or an Awaitable that resolves to such a response.
 
@@ -191,6 +194,7 @@ class BaseUsersManager(BaseManager):
             user_id=user_id,
             about=about,
             name=name,
+            metadata=metadata,
         )
 
         update_data = {k: v for k, v in update_data.items() if v is not NotSet}
