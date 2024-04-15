@@ -133,17 +133,24 @@ def proc_mem_context_query(
         # Search for tools
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{agent_id, tool_query}},
-            ~agent_functions:embedding_space {{
+            # ~agent_functions:embedding_space {{
+            #     agent_id,
+            #     name: fn_name,
+            #     description,
+            #     parameters,
+            #     updated_at: created_at |
+            #     query: tool_query,
+            #     k: $k_tools,
+            #     ef: 128,
+            #     radius: $tools_radius,
+            #     bind_distance: distance,
+            # }},
+            *agent_functions {{
                 agent_id,
                 name: fn_name,
                 description,
                 parameters,
-                updated_at: created_at |
-                query: tool_query,
-                k: $k_tools,
-                ef: 128,
-                radius: $tools_radius,
-                bind_distance: distance,
+                updated_at: created_at,
             }},
 
             role = "system",
