@@ -1,9 +1,5 @@
 name: Lint and format APIs and SDKs
 run-name: ${{ github.actor }} is linting and formatting the code
-on: [push, pull_request]
-jobs:
-
-name: Lint and format APIs and SDKs
 
 on: [push, pull_request]
 
