@@ -161,6 +161,12 @@ async def update_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found",
         )
+    except QueryException as e:
+        # the code is not so informative now, but it may be a good solution in the future
+        if e.code in ("transact::assertion_failure", "eval::assert_some_failure"):
+            raise SessionNotFoundError(x_developer_id, session_id)
+
+        raise
 
 
 @router.patch("/sessions/{session_id}", tags=["sessions"])
@@ -186,6 +192,12 @@ async def patch_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session not found",
         )
+    except QueryException as e:
+        # the code is not so informative now, but it may be a good solution in the future
+        if e.code in ("transact::assertion_failure", "eval::assert_some_failure"):
+            raise SessionNotFoundError(x_developer_id, session_id)
+
+        raise
 
 
 @router.get("/sessions/{session_id}/suggestions", tags=["sessions"])
