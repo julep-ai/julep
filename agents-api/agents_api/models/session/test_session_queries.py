@@ -15,6 +15,8 @@ from .list_sessions import list_sessions_query
 from .session_data import get_session_data, session_data_query
 
 
+MODEL = "julep-ai/samantha-1-turbo"
+
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
@@ -124,6 +126,7 @@ def _():
     # Create an agent
     create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         about="test agent about",
         name="test agent name",
@@ -172,6 +175,7 @@ def _():
     # Create an agent
     create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         about="test agent about",
         name="test agent name",
@@ -227,6 +231,7 @@ def _():
     # Create an agent
     create_agent_query(
         developer_id=developer_id,
+        model=MODEL,
         agent_id=agent_id,
         about="test agent about",
         name="test agent name",

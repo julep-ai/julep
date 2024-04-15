@@ -19,6 +19,7 @@ from .get_entries import get_entries_query
 from .naive_context_window import naive_context_window_query
 from .proc_mem_context import proc_mem_context_query
 
+MODEL = "julep-ai/samantha-1-turbo"
 
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
@@ -132,6 +133,7 @@ def _():
         ),
         create_agent_query(
             agent_id=agent_id,
+            model=MODEL,
             developer_id=developer_id,
             name="test agent",
             about="test agent about",
