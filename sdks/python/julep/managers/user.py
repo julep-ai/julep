@@ -199,6 +199,9 @@ class BaseUsersManager(BaseManager):
 
         update_data = {k: v for k, v in update_data.items() if v is not NotSet}
 
+        if not update_data:
+            raise ValueError("No fields to update")
+
         return updateFn(**update_data)
 
 

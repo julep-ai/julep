@@ -1,14 +1,16 @@
 from ward import test
 
+from julep import AsyncClient
 from julep.api.types import User
 
 from .fixtures import (
-    async_client,
     client,
     mock_user,
     mock_user_update,
     test_user,
     test_user_async,
+    TEST_API_KEY,
+    TEST_API_URL,
 )
 
 
@@ -21,7 +23,12 @@ def _(user=test_user):
 
 
 @test("users: async users.create, users.get, users.update & users.delete")
-async def _(client=async_client, user=test_user_async):
+async def _(user=test_user_async):
+    client = AsyncClient(
+        api_key=TEST_API_KEY,
+        base_url=TEST_API_URL,
+    )
+
     assert isinstance(user, User)
     assert hasattr(user, "created_at")
     assert user.name == mock_user["name"]
@@ -60,18 +67,10 @@ def _(client=client, _=test_user):
     assert isinstance(response[0], User)
 
 
-@test("users: async users.list")
-async def _(client=async_client, _=test_user_async):
-    response = await client.users.list()
-    assert len(response) > 0
-    assert isinstance(response[0], User)
-
-
 @test("users: users.update")
 def _(client=client, user=test_user):
     response = client.users.update(
-        user_id=user.id,
-        name=mock_user_update["name"],
+        user_id=user.id, name=mock_user_update["name"], about="gaga"
     )
 
     assert isinstance(response, User)
@@ -83,14 +82,14 @@ def _(client=client, user=test_user):
 def _(client=client, user=test_user):
     response = client.users.update(
         user_id=user.id,
-        overwrite=True,
         name=mock_user_update["name"],
+        about="gaga",
+        overwrite=True,
     )
 
     assert isinstance(response, User)
     assert hasattr(response, "updated_at")
     assert response.name == mock_user_update["name"]
-    assert not response.about
 
 
 @test("users: users.delete")

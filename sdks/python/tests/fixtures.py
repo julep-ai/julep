@@ -1,11 +1,11 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 from environs import Env
 from ward import fixture
 
 from julep import AsyncClient, Client
 
-from julep.api.types import Agent, User, Session, ResourceCreatedResponse
+from julep.api.types import Agent, User, Session
 
 env = Env()
 
@@ -92,6 +92,26 @@ mock_doc = {
 }
 
 
+def cleanup(client: Client):
+    for session in client.sessions.list(metadata_filter={"type": "test"}):
+        client.sessions.delete(session.id)
+
+    for agent in client.agents.list(metadata_filter={"test": "test"}):
+        client.agents.delete(agent.id)
+
+        for tool in client.tools.list(agent_id=agent.id):
+            client.tools.delete(tool.id)
+
+        for doc in client.docs.list(agent_id=agent.id):
+            client.docs.delete(doc_id=doc.id, agent_id=agent.id)
+
+    for user in client.users.list(metadata_filter={"type": "test"}):
+        client.users.delete(user.id)
+
+        for doc in client.docs.list(user_id=user.id):
+            client.docs.delete(doc_id=doc.id, user_id=user.id)
+
+
 @fixture(scope="global")
 def client():
     client = Client(
@@ -99,11 +119,13 @@ def client():
         base_url=TEST_API_URL,
     )
 
-    return client
+    yield client
+
+    cleanup(client)
 
 
 @fixture
-async def async_client():
+def async_client(_=client):
     client = AsyncClient(
         api_key=TEST_API_KEY,
         base_url=TEST_API_URL,
@@ -146,14 +168,14 @@ def test_user(client=client) -> User:
 
 
 @fixture
-async def test_user_async(client=async_client) -> User:
-    user = await client.users.create(
+async def test_user_async(async_client=async_client, client=client) -> User:
+    user = await async_client.users.create(
         **mock_user,
     )
 
     yield user
 
-    await client.users.delete(user.id)
+    client.users.delete(user.id)
 
 
 @fixture
