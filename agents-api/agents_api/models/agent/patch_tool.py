@@ -4,25 +4,50 @@ import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
 from ...clients.cozo import client
-from ...common.utils import json
 
 
 def patch_tool_by_id_query(
     agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
 ) -> pd.DataFrame:
+    """
+    # Execute the datalog query and return the results as a DataFrame
+    Updates the tool information for a given agent and tool ID in the 'cozodb' database.
+
+    Parameters:
+    - agent_id (UUID): The unique identifier of the agent.
+    - tool_id (UUID): The unique identifier of the tool to be updated.
+    - function (FunctionDef): The function definition containing the new tool information.
+    - embedding (list[float]): The embedding vector associated with the tool.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the result of the update operation.
+    """
     # Agent update query
+    # Convert the function definition to a dictionary for easier manipulation
     function = function.model_dump()
-
-    name = json.dumps(function["name"])
-    description = json.dumps(function["description"])
-    parameters = json.dumps(function.get("parameters", {}))
-
-    query = f"""
-        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
-            [to_uuid("{agent_id}"), to_uuid("{tool_id}"), {name}, {description}, {parameters}, vec({embedding}), now()]
+    # Prepare the parameters for the datalog query
+    params = {
+        "input": [
+            [
+                str(agent_id),
+                str(tool_id),
+                function["name"],
+                function["description"],
+                function.get("parameters", {}),
+                embedding,
+            ]
         ]
+    }
 
-        :update agent_functions {{
+    # Construct the datalog query for updating the tool information
+    query = """
+        input[agent_id, tool_id, name, description, parameters, embedding] <- $input
+
+        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] := 
+            input[agent_id, tool_id, name, description, parameters, embedding],
+            updated_at = now()
+
+        :update agent_functions {
             agent_id,
             tool_id,
             name,
@@ -30,8 +55,8 @@ def patch_tool_by_id_query(
             parameters,
             embedding,
             updated_at,
-        }}
+        }
         :returning
     """
 
-    return client.run(query)
+    return client.run(query, params)

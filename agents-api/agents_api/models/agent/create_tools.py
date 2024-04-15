@@ -1,10 +1,11 @@
+"""This module contains functions for creating tools in the CozoDB database."""
+
 from uuid import UUID, uuid4
 
 import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
 from ...clients.cozo import client
-from ...common.utils import json
 
 
 def create_tools_query(
@@ -12,27 +13,44 @@ def create_tools_query(
     functions: list[FunctionDef],
     embeddings: list[list[float]],
 ) -> pd.DataFrame:
+    """
+    Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
+
+    Parameters:
+    - agent_id (UUID): The unique identifier for the agent.
+    - functions (list[FunctionDef]): A list of function definitions to be inserted.
+    - embeddings (list[list[float]]): A list of embeddings corresponding to each function.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the results of the query execution.
+    """
+    # Ensure the number of functions matches the number of embeddings
     assert len(functions) == len(embeddings)
 
-    functions_input = []
+    # Construct the input records for the datalog query
+    functions_input: list[list] = []
 
     for function, embedding in zip(functions, embeddings):
-        function_name = json.dumps(function.name)
-        function_description = json.dumps(function.description)
-        tool_id = uuid4()
         parameters = function.parameters.model_dump_json()
         functions_input.append(
-            f"""[to_uuid("{agent_id}"), to_uuid("{tool_id}"), {function_name}, {function_description}, {parameters}, vec({embedding}), now()]"""
+            [
+                str(agent_id),
+                str(uuid4()),
+                function.name,
+                function.description or "",
+                parameters,
+                embedding,
+            ]
         )
 
-    records = "\n".join(functions_input)
+    # Datalog query for inserting new tool records into the 'agent_functions' relation
+    query = """
+        input[agent_id, tool_id, name, description, parameters, embedding] <- $records
+        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] :=
+            input[agent_id, tool_id, name, description, parameters, embedding],
+            updated_at = now(),
 
-    query = f"""
-        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] <- [
-            {records}
-        ]
-
-        :insert agent_functions {{
+        :insert agent_functions {
             agent_id,
             tool_id,
             name,
@@ -40,8 +58,8 @@ def create_tools_query(
             parameters,
             embedding,
             updated_at,
-        }}
+        }
         :returning
     """
 
-    return client.run(query)
+    return client.run(query, {"records": functions_input})

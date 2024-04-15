@@ -1,10 +1,30 @@
+"""
+This module contains the functionality for creating a new session in the 'cozodb' database.
+It constructs and executes a datalog query to insert session data.
+"""
 from uuid import UUID
 
 import pandas as pd
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
-from ...common.utils import json
+
+
+"""
+Constructs and executes a datalog query to create a new session in the database.
+
+Parameters:
+- session_id (UUID): The unique identifier for the session.
+- developer_id (UUID): The unique identifier for the developer.
+- agent_id (UUID): The unique identifier for the agent.
+- user_id (UUID | None): The unique identifier for the user, if applicable.
+- situation (str | None): The situation/context of the session.
+- metadata (dict): Additional metadata for the session.
+- client (CozoClient): The database client used to execute the query.
+
+Returns:
+- pd.DataFrame: The result of the query execution.
+"""
 
 
 def create_session_query(
@@ -16,38 +36,51 @@ def create_session_query(
     metadata: dict = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
-    user_create_query = f'to_uuid("{user_id}")' if user_id else "null"
+    situation: str = situation or ""
 
-    query = f"""
-    {{
-        # Create a new session lookup
+    # Construct the datalog query for creating a new session and its lookup.
+    query = """
+    {
+        # This section creates a new session lookup to ensure uniqueness and manage session metadata.
         ?[session_id, agent_id, user_id] <- [[
-            to_uuid("{session_id}"),
-            to_uuid("{agent_id}"),
-            {user_create_query},
+            $session_id,
+            $agent_id,
+            $user_id,
         ]]
 
-        :insert session_lookup {{
+        :insert session_lookup {
             agent_id,
             user_id,
             session_id,
-        }}
-    }} {{
-        # Create a new session
+        }
+    } {
+        # Insert the new session data into the 'session' table with the specified columns.
         ?[session_id, developer_id, situation, metadata] <- [[
-            to_uuid("{session_id}"),
-            to_uuid("{developer_id}"),
-            {json.dumps(situation)},
-            {json.dumps(metadata)},
+            $session_id,
+            $developer_id,
+            $situation,
+            $metadata,
         ]]
 
-        :insert sessions {{
+        :insert sessions {
             developer_id,
             session_id,
             situation,
             metadata,
-        }}
+        }
+        # Specify the data to return after the query execution, typically the newly created session's ID.
         :returning
-     }}"""
+     }"""
 
-    return client.run(query)
+    # Execute the constructed query with the provided parameters and return the result.
+    return client.run(
+        query,
+        {
+            "session_id": str(session_id),
+            "agent_id": str(agent_id),
+            "user_id": str(user_id) if user_id else None,
+            "developer_id": str(developer_id),
+            "situation": situation,
+            "metadata": metadata,
+        },
+    )

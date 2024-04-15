@@ -192,4 +192,14 @@ export class SessionsManager extends BaseManager {
       throw error;
     }
   }
+
+  async deleteHistory(sessionId: string): Promise<void> {
+    try {
+      invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
+
+      await this.apiClient.default.deleteSessionHistory({ sessionId });
+    } catch (error) {
+      throw error;
+    }
+  }
 }

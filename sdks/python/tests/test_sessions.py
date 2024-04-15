@@ -178,6 +178,15 @@ def _(client=client, session=test_session):
 #     assert isinstance(response[0], ChatMlMessage)
 
 
+@test("sessions.delete_history")
+def _(client=client, session=test_session):
+    response = client.sessions.delete_history(
+        session_id=session.id,
+    )
+
+    assert response is None
+
+
 @test("sessions.delete")
 def _(client=client, session=test_session):
     response = client.sessions.delete(

@@ -1,3 +1,5 @@
+"""This module contains functions for searching documents in the CozoDB based on embedding queries."""
+
 from typing import Literal
 from uuid import UUID
 
@@ -5,6 +7,22 @@ import pandas as pd
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
+
+
+"""
+Searches for document snippets in CozoDB by embedding query.
+
+Parameters:
+- owner_type (Literal["user", "agent"]): The type of the owner of the documents.
+- owner_id (UUID): The unique identifier of the owner.
+- query_embedding (list[float]): The embedding vector of the query.
+- k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
+- confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
+- client (CozoClient, optional): The CozoDB client instance. Defaults to a pre-configured client.
+
+Returns:
+- pd.DataFrame: A DataFrame containing the search results.
+"""
 
 
 def search_docs_snippets_by_embedding_query(
@@ -16,16 +34,18 @@ def search_docs_snippets_by_embedding_query(
     client: CozoClient = client,
 ) -> pd.DataFrame:
     owner_id = str(owner_id)
+    # Calculate the search radius based on confidence level
     radius: float = 1.0 - confidence
 
+    # Construct the datalog query for searching document snippets
     query = f"""
     {{
         input[
             {owner_type}_id,
             query_embedding,
         ] <- [[
-            to_uuid("{owner_id}"),
-            vec({query_embedding}),
+            to_uuid($owner_id),
+            vec($query_embedding),
         ]]
 
         candidate[
@@ -52,14 +72,23 @@ def search_docs_snippets_by_embedding_query(
                 title,
                 snippet |
                 query: query_embedding,
-                k: {k},
+                k: $k,
                 ef: 128,
-                radius: {radius},
+                radius: $radius,
                 bind_distance: distance,
                 bind_vector: vector,
             }}
 
+        # Sort the results by distance to find the closest matches
         :sort distance
     }}"""
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "owner_id": owner_id,
+            "query_embedding": query_embedding,
+            "k": k,
+            "radius": radius,
+        },
+    )
