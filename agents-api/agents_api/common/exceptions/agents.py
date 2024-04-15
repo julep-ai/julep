@@ -2,6 +2,7 @@
 
 from uuid import UUID
 from . import BaseCommonException
+from agents_api.model_registry import ALL_AVAILABLE_MODELS
 
 
 class BaseAgentException(BaseCommonException):
@@ -38,4 +39,13 @@ class AgentDocNotFoundError(BaseAgentException):
         # Initialize the exception with a message indicating the missing document and agent ID.
         super().__init__(
             f"Doc {str(doc_id)} not found for agent {str(agent_id)}", http_code=404
+        )
+
+
+class AgentModelNotValid(BaseAgentException):
+    def __init__(self, model: str):
+        super().__init__(
+            f"Unknown model: {model}. Please provide a valid model name."
+            "Known models are: " + ", ".join(ALL_AVAILABLE_MODELS.keys()),
+            http_code=400,
         )

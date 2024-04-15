@@ -222,7 +222,6 @@ async def create_agent(
         ).model_dump(),
         metadata=request.metadata or {},
     )
-
     new_agent_id = resp["agent_id"][0]
     res = ResourceCreatedResponse(
         id=new_agent_id,

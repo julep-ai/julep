@@ -10,7 +10,7 @@ from agents_api.models.entry.entries_summarization import (
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
-from agents_api.clients.openai import client as openai_client
+from agents_api.clients.model import julep_client
 
 
 example_previous_memory = """
@@ -130,7 +130,7 @@ async def run_prompt(
 ) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
 
-    response = await openai_client.chat.completions.create(
+    response = await julep_client.chat.completions.create(
         model=model,
         messages=[
             {

@@ -22,6 +22,8 @@ from .add_entries import add_entries_query
 from .get_entries import get_entries_query
 from .proc_mem_context import proc_mem_context_query
 
+MODEL = "julep-ai/samantha-1-turbo"
+
 
 # Initializes a new CozoDB client for testing, applying all migrations.
 def cozo_client(migrations_dir: str = "./migrations"):
@@ -129,6 +131,7 @@ def _():
         ),
         create_agent_query(
             agent_id=agent_id,
+            model=MODEL,
             developer_id=developer_id,
             name="test agent",
             about="test agent about",

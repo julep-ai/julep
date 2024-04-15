@@ -6,3 +6,4 @@ ngrok*
 *.pyc
 */node_modules/
 .aider*
+.vscode/

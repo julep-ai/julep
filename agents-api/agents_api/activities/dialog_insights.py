@@ -3,7 +3,7 @@ from typing import Callable
 
 from temporalio import activity
 
-from ..clients.openai import client as openai_client
+from ..clients.model import julep_client
 from .types import ChatML, DialogInsightsTaskArgs
 
 
@@ -66,7 +66,7 @@ async def run_prompt(
         DialogInsightsTaskArgs(dialog=dialog, person1=person1, person2=person2)
     )
 
-    response = await openai_client.chat.completions.create(
+    response = await julep_client.chat.completions.create(
         model=model,
         messages=[
             {

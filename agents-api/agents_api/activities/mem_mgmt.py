@@ -4,7 +4,7 @@ from uuid import UUID
 
 from temporalio import activity
 
-from ..clients.openai import client as openai_client
+from ..clients.model import julep_client
 from .types import ChatML, MemoryManagementTaskArgs
 
 
@@ -135,7 +135,7 @@ async def run_prompt(
         )
     )
 
-    response = await openai_client.chat.completions.create(
+    response = await julep_client.chat.completions.create(
         model=model,
         messages=[
             {
