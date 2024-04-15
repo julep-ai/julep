@@ -10,7 +10,7 @@ def proc_mem_context_query(
     session_id: UUID,
     tool_query_embedding: list[float],
     doc_query_embedding: list[float],
-    tools_confidence: float = 0.7,
+    tools_confidence: float = 0,
     docs_confidence: float = 0.7,
     k_tools: int = 3,
     k_docs: int = 2,

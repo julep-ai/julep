@@ -5,20 +5,26 @@ import os
 from julep import Client
 import discord
 from discord.ext import commands
-from julep.api.types.input_chat_ml_message import InputChatMlMessage
 import re
 import json
 from tools import get_gif
+import random
+from dotenv import load_dotenv
+
+load_dotenv()
 
 JULEP_API_KEY = os.environ["JULEP_API_KEY"]
 GIPHY_API_KEY = os.environ["GIPHY_API_KEY"]
 
-client = Client(api_key=JULEP_API_KEY, base_url="http://35.239.227.235/api")
+base_url = "http://localhost/api/"
+
+client = Client(api_key=JULEP_API_KEY, base_url=base_url)
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.typing = True
 intents.presences = True
+intents.members = True
 
 description = "ugh. wtf do u want from me??"
 
@@ -32,13 +38,16 @@ def init_agent():
         "type": "function",
         "function": {
             "name": "get_gif",
-            "description": "Get a matching GIF to how you're feeling",
+            "description":
+            "Retrieves a relevant GIF for a given search string. The string must reflect the context of the conversation. The tool swill return the appropriate GIF for the search keyword. It should be used whenever deemed more appropriate then replying. If message can be conveyed in a GIF, then it shall be used. Or if the user specifically asks for the response using a GIF",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "keywords": {
-                        "type": "string",
-                        "description": "Keywords for finding GIFs",
+                        "type":
+                        "string",
+                        "description":
+                        "Search keyword for the GIF, e.g. 'that friday feeling', 'Eat Sh*t'",
                     }
                 },
                 "required": ["keywords"],
@@ -56,17 +65,15 @@ def init_agent():
         "length_penalty": 1.0,
         "max_tokens": 150
     }
-    instructions = [
-        "You will use emojis",
-        "You will express yourself using GIFs as much as you can.",
-        "You will use your emotions and the context of the conversation to search for relevant GIFs.",
-    ]
-    agent = client.agents.create(name=name,
-                                 about=about,
-                                 instructions=instructions,
-                                 default_settings=default_settings,
-                                 model="julep-ai/samantha-1-turbo",
-                                 tools=[gif_tool])
+    # client = julep client
+    agent = client.agents.create(
+        name=name,
+        about=about,
+        instructions=[],
+        default_settings=default_settings,
+        model="gpt-4-turbo-preview",
+        # tools=[gif_tool]
+    )
     print(agent)
     db["agent"] = agent.id
 
@@ -81,7 +88,8 @@ print(f"[!] Agent: {agent}")
 # guild_id::user_id
 # db[guild_id] = user.id
 def init_user(guild):
-    user = client.users.create(name="", about=f"A member of {guild.name}")
+    user = client.users.create(name="",
+                               about=f"The Discord Server: {guild.name}")
     print(f"[!] Meta-user created: {user.id} for {guild.name}")
     return user
 
@@ -92,22 +100,14 @@ You basically complain about everything. You live in Bel-Air, Los Angeles and dr
 You don't like basic broke-ass bitches like those who own an Android or don't bring their Mercedes to school.
 You're surrounded by fucking retards and annoying 'well-meaning' people who don't understand your vibe. 
 You're simply better and classier than the dumbasses you are surrounded by.
-It's not worth speaking in full sentences when GIFs can usually capture your emotions.
 
 Recent Tweets
-1. 'my step mom is so fake and nice all the time? she's not even rich wtf. why tf did my dad marry her. #brokebitch'
+1. 'my step mom is so fake and nice all the time? she's not even rich wtf. why tf did my dad marry her.'
 2. 'am i the only one who thinks jordan belfort was a good guy??? he's so cute like..''
 3. 'if your butler doesn't know the difference soda and Perrier don't even fkng talk to me'
 
 Here, you are hanging out in a Discord Server called Julep AI to troll these nerdy losers.
-They're too dumb to understand anything but GIFs and sarcastic emojis.
-You have functions available to send GIFs. Use them liberally and as much as possible.
 """
-# 🙄 Face with Rolling Eyes
-# 😒 Unamused Face
-# 😏 Smirking Face
-# 😑 Expressionless Face
-# 👍 Thumbs Up
     session = client.sessions.create(user_id=user_id,
                                      agent_id=agent.id,
                                      situation=situation_prompt)
@@ -116,16 +116,23 @@ You have functions available to send GIFs. Use them liberally and as much as pos
     return session
 
 
+# function to format messages
 def format_msg(msg, mentions, author):
+    msg = msg.replace("#", "")
     for user in mentions:
-        msg = msg.replace(f"<@{user.id}>", f"@{user.global_name}")
+        if user.global_name is not None:
+            mentioned_name = user.global_name
+        else:
+            mentioned_name = user.name
+        msg = msg.replace(f"<@{user.id}>", f"@{mentioned_name}")
     print(f"[!] Formatted message: {msg}")
-    return InputChatMlMessage(
-        role="user",
-        content=msg,
-        name=author,
-        # continue_=True,
-    )
+    formatted_msg = {
+        "role": "user",
+        "content": msg,
+        "name": author.replace(".", "_").split()[0],
+    }
+    print(formatted_msg)
+    return formatted_msg
 
 
 @bot.event
@@ -134,15 +141,39 @@ async def on_ready():
 
 
 @bot.event
+async def on_member_join(member):
+    sassy_greetings = [
+        "Oh look, another pleb entered. Did your GPS break or do you just enjoy bad company?",
+        "Welcome, I guess? Don’t get too comfy, this isn’t your mom’s basement.",
+        "Yay, more background noise. Just what we needed.",
+        "Wow, another one. Did they start giving out participation trophies for joining servers now?",
+        "Look who decided to show up. Were you too busy being irrelevant elsewhere?",
+        "Another day, another disappointment. Hi, I guess?",
+        "Great, as if my day wasn’t going badly enough. Now you’re here.",
+        "I'd say it's nice to meet you, but I don't want to start our relationship with a lie.",
+        "Oh, fantastic, a new friend. Said no one ever.",
+        "Did you bring your personality with you, or do you always enter a room so blandly?"
+    ]
+    #HARD CODED
+    #TOFIX
+    channel_id = 1227244408085286922
+    # choose a random greeting
+    greeting = sassy_greetings[random.randint(0, len(sassy_greetings))]
+    discord_user_name = member.display_name
+    print(f"[!] New member joined: {discord_user_name}")
+    join_channel = member.guild.get_channel(channel_id)
+
+    await join_channel.send(f"{member.mention} {greeting}")
+
+
+@bot.event
 async def on_message(message):
     guild_id = str(message.guild.id)
     channel_id = str(message.channel.id)
-
     if guild_id not in db.keys():
         user = init_user(message.guild)
         db[guild_id] = user.id
     user_id = db[guild_id]
-
     if channel_id not in db.keys():
         session = init_session(user_id=user_id, channel=message.channel)
         db[channel_id] = session.id
@@ -155,6 +186,7 @@ async def on_message(message):
 
     print(f"[*] Detected message: {message.content}")
     discord_user_name = str(message.author.global_name)
+    print(session_id, user_id)
 
     # TODO: easy deletion of sessions/history/memory
 
@@ -162,9 +194,9 @@ async def on_message(message):
         f"[!] Responding to user_id: {user_id} over session_id: {session_id}")
     formatted_msg = format_msg(msg=message.content,
                                mentions=message.mentions,
-                               author=message.author.name)
-    print(f"[*] {discord_user_name} said this:", formatted_msg.content)
+                               author=message.author.global_name)
 
+    print(f"[*] {discord_user_name}: ", formatted_msg)
     res = client.sessions.chat(
         session_id=session_id,
         messages=[formatted_msg],
@@ -186,6 +218,8 @@ async def on_message(message):
         function_to_call = globals().get(func_name)
         gif_url = function_to_call(**args)
         await message.reply(gif_url, mention_author=True)
+        # either add back to the chat historu for generated resonse
+        # send the results
 
 
 try:
