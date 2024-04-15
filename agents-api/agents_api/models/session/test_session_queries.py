@@ -1,3 +1,6 @@
+"""
+This module contains tests for session-related queries against the 'cozodb' database. It verifies the creation, retrieval, and deletion of session records as defined in the schema provided in agents-api/README.md.
+"""
 # Tests for session queries
 from uuid import uuid4
 
@@ -30,6 +33,7 @@ def cozo_client(migrations_dir: str = "./migrations"):
 
 @test("model: create session")
 def _():
+    """Test session creation with a valid session, user, agent, and developer IDs."""
     client = cozo_client()
     session_id = uuid4()
     agent_id = uuid4()
@@ -48,6 +52,7 @@ def _():
 
 @test("model: create session no user")
 def _():
+    """Test session creation without a user ID."""
     client = cozo_client()
     session_id = uuid4()
     agent_id = uuid4()
@@ -65,6 +70,7 @@ def _():
 
 @test("model: get session not exists")
 def _():
+    """Verify that querying a non-existent session returns an empty result."""
     client = cozo_client()
     session_id = uuid4()
     developer_id = uuid4()
@@ -80,6 +86,7 @@ def _():
 
 @test("model: get session exists")
 def _():
+    """Verify that a created session can be successfully retrieved."""
     client = cozo_client()
     session_id = uuid4()
     agent_id = uuid4()
@@ -106,6 +113,7 @@ def _():
 
 @test("model: get session data")
 def _():
+    """Test retrieval of session data for an existing session."""
     # Setup client for user and agent
     client = cozo_client()
 
@@ -155,6 +163,7 @@ def _():
 
 @test("model: delete session")
 def _():
+    """Test the deletion of a session and verify it cannot be retrieved afterwards."""
     # Setup client for user and agent
     client = cozo_client()
 
@@ -219,6 +228,7 @@ def _():
     agent_id = uuid4()
     user_id = uuid4()
 
+    # Setup: Create a user, agent, and session for testing session data retrieval using get_session_data.
     # Create a user
     create_user_query(
         user_id=user_id,

@@ -16,23 +16,19 @@ def embed_functions_query(
     tool_ids = [str(id) for id in tool_ids]
     assert len(tool_ids) == len(embeddings)
 
-    records = "\n".join(
-        [
-            f'[to_uuid("{agent_id}"), to_uuid("{tool_id}"), vec({embedding})],'
-            for tool_id, embedding in zip(tool_ids, embeddings)
-        ]
-    )
+    records = [
+        [agent_id, tool_id, embedding]
+        for tool_id, embedding in zip(tool_ids, embeddings)
+    ]
 
-    query = f"""
-    {{
-        ?[agent_id, tool_id, embedding] <- [
-            {records}
-        ]
+    query = """
+    {
+        ?[agent_id, tool_id, embedding] <- $records
 
-        :update agent_functions {{
+        :update agent_functions {
             agent_id, tool_id, embedding
-        }}
+        }
         :returning
-    }}"""
+    }"""
 
-    return client.run(query)
+    return client.run(query, {"records": records})

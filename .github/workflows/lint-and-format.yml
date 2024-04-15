@@ -1,0 +1,19 @@
+name: Lint and format APIs and SDKs
+run-name: ${{ github.actor }} is linting and formatting the code
+on: [push, pull_request]
+jobs:
+  Lint-And-Format-APIs-And-SDKs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' 
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+      - name: Lint and format Agents API
+        run: cd agents-api && poetry install && poetry run poe check
+      - name: Lint and format Models API
+        run: cd model-serving && poetry install && poetry run poe check
+      - name: Lint and format Python SDK
+        run: cd sdks/python && poetry install && poetry run poe check

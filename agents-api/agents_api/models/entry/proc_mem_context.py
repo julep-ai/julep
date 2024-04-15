@@ -16,6 +16,21 @@ def proc_mem_context_query(
     k_docs: int = 2,
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    """Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
+
+    Parameters:
+        session_id (UUID),
+        tool_query_embedding (list[float]),
+        doc_query_embedding (list[float]),
+        tools_confidence (float),
+        docs_confidence (float),
+        k_tools (int),
+        k_docs (int),
+        client (CozoClient).
+
+    Return type:
+        A pandas DataFrame containing the query results.
+    """
     VECTOR_SIZE = 768
     session_id = str(session_id)
     assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
@@ -23,14 +38,15 @@ def proc_mem_context_query(
     tools_radius: float = 1.0 - tools_confidence
     docs_radius: float = 1.0 - docs_confidence
 
+    # Define the datalog query to collect memory context.
     query = f"""
     {{
         # Input table for the query
         # (This is temporary to this query)
         input[session_id, tool_query, doc_query] <- [[
-            to_uuid("{session_id}"),
-            vec({tool_query_embedding}),
-            vec({doc_query_embedding}),
+            to_uuid($session_id),
+            $tool_query_embedding,
+            $doc_query_embedding,
         ]]
 
         ?[session_id, tool_query, doc_query, agent_id, user_id] :=
@@ -49,6 +65,7 @@ def proc_mem_context_query(
             doc_query: <F32; {VECTOR_SIZE}>,
         }}
     }} {{
+        # Collect situation details based on session ID.
         # Collect situation
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{session_id}},
@@ -110,22 +127,30 @@ def proc_mem_context_query(
             index: Float,
         }}
     }} {{
+        # Collect tool information based on agent ID and tool query embedding.
         # Collect all tools
 
         # Search for tools
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{agent_id, tool_query}},
-            ~agent_functions:embedding_space {{
+            # ~agent_functions:embedding_space {{
+            #     agent_id,
+            #     name: fn_name,
+            #     description,
+            #     parameters,
+            #     updated_at: created_at |
+            #     query: tool_query,
+            #     k: $k_tools,
+            #     ef: 128,
+            #     radius: $tools_radius,
+            #     bind_distance: distance,
+            # }},
+            *agent_functions {{
                 agent_id,
                 name: fn_name,
                 description,
                 parameters,
-                updated_at: created_at |
-                query: tool_query,
-                k: {k_tools},
-                ef: 128,
-                radius: {tools_radius:.2f},
-                bind_distance: distance,
+                updated_at: created_at,
             }},
 
             role = "system",
@@ -150,6 +175,7 @@ def proc_mem_context_query(
             index: Float,
         }}
     }} {{
+        # Collect document information based on agent ID and document query embedding.
         # Collect docs
 
         # Search for agent docs
@@ -166,9 +192,9 @@ def proc_mem_context_query(
                 title,
                 snippet |
                 query: doc_query,
-                k: {k_docs},
+                k: $k_docs,
                 ef: 128,
-                radius: {docs_radius:.2f},
+                radius: $docs_radius,
                 bind_distance: distance,
             }},
             role = "system",
@@ -192,9 +218,9 @@ def proc_mem_context_query(
                 title,
                 snippet |
                 query: doc_query,
-                k: {k_docs},
+                k: $k_docs,
                 ef: 128,
-                radius: {docs_radius:.2f},
+                radius: $docs_radius,
                 bind_distance: distance,
             }},
             role = "system",
@@ -214,6 +240,7 @@ def proc_mem_context_query(
             index: Float,
         }}
     }} {{
+        # Collect all entries related to the session.
         # Collect all entries
         ?[role, name, content, token_count, created_at, index] :=
             *_input{{session_id}},
@@ -244,6 +271,7 @@ def proc_mem_context_query(
             index: Float,
         }}
     }} {{
+        # Combine all collected data into a structured format.
         # Combine all
         ?[role, name, content, token_count, created_at, index] :=
             *_preamble{{
@@ -284,4 +312,15 @@ def proc_mem_context_query(
     }}
     """
 
-    return client.run(query)
+    return client.run(
+        query,
+        {
+            "session_id": session_id,
+            "tool_query_embedding": tool_query_embedding,
+            "doc_query_embedding": doc_query_embedding,
+            "k_tools": k_tools,
+            "tools_radius": round(tools_radius, 2),
+            "k_docs": k_docs,
+            "docs_radius": round(docs_radius, 2),
+        },
+    )

@@ -3,7 +3,6 @@ from uuid import UUID
 import pandas as pd
 
 from ...clients.cozo import client
-from ...common.utils import json
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
@@ -22,12 +21,26 @@ def update_session_query(
     developer_id: UUID,
     **update_data,
 ) -> pd.DataFrame:
+    # Process the update data to prepare it for the query.
+    assertion_query = """
+    ?[session_id, developer_id] := 
+        *sessions {
+            session_id,
+            developer_id,
+        },
+        session_id = to_uuid($session_id),
+        developer_id = to_uuid($developer_id),
+    # Assertion to ensure the session exists before updating.
+    :assert some
+    """
+
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
         }
     )
 
+    # Prepare lists of columns for the query.
     session_update_cols_lst = session_update_cols.split(",")
     all_fields_lst = list(set(session_update_cols_lst).union(set(_fields)))
     all_fields = ", ".join(all_fields_lst)
@@ -38,14 +51,15 @@ def update_session_query(
         )
     )
 
+    # Construct the datalog query for updating session information.
     session_update_query = f"""
     {{
-        input[{session_update_cols}, session_id, developer_id] <- [
-            [{json.dumps(session_update_vals[0]).strip("[]")}, to_uuid("{session_id}"), to_uuid("{developer_id}")]
-        ]
+        input[{session_update_cols}] <- $session_update_vals
+        ids[session_id, developer_id] <- [[$session_id, $developer_id]]
         
         ?[{all_fields}, updated_at] :=
-            input[{session_update_cols}, session_id, developer_id],
+            input[{session_update_cols}],
+            ids[session_id, developer_id],
             *sessions{{
                 {rest_fields}, @ "NOW"
             }},
@@ -59,4 +73,13 @@ def update_session_query(
     }}
     """
 
-    return client.run(session_update_query)
+    combined_query = "{" + assertion_query + "}" + session_update_query
+
+    return client.run(
+        combined_query,
+        {
+            "session_update_vals": session_update_vals,
+            "session_id": str(session_id),
+            "developer_id": str(developer_id),
+        },
+    )
