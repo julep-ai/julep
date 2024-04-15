@@ -1,6 +1,5 @@
 branch: dev
 blocked_dirs:
-  - .github/
   - agents-api/notebooks/
   - docs/python-sdk-docs/julep/api/
   - docs/js-sdk-docs/
