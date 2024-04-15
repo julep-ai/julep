@@ -18,7 +18,7 @@ from ..api.types import (
 from .utils import rewrap_in_class
 
 from .base import BaseManager
-from .utils import is_valid_uuid4
+from .utils import is_valid_uuid4, NotSet
 from .types import (
     ToolDict,
     FunctionDefDict,
@@ -31,6 +31,7 @@ from .types import (
 ## TYPES ##
 ###########
 
+
 ModelName = Literal[
     "julep-ai/samantha-1",
     "julep-ai/samantha-1-turbo",
@@ -39,8 +40,8 @@ ModelName = Literal[
 
 class AgentCreateArgs(TypedDict):
     name: str
-    about: str
-    instructions: List[str]
+    about: Optional[str]
+    instructions: Optional[List[str]]
     tools: List[ToolDict] = []
     functions: List[FunctionDefDict] = []
     default_settings: DefaultSettingsDict = {}
@@ -55,7 +56,8 @@ class AgentUpdateArgs(TypedDict):
     name: Optional[str] = None
     model: Optional[str] = None
     default_settings: Optional[DefaultSettingsDict] = None
-    metadata: Dict[str, Any] = {}
+    metadata: Optional[Dict[str, Any]] = None
+    overwrite: bool = False
 
 
 class BaseAgentsManager(BaseManager):
@@ -86,7 +88,7 @@ class BaseAgentsManager(BaseManager):
                 default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the new agent. Defaults to an empty dictionary.
                 model (ModelName, optional): The model name for the new agent. Defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): List of document dictionaries for the new agent. Defaults to an empty list.
-                metadata (Dict[str, Any])
+                metadata (Dict[str, Any], optional): Dictionary of metadata for the new agent. Defaults to an empty dictionary.
             Returns:
                 The response indicating creation or an awaitable that resolves to the creation response.
 
@@ -138,8 +140,8 @@ class BaseAgentsManager(BaseManager):
     def _create(
         self,
         name: str,
-        about: str,
-        instructions: List[str],
+        about: str = "",
+        instructions: List[str] = [],
         tools: List[ToolDict] = [],
         functions: List[FunctionDefDict] = [],
         default_settings: DefaultSettingsDict = {},
@@ -250,12 +252,13 @@ class BaseAgentsManager(BaseManager):
     def _update(
         self,
         agent_id: Union[str, UUID],
-        about: Optional[str] = None,
-        instructions: List[str] = None,
-        name: Optional[str] = None,
-        model: Optional[str] = None,
-        default_settings: Optional[DefaultSettingsDict] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        about: Optional[str] = NotSet,
+        instructions: List[str] = NotSet,
+        name: Optional[str] = NotSet,
+        model: Optional[str] = NotSet,
+        default_settings: Optional[DefaultSettingsDict] = NotSet,
+        metadata: Dict[str, Any] = NotSet,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update the agent's properties.
@@ -268,6 +271,7 @@ class BaseAgentsManager(BaseManager):
                 model (Optional[str], optional): The model identifier for the agent. Defaults to None.
                 default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
                 metadata (Dict[str, Any])
+                overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
             Returns:
                 Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: An object representing the response for the resource updated, which can also be an awaitable in asynchronous contexts.
@@ -285,7 +289,11 @@ class BaseAgentsManager(BaseManager):
                 **default_settings
             )
 
-        return self.api_client.update_agent(
+        updateFn = (
+            self.api_client.update_agent if overwrite else self.api_client.patch_agent
+        )
+
+        update_payload = dict(
             agent_id=agent_id,
             about=about,
             instructions=instructions,
@@ -294,6 +302,10 @@ class BaseAgentsManager(BaseManager):
             default_settings=default_settings,
             metadata=metadata,
         )
+
+        update_payload = {k: v for k, v in update_payload.items() if v is not NotSet}
+
+        return updateFn(**update_payload)
 
 
 class AgentsManager(BaseAgentsManager):
@@ -470,6 +482,7 @@ class AgentsManager(BaseAgentsManager):
             model (Optional[str], optional): The model identifier to associate with the agent. Defaults to None.
             default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
             metadata (Dict[str, Any])
+            overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
         Returns:
             ResourceUpdatedResponse: An object representing the response to the update request.
@@ -477,6 +490,7 @@ class AgentsManager(BaseAgentsManager):
         Note:
             This method is decorated with `beartype`, which means it enforces type annotations at runtime.
         """
+
         result = self._update(agent_id=agent_id, **kwargs)
         return result
 
@@ -665,6 +679,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             model (Optional[str]): The model identifier or name. Default is None.
             default_settings (Optional[DefaultSettingsDict]): Dictionary with default settings for the agent. Default is None.
             metadata (Dict[str, Any])
+            overwrite (bool): Whether to overwrite the existing agent settings. Default is False.
 
         Returns:
             ResourceUpdatedResponse: An object containing the details of the update response.

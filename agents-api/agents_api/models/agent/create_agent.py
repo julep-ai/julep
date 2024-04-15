@@ -42,8 +42,6 @@ def create_agent_query(
     default_settings: dict = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
-    assert model in ["julep-ai/samantha-1", "julep-ai/samantha-1-turbo"]
-
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
             **default_settings,

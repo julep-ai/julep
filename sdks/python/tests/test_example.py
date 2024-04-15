@@ -62,3 +62,8 @@ def _(client=client):
     [response_msg, *_] = result.response[0]
     assert hasattr(response_msg, "role")
     assert hasattr(response_msg, "content")
+
+    # Clean up
+    client.sessions.delete(session.id)
+    client.users.delete(user.id)
+    client.agents.delete(agent.id)

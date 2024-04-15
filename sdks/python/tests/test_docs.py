@@ -9,89 +9,57 @@ from .fixtures import (
     async_client,
     test_agent_doc,
     test_user_doc,
-    setup_agent_async,
-    setup_agent_doc_async,
-    setup_user_async,
-    setup_user_doc_async,
 )
 
 
-@test("agent docs.create")
-def _(client=client, doc=test_agent_doc):
-    agent, created_doc = doc
-    try:
-        assert isinstance(created_doc, Doc)
-    finally:
-        response = client.docs.delete(agent_id=agent.id, doc_id=created_doc.id)
-        assert response is None
+@test("docs: agent docs.create")
+def _(client=client, agent_doc=test_agent_doc):
+    created_doc, agent = agent_doc
+    assert isinstance(created_doc, Doc)
 
 
-@test("user docs.create")
-def _(client=client, doc=test_user_doc):
-    user, created_doc = doc
-    try:
-        assert isinstance(created_doc, Doc)
-    finally:
-        response = client.docs.delete(user_id=user.id, doc_id=created_doc.id)
-        assert response is None
+@test("docs: user docs.create")
+def _(client=client, user_doc=test_user_doc):
+    created_doc, user = user_doc
+    assert isinstance(created_doc, Doc)
 
 
-@test("agent docs.get")
-def _(client=client, doc=test_agent_doc):
-    agent, created_doc = doc
-    response = client.docs.list(agent_id=agent.id)
-    try:
-        assert len(response) > 0
-        assert isinstance(response[0], Doc)
-    finally:
-        response = client.docs.delete(agent_id=agent.id, doc_id=created_doc.id)
-        assert response is None
+@test("docs: agent docs.get")
+def _(client=client, agent_doc=test_agent_doc):
+    _, agent = agent_doc
+    docs = client.docs.list(agent_id=agent.id)
+    assert len(docs) > 0
+    assert isinstance(docs[0], Doc)
 
 
-@test("user docs.get")
-def _(client=client, doc=test_user_doc):
-    user, created_doc = doc
-    response = client.docs.list(user_id=user.id)
+@test("docs: user docs.get")
+def _(client=client, user_doc=test_user_doc):
+    _, user = user_doc
+    docs = client.docs.list(user_id=user.id)
 
-    try:
-        assert len(response) > 0
-        assert isinstance(response[0], Doc)
-    finally:
-        response = client.docs.delete(user_id=user.id, doc_id=created_doc.id)
-        assert response is None
+    assert len(docs) > 0
+    assert isinstance(docs[0], Doc)
 
 
-@test("async agent docs.get, agent docs.create, agent docs.delete")
-async def _(client=async_client):
-    agent = await setup_agent_async(client)
-    doc = await setup_agent_doc_async(client, agent)
+@test("docs: async agent docs.get, agent docs.create, agent docs.delete")
+async def _(client=async_client, agent_doc=test_agent_doc):
+    doc, agent = agent_doc
 
     assert isinstance(doc, Doc)
     assert doc.agent_id == agent.id
 
-    try:
-        response = await client.docs.list(agent_id=agent.id)
-        assert len(response) > 0
-        assert isinstance(response[0], Doc)
-    finally:
-        response = await client.docs.delete(agent_id=agent.id, doc_id=doc.id)
-        assert response is None
-        await client.agents.delete(agent_id=agent.id)
+    docs = await client.docs.list(agent_id=agent.id)
+    assert len(docs) > 0
+    assert isinstance(docs[0], Doc)
 
 
-@test("async user docs.get, user docs.create, user docs.delete")
-async def _(client=async_client):
-    user = await setup_user_async(client)
-    doc = await setup_user_doc_async(client, user)
+@test("docs: async user docs.get, user docs.create, user docs.delete")
+async def _(client=async_client, user_doc=test_user_doc):
+    doc, user = user_doc
 
     assert isinstance(doc, Doc)
     assert doc.user_id == user.id
 
-    try:
-        response = await client.docs.list(user_id=user.id)
-        assert len(response) > 0
-        assert isinstance(response[0], Doc)
-    finally:
-        response = await client.docs.delete(user_id=user.id, doc_id=doc.id)
-        assert response is None
-        await client.users.delete(user_id=user.id)
+    docs = await client.docs.list(user_id=user.id)
+    assert len(docs) > 0
+    assert isinstance(docs[0], Doc)

@@ -12,63 +12,52 @@ from .fixtures import (
     async_client,
     client,
     test_session,
+    test_session_agent_user,
     test_session_no_user,
     mock_session,
     mock_session_update,
-    setup_agent_async,
-    setup_user_async,
-    setup_session_async,
 )
 
 
-@test("sessions.create")
+@test("sessions: sessions.create")
 def _(client=client, session=test_session):
     assert isinstance(session, Session)
     assert hasattr(session, "created_at")
     assert session.situation == mock_session["situation"]
 
 
-@test("async sessions.create, sessions.get, sessions.update & sessions.delete")
-async def _(client=async_client):
-    agent = await setup_agent_async(client)
-    user = await setup_user_async(client)
-    session = await setup_session_async(client, user, agent)
+@test(
+    "sessions: async sessions.create, sessions.get, sessions.update & sessions.delete"
+)
+async def _(client=async_client, session_agent_user=test_session_agent_user):
+    session, agent, user = session_agent_user
 
     assert isinstance(session, Session)
     assert hasattr(session, "created_at")
     assert session.situation == mock_session["situation"]
 
-    try:
-        response = await client.sessions.get(id=session.id)
-        assert isinstance(response, Session)
-        assert response.id == session.id
-        assert response.situation == session.situation
+    response = await client.sessions.get(id=session.id)
+    assert isinstance(response, Session)
+    assert response.id == session.id
+    assert response.situation == session.situation
 
-        updated = await client.sessions.update(
-            session_id=session.id,
-            **mock_session_update,
-        )
+    updated = await client.sessions.update(
+        session_id=session.id,
+        **mock_session_update,
+    )
 
-        assert updated.updated_at
-        assert updated.situation == mock_session_update["situation"]
-
-    finally:
-        response = await client.sessions.delete(session_id=session.id)
-        assert response is None
-        await client.agents.delete(agent_id=agent.id)
-        await client.users.delete(user_id=user.id)
+    assert updated.situation == mock_session_update["situation"]
+    assert updated.updated_at > session.updated_at
+    assert updated.created_at == session.created_at
 
 
-@test("sessions.create no user")
+@test("sessions: sessions.create no user")
 def _(client=client, session=test_session_no_user):
     assert isinstance(session, Session)
     assert session.id
 
-    response = client.sessions.delete(session_id=session.id)
-    assert response is None
 
-
-@test("sessions.get")
+@test("sessions: sessions.get")
 def _(client=client, session=test_session):
     response = client.sessions.get(id=session.id)
 
@@ -77,21 +66,27 @@ def _(client=client, session=test_session):
     assert response.situation == session.situation
 
 
-@test("sessions.list")
+@test("sessions: sessions.list empty")
 def _(client=client):
+    response = client.sessions.list()
+    assert len(response) == 0
+
+
+@test("sessions: sessions.list")
+def _(client=client, session=test_session):
     response = client.sessions.list()
     assert len(response) > 0
     assert isinstance(response[0], Session)
 
 
-@test("async sessions.list")
-async def _(client=async_client):
+@test("sessions: async sessions.list")
+async def _(client=async_client, session=test_session):
     response = await client.sessions.list()
     assert len(response) > 0
     assert isinstance(response[0], Session)
 
 
-@test("sessions.update")
+@test("sessions: sessions.update")
 def _(client=client, session=test_session):
     response = client.sessions.update(
         session_id=session.id,
@@ -103,7 +98,20 @@ def _(client=client, session=test_session):
     assert response.situation == mock_session_update["situation"]
 
 
-@test("sessions.chat")
+@test("sessions: sessions.update with overwrite")
+def _(client=client, session=test_session):
+    response = client.sessions.update(
+        session_id=session.id,
+        overwrite=True,
+        **mock_session_update,
+    )
+
+    assert isinstance(response, Session)
+    assert response.updated_at
+    assert response.situation == mock_session_update["situation"]
+
+
+@test("sessions: sessions.chat")
 def _(client=client, session=test_session):
     response = client.sessions.chat(
         session_id=session.id,
@@ -141,8 +149,14 @@ def _(client=client, session=test_session):
 
     assert isinstance(response, ChatResponse)
 
+    history = client.sessions.history(
+        session_id=session.id,
+    )
 
-# @test("sessions.suggestions")
+    assert len(history) > 0
+
+
+# @test("sessions: sessions.suggestions")
 # def _(client=client, session=test_session):
 #     response = client.sessions.suggestions(
 #         session_id=session.id,
@@ -151,7 +165,7 @@ def _(client=client, session=test_session):
 #     assert isinstance(response[0], Suggestion)
 
 
-# @test("async sessions.suggestions")
+# @test("sessions: async sessions.suggestions")
 # async def _(client=async_client, session=test_session_async):
 #     response = await client.sessions.suggestions(
 #         session_id=session.id,
@@ -160,25 +174,16 @@ def _(client=client, session=test_session):
 #     assert isinstance(response[0], Suggestion)
 
 
-# @test("sessions.history")
-# def _(client=client, session=test_session):
-#     response = client.sessions.history(
-#         session_id=session.id,
-#     )
-#     assert len(response) > 0
-#     assert isinstance(response[0], ChatMlMessage)
+@test("sessions: sessions.history empty")
+def _(client=client, session=test_session):
+    response = client.sessions.history(
+        session_id=session.id,
+    )
+
+    assert len(response) == 0
 
 
-# @test("async sessions.list")
-# async def _(client=async_client, session=test_session_async):
-#     response = await client.sessions.history(
-#         session_id=session.id,
-#     )
-#     assert len(response) > 0
-#     assert isinstance(response[0], ChatMlMessage)
-
-
-@test("sessions.delete_history")
+@test("sessions: sessions.delete_history")
 def _(client=client, session=test_session):
     response = client.sessions.delete_history(
         session_id=session.id,
@@ -186,8 +191,14 @@ def _(client=client, session=test_session):
 
     assert response is None
 
+    history = client.sessions.history(
+        session_id=session.id,
+    )
 
-@test("sessions.delete")
+    assert len(history) == 0
+
+
+@test("sessions: sessions.delete")
 def _(client=client, session=test_session):
     response = client.sessions.delete(
         session_id=session.id,
