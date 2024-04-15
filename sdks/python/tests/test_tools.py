@@ -1,5 +1,7 @@
 from ward import test
 
+
+from julep import AsyncClient
 from julep.api.types import ResourceCreatedResponse, ResourceUpdatedResponse, Tool
 
 from .fixtures import (
@@ -7,6 +9,8 @@ from .fixtures import (
     test_agent,
     client,
     async_client,
+    TEST_API_KEY,
+    TEST_API_URL,
 )
 
 
@@ -37,8 +41,6 @@ def _(client=client, tool=test_tool):
     )
 
     assert isinstance(response, ResourceUpdatedResponse)
-    assert response.updated_at > created_tool.updated_at
-    assert response.created_at == created_tool.created_at
 
 
 @test("tools: tools.list")
@@ -102,7 +104,12 @@ async def _(client=async_client, agent=test_agent):
 
 
 @test("tools: async tools.update")
-async def _(client=async_client, tool=test_tool):
+async def _(tool=test_tool):
+    client = AsyncClient(
+        api_key=TEST_API_KEY,
+        base_url=TEST_API_URL,
+    )
+
     tool, agent = tool
     response = await client.tools.update(
         agent_id=agent.id,

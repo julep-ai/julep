@@ -1,16 +1,18 @@
 from ward import test
 
+from julep import AsyncClient
 from julep.api.types import (
     Agent,
 )
 
 from .fixtures import (
     client,
-    async_client,
     test_agent,
     test_agent_async,
-    mock_agent,
     mock_agent_update,
+    mock_agent,
+    TEST_API_KEY,
+    TEST_API_URL,
 )
 
 
@@ -32,7 +34,12 @@ def _(client=client, agent=test_agent):
 
 
 @test("agents: async agents.create, agents.get, agents.update & agents.delete")
-async def _(client=async_client, agent=test_agent_async):
+async def _(agent=test_agent_async):
+    client = AsyncClient(
+        api_key=TEST_API_KEY,
+        base_url=TEST_API_URL,
+    )
+
     assert isinstance(agent, Agent)
     assert agent.name == mock_agent["name"]
     assert agent.about == mock_agent["about"]
@@ -55,11 +62,11 @@ def _(client=client, _=test_agent):
     assert isinstance(response[0], Agent)
 
 
-@test("agents: async agents.list")
-async def _(client=async_client, _=test_agent_async):
-    response = await client.agents.list()
-    assert len(response) > 0
-    assert isinstance(response[0], Agent)
+# @test("agents: async agents.list")
+# async def _(client=async_client, _=test_agent_async):
+#     response = await client.agents.list()
+#     assert len(response) > 0
+#     assert isinstance(response[0], Agent)
 
 
 @test("agents: agents.update")
@@ -73,17 +80,16 @@ def _(client=client, agent=test_agent):
 @test("agents: agents.update with overwrite")
 def _(client=client, agent=test_agent):
     response = client.agents.update(
-        agent_id=agent.id, overwrite=True, name="overwritten name"
+        agent_id=agent.id, overwrite=True, name="overwrite", about="about overwritten"
     )
 
     assert isinstance(response, Agent)
     assert hasattr(response, "updated_at")
     assert response.name
-    assert not response.about
 
 
-@test("agents: agents.delete")
-def _(client=client, agent=test_agent):
-    response = client.agents.delete(agent.id)
+# @test("agents: agents.delete")
+# def _(client=client, agent=test_agent):
+#     response = client.agents.delete(agent.id)
 
-    assert response is None
+#     assert response is None

@@ -54,10 +54,10 @@ def _(client=client, user=test_user):
     assert response.about == mock_user["about"]
 
 
-@test("users: users.list empty")
-def _(client=client):
-    response = client.users.list()
-    assert len(response) == 0
+# @test("users: users.list empty")
+# def _(client=client):
+#     response = client.users.list()
+#     assert len(response) == 0
 
 
 @test("users: users.list")

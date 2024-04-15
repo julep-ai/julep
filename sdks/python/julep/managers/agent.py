@@ -284,7 +284,7 @@ class BaseAgentsManager(BaseManager):
         """
         assert is_valid_uuid4(agent_id), "id must be a valid UUID v4"
 
-        if default_settings is not None:
+        if default_settings is not NotSet:
             default_settings: AgentDefaultSettings = AgentDefaultSettings(
                 **default_settings
             )

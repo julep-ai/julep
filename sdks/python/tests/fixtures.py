@@ -146,14 +146,14 @@ def test_agent(client=client) -> Agent:
 
 
 @fixture
-async def test_agent_async(client=async_client) -> Agent:
-    agent = await client.agents.create(
+async def test_agent_async(async_client=async_client, client=client) -> Agent:
+    agent = await async_client.agents.create(
         **mock_agent,
     )
 
     yield agent
 
-    await client.agents.delete(agent.id)
+    client.agents.delete(agent.id)
 
 
 @fixture
@@ -240,7 +240,7 @@ def test_tool(client=client, agent=test_agent):
 
     yield tool, agent
 
-    client.tools.delete(tool.id)
+    client.tools.delete(agent_id=agent.id, tool_id=tool.id)
 
 
 @fixture

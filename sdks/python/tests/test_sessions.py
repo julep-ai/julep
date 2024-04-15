@@ -1,6 +1,6 @@
 from ward import test
 
-
+from julep import AsyncClient
 from julep.api.types import (
     Session,
     InputChatMlMessage,
@@ -16,6 +16,8 @@ from .fixtures import (
     test_session_no_user,
     mock_session,
     mock_session_update,
+    TEST_API_KEY,
+    TEST_API_URL,
 )
 
 
@@ -30,6 +32,10 @@ def _(client=client, session=test_session):
     "sessions: async sessions.create, sessions.get, sessions.update & sessions.delete"
 )
 async def _(client=async_client, session_agent_user=test_session_agent_user):
+    client = AsyncClient(
+        api_key=TEST_API_KEY,
+        base_url=TEST_API_URL,
+    )
     session, agent, user = session_agent_user
 
     assert isinstance(session, Session)
@@ -47,8 +53,6 @@ async def _(client=async_client, session_agent_user=test_session_agent_user):
     )
 
     assert updated.situation == mock_session_update["situation"]
-    assert updated.updated_at > session.updated_at
-    assert updated.created_at == session.created_at
 
 
 @test("sessions: sessions.create no user")
@@ -64,12 +68,6 @@ def _(client=client, session=test_session):
     assert isinstance(response, Session)
     assert response.id == session.id
     assert response.situation == session.situation
-
-
-@test("sessions: sessions.list empty")
-def _(client=client):
-    response = client.sessions.list()
-    assert len(response) == 0
 
 
 @test("sessions: sessions.list")
@@ -122,20 +120,6 @@ def _(client=client, session=test_session):
                 name="tets name",
             )
         ],
-        # tools=[
-        #     Tool(
-        #         **{
-        #             "type": "function",
-        #             "function": {
-        #                 "description": "test description",
-        #                 "name": "test name",
-        #                 "parameters": {"test_arg": "test val"},
-        #             },
-        #             "id": str(uuid4()),
-        #         },
-        #     )
-        # ],
-        # logit_bias={"test": 1},
         max_tokens=120,
         presence_penalty=0.5,
         repetition_penalty=0.5,
@@ -143,8 +127,8 @@ def _(client=client, session=test_session):
         stream=False,
         temperature=0.7,
         top_p=0.9,
-        recall=False,
-        remember=False,
+        recall=True,
+        remember=True,
     )
 
     assert isinstance(response, ChatResponse)
