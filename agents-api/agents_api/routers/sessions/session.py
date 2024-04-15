@@ -15,7 +15,7 @@ from agents_api.clients.worker.types import ChatML
 from agents_api.models.session.session_data import get_session_data
 from agents_api.models.entry.proc_mem_context import proc_mem_context_query
 from agents_api.autogen.openapi_model import InputChatMLMessage, Tool
-from agents_api.model_registry import get_model_client
+from agents_api.model_registry import get_model_client, JULEP_MODELS
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
@@ -206,6 +206,15 @@ class BaseSession:
         if settings.tools:
             tools = [tool.model_dump(mode="json") for tool in settings.tools]
         model_client = get_model_client(settings.model)
+        extra_body = dict(
+                repetition_penalty=settings.repetition_penalty,
+                best_of=1,
+                top_k=1,
+                length_penalty=settings.length_penalty,
+                logit_bias=settings.logit_bias,
+                preset=settings.preset.name if settings.preset else None,
+        ) if settings.model in JULEP_MODELS else None
+
         res = await model_client.chat.completions.create(
             model=settings.model,
             messages=init_context,
@@ -213,14 +222,7 @@ class BaseSession:
             stop=settings.stop,
             temperature=settings.temperature,
             frequency_penalty=settings.frequency_penalty,
-            # extra_body=dict(
-            #     repetition_penalty=settings.repetition_penalty,
-            #     best_of=1,
-            #     top_k=1,
-            #     length_penalty=settings.length_penalty,
-            #     logit_bias=settings.logit_bias,
-            #     preset=settings.preset.name if settings.preset else None,
-            # ),
+            extra_body=extra_body,
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
