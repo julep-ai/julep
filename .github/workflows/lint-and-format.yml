@@ -67,7 +67,7 @@ jobs:
     - name: Lint and format TypeScript SDK
       run: |
         cd sdks/ts
-        npm ci
+        # npm ci
         # npm run format
         # npm run lint
 
