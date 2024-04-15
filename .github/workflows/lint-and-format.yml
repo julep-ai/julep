@@ -11,12 +11,61 @@ jobs:
           python-version: '3.10' 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
+
+      - name: Configure Poetry to use .venv
+        run: |
+          poetry config virtualenvs.in-project true
+  
+      - name: Cache Poetry virtualenv for Agents API
+        uses: actions/cache@v3
+        with:
+          path: agents-api/.venv
+          key: ${{ runner.os }}-poetry-agents-api-${{ hashFiles('agents-api/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-agents-api-
+  
+      - name: Cache Poetry virtualenv for Models API
+        uses: actions/cache@v3
+        with:
+          path: model-serving/.venv
+          key: ${{ runner.os }}-poetry-model-serving-${{ hashFiles('model-serving/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-model-serving-
+  
+      - name: Cache Poetry virtualenv for Python SDK
+        uses: actions/cache@v3
+        with:
+          path: sdks/python/.venv
+          key: ${{ runner.os }}-poetry-python-sdk-${{ hashFiles('sdks/python/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-python-sdk-
+  
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: sdks/ts/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('sdks/ts/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
       - name: Lint and format Agents API
-        run: cd agents-api && poetry install && poetry run poe check
+        run: |
+          cd agents-api
+          poetry install
+          poetry run poe check
+  
       - name: Lint and format Models API
-        run: cd model-serving && poetry install && poetry run poe check
+        run: |
+          cd model-serving
+          poetry install
+          poetry run poe check
+  
       - name: Lint and format Python SDK
-        run: cd sdks/python && poetry install && poetry run poe check
+        run: |
+          cd sdks/python
+          poetry install
+          poetry run poe check
+
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "🎨 Auto-format code with black"
