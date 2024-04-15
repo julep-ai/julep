@@ -8,6 +8,8 @@ Exceptions are organized into categories based on the domain of operation, inclu
 
 All custom exceptions extend from `BaseCommonException`, which encapsulates common attributes and behavior, including the error message and HTTP status code. This structured approach to exception handling facilitates precise and meaningful error feedback to API consumers, thereby improving the overall developer experience.
 """
+
+
 class BaseCommonException(Exception):
     def __init__(self, msg: str, http_code: int):
         super().__init__(msg)

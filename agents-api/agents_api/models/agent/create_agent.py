@@ -4,7 +4,6 @@ It includes functions to construct and execute datalog queries for inserting new
 """
 
 from agents_api.common.exceptions.agents import AgentModelNotValid
-from ...common.utils import json
 from uuid import UUID
 
 import pandas as pd

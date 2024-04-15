@@ -206,14 +206,18 @@ class BaseSession:
         if settings.tools:
             tools = [tool.model_dump(mode="json") for tool in settings.tools]
         model_client = get_model_client(settings.model)
-        extra_body = dict(
+        extra_body = (
+            dict(
                 repetition_penalty=settings.repetition_penalty,
                 best_of=1,
                 top_k=1,
                 length_penalty=settings.length_penalty,
                 logit_bias=settings.logit_bias,
                 preset=settings.preset.name if settings.preset else None,
-        ) if settings.model in JULEP_MODELS else None
+            )
+            if settings.model in JULEP_MODELS
+            else None
+        )
 
         res = await model_client.chat.completions.create(
             model=settings.model,

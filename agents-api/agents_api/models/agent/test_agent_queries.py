@@ -13,6 +13,7 @@ from .update_agent import update_agent_query
 
 MODEL = "julep-ai/samantha-1-turbo"
 
+
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.

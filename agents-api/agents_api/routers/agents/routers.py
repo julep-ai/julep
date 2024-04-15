@@ -12,7 +12,6 @@ from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 from agents_api.clients.embed import embed
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.exceptions.agents import (
-    AgentModelNotValid,
     AgentNotFoundError,
     AgentToolNotFoundError,
     AgentDocNotFoundError,

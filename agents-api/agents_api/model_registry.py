@@ -1,8 +1,9 @@
 """
 Model Registry maintains a list of supported models and their configs.
 """
-from typing import Dict, List, Optional
+from typing import Dict
 from agents_api.clients.model import julep_client, openai_client
+from openai import AsyncOpenAI
 
 
 GPT4_MODELS: Dict[str, int] = {
@@ -85,23 +86,14 @@ CLAUDE_MODELS: Dict[str, int] = {
     "claude-3-haiku-20240307": 180000,
 }
 
-OPENAI_MODELS = {
-    **GPT4_MODELS,
-    **TURBO_MODELS,
-    **GPT3_5_MODELS,
-    **GPT3_MODELS
-}
+OPENAI_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **GPT3_5_MODELS, **GPT3_MODELS}
 
 JULEP_MODELS = {
     "julep-ai/samantha-1-turbo": 32768,
-    "julep-ai/samantha-1-turbo-awq": 32768
+    "julep-ai/samantha-1-turbo-awq": 32768,
 }
 
-CHAT_MODELS = {
-    **GPT4_MODELS,
-    **TURBO_MODELS,
-    **CLAUDE_MODELS
-}
+CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
 
 ALL_AVAILABLE_MODELS = {
     **JULEP_MODELS,
@@ -112,12 +104,14 @@ ALL_AVAILABLE_MODELS = {
     # **CLAUDE_MODELS,
 }
 
+
 # TODO: implement
 def validate_configuration():
     """
     function that validates the config based on the model
     """
     pass
+
 
 # TODO: implement
 def validate_request():
@@ -126,14 +120,16 @@ def validate_request():
     """
     pass
 
-def get_model_client(model: str) -> str:
+
+def get_model_client(model: str) -> AsyncOpenAI:
     """
-    Returns the model serving URL based on the model
+    Returns the model serving client based on the model
     """
     if model in JULEP_MODELS:
         return julep_client
     elif model in OPENAI_MODELS:
         return openai_client
+
 
 # TODO: implement and use this to work with the response from different model formats
 def parse_response():
@@ -141,4 +137,3 @@ def parse_response():
     method that converts the response from the provider back into the openai format
     """
     pass
-

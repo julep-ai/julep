@@ -24,6 +24,7 @@ from .proc_mem_context import proc_mem_context_query
 
 MODEL = "julep-ai/samantha-1-turbo"
 
+
 # Initializes a new CozoDB client for testing, applying all migrations.
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
