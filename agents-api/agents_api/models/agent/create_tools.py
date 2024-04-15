@@ -31,7 +31,7 @@ def create_tools_query(
     functions_input: list[list] = []
 
     for function, embedding in zip(functions, embeddings):
-        parameters = function.parameters.model_dump_json()
+        parameters = function.parameters.model_dump()
         functions_input.append(
             [
                 str(agent_id),
