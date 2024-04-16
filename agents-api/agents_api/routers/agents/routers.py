@@ -133,7 +133,7 @@ async def update_agent(
             detail="Agent not found",
         )
     except QueryException as e:
-        if e.code == "transact::assertion_failure":
+        if e.code in ("transact::assertion_failure", "eval::assert_some_failure"):
             raise AgentNotFoundError(x_developer_id, agent_id)
 
         raise
