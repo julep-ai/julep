@@ -26,7 +26,7 @@ pydantic = "^2.5.3"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.18.1"
-black = "^23.12.1"
+black = "^24.4.0"
 ruff = "^0.1.9"
 datamodel-code-generator = "^0.25.3"
 cozo-migrate = "^0.2.0"
