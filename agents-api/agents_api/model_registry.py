@@ -4,7 +4,10 @@ Model Registry maintains a list of supported models and their configs.
 
 from typing import Dict
 from agents_api.clients.model import julep_client, openai_client
-from agents_api.common.exceptions.agents import AgentModelNotValid, MissingAgentModelAPIKeyError
+from agents_api.common.exceptions.agents import (
+    AgentModelNotValid,
+    MissingAgentModelAPIKeyError,
+)
 from openai import AsyncOpenAI
 
 

@@ -49,6 +49,7 @@ class AgentModelNotValid(BaseAgentException):
             http_code=400,
         )
 
+
 class MissingAgentModelAPIKeyError(BaseAgentException):
     def __init__(self, model: str):
         super().__init__(
