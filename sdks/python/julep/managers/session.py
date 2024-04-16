@@ -37,12 +37,15 @@ from .utils import is_valid_uuid4
 class SessionCreateArgs(TypedDict):
     user_id: Optional[Union[str, UUID]]
     agent_id: Union[str, UUID]
-    situation: Optional[str]
+    situation: Optional[str] = None
+    metadata: Dict[str, Any] = {}
 
 
 class SessionUpdateArgs(TypedDict):
     session_id: Union[str, UUID]
-    situation: str
+    situation: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    overwrite: bool = False
 
 
 class BaseSessionsManager(BaseManager):
@@ -171,6 +174,7 @@ class BaseSessionsManager(BaseManager):
         agent_id: Union[str, UUID],
         user_id: Optional[Union[str, UUID]] = None,
         situation: Optional[str] = None,
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -182,6 +186,7 @@ class BaseSessionsManager(BaseManager):
             agent_id (Union[str, UUID]): The agent's identifier which could be a string or a UUID object.
             user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
             situation (Optional[str], optional): An optional description of the situation.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response from the API client upon successful session creation, which can be a synchronous `ResourceCreatedResponse` or an asynchronous `Awaitable` of it.
@@ -198,6 +203,7 @@ class BaseSessionsManager(BaseManager):
             user_id=user_id,
             agent_id=agent_id,
             situation=situation,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -249,7 +255,9 @@ class BaseSessionsManager(BaseManager):
     def _update(
         self,
         session_id: Union[str, UUID],
-        situation: str,
+        situation: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update a session with a given situation.
@@ -257,7 +265,7 @@ class BaseSessionsManager(BaseManager):
         Args:
             session_id (Union[str, UUID]): The session identifier, which can be a string-formatted UUID or an actual UUID object.
             situation (str): A string describing the current situation.
-
+            overwrite (bool, optional): Whether to overwrite the existing situation. Defaults to False.
         Returns:
             Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The response from the update operation, which can be either synchronous or asynchronous.
 
@@ -266,9 +274,16 @@ class BaseSessionsManager(BaseManager):
         """
         assert is_valid_uuid4(session_id), "id must be a valid UUID v4"
 
-        return self.api_client.update_session(
+        updateFn = (
+            self.api_client.update_session
+            if overwrite
+            else self.api_client.patch_session
+        )
+
+        return updateFn(
             session_id=session_id,
             situation=situation,
+            metadata=metadata,
         )
 
     def _chat(
@@ -591,6 +606,7 @@ class SessionsManager(BaseSessionsManager):
             session_id (Union[str, UUID]): The session identifier, which can be a UUID or a
                 string that uniquely identifies the session.
             situation (str): A string that represents the new situation for the resource update.
+            overwrite (bool, optional): A flag to indicate whether to overwrite the existing
 
         Returns:
             Session: The updated Session object.

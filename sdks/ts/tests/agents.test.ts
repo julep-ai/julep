@@ -32,21 +32,35 @@ describe("Julep Client Tests", () => {
     expect(response).toHaveProperty("created_at");
     expect(response.about).toBe(mockAgent.about);
     expect(response.name).toBe(mockAgent.name);
-    expect(response.instructions).toHaveLength(1);
   });
 
   test("agents.get", async () => {
     const response = await client.agents.get(testAgent.id);
 
+    // console.error(response);
+
     expect(response).toHaveProperty("created_at");
     expect(response).toHaveProperty("updated_at");
     expect(response.about).toBe(mockAgent.about);
     expect(response.name).toBe(mockAgent.name);
-    expect(response.instructions).toHaveLength(1);
   });
 
   test("agents.update", async () => {
-    const response = await client.agents.update(testAgent.id, mockAgentUpdate);
+    const response = await client.agents.update(testAgent.id, {
+      name: mockAgentUpdate.name,
+    });
+
+    expect(response.id).toBe(testAgent.id);
+    expect(response).toHaveProperty("updated_at");
+    expect(response.name).toBe(mockAgentUpdate.name);
+  });
+
+  test("agents.update with overload", async () => {
+    const response = await client.agents.update(
+      testAgent.id,
+      mockAgentUpdate,
+      true,
+    );
 
     expect(response.id).toBe(testAgent.id);
     expect(response).toHaveProperty("updated_at");

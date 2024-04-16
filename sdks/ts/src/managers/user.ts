@@ -2,7 +2,7 @@ import type {
   User,
   CreateUserRequest,
   ResourceCreatedResponse,
-  ResourceUpdatedResponse,
+  PatchUserRequest,
   UpdateUserRequest,
 } from "../api";
 
@@ -71,21 +71,46 @@ export class UsersManager extends BaseManager {
 
   async update(
     userId: string,
-    { about = "", name }: UpdateUserRequest = {},
+    request: UpdateUserRequest,
+    overwrite: true,
+  ): Promise<User>;
+
+  async update(
+    userId: string,
+    request: PatchUserRequest,
+    overwrite?: false,
+  ): Promise<User>;
+
+  async update(
+    userId: string,
+    { about, name }: PatchUserRequest | UpdateUserRequest,
+    overwrite = false,
   ): Promise<User> {
     try {
       invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
-      const requestBody = { about, name };
+      // Tests won't pass if ternary is used
+      //   const updateFn = overwrite
+      //     ? this.apiClient.default.updateUser
+      //     : this.apiClient.default.patchUser;
 
-      const result: ResourceUpdatedResponse =
-        await this.apiClient.default.updateUser({
+      if (overwrite) {
+        const requestBody = { name: name!, about: about! };
+        const result = await this.apiClient.default.updateUser({
           userId,
           requestBody,
         });
-
-      const user: User = { ...result, ...requestBody };
-      return user;
+        const user: User = { ...result, ...requestBody };
+        return user;
+      } else {
+        const requestBody = { name, about };
+        const result = await this.apiClient.default.patchUser({
+          userId,
+          requestBody,
+        });
+        const user: User = { ...result, ...requestBody };
+        return user;
+      }
     } catch (error) {
       throw error;
     }

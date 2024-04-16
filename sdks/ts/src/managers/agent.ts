@@ -3,10 +3,10 @@ import type {
   CreateToolRequest,
   AgentDefaultSettings,
   ResourceCreatedResponse,
-  ResourceUpdatedResponse,
   Doc,
   CreateAgentRequest,
   UpdateAgentRequest,
+  PatchAgentRequest,
 } from "../api";
 
 import { invariant } from "../utils/invariant";
@@ -91,37 +91,72 @@ export class AgentsManager extends BaseManager {
 
   async update(
     agentId: string,
+    request: PatchAgentRequest,
+    overwrite?: false,
+  ): Promise<Partial<Agent> & { id: string }>;
+
+  async update(
+    agentId: string,
+    request: UpdateAgentRequest,
+    overwrite: true,
+  ): Promise<Partial<Agent> & { id: string }>;
+
+  async update(
+    agentId: string,
     {
       about,
       instructions,
       name,
       model,
       default_settings,
-    }: {
-      about?: string;
-      instructions?: string[];
-      name?: string;
-      model?: string;
-      default_settings?: AgentDefaultSettings;
-    } = {},
+    }: PatchAgentRequest | UpdateAgentRequest,
+    overwrite = false,
   ): Promise<Partial<Agent> & { id: string }> {
     invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
 
-    const requestBody: UpdateAgentRequest = {
-      about,
-      instructions: instructions,
-      name,
-      model,
-      default_settings,
-    };
+    // Fails tests
+    // const updateFn = overwrite ? this.apiClient.default.updateAgent : this.apiClient.default.patchAgent;
 
-    const result: ResourceUpdatedResponse =
-      await this.apiClient.default.updateAgent({ agentId, requestBody });
+    if (overwrite) {
+      const requestBody: UpdateAgentRequest = {
+        about: about!,
+        instructions,
+        name: name!,
+        model,
+        default_settings,
+      };
 
-    const agent: Partial<Agent> & { id: string } = {
-      ...result,
-      ...requestBody,
-    };
-    return agent;
+      const result = await this.apiClient.default.updateAgent({
+        agentId,
+        requestBody,
+      });
+
+      const agent: Partial<Agent> & { id: string } = {
+        ...result,
+        ...requestBody,
+      };
+
+      return agent;
+    } else {
+      const requestBody: PatchAgentRequest = {
+        about,
+        instructions,
+        name,
+        model,
+        default_settings,
+      };
+
+      const result = await this.apiClient.default.patchAgent({
+        agentId,
+        requestBody,
+      });
+
+      const agent: Partial<Agent> & { id: string } = {
+        ...result,
+        ...requestBody,
+      };
+
+      return agent;
+    }
   }
 }
