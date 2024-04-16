@@ -1,6 +1,7 @@
 """
 This module initializes the FastAPI application, registers routes, sets up middleware, and configures exception handlers.
 """
+
 import fire
 import uvicorn
 import logging

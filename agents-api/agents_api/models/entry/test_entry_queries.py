@@ -2,6 +2,7 @@
 This module contains tests for entry queries against the CozoDB database.
 It verifies the functionality of adding, retrieving, and processing entries as defined in the schema.
 """
+
 # Tests for entry queries
 from uuid import uuid4
 

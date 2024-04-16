@@ -3,6 +3,7 @@ Defines session-related exceptions for the agents API.
 
 These exceptions are used throughout the agents API to handle errors related to session operations, such as when a requested session cannot be found.
 """
+
 from uuid import UUID
 from . import BaseCommonException
 

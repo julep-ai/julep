@@ -2,6 +2,7 @@
 This module contains the functionality for creating a new session in the 'cozodb' database.
 It constructs and executes a datalog query to insert session data.
 """
+
 from uuid import UUID
 
 import pandas as pd

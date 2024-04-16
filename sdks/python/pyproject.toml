@@ -17,7 +17,7 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
-pytype = ">=2024.4.11"
+pytype = "2024.1.5"
 black = "^24.4.0"
 ward = "^0.68.0b0"
 ruff = "^0.1.13"
