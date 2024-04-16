@@ -33,11 +33,15 @@ jobs:
         key: ${{ runner.os }}-poetry-${{ matrix.directory }}-${{ hashFiles(format('{0}/poetry.lock', matrix.directory)) }}
         restore-keys: |
           ${{ runner.os }}-poetry-${{ matrix.directory }}-
+ 
+    - name: Install dependencies 
+      run: |
+        cd ${{ matrix.directory }}
+        poetry install
 
     - name: Lint and format
       run: |
         cd ${{ matrix.directory }}
-        poetry install
         poetry run poe check
 
     - uses: stefanzweifel/git-auto-commit-action@v4
