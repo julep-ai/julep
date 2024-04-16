@@ -2,6 +2,7 @@
 This module contains the functionality for creating a new user in the CozoDB database.
 It defines a query for inserting user data into the 'users' relation.
 """
+
 from uuid import UUID
 
 import pandas as pd

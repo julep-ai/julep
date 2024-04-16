@@ -2,6 +2,7 @@
 This module is responsible for loading and providing access to environment variables used throughout the agents-api application.
 It utilizes the environs library for environment variable parsing.
 """
+
 from pprint import pprint
 from environs import Env
 
