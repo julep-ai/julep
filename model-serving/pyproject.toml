@@ -32,7 +32,7 @@ modal = "^0.62.24"
 ipython = "^8.21.0"
 ruff = "^0.1.9"
 poethepoet = "^0.24.4"
-pytype = "^2024.1.5"
+pytype = ">=2024.4.11"
 julep = "^0.2.1"
 jupyterlab = "^4.1.1"
 ipywidgets = "^8.1.2"
@@ -49,11 +49,11 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-prettify = "black ."
-lint = "ruff **/*.py --fix --unsafe-fixes"
-typecheck = "pytype model_api"
+format = "black ."
+lint = "ruff model_api/**/*.py tests/**/*.py --fix --unsafe-fixes"
+typecheck = "pytype -j auto -k model_api"
 check = [
-    "prettify",
+    "format",
     "lint",
     "typecheck",
 ]

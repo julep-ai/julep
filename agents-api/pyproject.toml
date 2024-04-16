@@ -31,7 +31,7 @@ ruff = "^0.1.9"
 datamodel-code-generator = "^0.25.3"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.24.4"
-pytype = "^2024.1.5"
+pytype = ">=2024.4.11"
 julep = "^0.2.4"
 
 [build-system]
@@ -40,8 +40,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
 format = "black ."
-lint = "ruff **/*.py --fix --unsafe-fixes"
-typecheck = "pytype agents_api"
+lint = "ruff agents_api/**/*.py migrations/**/*.py tests/**/*.py --fix --unsafe-fixes"
+typecheck = "pytype -j auto -k agents_api"
 check = [
     "format",
     "lint",
