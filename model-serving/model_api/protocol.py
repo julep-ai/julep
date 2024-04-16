@@ -46,9 +46,9 @@ class DeltaMessage(DeltaMessage):
 
 class ChatCompletionResponseChoice(ChatCompletionResponseChoice):
     message: ChatMessage
-    finish_reason: Literal[
-        "stop", "length", "function_call", "tool_calls"
-    ] | None = None
+    finish_reason: Literal["stop", "length", "function_call", "tool_calls"] | None = (
+        None
+    )
 
 
 class ChatCompletionResponseStreamChoice(ChatCompletionResponseStreamChoice):
