@@ -12,70 +12,78 @@ jobs:
         directory: [agents-api, model-serving, sdks/python]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-        
-    - name: Install and configure Poetry
-      uses: snok/install-poetry@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Configure Poetry to use .venv
-      run: |
-        cd ${{ matrix.directory }}
-        poetry config virtualenvs.in-project true
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
 
-    - name: Cache Poetry virtualenv
-      uses: actions/cache@v3
-      with:
-        path: ${{ matrix.directory }}/.venv
-        key: ${{ runner.os }}-poetry-${{ matrix.directory }}-${{ hashFiles(format('{0}/poetry.lock', matrix.directory)) }}
-        restore-keys: |
-          ${{ runner.os }}-poetry-${{ matrix.directory }}-
- 
-    - name: Install dependencies 
-      run: |
-        cd ${{ matrix.directory }}
-        poetry install
+      - name: Configure Poetry to use .venv
+        run: |
+          cd ${{ matrix.directory }}
+          poetry config virtualenvs.in-project true
 
-    - name: Lint and format
-      run: |
-        cd ${{ matrix.directory }}
-        poetry run poe check
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.directory }}/.venv
+          key: ${{ runner.os }}-poetry-${{ matrix.directory }}-${{ hashFiles(format('{0}/poetry.lock', matrix.directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ matrix.directory }}-
 
-    - uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: "refactor: Lint ${{ matrix.directory }} (CI)"
-        branch: ${{ github.head_ref }}
+      - name: Cache pytype
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.directory }}/.pytype
+          key: ${{ runner.os }}-pytype-${{ matrix.directory }}-${{ hashFiles(format('{0}/**/*.py', matrix.directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-pytype-${{ matrix.directory }}-
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.directory }}
+          poetry install
+
+      - name: Lint and format
+        run: |
+          cd ${{ matrix.directory }}
+          poetry run poe check
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "refactor: Lint ${{ matrix.directory }} (CI)"
+          branch: ${{ github.head_ref }}
 
   Lint-And-Format-TS-SDK:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '14.x'
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
 
-    - name: Cache npm dependencies
-      uses: actions/cache@v3
-      with:
-        path: sdks/ts/node_modules
-        key: ${{ runner.os }}-npm-${{ hashFiles('sdks/ts/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-npm-
+      - name: Cache npm dependencies
+        uses: actions/cache@v3
+        with:
+          path: sdks/ts/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('sdks/ts/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
-    - name: Lint and format TypeScript SDK
-      run: |
-        cd sdks/ts
-        # npm ci
-        # npm run format
-        # npm run lint
+      - name: Lint and format TypeScript SDK
+        run: |
+          cd sdks/ts
+          npm ci
+          # npm run format
+          # npm run lint
 
-    - uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: "refactor: Lint sdks/ts (CI)"
-        branch: ${{ github.head_ref }}
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "refactor: Lint sdks/ts (CI)"
+          branch: ${{ github.head_ref }}

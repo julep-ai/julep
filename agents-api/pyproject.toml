@@ -40,7 +40,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
 format = "black ."
-lint = "ruff **/*.py --fix --unsafe-fixes"
+lint = "ruff agents_api/**/*.py migrations/**/*.py tests/**/*.py --fix --unsafe-fixes"
 typecheck = "pytype agents_api"
 check = [
     "format",
