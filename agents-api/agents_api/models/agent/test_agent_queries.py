@@ -11,6 +11,8 @@ from .get_agent import get_agent_query
 from .list_agents import list_agents_query
 from .update_agent import update_agent_query
 
+MODEL = "julep-ai/samantha-1-turbo"
+
 
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
@@ -31,6 +33,7 @@ def _():
 
     create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
@@ -46,6 +49,7 @@ def _():
 
     create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
@@ -77,6 +81,7 @@ def _():
 
     result = create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
@@ -102,6 +107,7 @@ def _():
     # Create the agent
     result = create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",
@@ -129,6 +135,7 @@ def _():
 
     create_agent_query(
         agent_id=agent_id,
+        model=MODEL,
         developer_id=developer_id,
         name="test agent",
         about="test agent about",

@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel
 
 
@@ -20,8 +18,3 @@ class AgentDefaultSettings(BaseModel):
     frequency_penalty: float = 0.0
     """Minimum probability threshold for including a word in the agent's response."""
     min_p: float = 0.01
-
-
-ModelType = Literal[
-    "julep-ai/samantha-1", "julep-ai/samantha-1-turbo", "julep-ai/samantha-1-turbo-awq"
-]

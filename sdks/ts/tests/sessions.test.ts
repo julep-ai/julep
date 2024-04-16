@@ -63,7 +63,10 @@ describe("Sessions API", () => {
   });
 
   it("sessions.update", async () => {
-    const response = await client.sessions.update(testSessionId, mockSessionUpdate);
+    const response = await client.sessions.update(
+      testSessionId,
+      mockSessionUpdate,
+    );
 
     expect(response).toHaveProperty("updated_at");
   });

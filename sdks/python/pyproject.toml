@@ -17,7 +17,7 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
-pytype = "^2024.1.5"
+pytype = ">=2024.4.11"
 black = "^23.12.1"
 ward = "^0.68.0b0"
 ruff = "^0.1.13"
@@ -33,8 +33,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
 format = "black ."
-lint = "ruff **/*.py --fix --unsafe-fixes"
-typecheck = "pytype --config=pytype.toml julep"
+lint = "ruff julep/**/*.py tests/**/*.py --fix --unsafe-fixes"
+typecheck = "pytype -j auto -k --config=pytype.toml julep"
 check = [
     "format",
     "lint",

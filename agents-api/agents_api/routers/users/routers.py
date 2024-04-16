@@ -108,7 +108,7 @@ async def update_user(
         )
     except QueryException as e:
         # the code is not so informative now, but it may be a good solution in the future
-        if e.code == "transact::assertion_failure":
+        if e.code in ("transact::assertion_failure", "eval::assert_some_failure"):
             raise UserNotFoundError(x_developer_id, user_id)
 
         raise

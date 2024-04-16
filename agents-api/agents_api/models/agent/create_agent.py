@@ -3,6 +3,7 @@ This module contains the functionality for creating agents in the CozoDB databas
 It includes functions to construct and execute datalog queries for inserting new agent records.
 """
 
+from agents_api.common.exceptions.agents import AgentModelNotValid
 from uuid import UUID
 
 import pandas as pd
@@ -10,6 +11,7 @@ from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...model_registry import ALL_AVAILABLE_MODELS
 
 
 """
@@ -36,12 +38,15 @@ def create_agent_query(
     developer_id: UUID,
     name: str,
     about: str,
+    model: str,
     instructions: list[str] = [],
-    model: str = "julep-ai/samantha-1-turbo",
     metadata: dict = {},
     default_settings: dict = {},
     client: CozoClient = client,
 ) -> pd.DataFrame:
+    if model not in ALL_AVAILABLE_MODELS.keys():
+        raise AgentModelNotValid(model)
+
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
             **default_settings,
