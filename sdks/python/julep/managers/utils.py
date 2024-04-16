@@ -5,6 +5,13 @@ from uuid import UUID
 from ..api.types import ResourceCreatedResponse
 
 
+class NotSet:
+    pass
+
+
+NotSet = NotSet()
+
+
 def is_valid_uuid4(uuid_to_test: str) -> bool:
     """
     Check if uuid_to_test is a valid UUID v4.

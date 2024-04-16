@@ -23,6 +23,7 @@ class DocsCreateArgs(TypedDict):
     agent_id: Optional[Union[str, UUID]]
     user_id: Optional[Union[str, UUID]]
     doc: DocDict
+    metadata: Dict[str, Any] = {}
 
 
 class BaseDocsManager(BaseManager):
@@ -114,6 +115,7 @@ class BaseDocsManager(BaseManager):
         doc: DocDict,
         agent_id: Optional[Union[str, UUID]] = None,
         user_id: Optional[Union[str, UUID]] = None,
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         """
         Create a new resource with docsrmation for either an agent or a user, but not both.
@@ -457,6 +459,11 @@ class AsyncDocsManager(BaseDocsManager):
         Note:
             The `@beartype` decorator is used to enforce type checking on the function arguments.
         """
+
+        # Assert either user_id or agent_id is provided
+        if not agent_id and not user_id:
+            raise ValueError("Either agent_id or user_id must be provided.")
+
         return await self._delete(
             agent_id=agent_id,
             user_id=user_id,

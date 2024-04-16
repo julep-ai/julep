@@ -18,7 +18,7 @@ from ..api.types import (
 from .utils import rewrap_in_class
 
 from .base import BaseManager
-from .utils import is_valid_uuid4
+from .utils import is_valid_uuid4, NotSet
 from .types import (
     ToolDict,
     FunctionDefDict,
@@ -31,6 +31,7 @@ from .types import (
 ## TYPES ##
 ###########
 
+
 ModelName = Literal[
     "julep-ai/samantha-1",
     "julep-ai/samantha-1-turbo",
@@ -39,13 +40,14 @@ ModelName = Literal[
 
 class AgentCreateArgs(TypedDict):
     name: str
-    about: str
-    instructions: List[str]
+    about: Optional[str]
+    instructions: Optional[List[str]]
     tools: List[ToolDict] = []
     functions: List[FunctionDefDict] = []
     default_settings: DefaultSettingsDict = {}
     model: ModelName = "julep-ai/samantha-1-turbo"
     docs: List[DocDict] = []
+    metadata: Dict[str, Any] = {}
 
 
 class AgentUpdateArgs(TypedDict):
@@ -54,6 +56,8 @@ class AgentUpdateArgs(TypedDict):
     name: Optional[str] = None
     model: Optional[str] = None
     default_settings: Optional[DefaultSettingsDict] = None
+    metadata: Optional[Dict[str, Any]] = None
+    overwrite: bool = False
 
 
 class BaseAgentsManager(BaseManager):
@@ -73,7 +77,7 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 The agent object or an awaitable that resolves to the agent object.
 
-        _create(self, name: str, about: str, instructions: List[str], tools: List[ToolDict] = [], functions: List[FunctionDefDict] = [], default_settings: DefaultSettingsDict = {}, model: ModelName = 'julep-ai/samantha-1-turbo', docs: List[DocDict] = []) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
+        _create(self, name: str, about: str, instructions: List[str], tools: List[ToolDict] = [], functions: List[FunctionDefDict] = [], default_settings: DefaultSettingsDict = {}, model: ModelName = 'julep-ai/samantha-1-turbo', docs: List[DocDict] = [], metadata: Dict[str, Any] = {}) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
             Creates an agent with the given specifications.
             Args:
                 name (str): The name of the new agent.
@@ -84,6 +88,7 @@ class BaseAgentsManager(BaseManager):
                 default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the new agent. Defaults to an empty dictionary.
                 model (ModelName, optional): The model name for the new agent. Defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): List of document dictionaries for the new agent. Defaults to an empty list.
+                metadata (Dict[str, Any], optional): Dictionary of metadata for the new agent. Defaults to an empty dictionary.
             Returns:
                 The response indicating creation or an awaitable that resolves to the creation response.
 
@@ -102,7 +107,7 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 None or an awaitable that resolves to None.
 
-        _update(self, agent_id: Union[str, UUID], about: Optional[str] = None, instructions: Optional[List[str]] = None, name: Optional[str] = None, model: Optional[str] = None, default_settings: Optional[DefaultSettingsDict] = None) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
+        _update(self, agent_id: Union[str, UUID], about: Optional[str] = None, instructions: Optional[List[str]] = None, name: Optional[str] = None, model: Optional[str] = None, default_settings: Optional[DefaultSettingsDict] = None, metadata: Dict[str, Any] = {}) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
             Updates the specified fields of an agent.
             Args:
                 agent_id (Union[str, UUID]): The UUID of the agent to update.
@@ -111,6 +116,7 @@ class BaseAgentsManager(BaseManager):
                 name (Optional[str], optional): The new name for the agent.
                 model (Optional[str], optional): The new model name for the agent.
                 default_settings (Optional[DefaultSettingsDict], optional): The new default settings dictionary for the agent.
+                metadata (Dict[str, Any])
             Returns:
                 The response indicating successful update or an awaitable that resolves to the update response.
     """
@@ -134,13 +140,14 @@ class BaseAgentsManager(BaseManager):
     def _create(
         self,
         name: str,
-        about: str,
-        instructions: List[str],
+        about: str = "",
+        instructions: List[str] = [],
         tools: List[ToolDict] = [],
         functions: List[FunctionDefDict] = [],
         default_settings: DefaultSettingsDict = {},
         model: ModelName = "julep-ai/samantha-1-turbo",
         docs: List[DocDict] = [],
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -155,6 +162,7 @@ class BaseAgentsManager(BaseManager):
             default_settings (DefaultSettingsDict, optional): Dictionary of default settings for the agent. Defaults to an empty dict.
             model (ModelName, optional): The model name identifier. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): List of document configurations for the agent. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response object indicating the resource has been created or a future of the response object if the creation is being awaited.
@@ -196,6 +204,7 @@ class BaseAgentsManager(BaseManager):
             default_settings=default_settings,
             model=model,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -243,11 +252,13 @@ class BaseAgentsManager(BaseManager):
     def _update(
         self,
         agent_id: Union[str, UUID],
-        about: Optional[str] = None,
-        instructions: List[str] = None,
-        name: Optional[str] = None,
-        model: Optional[str] = None,
-        default_settings: Optional[DefaultSettingsDict] = None,
+        about: Optional[str] = NotSet,
+        instructions: List[str] = NotSet,
+        name: Optional[str] = NotSet,
+        model: Optional[str] = NotSet,
+        default_settings: Optional[DefaultSettingsDict] = NotSet,
+        metadata: Dict[str, Any] = NotSet,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update the agent's properties.
@@ -259,6 +270,8 @@ class BaseAgentsManager(BaseManager):
                 name (Optional[str], optional): The name of the agent. Defaults to None.
                 model (Optional[str], optional): The model identifier for the agent. Defaults to None.
                 default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
+                metadata (Dict[str, Any])
+                overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
             Returns:
                 Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: An object representing the response for the resource updated, which can also be an awaitable in asynchronous contexts.
@@ -271,19 +284,28 @@ class BaseAgentsManager(BaseManager):
         """
         assert is_valid_uuid4(agent_id), "id must be a valid UUID v4"
 
-        if default_settings is not None:
+        if default_settings is not NotSet:
             default_settings: AgentDefaultSettings = AgentDefaultSettings(
                 **default_settings
             )
 
-        return self.api_client.update_agent(
+        updateFn = (
+            self.api_client.update_agent if overwrite else self.api_client.patch_agent
+        )
+
+        update_payload = dict(
             agent_id=agent_id,
             about=about,
             instructions=instructions,
             name=name,
             model=model,
             default_settings=default_settings,
+            metadata=metadata,
         )
+
+        update_payload = {k: v for k, v in update_payload.items() if v is not NotSet}
+
+        return updateFn(**update_payload)
 
 
 class AgentsManager(BaseAgentsManager):
@@ -314,6 +336,7 @@ class AgentsManager(BaseAgentsManager):
                 default_settings (DefaultSettingsDict, optional): A dictionary of default settings. Defaults to an empty dictionary.
                 model (ModelName, optional): The model name to be used. Defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): A list of dictionaries defining documentation. Defaults to an empty list.
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceCreatedResponse: The response indicating the resource (agent) was successfully created.
@@ -344,6 +367,7 @@ class AgentsManager(BaseAgentsManager):
                 name (Optional[str], optional): A new name for the agent. Defaults to None (no change).
                 model (Optional[str], optional): A new model name to be used. Defaults to None (no change).
                 default_settings (Optional[DefaultSettingsDict], optional): A new dictionary of default settings. Defaults to None (no change).
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceUpdatedResponse: The response indicating the resource (agent) was successfully updated.
@@ -381,6 +405,7 @@ class AgentsManager(BaseAgentsManager):
             default_settings (DefaultSettingsDict, optional): A dictionary with default settings. Defaults to an empty dictionary.
             model (ModelName, optional): The name of the model to use. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): A list of dictionaries with documentation details. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Agent: An instance of the Agent with the specified details
@@ -456,6 +481,8 @@ class AgentsManager(BaseAgentsManager):
             name (Optional[str], optional): The new name to assign to the agent. Defaults to None.
             model (Optional[str], optional): The model identifier to associate with the agent. Defaults to None.
             default_settings (Optional[DefaultSettingsDict], optional): A dictionary of default settings to apply to the agent. Defaults to None.
+            metadata (Dict[str, Any])
+            overwrite (bool, optional): Whether to overwrite the existing agent settings. Defaults to False.
 
         Returns:
             ResourceUpdatedResponse: An object representing the response to the update request.
@@ -463,6 +490,7 @@ class AgentsManager(BaseAgentsManager):
         Note:
             This method is decorated with `beartype`, which means it enforces type annotations at runtime.
         """
+
         result = self._update(agent_id=agent_id, **kwargs)
         return result
 
@@ -500,6 +528,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 default_settings (DefaultSettingsDict, optional): Optional default settings for the agent.
                 model (ModelName, optional): The model name to associate with the agent, defaults to 'julep-ai/samantha-1-turbo'.
                 docs (List[DocDict], optional): An optional list of documents associated with the agent.
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceCreatedResponse: A response indicating the agent was created successfully.
@@ -533,6 +562,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 name (Optional[str], optional): An optional new name for the agent.
                 model (Optional[str], optional): Optional new model associated with the agent.
                 default_settings (Optional[DefaultSettingsDict], optional): Optional new default settings for the agent.
+                metadata (Dict[str, Any])
 
             Returns:
                 ResourceUpdatedResponse: A response indicating the agent was updated successfully.
@@ -574,6 +604,7 @@ class AsyncAgentsManager(BaseAgentsManager):
             default_settings (DefaultSettingsDict, optional): A dictionary with default settings for the resource. Defaults to an empty dictionary.
             model (ModelName, optional): The model identifier to use for the resource. Defaults to 'julep-ai/samantha-1-turbo'.
             docs (List[DocDict], optional): A list of dictionaries containing documentation for the resource. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Agent: An instance of the Agent with the specified details
@@ -647,6 +678,8 @@ class AsyncAgentsManager(BaseAgentsManager):
             name (Optional[str]): The name of the agent. Default is None.
             model (Optional[str]): The model identifier or name. Default is None.
             default_settings (Optional[DefaultSettingsDict]): Dictionary with default settings for the agent. Default is None.
+            metadata (Dict[str, Any])
+            overwrite (bool): Whether to overwrite the existing agent settings. Default is False.
 
         Returns:
             ResourceUpdatedResponse: An object containing the details of the update response.

@@ -1,11 +1,10 @@
 import json
 from uuid import UUID
 from typing import Optional, TypedDict
-
 from beartype import beartype
 from beartype.typing import Any, Awaitable, Dict, List, Union
 
-from .utils import rewrap_in_class
+from .utils import rewrap_in_class, NotSet
 
 from ..api.types import (
     User,
@@ -23,12 +22,15 @@ from .types import DocDict
 class UserCreateArgs(TypedDict):
     name: str
     about: str
-    docs: List[str]
+    docs: List[str] = []
+    metadata: Dict[str, Any] = {}
 
 
 class UserUpdateArgs(TypedDict):
-    about: Optional[str] = None
     name: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    about: Optional[str] = None
+    overwrite: bool = False
 
 
 class BaseUsersManager(BaseManager):
@@ -79,6 +81,7 @@ class BaseUsersManager(BaseManager):
         name: str,
         about: str,
         docs: List[DocDict] = [],
+        metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast docs to a list of CreateDoc objects
         """
@@ -91,6 +94,7 @@ class BaseUsersManager(BaseManager):
             about (str): A brief description about the new resource.
             docs (List[DocDict], optional): A list of dictionaries with documentation-related information. Each dictionary
                 must conform to the structure expected by CreateDoc. Defaults to an empty list.
+            metadata (Dict[str, Any])
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response indicating the resource has been
@@ -111,6 +115,7 @@ class BaseUsersManager(BaseManager):
             name=name,
             about=about,
             docs=docs,
+            metadata=metadata,
         )
 
     def _list_items(
@@ -156,8 +161,10 @@ class BaseUsersManager(BaseManager):
     def _update(
         self,
         user_id: Union[str, UUID],
-        about: Optional[str] = None,
-        name: Optional[str] = None,
+        about: Optional[str] = NotSet,
+        name: Optional[str] = NotSet,
+        metadata: Dict[str, Any] = NotSet,
+        overwrite: bool = False,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update user details for a given user ID.
@@ -168,6 +175,8 @@ class BaseUsersManager(BaseManager):
             user_id (Union[str, UUID]): The ID of the user to be updated. Must be a valid UUID v4.
             about (Optional[str], optional): The new information about the user. Defaults to None.
             name (Optional[str], optional): The new name for the user. Defaults to None.
+            metadata (Dict[str, Any])
+            overwrite (bool, optional): Whether to overwrite the existing user data. Defaults to False.
 
         Returns:
             Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The response indicating successful update or an Awaitable that resolves to such a response.
@@ -176,11 +185,24 @@ class BaseUsersManager(BaseManager):
             AssertionError: If `user_id` is not a valid UUID v4.
         """
         assert is_valid_uuid4(user_id), "id must be a valid UUID v4"
-        return self.api_client.update_user(
+
+        updateFn = (
+            self.api_client.update_user if overwrite else self.api_client.patch_user
+        )
+
+        update_data = dict(
             user_id=user_id,
             about=about,
             name=name,
+            metadata=metadata,
         )
+
+        update_data = {k: v for k, v in update_data.items() if v is not NotSet}
+
+        if not update_data:
+            raise ValueError("No fields to update")
+
+        return updateFn(**update_data)
 
 
 class UsersManager(BaseUsersManager):
@@ -289,7 +311,6 @@ class UsersManager(BaseUsersManager):
     @beartype
     def delete(
         self,
-        *,
         user_id: Union[str, UUID],
     ) -> None:
         """
@@ -325,6 +346,7 @@ class UsersManager(BaseUsersManager):
             user_id (Union[str, UUID]): The unique identifier for the user, which can be a string or a UUID object.
             about(Optional[str], optional): The descriptive information about the user. Defaults to None, indicating that `about` should not be updated if not provided.
             name(Optional[str], optional): The name of the user. Defaults to None, indicating that `name` should not be updated if not provided.
+            overwrite(bool, optional): Whether to overwrite the existing user data. Defaults to False.
 
         Returns:
             ResourceUpdatedResponse: An object indicating the outcome of the update operation, which typically includes the status of the operation and possibly the updated resource data.
@@ -439,7 +461,6 @@ class AsyncUsersManager(BaseUsersManager):
     @beartype
     async def delete(
         self,
-        *,
         user_id: Union[str, UUID],
     ) -> None:
         """

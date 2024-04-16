@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from beartype import beartype
@@ -81,6 +81,7 @@ class Client:
         api_key: Optional[str] = JULEP_API_KEY,
         base_url: Optional[str] = JULEP_API_URL,
         timeout: int = 300,
+        additional_headers: Dict[str, str] = {},
         _httpx_client: Optional[httpx.Client] = None,
         *args,
         **kwargs,
@@ -115,6 +116,7 @@ class Client:
         # Create an httpz client that follows redirects and has a timeout
         httpx_client = _httpx_client or httpx.Client(
             timeout=timeout,
+            headers=additional_headers,
             follow_redirects=True,
         )
 

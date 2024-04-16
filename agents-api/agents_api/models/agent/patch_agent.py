@@ -52,7 +52,7 @@ def patch_agent_query(
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
             **default_settings,
-            "agent_id": agent_id,
+            "agent_id": str(agent_id),
         }
     )
 

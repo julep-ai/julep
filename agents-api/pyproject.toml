@@ -33,6 +33,7 @@ cozo-migrate = "^0.2.0"
 poethepoet = "^0.24.4"
 pytype = ">=2024.4.11"
 julep = "^0.2.4"
+pyjwt = "^2.8.0"
 
 [build-system]
 requires = ["poetry-core"]
