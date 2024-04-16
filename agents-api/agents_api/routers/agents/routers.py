@@ -487,7 +487,7 @@ async def update_tool(
     embeddings = await embed(
         [
             function_embed_instruction
-            + request.function.description
+            + (request.function.description or "")
             + "\nParameters: "
             + json.dumps(request.function.parameters.model_dump())
         ],
@@ -528,7 +528,7 @@ async def patch_tool(
     embeddings = await embed(
         [
             function_embed_instruction
-            + request.function.description
+            + (request.function.description or "")
             + "\nParameters: "
             + json.dumps(request.function.parameters.model_dump())
         ],
