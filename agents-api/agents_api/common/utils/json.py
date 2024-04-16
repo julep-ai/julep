@@ -1,4 +1,5 @@
 """This module provides JSON utilities, including a custom JSON encoder for handling specific object types and a utility function for JSON serialization."""
+
 import json
 from uuid import UUID
 from typing import Any

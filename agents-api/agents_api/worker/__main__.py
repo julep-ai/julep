@@ -2,6 +2,7 @@
 This script initializes and runs a Temporal worker that listens for tasks on a specified queue.
 It supports various workflows and activities related to agents' operations.
 """
+
 #!/usr/bin/env python3
 
 import asyncio

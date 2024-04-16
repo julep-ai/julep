@@ -80,9 +80,9 @@ class JulepApi:
         self._client_wrapper = SyncClientWrapper(
             base_url=_get_base_url(base_url=base_url, environment=environment),
             api_key=api_key,
-            httpx_client=httpx.Client(timeout=timeout)
-            if httpx_client is None
-            else httpx_client,
+            httpx_client=(
+                httpx.Client(timeout=timeout) if httpx_client is None else httpx_client
+            ),
         )
 
     def list_sessions(
@@ -1838,9 +1838,11 @@ class AsyncJulepApi:
         self._client_wrapper = AsyncClientWrapper(
             base_url=_get_base_url(base_url=base_url, environment=environment),
             api_key=api_key,
-            httpx_client=httpx.AsyncClient(timeout=timeout)
-            if httpx_client is None
-            else httpx_client,
+            httpx_client=(
+                httpx.AsyncClient(timeout=timeout)
+                if httpx_client is None
+                else httpx_client
+            ),
         )
 
     async def list_sessions(

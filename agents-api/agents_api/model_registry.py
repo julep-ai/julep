@@ -1,6 +1,7 @@
 """
 Model Registry maintains a list of supported models and their configs.
 """
+
 from typing import Dict
 from agents_api.clients.model import julep_client, openai_client
 from openai import AsyncOpenAI

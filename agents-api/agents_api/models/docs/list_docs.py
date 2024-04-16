@@ -1,4 +1,5 @@
 """This module contains functions for querying document-related data from the 'cozodb' database using datalog queries."""
+
 from typing import Literal
 from uuid import UUID
 

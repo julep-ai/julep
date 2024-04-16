@@ -1,6 +1,7 @@
 """
 This module contains tests for session-related queries against the 'cozodb' database. It verifies the creation, retrieval, and deletion of session records as defined in the schema provided in agents-api/README.md.
 """
+
 # Tests for session queries
 from uuid import uuid4
 
