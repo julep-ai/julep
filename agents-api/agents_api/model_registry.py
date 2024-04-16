@@ -111,7 +111,7 @@ def validate_configuration(model: str):
     Validates the model specified in the request
     """
     if model not in ALL_AVAILABLE_MODELS:
-        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS.keys())
+        raise AgentModelNotValid(model, list(ALL_AVAILABLE_MODELS.keys()))
     model_client = get_model_client(model)
     if model_client.api_key == "":
         raise MissingAgentModelAPIKeyError(model)
