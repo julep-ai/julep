@@ -1,5 +1,5 @@
-name: Lint and format APIs and SDKs
-run-name: ${{ github.actor }} is linting and formatting the code
+name: Lint and typecheck APIs and SDKs
+run-name: ${{ github.actor }} is linting and typechecking the code
 
 on: [push, pull_request]
 
@@ -27,20 +27,20 @@ jobs:
           poetry config virtualenvs.in-project true
 
       - name: Cache Poetry virtualenv
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ matrix.directory }}/.venv
-          key: ${{ runner.os }}-poetry-${{ matrix.directory }}-${{ hashFiles(format('{0}/poetry.lock', matrix.directory)) }}
+          key: ${{ runner.os }}-${{ matrix.directory }}-poetry-${{ hashFiles(format('{0}/poetry.lock', matrix.directory)) }}
           restore-keys: |
-            ${{ runner.os }}-poetry-${{ matrix.directory }}-
+            ${{ runner.os }}-${{ matrix.directory }}-poetry-
 
       - name: Cache pytype
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ matrix.directory }}/.pytype
-          key: ${{ runner.os }}-pytype-${{ matrix.directory }}-${{ hashFiles(format('{0}/**/*.py', matrix.directory)) }}
+          key: ${{ runner.os }}-${{ matrix.directory }}-pytype-${{ hashFiles(format('{0}/**/*.py', matrix.directory)) }}
           restore-keys: |
-            ${{ runner.os }}-pytype-${{ matrix.directory }}-
+            ${{ runner.os }}-${{ matrix.directory }}-pytype-
 
       - name: Install dependencies
         run: |
@@ -78,9 +78,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: sdks/ts/node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('sdks/ts/package-lock.json') }}
+          key: ${{ runner.os }}-sdks-ts-npm-${{ hashFiles('sdks/ts/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-npm-
+            ${{ runner.os }}-sdks-ts-npm-
 
       - name: Install npm dependencies
         run: |
