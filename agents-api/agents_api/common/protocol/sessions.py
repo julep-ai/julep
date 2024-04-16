@@ -2,6 +2,7 @@
 This module defines session-related data structures and settings used across the agents API.
 It includes definitions for session settings and session data models.
 """
+
 from uuid import UUID
 
 from pydantic import BaseModel, validator

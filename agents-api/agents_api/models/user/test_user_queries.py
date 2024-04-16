@@ -1,4 +1,5 @@
 """This module contains tests for user-related queries against the 'cozodb' database. It includes tests for creating, updating, and retrieving user information."""
+
 # Tests for user queries
 from uuid import uuid4
 
