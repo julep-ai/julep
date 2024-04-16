@@ -95,7 +95,7 @@ jobs:
       - name: Build TypeScript SDK
         run: |
           cd sdks/ts
-          # npm run build
+          npm run build
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
