@@ -24,7 +24,7 @@ Returns:
 
 def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.DataFrame:
     # Prepare data for mutation by filtering out None values and adding system-generated fields.
-    metadata = update_data.pop("metadata", {})
+    metadata = update_data.pop("metadata", {}) or {}
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},

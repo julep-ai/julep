@@ -45,7 +45,7 @@ def patch_session_query(
     :assert some
     """
 
-    metadata = update_data.pop("metadata", {})
+    metadata = update_data.pop("metadata", {}) or {}
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {k: v for k, v in update_data.items() if v is not None}
