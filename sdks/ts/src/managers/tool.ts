@@ -72,6 +72,7 @@ export class ToolsManager extends BaseManager {
       const result = await this.apiClient.default.patchAgentTool({
         agentId,
         toolId,
+        requestBody: tool,
       });
       const updatedTool: Tool = { type: "function", ...result, ...tool };
       return updatedTool;
