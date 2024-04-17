@@ -20,6 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set branch name
+        id: variables
+        run: echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -34,11 +38,11 @@ jobs:
         with:
           context: ./${{ matrix.service-directory }}
           push: true
-          tags: julepai/${{ matrix.service-directory }}:${{ github.ref_name | replace('/', '--') }}
+          tags: julepai/${{ matrix.service-directory }}:${{ steps.variables.outputs.branch_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # cache-from: |
-          #   type=registry,ref=julepai/${{ matrix.service-directory }}:${{ github.ref_name | replace('/', '--') }}
+          #   type=registry,ref=julepai/${{ matrix.service-directory }}:${{ steps.variables.outputs.branch_name }}
           #   type=registry,ref=julepai/${{ matrix.service-directory }}:dev
           # cache-to: type=inline
 
