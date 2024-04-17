@@ -35,9 +35,7 @@ def update_session_query(
     """
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(
-        {
-            **{k: v for k, v in update_data.items() if v is not None},
-        }
+        {k: v for k, v in update_data.items() if v is not None}
     )
 
     # Prepare lists of columns for the query.
