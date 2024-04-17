@@ -1,7 +1,6 @@
 # Python Discord Bot
 
-This is a starting point for making your own Discord bot using Python and the [discordpy](https://discordpy.readthedocs.io/) library.
-Read [their getting-started guides](https://discordpy.readthedocs.io/en/stable/#getting-started) to get the most out of this template.
+This is a minimal example bot built using the discord.py library and the Julep API for creating interactive Discord bots. It serves as a starting point for making your own Discord bot. Read [their getting-started guides](https://discordpy.readthedocs.io/en/stable/#getting-started) to get the most out of this template.
 
 ## Getting Started
 
