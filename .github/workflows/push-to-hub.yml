@@ -11,6 +11,10 @@ jobs:
   Build-Push-Images-To-Docker-Hub:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        directory: [agents-api, model-serving, gateway, memory-store]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -18,7 +22,7 @@ jobs:
         with:
           username: julepai
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
-          compose_file: docker-compose.yml
+          compose_file: "${{ matrix.directory }}/docker-compose.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
