@@ -49,6 +49,7 @@ def list_agents_query(
             created_at,
             updated_at,
             metadata,
+            instructions,
         ] := input[developer_id],
             *agents {{
                 developer_id,
@@ -59,6 +60,7 @@ def list_agents_query(
                 created_at,
                 updated_at,
                 metadata,
+                instructions,
             }},
             {metadata_filter_str}
         
