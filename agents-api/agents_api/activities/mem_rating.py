@@ -39,6 +39,7 @@ def make_prompt(args: MemoryRatingTaskArgs):
 
 
 async def run_prompt(
+    # FIXME: Review hard-coded model reference "julep-ai/samantha-1-turbo" for potential dynamic configuration.
     memory: str,
     model: str = "julep-ai/samantha-1-turbo",
     max_tokens: int = 400,
