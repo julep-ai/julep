@@ -53,16 +53,6 @@ def _(client=client, tool=test_tool):
     assert isinstance(response[0], Tool)
 
 
-@test("tools: tools.delete")
-def _(client=client, tool=test_tool):
-    created_tool, agent = tool
-    response = client.tools.delete(
-        agent_id=agent.id,
-        tool_id=created_tool.id,
-    )
-    assert response is None
-
-
 @test("tools: async tools.create, tools.get, tools.update & tools.delete")
 async def _(client=async_client, tool=test_tool):
     tool, agent = tool
@@ -127,13 +117,3 @@ async def _(tool=test_tool):
     )
 
     assert response.updated_at
-
-
-@test("tools: async tools.delete")
-async def _(client=async_client, tool=test_tool):
-    tool, agent = tool
-    response = await client.tools.delete(
-        agent_id=agent.id,
-        tool_id=tool.id,
-    )
-    assert response is None

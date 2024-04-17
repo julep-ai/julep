@@ -58,19 +58,17 @@ describe("Tools API", () => {
   });
 
   it("tools.update", async () => {
-    // const response = await client.tools.update({
-    //   agentId: testAgent.id,
-    //   toolId: testTool.id,
-    //   tool: mockToolUpdate,
-    // });
+    const response = await client.tools.update({
+      agentId: testAgent.id,
+      toolId: testTool.id,
+      tool: mockToolUpdate,
+    });
 
-    // expect(response).toHaveProperty("updated_at");
-    // expect(response.function.description).toBe(
-    //   mockToolUpdate.function.description,
-    // );
-    // expect(response.function.name).toBe(mockToolUpdate.function.name);
-    console.log(mockToolUpdate);
-    expect(true).toBe(true);
+    expect(response).toHaveProperty("updated_at");
+    expect(response.function.description).toBe(
+      mockToolUpdate.function.description,
+    );
+    expect(response.function.name).toBe(mockToolUpdate.function.name);
   });
 
   it("tools.list", async () => {
