@@ -5,13 +5,18 @@ on:
   push:
     branches:
       - "dev"
+      - "main"
 
 jobs:
-  Build-Push-Images-To-Docker-Hub:
+  Build-Push-Agents-API-Image:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set branch name
+        id: variables
+        run: echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -22,18 +27,136 @@ jobs:
           username: julepai
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
-      - uses: KengoTODA/actions-setup-docker-compose@v1
+      - name: Build and push agent images
+        uses: docker/build-push-action@v4
         with:
-          version: "2.24.6"
+          context: ./agents-api
+          file: ./agents-api/Dockerfile
+          push: true
+          tags: julepai/agents-api:${{ steps.variables.outputs.branch_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Build images
-        run: |
-          touch .env
-          docker compose build
+  Build-Push-Migration-Image:
+    runs-on: ubuntu-latest
 
-      - name: Push images
-        run: |
-          docker compose push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set branch name
+        id: variables
+        run: echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: julepai
+          password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
+
+      - name: Build and push migration image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./agents-api
+          file: ./agents-api/Dockerfile.migration
+          push: true
+          tags: julepai/cozo-migrate:${{ steps.variables.outputs.branch_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  Build-Push-Temporal-Image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set branch name
+        id: variables
+        run: echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: julepai
+          password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
+
+      - name: Build and push temporal image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./agents-api
+          file: ./agents-api/Dockerfile.temporal
+          push: true
+          tags: julepai/temporal:${{ steps.variables.outputs.branch_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  Build-Push-Worker-Image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set branch name
+        id: variables
+        run: echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: julepai
+          password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./agents-api
+          file: ./agents-api/Dockerfile.worker
+          push: true
+          tags: julepai/worker:${{ steps.variables.outputs.branch_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  Build-Push-Other-Images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service-directory:
+          - gateway
+          - memory-store
+          # - model-serving
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set branch name
+        id: variables
+        run: echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: julepai
+          password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
+
+      - name: Build and push images
+        uses: docker/build-push-action@v4
+        with:
+          context: ./${{ matrix.service-directory }}
+          push: true
+          tags: julepai/${{ matrix.service-directory }}:${{ steps.variables.outputs.branch_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
