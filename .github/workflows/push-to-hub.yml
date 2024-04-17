@@ -23,14 +23,28 @@ jobs:
           username: julepai
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
-      - uses: KengoTODA/actions-setup-docker-compose@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v3
         with:
-          version: "2.24.6"
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - uses: KengoTODA/actions-setup-docker-compose@main
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Build images
         run: |
           touch .env
-          docker compose build
+          docker compose build --cache-from type=local,src=/tmp/.buildx-cache
+          docker compose build --cache-to type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Push images
         run: |
