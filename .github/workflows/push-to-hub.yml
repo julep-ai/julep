@@ -34,11 +34,11 @@ jobs:
         with:
           context: ./${{ matrix.service-directory }}
           push: true
-          tags: julepai/${{ matrix.service-directory }}:${{ github.ref_name }}
+          tags: julepai/${{ matrix.service-directory }}:${{ github.ref_name | replace('/', '--') }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           # cache-from: |
-          #   type=registry,ref=julepai/${{ matrix.service-directory }}:${{ github.ref_name }}
+          #   type=registry,ref=julepai/${{ matrix.service-directory }}:${{ github.ref_name | replace('/', '--') }}
           #   type=registry,ref=julepai/${{ matrix.service-directory }}:dev
           # cache-to: type=inline
 
