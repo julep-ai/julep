@@ -1,11 +1,11 @@
 name: Build and push images to docker hub on merge to dev
 run-name: ${{ github.actor }} is building and pushing images to docker hub
 
-on: [push]
-# on:
-#   push:
-#     branches:
-#       - "dev"
+on:
+  push:
+    branches:
+      - "dev"
+      - "main"
 
 jobs:
   Build-Push-Agents-API-Image:
