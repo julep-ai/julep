@@ -11,9 +11,9 @@ jobs:
   Build-Push-Images-To-Docker-Hub:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        directory: [agents-api, model-serving, gateway, memory-store]
+    # strategy:
+    #   matrix:
+    #     directory: [agents-api, model-serving, gateway, memory-store]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,12 +33,14 @@ jobs:
 
       - name: Build images
         run: |
-          cd ${{ matrix.directory }}
+          # cd ${{ matrix.directory }}
+          touch .env
           docker compose build
 
       - name: Push images
         run: |
-          cd ${{ matrix.directory }}
+          # cd ${{ matrix.directory }}
+          touch .env
           docker compose push
 
 concurrency:
