@@ -4,6 +4,7 @@ Model Registry maintains a list of supported models and their configs.
 
 from typing import Dict
 from agents_api.clients.model import julep_client, openai_client
+from agents_api.clients.worker.types import ChatML
 from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
     MissingAgentModelAPIKeyError,
@@ -129,6 +130,44 @@ def get_model_client(model: str) -> AsyncOpenAI:
         return julep_client
     elif model in OPENAI_MODELS:
         return openai_client
+
+
+def load_context(init_context: list[ChatML], model: str):
+    """
+    Converts the message history into a format supported by the model.
+    """
+    if model in OPENAI_MODELS:
+        init_context = [
+            {
+                "role": "assistant" if msg.role == "function_call" else msg.role,
+                "content": msg.content,
+            }
+            for msg in init_context
+        ]
+    elif model in JULEP_MODELS:
+        init_context = [
+            {"name": msg.name, "role": msg.role, "content": msg.content}
+            for msg in init_context
+        ]
+    return init_context
+
+
+# TODO: add type hint for Settings
+def get_extra_settings(settings):
+    extra_settings = (
+        dict(
+            repetition_penalty=settings.repetition_penalty,
+            best_of=1,
+            top_k=1,
+            length_penalty=settings.length_penalty,
+            logit_bias=settings.logit_bias,
+            preset=settings.preset.name if settings.preset else None,
+        )
+        if settings.model in JULEP_MODELS
+        else None
+    )
+
+    return extra_settings
 
 
 # TODO: implement and use this to work with the response from different model formats
