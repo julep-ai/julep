@@ -24,6 +24,7 @@ Returns:
 
 def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.DataFrame:
     # Prepare data for mutation by filtering out None values and adding system-generated fields.
+    metadata = update_data.pop("metadata", {})
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -36,12 +37,27 @@ def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.Dat
     # Construct the datalog query for updating user information.
     query = f"""
         # update the user
-        ?[{user_update_cols}] <- $user_update_vals
+        input[{user_update_cols}] <- $user_update_vals
+        
+        ?[{user_update_cols}, metadata] := 
+            input[{user_update_cols}],
+            *users {{
+                user_id: to_uuid($user_id),
+                metadata: md,
+            }},
+            metadata = concat(md, $metadata)
 
         :update users {{
-            {user_update_cols}
+            {user_update_cols}, metadata
         }}
         :returning
     """
 
-    return client.run(query, {"user_update_vals": user_update_vals})
+    return client.run(
+        query,
+        {
+            "user_update_vals": user_update_vals,
+            "metadata": metadata,
+            "user_id": str(user_id),
+        },
+    )
