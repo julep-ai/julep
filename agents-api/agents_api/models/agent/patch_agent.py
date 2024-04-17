@@ -26,7 +26,7 @@ def patch_agent_query(
     """
     # Construct the query for updating agent information in the database.
     # Agent update query
-    metadata = update_data.pop("metadata", {})
+    metadata = update_data.pop("metadata", {}) or {}
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
