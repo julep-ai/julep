@@ -1,0 +1,25 @@
+name: Build and push images to docker hub on merge to dev
+run-name: ${{ github.actor }} is building and pushing images to docker hub
+
+on: [push]
+# on:
+#   push:
+#     branches:
+#       - "dev"
+
+jobs:
+  Build-Push-Images-To-Docker-Hub:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: whoan/docker-build-with-cache-action@v5
+        with:
+          username: julepai
+          password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
+          compose_file: docker-compose.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
