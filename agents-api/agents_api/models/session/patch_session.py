@@ -11,7 +11,6 @@ from ...common.utils.cozo import cozo_process_mutate_data
 _fields = [
     "situation",
     "summary",
-    "metadata",
     "created_at",
     "session_id",
     "developer_id",
@@ -33,24 +32,26 @@ def patch_session_query(
     Returns:
     pd.DataFrame: A pandas DataFrame containing the result of the update operation.
     """
+    # Process the update data to prepare it for the query.
     assertion_query = """
-        ?[session_id, developer_id] :=
-            *sessions {
-                session_id,
-                developer_id,
-            },
-            session_id = to_uuid($session_id),
-            developer_id = to_uuid($developer_id),
-        # Assertion to ensure the session exists before updating.
-        :assert some
+    ?[session_id, developer_id] := 
+        *sessions {
+            session_id,
+            developer_id,
+        },
+        session_id = to_uuid($session_id),
+        developer_id = to_uuid($developer_id),
+    # Assertion to ensure the session exists before updating.
+    :assert some
     """
 
+    metadata = update_data.pop("metadata", {})
+
     session_update_cols, session_update_vals = cozo_process_mutate_data(
-        {
-            **{k: v for k, v in update_data.items() if v is not None},
-        }
+        {k: v for k, v in update_data.items() if v is not None}
     )
 
+    # Prepare lists of columns for the query.
     session_update_cols_lst = session_update_cols.split(",")
     all_fields_lst = list(set(session_update_cols_lst).union(set(_fields)))
     all_fields = ", ".join(all_fields_lst)
@@ -61,36 +62,35 @@ def patch_session_query(
         )
     )
 
-    # Constructing a datalog query for updating session data based on provided parameters.
+    # Construct the datalog query for updating session information.
     session_update_query = f"""
     {{
         input[{session_update_cols}] <- $session_update_vals
-        ids[session_id, developer_id] <- [[$session_id, $developer_id]]
         
-        ?[{all_fields}, updated_at] :=
+        ?[{all_fields}, metadata, updated_at] :=
             input[{session_update_cols}],
-            ids[session_id, developer_id],
             *sessions{{
-                {rest_fields}, @ "NOW"
+                {rest_fields}, metadata: md, @ "NOW"
             }},
-            updated_at = [floor(now()), true]
+            updated_at = [floor(now()), true],
+            metadata = concat(md, $metadata),
 
-        :update sessions {{
-            {all_fields}, updated_at
+        :put sessions {{
+            {all_fields}, metadata, updated_at
         }}
 
         :returning
     }}
     """
 
-    # Execute the constructed datalog query and return the result as a pandas DataFrame.
-    query = "{" + assertion_query + "}" + session_update_query
+    combined_query = "{" + assertion_query + "}" + session_update_query
 
     return client.run(
-        query,
+        combined_query,
         {
             "session_update_vals": session_update_vals,
             "session_id": str(session_id),
             "developer_id": str(developer_id),
+            "metadata": metadata,
         },
     )
