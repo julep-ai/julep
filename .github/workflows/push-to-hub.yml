@@ -8,8 +8,14 @@ on: [push]
 #       - "dev"
 
 jobs:
-  Build-Push-Images-To-Docker-Hub:
+  Build-Push-Other-Images:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service-directory:
+          - gateway
+          - memory-store
+          # - model-serving
 
     steps:
       - uses: actions/checkout@v4
@@ -23,32 +29,18 @@ jobs:
           username: julepai
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
+      - name: Build and push images
+        uses: docker/build-push-action@v4
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - uses: KengoTODA/actions-setup-docker-compose@main
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Build images
-        run: |
-          touch .env
-          docker compose build --cache-from type=local,src=/tmp/.buildx-cache
-          docker compose build --cache-to type=local,dest=/tmp/.buildx-cache-new
-
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Push images
-        run: |
-          docker compose push
+          context: ./${{ matrix.service-directory }}
+          push: true
+          tags: julepai/${{ matrix.service-directory }}:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # cache-from: |
+          #   type=registry,ref=julepai/${{ matrix.service-directory }}:${{ github.ref_name }}
+          #   type=registry,ref=julepai/${{ matrix.service-directory }}:dev
+          # cache-to: type=inline
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
