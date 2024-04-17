@@ -8,11 +8,7 @@ include:
 services:
   agents-api:
     image: julepai/agents-api:dev
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: false
+    env_file: "../.env"
 
     container_name: agents-api
     depends_on:
@@ -42,11 +38,7 @@ services:
 
   worker:
     image: julepai/worker:dev
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    env_file: "../.env"
 
     build:
       context: .
@@ -91,11 +83,7 @@ services:
   temporal:
     image: julepai/temporal:dev
     container_name: temporal
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    env_file: "../.env"
 
     build:
       context: .
@@ -112,11 +100,7 @@ services:
 
   cozo-migrate:
     image: julepai/cozo-migrate:dev
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    env_file: "../.env"
 
     container_name: cozo-migrate
     depends_on:

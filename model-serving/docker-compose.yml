@@ -3,11 +3,8 @@ name: julep-model-serving
 services:
   model-serving:
     image: julepai/model-serving:dev
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    env_file: "../.env"
+
     environment:
       - MODEL_API_KEY=${MODEL_API_KEY}
       - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}

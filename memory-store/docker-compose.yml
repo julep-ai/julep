@@ -4,11 +4,7 @@ version: "3"
 services:
   memory-store:
     image: julepai/memory-store:dev
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    env_file: "../.env"
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
       - COZO_PORT=${COZO_PORT}
