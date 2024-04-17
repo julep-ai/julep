@@ -27,6 +27,10 @@ jobs:
           username: julepai
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
+      - uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: "2.24.6"
+
       - name: Build images
         run: |
           cd ${{ matrix.directory }}
