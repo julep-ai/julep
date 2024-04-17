@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Run Changelog CI
-        uses: saadmk11/changelog-ci@v1.1.2
+        uses: saadmk11/changelog-ci@v1
         with:
           changelog_filename: CHANGELOG.md
           # config_file: changelog-ci-config.json
