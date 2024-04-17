@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "julep"
-version = "0.2.11"
+version = "0.2.13"
 description = "Julep is a platform for creating agents with long-term memory"
 authors = ["Julep Developers <developers@julep.ai>"]
 license = "ISC"
