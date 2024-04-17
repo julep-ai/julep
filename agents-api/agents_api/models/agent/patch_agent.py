@@ -26,6 +26,7 @@ def patch_agent_query(
     """
     # Construct the query for updating agent information in the database.
     # Agent update query
+    metadata = update_data.pop("metadata", {})
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -38,10 +39,18 @@ def patch_agent_query(
     agent_update_query = f"""
     {{
         # update the agent
-        ?[{agent_update_cols}] <- $agent_update_vals
+        input[{agent_update_cols}] <- $agent_update_vals
+
+        ?[{agent_update_cols}, metadata] := 
+            input[{agent_update_cols}],
+            *agents {{
+                agent_id: to_uuid($agent_id),
+                metadata: md,
+            }},
+            metadata = concat(md, $metadata)
 
         :update agents {{
-            {agent_update_cols}
+            {agent_update_cols}, metadata,
         }}
         :returning
     }}
@@ -78,5 +87,10 @@ def patch_agent_query(
 
     return client.run(
         combined_query,
-        {"agent_update_vals": agent_update_vals, "settings_vals": settings_vals},
+        {
+            "agent_update_vals": agent_update_vals,
+            "settings_vals": settings_vals,
+            "metadata": metadata,
+            "agent_id": str(agent_id),
+        },
     )
