@@ -15,7 +15,11 @@ from agents_api.clients.worker.types import ChatML
 from agents_api.models.session.session_data import get_session_data
 from agents_api.models.entry.proc_mem_context import proc_mem_context_query
 from agents_api.autogen.openapi_model import InputChatMLMessage, Tool
-from agents_api.model_registry import get_model_client, JULEP_MODELS
+from agents_api.model_registry import (
+    get_extra_settings,
+    get_model_client,
+    load_context,
+)
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
 
@@ -59,6 +63,10 @@ class BaseSession:
         content = message.content
 
         # Unpack tool calls if present
+        # TODO: implement changes in the openapi spec
+        # Currently our function_call does the same job as openai's function role
+        # Need to add a new role for openai's paradigm of shoving function selected into assistant's context
+        # Ref: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_call_functions_with_chat_models.ipynb
         if not message.content and message.tool_calls:
             role = "function_call"
             function_call = message.tool_calls[0].function.model_dump()
@@ -198,26 +206,12 @@ class BaseSession:
     async def generate(
         self, init_context: list[ChatML], settings: Settings
     ) -> ChatCompletion:
-        init_context = [
-            {"name": msg.name, "role": msg.role, "content": msg.content}
-            for msg in init_context
-        ]
+        init_context = load_context(init_context, settings.model)
         tools = None
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
         model_client = get_model_client(settings.model)
-        extra_body = (
-            dict(
-                repetition_penalty=settings.repetition_penalty,
-                best_of=1,
-                top_k=1,
-                length_penalty=settings.length_penalty,
-                logit_bias=settings.logit_bias,
-                preset=settings.preset.name if settings.preset else None,
-            )
-            if settings.model in JULEP_MODELS
-            else None
-        )
+        extra_body = get_extra_settings(settings)
 
         res = await model_client.chat.completions.create(
             model=settings.model,

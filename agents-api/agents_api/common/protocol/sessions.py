@@ -5,11 +5,9 @@ It includes definitions for session settings and session data models.
 
 from uuid import UUID
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 from .agents import AgentDefaultSettings
-
-from agents_api.model_registry import ALL_AVAILABLE_MODELS
 
 
 class SessionSettings(AgentDefaultSettings):
@@ -40,13 +38,3 @@ class SessionData(BaseModel):
     created_at: float
     model: str
     default_settings: SessionSettings
-
-    @validator("model")
-    def validate_model_type(cls, model):
-        if model not in ALL_AVAILABLE_MODELS.keys():
-            raise ValueError(
-                f"Unknown model: {model}. Please provide a valid model name."
-                "Known models are: " + ", ".join(ALL_AVAILABLE_MODELS.keys())
-            )
-
-        return model
