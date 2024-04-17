@@ -204,7 +204,7 @@ class BaseSession:
         ]
         tools = None
         if settings.tools:
-            tools = [tool.model_dump(mode="json") for tool in settings.tools]
+            tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
         model_client = get_model_client(settings.model)
         extra_body = (
             dict(

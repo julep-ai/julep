@@ -4,6 +4,10 @@ Model Registry maintains a list of supported models and their configs.
 
 from typing import Dict
 from agents_api.clients.model import julep_client, openai_client
+from agents_api.common.exceptions.agents import (
+    AgentModelNotValid,
+    MissingAgentModelAPIKeyError,
+)
 from openai import AsyncOpenAI
 
 
@@ -106,20 +110,15 @@ ALL_AVAILABLE_MODELS = {
 }
 
 
-# TODO: implement
-def validate_configuration():
+def validate_configuration(model: str):
     """
-    function that validates the config based on the model
+    Validates the model specified in the request
     """
-    pass
-
-
-# TODO: implement
-def validate_request():
-    """
-    function that validates the config based on the model
-    """
-    pass
+    if model not in ALL_AVAILABLE_MODELS:
+        raise AgentModelNotValid(model, list(ALL_AVAILABLE_MODELS.keys()))
+    model_client = get_model_client(model)
+    if model_client.api_key == "":
+        raise MissingAgentModelAPIKeyError(model)
 
 
 def get_model_client(model: str) -> AsyncOpenAI:
