@@ -1,0 +1,20 @@
+name: Changelog CI
+
+on:
+  pull_request:
+    types: [ opened, synchronize ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository
+      - uses: actions/checkout@v2
+
+      - name: Run Changelog CI
+        uses: saadmk11/changelog-ci@v1.1.2
+        with:
+          changelog_filename: CHANGELOG.md
+          # config_file: changelog-ci-config.json
+          github_token: ${{ secrets.GITHUB_TOKEN }}
