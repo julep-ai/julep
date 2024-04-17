@@ -38,6 +38,7 @@ def get_agent_query(
             updated_at,
             metadata,
             default_settings,
+            instructions,
         ] := input[id, developer_id],
             *agents {
                 developer_id,
@@ -48,6 +49,7 @@ def get_agent_query(
                 created_at,
                 updated_at,
                 metadata,
+                instructions,
             },
             *agent_default_settings {
                 agent_id: id,
