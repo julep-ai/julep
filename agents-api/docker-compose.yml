@@ -1,10 +1,11 @@
 name: julep-agents-api
 version: "3"
 
-include:
-  # - ../model-serving/docker-compose.yml
-  # - ../memory-store/docker-compose.yml
-  # TODO: figure out why this doesn't work
+# TODO: figure out why this doesn't work
+# include:
+# - ../model-serving/docker-compose.yml
+# - ../memory-store/docker-compose.yml
+
 services:
   agents-api:
     image: julepai/agents-api:dev
