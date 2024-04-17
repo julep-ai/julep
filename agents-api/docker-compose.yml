@@ -1,11 +1,6 @@
 name: julep-agents-api
 version: "3"
 
-# TODO: figure out why this doesn't work
-# include:
-# - ../model-serving/docker-compose.yml
-# - ../memory-store/docker-compose.yml
-
 services:
   agents-api:
     image: julepai/agents-api:dev
@@ -13,8 +8,6 @@ services:
 
     container_name: agents-api
     depends_on:
-      model-serving:
-        condition: service_started
       memory-store:
         condition: service_started
       worker:
