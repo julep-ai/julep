@@ -1,17 +1,15 @@
 name: julep-agents-api
 version: "3"
 
-include:
-  # - ../model-serving/docker-compose.yml
-  # - ../memory-store/docker-compose.yml
-  # TODO: figure out why this doesn't work
+# TODO: figure out why this doesn't work
+# include:
+# - ../model-serving/docker-compose.yml
+# - ../memory-store/docker-compose.yml
+
 services:
   agents-api:
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: false
+    image: julepai/agents-api:dev
+    env_file: "../.env"
 
     container_name: agents-api
     depends_on:
@@ -40,11 +38,8 @@ services:
           path: Dockerfile
 
   worker:
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    image: julepai/worker:dev
+    env_file: "../.env"
 
     build:
       context: .
@@ -87,12 +82,9 @@ services:
               capabilities: [gpu]
 
   temporal:
+    image: julepai/temporal:dev
     container_name: temporal
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    env_file: "../.env"
 
     build:
       context: .
@@ -108,11 +100,8 @@ services:
           path: Dockerfile.temporal
 
   cozo-migrate:
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    image: julepai/cozo-migrate:dev
+    env_file: "../.env"
 
     container_name: cozo-migrate
     depends_on:

@@ -7,11 +7,8 @@ include:
 
 services:
   gateway:
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: true
+    image: julepai/gateway:dev
+    env_file: "../.env"
 
     environment:
       - GATEWAY_PORT=80
