@@ -2,6 +2,7 @@ name: julep-model-serving
 
 services:
   model-serving:
+    image: julepai/model-serving:dev
     env_file:
       - path: .env
         required: false
