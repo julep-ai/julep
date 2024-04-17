@@ -139,7 +139,6 @@ def load_context(init_context: list[ChatML], model: str):
     if model in OPENAI_MODELS:
         init_context = [
             {
-                "name": msg.name,
                 "role": "assistant" if msg.role == "function_call" else msg.role,
                 "content": msg.content,
             }
