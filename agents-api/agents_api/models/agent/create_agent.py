@@ -21,6 +21,7 @@ Parameters:
 - name (str): The name of the agent.
 - about (str): A description of the agent.
 - instructions (list[str], optional): A list of instructions for using the agent. Defaults to an empty list.
+# FIXME: Review hard-coded model reference "julep-ai/samantha-1-turbo" for potential dynamic configuration.
 - model (str, optional): The model identifier for the agent. Defaults to "julep-ai/samantha-1-turbo".
 - metadata (dict, optional): A dictionary of metadata for the agent. Defaults to an empty dict.
 - default_settings (dict, optional): A dictionary of default settings for the agent. Defaults to an empty dict.
