@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
+from agents_api.model_registry import validate_configuration
 from fastapi import APIRouter, HTTPException, status, Depends
 import pandas as pd
 from pycozo.client import QueryException
@@ -210,6 +211,7 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
+    validate_configuration(request.model)
     resp = create_agent_query(
         agent_id=uuid4(),
         developer_id=x_developer_id,
@@ -487,7 +489,7 @@ async def update_tool(
     embeddings = await embed(
         [
             function_embed_instruction
-            + request.function.description
+            + (request.function.description or "")
             + "\nParameters: "
             + json.dumps(request.function.parameters.model_dump())
         ],
@@ -528,7 +530,7 @@ async def patch_tool(
     embeddings = await embed(
         [
             function_embed_instruction
-            + request.function.description
+            + (request.function.description or "")
             + "\nParameters: "
             + json.dumps(request.function.parameters.model_dump())
         ],

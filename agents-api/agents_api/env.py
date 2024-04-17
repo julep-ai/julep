@@ -25,7 +25,7 @@ prediction_api_endpoint: str = env.str(
 )
 model_api_key: str = env.str("MODEL_API_KEY", default=None)
 model_inference_url: str = env.str("MODEL_INFERENCE_URL", default=None)
-openai_api_key: str = env.str("OPENAI_API_KEY", default=None)
+openai_api_key: str = env.str("OPENAI_API_KEY", default="")
 summarization_ratio_threshold: float = env.float(
     "MAX_TOKENS_RATIO_TO_SUMMARIZE", default=0.5
 )
@@ -78,7 +78,11 @@ environment = dict(
     truncate_embed_text=truncate_embed_text,
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
+    openai_api_key=openai_api_key,
 )
+
+if openai_api_key == "":
+    print("OpenAI API key not found. OpenAI API will not be enabled.")
 
 if debug:
     # Print the loaded environment variables for debugging purposes.
