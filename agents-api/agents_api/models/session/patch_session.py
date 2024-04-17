@@ -6,7 +6,6 @@ import pandas as pd
 
 from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
-from ...common.utils.datetime import utcnow
 
 
 _fields = [
