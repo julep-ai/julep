@@ -29,7 +29,7 @@ export const $User = {
       format: "uuid",
     },
     metadata: {
-      description: `Optional metadata`,
+      description: `(Optional) metadata`,
       properties: {},
     },
   },

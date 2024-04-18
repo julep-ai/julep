@@ -13,7 +13,7 @@ except ImportError:
 
 class UserMetadata(pydantic.BaseModel):
     """
-    Optional metadata
+    (Optional) metadata
     """
 
     def json(self, **kwargs: typing.Any) -> str:

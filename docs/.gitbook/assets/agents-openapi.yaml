@@ -2,23 +2,28 @@ openapi: 3.0.3
 info:
   title: Julep Agents API
   description: Julep AI agents API allows creating agents with long-term memory easily.
-  termsOfService: ""
+  termsOfService: ''
   contact:
     email: developers@julep.ai
+    name: Julep Developers
+    url: https://julep.ai
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 externalDocs:
   description: Find out more about spec
-  url: ""
+  url: https://docs.julep.ai
 servers:
   - url: https://api-alpha.julep.ai/api
-    description: ""
+    description: ''
     variables: {}
 tags:
   - name: Default
-    description: ""
+    description: ''
+    externalDocs:
+      url: https://docs.julep.ai
+      description: https://docs.julep.ai
 paths:
   /sessions:
     post:
@@ -35,7 +40,7 @@ paths:
               description: Session options
         description: Session initialization options
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
@@ -45,7 +50,8 @@ paths:
         - api-key: []
     get:
       summary: List sessions
-      description: List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: >-
+        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListSessions
       tags: []
       parameters:
@@ -54,21 +60,44 @@ paths:
           description: Number of sessions to return
           schema:
             type: integer
-            exclusiveMinimum: true
-            exclusiveMaximum: true
-            default: 10
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of sessions to skip (sorted created_at descending order)
           schema:
             type: integer
-            exclusiveMinimum: true
             default: 0
             minimum: 0
+        - in: query
+          name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
+          required: false
+          schema:
+            type: string
+            default: '{}'
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: >-
+            Which order should the sort be: `asc` (ascending) or `desc` (descending)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -81,7 +110,8 @@ paths:
                       $ref: '#/components/schemas/Session'
                 required:
                   - items
-          description: List of sessions (sorted created_at descending order) with limit+offset pagination
+          description: >-
+            List of sessions (sorted created_at descending order) with limit+offset pagination
       security:
         - api-key: []
   /users:
@@ -98,7 +128,7 @@ paths:
               $ref: '#/components/schemas/CreateUserRequest'
         description: User create options
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
@@ -108,7 +138,8 @@ paths:
         - api-key: []
     get:
       summary: List users
-      description: List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: >-
+        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListUsers
       tags: []
       parameters:
@@ -117,18 +148,42 @@ paths:
           description: Number of items to return
           schema:
             type: integer
-            default: 10
-            exclusiveMinimum: true
+            default: 100
             minimum: 1
-            exclusiveMaximum: true
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
+          required: false
+          schema:
+            type: string
+            default: '{}'
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: >-
+            Which order should the sort be: `asc` (ascending) or `desc` (descending)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -141,7 +196,8 @@ paths:
                       $ref: '#/components/schemas/User'
                 required:
                   - items
-          description: List of users (sorted created_at descending order) with limit+offset pagination
+          description: >-
+            List of users (sorted created_at descending order) with limit+offset pagination
       security:
         - api-key: []
   /agents:
@@ -158,7 +214,7 @@ paths:
               $ref: '#/components/schemas/CreateAgentRequest'
         description: Agent create options
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
@@ -168,7 +224,8 @@ paths:
         - api-key: []
     get:
       summary: List agents
-      description: List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+      description: >-
+        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
       operationId: ListAgents
       tags: []
       parameters:
@@ -177,22 +234,46 @@ paths:
           description: Number of items to return
           schema:
             type: integer
-            default: 10
-            exclusiveMinimum: true
+            default: 100
             minimum: 1
-            exclusiveMaximum: true
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
           description: Number of items to skip (sorted created_at descending order)
           schema:
             type: integer
-            exclusiveMinimum: true
             default: 0
             minimum: 0
+        - in: query
+          name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
+          required: false
+          schema:
+            type: string
+            default: '{}'
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: >-
+            Which order should the sort be: `asc` (ascending) or `desc` (descending)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
-        "200":
-          description: List of agents (sorted created_at descending order) with limit+offset pagination
+        '200':
+          description: >-
+            List of agents (sorted created_at descending order) with limit+offset pagination
           content:
             application/json:
               schema:
@@ -209,12 +290,12 @@ paths:
   /sessions/{session_id}:
     get:
       summary: Get details of the session
-      description: ""
+      description: ''
       operationId: GetSession
       tags: []
       parameters: []
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -223,17 +304,21 @@ paths:
         - api-key: []
     delete:
       summary: Delete session
-      description: ""
+      description: ''
       operationId: DeleteSession
       tags: []
       parameters: []
       responses:
-        "202": {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
       summary: Update session parameters
-      description: ""
+      description: ''
       operationId: UpdateSession
       tags: []
       parameters: []
@@ -243,7 +328,7 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateSessionRequest'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -253,10 +338,32 @@ paths:
     parameters:
       - in: path
         name: session_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
+    patch:
+      summary: Patch Session parameters (merge instead of replace)
+      description: ''
+      operationId: PatchSession
+      tags: []
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchSessionRequest'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
   /sessions/{session_id}/suggestions:
     get:
       summary: Get autogenerated suggestions for session user and agent
@@ -266,24 +373,21 @@ paths:
       parameters:
         - in: query
           name: limit
-          description: ""
+          description: ''
           schema:
             type: integer
-            default: 10
-            exclusiveMinimum: true
-            exclusiveMaximum: true
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
-          description: ""
+          description: ''
           schema:
             type: integer
             default: 0
-            exclusiveMinimum: true
             minimum: 0
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -299,9 +403,10 @@ paths:
     parameters:
       - in: path
         name: session_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
   /sessions/{session_id}/history:
     get:
@@ -312,24 +417,21 @@ paths:
       parameters:
         - in: query
           name: limit
-          description: ""
+          description: ''
           schema:
             type: integer
-            default: 10
-            exclusiveMinimum: true
-            exclusiveMaximum: true
+            default: 100
             minimum: 1
-            maximum: 100
+            maximum: 1000
         - in: query
           name: offset
-          description: ""
+          description: ''
           schema:
             type: integer
             default: 0
-            exclusiveMinimum: true
             minimum: 0
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -345,27 +447,43 @@ paths:
     parameters:
       - in: path
         name: session_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
+    delete:
+      summary: Delete session history (does NOT delete related memories)
+      description: ''
+      operationId: DeleteSessionHistory
+      tags: []
+      parameters: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
+      security:
+        - api-key: []
   /sessions/{session_id}/chat:
     parameters:
       - in: path
         name: session_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     post:
       summary: Interact with the session
-      description: ""
+      description: ''
       operationId: Chat
       tags: []
       parameters:
         - in: header
           name: Accept
-          description: ""
+          description: ''
           schema:
             type: string
             default: application/json
@@ -378,7 +496,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ChatInput'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -394,36 +512,28 @@ paths:
       parameters:
         - in: query
           name: query
-          description: ""
+          description: ''
           schema:
             type: string
           required: true
         - in: query
-          name: types
-          description: episode, belief, entity
-          schema:
-            type: array
-            items:
-              type: string
-            uniqueItems: true
-        - in: query
           name: user_id
-          description: ""
+          description: ''
           schema:
             type: string
             format: uuid
         - in: query
           name: limit
-          description: ""
+          description: ''
           schema:
             type: integer
         - in: query
           name: offset
-          description: ""
+          description: ''
           schema:
             type: integer
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -439,19 +549,20 @@ paths:
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
   /users/{user_id}:
     get:
       summary: Get details of the user
-      description: ""
+      description: ''
       operationId: GetUser
       tags: []
       parameters: []
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -460,17 +571,21 @@ paths:
         - api-key: []
     delete:
       summary: Delete user
-      description: ""
+      description: ''
       operationId: DeleteUser
       tags: []
       parameters: []
       responses:
-        "202": {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
       summary: Update user parameters
-      description: ""
+      description: ''
       operationId: UpdateUser
       tags: []
       parameters: []
@@ -480,7 +595,7 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateUserRequest'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -490,19 +605,41 @@ paths:
     parameters:
       - in: path
         name: user_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
+    patch:
+      summary: Patch User parameters (merge instead of replace)
+      description: ''
+      operationId: PatchUser
+      tags: []
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUserRequest'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
   /agents/{agent_id}:
     get:
       summary: Get details of the agent
-      description: ""
+      description: ''
       operationId: GetAgent
       tags: []
       parameters: []
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -511,17 +648,21 @@ paths:
         - api-key: []
     delete:
       summary: Delete agent
-      description: ""
+      description: ''
       operationId: DeleteAgent
       tags: []
       parameters: []
       responses:
-        "202": {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
       summary: Update agent parameters
-      description: ""
+      description: ''
       operationId: UpdateAgent
       tags: []
       parameters: []
@@ -531,7 +672,7 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateAgentRequest'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -541,29 +682,79 @@ paths:
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
-  /agents/{agent_id}/additional_info:
+    patch:
+      summary: Patch Agent parameters (merge instead of replace)
+      description: ''
+      operationId: PatchAgent
+      tags: []
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAgentRequest'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
+  /agents/{agent_id}/docs:
     get:
-      summary: Get additional info of the agent
+      summary: Get docs of the agent
       description: Sorted (created_at descending)
-      operationId: GetAgentAdditionalInfo
+      operationId: GetAgentDocs
       tags: []
       parameters:
         - in: query
           name: limit
-          description: ""
+          description: ''
           schema:
             type: integer
         - in: query
           name: offset
-          description: ""
+          description: ''
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
+          required: false
+          schema:
+            type: string
+            default: '{}'
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: >-
+            Which order should the sort be: `asc` (ascending) or `desc` (descending)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      requestBody:
+        content: {}
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -573,54 +764,83 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/AdditionalInfo'
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     post:
-      summary: Create additional info of the agent
-      description: ""
-      operationId: CreateAgentAdditionalInfo
+      summary: Create doc of the agent
+      description: ''
+      operationId: CreateAgentDoc
       tags: []
       parameters: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+              $ref: '#/components/schemas/CreateDoc'
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
-  /users/{user_id}/additional_info:
+  /users/{user_id}/docs:
     get:
-      summary: Get additional info of the user
+      summary: Get docs of the user
       description: Sorted (created_at descending)
-      operationId: GetUserAdditionalInfo
+      operationId: GetUserDocs
       tags: []
       parameters:
         - in: query
           name: limit
-          description: ""
+          description: ''
           schema:
             type: integer
         - in: query
           name: offset
-          description: ""
+          description: ''
           schema:
             type: integer
+        - in: query
+          name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
+          required: false
+          schema:
+            type: string
+            default: '{}'
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: >-
+            Which order should the sort be: `asc` (ascending) or `desc` (descending)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      requestBody:
+        content: {}
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -630,107 +850,125 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/AdditionalInfo'
+                      $ref: '#/components/schemas/Doc'
       security:
         - api-key: []
     parameters:
       - in: path
         name: user_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     post:
-      summary: Create additional info of the user
-      description: ""
-      operationId: CreateUserAdditionalInfo
+      summary: Create doc of the user
+      description: ''
+      operationId: CreateUserDoc
       tags: []
       parameters: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+              $ref: '#/components/schemas/CreateDoc'
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
-  /users/{user_id}/additional_info/{additional_info_id}:
+  /users/{user_id}/docs/{doc_id}:
     parameters:
       - in: path
         name: user_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
-        name: additional_info_id
-        description: ""
+        name: doc_id
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     delete:
-      summary: Delete additional info doc by id
-      description: ""
-      operationId: DeleteUserAdditionalInfo
+      summary: Delete doc by id
+      description: ''
+      operationId: DeleteUserDoc
       tags: []
       parameters: []
       responses:
-        "202": {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
-  /agents/{agent_id}/additional_info/{additional_info_id}:
+  /agents/{agent_id}/docs/{doc_id}:
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
-        name: additional_info_id
-        description: ""
+        name: doc_id
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     delete:
-      summary: Delete additional info doc by id
-      description: ""
-      operationId: DeleteAgentAdditionalInfo
+      summary: Delete doc by id
+      description: ''
+      operationId: DeleteAgentDoc
       tags: []
       parameters: []
       responses:
-        "202": {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
   /agents/{agent_id}/memories/{memory_id}:
     delete:
       summary: Delete memory of the agent by id
-      description: ""
+      description: ''
       operationId: DeleteAgentMemory
       tags: []
       parameters: []
       responses:
-        "202":
-          content: {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
         name: memory_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
   /agents/{agent_id}/tools:
     get:
@@ -741,16 +979,18 @@ paths:
       parameters:
         - in: query
           name: limit
-          description: ""
+          description: ''
           schema:
             type: integer
         - in: query
           name: offset
-          description: ""
+          description: ''
           schema:
             type: integer
+      requestBody:
+        content: {}
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -766,13 +1006,14 @@ paths:
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     post:
       summary: Create tool for the agent
-      description: ""
+      description: ''
       operationId: CreateAgentTool
       tags: []
       parameters: []
@@ -782,7 +1023,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateToolRequest'
       responses:
-        "201":
+        '201':
           content:
             application/json:
               schema:
@@ -793,29 +1034,35 @@ paths:
     parameters:
       - in: path
         name: agent_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
       - in: path
         name: tool_id
-        description: ""
+        description: ''
         schema:
           type: string
+          format: uuid
         required: true
     delete:
       summary: Delete tool by id
-      description: ""
+      description: ''
       operationId: DeleteAgentTool
       tags: []
       parameters: []
       responses:
-        "202": {}
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
       security:
         - api-key: []
     put:
       summary: Update agent tool definition
-      description: ""
+      description: ''
       operationId: UpdateAgentTool
       tags: []
       parameters: []
@@ -825,13 +1072,57 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateToolRequest'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
+    patch:
+      summary: Patch Agent tool parameters (merge instead of replace)
+      description: ''
+      operationId: PatchAgentTool
+      tags: []
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchToolRequest'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
+  /jobs/{job_id}:
+    get:
+      summary: Get status of the job
+      description: ''
+      operationId: GetJobStatus
+      tags: []
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+      security:
+        - api-key: []
+    parameters:
+      - in: path
+        name: job_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
 components:
   schemas:
     User:
@@ -857,6 +1148,10 @@ components:
           type: string
           description: User id (UUID)
           format: uuid
+        metadata:
+          type: object
+          properties: {}
+          description: (Optional) metadata
       required:
         - id
     Agent:
@@ -869,10 +1164,11 @@ components:
         about:
           type: string
           description: About the agent
+          default: ''
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction for the agent
           description: List of instructions for the agent
         created_at:
@@ -894,9 +1190,12 @@ components:
           type: string
           description: The model to use with this agent
           default: julep-ai/samantha-1-turbo
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - name
-        - about
         - id
         - model
     FunctionParameters:
@@ -909,10 +1208,12 @@ components:
       properties:
         description:
           type: string
-          description: A description of what the function does, used by the model to choose when and how to call the function.
+          description: >-
+            A description of what the function does, used by the model to choose when and how to call the function.
         name:
           type: string
-          description: The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+          description: >-
+            The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
         parameters:
           $ref: '#/components/schemas/FunctionParameters'
           description: Parameters accepeted by this function
@@ -927,8 +1228,9 @@ components:
           enum:
             - function
             - webhook
-          description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
-        definition:
+          description: >-
+            Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
+        function:
           oneOf:
             - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
@@ -938,7 +1240,7 @@ components:
           format: uuid
       required:
         - type
-        - definition
+        - function
         - id
     Session:
       $schema: http://json-schema.org/draft-04/schema#
@@ -961,7 +1263,8 @@ components:
           description: A specific situation that sets the background for this session
         summary:
           type: string
-          description: (null at the beginning) - generated automatically after every interaction
+          description: >-
+            (null at the beginning) - generated automatically after every interaction
         created_at:
           type: string
           format: date-time
@@ -970,6 +1273,14 @@ components:
           type: string
           format: date-time
           description: Session updated at (RFC-3339 format)
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
+        render_templates:
+          type: boolean
+          description: Render system and assistant message content as jinja templates
+          default: false
       required:
         - id
         - user_id
@@ -985,12 +1296,16 @@ components:
         about:
           type: string
           description: About the user
-        additional_information:
+        docs:
           type: array
           items:
-            $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the user
-          description: List of additional info about user
+          description: List of docs about user
+        metadata:
+          type: object
+          properties: {}
+          description: (Optional) metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -998,7 +1313,7 @@ components:
       properties:
         user_id:
           type: string
-          description: User ID of user to associate with this session
+          description: (Optional) User ID of user to associate with this session
           format: uuid
         agent_id:
           type: string
@@ -1007,9 +1322,16 @@ components:
         situation:
           type: string
           description: A specific situation that sets the background for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
+        render_templates:
+          type: boolean
+          description: Render system and assistant message content as jinja templates
+          default: false
       required:
         - agent_id
-        - user_id
       description: A valid request payload for creating a session
     CreateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1021,17 +1343,19 @@ components:
         about:
           type: string
           description: About the agent
+          default: ''
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         tools:
           type: array
           items:
             $ref: '#/components/schemas/CreateToolRequest'
-          description: A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
+          description: >-
+            A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
         default_settings:
           $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
@@ -1039,16 +1363,18 @@ components:
           type: string
           description: Name of the model that the agent is supposed to use
           default: julep-ai/samantha-1-turbo
-        additional_info:
+        docs:
           type: array
           items:
-            $ref: '#/components/schemas/CreateAdditionalInfoRequest'
+            $ref: '#/components/schemas/CreateDoc'
             description: Snippet that has information about the agent
-          description: List of additional info about agent
+          description: List of docs about agent
+        metadata:
+          type: object
+          properties: {}
+          description: (Optional) metadata
       required:
         - name
-        - about
-        - model
       description: A valid request payload for creating an agent
     UpdateSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#
@@ -1057,9 +1383,13 @@ components:
         situation:
           type: string
           description: Updated situation for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
+      description: A valid request payload for updating a session
       required:
         - situation
-      description: A valid request payload for updating a session
     UpdateAgentRequest:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -1070,7 +1400,7 @@ components:
         instructions:
           type: array
           items:
-            $ref: '#/components/schemas/Instruction'
+            type: string
             description: Instruction
           description: List of instructions for the agent
         name:
@@ -1082,7 +1412,14 @@ components:
         default_settings:
           $ref: '#/components/schemas/AgentDefaultSettings'
           description: Default model settings to start every session with
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating an agent
+      required:
+        - about
+        - name
     UpdateUserRequest:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -1093,7 +1430,14 @@ components:
         name:
           type: string
           description: Name of the user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       description: A valid request payload for updating a user
+      required:
+        - about
+        - name
     Suggestion:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -1135,6 +1479,7 @@ components:
             - assistant
             - system
             - function_call
+            - function
           description: ChatML role (system|assistant|user|function_call)
         content:
           type: string
@@ -1166,11 +1511,12 @@ components:
             - assistant
             - system
             - function_call
+            - auto
           description: ChatML role (system|assistant|user|function_call)
         content:
           type: string
           description: ChatML content
-          default: ""
+          default: ''
         name:
           type: string
           description: ChatML name
@@ -1179,8 +1525,8 @@ components:
           default: false
           description: Whether to continue this message or return a new one
       required:
-        - role
         - content
+        - role
     ChatInputData:
       type: object
       properties:
@@ -1192,17 +1538,24 @@ components:
             $ref: '#/components/schemas/InputChatMLMessage'
         tools:
           type: array
-          description: (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
+          nullable: true
+          description: >-
+            (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
           items:
             $ref: '#/components/schemas/Tool'
         tool_choice:
-          $ref: '#/components/schemas/ToolChoiceOption'
-          description: Can be one of existing tools given to the agent earlier or the ones included in the request
+          nullable: true
+          oneOf:
+            - $ref: '#/components/schemas/ToolChoiceOption'
+            - $ref: '#/components/schemas/NamedToolChoice'
+          description: >-
+            Can be one of existing tools given to the agent earlier or the ones included in the request
       required:
         - messages
     NamedToolChoice:
       type: object
-      description: Specifies a tool the model should use. Use to force the model to call a specific function.
+      description: >-
+        Specifies a tool the model should use. Use to force the model to call a specific function.
       properties:
         type:
           type: string
@@ -1221,17 +1574,23 @@ components:
         - type
         - function
     ToolChoiceOption:
-      description: |
+      description: >
         Controls which (if any) function is called by the model.
+
         `none` means the model will not call a function and instead generates a message.
+
         `auto` means the model can pick between generating a message or calling a function.
+
         Specifying a particular function via `{"type: "function", "function": {"name": "my_function"}}` forces the model to call that function.
 
+
         `none` is the default when no functions are present. `auto` is the default if functions are present.
+
       oneOf:
         - type: string
-          description: |
+          description: >
             `none` means the model will not call a function and instead generates a message. `auto` means the model can pick between generating a message or calling a function.
+
           enum:
             - none
             - auto
@@ -1239,8 +1598,9 @@ components:
       type: string
     FunctionCallOption:
       type: object
-      description: |
+      description: >
         Specifying a particular function via `{"name": "my_function"}` forces the model to call that function.
+
       properties:
         name:
           type: string
@@ -1266,7 +1626,8 @@ components:
         - total_tokens
     ChatResponse:
       type: object
-      description: Represents a chat completion response returned by model, based on the provided input.
+      description: >-
+        Represents a chat completion response returned by model, based on the provided input.
       properties:
         id:
           type: string
@@ -1274,7 +1635,8 @@ components:
           format: uuid
         finish_reason:
           type: string
-          description: The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, `length` if the maximum number of tokens specified in the request was reached, `content_filter` if content was omitted due to a flag from our content filters, `tool_calls` if the model called a tool, or `function_call` (deprecated) if the model called a function.
+          description: >-
+            The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, `length` if the maximum number of tokens specified in the request was reached, `content_filter` if content was omitted due to a flag from our content filters, `tool_calls` if the model called a tool, or `function_call` (deprecated) if the model called a function.
           enum:
             - stop
             - length
@@ -1293,132 +1655,69 @@ components:
               $ref: '#/components/schemas/ChatMLMessage'
         usage:
           $ref: '#/components/schemas/CompletionUsage'
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+          description: IDs (if any) of jobs created as part of this request
       required:
         - usage
         - response
         - finish_reason
         - id
-    Belief:
+    Memory:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
       properties:
-        type:
-          type: string
-          default: belief
-          enum:
-            - belief
-          description: Type of memory (`belief`)
-        subject:
+        agent_id:
           type: string
           format: uuid
-          description: (Optional) ID of the subject user
+          description: ID of the agent
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user
         content:
           type: string
           description: Content of the memory
-        rationale:
-          type: string
-          description: 'Rationale: Why did the model decide to form this memory'
-        weight:
-          type: number
-          default: 1
-          exclusiveMinimum: true
-          exclusiveMaximum: true
-          minimum: 0
-          maximum: 100
-          description: Weight (importance) of the memory on a scale of 0-100
-        sentiment:
-          type: number
-          default: 0
-          exclusiveMinimum: true
-          minimum: -1
-          exclusiveMaximum: true
-          maximum: 1
-          description: Sentiment (valence) of the memory on a scale of -1 to 1
         created_at:
           type: string
           format: date-time
-          description: Belief created at (RFC-3339 format)
-        id:
-          type: string
-          description: Belief id (UUID)
-          format: uuid
-      required:
-        - type
-        - content
-        - created_at
-        - weight
-        - sentiment
-        - id
-    Episode:
-      $schema: http://json-schema.org/draft-04/schema#
-      type: object
-      properties:
-        type:
-          type: string
-          default: episode
-          enum:
-            - episode
-          description: Type of memory (`episode`)
-        subject:
-          type: string
-          format: uuid
-          description: (Optional) ID of the subject user
-        content:
-          type: string
-          description: Content of the memory
-        weight:
-          type: number
-          default: 1
-          exclusiveMinimum: true
-          exclusiveMaximum: true
-          minimum: 0
-          maximum: 100
-          description: Weight (importance) of the memory on a scale of 0-100
-        created_at:
-          type: string
-          format: date-time
-          description: Episode created at (RFC-3339 format)
+          description: Memory created at (RFC-3339 format)
         last_accessed_at:
           type: string
           format: date-time
-          description: Episode last accessed at (RFC-3339 format)
-        happened_at:
+          description: Memory last accessed at (RFC-3339 format)
+        timestamp:
           type: string
-          description: Episode happened at (RFC-3339 format)
+          description: Memory happened at (RFC-3339 format)
           format: date-time
-        duration:
+        sentiment:
           type: number
-          description: Duration of the episode (in seconds)
-          exclusiveMinimum: true
-          minimum: 0
           default: 0
+          minimum: -1
+          maximum: 1
+          description: Sentiment (valence) of the memory on a scale of -1 to 1
         id:
           type: string
-          description: Episode id (UUID)
+          description: Memory id (UUID)
           format: uuid
+        entities:
+          type: array
+          items:
+            type: object
+            properties: {}
+          description: List of entities mentioned in the memory
       required:
         - type
         - content
         - created_at
-        - happened_at
-        - weight
-        - last_accessed_at
         - id
-    Memory:
-      oneOf:
-        - $ref: '#/components/schemas/Belief'
-        - $ref: '#/components/schemas/Episode'
-        - $ref: '#/components/schemas/Entity'
-    Entity:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Entity id (UUID)
-          format: uuid
-      description: TBD
-      required:
-        - id
+        - agent_id
+        - user_id
+        - entities
     ChatSettings:
       type: object
       properties:
@@ -1428,72 +1727,97 @@ components:
           minimum: -1
           maximum: 1
           nullable: true
-          description: (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+          description: >-
+            (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
         length_penalty:
           type: number
           default: 1
           minimum: 0
           maximum: 2
           nullable: true
-          description: '(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. '
+          description: "(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. "
         logit_bias:
           type: object
           default: null
           nullable: true
           additionalProperties:
             type: integer
-          description: |
+          description: >
             Modify the likelihood of specified tokens appearing in the completion.
 
+
             Accepts a JSON object that maps tokens (specified by their token ID in the tokenizer) to an associated bias value from -100 to 100. Mathematically, the bias is added to the logits generated by the model prior to sampling. The exact effect will vary per model, but values between -1 and 1 should decrease or increase likelihood of selection; values like -100 or 100 should result in a ban or exclusive selection of the relevant token.
+
           properties: {}
         max_tokens:
-          description: |
+          description: >
             The maximum number of tokens to generate in the chat completion.
 
+
             The total length of input tokens and generated tokens is limited by the model's context length.
+
           type: integer
           nullable: true
+          default: 200
+          minimum: 1
+          maximum: 16384
         presence_penalty:
           type: number
           default: 0
           minimum: -1
           maximum: 1
           nullable: true
-          description: (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+          description: >-
+            (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
         repetition_penalty:
           type: number
           default: 1
           minimum: 0
           maximum: 2
           nullable: true
-          description: (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+          description: >-
+            (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
         response_format:
           type: object
-          description: |
+          description: >
             An object specifying the format that the model must output.
+
 
             Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
 
+
             **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.
+
           properties:
             type:
               type: string
               enum:
                 - text
                 - json_object
+                - regex
               example: json_object
               default: text
-              description: Must be one of `text` or `json_object`.
+              description: Must be one of `"text"`, `"regex"` or `"json_object"`.
+            pattern:
+              type: string
+              description: Regular expression pattern to use if `type` is `"regex"`
+            schema:
+              type: object
+              properties: {}
+              default: {}
+              description: JSON Schema to use if `type` is `"json_object"`
         seed:
           type: integer
-          minimum: -9223372036854776000
-          maximum: 9223372036854776000
+          minimum: -1
+          maximum: 9999
           nullable: true
-          description: |
+          description: >
             This feature is in Beta.
+
             If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result.
+
             Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend.
+
         stop:
           description: |
             Up to 4 sequences where the API will stop generating further tokens.
@@ -1507,8 +1831,9 @@ components:
               items:
                 type: string
         stream:
-          description: |
+          description: >
             If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sent as data-only [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format) as they become available, with the stream terminated by a `data: [DONE]` message. [Example Python code](https://cookbook.openai.com/examples/how_to_stream_completions).
+
           type: boolean
           nullable: true
           default: false
@@ -1516,10 +1841,11 @@ components:
           type: number
           minimum: 0
           maximum: 2
-          default: 1
-          example: 1
+          default: 0.75
+          example: 0.75
           nullable: true
-          description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+          description: >-
+            What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
         top_p:
           type: number
           minimum: 0
@@ -1527,9 +1853,32 @@ components:
           default: 1
           example: 1
           nullable: true
-          description: Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-      required:
-        - stream
+          description: >-
+            Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+          exclusiveMinimum: true
+        min_p:
+          type: number
+          description: Minimum probability compared to leading token to be considered
+          exclusiveMaximum: true
+          maximum: 1
+          exclusiveMinimum: false
+          minimum: 0
+          example: 0.01
+          default: 0.01
+        preset:
+          type: string
+          description: >-
+            Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     AgentDefaultSettings:
       type: object
       properties:
@@ -1539,38 +1888,40 @@ components:
           minimum: -2
           maximum: 2
           nullable: true
-          description: (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-          exclusiveMinimum: true
-          exclusiveMaximum: true
+          description: >-
+            (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
         length_penalty:
           type: number
           default: 1
           minimum: 0
           maximum: 2
           nullable: true
-          description: '(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. '
+          description: "(Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated. "
         presence_penalty:
           type: number
           default: 0
           minimum: -1
           maximum: 1
           nullable: true
-          description: (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+          description: >-
+            (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
         repetition_penalty:
           type: number
           default: 1
           minimum: 0
           maximum: 2
           nullable: true
-          description: (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+          description: >-
+            (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
         temperature:
           type: number
           minimum: 0
-          maximum: 2
-          default: 1
-          example: 1
+          maximum: 3
+          default: 0.75
+          example: 0.75
           nullable: true
-          description: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+          description: >-
+            What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
         top_p:
           type: number
           minimum: 0
@@ -1578,13 +1929,37 @@ components:
           default: 1
           example: 1
           nullable: true
-          description: Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+          description: >-
+            Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+        min_p:
+          type: number
+          description: Minimum probability compared to leading token to be considered
+          exclusiveMaximum: true
+          maximum: 1
+          exclusiveMinimum: false
+          minimum: 0
+          example: 0.01
+          default: 0.01
+        preset:
+          type: string
+          description: >-
+            Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+          enum:
+            - problem_solving
+            - conversational
+            - fun
+            - prose
+            - creative
+            - business
+            - deterministic
+            - code
+            - multilingual
     ChatInput:
       allOf:
         - $ref: '#/components/schemas/ChatInputData'
         - $ref: '#/components/schemas/ChatSettings'
         - $ref: '#/components/schemas/MemoryAccessOptions'
-    AdditionalInfo:
+    Doc:
       type: object
       properties:
         title:
@@ -1595,13 +1970,22 @@ components:
           description: Information content
         id:
           type: string
-          description: ID of additional info doc
+          description: ID of doc
           format: uuid
+        created_at:
+          type: string
+          description: Doc created at
+          format: date-time
+        metadata:
+          type: object
+          properties: {}
+          description: optional metadata
       required:
         - title
         - content
         - id
-    CreateAdditionalInfoRequest:
+        - created_at
+    CreateDoc:
       type: object
       properties:
         title:
@@ -1610,6 +1994,10 @@ components:
         content:
           type: string
           description: Information content
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
       required:
         - title
         - content
@@ -1620,22 +2008,14 @@ components:
           type: boolean
           description: Whether previous memories should be recalled or not
           default: true
+        record:
+          type: boolean
+          description: Whether this interaction should be recorded in history or not
+          default: true
         remember:
           type: boolean
-          description: Whether this interaction should be recorded in memory or not
+          description: Whether this interaction should form memories or not
           default: true
-    Instruction:
-      type: object
-      properties:
-        content:
-          type: string
-          description: Content of the instruction
-        important:
-          type: boolean
-          description: Whether this instruction should be marked as important (only up to 3 instructions per agent can be marked important)
-          default: false
-      required:
-        - content
     CreateToolRequest:
       type: object
       properties:
@@ -1644,23 +2024,23 @@ components:
           enum:
             - function
             - webhook
-          description: Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
-        definition:
+          description: >-
+            Whether this tool is a `function` or a `webhook` (Only `function` tool supported right now)
+        function:
           oneOf:
             - $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
         - type
-        - definition
+        - function
     UpdateToolRequest:
       type: object
       properties:
-        definition:
-          oneOf:
-            - $ref: '#/components/schemas/FunctionDef'
+        function:
+          $ref: '#/components/schemas/FunctionDef'
           description: Function definition and parameters
       required:
-        - definition
+        - function
     ResourceCreatedResponse:
       type: object
       properties:
@@ -1670,6 +2050,13 @@ components:
         created_at:
           type: string
           format: date-time
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+          description: IDs (if any) of jobs created as part of this request
       required:
         - id
         - created_at
@@ -1682,9 +2069,160 @@ components:
         updated_at:
           type: string
           format: date-time
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs (if any) of jobs created as part of this request
+          uniqueItems: true
       required:
         - id
         - updated_at
+    ResourceDeletedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        deleted_at:
+          type: string
+          format: date-time
+        jobs:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs (if any) of jobs created as part of this request
+          uniqueItems: true
+      required:
+        - id
+        - deleted_at
+    JobStatus:
+      $schema: http://json-schema.org/draft-04/schema#
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the job
+        reason:
+          type: string
+          description: Reason for current state
+        created_at:
+          type: string
+          format: date-time
+          description: Job created at (RFC-3339 format)
+        updated_at:
+          type: string
+          format: date-time
+          description: Job updated at (RFC-3339 format)
+        id:
+          type: string
+          description: Job id (UUID)
+          format: uuid
+        has_progress:
+          type: boolean
+          default: false
+          description: Whether this Job supports progress updates
+        progress:
+          type: number
+          description: Progress percentage
+          default: 0
+          minimum: 0
+          maximum: 100
+        state:
+          type: string
+          description: >-
+            Current state (one of: pending, in_progress, retrying, succeeded, aborted, failed)
+          enum:
+            - pending
+            - in_progress
+            - retrying
+            - succeeded
+            - aborted
+            - failed
+            - unknown
+      required:
+        - id
+        - name
+        - created_at
+        - state
+    PatchUserRequest:
+      $schema: http://json-schema.org/draft-04/schema#
+      type: object
+      properties:
+        about:
+          type: string
+          description: About the user
+        name:
+          type: string
+          description: Name of the user
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
+      description: A request for patching a user
+    PatchAgentRequest:
+      $schema: http://json-schema.org/draft-04/schema#
+      type: object
+      properties:
+        about:
+          type: string
+          description: About the agent
+        instructions:
+          type: array
+          items:
+            type: string
+            description: Instruction
+          description: List of instructions for the agent
+        name:
+          type: string
+          description: Name of the agent
+        model:
+          type: string
+          description: Name of the model that the agent is supposed to use
+        default_settings:
+          $ref: '#/components/schemas/AgentDefaultSettings'
+          description: Default model settings to start every session with
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
+      description: A request for patching an agent
+    PatchSessionRequest:
+      $schema: http://json-schema.org/draft-04/schema#
+      type: object
+      properties:
+        situation:
+          type: string
+          description: Updated situation for this session
+        metadata:
+          type: object
+          properties: {}
+          description: Optional metadata
+      description: A request for patching a session
+    PatchToolRequest:
+      type: object
+      properties:
+        function:
+          $ref: '#/components/schemas/PartialFunctionDef'
+          description: Function definition and parameters
+      required:
+        - function
+    PartialFunctionDef:
+      type: object
+      properties:
+        description:
+          type: string
+          description: >-
+            A description of what the function does, used by the model to choose when and how to call the function.
+        name:
+          type: string
+          description: >-
+            The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        parameters:
+          $ref: '#/components/schemas/FunctionParameters'
+          description: Parameters accepeted by this function
   securitySchemes:
     api-key:
       type: apiKey
@@ -1696,44 +2234,59 @@ components:
     session_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
+        format: uuid
     user_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
+        format: uuid
     agent_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
+        format: uuid
     message_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
-    additional_info_id:
+        format: uuid
+    doc_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
+        format: uuid
     memory_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
+        format: uuid
     tool_id:
       in: path
       required: false
-      description: ""
+      description: ''
       schema:
         type: string
+        format: uuid
+    job_id:
+      in: path
+      required: false
+      description: ''
+      schema:
+        type: string
+        format: uuid
+  requestBodies: {}
 security:
   - api-key: []

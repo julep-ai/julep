@@ -106,7 +106,7 @@
             "body": null
           },
           "description": "List of sessions (sorted created_at descending order) with limit+offset pagination",
-          "body": "{\n    \"items\": [\n        {\n            \"id\": \"id\",\n            \"user_id\": \"user_id\",\n            \"agent_id\": \"agent_id\",\n            \"situation\": \"situation\",\n            \"summary\": \"summary\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
+          "body": "{\n    \"items\": [\n        {\n            \"id\": \"id\",\n            \"user_id\": \"user_id\",\n            \"agent_id\": \"agent_id\",\n            \"situation\": \"situation\",\n            \"summary\": \"summary\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"render_templates\": true\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -612,7 +612,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"user_id\": \"user_id\",\n    \"agent_id\": \"agent_id\",\n    \"situation\": \"situation\",\n    \"summary\": \"summary\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"user_id\": \"user_id\",\n    \"agent_id\": \"agent_id\",\n    \"situation\": \"situation\",\n    \"summary\": \"summary\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"render_templates\": true\n}",
           "_postman_previewlanguage": "json"
         }
       ]

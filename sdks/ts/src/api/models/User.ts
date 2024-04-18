@@ -24,7 +24,7 @@ export type User = {
    */
   id: string;
   /**
-   * Optional metadata
+   * (Optional) metadata
    */
   metadata?: any;
 };

@@ -23,7 +23,7 @@ class User(pydantic.BaseModel):
     )
     id: str = pydantic.Field(description="User id (UUID)")
     metadata: typing.Optional[UserMetadata] = pydantic.Field(
-        description="Optional metadata"
+        description="(Optional) metadata"
     )
 
     def json(self, **kwargs: typing.Any) -> str:
