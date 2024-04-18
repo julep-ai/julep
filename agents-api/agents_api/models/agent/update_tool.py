@@ -18,8 +18,8 @@ def update_tool_by_id_query(
                 str(agent_id),
                 str(tool_id),
                 function["name"],
-                function["description"],
-                function.get("parameters", {}),
+                function.get("description", "") or "",
+                function.get("parameters", {}) or {},
                 embedding,
             ]
         ]
