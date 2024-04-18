@@ -13,7 +13,7 @@
 
 ## AsyncSessionsManager
 
-[Show source in session.py:699](../../../../../../julep/managers/session.py#L699)
+[Show source in session.py:777](../../../../../../julep/managers/session.py#L777)
 
 A class for managing asynchronous sessions.
 
@@ -51,6 +51,8 @@ async suggestions(*, session_id: Union[str, UUID], limit: Optional[int]=None, of
 async history(*, session_id: Union[str, UUID], limit: Optional[int]=None, offset: Optional[int]=None) -> List[ChatMlMessage]:
     Retrieves the history of messages in a session, optionally limited and paginated.
 
+- `async` *delete_history(session_id* - Union[str, UUID]) -> None:
+
 #### Notes
 
 The `@beartype` decorator is used for runtime type checking of the arguments.
@@ -69,7 +71,7 @@ class AsyncSessionsManager(BaseSessionsManager): ...
 
 ### AsyncSessionsManager().chat
 
-[Show source in session.py:868](../../../../../../julep/managers/session.py#L868)
+[Show source in session.py:952](../../../../../../julep/managers/session.py#L952)
 
 Sends a message in an asynchronous chat session and retrieves the response.
 
@@ -142,7 +144,7 @@ async def chat(
 
 ### AsyncSessionsManager().create
 
-[Show source in session.py:769](../../../../../../julep/managers/session.py#L769)
+[Show source in session.py:849](../../../../../../julep/managers/session.py#L849)
 
 Asynchronously create a resource with the specified user and agent identifiers.
 
@@ -177,7 +179,7 @@ async def create(self, **kwargs: SessionCreateArgs) -> Session: ...
 
 ### AsyncSessionsManager().delete
 
-[Show source in session.py:818](../../../../../../julep/managers/session.py#L818)
+[Show source in session.py:902](../../../../../../julep/managers/session.py#L902)
 
 Asynchronously delete a session given its ID.
 
@@ -203,9 +205,34 @@ by the '_delete' method or by the 'beartype' decorator in this section.
 async def delete(self, session_id: Union[str, UUID]): ...
 ```
 
+### AsyncSessionsManager().delete_history
+
+[Show source in session.py:1097](../../../../../../julep/managers/session.py#L1097)
+
+Delete the history of a session asynchronously.
+
+#### Arguments
+
+session_id (Union[str, UUID]): The unique identifier for the session.
+
+#### Returns
+
+- `None` - The result of the delete operation.
+
+#### Raises
+
+- `AssertionError` - If the `session_id` is not a valid UUID v4.
+
+#### Signature
+
+```python
+@beartype
+async def delete_history(self, session_id: Union[str, UUID]) -> None: ...
+```
+
 ### AsyncSessionsManager().get
 
-[Show source in session.py:741](../../../../../../julep/managers/session.py#L741)
+[Show source in session.py:821](../../../../../../julep/managers/session.py#L821)
 
 Asynchronously get a Session object by its identifier.
 
@@ -243,7 +270,7 @@ async def get(self, id: Union[UUID, str]) -> Session: ...
 
 ### AsyncSessionsManager().history
 
-[Show source in session.py:981](../../../../../../julep/managers/session.py#L981)
+[Show source in session.py:1065](../../../../../../julep/managers/session.py#L1065)
 
 Retrieve a history of chat messages based on the session ID, with optional limit and offset.
 
@@ -277,7 +304,7 @@ async def history(
 
 ### AsyncSessionsManager().list
 
-[Show source in session.py:792](../../../../../../julep/managers/session.py#L792)
+[Show source in session.py:872](../../../../../../julep/managers/session.py#L872)
 
 Asynchronously retrieves a list of sessions with optional pagination.
 
@@ -297,13 +324,16 @@ This method utilizes `_list_items` internally to obtain session data with suppor
 ```python
 @beartype
 async def list(
-    self, limit: Optional[int] = None, offset: Optional[int] = None
+    self,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> List[Session]: ...
 ```
 
 ### AsyncSessionsManager().suggestions
 
-[Show source in session.py:949](../../../../../../julep/managers/session.py#L949)
+[Show source in session.py:1033](../../../../../../julep/managers/session.py#L1033)
 
 Retrieve a list of suggestions asynchronously.
 
@@ -337,7 +367,7 @@ async def suggestions(
 
 ### AsyncSessionsManager().update
 
-[Show source in session.py:837](../../../../../../julep/managers/session.py#L837)
+[Show source in session.py:921](../../../../../../julep/managers/session.py#L921)
 
 Asynchronously update a resource with the given situation.
 
@@ -380,7 +410,7 @@ async def update(self, **kwargs: SessionUpdateArgs) -> Session: ...
 
 ## BaseSessionsManager
 
-[Show source in session.py:47](../../../../../../julep/managers/session.py#L47)
+[Show source in session.py:51](../../../../../../julep/managers/session.py#L51)
 
 A class to manage sessions using base API client methods.
 
@@ -400,8 +430,8 @@ _get(id):
 
 id (Union[str, UUID]): The unique identifier for the session.
 
-user_id (Union[str, UUID]): The unique identifier for the user.
 agent_id (Union[str, UUID]): The unique identifier for the agent.
+user_id (Optional[Union[str, UUID]]): The unique identifier for the user.
 - `situation` *Optional[str]* - An optional description of the situation for the session.
 
 - `limit` *Optional[int]* - The limit on the number of items to be retrieved.
@@ -426,12 +456,11 @@ session_id (Union[str, UUID]): The unique identifier for the session.
 - `limit` *Optional[int]* - The limit on the number of history entries to be retrieved.
 - `offset` *Optional[int]* - The number of history entries to be skipped before starting to collect the result set.
 
+session_id (Union[str, UUID]): The unique identifier for the session.
+
 #### Returns
 
 - `Union[Session,` *Awaitable[Session]]* - The session object or an awaitable yielding it.
-
-_create(user_id, agent_id, situation):
-    Create a new session with specified user and agent identifiers.
 
 - `Union[ResourceCreatedResponse,` *Awaitable[ResourceCreatedResponse]]* - The response for the created session or an awaitable yielding it.
 
@@ -465,6 +494,19 @@ _history(session_id, limit, offset):
 
 - `Union[GetHistoryResponse,` *Awaitable[GetHistoryResponse]]* - The history response for the session or an awaitable yielding it.
 
+_delete_history(session_id):
+    Delete the history of a session.
+
+- `Union[None,` *Awaitable[None]]* - None or an awaitable yielding None if the operation is successful.
+
+#### Raises
+
+- `ValueError` - If the `id` is not a valid UUID.
+- `NetworkError` - If there is an issue communicating with the API.
+
+_create(user_id, agent_id, situation):
+    Create a new session with specified user and agent identifiers.
+
 #### Signature
 
 ```python
@@ -473,7 +515,7 @@ class BaseSessionsManager(BaseManager): ...
 
 ### BaseSessionsManager()._chat
 
-[Show source in session.py:259](../../../../../../julep/managers/session.py#L259)
+[Show source in session.py:293](../../../../../../julep/managers/session.py#L293)
 
 Conducts a chat conversation with an AI model using specific parameters.
 
@@ -540,7 +582,7 @@ def _chat(
 
 ### BaseSessionsManager()._create
 
-[Show source in session.py:159](../../../../../../julep/managers/session.py#L159)
+[Show source in session.py:176](../../../../../../julep/managers/session.py#L176)
 
 Creates a session for a specified user and agent.
 
@@ -548,9 +590,10 @@ This internal method is responsible for creating a session using the API client.
 
 #### Arguments
 
-user_id (Union[str, UUID]): The user's identifier which could be a string or a UUID object.
 agent_id (Union[str, UUID]): The agent's identifier which could be a string or a UUID object.
+user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
 - `situation` *Optional[str], optional* - An optional description of the situation.
+metadata (Dict[str, Any])
 
 #### Returns
 
@@ -565,15 +608,16 @@ agent_id (Union[str, UUID]): The agent's identifier which could be a string or a
 ```python
 def _create(
     self,
-    user_id: Union[str, UUID],
     agent_id: Union[str, UUID],
+    user_id: Optional[Union[str, UUID]] = None,
     situation: Optional[str] = None,
+    metadata: Dict[str, Any] = {},
 ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: ...
 ```
 
 ### BaseSessionsManager()._delete
 
-[Show source in session.py:213](../../../../../../julep/managers/session.py#L213)
+[Show source in session.py:238](../../../../../../julep/managers/session.py#L238)
 
 Delete a session given its session ID.
 
@@ -597,9 +641,37 @@ Raises:
 def _delete(self, session_id: Union[str, UUID]) -> Union[None, Awaitable[None]]: ...
 ```
 
+### BaseSessionsManager()._delete_history
+
+[Show source in session.py:421](../../../../../../julep/managers/session.py#L421)
+
+Delete the history of a session.
+
+#### Arguments
+
+session_id (Union[str, UUID]): The unique identifier for the session.
+
+#### Returns
+
+- `Union[None,` *Awaitable[None]]* - The result of the delete operation, which can be either
+None or an Awaitable that resolves to None, depending on whether this is a synchronous
+or asynchronous call.
+
+#### Raises
+
+- `AssertionError` - If the `session_id` is not a valid UUID v4.
+
+#### Signature
+
+```python
+def _delete_history(
+    self, session_id: Union[str, UUID]
+) -> Union[None, Awaitable[None]]: ...
+```
+
 ### BaseSessionsManager()._get
 
-[Show source in session.py:143](../../../../../../julep/managers/session.py#L143)
+[Show source in session.py:160](../../../../../../julep/managers/session.py#L160)
 
 Get a session by its ID.
 
@@ -623,7 +695,7 @@ def _get(self, id: Union[str, UUID]) -> Union[Session, Awaitable[Session]]: ...
 
 ### BaseSessionsManager()._history
 
-[Show source in session.py:359](../../../../../../julep/managers/session.py#L359)
+[Show source in session.py:393](../../../../../../julep/managers/session.py#L393)
 
 Retrieve a session's history with optional pagination controls.
 
@@ -653,7 +725,7 @@ def _history(
 
 ### BaseSessionsManager()._list_items
 
-[Show source in session.py:192](../../../../../../julep/managers/session.py#L192)
+[Show source in session.py:213](../../../../../../julep/managers/session.py#L213)
 
 List items with optional pagination.
 
@@ -674,13 +746,16 @@ The '_list_items' function is assumed to be a method of a class that has an 'api
 
 ```python
 def _list_items(
-    self, limit: Optional[int] = None, offset: Optional[int] = None
+    self,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    metadata_filter: str = "{}",
 ) -> Union[ListSessionsResponse, Awaitable[ListSessionsResponse]]: ...
 ```
 
 ### BaseSessionsManager()._suggestions
 
-[Show source in session.py:336](../../../../../../julep/managers/session.py#L336)
+[Show source in session.py:370](../../../../../../julep/managers/session.py#L370)
 
 Retrieve a list of suggestions for a given session.
 
@@ -705,7 +780,7 @@ def _suggestions(
 
 ### BaseSessionsManager()._update
 
-[Show source in session.py:234](../../../../../../julep/managers/session.py#L234)
+[Show source in session.py:259](../../../../../../julep/managers/session.py#L259)
 
 Update a session with a given situation.
 
@@ -713,6 +788,7 @@ Update a session with a given situation.
 
 session_id (Union[str, UUID]): The session identifier, which can be a string-formatted UUID or an actual UUID object.
 - `situation` *str* - A string describing the current situation.
+- `overwrite` *bool, optional* - Whether to overwrite the existing situation. Defaults to False.
 
 #### Returns
 
@@ -726,7 +802,11 @@ session_id (Union[str, UUID]): The session identifier, which can be a string-for
 
 ```python
 def _update(
-    self, session_id: Union[str, UUID], situation: str
+    self,
+    session_id: Union[str, UUID],
+    situation: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    overwrite: bool = False,
 ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: ...
 ```
 
@@ -734,7 +814,7 @@ def _update(
 
 ## SessionCreateArgs
 
-[Show source in session.py:36](../../../../../../julep/managers/session.py#L36)
+[Show source in session.py:37](../../../../../../julep/managers/session.py#L37)
 
 #### Signature
 
@@ -746,7 +826,7 @@ class SessionCreateArgs(TypedDict): ...
 
 ## SessionUpdateArgs
 
-[Show source in session.py:42](../../../../../../julep/managers/session.py#L42)
+[Show source in session.py:44](../../../../../../julep/managers/session.py#L44)
 
 #### Signature
 
@@ -758,7 +838,7 @@ class SessionUpdateArgs(TypedDict): ...
 
 ## SessionsManager
 
-[Show source in session.py:388](../../../../../../julep/managers/session.py#L388)
+[Show source in session.py:443](../../../../../../julep/managers/session.py#L443)
 
 A class responsible for managing session interactions.
 
@@ -822,6 +902,8 @@ history (
     Retrieves the chat history for a given session, supported by
     optional pagination parameters.
 
+- `delete_history` *(session_id* - Union[str, UUID]) -> None:
+
 Each method is decorated with `@beartype` for runtime type enforcement.
 
 #### Signature
@@ -836,7 +918,7 @@ class SessionsManager(BaseSessionsManager): ...
 
 ### SessionsManager().chat
 
-[Show source in session.py:562](../../../../../../julep/managers/session.py#L562)
+[Show source in session.py:624](../../../../../../julep/managers/session.py#L624)
 
 Initiate a chat session with the provided inputs and configurations.
 
@@ -900,7 +982,7 @@ def chat(
 
 ### SessionsManager().create
 
-[Show source in session.py:471](../../../../../../julep/managers/session.py#L471)
+[Show source in session.py:528](../../../../../../julep/managers/session.py#L528)
 
 Create a new resource with a user ID and an agent ID, optionally including a situation description.
 
@@ -933,7 +1015,7 @@ def create(self, **kwargs: SessionCreateArgs) -> Session: ...
 
 ### SessionsManager().delete
 
-[Show source in session.py:519](../../../../../../julep/managers/session.py#L519)
+[Show source in session.py:580](../../../../../../julep/managers/session.py#L580)
 
 Deletes a session based on its session ID.
 
@@ -956,9 +1038,34 @@ The specific exceptions that `self._delete` might raise, which should be documen
 def delete(self, session_id: Union[str, UUID]): ...
 ```
 
+### SessionsManager().delete_history
+
+[Show source in session.py:760](../../../../../../julep/managers/session.py#L760)
+
+Delete the history of a session.
+
+#### Arguments
+
+session_id (Union[str, UUID]): The unique identifier for the session.
+
+#### Returns
+
+- `None` - The result of the delete operation.
+
+#### Raises
+
+- `AssertionError` - If the `session_id` is not a valid UUID v4.
+
+#### Signature
+
+```python
+@beartype
+def delete_history(self, session_id: Union[str, UUID]) -> None: ...
+```
+
 ### SessionsManager().get
 
-[Show source in session.py:454](../../../../../../julep/managers/session.py#L454)
+[Show source in session.py:511](../../../../../../julep/managers/session.py#L511)
 
 Retrieve a Session object based on a given identifier.
 
@@ -981,7 +1088,7 @@ def get(self, id: Union[str, UUID]) -> Session: ...
 
 ### SessionsManager().history
 
-[Show source in session.py:671](../../../../../../julep/managers/session.py#L671)
+[Show source in session.py:733](../../../../../../julep/managers/session.py#L733)
 
 Retrieve a history of ChatMl messages for a given session.
 
@@ -1009,7 +1116,7 @@ def history(
 
 ### SessionsManager().list
 
-[Show source in session.py:492](../../../../../../julep/managers/session.py#L492)
+[Show source in session.py:549](../../../../../../julep/managers/session.py#L549)
 
 Retrieve a list of Session objects with optional pagination.
 
@@ -1030,13 +1137,16 @@ Raises:
 ```python
 @beartype
 def list(
-    self, limit: Optional[int] = None, offset: Optional[int] = None
+    self,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> List[Session]: ...
 ```
 
 ### SessionsManager().suggestions
 
-[Show source in session.py:637](../../../../../../julep/managers/session.py#L637)
+[Show source in session.py:699](../../../../../../julep/managers/session.py#L699)
 
 Provides a list of suggestion objects based on the given session ID.
 
@@ -1074,7 +1184,7 @@ def suggestions(
 
 ### SessionsManager().update
 
-[Show source in session.py:535](../../../../../../julep/managers/session.py#L535)
+[Show source in session.py:596](../../../../../../julep/managers/session.py#L596)
 
 Updates the state of a resource based on a given situation.
 
@@ -1087,6 +1197,7 @@ the actual update process to an internal method '_update'.
 session_id (Union[str, UUID]): The session identifier, which can be a UUID or a
     string that uniquely identifies the session.
 - `situation` *str* - A string that represents the new situation for the resource update.
+- `overwrite` *bool, optional* - A flag to indicate whether to overwrite the existing
 
 #### Returns
 

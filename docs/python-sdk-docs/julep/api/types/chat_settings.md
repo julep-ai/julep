@@ -19,7 +19,7 @@ class ChatSettings(pydantic.BaseModel): ...
 
 ### ChatSettings().dict
 
-[Show source in chat_settings.py:89](../../../../../../../julep/api/types/chat_settings.py#L89)
+[Show source in chat_settings.py:99](../../../../../../../julep/api/types/chat_settings.py#L99)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ChatSettings().json
 
-[Show source in chat_settings.py:81](../../../../../../../julep/api/types/chat_settings.py#L81)
+[Show source in chat_settings.py:91](../../../../../../../julep/api/types/chat_settings.py#L91)
 
 #### Signature
 

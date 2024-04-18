@@ -21,7 +21,7 @@ class InputChatMlMessageRole(str, enum.Enum): ...
 
 ### InputChatMlMessageRole().visit
 
-[Show source in input_chat_ml_message_role.py:19](../../../../../../../julep/api/types/input_chat_ml_message_role.py#L19)
+[Show source in input_chat_ml_message_role.py:20](../../../../../../../julep/api/types/input_chat_ml_message_role.py#L20)
 
 #### Signature
 
@@ -32,6 +32,7 @@ def visit(
     assistant: typing.Callable[[], T_Result],
     system: typing.Callable[[], T_Result],
     function_call: typing.Callable[[], T_Result],
+    auto: typing.Callable[[], T_Result],
 ) -> T_Result: ...
 ```
 

@@ -9,7 +9,7 @@
 
 ## Doc
 
-[Show source in doc.py:14](../../../../../../../julep/api/types/doc.py#L14)
+[Show source in doc.py:15](../../../../../../../julep/api/types/doc.py#L15)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class Doc(pydantic.BaseModel): ...
 
 ### Doc().dict
 
-[Show source in doc.py:30](../../../../../../../julep/api/types/doc.py#L30)
+[Show source in doc.py:34](../../../../../../../julep/api/types/doc.py#L34)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### Doc().json
 
-[Show source in doc.py:22](../../../../../../../julep/api/types/doc.py#L22)
+[Show source in doc.py:26](../../../../../../../julep/api/types/doc.py#L26)
 
 #### Signature
 

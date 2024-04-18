@@ -42,6 +42,55 @@ jobs:
           commit_message: "doc(sdks/ts): Generate docs for sdks/ts (CI)"
           branch: ${{ github.head_ref }}
 
+  Generate-Docs-For-Python-SDK:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Configure Poetry to use .venv
+        run: |
+          cd sdks/python
+          poetry config virtualenvs.in-project true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: sdks/python/.venv
+          key: ${{ runner.os }}-sdks-python-poetry-${{ hashFiles('sdks/python/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sdks-python-poetry-
+
+      - name: Cache pytype
+        uses: actions/cache@v4
+        with:
+          path: sdks/python/.pytype
+          key: ${{ runner.os }}-sdks-python-pytype-${{ hashFiles('sdks/python/**/*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-sdks-python-pytype-
+
+      - name: Install dependencies
+        run: |
+          cd sdks/python
+          poetry install
+
+      - name: Generate docs
+        run: |
+          cd sdks/python
+          poetry run poe generate-docs
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "doc(sdks/python): Generate docs for sdks/python (CI)"
+          branch: ${{ github.head_ref }}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

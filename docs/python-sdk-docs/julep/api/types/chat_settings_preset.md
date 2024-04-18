@@ -11,7 +11,7 @@
 
 [Show source in chat_settings_preset.py:9](../../../../../../../julep/api/types/chat_settings_preset.py#L9)
 
-Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
 #### Signature
 
