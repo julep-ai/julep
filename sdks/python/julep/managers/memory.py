@@ -17,8 +17,8 @@ class BaseMemoriesManager(BaseManager):
     """
     A base manager class for handling agent memories.
 
-        This manager provides an interface to interact with agent memories, allowing
-        for listing and other operations to manage an agent's memories.
+        This manager provides an interface to interact with agent memories, facilitating
+        operations such as listing and retrieving memories based on various criteria.
 
         Methods:
             _list(agent_id, query, types=None, user_id=None, limit=None, offset=None):
@@ -81,8 +81,8 @@ class MemoriesManager(BaseMemoriesManager):
     """
     A class for managing memory entities associated with agents.
 
-        This class inherits from `BaseMemoriesManager` and provides
-        an interface to list memory entities for a given agent.
+        Inherits from `BaseMemoriesManager` and extends its functionality to specifically
+        manage and retrieve memory entities for agents based on query parameters.
 
         Attributes:
             Inherited from `BaseMemoriesManager`.
