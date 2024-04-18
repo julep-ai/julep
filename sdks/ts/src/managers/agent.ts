@@ -38,8 +38,7 @@ export class AgentsManager extends BaseManager {
     model?: string;
     docs?: Doc[];
   }): Promise<Partial<Agent> & { id: string }> {
-    // FIXME: Fix the type of return value
-    // The returned object must have an `id` (cannot be `undefined`)
+    // Ensure the returned object includes an `id` property of type string, which is guaranteed not to be `undefined`
 
     const requestBody: CreateAgentRequest = {
       name,
@@ -89,6 +88,7 @@ export class AgentsManager extends BaseManager {
     await this.apiClient.default.deleteAgent({ agentId });
   }
 
+  // Overloads for the `update` function to handle both partial updates (patch) and full updates (overwrite) of an agent.
   async update(
     agentId: string,
     request: PatchAgentRequest,
@@ -117,6 +117,7 @@ export class AgentsManager extends BaseManager {
     // Fails tests
     // const updateFn = overwrite ? this.apiClient.default.updateAgent : this.apiClient.default.patchAgent;
 
+    // If `overwrite` is true, perform a full update of the agent using the provided details. Otherwise, perform a partial update (patch).
     if (overwrite) {
       const requestBody: UpdateAgentRequest = {
         about: about!,
