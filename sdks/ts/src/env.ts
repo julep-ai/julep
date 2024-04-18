@@ -1,5 +1,6 @@
 // env.ts
 
+// Initialize JULEP_API_KEY and JULEP_API_URL with empty strings. These will be updated based on environment variables if available.
 let JULEP_API_KEY = "";
 let JULEP_API_URL = "";
 
