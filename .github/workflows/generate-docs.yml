@@ -84,7 +84,7 @@ jobs:
       - name: Generate docs
         run: |
           cd sdks/python
-          poetry run poe generate-docs
+          poetry run poe doc
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
