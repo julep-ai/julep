@@ -24,10 +24,11 @@ export class Client {
 
   /**
    * Creates an instance of Client.
-   * @param {ClientOptions} [options={}] - Options for the client.
-   * @param {string} [options.apiKey=JULEP_API_KEY] - API key for the Julep API.
-   * @param {string} [options.baseUrl=JULEP_API_URL] - Base URL for the Julep API.
-   * @throws {Error} Throws an error if apiKey and baseUrl are not provided.
+   * Initializes the client with the provided or default API key and base URL. If neither are provided nor set as environment variables, an error is thrown.
+   * @param {ClientOptions} [options={}] - Configuration options for the client.
+   * @param {string} [options.apiKey=JULEP_API_KEY] - API key for the Julep API. Defaults to the JULEP_API_KEY environment variable if not provided.
+   * @param {string} [options.baseUrl=JULEP_API_URL] - Base URL for the Julep API. Defaults to the JULEP_API_URL environment variable or "https://api-alpha.julep.ai/api" if not provided.
+   * @throws {Error} Throws an error if both apiKey and baseUrl are not provided and not set as environment variables.
    */
   constructor({
     apiKey = JULEP_API_KEY,
@@ -64,27 +65,51 @@ export class Client {
     patchCreate(this.completions);
   }
 
-  /** Manager for interacting with agents. */
+  /**
+   * Manager for interacting with agents.
+   * Provides methods to manage and interact with agents within the Julep API.
+   */
   agents: AgentsManager;
 
-  /** Manager for interacting with users. */
+  /**
+   * Manager for interacting with users.
+   * Offers functionalities to handle user accounts and their data.
+   */
   users: UsersManager;
 
-  /** Manager for interacting with sessions. */
+  /**
+   * Manager for interacting with sessions.
+   * Facilitates the creation, management, and retrieval of user sessions.
+   */
   sessions: SessionsManager;
 
-  /** Manager for interacting with documents. */
+  /**
+   * Manager for interacting with documents.
+   * Enables document management including creation, update, and deletion.
+   */
   docs: DocsManager;
 
-  /** Manager for interacting with memories. */
+  /**
+   * Manager for interacting with memories.
+   * Allows for storing and retrieving user-specific data and preferences.
+   */
   memories: MemoriesManager;
 
-  /** Manager for interacting with tools. */
+  /**
+   * Manager for interacting with tools.
+   * Provides access to various utility tools and functionalities.
+   */
   tools: ToolsManager;
 
-  /** OpenAI Chat API. */
+  /**
+   * OpenAI Chat API.
+   * This is patched to enhance functionality and ensure compatibility with Julep API.
+   */
   chat: Chat;
 
-  /** OpenAI Completions API. */
+  /**
+   * OpenAI Completions API.
+   * Enhanced with custom patches for improved integration and usage within Julep.
+   */
   completions: Completions;
 }
