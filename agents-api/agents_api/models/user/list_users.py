@@ -1,21 +1,18 @@
 from typing import Any
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
-
+from ..utils import cozo_query
 from ...common.utils import json
 
 
+@cozo_query
 def list_users_query(
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
     metadata_filter: dict[str, Any] = {},
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """
     Queries the 'cozodb' database to list users associated with a specific developer.
 
@@ -24,7 +21,6 @@ def list_users_query(
     - limit (int): The maximum number of users to return. Defaults to 100.
     - offset (int): The number of users to skip before starting to collect the result set. Defaults to 0.
     - metadata_filter (dict[str, Any]): A dictionary representing filters to apply on user metadata.
-    - client (CozoClient): The database client used to run the query. Defaults to an instance of CozoClient.
 
     Returns:
     - pd.DataFrame: A DataFrame containing the queried user data.
@@ -67,6 +63,7 @@ def list_users_query(
     """
 
     # Execute the datalog query with the specified parameters and return the results as a DataFrame.
-    return client.run(
-        query, {"developer_id": str(developer_id), "limit": limit, "offset": offset}
+    return (
+        query,
+        {"developer_id": str(developer_id), "limit": limit, "offset": offset},
     )

@@ -3,17 +3,15 @@
 from typing import Literal
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def ensure_owner_exists_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     owner_id = str(owner_id)
 
     # Query to check if an owner (user or agent) exists in the database
@@ -30,14 +28,14 @@ def ensure_owner_exists_query(
             }}
     }}"""
 
-    return client.run(query, {"owner_id": owner_id})
+    return (query, {"owner_id": owner_id})
 
 
+@cozo_query
 def list_docs_snippets_by_owner_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
-    client: CozoClient = client,
-):
+) -> tuple[str, dict]:
     owner_id = str(owner_id)
 
     # Query to retrieve document snippets by owner (user or agent)
@@ -70,4 +68,4 @@ def list_docs_snippets_by_owner_query(
             }}
     }}"""
 
-    return client.run(query, {"owner_id": owner_id})
+    return (query, {"owner_id": owner_id})

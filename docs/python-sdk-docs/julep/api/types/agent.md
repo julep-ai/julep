@@ -19,7 +19,7 @@ class Agent(pydantic.BaseModel): ...
 
 ### Agent().dict
 
-[Show source in agent.py:42](../../../../../../../julep/api/types/agent.py#L42)
+[Show source in agent.py:45](../../../../../../../julep/api/types/agent.py#L45)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### Agent().json
 
-[Show source in agent.py:34](../../../../../../../julep/api/types/agent.py#L34)
+[Show source in agent.py:37](../../../../../../../julep/api/types/agent.py#L37)
 
 #### Signature
 

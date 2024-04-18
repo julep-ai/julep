@@ -1,16 +1,14 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def delete_function_by_id_query(
     agent_id: UUID,
     tool_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
@@ -29,4 +27,4 @@ def delete_function_by_id_query(
         :returning
     }"""
 
-    return client.run(query, {"tool_id": tool_id, "agent_id": agent_id})
+    return (query, {"tool_id": tool_id, "agent_id": agent_id})

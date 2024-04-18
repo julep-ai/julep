@@ -9,7 +9,7 @@
 
 ## Session
 
-[Show source in session.py:14](../../../../../../../julep/api/types/session.py#L14)
+[Show source in session.py:15](../../../../../../../julep/api/types/session.py#L15)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class Session(pydantic.BaseModel): ...
 
 ### Session().dict
 
-[Show source in session.py:43](../../../../../../../julep/api/types/session.py#L43)
+[Show source in session.py:47](../../../../../../../julep/api/types/session.py#L47)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### Session().json
 
-[Show source in session.py:35](../../../../../../../julep/api/types/session.py#L35)
+[Show source in session.py:39](../../../../../../../julep/api/types/session.py#L39)
 
 #### Signature
 

@@ -1,11 +1,11 @@
 from uuid import UUID
 
-import pandas as pd
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-def delete_entries_query(session_id: UUID) -> pd.DataFrame:
+@cozo_query
+def delete_entries_query(session_id: UUID) -> tuple[str, dict]:
     """
     Constructs and returns a datalog query for deleting entries associated with a given session ID from the 'cozodb' database.
 
@@ -57,4 +57,4 @@ def delete_entries_query(session_id: UUID) -> pd.DataFrame:
         }
     }"""
 
-    return client.run(query, {"session_id": str(session_id)})
+    return (query, {"session_id": str(session_id)})

@@ -2,17 +2,18 @@
 
 from uuid import UUID, uuid4
 
-import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
-from ...clients.cozo import client
+
+from ..utils import cozo_query
 
 
+@cozo_query
 def create_tools_query(
     agent_id: UUID,
     functions: list[FunctionDef],
     embeddings: list[list[float]],
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
@@ -62,4 +63,4 @@ def create_tools_query(
         :returning
     """
 
-    return client.run(query, {"records": functions_input})
+    return (query, {"records": functions_input})

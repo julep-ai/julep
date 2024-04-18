@@ -1,18 +1,16 @@
 from typing import Literal
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def delete_docs_by_id_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
     doc_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """Constructs and returns a datalog query for deleting documents and associated information snippets.
 
     This function targets the 'cozodb' database, allowing for the removal of documents and their related information snippets based on the provided document ID and owner (user or agent).
@@ -64,4 +62,4 @@ def delete_docs_by_id_query(
         :returning
     }}"""
 
-    return client.run(query, {"doc_id": doc_id, "owner_id": owner_id})
+    return (query, {"doc_id": doc_id, "owner_id": owner_id})

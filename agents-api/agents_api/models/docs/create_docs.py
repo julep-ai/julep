@@ -1,14 +1,13 @@
 from typing import Callable, Literal
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
 
 
+@cozo_query
 def create_docs_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
@@ -17,8 +16,7 @@ def create_docs_query(
     content: str,
     split_fn: Callable[[str], list[str]] = lambda x: x.split("\n\n"),
     metadata: dict = {},
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new document and its associated snippets in the 'cozodb' database.
 
@@ -30,7 +28,6 @@ def create_docs_query(
     - content (str): The content of the document, which will be split into snippets.
     - split_fn (Callable[[str], list[str]]): A function to split the content into snippets. Defaults to splitting by double newlines.
     - metadata (dict): Metadata associated with the document. Defaults to an empty dictionary.
-    - client (CozoClient): The Cozo client instance to execute the query. Defaults to a pre-configured client instance.
 
     Returns:
     pd.DataFrame: A DataFrame containing the results of the query execution.
@@ -86,7 +83,7 @@ def create_docs_query(
     }}"""
 
     # Execute the constructed datalog query and return the results as a DataFrame.
-    return client.run(
+    return (
         query,
         {
             "owner_id": str(owner_id),

@@ -19,7 +19,7 @@ class MemoryAccessOptions(pydantic.BaseModel): ...
 
 ### MemoryAccessOptions().dict
 
-[Show source in memory_access_options.py:30](../../../../../../../julep/api/types/memory_access_options.py#L30)
+[Show source in memory_access_options.py:33](../../../../../../../julep/api/types/memory_access_options.py#L33)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### MemoryAccessOptions().json
 
-[Show source in memory_access_options.py:22](../../../../../../../julep/api/types/memory_access_options.py#L22)
+[Show source in memory_access_options.py:25](../../../../../../../julep/api/types/memory_access_options.py#L25)
 
 #### Signature
 

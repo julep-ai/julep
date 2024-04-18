@@ -3,36 +3,32 @@
 from typing import Literal
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-"""
-Searches for document snippets in CozoDB by embedding query.
-
-Parameters:
-- owner_type (Literal["user", "agent"]): The type of the owner of the documents.
-- owner_id (UUID): The unique identifier of the owner.
-- query_embedding (list[float]): The embedding vector of the query.
-- k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
-- confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
-- client (CozoClient, optional): The CozoDB client instance. Defaults to a pre-configured client.
-
-Returns:
-- pd.DataFrame: A DataFrame containing the search results.
-"""
-
-
+@cozo_query
 def search_docs_snippets_by_embedding_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
     query_embedding: list[float],
     k: int = 3,
     confidence: float = 0.8,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """
+    Searches for document snippets in CozoDB by embedding query.
+
+    Parameters:
+    - owner_type (Literal["user", "agent"]): The type of the owner of the documents.
+    - owner_id (UUID): The unique identifier of the owner.
+    - query_embedding (list[float]): The embedding vector of the query.
+    - k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
+    - confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the search results.
+    """
+
     owner_id = str(owner_id)
     # Calculate the search radius based on confidence level
     radius: float = 1.0 - confidence
@@ -83,7 +79,7 @@ def search_docs_snippets_by_embedding_query(
         :sort distance
     }}"""
 
-    return client.run(
+    return (
         query,
         {
             "owner_id": owner_id,

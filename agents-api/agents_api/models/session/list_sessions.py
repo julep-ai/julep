@@ -3,20 +3,18 @@
 from typing import Any
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
 from ...common.utils import json
+from ..utils import cozo_query
 
 
+@cozo_query
 def list_sessions_query(
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
     metadata_filter: dict[str, Any] = {},
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """Lists sessions from the 'cozodb' database based on the provided filters.
 
     Parameters:
@@ -24,7 +22,6 @@ def list_sessions_query(
         limit (int): The maximum number of sessions to return.
         offset (int): The offset from which to start listing sessions.
         metadata_filter (dict[str, Any]): A dictionary of metadata fields to filter sessions by.
-        client (CozoClient): The database client instance to use for the query.
 
     Returns:
         pd.DataFrame: A DataFrame containing the queried session data.
@@ -76,6 +73,7 @@ def list_sessions_query(
     """
 
     # Execute the datalog query and return the results as a pandas DataFrame.
-    return client.run(
-        query, {"developer_id": str(developer_id), "limit": limit, "offset": offset}
+    return (
+        query,
+        {"developer_id": str(developer_id), "limit": limit, "offset": offset},
     )

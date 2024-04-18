@@ -1,16 +1,14 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
-
+from ..utils import cozo_query
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
+@cozo_query
 def update_user_query(
-    developer_id: UUID, user_id: UUID, client: CozoClient = client, **update_data
-) -> pd.DataFrame:
+    developer_id: UUID, user_id: UUID, **update_data
+) -> tuple[str, dict]:
     """Updates user information in the 'cozodb' database.
 
     Parameters:
@@ -73,7 +71,7 @@ def update_user_query(
     query = "{" + assertion_query + "} {" + query + "}"
     # Combines the assertion and update queries.
 
-    return client.run(
+    return (
         query,
         {
             "user_update_vals": user_update_vals,
