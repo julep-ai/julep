@@ -25,12 +25,10 @@ class ChatML(BaseModel):
     token_count: Optional[int] = None
 
 
-class BaseTask(BaseModel):
-    ...
+class BaseTask(BaseModel): ...
 
 
-class BaseTaskArgs(BaseModel):
-    ...
+class BaseTaskArgs(BaseModel): ...
 
 
 class AddPrinciplesTaskArgs(BaseTaskArgs):
