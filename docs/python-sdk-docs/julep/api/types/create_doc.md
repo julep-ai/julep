@@ -9,7 +9,7 @@
 
 ## CreateDoc
 
-[Show source in create_doc.py:14](../../../../../../../julep/api/types/create_doc.py#L14)
+[Show source in create_doc.py:15](../../../../../../../julep/api/types/create_doc.py#L15)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class CreateDoc(pydantic.BaseModel): ...
 
 ### CreateDoc().dict
 
-[Show source in create_doc.py:28](../../../../../../../julep/api/types/create_doc.py#L28)
+[Show source in create_doc.py:32](../../../../../../../julep/api/types/create_doc.py#L32)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### CreateDoc().json
 
-[Show source in create_doc.py:20](../../../../../../../julep/api/types/create_doc.py#L20)
+[Show source in create_doc.py:24](../../../../../../../julep/api/types/create_doc.py#L24)
 
 #### Signature
 

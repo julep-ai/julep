@@ -11,7 +11,7 @@
 
 ## AsyncMemoriesManager
 
-[Show source in memory.py:135](../../../../../../julep/managers/memory.py#L135)
+[Show source in memory.py:134](../../../../../../julep/managers/memory.py#L134)
 
 Asynchronously lists memories based on various filter parameters.
 
@@ -42,7 +42,7 @@ class AsyncMemoriesManager(BaseMemoriesManager): ...
 
 ### AsyncMemoriesManager().list
 
-[Show source in memory.py:155](../../../../../../julep/managers/memory.py#L155)
+[Show source in memory.py:154](../../../../../../julep/managers/memory.py#L154)
 
 Asynchronously list memories based on query parameters.
 
@@ -86,8 +86,8 @@ async def list(
 
 A base manager class for handling agent memories.
 
-This manager provides an interface to interact with agent memories, allowing
-for listing and other operations to manage an agent's memories.
+This manager provides an interface to interact with agent memories, facilitating
+operations such as listing and retrieving memories based on various criteria.
 
 Methods:
     _list(agent_id, query, types=None, user_id=None, limit=None, offset=None):
@@ -155,12 +155,12 @@ def _list(
 
 ## MemoriesManager
 
-[Show source in memory.py:81](../../../../../../julep/managers/memory.py#L81)
+[Show source in memory.py:80](../../../../../../julep/managers/memory.py#L80)
 
 A class for managing memory entities associated with agents.
 
-This class inherits from [BaseMemoriesManager](#basememoriesmanager) and provides
-an interface to list memory entities for a given agent.
+Inherits from [BaseMemoriesManager](#basememoriesmanager) and extends its functionality to specifically
+manage and retrieve memory entities for agents based on query parameters.
 
 Attributes:
     Inherited from [BaseMemoriesManager](#basememoriesmanager).
@@ -180,7 +180,7 @@ class MemoriesManager(BaseMemoriesManager): ...
 
 ### MemoriesManager().list
 
-[Show source in memory.py:95](../../../../../../julep/managers/memory.py#L95)
+[Show source in memory.py:94](../../../../../../julep/managers/memory.py#L94)
 
 List memories meeting specified criteria.
 

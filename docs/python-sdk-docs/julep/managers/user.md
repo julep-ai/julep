@@ -13,7 +13,7 @@
 
 ## AsyncUsersManager
 
-[Show source in user.py:327](../../../../../../julep/managers/user.py#L327)
+[Show source in user.py:358](../../../../../../julep/managers/user.py#L358)
 
 A class that provides asynchronous management of users extending BaseUsersManager.
 
@@ -52,7 +52,7 @@ class AsyncUsersManager(BaseUsersManager): ...
 
 ### AsyncUsersManager().create
 
-[Show source in user.py:371](../../../../../../julep/managers/user.py#L371)
+[Show source in user.py:402](../../../../../../julep/managers/user.py#L402)
 
 Asynchronously create a new resource with the provided name, description, and documents.
 
@@ -86,7 +86,7 @@ async def create(self, **kwargs: UserCreateArgs) -> User: ...
 
 ### AsyncUsersManager().delete
 
-[Show source in user.py:426](../../../../../../julep/managers/user.py#L426)
+[Show source in user.py:461](../../../../../../julep/managers/user.py#L461)
 
 Asynchronously deletes a user by their user ID.
 
@@ -116,7 +116,7 @@ async def delete(self, user_id: Union[str, UUID]) -> None: ...
 
 ### AsyncUsersManager().get
 
-[Show source in user.py:353](../../../../../../julep/managers/user.py#L353)
+[Show source in user.py:384](../../../../../../julep/managers/user.py#L384)
 
 Fetch a User object asynchronously by its identifier.
 
@@ -143,7 +143,7 @@ async def get(self, id: Union[UUID, str]) -> User: ...
 
 ### AsyncUsersManager().list
 
-[Show source in user.py:393](../../../../../../julep/managers/user.py#L393)
+[Show source in user.py:424](../../../../../../julep/managers/user.py#L424)
 
 Asynchronously lists users with optional limits and offsets.
 
@@ -172,13 +172,16 @@ The actual exception raised by the `beartype` decorator or during the users' ret
 ```python
 @beartype
 async def list(
-    self, limit: Optional[int] = None, offset: Optional[int] = None
+    self,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> List[User]: ...
 ```
 
 ### AsyncUsersManager().update
 
-[Show source in user.py:452](../../../../../../julep/managers/user.py#L452)
+[Show source in user.py:486](../../../../../../julep/managers/user.py#L486)
 
 Asynchronously updates user details.
 
@@ -214,7 +217,7 @@ async def update(self, user_id: Union[str, UUID], **kwargs: UserUpdateArgs) -> U
 
 ## BaseUsersManager
 
-[Show source in user.py:33](../../../../../../julep/managers/user.py#L33)
+[Show source in user.py:36](../../../../../../julep/managers/user.py#L36)
 
 A manager class for handling user-related operations through an API client.
 
@@ -243,7 +246,7 @@ class BaseUsersManager(BaseManager): ...
 
 ### BaseUsersManager()._create
 
-[Show source in user.py:76](../../../../../../julep/managers/user.py#L76)
+[Show source in user.py:79](../../../../../../julep/managers/user.py#L79)
 
 Create a new resource with the given name and about information, optionally including additional docs.
 
@@ -255,6 +258,7 @@ This internal method allows for creating a new resource with optional docsrmatio
 - `about` *str* - A brief description about the new resource.
 - `docs` *List[DocDict], optional* - A list of dictionaries with documentation-related information. Each dictionary
     must conform to the structure expected by CreateDoc. Defaults to an empty list.
+metadata (Dict[str, Any])
 
 #### Returns
 
@@ -275,13 +279,13 @@ Side effects:
 
 ```python
 def _create(
-    self, name: str, about: str, docs: List[DocDict] = []
+    self, name: str, about: str, docs: List[DocDict] = [], metadata: Dict[str, Any] = {}
 ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: ...
 ```
 
 ### BaseUsersManager()._delete
 
-[Show source in user.py:134](../../../../../../julep/managers/user.py#L134)
+[Show source in user.py:144](../../../../../../julep/managers/user.py#L144)
 
 Delete a user given their user ID.
 
@@ -303,7 +307,7 @@ def _delete(self, user_id: Union[str, UUID]) -> Union[None, Awaitable[None]]: ..
 
 ### BaseUsersManager()._get
 
-[Show source in user.py:55](../../../../../../julep/managers/user.py#L55)
+[Show source in user.py:58](../../../../../../julep/managers/user.py#L58)
 
 Get the user by their ID.
 
@@ -333,7 +337,7 @@ def _get(self, id: Union[str, UUID]) -> Union[User, Awaitable[User]]: ...
 
 ### BaseUsersManager()._list_items
 
-[Show source in user.py:115](../../../../../../julep/managers/user.py#L115)
+[Show source in user.py:121](../../../../../../julep/managers/user.py#L121)
 
 Fetch a list of users, with optional pagination parameters.
 
@@ -349,13 +353,16 @@ Returns:
 
 ```python
 def _list_items(
-    self, limit: Optional[int] = None, offset: Optional[int] = None
+    self,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    metadata_filter: str = "{}",
 ) -> Union[ListUsersResponse, Awaitable[ListUsersResponse]]: ...
 ```
 
 ### BaseUsersManager()._update
 
-[Show source in user.py:151](../../../../../../julep/managers/user.py#L151)
+[Show source in user.py:161](../../../../../../julep/managers/user.py#L161)
 
 Update user details for a given user ID.
 
@@ -366,6 +373,8 @@ This method updates the 'about' and/or 'name' fields for the user identified by 
 user_id (Union[str, UUID]): The ID of the user to be updated. Must be a valid UUID v4.
 - `about` *Optional[str], optional* - The new information about the user. Defaults to None.
 - `name` *Optional[str], optional* - The new name for the user. Defaults to None.
+metadata (Dict[str, Any])
+- `overwrite` *bool, optional* - Whether to overwrite the existing user data. Defaults to False.
 
 #### Returns
 
@@ -381,8 +390,10 @@ user_id (Union[str, UUID]): The ID of the user to be updated. Must be a valid UU
 def _update(
     self,
     user_id: Union[str, UUID],
-    about: Optional[str] = None,
-    name: Optional[str] = None,
+    about: Optional[str] = NotSet,
+    name: Optional[str] = NotSet,
+    metadata: Dict[str, Any] = NotSet,
+    overwrite: bool = False,
 ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: ...
 ```
 
@@ -402,7 +413,7 @@ class UserCreateArgs(TypedDict): ...
 
 ## UserUpdateArgs
 
-[Show source in user.py:28](../../../../../../julep/managers/user.py#L28)
+[Show source in user.py:29](../../../../../../julep/managers/user.py#L29)
 
 #### Signature
 
@@ -414,7 +425,7 @@ class UserUpdateArgs(TypedDict): ...
 
 ## UsersManager
 
-[Show source in user.py:181](../../../../../../julep/managers/user.py#L181)
+[Show source in user.py:208](../../../../../../julep/managers/user.py#L208)
 
 A class responsible for managing users in a system.
 
@@ -453,7 +464,7 @@ class UsersManager(BaseUsersManager): ...
 
 ### UsersManager().create
 
-[Show source in user.py:228](../../../../../../julep/managers/user.py#L228)
+[Show source in user.py:255](../../../../../../julep/managers/user.py#L255)
 
 Create a new resource with the specified name, about text, and associated docs.
 
@@ -487,7 +498,7 @@ def create(self, **kwargs: UserCreateArgs) -> User: ...
 
 ### UsersManager().delete
 
-[Show source in user.py:280](../../../../../../julep/managers/user.py#L280)
+[Show source in user.py:311](../../../../../../julep/managers/user.py#L311)
 
 Deletes a user based on the provided user ID.
 
@@ -518,7 +529,7 @@ def delete(self, user_id: Union[str, UUID]) -> None: ...
 
 ### UsersManager().get
 
-[Show source in user.py:208](../../../../../../julep/managers/user.py#L208)
+[Show source in user.py:235](../../../../../../julep/managers/user.py#L235)
 
 Retrieve a User object by its identifier.
 
@@ -547,7 +558,7 @@ def get(self, id: Union[str, UUID]) -> User: ...
 
 ### UsersManager().list
 
-[Show source in user.py:253](../../../../../../julep/managers/user.py#L253)
+[Show source in user.py:280](../../../../../../julep/managers/user.py#L280)
 
 Lists the users optionally applying limit and offset.
 
@@ -571,13 +582,16 @@ Lists the users optionally applying limit and offset.
 ```python
 @beartype
 def list(
-    self, limit: Optional[int] = None, offset: Optional[int] = None
+    self,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> List[User]: ...
 ```
 
 ### UsersManager().update
 
-[Show source in user.py:307](../../../../../../julep/managers/user.py#L307)
+[Show source in user.py:337](../../../../../../julep/managers/user.py#L337)
 
 Update user information.
 
@@ -588,6 +602,7 @@ This method updates user details such as the `about` text and user's `name` for 
 user_id (Union[str, UUID]): The unique identifier for the user, which can be a string or a UUID object.
 - `about(Optional[str],` *optional)* - The descriptive information about the user. Defaults to None, indicating that `about` should not be updated if not provided.
 - `name(Optional[str],` *optional)* - The name of the user. Defaults to None, indicating that `name` should not be updated if not provided.
+- `overwrite(bool,` *optional)* - Whether to overwrite the existing user data. Defaults to False.
 
 #### Returns
 

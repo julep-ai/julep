@@ -9,7 +9,7 @@
 
 ## User
 
-[Show source in user.py:14](../../../../../../../julep/api/types/user.py#L14)
+[Show source in user.py:15](../../../../../../../julep/api/types/user.py#L15)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class User(pydantic.BaseModel): ...
 
 ### User().dict
 
-[Show source in user.py:33](../../../../../../../julep/api/types/user.py#L33)
+[Show source in user.py:37](../../../../../../../julep/api/types/user.py#L37)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### User().json
 
-[Show source in user.py:25](../../../../../../../julep/api/types/user.py#L25)
+[Show source in user.py:29](../../../../../../../julep/api/types/user.py#L29)
 
 #### Signature
 

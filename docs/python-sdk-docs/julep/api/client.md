@@ -15,7 +15,7 @@
 
 ## AsyncJulepApi
 
-[Show source in client.py:1444](../../../../../../julep/api/client.py#L1444)
+[Show source in client.py:1828](../../../../../../julep/api/client.py#L1828)
 
 #### Signature
 
@@ -33,7 +33,7 @@ class AsyncJulepApi:
 
 ### AsyncJulepApi().chat
 
-[Show source in client.py:1909](../../../../../../julep/api/client.py#L1909)
+[Show source in client.py:2460](../../../../../../julep/api/client.py#L2460)
 
 #### Arguments
 
@@ -77,11 +77,13 @@ Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the m
 
 - `-` *min_p* - typing.Optional[float]. Minimum probability compared to leading token to be considered
 
-- `-` *preset* - typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+- `-` *preset* - typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
 - `-` *recall* - typing.Optional[bool]. Whether previous memories should be recalled or not
 
-    - `-` *remember* - typing.Optional[bool]. Whether this interaction should be recorded in memory or not
+- `-` *record* - typing.Optional[bool]. Whether this interaction should be recorded in history or not
+
+    - `-` *remember* - typing.Optional[bool]. Whether this interaction should form memories or not
 ---
 from julep import InputChatMlMessage, InputChatMlMessageRole
 from julep.client import AsyncJulepApi
@@ -124,6 +126,7 @@ async def chat(
     min_p: typing.Optional[float] = OMIT,
     preset: typing.Optional[ChatSettingsPreset] = OMIT,
     recall: typing.Optional[bool] = OMIT,
+    record: typing.Optional[bool] = OMIT,
     remember: typing.Optional[bool] = OMIT,
 ) -> ChatResponse: ...
 ```
@@ -134,7 +137,7 @@ async def chat(
 
 ### AsyncJulepApi().create_agent
 
-[Show source in client.py:1651](../../../../../../julep/api/client.py#L1651)
+[Show source in client.py:2109](../../../../../../julep/api/client.py#L2109)
 
 Create a new agent
 
@@ -142,17 +145,19 @@ Create a new agent
 
 - `-` *name* - str. Name of the agent
 
-- `-` *about* - str. About the agent
+- `-` *about* - typing.Optional[str]. About the agent
 
-- `-` *instructions* - typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+- `-` *instructions* - typing.Optional[typing.List[str]]. List of instructions for the agent
 
 - `-` *tools* - typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
 
 - `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-- `-` *model* - str. Name of the model that the agent is supposed to use
+- `-` *model* - typing.Optional[str]. Name of the model that the agent is supposed to use
 
-    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about agent
+- `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about agent
+
+    - `-` *metadata* - typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
 ---
 from julep.client import AsyncJulepApi
 
@@ -161,8 +166,6 @@ client = AsyncJulepApi(
 )
 await client.create_agent(
     name="name",
-    about="about",
-    model="model",
 )
 
 #### Signature
@@ -171,12 +174,13 @@ await client.create_agent(
 async def create_agent(
     self,
     name: str,
-    about: str,
-    instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+    about: typing.Optional[str] = OMIT,
+    instructions: typing.Optional[typing.List[str]] = OMIT,
     tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
     default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-    model: str,
+    model: typing.Optional[str] = OMIT,
     docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+    metadata: typing.Optional[CreateAgentRequestMetadata] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -186,7 +190,7 @@ async def create_agent(
 
 ### AsyncJulepApi().create_agent_doc
 
-[Show source in client.py:2399](../../../../../../julep/api/client.py#L2399)
+[Show source in client.py:3090](../../../../../../julep/api/client.py#L3090)
 
 #### Arguments
 
@@ -218,7 +222,7 @@ async def create_agent_doc(
 
 ### AsyncJulepApi().create_agent_tool
 
-[Show source in client.py:2677](../../../../../../julep/api/client.py#L2677)
+[Show source in client.py:3385](../../../../../../julep/api/client.py#L3385)
 
 #### Arguments
 
@@ -253,17 +257,19 @@ async def create_agent_tool(
 
 ### AsyncJulepApi().create_session
 
-[Show source in client.py:1495](../../../../../../julep/api/client.py#L1495)
+[Show source in client.py:1901](../../../../../../julep/api/client.py#L1901)
 
 Create a session between an agent and a user
 
 #### Arguments
 
-- `-` *user_id* - str. User ID of user to associate with this session
+- `-` *user_id* - typing.Optional[str]. (Optional) User ID of user to associate with this session
 
 - `-` *agent_id* - str. Agent ID of agent to associate with this session
 
-    - `-` *situation* - typing.Optional[str]. A specific situation that sets the background for this session
+- `-` *situation* - typing.Optional[str]. A specific situation that sets the background for this session
+
+    - `-` *metadata* - typing.Optional[CreateSessionRequestMetadata]. Optional metadata
 ---
 from julep.client import AsyncJulepApi
 
@@ -271,7 +277,6 @@ client = AsyncJulepApi(
     api_key="YOUR_API_KEY",
 )
 await client.create_session(
-    user_id="user_id",
     agent_id="agent_id",
 )
 
@@ -279,7 +284,11 @@ await client.create_session(
 
 ```python
 async def create_session(
-    self, user_id: str, agent_id: str, situation: typing.Optional[str] = OMIT
+    self,
+    user_id: typing.Optional[str] = OMIT,
+    agent_id: str,
+    situation: typing.Optional[str] = OMIT,
+    metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -289,7 +298,7 @@ async def create_session(
 
 ### AsyncJulepApi().create_user
 
-[Show source in client.py:1572](../../../../../../julep/api/client.py#L1572)
+[Show source in client.py:2005](../../../../../../julep/api/client.py#L2005)
 
 Create a new user
 
@@ -299,7 +308,9 @@ Create a new user
 
 - `-` *about* - typing.Optional[str]. About the user
 
-    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about user
+- `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about user
+
+    - `-` *metadata* - typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
 ---
 from julep.client import AsyncJulepApi
 
@@ -316,6 +327,7 @@ async def create_user(
     name: typing.Optional[str] = OMIT,
     about: typing.Optional[str] = OMIT,
     docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+    metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -325,7 +337,7 @@ async def create_user(
 
 ### AsyncJulepApi().create_user_doc
 
-[Show source in client.py:2484](../../../../../../julep/api/client.py#L2484)
+[Show source in client.py:3192](../../../../../../julep/api/client.py#L3192)
 
 #### Arguments
 
@@ -357,7 +369,7 @@ async def create_user_doc(
 
 ### AsyncJulepApi().delete_agent
 
-[Show source in client.py:2324](../../../../../../julep/api/client.py#L2324)
+[Show source in client.py:2930](../../../../../../julep/api/client.py#L2930)
 
 #### Arguments
 
@@ -380,7 +392,7 @@ async def delete_agent(self, agent_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_doc
 
-[Show source in client.py:2562](../../../../../../julep/api/client.py#L2562)
+[Show source in client.py:3270](../../../../../../julep/api/client.py#L3270)
 
 #### Arguments
 
@@ -406,7 +418,7 @@ async def delete_agent_doc(self, agent_id: str, doc_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_memory
 
-[Show source in client.py:2598](../../../../../../julep/api/client.py#L2598)
+[Show source in client.py:3306](../../../../../../julep/api/client.py#L3306)
 
 #### Arguments
 
@@ -432,7 +444,7 @@ async def delete_agent_memory(self, agent_id: str, memory_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_tool
 
-[Show source in client.py:2768](../../../../../../julep/api/client.py#L2768)
+[Show source in client.py:3476](../../../../../../julep/api/client.py#L3476)
 
 #### Arguments
 
@@ -458,7 +470,7 @@ async def delete_agent_tool(self, agent_id: str, tool_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_session
 
-[Show source in client.py:1789](../../../../../../julep/api/client.py#L1789)
+[Show source in client.py:2259](../../../../../../julep/api/client.py#L2259)
 
 #### Arguments
 
@@ -479,9 +491,32 @@ await client.delete_session(
 async def delete_session(self, session_id: str) -> None: ...
 ```
 
+### AsyncJulepApi().delete_session_history
+
+[Show source in client.py:2427](../../../../../../julep/api/client.py#L2427)
+
+#### Arguments
+
+    - `-` *session_id* - str.
+---
+from julep.client import AsyncJulepApi
+
+client = AsyncJulepApi(
+    api_key="YOUR_API_KEY",
+)
+await client.delete_session_history(
+    session_id="session_id",
+)
+
+#### Signature
+
+```python
+async def delete_session_history(self, session_id: str) -> None: ...
+```
+
 ### AsyncJulepApi().delete_user
 
-[Show source in client.py:2197](../../../../../../julep/api/client.py#L2197)
+[Show source in client.py:2747](../../../../../../julep/api/client.py#L2747)
 
 #### Arguments
 
@@ -504,7 +539,7 @@ async def delete_user(self, user_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_user_doc
 
-[Show source in client.py:2526](../../../../../../julep/api/client.py#L2526)
+[Show source in client.py:3234](../../../../../../julep/api/client.py#L3234)
 
 #### Arguments
 
@@ -530,7 +565,7 @@ async def delete_user_doc(self, user_id: str, doc_id: str) -> None: ...
 
 ### AsyncJulepApi().get_agent
 
-[Show source in client.py:2229](../../../../../../julep/api/client.py#L2229)
+[Show source in client.py:2832](../../../../../../julep/api/client.py#L2832)
 
 #### Arguments
 
@@ -553,7 +588,7 @@ async def get_agent(self, agent_id: str) -> Agent: ...
 
 ### AsyncJulepApi().get_agent_docs
 
-[Show source in client.py:2356](../../../../../../julep/api/client.py#L2356)
+[Show source in client.py:3030](../../../../../../julep/api/client.py#L3030)
 
 Sorted (created_at descending)
 
@@ -563,7 +598,13 @@ Sorted (created_at descending)
 
 - `-` *limit* - typing.Optional[int].
 
-    - `-` *offset* - typing.Optional[int].
+- `-` *offset* - typing.Optional[int].
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import AsyncJulepApi
 
@@ -582,12 +623,15 @@ async def get_agent_docs(
     agent_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
+    order: typing.Optional[GetAgentDocsRequestOrder] = None,
 ) -> GetAgentDocsResponse: ...
 ```
 
 ### AsyncJulepApi().get_agent_memories
 
-[Show source in client.py:2056](../../../../../../julep/api/client.py#L2056)
+[Show source in client.py:2612](../../../../../../julep/api/client.py#L2612)
 
 Sorted (created_at descending)
 
@@ -596,8 +640,6 @@ Sorted (created_at descending)
 - `-` *agent_id* - str.
 
 - `-` *query* - str.
-
-- `-` *types* - typing.Optional[typing.Union[str, typing.List[str]]]. episode, belief, entity
 
 - `-` *user_id* - typing.Optional[str].
 
@@ -622,7 +664,6 @@ async def get_agent_memories(
     self,
     agent_id: str,
     query: str,
-    types: typing.Optional[typing.Union[str, typing.List[str]]] = None,
     user_id: typing.Optional[str] = None,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
@@ -631,7 +672,7 @@ async def get_agent_memories(
 
 ### AsyncJulepApi().get_agent_tools
 
-[Show source in client.py:2634](../../../../../../julep/api/client.py#L2634)
+[Show source in client.py:3342](../../../../../../julep/api/client.py#L3342)
 
 Sorted (created_at descending)
 
@@ -665,7 +706,7 @@ async def get_agent_tools(
 
 ### AsyncJulepApi().get_history
 
-[Show source in client.py:1865](../../../../../../julep/api/client.py#L1865)
+[Show source in client.py:2383](../../../../../../julep/api/client.py#L2383)
 
 Sorted (created_at ascending)
 
@@ -699,7 +740,7 @@ async def get_history(
 
 ### AsyncJulepApi().get_job_status
 
-[Show source in client.py:2804](../../../../../../julep/api/client.py#L2804)
+[Show source in client.py:3555](../../../../../../julep/api/client.py#L3555)
 
 #### Arguments
 
@@ -722,7 +763,7 @@ async def get_job_status(self, job_id: str) -> JobStatus: ...
 
 ### AsyncJulepApi().get_session
 
-[Show source in client.py:1719](../../../../../../julep/api/client.py#L1719)
+[Show source in client.py:2180](../../../../../../julep/api/client.py#L2180)
 
 #### Arguments
 
@@ -745,7 +786,7 @@ async def get_session(self, session_id: str) -> Session: ...
 
 ### AsyncJulepApi().get_suggestions
 
-[Show source in client.py:1821](../../../../../../julep/api/client.py#L1821)
+[Show source in client.py:2339](../../../../../../julep/api/client.py#L2339)
 
 Sorted (created_at descending)
 
@@ -779,7 +820,7 @@ async def get_suggestions(
 
 ### AsyncJulepApi().get_user
 
-[Show source in client.py:2117](../../../../../../julep/api/client.py#L2117)
+[Show source in client.py:2664](../../../../../../julep/api/client.py#L2664)
 
 #### Arguments
 
@@ -802,7 +843,7 @@ async def get_user(self, user_id: str) -> User: ...
 
 ### AsyncJulepApi().get_user_docs
 
-[Show source in client.py:2441](../../../../../../julep/api/client.py#L2441)
+[Show source in client.py:3132](../../../../../../julep/api/client.py#L3132)
 
 Sorted (created_at descending)
 
@@ -812,7 +853,13 @@ Sorted (created_at descending)
 
 - `-` *limit* - typing.Optional[int].
 
-    - `-` *offset* - typing.Optional[int].
+- `-` *offset* - typing.Optional[int].
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import AsyncJulepApi
 
@@ -831,20 +878,29 @@ async def get_user_docs(
     user_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
+    order: typing.Optional[GetUserDocsRequestOrder] = None,
 ) -> GetUserDocsResponse: ...
 ```
 
 ### AsyncJulepApi().list_agents
 
-[Show source in client.py:1618](../../../../../../julep/api/client.py#L1618)
+[Show source in client.py:2056](../../../../../../julep/api/client.py#L2056)
 
-List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
 #### Arguments
 
 - `-` *limit* - typing.Optional[int]. Number of items to return
 
-    - `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+- `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import AsyncJulepApi
 
@@ -857,21 +913,32 @@ await client.list_agents()
 
 ```python
 async def list_agents(
-    self, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+    self,
+    limit: typing.Optional[int] = None,
+    offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
+    order: typing.Optional[ListAgentsRequestOrder] = None,
 ) -> ListAgentsResponse: ...
 ```
 
 ### AsyncJulepApi().list_sessions
 
-[Show source in client.py:1462](../../../../../../julep/api/client.py#L1462)
+[Show source in client.py:1848](../../../../../../julep/api/client.py#L1848)
 
-List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
 #### Arguments
 
 - `-` *limit* - typing.Optional[int]. Number of sessions to return
 
-    - `-` *offset* - typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+- `-` *offset* - typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import AsyncJulepApi
 
@@ -884,21 +951,32 @@ await client.list_sessions()
 
 ```python
 async def list_sessions(
-    self, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+    self,
+    limit: typing.Optional[int] = None,
+    offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
+    order: typing.Optional[ListSessionsRequestOrder] = None,
 ) -> ListSessionsResponse: ...
 ```
 
 ### AsyncJulepApi().list_users
 
-[Show source in client.py:1539](../../../../../../julep/api/client.py#L1539)
+[Show source in client.py:1952](../../../../../../julep/api/client.py#L1952)
 
-List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
 #### Arguments
 
 - `-` *limit* - typing.Optional[int]. Number of items to return
 
-    - `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+- `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import AsyncJulepApi
 
@@ -911,13 +989,18 @@ await client.list_users()
 
 ```python
 async def list_users(
-    self, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+    self,
+    limit: typing.Optional[int] = None,
+    offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[ListUsersRequestSortBy] = None,
+    order: typing.Optional[ListUsersRequestOrder] = None,
 ) -> ListUsersResponse: ...
 ```
 
-### AsyncJulepApi().update_agent
+### AsyncJulepApi().patch_agent
 
-[Show source in client.py:2261](../../../../../../julep/api/client.py#L2261)
+[Show source in client.py:2962](../../../../../../julep/api/client.py#L2962)
 
 #### Arguments
 
@@ -925,13 +1008,170 @@ async def list_users(
 
 - `-` *about* - typing.Optional[str]. About the agent
 
-- `-` *instructions* - typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+- `-` *instructions* - typing.Optional[typing.List[str]]. List of instructions for the agent
 
 - `-` *name* - typing.Optional[str]. Name of the agent
 
 - `-` *model* - typing.Optional[str]. Name of the model that the agent is supposed to use
 
-    - `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+- `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+    - `-` *metadata* - typing.Optional[PatchAgentRequestMetadata]. Optional metadata
+---
+from julep.client import AsyncJulepApi
+
+client = AsyncJulepApi(
+    api_key="YOUR_API_KEY",
+)
+await client.patch_agent(
+    agent_id="agent_id",
+)
+
+#### Signature
+
+```python
+async def patch_agent(
+    self,
+    agent_id: str,
+    about: typing.Optional[str] = OMIT,
+    instructions: typing.Optional[typing.List[str]] = OMIT,
+    name: typing.Optional[str] = OMIT,
+    model: typing.Optional[str] = OMIT,
+    default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+    metadata: typing.Optional[PatchAgentRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
+```
+
+#### See also
+
+- [OMIT](#omit)
+
+### AsyncJulepApi().patch_agent_tool
+
+[Show source in client.py:3512](../../../../../../julep/api/client.py#L3512)
+
+#### Arguments
+
+- `-` *agent_id* - str.
+
+- `-` *tool_id* - str.
+
+    - `-` *function* - PartialFunctionDef. Function definition and parameters
+---
+from julep import PartialFunctionDef
+from julep.client import AsyncJulepApi
+
+client = AsyncJulepApi(
+    api_key="YOUR_API_KEY",
+)
+await client.patch_agent_tool(
+    agent_id="agent_id",
+    tool_id="tool_id",
+    function=PartialFunctionDef(),
+)
+
+#### Signature
+
+```python
+async def patch_agent_tool(
+    self, agent_id: str, tool_id: str, function: PartialFunctionDef
+) -> ResourceUpdatedResponse: ...
+```
+
+### AsyncJulepApi().patch_session
+
+[Show source in client.py:2291](../../../../../../julep/api/client.py#L2291)
+
+#### Arguments
+
+- `-` *session_id* - str.
+
+- `-` *situation* - typing.Optional[str]. Updated situation for this session
+
+    - `-` *metadata* - typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+---
+from julep.client import AsyncJulepApi
+
+client = AsyncJulepApi(
+    api_key="YOUR_API_KEY",
+)
+await client.patch_session(
+    session_id="session_id",
+)
+
+#### Signature
+
+```python
+async def patch_session(
+    self,
+    session_id: str,
+    situation: typing.Optional[str] = OMIT,
+    metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
+```
+
+#### See also
+
+- [OMIT](#omit)
+
+### AsyncJulepApi().patch_user
+
+[Show source in client.py:2779](../../../../../../julep/api/client.py#L2779)
+
+#### Arguments
+
+- `-` *user_id* - str.
+
+- `-` *about* - typing.Optional[str]. About the user
+
+- `-` *name* - typing.Optional[str]. Name of the user
+
+    - `-` *metadata* - typing.Optional[PatchUserRequestMetadata]. Optional metadata
+---
+from julep.client import AsyncJulepApi
+
+client = AsyncJulepApi(
+    api_key="YOUR_API_KEY",
+)
+await client.patch_user(
+    user_id="user_id",
+)
+
+#### Signature
+
+```python
+async def patch_user(
+    self,
+    user_id: str,
+    about: typing.Optional[str] = OMIT,
+    name: typing.Optional[str] = OMIT,
+    metadata: typing.Optional[PatchUserRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
+```
+
+#### See also
+
+- [OMIT](#omit)
+
+### AsyncJulepApi().update_agent
+
+[Show source in client.py:2864](../../../../../../julep/api/client.py#L2864)
+
+#### Arguments
+
+- `-` *agent_id* - str.
+
+- `-` *about* - str. About the agent
+
+- `-` *instructions* - typing.Optional[typing.List[str]]. List of instructions for the agent
+
+- `-` *name* - str. Name of the agent
+
+- `-` *model* - typing.Optional[str]. Name of the model that the agent is supposed to use
+
+- `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+    - `-` *metadata* - typing.Optional[UpdateAgentRequestMetadata]. Optional metadata
 ---
 from julep.client import AsyncJulepApi
 
@@ -940,6 +1180,8 @@ client = AsyncJulepApi(
 )
 await client.update_agent(
     agent_id="agent_id",
+    about="about",
+    name="name",
 )
 
 #### Signature
@@ -948,11 +1190,12 @@ await client.update_agent(
 async def update_agent(
     self,
     agent_id: str,
-    about: typing.Optional[str] = OMIT,
-    instructions: typing.Optional[typing.List[Instruction]] = OMIT,
-    name: typing.Optional[str] = OMIT,
+    about: str,
+    instructions: typing.Optional[typing.List[str]] = OMIT,
+    name: str,
     model: typing.Optional[str] = OMIT,
     default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+    metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
 ) -> ResourceUpdatedResponse: ...
 ```
 
@@ -962,7 +1205,7 @@ async def update_agent(
 
 ### AsyncJulepApi().update_agent_tool
 
-[Show source in client.py:2722](../../../../../../julep/api/client.py#L2722)
+[Show source in client.py:3430](../../../../../../julep/api/client.py#L3430)
 
 #### Arguments
 
@@ -997,13 +1240,15 @@ async def update_agent_tool(
 
 ### AsyncJulepApi().update_session
 
-[Show source in client.py:1751](../../../../../../julep/api/client.py#L1751)
+[Show source in client.py:2212](../../../../../../julep/api/client.py#L2212)
 
 #### Arguments
 
 - `-` *session_id* - str.
 
-    - `-` *situation* - str. Updated situation for this session
+- `-` *situation* - str. Updated situation for this session
+
+    - `-` *metadata* - typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
 ---
 from julep.client import AsyncJulepApi
 
@@ -1019,21 +1264,30 @@ await client.update_session(
 
 ```python
 async def update_session(
-    self, session_id: str, situation: str
+    self,
+    session_id: str,
+    situation: str,
+    metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
 ) -> ResourceUpdatedResponse: ...
 ```
 
+#### See also
+
+- [OMIT](#omit)
+
 ### AsyncJulepApi().update_user
 
-[Show source in client.py:2149](../../../../../../julep/api/client.py#L2149)
+[Show source in client.py:2696](../../../../../../julep/api/client.py#L2696)
 
 #### Arguments
 
 - `-` *user_id* - str.
 
-- `-` *about* - typing.Optional[str]. About the user
+- `-` *about* - str. About the user
 
-    - `-` *name* - typing.Optional[str]. Name of the user
+- `-` *name* - str. Name of the user
+
+    - `-` *metadata* - typing.Optional[UpdateUserRequestMetadata]. Optional metadata
 ---
 from julep.client import AsyncJulepApi
 
@@ -1042,6 +1296,8 @@ client = AsyncJulepApi(
 )
 await client.update_user(
     user_id="user_id",
+    about="about",
+    name="name",
 )
 
 #### Signature
@@ -1050,8 +1306,9 @@ await client.update_user(
 async def update_user(
     self,
     user_id: str,
-    about: typing.Optional[str] = OMIT,
-    name: typing.Optional[str] = OMIT,
+    about: str,
+    name: str,
+    metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
 ) -> ResourceUpdatedResponse: ...
 ```
 
@@ -1063,7 +1320,7 @@ async def update_user(
 
 ## JulepApi
 
-[Show source in client.py:51](../../../../../../julep/api/client.py#L51)
+[Show source in client.py:70](../../../../../../julep/api/client.py#L70)
 
 #### Signature
 
@@ -1081,7 +1338,7 @@ class JulepApi:
 
 ### JulepApi().chat
 
-[Show source in client.py:516](../../../../../../julep/api/client.py#L516)
+[Show source in client.py:700](../../../../../../julep/api/client.py#L700)
 
 #### Arguments
 
@@ -1125,11 +1382,13 @@ Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the m
 
 - `-` *min_p* - typing.Optional[float]. Minimum probability compared to leading token to be considered
 
-- `-` *preset* - typing.Optional[ChatSettingsPreset]. Generation preset name (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+- `-` *preset* - typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
 
 - `-` *recall* - typing.Optional[bool]. Whether previous memories should be recalled or not
 
-    - `-` *remember* - typing.Optional[bool]. Whether this interaction should be recorded in memory or not
+- `-` *record* - typing.Optional[bool]. Whether this interaction should be recorded in history or not
+
+    - `-` *remember* - typing.Optional[bool]. Whether this interaction should form memories or not
 ---
 from julep import InputChatMlMessage, InputChatMlMessageRole
 from julep.client import JulepApi
@@ -1172,6 +1431,7 @@ def chat(
     min_p: typing.Optional[float] = OMIT,
     preset: typing.Optional[ChatSettingsPreset] = OMIT,
     recall: typing.Optional[bool] = OMIT,
+    record: typing.Optional[bool] = OMIT,
     remember: typing.Optional[bool] = OMIT,
 ) -> ChatResponse: ...
 ```
@@ -1182,7 +1442,7 @@ def chat(
 
 ### JulepApi().create_agent
 
-[Show source in client.py:258](../../../../../../julep/api/client.py#L258)
+[Show source in client.py:349](../../../../../../julep/api/client.py#L349)
 
 Create a new agent
 
@@ -1190,17 +1450,19 @@ Create a new agent
 
 - `-` *name* - str. Name of the agent
 
-- `-` *about* - str. About the agent
+- `-` *about* - typing.Optional[str]. About the agent
 
-- `-` *instructions* - typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+- `-` *instructions* - typing.Optional[typing.List[str]]. List of instructions for the agent
 
 - `-` *tools* - typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
 
 - `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-- `-` *model* - str. Name of the model that the agent is supposed to use
+- `-` *model* - typing.Optional[str]. Name of the model that the agent is supposed to use
 
-    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about agent
+- `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about agent
+
+    - `-` *metadata* - typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
 ---
 from julep.client import JulepApi
 
@@ -1209,8 +1471,6 @@ client = JulepApi(
 )
 client.create_agent(
     name="name",
-    about="about",
-    model="model",
 )
 
 #### Signature
@@ -1219,12 +1479,13 @@ client.create_agent(
 def create_agent(
     self,
     name: str,
-    about: str,
-    instructions: typing.Optional[typing.List[Instruction]] = OMIT,
+    about: typing.Optional[str] = OMIT,
+    instructions: typing.Optional[typing.List[str]] = OMIT,
     tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
     default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-    model: str,
+    model: typing.Optional[str] = OMIT,
     docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+    metadata: typing.Optional[CreateAgentRequestMetadata] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -1234,7 +1495,7 @@ def create_agent(
 
 ### JulepApi().create_agent_doc
 
-[Show source in client.py:1006](../../../../../../julep/api/client.py#L1006)
+[Show source in client.py:1330](../../../../../../julep/api/client.py#L1330)
 
 #### Arguments
 
@@ -1266,7 +1527,7 @@ def create_agent_doc(
 
 ### JulepApi().create_agent_tool
 
-[Show source in client.py:1284](../../../../../../julep/api/client.py#L1284)
+[Show source in client.py:1625](../../../../../../julep/api/client.py#L1625)
 
 #### Arguments
 
@@ -1301,17 +1562,19 @@ def create_agent_tool(
 
 ### JulepApi().create_session
 
-[Show source in client.py:102](../../../../../../julep/api/client.py#L102)
+[Show source in client.py:141](../../../../../../julep/api/client.py#L141)
 
 Create a session between an agent and a user
 
 #### Arguments
 
-- `-` *user_id* - str. User ID of user to associate with this session
+- `-` *user_id* - typing.Optional[str]. (Optional) User ID of user to associate with this session
 
 - `-` *agent_id* - str. Agent ID of agent to associate with this session
 
-    - `-` *situation* - typing.Optional[str]. A specific situation that sets the background for this session
+- `-` *situation* - typing.Optional[str]. A specific situation that sets the background for this session
+
+    - `-` *metadata* - typing.Optional[CreateSessionRequestMetadata]. Optional metadata
 ---
 from julep.client import JulepApi
 
@@ -1319,7 +1582,6 @@ client = JulepApi(
     api_key="YOUR_API_KEY",
 )
 client.create_session(
-    user_id="user_id",
     agent_id="agent_id",
 )
 
@@ -1327,7 +1589,11 @@ client.create_session(
 
 ```python
 def create_session(
-    self, user_id: str, agent_id: str, situation: typing.Optional[str] = OMIT
+    self,
+    user_id: typing.Optional[str] = OMIT,
+    agent_id: str,
+    situation: typing.Optional[str] = OMIT,
+    metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -1337,7 +1603,7 @@ def create_session(
 
 ### JulepApi().create_user
 
-[Show source in client.py:179](../../../../../../julep/api/client.py#L179)
+[Show source in client.py:245](../../../../../../julep/api/client.py#L245)
 
 Create a new user
 
@@ -1347,7 +1613,9 @@ Create a new user
 
 - `-` *about* - typing.Optional[str]. About the user
 
-    - `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about user
+- `-` *docs* - typing.Optional[typing.List[CreateDoc]]. List of docs about user
+
+    - `-` *metadata* - typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
 ---
 from julep.client import JulepApi
 
@@ -1364,6 +1632,7 @@ def create_user(
     name: typing.Optional[str] = OMIT,
     about: typing.Optional[str] = OMIT,
     docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
+    metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
 ) -> ResourceCreatedResponse: ...
 ```
 
@@ -1373,7 +1642,7 @@ def create_user(
 
 ### JulepApi().create_user_doc
 
-[Show source in client.py:1091](../../../../../../julep/api/client.py#L1091)
+[Show source in client.py:1432](../../../../../../julep/api/client.py#L1432)
 
 #### Arguments
 
@@ -1405,7 +1674,7 @@ def create_user_doc(
 
 ### JulepApi().delete_agent
 
-[Show source in client.py:931](../../../../../../julep/api/client.py#L931)
+[Show source in client.py:1170](../../../../../../julep/api/client.py#L1170)
 
 #### Arguments
 
@@ -1428,7 +1697,7 @@ def delete_agent(self, agent_id: str) -> None: ...
 
 ### JulepApi().delete_agent_doc
 
-[Show source in client.py:1169](../../../../../../julep/api/client.py#L1169)
+[Show source in client.py:1510](../../../../../../julep/api/client.py#L1510)
 
 #### Arguments
 
@@ -1454,7 +1723,7 @@ def delete_agent_doc(self, agent_id: str, doc_id: str) -> None: ...
 
 ### JulepApi().delete_agent_memory
 
-[Show source in client.py:1205](../../../../../../julep/api/client.py#L1205)
+[Show source in client.py:1546](../../../../../../julep/api/client.py#L1546)
 
 #### Arguments
 
@@ -1480,7 +1749,7 @@ def delete_agent_memory(self, agent_id: str, memory_id: str) -> None: ...
 
 ### JulepApi().delete_agent_tool
 
-[Show source in client.py:1375](../../../../../../julep/api/client.py#L1375)
+[Show source in client.py:1716](../../../../../../julep/api/client.py#L1716)
 
 #### Arguments
 
@@ -1506,7 +1775,7 @@ def delete_agent_tool(self, agent_id: str, tool_id: str) -> None: ...
 
 ### JulepApi().delete_session
 
-[Show source in client.py:396](../../../../../../julep/api/client.py#L396)
+[Show source in client.py:499](../../../../../../julep/api/client.py#L499)
 
 #### Arguments
 
@@ -1527,9 +1796,32 @@ client.delete_session(
 def delete_session(self, session_id: str) -> None: ...
 ```
 
+### JulepApi().delete_session_history
+
+[Show source in client.py:667](../../../../../../julep/api/client.py#L667)
+
+#### Arguments
+
+    - `-` *session_id* - str.
+---
+from julep.client import JulepApi
+
+client = JulepApi(
+    api_key="YOUR_API_KEY",
+)
+client.delete_session_history(
+    session_id="session_id",
+)
+
+#### Signature
+
+```python
+def delete_session_history(self, session_id: str) -> None: ...
+```
+
 ### JulepApi().delete_user
 
-[Show source in client.py:804](../../../../../../julep/api/client.py#L804)
+[Show source in client.py:987](../../../../../../julep/api/client.py#L987)
 
 #### Arguments
 
@@ -1552,7 +1844,7 @@ def delete_user(self, user_id: str) -> None: ...
 
 ### JulepApi().delete_user_doc
 
-[Show source in client.py:1133](../../../../../../julep/api/client.py#L1133)
+[Show source in client.py:1474](../../../../../../julep/api/client.py#L1474)
 
 #### Arguments
 
@@ -1578,7 +1870,7 @@ def delete_user_doc(self, user_id: str, doc_id: str) -> None: ...
 
 ### JulepApi().get_agent
 
-[Show source in client.py:836](../../../../../../julep/api/client.py#L836)
+[Show source in client.py:1072](../../../../../../julep/api/client.py#L1072)
 
 #### Arguments
 
@@ -1601,7 +1893,7 @@ def get_agent(self, agent_id: str) -> Agent: ...
 
 ### JulepApi().get_agent_docs
 
-[Show source in client.py:963](../../../../../../julep/api/client.py#L963)
+[Show source in client.py:1270](../../../../../../julep/api/client.py#L1270)
 
 Sorted (created_at descending)
 
@@ -1611,7 +1903,13 @@ Sorted (created_at descending)
 
 - `-` *limit* - typing.Optional[int].
 
-    - `-` *offset* - typing.Optional[int].
+- `-` *offset* - typing.Optional[int].
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import JulepApi
 
@@ -1630,12 +1928,15 @@ def get_agent_docs(
     agent_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
+    order: typing.Optional[GetAgentDocsRequestOrder] = None,
 ) -> GetAgentDocsResponse: ...
 ```
 
 ### JulepApi().get_agent_memories
 
-[Show source in client.py:663](../../../../../../julep/api/client.py#L663)
+[Show source in client.py:852](../../../../../../julep/api/client.py#L852)
 
 Sorted (created_at descending)
 
@@ -1644,8 +1945,6 @@ Sorted (created_at descending)
 - `-` *agent_id* - str.
 
 - `-` *query* - str.
-
-- `-` *types* - typing.Optional[typing.Union[str, typing.List[str]]]. episode, belief, entity
 
 - `-` *user_id* - typing.Optional[str].
 
@@ -1670,7 +1969,6 @@ def get_agent_memories(
     self,
     agent_id: str,
     query: str,
-    types: typing.Optional[typing.Union[str, typing.List[str]]] = None,
     user_id: typing.Optional[str] = None,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
@@ -1679,7 +1977,7 @@ def get_agent_memories(
 
 ### JulepApi().get_agent_tools
 
-[Show source in client.py:1241](../../../../../../julep/api/client.py#L1241)
+[Show source in client.py:1582](../../../../../../julep/api/client.py#L1582)
 
 Sorted (created_at descending)
 
@@ -1713,7 +2011,7 @@ def get_agent_tools(
 
 ### JulepApi().get_history
 
-[Show source in client.py:472](../../../../../../julep/api/client.py#L472)
+[Show source in client.py:623](../../../../../../julep/api/client.py#L623)
 
 Sorted (created_at ascending)
 
@@ -1747,7 +2045,7 @@ def get_history(
 
 ### JulepApi().get_job_status
 
-[Show source in client.py:1411](../../../../../../julep/api/client.py#L1411)
+[Show source in client.py:1795](../../../../../../julep/api/client.py#L1795)
 
 #### Arguments
 
@@ -1770,7 +2068,7 @@ def get_job_status(self, job_id: str) -> JobStatus: ...
 
 ### JulepApi().get_session
 
-[Show source in client.py:326](../../../../../../julep/api/client.py#L326)
+[Show source in client.py:420](../../../../../../julep/api/client.py#L420)
 
 #### Arguments
 
@@ -1793,7 +2091,7 @@ def get_session(self, session_id: str) -> Session: ...
 
 ### JulepApi().get_suggestions
 
-[Show source in client.py:428](../../../../../../julep/api/client.py#L428)
+[Show source in client.py:579](../../../../../../julep/api/client.py#L579)
 
 Sorted (created_at descending)
 
@@ -1827,7 +2125,7 @@ def get_suggestions(
 
 ### JulepApi().get_user
 
-[Show source in client.py:724](../../../../../../julep/api/client.py#L724)
+[Show source in client.py:904](../../../../../../julep/api/client.py#L904)
 
 #### Arguments
 
@@ -1850,7 +2148,7 @@ def get_user(self, user_id: str) -> User: ...
 
 ### JulepApi().get_user_docs
 
-[Show source in client.py:1048](../../../../../../julep/api/client.py#L1048)
+[Show source in client.py:1372](../../../../../../julep/api/client.py#L1372)
 
 Sorted (created_at descending)
 
@@ -1860,7 +2158,13 @@ Sorted (created_at descending)
 
 - `-` *limit* - typing.Optional[int].
 
-    - `-` *offset* - typing.Optional[int].
+- `-` *offset* - typing.Optional[int].
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import JulepApi
 
@@ -1879,20 +2183,29 @@ def get_user_docs(
     user_id: str,
     limit: typing.Optional[int] = None,
     offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
+    order: typing.Optional[GetUserDocsRequestOrder] = None,
 ) -> GetUserDocsResponse: ...
 ```
 
 ### JulepApi().list_agents
 
-[Show source in client.py:225](../../../../../../julep/api/client.py#L225)
+[Show source in client.py:296](../../../../../../julep/api/client.py#L296)
 
-List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
 #### Arguments
 
 - `-` *limit* - typing.Optional[int]. Number of items to return
 
-    - `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+- `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import JulepApi
 
@@ -1905,21 +2218,32 @@ client.list_agents()
 
 ```python
 def list_agents(
-    self, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+    self,
+    limit: typing.Optional[int] = None,
+    offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
+    order: typing.Optional[ListAgentsRequestOrder] = None,
 ) -> ListAgentsResponse: ...
 ```
 
 ### JulepApi().list_sessions
 
-[Show source in client.py:69](../../../../../../julep/api/client.py#L69)
+[Show source in client.py:88](../../../../../../julep/api/client.py#L88)
 
-List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
 #### Arguments
 
 - `-` *limit* - typing.Optional[int]. Number of sessions to return
 
-    - `-` *offset* - typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+- `-` *offset* - typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import JulepApi
 
@@ -1932,21 +2256,32 @@ client.list_sessions()
 
 ```python
 def list_sessions(
-    self, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+    self,
+    limit: typing.Optional[int] = None,
+    offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
+    order: typing.Optional[ListSessionsRequestOrder] = None,
 ) -> ListSessionsResponse: ...
 ```
 
 ### JulepApi().list_users
 
-[Show source in client.py:146](../../../../../../julep/api/client.py#L146)
+[Show source in client.py:192](../../../../../../julep/api/client.py#L192)
 
-List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at`)
+List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
 #### Arguments
 
 - `-` *limit* - typing.Optional[int]. Number of items to return
 
-    - `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+- `-` *offset* - typing.Optional[int]. Number of items to skip (sorted created_at descending order)
+
+- `-` *metadata_filter* - typing.Optional[str]. JSON object that should be used to filter objects by metadata
+
+- `-` *sort_by* - typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+
+    - `-` *order* - typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
 ---
 from julep.client import JulepApi
 
@@ -1959,13 +2294,18 @@ client.list_users()
 
 ```python
 def list_users(
-    self, limit: typing.Optional[int] = None, offset: typing.Optional[int] = None
+    self,
+    limit: typing.Optional[int] = None,
+    offset: typing.Optional[int] = None,
+    metadata_filter: typing.Optional[str] = None,
+    sort_by: typing.Optional[ListUsersRequestSortBy] = None,
+    order: typing.Optional[ListUsersRequestOrder] = None,
 ) -> ListUsersResponse: ...
 ```
 
-### JulepApi().update_agent
+### JulepApi().patch_agent
 
-[Show source in client.py:868](../../../../../../julep/api/client.py#L868)
+[Show source in client.py:1202](../../../../../../julep/api/client.py#L1202)
 
 #### Arguments
 
@@ -1973,13 +2313,170 @@ def list_users(
 
 - `-` *about* - typing.Optional[str]. About the agent
 
-- `-` *instructions* - typing.Optional[typing.List[Instruction]]. List of instructions for the agent
+- `-` *instructions* - typing.Optional[typing.List[str]]. List of instructions for the agent
 
 - `-` *name* - typing.Optional[str]. Name of the agent
 
 - `-` *model* - typing.Optional[str]. Name of the model that the agent is supposed to use
 
-    - `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+- `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+    - `-` *metadata* - typing.Optional[PatchAgentRequestMetadata]. Optional metadata
+---
+from julep.client import JulepApi
+
+client = JulepApi(
+    api_key="YOUR_API_KEY",
+)
+client.patch_agent(
+    agent_id="agent_id",
+)
+
+#### Signature
+
+```python
+def patch_agent(
+    self,
+    agent_id: str,
+    about: typing.Optional[str] = OMIT,
+    instructions: typing.Optional[typing.List[str]] = OMIT,
+    name: typing.Optional[str] = OMIT,
+    model: typing.Optional[str] = OMIT,
+    default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+    metadata: typing.Optional[PatchAgentRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
+```
+
+#### See also
+
+- [OMIT](#omit)
+
+### JulepApi().patch_agent_tool
+
+[Show source in client.py:1752](../../../../../../julep/api/client.py#L1752)
+
+#### Arguments
+
+- `-` *agent_id* - str.
+
+- `-` *tool_id* - str.
+
+    - `-` *function* - PartialFunctionDef. Function definition and parameters
+---
+from julep import PartialFunctionDef
+from julep.client import JulepApi
+
+client = JulepApi(
+    api_key="YOUR_API_KEY",
+)
+client.patch_agent_tool(
+    agent_id="agent_id",
+    tool_id="tool_id",
+    function=PartialFunctionDef(),
+)
+
+#### Signature
+
+```python
+def patch_agent_tool(
+    self, agent_id: str, tool_id: str, function: PartialFunctionDef
+) -> ResourceUpdatedResponse: ...
+```
+
+### JulepApi().patch_session
+
+[Show source in client.py:531](../../../../../../julep/api/client.py#L531)
+
+#### Arguments
+
+- `-` *session_id* - str.
+
+- `-` *situation* - typing.Optional[str]. Updated situation for this session
+
+    - `-` *metadata* - typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+---
+from julep.client import JulepApi
+
+client = JulepApi(
+    api_key="YOUR_API_KEY",
+)
+client.patch_session(
+    session_id="session_id",
+)
+
+#### Signature
+
+```python
+def patch_session(
+    self,
+    session_id: str,
+    situation: typing.Optional[str] = OMIT,
+    metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
+```
+
+#### See also
+
+- [OMIT](#omit)
+
+### JulepApi().patch_user
+
+[Show source in client.py:1019](../../../../../../julep/api/client.py#L1019)
+
+#### Arguments
+
+- `-` *user_id* - str.
+
+- `-` *about* - typing.Optional[str]. About the user
+
+- `-` *name* - typing.Optional[str]. Name of the user
+
+    - `-` *metadata* - typing.Optional[PatchUserRequestMetadata]. Optional metadata
+---
+from julep.client import JulepApi
+
+client = JulepApi(
+    api_key="YOUR_API_KEY",
+)
+client.patch_user(
+    user_id="user_id",
+)
+
+#### Signature
+
+```python
+def patch_user(
+    self,
+    user_id: str,
+    about: typing.Optional[str] = OMIT,
+    name: typing.Optional[str] = OMIT,
+    metadata: typing.Optional[PatchUserRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
+```
+
+#### See also
+
+- [OMIT](#omit)
+
+### JulepApi().update_agent
+
+[Show source in client.py:1104](../../../../../../julep/api/client.py#L1104)
+
+#### Arguments
+
+- `-` *agent_id* - str.
+
+- `-` *about* - str. About the agent
+
+- `-` *instructions* - typing.Optional[typing.List[str]]. List of instructions for the agent
+
+- `-` *name* - str. Name of the agent
+
+- `-` *model* - typing.Optional[str]. Name of the model that the agent is supposed to use
+
+- `-` *default_settings* - typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
+
+    - `-` *metadata* - typing.Optional[UpdateAgentRequestMetadata]. Optional metadata
 ---
 from julep.client import JulepApi
 
@@ -1988,6 +2485,8 @@ client = JulepApi(
 )
 client.update_agent(
     agent_id="agent_id",
+    about="about",
+    name="name",
 )
 
 #### Signature
@@ -1996,11 +2495,12 @@ client.update_agent(
 def update_agent(
     self,
     agent_id: str,
-    about: typing.Optional[str] = OMIT,
-    instructions: typing.Optional[typing.List[Instruction]] = OMIT,
-    name: typing.Optional[str] = OMIT,
+    about: str,
+    instructions: typing.Optional[typing.List[str]] = OMIT,
+    name: str,
     model: typing.Optional[str] = OMIT,
     default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
+    metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
 ) -> ResourceUpdatedResponse: ...
 ```
 
@@ -2010,7 +2510,7 @@ def update_agent(
 
 ### JulepApi().update_agent_tool
 
-[Show source in client.py:1329](../../../../../../julep/api/client.py#L1329)
+[Show source in client.py:1670](../../../../../../julep/api/client.py#L1670)
 
 #### Arguments
 
@@ -2045,13 +2545,15 @@ def update_agent_tool(
 
 ### JulepApi().update_session
 
-[Show source in client.py:358](../../../../../../julep/api/client.py#L358)
+[Show source in client.py:452](../../../../../../julep/api/client.py#L452)
 
 #### Arguments
 
 - `-` *session_id* - str.
 
-    - `-` *situation* - str. Updated situation for this session
+- `-` *situation* - str. Updated situation for this session
+
+    - `-` *metadata* - typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
 ---
 from julep.client import JulepApi
 
@@ -2066,20 +2568,31 @@ client.update_session(
 #### Signature
 
 ```python
-def update_session(self, session_id: str, situation: str) -> ResourceUpdatedResponse: ...
+def update_session(
+    self,
+    session_id: str,
+    situation: str,
+    metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
+) -> ResourceUpdatedResponse: ...
 ```
+
+#### See also
+
+- [OMIT](#omit)
 
 ### JulepApi().update_user
 
-[Show source in client.py:756](../../../../../../julep/api/client.py#L756)
+[Show source in client.py:936](../../../../../../julep/api/client.py#L936)
 
 #### Arguments
 
 - `-` *user_id* - str.
 
-- `-` *about* - typing.Optional[str]. About the user
+- `-` *about* - str. About the user
 
-    - `-` *name* - typing.Optional[str]. Name of the user
+- `-` *name* - str. Name of the user
+
+    - `-` *metadata* - typing.Optional[UpdateUserRequestMetadata]. Optional metadata
 ---
 from julep.client import JulepApi
 
@@ -2088,6 +2601,8 @@ client = JulepApi(
 )
 client.update_user(
     user_id="user_id",
+    about="about",
+    name="name",
 )
 
 #### Signature
@@ -2096,8 +2611,9 @@ client.update_user(
 def update_user(
     self,
     user_id: str,
-    about: typing.Optional[str] = OMIT,
-    name: typing.Optional[str] = OMIT,
+    about: str,
+    name: str,
+    metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
 ) -> ResourceUpdatedResponse: ...
 ```
 

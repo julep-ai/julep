@@ -19,7 +19,7 @@ class ResourceDeletedResponse(pydantic.BaseModel): ...
 
 ### ResourceDeletedResponse().dict
 
-[Show source in resource_deleted_response.py:26](../../../../../../../julep/api/types/resource_deleted_response.py#L26)
+[Show source in resource_deleted_response.py:29](../../../../../../../julep/api/types/resource_deleted_response.py#L29)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ResourceDeletedResponse().json
 
-[Show source in resource_deleted_response.py:18](../../../../../../../julep/api/types/resource_deleted_response.py#L18)
+[Show source in resource_deleted_response.py:21](../../../../../../../julep/api/types/resource_deleted_response.py#L21)
 
 #### Signature
 

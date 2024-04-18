@@ -12,7 +12,7 @@
 
 ## AsyncDocsManager
 
-[Show source in doc.py:327](../../../../../../julep/managers/doc.py#L327)
+[Show source in doc.py:339](../../../../../../julep/managers/doc.py#L339)
 
 A class for managing asynchronous operations on documents.
 
@@ -24,7 +24,7 @@ Inherited from BaseDocsManager.
 
 #### Methods
 
-async get(self, *, agent_id: Optional[Union[str, UUID]] = None, user_id: Optional[Union[str, UUID]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Doc]:
+async list(self, *, agent_id: Optional[Union[str, UUID]] = None, user_id: Optional[Union[str, UUID]] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> List[Doc]:
     Asynchronously get a list of documents, with optional filtering based on agent_id, user_id, and pagination options limit and offset.
 
 #### Arguments
@@ -67,7 +67,7 @@ class AsyncDocsManager(BaseDocsManager): ...
 
 ### AsyncDocsManager().create
 
-[Show source in doc.py:406](../../../../../../julep/managers/doc.py#L406)
+[Show source in doc.py:420](../../../../../../julep/managers/doc.py#L420)
 
 Create a new resource asynchronously.
 
@@ -99,7 +99,7 @@ async def create(self, **kwargs: DocsCreateArgs) -> Doc: ...
 
 ### AsyncDocsManager().delete
 
-[Show source in doc.py:426](../../../../../../julep/managers/doc.py#L426)
+[Show source in doc.py:440](../../../../../../julep/managers/doc.py#L440)
 
 Asynchronously deletes a document by its ID.
 
@@ -131,9 +131,9 @@ async def delete(
 ): ...
 ```
 
-### AsyncDocsManager().get
+### AsyncDocsManager().list
 
-[Show source in doc.py:367](../../../../../../julep/managers/doc.py#L367)
+[Show source in doc.py:379](../../../../../../julep/managers/doc.py#L379)
 
 Asynchronously get a list of documents.
 
@@ -163,12 +163,13 @@ The `@beartype` decorator is used to ensure that arguments conform to the expect
 
 ```python
 @beartype
-async def get(
+async def list(
     self,
     agent_id: Optional[Union[str, UUID]] = None,
     user_id: Optional[Union[str, UUID]] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> List[Doc]: ...
 ```
 
@@ -176,17 +177,17 @@ async def get(
 
 ## BaseDocsManager
 
-[Show source in doc.py:27](../../../../../../julep/managers/doc.py#L27)
+[Show source in doc.py:29](../../../../../../julep/managers/doc.py#L29)
 
-Manages documents for agents or users by providing methods to get, create, and delete docsrmation.
+Manages documents for agents or users by providing internal methods to list, create, and delete documents.
 
 The class utilizes an API client to interact with a back-end service that handles the document management operations.
 
 Typical usage example:
 
 docs_manager = BaseDocsManager(api_client)
-agent_docs = docs_manager._get(agent_id="some-agent-uuid")
-user_docs = docs_manager._get(user_id="some-user-uuid")
+agent_docs = docs_manager._list(agent_id="some-agent-uuid")
+user_docs = docs_manager._list(user_id="some-user-uuid")
 created_doc = docs_manager._create(agent_id="some-agent-uuid", doc={"key": "value"})
 docs_manager._delete(user_id="some-user-uuid", doc_id="some-doc-uuid")
 
@@ -196,7 +197,7 @@ docs_manager._delete(user_id="some-user-uuid", doc_id="some-doc-uuid")
 
 #### Methods
 
-- `_get(agent_id` - Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]],
+- `_list(agent_id` - Optional[Union[str, UUID]], user_id: Optional[Union[str, UUID]],
      - `limit` - Optional[int]=None, offset: Optional[int]=None) -> Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]
     Retrieves docsrmation for either an agent or user.
     Must provide exactly one valid UUID v4 for either `agent_id` or `user_id`.
@@ -218,7 +219,7 @@ class BaseDocsManager(BaseManager): ...
 
 ### BaseDocsManager()._create
 
-[Show source in doc.py:106](../../../../../../julep/managers/doc.py#L106)
+[Show source in doc.py:114](../../../../../../julep/managers/doc.py#L114)
 
 Create a new resource with docsrmation for either an agent or a user, but not both.
 
@@ -229,6 +230,7 @@ Args:
     agent_id (Optional[Union[str, UUID]]): The UUID of the agent or None.
     user_id (Optional[Union[str, UUID]]): The UUID of the user or None.
     doc (DocDict): A dictionary containing the document data for the resource being created.
+    metadata (Dict[str, Any]): Optional metadata for the document. Defaults to an empty dictionary.
 
 Returns:
     Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response after creating the resource, which could be immediate or an awaitable for asynchronous execution.
@@ -248,12 +250,13 @@ def _create(
     doc: DocDict,
     agent_id: Optional[Union[str, UUID]] = None,
     user_id: Optional[Union[str, UUID]] = None,
+    metadata: Dict[str, Any] = {},
 ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: ...
 ```
 
 ### BaseDocsManager()._delete
 
-[Show source in doc.py:153](../../../../../../julep/managers/doc.py#L153)
+[Show source in doc.py:163](../../../../../../julep/managers/doc.py#L163)
 
 Delete docs based on either an agent_id or a user_id.
 
@@ -268,7 +271,7 @@ Returns:
     The result of the API deletion request. This can be the response object from the client's delete operation.
 
 Raises:
-    AssertionError: If neither `agent_id` nor `user_id` is valid, if both are provided simultaneously, or if negation logic for valid UUIDs fails.
+    AssertionError: If both `agent_id` and `user_id` are provided, neither are provided, or if the provided IDs are not valid UUID v4 strings.
     Other exceptions related to the `api_client` operations could potentially be raised and depend on its implementation.
 
 #### Signature
@@ -282,9 +285,9 @@ def _delete(
 ): ...
 ```
 
-### BaseDocsManager()._get
+### BaseDocsManager()._list
 
-[Show source in doc.py:60](../../../../../../julep/managers/doc.py#L60)
+[Show source in doc.py:62](../../../../../../julep/managers/doc.py#L62)
 
 Retrieve docsrmation for an agent or user based on their ID.
 
@@ -298,6 +301,7 @@ agent_id (Optional[Union[str, UUID]]): The UUID v4 of the agent for whom docs is
 user_id (Optional[Union[str, UUID]]): The UUID v4 of the user for whom docs is requested, exclusive with `agent_id`.
 - `limit` *Optional[int]* - The maximum number of records to return. Defaults to None.
 - `offset` *Optional[int]* - The number of records to skip before starting to collect the response set. Defaults to None.
+metadata_filter (Dict[str, Any]): A dictionary used for filtering documents based on metadata criteria. Defaults to an empty dictionary.
 
 #### Returns
 
@@ -310,12 +314,13 @@ user_id (Optional[Union[str, UUID]]): The UUID v4 of the user for whom docs is r
 #### Signature
 
 ```python
-def _get(
+def _list(
     self,
     agent_id: Optional[Union[str, UUID]],
     user_id: Optional[Union[str, UUID]],
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]: ...
 ```
 
@@ -323,7 +328,7 @@ def _get(
 
 ## DocsCreateArgs
 
-[Show source in doc.py:21](../../../../../../julep/managers/doc.py#L21)
+[Show source in doc.py:22](../../../../../../julep/managers/doc.py#L22)
 
 #### Signature
 
@@ -335,7 +340,7 @@ class DocsCreateArgs(TypedDict): ...
 
 ## DocsManager
 
-[Show source in doc.py:195](../../../../../../julep/managers/doc.py#L195)
+[Show source in doc.py:205](../../../../../../julep/managers/doc.py#L205)
 
 A class responsible for managing documents.
 
@@ -391,7 +396,7 @@ class DocsManager(BaseDocsManager): ...
 
 ### DocsManager().create
 
-[Show source in doc.py:273](../../../../../../julep/managers/doc.py#L273)
+[Show source in doc.py:285](../../../../../../julep/managers/doc.py#L285)
 
 Create a new resource with the specified document.
 
@@ -426,7 +431,7 @@ def create(self, **kwargs: DocsCreateArgs) -> Doc: ...
 
 ### DocsManager().delete
 
-[Show source in doc.py:296](../../../../../../julep/managers/doc.py#L296)
+[Show source in doc.py:308](../../../../../../julep/managers/doc.py#L308)
 
 Deletes a document by its identifier.
 
@@ -458,9 +463,9 @@ def delete(
 ): ...
 ```
 
-### DocsManager().get
+### DocsManager().list
 
-[Show source in doc.py:240](../../../../../../julep/managers/doc.py#L240)
+[Show source in doc.py:250](../../../../../../julep/managers/doc.py#L250)
 
 Retrieve a list of documents based on specified criteria.
 
@@ -485,11 +490,12 @@ The `@beartype` decorator is used to ensure that the input arguments are of the 
 
 ```python
 @beartype
-def get(
+def list(
     self,
     agent_id: Optional[Union[str, UUID]] = None,
     user_id: Optional[Union[str, UUID]] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
+    metadata_filter: Dict[str, Any] = {},
 ) -> List[Doc]: ...
 ```

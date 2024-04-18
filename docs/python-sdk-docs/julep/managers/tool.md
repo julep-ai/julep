@@ -11,7 +11,7 @@
 
 ## AsyncToolsManager
 
-[Show source in tool.py:344](../../../../../../julep/managers/tool.py#L344)
+[Show source in tool.py:351](../../../../../../julep/managers/tool.py#L351)
 
 A manager for asynchronous tools handling.
 
@@ -38,7 +38,7 @@ class AsyncToolsManager(BaseToolsManager): ...
 
 ### AsyncToolsManager().create
 
-[Show source in tool.py:395](../../../../../../julep/managers/tool.py#L395)
+[Show source in tool.py:402](../../../../../../julep/managers/tool.py#L402)
 
 Create a new resource asynchronously.
 
@@ -68,7 +68,7 @@ async def create(
 
 ### AsyncToolsManager().delete
 
-[Show source in tool.py:422](../../../../../../julep/managers/tool.py#L422)
+[Show source in tool.py:429](../../../../../../julep/managers/tool.py#L429)
 
 Asynchronously delete a specified agent-tool association.
 
@@ -102,7 +102,7 @@ async def delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]): .
 
 ### AsyncToolsManager().get
 
-[Show source in tool.py:360](../../../../../../julep/managers/tool.py#L360)
+[Show source in tool.py:367](../../../../../../julep/managers/tool.py#L367)
 
 Asynchronously get a list of Tool objects based on provided filters.
 
@@ -139,7 +139,7 @@ async def get(
 
 ### AsyncToolsManager().update
 
-[Show source in tool.py:458](../../../../../../julep/managers/tool.py#L458)
+[Show source in tool.py:465](../../../../../../julep/managers/tool.py#L465)
 
 Asynchronously updates a resource identified by the agent_id and tool_id with a new definition.
 
@@ -177,32 +177,27 @@ async def update(
 
 [Show source in tool.py:21](../../../../../../julep/managers/tool.py#L21)
 
-A class to manage base tools by interacting with an API client.
+A class to manage tools by interacting with an API client.
 
-This class provides an interface for creating, reading, updating, and deleting tools, where each tool is associated with an agent.
+This class provides methods for creating, reading, updating, and deleting tools associated with agents. It ensures the validity of UUIDs for agent_id and tool_id where applicable and handles both synchronous and asynchronous operations.
 
 #### Attributes
 
-- `api_client` - The API client utilized to send requests to the service.
+- `api_client` - The API client used to send requests to the service.
 
 #### Methods
 
 - `_get(self,` *agent_id* - Union[str, UUID], limit: Optional[int]=None, offset: Optional[int]=None) -> Union[GetAgentToolsResponse, Awaitable[GetAgentToolsResponse]]:
-    Retrieve a list of tools associated with the given agent using the API client.
+    Retrieves a list of tools associated with the specified agent. Supports pagination through limit and offset parameters.
 
 - `_create(self,` *agent_id* - Union[str, UUID], tool: ToolDict) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
-    Create a new tool associated with the given agent using the API client.
+    Creates a new tool associated with the specified agent.
 
 - `_update(self,` *agent_id* - Union[str, UUID], tool_id: Union[str, UUID], function: FunctionDefDict) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
-    Update the definition of an existing tool associated with the given agent using the API client.
+    Updates the definition of an existing tool associated with the specified agent.
 
 - `_delete(self,` *agent_id* - Union[str, UUID], tool_id: Union[str, UUID]):
-    Delete a tool associated with the given agent using the API client.
-
-#### Notes
-
-All methods assert the validity of UUIDs for agent_id and tool_id when applicable.
-The _get, _create, and _update methods may return either synchronous or asynchronous responses, indicated by the return type Union[..., Awaitable[...]].
+    Deletes a tool associated with the specified agent.
 
 #### Signature
 
@@ -212,7 +207,7 @@ class BaseToolsManager(BaseManager): ...
 
 ### BaseToolsManager()._create
 
-[Show source in tool.py:80](../../../../../../julep/managers/tool.py#L80)
+[Show source in tool.py:76](../../../../../../julep/managers/tool.py#L76)
 
 Create a new tool associated with a given agent.
 
@@ -234,7 +229,7 @@ def _create(
 
 ### BaseToolsManager()._delete
 
-[Show source in tool.py:137](../../../../../../julep/managers/tool.py#L137)
+[Show source in tool.py:141](../../../../../../julep/managers/tool.py#L141)
 
 Delete a tool associated with an agent.
 
@@ -256,7 +251,7 @@ def _delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]): ...
 
 ### BaseToolsManager()._get
 
-[Show source in tool.py:48](../../../../../../julep/managers/tool.py#L48)
+[Show source in tool.py:44](../../../../../../julep/managers/tool.py#L44)
 
 Retrieve tools associated with the given agent.
 
@@ -293,7 +288,7 @@ def _get(
 
 ### BaseToolsManager()._update
 
-[Show source in tool.py:105](../../../../../../julep/managers/tool.py#L105)
+[Show source in tool.py:101](../../../../../../julep/managers/tool.py#L101)
 
 Update the tool definition for a given agent.
 
@@ -301,6 +296,7 @@ Args:
     agent_id (Union[str, UUID]): The unique identifier for the agent, either in string or UUID format.
     tool_id (Union[str, UUID]): The unique identifier for the tool, either in string or UUID format.
     function (FunctionDefDict): A dictionary containing the function definition that conforms with the required API schema.
+    overwrite (bool): A flag to indicate whether to overwrite the existing function definition. Defaults to False.
 
 Returns:
     Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: The updated resource response sync or async.
@@ -316,6 +312,7 @@ def _update(
     agent_id: Union[str, UUID],
     tool_id: Union[str, UUID],
     function: FunctionDefDict,
+    overwrite: bool = False,
 ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: ...
 ```
 
@@ -323,7 +320,7 @@ def _update(
 
 ## ToolsManager
 
-[Show source in tool.py:165](../../../../../../julep/managers/tool.py#L165)
+[Show source in tool.py:169](../../../../../../julep/managers/tool.py#L169)
 
 A manager class for handling tools related to agents.
 
@@ -383,7 +380,7 @@ class ToolsManager(BaseToolsManager): ...
 
 ### ToolsManager().create
 
-[Show source in tool.py:247](../../../../../../julep/managers/tool.py#L247)
+[Show source in tool.py:251](../../../../../../julep/managers/tool.py#L251)
 
 Create a new resource with the provided agent identifier and tool information.
 
@@ -423,7 +420,7 @@ def create(
 
 ### ToolsManager().delete
 
-[Show source in tool.py:285](../../../../../../julep/managers/tool.py#L285)
+[Show source in tool.py:289](../../../../../../julep/managers/tool.py#L289)
 
 Deletes an agent's access to a specific tool.
 
@@ -449,7 +446,7 @@ def delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]): ...
 
 ### ToolsManager().get
 
-[Show source in tool.py:216](../../../../../../julep/managers/tool.py#L216)
+[Show source in tool.py:220](../../../../../../julep/managers/tool.py#L220)
 
 Retrieve a list of Tool objects for the specified agent.
 
@@ -481,7 +478,7 @@ def get(
 
 ### ToolsManager().update
 
-[Show source in tool.py:310](../../../../../../julep/managers/tool.py#L310)
+[Show source in tool.py:314](../../../../../../julep/managers/tool.py#L314)
 
 Update a specific tool definition for an agent.
 
@@ -490,6 +487,7 @@ Update a specific tool definition for an agent.
 agent_id (Union[str, UUID]): The unique identifier of the agent.
 tool_id (Union[str, UUID]): The unique identifier of the tool to be updated.
 - `function` *FunctionDefDict* - A dictionary containing the new definition of the tool.
+- `overwrite` *bool* - A flag indicating whether to overwrite the existing definition.
 
 #### Returns
 
@@ -514,5 +512,6 @@ def update(
     agent_id: Union[str, UUID],
     tool_id: Union[str, UUID],
     function: FunctionDefDict,
+    overwrite: bool = False,
 ) -> ResourceUpdatedResponse: ...
 ```

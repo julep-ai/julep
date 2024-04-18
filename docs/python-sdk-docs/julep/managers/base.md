@@ -11,15 +11,13 @@
 
 [Show source in base.py:7](../../../../../../julep/managers/base.py#L7)
 
-A class that serves as a base manager for working with different API clients.
+A class that serves as a base manager for working with different API clients. This class is responsible for abstracting the complexities of interacting with various API clients, providing a unified interface for higher-level components.
 
 Attributes:
-    api_client (Union[JulepApi, AsyncJulepApi]): A client instance for communicating with an API.
-        It can either be an instance of JulepApi for synchronous operations or
-        AsyncJulepApi for asynchronous operations.
+    api_client (Union[JulepApi, AsyncJulepApi]): A client instance for communicating with an API. This attribute is essential for enabling the class to perform API operations, whether they are synchronous or asynchronous.
 
 Args:
-    api_client (Union[JulepApi, AsyncJulepApi]): The API client that is used for making API calls.
+    api_client (Union[JulepApi, AsyncJulepApi]): The API client that is used for making API calls. It is crucial for the operation of this class, allowing it to interact with the API effectively.
 
 #### Signature
 
