@@ -57,7 +57,7 @@ export class DocsManager extends BaseManager {
     }
   }
 
-    /**
+  /**
    * Lists documents based on the provided agentId or userId, with optional metadata filtering.
    * Ensures that only one of agentId or userId is provided using xor function.
    * Validates the provided agentId or userId using isValidUuid4.
@@ -119,7 +119,7 @@ export class DocsManager extends BaseManager {
     }
   }
 
-    /**
+  /**
    * Creates a document based on the provided agentId or userId.
    * Ensures that only one of agentId or userId is provided using xor function.
    * Validates the provided agentId or userId using isValidUuid4.
@@ -172,7 +172,7 @@ export class DocsManager extends BaseManager {
     }
   }
 
-    /**
+  /**
    * Deletes a document based on the provided agentId or userId and the specific docId.
    * Ensures that only one of agentId or userId is provided using xor function.
    * Validates the provided agentId or userId using isValidUuid4.
