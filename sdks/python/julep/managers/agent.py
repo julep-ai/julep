@@ -92,11 +92,12 @@ class BaseAgentsManager(BaseManager):
             Returns:
                 The response indicating creation or an awaitable that resolves to the creation response.
 
-        _list_items(self, limit: Optional[int] = None, offset: Optional[int] = None) -> Union[ListAgentsResponse, Awaitable[ListAgentsResponse]]:
-            Lists agents with pagination support.
+        _list_items(self, limit: Optional[int] = None, offset: Optional[int] = None, metadata_filter: Dict[str, Any] = {}) -> Union[ListAgentsResponse, Awaitable[ListAgentsResponse]]:
+            Lists agents with pagination support and optional metadata filtering.
             Args:
                 limit (Optional[int], optional): The maximum number of agents to list. Defaults to None.
                 offset (Optional[int], optional): The number of agents to skip (for pagination). Defaults to None.
+                metadata_filter (Dict[str, Any], optional): Filters for querying agents based on metadata. Defaults to an empty dictionary.
             Returns:
                 The list of agents or an awaitable that resolves to the list of agents.
 
@@ -149,7 +150,7 @@ class BaseAgentsManager(BaseManager):
         docs: List[DocDict] = [],
         metadata: Dict[str, Any] = {},
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
-        # Cast instructions to a list of Instruction objects
+        # Instructions are expected to be provided in the correct format
         """
         Create a new agent with the specified configuration.
 
@@ -277,7 +278,7 @@ class BaseAgentsManager(BaseManager):
                 Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: An object representing the response for the resource updated, which can also be an awaitable in asynchronous contexts.
 
             Raises:
-                AssertionError: If the provided agent_id is not a valid UUID v4.
+                AssertionError: If the provided agent_id is not validated by the is_valid_uuid4 function.
 
             Note:
                 This method asserts that the agent_id must be a valid UUID v4. The instructions and default_settings, if provided, are converted into their respective object types before making the update API call.
@@ -534,7 +535,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 ResourceCreatedResponse: A response indicating the agent was created successfully.
 
         list:
-            Lists agents with optional pagination.
+            Asynchronously lists agents with optional pagination and returns an awaitable object.
 
             Args:
                 limit (Optional[int], optional): The maximum number of agents to retrieve.
@@ -544,7 +545,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 List[Agent]: A list of agents.
 
         delete:
-            Deletes an agent by its ID.
+            Asynchronously deletes an agent by its ID and returns an awaitable object.
 
             Args:
                 agent_id (Union[str, UUID]): The unique identifier of the agent to delete.
@@ -553,7 +554,7 @@ class AsyncAgentsManager(BaseAgentsManager):
                 The response from the delete operation (specific return type may vary).
 
         update:
-            Updates the specified fields of an agent by its ID.
+            Asynchronously updates the specified fields of an agent by its ID and returns an awaitable object.
 
             Args:
                 agent_id (Union[str, UUID]): The unique identifier of the agent to update.
