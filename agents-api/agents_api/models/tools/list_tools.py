@@ -1,17 +1,15 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def list_functions_by_agent_query(
     agent_id: UUID,
     limit: int = 100,
     offset: int = 0,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     agent_id = str(agent_id)
 
     query = """
@@ -41,4 +39,4 @@ def list_functions_by_agent_query(
         :offset $offset
     }"""
 
-    return client.run(query, {"agent_id": agent_id, "limit": limit, "offset": offset})
+    return (query, {"agent_id": agent_id, "limit": limit, "offset": offset})

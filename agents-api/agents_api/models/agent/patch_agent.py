@@ -1,18 +1,18 @@
 from uuid import UUID
 
-import pandas as pd
 
-from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
 
 
+@cozo_query
 def patch_agent_query(
     agent_id: UUID,
     developer_id: UUID,
     default_settings: dict = {},
     **update_data,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """Patches agent data based on provided updates.
 
     Parameters:
@@ -85,7 +85,7 @@ def patch_agent_query(
 
     combined_query = "\n".join(queries)
 
-    return client.run(
+    return (
         combined_query,
         {
             "agent_update_vals": agent_update_vals,

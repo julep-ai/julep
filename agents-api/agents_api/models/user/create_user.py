@@ -5,36 +5,33 @@ It defines a query for inserting user data into the 'users' relation.
 
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-"""
-Constructs and executes a datalog query to create a new user in the CozoDB database.
-
-Parameters:
-    user_id (UUID): The unique identifier for the user.
-    developer_id (UUID): The unique identifier for the developer creating the user.
-    name (str): The name of the user.
-    about (str): A brief description about the user.
-    metadata (dict, optional): Additional metadata about the user. Defaults to an empty dict.
-    client (CozoClient, optional): The CozoDB client instance to run the query. Defaults to a pre-configured client instance.
-
-Returns:
-    pd.DataFrame: A DataFrame containing the result of the query execution.
-"""
-
-
+@cozo_query
 def create_user_query(
     user_id: UUID,
     developer_id: UUID,
     name: str,
     about: str,
     metadata: dict = {},
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """
+    Constructs and executes a datalog query to create a new user in the CozoDB database.
+
+    Parameters:
+        user_id (UUID): The unique identifier for the user.
+        developer_id (UUID): The unique identifier for the developer creating the user.
+        name (str): The name of the user.
+        about (str): A brief description about the user.
+        metadata (dict, optional): Additional metadata about the user. Defaults to an empty dict.
+        client (CozoClient, optional): The CozoDB client instance to run the query. Defaults to a pre-configured client instance.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the result of the query execution.
+    """
+
     query = """
     {
         # Then create the user
@@ -52,7 +49,7 @@ def create_user_query(
         :returning
     }"""
 
-    return client.run(
+    return (
         query,
         {
             "user_id": str(user_id),

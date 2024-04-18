@@ -2,25 +2,24 @@
 
 from uuid import UUID
 
-import pandas as pd
 
-from ...clients.cozo import client
 from ...common.protocol.entries import Entry
+from ..utils import cozo_query
 from ...common.utils import json
 
 
-"""
-Retrieves top-level entries from the database for a given session.
+@cozo_query
+def get_toplevel_entries_query(session_id: UUID) -> tuple[str, dict]:
+    """
+    Retrieves top-level entries from the database for a given session.
 
-Parameters:
-- session_id (UUID): The unique identifier for the session.
+    Parameters:
+    - session_id (UUID): The unique identifier for the session.
 
-Returns:
-- pd.DataFrame: A DataFrame containing the queried top-level entries.
-"""
+    Returns:
+    - pd.DataFrame: A DataFrame containing the queried top-level entries.
+    """
 
-
-def get_toplevel_entries_query(session_id: UUID) -> pd.DataFrame:
     query = """
         # Construct a datalog query to retrieve entries not summarized by any other entry.
     input[session_id] <- [[to_uuid($session_id)]]
@@ -58,25 +57,25 @@ def get_toplevel_entries_query(session_id: UUID) -> pd.DataFrame:
     :sort timestamp
     """
 
-    return client.run(query, {"session_id": str(session_id)})
+    return (query, {"session_id": str(session_id)})
 
 
-"""
-Inserts a new entry and its summarization relations into the database.
-
-Parameters:
-- session_id (UUID): The session identifier.
-- new_entry (Entry): The new entry to be inserted.
-- old_entry_ids (list[UUID]): List of entry IDs that the new entry summarizes.
-
-Returns:
-- pd.DataFrame: A DataFrame containing the result of the insertion operation.
-"""
-
-
+@cozo_query
 def entries_summarization_query(
     session_id: UUID, new_entry: Entry, old_entry_ids: list[UUID]
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """
+    Inserts a new entry and its summarization relations into the database.
+
+    Parameters:
+    - session_id (UUID): The session identifier.
+    - new_entry (Entry): The new entry to be inserted.
+    - old_entry_ids (list[UUID]): List of entry IDs that the new entry summarizes.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the result of the insertion operation.
+    """
+
     # Prepare relations data for insertion, marking the new entry as a summary of the old entries.
     relations = [
         [str(new_entry.id), "summary_of", str(old_id)] for old_id in old_entry_ids
@@ -131,4 +130,4 @@ def entries_summarization_query(
     }
     """
 
-    return client.run(query, {"relations": relations, "entries": entries})
+    return (query, {"relations": relations, "entries": entries})

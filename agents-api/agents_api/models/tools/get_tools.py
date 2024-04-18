@@ -1,16 +1,14 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def get_function_by_id_query(
     agent_id: UUID,
     tool_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
@@ -38,4 +36,4 @@ def get_function_by_id_query(
             }
     }"""
 
-    return client.run(query, {"agent_id": agent_id, "tool_id": tool_id})
+    return (query, {"agent_id": agent_id, "tool_id": tool_id})

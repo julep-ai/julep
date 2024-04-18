@@ -5,29 +5,11 @@ It constructs and executes a datalog query to insert session data.
 
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-"""
-Constructs and executes a datalog query to create a new session in the database.
-
-Parameters:
-- session_id (UUID): The unique identifier for the session.
-- developer_id (UUID): The unique identifier for the developer.
-- agent_id (UUID): The unique identifier for the agent.
-- user_id (UUID | None): The unique identifier for the user, if applicable.
-- situation (str | None): The situation/context of the session.
-- metadata (dict): Additional metadata for the session.
-- client (CozoClient): The database client used to execute the query.
-
-Returns:
-- pd.DataFrame: The result of the query execution.
-"""
-
-
+@cozo_query
 def create_session_query(
     session_id: UUID,
     developer_id: UUID,
@@ -35,8 +17,22 @@ def create_session_query(
     user_id: UUID | None,
     situation: str | None,
     metadata: dict = {},
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """
+    Constructs and executes a datalog query to create a new session in the database.
+
+    Parameters:
+    - session_id (UUID): The unique identifier for the session.
+    - developer_id (UUID): The unique identifier for the developer.
+    - agent_id (UUID): The unique identifier for the agent.
+    - user_id (UUID | None): The unique identifier for the user, if applicable.
+    - situation (str | None): The situation/context of the session.
+    - metadata (dict): Additional metadata for the session.
+
+    Returns:
+    - pd.DataFrame: The result of the query execution.
+    """
+
     situation: str = situation or ""
 
     # Construct the datalog query for creating a new session and its lookup.
@@ -74,7 +70,7 @@ def create_session_query(
      }"""
 
     # Execute the constructed query with the provided parameters and return the result.
-    return client.run(
+    return (
         query,
         {
             "session_id": str(session_id),

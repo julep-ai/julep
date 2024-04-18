@@ -1,20 +1,18 @@
 from typing import Any
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
 from ...common.utils import json
+from ..utils import cozo_query
 
 
+@cozo_query
 def list_agents_query(
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
     metadata_filter: dict[str, Any] = {},
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to list agents from the 'cozodb' database.
 
@@ -69,6 +67,7 @@ def list_agents_query(
         :sort -created_at
     }}"""
 
-    return client.run(
-        query, {"developer_id": str(developer_id), "limit": limit, "offset": offset}
+    return (
+        query,
+        {"developer_id": str(developer_id), "limit": limit, "offset": offset},
     )

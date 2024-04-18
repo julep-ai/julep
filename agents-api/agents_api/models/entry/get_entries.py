@@ -1,14 +1,13 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def get_entries_query(
-    session_id: UUID, limit: int = 100, offset: int = 0, client: CozoClient = client
-) -> pd.DataFrame:
+    session_id: UUID, limit: int = 100, offset: int = 0
+) -> tuple[str, dict]:
     """
     Constructs and executes a query to retrieve entries from the 'cozodb' database.
 
@@ -55,9 +54,4 @@ def get_entries_query(
         :offset $offset
     }"""
 
-    results = client.run(
-        query, {"session_id": str(session_id), "limit": limit, "offset": offset}
-    )
-
-    # Execute the constructed query against the 'cozodb' database using the provided parameters and return the results.
-    return results
+    return (query, {"session_id": str(session_id), "limit": limit, "offset": offset})

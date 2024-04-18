@@ -1,14 +1,15 @@
 from uuid import UUID
 
-import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
-from ...clients.cozo import client
+
+from ..utils import cozo_query
 
 
+@cozo_query
 def update_tool_by_id_query(
     agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     # Agent update query
     function = function.model_dump()
     params = {
@@ -42,4 +43,4 @@ def update_tool_by_id_query(
         :returning
     """
 
-    return client.run(query, params)
+    return (query, params)

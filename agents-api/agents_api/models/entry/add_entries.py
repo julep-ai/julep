@@ -1,21 +1,16 @@
 import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
 from ...common.protocol.entries import Entry
+from ..utils import cozo_query
 from ...common.utils import json
 from ...common.utils.datetime import utcnow
 
 
-def add_entries_query(
-    entries: list[Entry], client: CozoClient = client
-) -> pd.DataFrame:
+@cozo_query
+def add_entries_query(entries: list[Entry]) -> tuple[str, dict]:
     """
-    Adds a list of Entry objects and a CozoClient object to a pandas DataFrame.
-
     Parameters:
         entries (list[Entry]): A list of Entry objects to be processed.
-        client (CozoClient): The CozoClient object used for database operations.
 
     Returns:
         pd.DataFrame: A DataFrame containing the entries data ready for insertion into the 'cozodb' database.
@@ -74,4 +69,4 @@ def add_entries_query(
     }
     """
 
-    return client.run(query, {"entries_lst": entries_lst})
+    return (query, {"entries_lst": entries_lst})

@@ -1,16 +1,14 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def get_user_query(
     developer_id: UUID,
     user_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     # Convert UUIDs to strings for query compatibility.
     user_id = str(user_id)
     developer_id = str(developer_id)
@@ -36,4 +34,4 @@ def get_user_query(
             metadata,
         }"""
 
-    return client.run(query, {"developer_id": developer_id, "user_id": user_id})
+    return (query, {"developer_id": developer_id, "user_id": user_id})

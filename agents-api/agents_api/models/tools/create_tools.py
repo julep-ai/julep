@@ -1,20 +1,18 @@
 from uuid import uuid4, UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
 from ...autogen.openapi_model import FunctionDef
-from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
 
 
+@cozo_query
 def create_function_query(
     agent_id: UUID,
     id: UUID,
     function: FunctionDef,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     created_at = utcnow().timestamp()
 
     # Process function definitions
@@ -42,14 +40,14 @@ def create_function_query(
         :returning
     }}"""
 
-    return client.run(query, {"function_rows": function_rows})
+    return (query, {"function_rows": function_rows})
 
 
+@cozo_query
 def create_multiple_functions_query(
     agent_id: UUID,
     functions: list[FunctionDef],
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     agent_id = str(agent_id)
     created_at = utcnow().timestamp()
 
@@ -82,4 +80,4 @@ def create_multiple_functions_query(
         :returning
     }}"""
 
-    return client.run(query, {"function_rows": function_rows})
+    return (query, {"function_rows": function_rows})

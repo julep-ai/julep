@@ -1,14 +1,15 @@
 from uuid import UUID
 
-import pandas as pd
 
 from ...autogen.openapi_model import FunctionDef
-from ...clients.cozo import client
+
+from ..utils import cozo_query
 
 
+@cozo_query
 def patch_tool_by_id_query(
     agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """
     # Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.
@@ -59,4 +60,4 @@ def patch_tool_by_id_query(
         :returning
     """
 
-    return client.run(query, params)
+    return (query, params)

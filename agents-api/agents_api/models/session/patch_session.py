@@ -2,10 +2,9 @@
 
 from uuid import UUID
 
-import pandas as pd
 
-from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import cozo_query
 
 
 _fields = [
@@ -17,11 +16,12 @@ _fields = [
 ]
 
 
+@cozo_query
 def patch_session_query(
     session_id: UUID,
     developer_id: UUID,
     **update_data,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """Patch session data in the 'cozodb' database.
 
     Parameters:
@@ -85,7 +85,7 @@ def patch_session_query(
 
     combined_query = "{" + assertion_query + "}" + session_update_query
 
-    return client.run(
+    return (
         combined_query,
         {
             "session_update_vals": session_update_vals,
