@@ -62,6 +62,8 @@
     "prettier": "^3.2.4",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^3.17.1",
     "typescript": "^5.4.2"
   },
   "scripts": {
@@ -75,7 +77,7 @@
     "format": "prettier -w .",
     "openapi-codegen": "openapi -c axios --name JulepApiClient --useOptions --indent 2 -i <(yq -o=json '.' ../../openapi.yaml) -o src/api --exportSchemas true --useUnionTypes true",
     "codegen": "npm run openapi-codegen && npm run format",
-    "docs": "typedoc --plugin typedoc-plugin-markdown --out ../../gitbook/js-sdk-docs src/**/*.d.ts",
+    "generate-docs": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/js-sdk-docs src/**/*.ts",
     "test-inspect": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "prepublishOnly": "npm run build",
     "test": "npm run format && npm run start_mock_api && sleep 1 && jest && npm run kill_mock_api"
