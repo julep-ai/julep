@@ -16,6 +16,7 @@ export class UsersManager extends BaseManager {
     try {
       invariant(isValidUuid4(userId), "id must be a valid UUID v4");
 
+      // Fetches a user by ID using the API client
       const user = await this.apiClient.default.getUser({ userId });
       return user;
     } catch (error) {
