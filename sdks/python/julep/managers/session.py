@@ -68,6 +68,10 @@ class BaseSessionsManager(BaseManager):
             Returns:
                 Union[Session, Awaitable[Session]]: The session object or an awaitable yielding it.
 
+            Raises:
+                ValueError: If the `id` is not a valid UUID.
+                NetworkError: If there is an issue communicating with the API.
+
         _create(user_id, agent_id, situation):
             Create a new session with specified user and agent identifiers.
 
