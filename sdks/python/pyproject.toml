@@ -51,4 +51,4 @@ test = [
     "kill_prism",
 ]
 generate_docstrings = "gpt4docstrings -k $OPENAI_API_KEY -v 1 -w -p -s -n -C -e api/ -m gpt-4-1106-preview julep/"
-doc = "handsdown julep --exclude julep/api/core --exclude julep/api/types --exclude julep/api/environment.py --exclude julep/env.py --exclude julep/managers/base.py --exclude julep/managers/types.py --exclude julep/managers/utils.py --cleanup -n 'Julep Python SDK' --toc-depth 2 -o ../../gitbook/python-sdk-docs"
+doc = "handsdown julep --exclude julep/api/core --exclude julep/api/types --exclude julep/api/environment.py --exclude julep/env.py --exclude julep/managers/base.py --exclude julep/managers/types.py --exclude julep/managers/utils.py --cleanup -n 'Julep Python SDK' --toc-depth 2 -o ../../docs/python-sdk-docs"
