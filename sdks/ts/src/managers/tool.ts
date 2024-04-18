@@ -1,3 +1,4 @@
+// ToolsManager class manages tool-related operations such as listing, creating, updating, and deleting tools.
 import {
   Tool,
   UpdateToolRequest,
@@ -18,6 +19,7 @@ export class ToolsManager extends BaseManager {
       offset?: number;
     } = {},
   ): Promise<Array<Tool>> {
+    // Lists tools associated with a given agent. Allows pagination through `limit` and `offset` parameters.
     const result = await this.apiClient.default.getAgentTools({
       agentId,
       limit,
@@ -37,6 +39,7 @@ export class ToolsManager extends BaseManager {
       function: FunctionDef;
     };
   }): Promise<Tool> {
+    // Creates a new tool for the specified agent. The `tool` parameter must include the tool type and function definition.
     const result: ResourceCreatedResponse =
       await this.apiClient.default.createAgentTool({
         agentId,
@@ -60,6 +63,7 @@ export class ToolsManager extends BaseManager {
     },
     overwrite = false,
   ): Promise<Tool> {
+    // Updates an existing tool. If `overwrite` is true, it replaces the existing tool with the new one; otherwise, it patches the tool with the provided changes.
     if (overwrite) {
       const result = await this.apiClient.default.updateAgentTool({
         agentId,
@@ -86,6 +90,7 @@ export class ToolsManager extends BaseManager {
     agentId: string;
     toolId: string;
   }): Promise<void> {
+    // Deletes a specified tool from an agent.
     await this.apiClient.default.deleteAgentTool({ agentId, toolId });
   }
 }
