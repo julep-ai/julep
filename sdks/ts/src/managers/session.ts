@@ -19,6 +19,11 @@ export interface CreateSessionPayload {
 }
 
 export class SessionsManager extends BaseManager {
+  /**
+   * Retrieves a session by its ID.
+   * @param sessionId The unique identifier of the session.
+   * @returns A promise that resolves with the session object.
+   */
   async get(sessionId: string): Promise<Session> {
     try {
       return this.apiClient.default.getSession({ sessionId });
