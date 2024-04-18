@@ -34,19 +34,24 @@
 
 ## 🛠️ SDKs
 
-* [Available SDKs](sdks/available-sdks.md)
-* [Python SDK](sdks/python-sdk-docs/README.md)
-  * [Client](sdks/python-sdk-docs/client.md)
-  * [Agents](sdks/python-sdk-docs/agent.md)
-  * [Users](sdks/python-sdk-docs/user.md)
-  * [Sessions](sdks/python-sdk-docs/session.md)
-  * [Memories](sdks/python-sdk-docs/memory.md)
-  * [Docs](sdks/python-sdk-docs/doc.md)
-  * [Tools](sdks/python-sdk-docs/tool.md)
-  * [API](sdks/python-sdk-docs/client-1.md)
-* [JS SDK](sdks/js-sdk-docs/README.md)
-  * [Client](sdks/js-sdk-docs/client.julepapiclient-1.md)
-  * [Modules](sdks/js-sdk-docs/modules.md)
+* [Python SDK](python-sdk-docs/README.md)
+  * [Client](python-sdk-docs/julep/client.md)
+  * [Agents](python-sdk-docs/julep/managers/agent.md)
+  * [Users](python-sdk-docs/julep/managers/user.md)
+  * [Sessions](python-sdk-docs/julep/managers/session.md)
+  * [Memories](python-sdk-docs/julep/managers/memory.md)
+  * [Docs](python-sdk-docs/julep/managers/doc.md)
+  * [Tools](python-sdk-docs/julep/managers/tool.md)
+  * [API](python-sdk-docs/julep/api/client.md)
+* [JS SDK](js-sdk-docs/README.md)
+  * [API](js-sdk-docs/modules/api.md)
+  * [Client](js-sdk-docs/classes/api_JulepApiClient.JulepApiClient.md)
+  * [Agent](js-sdk-docs/classes/managers_agent.AgentsManager.md)
+  * [Doc](js-sdk-docs/classes/managers_doc.DocsManager.md)
+  * [Memory](js-sdk-docs/classes/managers_memory.MemoriesManager.md)
+  * [Session](js-sdk-docs/classes/managers_session.SessionsManager.md)
+  * [Tool](js-sdk-docs/classes/managers_tool.ToolsManager.md)
+  * [User](js-sdk-docs/classes/managers_user.UsersManager.md)
 
 ## 📖 API REFERENCE
 
