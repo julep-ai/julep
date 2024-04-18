@@ -18,6 +18,17 @@ from openai._types import NOT_GIVEN, Body, Query, Headers, NotGiven
 
 
 def patch_completions_acreate(client: OpenAI):
+    """
+    Asynchronously patches the `completions.create` method of the OpenAI client.
+
+    This function replaces the original `completions.create` method with a custom asynchronous version that allows for additional parameters and custom behavior.
+
+    Parameters:
+    - client (OpenAI): The OpenAI client instance to be patched.
+
+    Returns:
+    - OpenAI: The patched OpenAI client instance with the modified `completions.create` method.
+    """
     original_completions_create = client.completions.create
 
     async def completions_create(
@@ -82,6 +93,17 @@ def patch_completions_acreate(client: OpenAI):
 
 
 def patch_chat_acreate(client: OpenAI):
+    """
+    Asynchronously patches the `chat.completions.create` method of the OpenAI client.
+
+    This function updates the `chat.completions.create` method to an asynchronous version, enabling the inclusion of additional parameters and adjustments to its behavior.
+
+    Parameters:
+    - client (OpenAI): The OpenAI client instance to be patched.
+
+    Returns:
+    - OpenAI: The patched OpenAI client instance with the updated `chat.completions.create` method.
+    """
     original_chat_create = client.chat.completions.create
 
     async def chat_create(
@@ -171,6 +193,17 @@ def patch_chat_acreate(client: OpenAI):
 
 
 def patch_completions_create(client: OpenAI):
+    """
+    Patches the `completions.create` method (non-async version) of the OpenAI client.
+
+    This function replaces the original `completions.create` method with a custom version that supports additional parameters and custom behavior, without changing it to an asynchronous function.
+
+    Parameters:
+    - client (OpenAI): The OpenAI client instance to be patched.
+
+    Returns:
+    - OpenAI: The patched OpenAI client instance with the modified `completions.create` method.
+    """
     original_completions_create = client.completions.create
 
     def completions_create(
