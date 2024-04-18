@@ -7,6 +7,18 @@ import { xor } from "../utils/xor";
 import { BaseManager } from "./base";
 
 export class DocsManager extends BaseManager {
+  /**
+   * Retrieves documents based on the provided agentId or userId.
+   * Ensures that only one of agentId or userId is provided using xor function.
+   * Validates the provided agentId or userId using isValidUuid4.
+   * @param {Object} params - The parameters for retrieving documents.
+   * @param {string} [params.agentId] - The agent's unique identifier.
+   * @param {string} [params.userId] - The user's unique identifier.
+   * @param {number} [params.limit=100] - The maximum number of documents to return.
+   * @param {number} [params.offset=0] - The offset from which to start the document retrieval.
+   * @returns {Promise<Object>} The retrieved documents.
+   * @throws {Error} If neither agentId nor userId is provided.
+   */
   async get({
     agentId,
     userId,
@@ -45,6 +57,20 @@ export class DocsManager extends BaseManager {
     }
   }
 
+  /**
+   * Lists documents based on the provided agentId or userId, with optional metadata filtering.
+   * Ensures that only one of agentId or userId is provided using xor function.
+   * Validates the provided agentId or userId using isValidUuid4.
+   * Allows for filtering based on metadata.
+   * @param {Object} params - The parameters for listing documents, including filtering options.
+   * @param {string} [params.agentId] - The agent's unique identifier, if filtering by agent.
+   * @param {string} [params.userId] - The user's unique identifier, if filtering by user.
+   * @param {number} [params.limit=100] - The maximum number of documents to return.
+   * @param {number} [params.offset=0] - The offset from which to start the document listing.
+   * @param {Object} [params.metadataFilter={}] - Optional metadata to filter the documents.
+   * @returns {Promise<Array<Doc>>} The list of filtered documents.
+   * @throws {Error} If neither agentId nor userId is provided.
+   */
   async list({
     agentId,
     userId,
@@ -93,6 +119,17 @@ export class DocsManager extends BaseManager {
     }
   }
 
+  /**
+   * Creates a document based on the provided agentId or userId.
+   * Ensures that only one of agentId or userId is provided using xor function.
+   * Validates the provided agentId or userId using isValidUuid4.
+   * @param {Object} params - The parameters for creating a document.
+   * @param {string} [params.agentId] - The agent's unique identifier, if creating for an agent.
+   * @param {string} [params.userId] - The user's unique identifier, if creating for a user.
+   * @param {CreateDoc} params.doc - The document to be created.
+   * @returns {Promise<Doc>} The created document.
+   * @throws {Error} If neither agentId nor userId is provided.
+   */
   async create({
     agentId,
     userId,
@@ -135,6 +172,17 @@ export class DocsManager extends BaseManager {
     }
   }
 
+  /**
+   * Deletes a document based on the provided agentId or userId and the specific docId.
+   * Ensures that only one of agentId or userId is provided using xor function.
+   * Validates the provided agentId or userId using isValidUuid4.
+   * @param {Object} params - The parameters for deleting a document.
+   * @param {string} [params.agentId] - The agent's unique identifier, if deleting for an agent.
+   * @param {string} [params.userId] - The user's unique identifier, if deleting for a user.
+   * @param {string} params.docId - The unique identifier of the document to be deleted.
+   * @returns {Promise<void>} A promise that resolves when the document is successfully deleted.
+   * @throws {Error} If neither agentId nor userId is provided.
+   */
   async delete({
     agentId,
     userId,
