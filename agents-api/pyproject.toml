@@ -8,7 +8,7 @@ packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-fastapi = "^0.103.1"
+fastapi = "^0.109.1"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.23.2"
 fire = "^0.5.0"
@@ -22,6 +22,10 @@ sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
 ward = "^0.68.0b0"
 temporalio = "^1.4.0"
 pydantic = "^2.5.3"
+arrow = "^1.3.0"
+jinja2 = "^3.1.3"
+jinja2schema = "^0.1.4"
+jsonschema = "^4.21.1"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -145,6 +145,7 @@ class JulepApi:
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
+        render_templates: typing.Optional[bool] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a session between an agent and a user
@@ -157,6 +158,8 @@ class JulepApi:
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
 
             - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
+
+            - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
         ---
         from julep.client import JulepApi
 
@@ -174,6 +177,8 @@ class JulepApi:
             _request["situation"] = situation
         if metadata is not OMIT:
             _request["metadata"] = metadata
+        if render_templates is not OMIT:
+            _request["render_templates"] = render_templates
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
@@ -1905,6 +1910,7 @@ class AsyncJulepApi:
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
+        render_templates: typing.Optional[bool] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a session between an agent and a user
@@ -1917,6 +1923,8 @@ class AsyncJulepApi:
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
 
             - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
+
+            - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
         ---
         from julep.client import AsyncJulepApi
 
@@ -1934,6 +1942,8 @@ class AsyncJulepApi:
             _request["situation"] = situation
         if metadata is not OMIT:
             _request["metadata"] = metadata
+        if render_templates is not OMIT:
+            _request["render_templates"] = render_templates
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),

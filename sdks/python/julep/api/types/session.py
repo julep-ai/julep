@@ -35,6 +35,9 @@ class Session(pydantic.BaseModel):
     metadata: typing.Optional[SessionMetadata] = pydantic.Field(
         description="Optional metadata"
     )
+    render_templates: typing.Optional[bool] = pydantic.Field(
+        description="Render system and assistant message content as jinja templates"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

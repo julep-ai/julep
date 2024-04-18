@@ -44,5 +44,9 @@ export const $Session = {
       description: `Optional metadata`,
       properties: {},
     },
+    render_templates: {
+      type: "boolean",
+      description: `Render system and assistant message content as jinja templates`,
+    },
   },
 } as const;

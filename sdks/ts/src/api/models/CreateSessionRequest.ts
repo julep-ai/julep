@@ -22,4 +22,8 @@ export type CreateSessionRequest = {
    * Optional metadata
    */
   metadata?: any;
+  /**
+   * Render system and assistant message content as jinja templates
+   */
+  render_templates?: boolean;
 };
