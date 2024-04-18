@@ -28,7 +28,7 @@ class DocsCreateArgs(TypedDict):
 
 class BaseDocsManager(BaseManager):
     """
-    Manages documents for agents or users by providing methods to get, create, and delete docsrmation.
+    Manages documents for agents or users by providing internal methods to list, create, and delete documents.
 
     The class utilizes an API client to interact with a back-end service that handles the document management operations.
 
@@ -79,6 +79,7 @@ class BaseDocsManager(BaseManager):
             user_id (Optional[Union[str, UUID]]): The UUID v4 of the user for whom docs is requested, exclusive with `agent_id`.
             limit (Optional[int]): The maximum number of records to return. Defaults to None.
             offset (Optional[int]): The number of records to skip before starting to collect the response set. Defaults to None.
+            metadata_filter (Dict[str, Any]): A dictionary used for filtering documents based on metadata criteria. Defaults to an empty dictionary.
 
         Returns:
             Union[GetAgentDocsResponse, Awaitable[GetAgentDocsResponse]]: The response object containing docsrmation about the agent or user, or a promise of such an object if the call is asynchronous.
@@ -127,6 +128,7 @@ class BaseDocsManager(BaseManager):
                 agent_id (Optional[Union[str, UUID]]): The UUID of the agent or None.
                 user_id (Optional[Union[str, UUID]]): The UUID of the user or None.
                 doc (DocDict): A dictionary containing the document data for the resource being created.
+                metadata (Dict[str, Any]): Optional metadata for the document. Defaults to an empty dictionary.
 
             Returns:
                 Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response after creating the resource, which could be immediate or an awaitable for asynchronous execution.
@@ -178,7 +180,7 @@ class BaseDocsManager(BaseManager):
                 The result of the API deletion request. This can be the response object from the client's delete operation.
 
             Raises:
-                AssertionError: If neither `agent_id` nor `user_id` is valid, if both are provided simultaneously, or if negation logic for valid UUIDs fails.
+                AssertionError: If both `agent_id` and `user_id` are provided, neither are provided, or if the provided IDs are not valid UUID v4 strings.
                 Other exceptions related to the `api_client` operations could potentially be raised and depend on its implementation.
         """
         assert (
