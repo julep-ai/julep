@@ -20,29 +20,25 @@ from .types import ToolDict, FunctionDefDict
 
 class BaseToolsManager(BaseManager):
     """
-    A class to manage base tools by interacting with an API client.
+    A class to manage tools by interacting with an API client.
 
-    This class provides an interface for creating, reading, updating, and deleting tools, where each tool is associated with an agent.
+    This class provides methods for creating, reading, updating, and deleting tools associated with agents. It ensures the validity of UUIDs for agent_id and tool_id where applicable and handles both synchronous and asynchronous operations.
 
     Attributes:
-        api_client: The API client utilized to send requests to the service.
+        api_client: The API client used to send requests to the service.
 
     Methods:
         _get(self, agent_id: Union[str, UUID], limit: Optional[int]=None, offset: Optional[int]=None) -> Union[GetAgentToolsResponse, Awaitable[GetAgentToolsResponse]]:
-            Retrieve a list of tools associated with the given agent using the API client.
+            Retrieves a list of tools associated with the specified agent. Supports pagination through limit and offset parameters.
 
         _create(self, agent_id: Union[str, UUID], tool: ToolDict) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
-            Create a new tool associated with the given agent using the API client.
+            Creates a new tool associated with the specified agent.
 
         _update(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID], function: FunctionDefDict) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
-            Update the definition of an existing tool associated with the given agent using the API client.
+            Updates the definition of an existing tool associated with the specified agent.
 
         _delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]):
-            Delete a tool associated with the given agent using the API client.
-
-    Note:
-        All methods assert the validity of UUIDs for agent_id and tool_id when applicable.
-        The _get, _create, and _update methods may return either synchronous or asynchronous responses, indicated by the return type Union[..., Awaitable[...]].
+            Deletes a tool associated with the specified agent.
     """
 
     def _get(
