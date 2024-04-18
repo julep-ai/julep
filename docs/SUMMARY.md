@@ -44,7 +44,7 @@
   * [Docs](sdks/python-sdk-docs/doc.md)
   * [Tools](sdks/python-sdk-docs/tool.md)
   * [API](sdks/python-sdk-docs/client-1.md)
-* [JS SDK](sdks/js-sdk-docs/README.md)
+* [JS SDK](js-sdk-docs/modules.md)
   * [Client](sdks/js-sdk-docs/client.julepapiclient-1.md)
   * [Modules](sdks/js-sdk-docs/modules.md)
 
