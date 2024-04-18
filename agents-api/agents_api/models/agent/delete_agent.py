@@ -4,11 +4,8 @@ This module contains the implementation of the delete_agent_query function, whic
 
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
-
+from ..utils import cozo_query
 
 """
 Constructs and returns a datalog query for deleting an agent and its default settings from the database.
@@ -19,13 +16,12 @@ Parameters:
 - client (CozoClient, optional): An instance of the CozoClient to execute the query.
 
 Returns:
-- pd.DataFrame: A DataFrame containing the results of the deletion query.
+- tuple[str, dict]: A DataFrame containing the results of the deletion query.
 """
 
 
-def delete_agent_query(
-    developer_id: UUID, agent_id: UUID, client: CozoClient = client
-) -> pd.DataFrame:
+@cozo_query
+def delete_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
     query = """
     {
         # Delete default agent settings
@@ -44,6 +40,4 @@ def delete_agent_query(
         }
     }"""
 
-    return client.run(
-        query, {"agent_id": str(agent_id), "developer_id": str(developer_id)}
-    )
+    return (query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})

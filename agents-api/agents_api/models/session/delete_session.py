@@ -2,24 +2,21 @@
 
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def delete_session_query(
     developer_id: UUID,
     session_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """
     Deletes a session and its related data from the 'cozodb' database.
 
     Parameters:
     - developer_id (UUID): The unique identifier for the developer.
     - session_id (UUID): The unique identifier for the session to be deleted.
-    - client (CozoClient): The database client used to execute the query.
 
     Returns:
     - pd.DataFrame: A DataFrame containing the result of the deletion query.
@@ -79,4 +76,4 @@ def delete_session_query(
     }
     """
 
-    return client.run(query, {"session_id": session_id, "developer_id": developer_id})
+    return (query, {"session_id": session_id, "developer_id": developer_id})

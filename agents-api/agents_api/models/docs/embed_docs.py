@@ -2,31 +2,27 @@
 
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-"""Embeds document snippets in the cozodb database.
-
-Parameters:
-doc_id (UUID): The unique identifier for the document.
-snippet_indices (list[int]): Indices of the snippets in the document.
-embeddings (list[list[float]]): Embedding vectors for the snippets.
-client (CozoClient, optional): The Cozo client to interact with the database. Defaults to a pre-configured client instance.
-
-Returns:
-pd.DataFrame: A DataFrame containing the results of the embedding operation.
-"""
-
-
+@cozo_query
 def embed_docs_snippets_query(
     doc_id: UUID,
     snippet_indices: list[int],
     embeddings: list[list[float]],
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """Embeds document snippets in the cozodb database.
+
+    Parameters:
+    doc_id (UUID): The unique identifier for the document.
+    snippet_indices (list[int]): Indices of the snippets in the document.
+    embeddings (list[list[float]]): Embedding vectors for the snippets.
+
+    Returns:
+    tuple[str, dict]: A DataFrame containing the results of the embedding operation.
+    """
+
     doc_id = str(doc_id)
     # Ensure the number of snippet indices matches the number of embeddings.
     assert len(snippet_indices) == len(embeddings)
@@ -50,4 +46,4 @@ def embed_docs_snippets_query(
         :returning
     }"""
 
-    return client.run(query, {"records": records})
+    return (query, {"records": records})

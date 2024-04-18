@@ -3,30 +3,27 @@
 from typing import Literal
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-"""
-Retrieves snippets of documents by their ID from the CozoDB.
-
-Parameters:
-    owner_type (Literal["user", "agent"]): The type of the owner of the document.
-    doc_id (UUID): The unique identifier of the document.
-    client (CozoClient, optional): The CozoDB client instance. Defaults to a pre-configured client.
-
-Returns:
-    pd.DataFrame: A DataFrame containing the document snippets and related metadata.
-"""
-
-
+@cozo_query
 def get_docs_snippets_by_id_query(
     owner_type: Literal["user", "agent"],
     doc_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """
+    Retrieves snippets of documents by their ID from the CozoDB.
+
+    Parameters:
+        owner_type (Literal["user", "agent"]): The type of the owner of the document.
+        doc_id (UUID): The unique identifier of the document.
+        client (CozoClient, optional): The CozoDB client instance. Defaults to a pre-configured client.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the document snippets and related metadata.
+    """
+
     doc_id = str(doc_id)
 
     query = f"""
@@ -58,4 +55,4 @@ def get_docs_snippets_by_id_query(
             }}
     }}"""
 
-    return client.run(query, {"doc_id": doc_id})
+    return (query, {"doc_id": doc_id})

@@ -2,27 +2,28 @@
 
 from uuid import UUID
 
-import pandas as pd
 
-from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
 
 
-"""
-Generates a datalog query for updating a user's information.
+@cozo_query
+def patch_user_query(
+    developer_id: UUID, user_id: UUID, **update_data
+) -> tuple[str, dict]:
+    """
+    Generates a datalog query for updating a user's information.
 
-Parameters:
-- developer_id (UUID): The UUID of the developer.
-- user_id (UUID): The UUID of the user to be updated.
-- **update_data: Arbitrary keyword arguments representing the data to be updated.
+    Parameters:
+    - developer_id (UUID): The UUID of the developer.
+    - user_id (UUID): The UUID of the user to be updated.
+    - **update_data: Arbitrary keyword arguments representing the data to be updated.
 
-Returns:
-- pd.DataFrame: A pandas DataFrame containing the results of the query execution.
-"""
+    Returns:
+    - tuple[str, dict]: A pandas DataFrame containing the results of the query execution.
+    """
 
-
-def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.DataFrame:
     # Prepare data for mutation by filtering out None values and adding system-generated fields.
     metadata = update_data.pop("metadata", {}) or {}
     user_update_cols, user_update_vals = cozo_process_mutate_data(
@@ -53,7 +54,7 @@ def patch_user_query(developer_id: UUID, user_id: UUID, **update_data) -> pd.Dat
         :returning
     """
 
-    return client.run(
+    return (
         query,
         {
             "user_update_vals": user_update_vals,

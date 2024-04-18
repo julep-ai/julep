@@ -1,11 +1,10 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
+@cozo_query
 def proc_mem_context_query(
     session_id: UUID,
     tool_query_embedding: list[float],
@@ -14,8 +13,7 @@ def proc_mem_context_query(
     docs_confidence: float = 0.7,
     k_tools: int = 3,
     k_docs: int = 2,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
 
     Parameters:
@@ -312,7 +310,7 @@ def proc_mem_context_query(
     }}
     """
 
-    return client.run(
+    return (
         query,
         {
             "session_id": session_id,

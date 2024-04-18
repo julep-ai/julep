@@ -1,14 +1,11 @@
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ..utils import cozo_query
 
 
-def get_agent_query(
-    developer_id: UUID, agent_id: UUID, client: CozoClient = client
-) -> pd.DataFrame:
+@cozo_query
+def get_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
     """
     Fetches agent details and default settings from the database.
 
@@ -77,6 +74,4 @@ def get_agent_query(
 
     # Execute the constructed datalog query using the provided CozoClient.
     # The result is returned as a pandas DataFrame.
-    return client.run(
-        query, {"agent_id": str(agent_id), "developer_id": str(developer_id)}
-    )
+    return (query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})

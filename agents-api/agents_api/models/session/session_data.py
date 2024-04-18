@@ -1,23 +1,22 @@
 from uuid import UUID
 
-import pandas as pd
 from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
+from ...clients.cozo import client as cozo_client
 from ...common.protocol.sessions import SessionData
+from ..utils import cozo_query
 
 
+@cozo_query
 def session_data_query(
     developer_id: UUID,
     session_id: UUID,
-    client: CozoClient = client,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
     """Constructs and executes a datalog query to retrieve session data from the 'cozodb' database.
 
     Parameters:
         developer_id (UUID): The developer's unique identifier.
         session_id (UUID): The session's unique identifier.
-        client (CozoClient): The database client used to execute the query.
 
     Returns:
         pd.DataFrame: A DataFrame containing the query results.
@@ -98,13 +97,11 @@ def session_data_query(
         }
     """
 
-    return client.run(
-        query, {"developer_id": str(developer_id), "session_id": str(session_id)}
-    )
+    return (query, {"developer_id": str(developer_id), "session_id": str(session_id)})
 
 
 def get_session_data(
-    developer_id: UUID, session_id: UUID, client: CozoClient = client
+    developer_id: UUID, session_id: UUID, client: CozoClient = cozo_client
 ) -> SessionData | None:
     """Calls `session_data_query` to get session data and processes the result.
 

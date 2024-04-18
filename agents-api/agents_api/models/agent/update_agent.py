@@ -5,35 +5,32 @@ It includes the `update_agent_query` function which constructs and executes data
 
 from uuid import UUID
 
-import pandas as pd
-from pycozo.client import Client as CozoClient
 
-from ...clients.cozo import client
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import cozo_query
 
 
-"""
-Constructs and executes a datalog query to update an agent and its default settings in the 'cozodb' database.
-
-Parameters:
-- agent_id (UUID): The unique identifier of the agent to be updated.
-- developer_id (UUID): The unique identifier of the developer associated with the agent.
-- default_settings (dict, optional): A dictionary of default settings to be updated for the agent. Defaults to an empty dict.
-- client (CozoClient, optional): The database client used to execute the query. Defaults to a pre-configured client instance.
-- **update_data: Variable keyword arguments representing additional agent data to be updated.
-
-Returns:
-- pd.DataFrame: A DataFrame containing the result of the update operation.
-"""
-
-
+@cozo_query
 def update_agent_query(
     agent_id: UUID,
     developer_id: UUID,
     default_settings: dict = {},
-    client: CozoClient = client,
     **update_data,
-) -> pd.DataFrame:
+) -> tuple[str, dict]:
+    """
+    Constructs and executes a datalog query to update an agent and its default settings in the 'cozodb' database.
+
+    Parameters:
+    - agent_id (UUID): The unique identifier of the agent to be updated.
+    - developer_id (UUID): The unique identifier of the developer associated with the agent.
+    - default_settings (dict, optional): A dictionary of default settings to be updated for the agent. Defaults to an empty dict.
+    - client (CozoClient, optional): The database client used to execute the query. Defaults to a pre-configured client instance.
+    - **update_data: Variable keyword arguments representing additional agent data to be updated.
+
+    Returns:
+    - pd.DataFrame: A DataFrame containing the result of the update operation.
+    """
+
     agent_id = str(agent_id)
     developer_id = str(developer_id)
     update_data["instructions"] = update_data.get("instructions", [])
@@ -115,7 +112,7 @@ def update_agent_query(
     # Combine the assertion query with the update queries
     combined_query = "{" + assertion_query + "} " + "\n".join(queries)
 
-    return client.run(
+    return (
         combined_query,
         {
             "agent_update_vals": agent_update_vals,
