@@ -46,7 +46,7 @@ AxiosHttpRequest.constructor
 
 #### Defined in
 
-[src/utils/requestConstructor.ts:16](https://github.com/julep-ai/julep/blob/459f37c65d4e139f914f7bba9dec6f3570b62fcb/sdks/ts/src/utils/requestConstructor.ts#L16)
+[src/utils/requestConstructor.ts:16](https://github.com/julep-ai/julep/blob/137fc3344978acb0061f00ed2f60bb7671aff682/sdks/ts/src/utils/requestConstructor.ts#L16)
 
 ## Properties
 
@@ -60,7 +60,7 @@ AxiosHttpRequest.config
 
 #### Defined in
 
-[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/459f37c65d4e139f914f7bba9dec6f3570b62fcb/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
+[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/137fc3344978acb0061f00ed2f60bb7671aff682/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
 
 ## Methods
 
@@ -90,4 +90,4 @@ AxiosHttpRequest.request
 
 #### Defined in
 
-[src/utils/requestConstructor.ts:21](https://github.com/julep-ai/julep/blob/459f37c65d4e139f914f7bba9dec6f3570b62fcb/sdks/ts/src/utils/requestConstructor.ts#L21)
+[src/utils/requestConstructor.ts:21](https://github.com/julep-ai/julep/blob/137fc3344978acb0061f00ed2f60bb7671aff682/sdks/ts/src/utils/requestConstructor.ts#L21)
