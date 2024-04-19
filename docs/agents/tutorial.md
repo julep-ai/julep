@@ -1,14 +1,10 @@
 # Tutorial
 
-{% hint style="info" %}
-**Coming soon.**
-{% endhint %}
-
 ### Loom Demo
 
 (Step by step code follows)
 
-{% embed url="https://www.loom.com/share/9d303e8ad1714c19a20afede05cdc7d3?sid=b5600ea5-583d-498e-8917-f2b35ca38a3c" %}
+{% embed url="https://www.loom.com/share/79646b058235467fb9042d242ce0d7a4?sid=86d9da76-87e5-4bf9-a2a8-0e9ee1c59f1c" %}
 
 ***
 
@@ -21,16 +17,21 @@
 ### Install SDK
 
 ```bash
-# Install the julep sdk (inside a virtualenv)
 pip install julep
 ```
 
 ### Setup
 
 ```python
-from julep import Client  # or AsyncClient
+from julep import Client
+from pprint import pprint
+import textwrap
+import os
 
-client = Client(api_key="<YOUR JULEP API KEY>"
+base_url = os.environ.get("JULEP_API_URL")
+api_key = os.environ.get("JULEP_API_KEY")
+
+client = Client(api_key=api_key, base_url=base_url)
 ```
 
 ### Creating an Agent
@@ -71,77 +72,49 @@ agent = client.agents.create(
 ```
 {% endcode %}
 
-### Creating a task
-
-This agent is supposed to follow this plan:
-
-1. Think about the task and make a plan using the tools:
-   * Given a topic, search the web for it,
-   * Then summarize it,
-   * And then send the result to a webhook.
-2. Think about step 1. And make a tool\_call to search the web for the topic with a detailed query
-3. Think about step 2. And then summarize the results received.
-4. Think about step 3. And make a tool call to the webhook
+### Creating a user
 
 {% code overflow="wrap" %}
 ```python
-# Let's create a task for this agent.
-instructions = [
-    "Consider the research topic and devise a search strategy using the provided tools.",
-    "Use the 'search' tool to find comprehensive information on the topic from various web sources.",
-    "Analyze the search results and create a concise summary highlighting the key points.",
-    "Send the summary and the detailed search results to the specified webhook endpoint for integration into our system.",
-]
-
-task = client.tasks.create(
-    agent_id=agent.id,
-    instructions=instructions,
-    inputs={"topic": {"type": "string", "description": "Topic to research"}},
+about = """
+Average nerdy techbro/girl who spends 8 hours a day in front of a laptop.
+Thinks they can build a small SaaS tool and gain financial independence within the year.
+"""
+user = client.users.create(
+    name="Anon",
+    about=about,
 )
 ```
 {% endcode %}
 
-### Creating a Task Run
+### Putting it all together in a "session"
+
+A "user" and an "agent" communicate in a "session". System prompt goes here.
+
+Conversation history and summary are stored in a "session" which saves the conversation history.
+
+The session paradigm allows for; many users to interact with one agent and allow separation of conversation history and memories.
 
 ```python
-# Ask the agent to run this task
-run = client.runs.create(
-    agent_id=agent.id, task_id=task.id, inputs={"topic": "Sam Altman"}
+situation_prompt = """You are Jessica. You're a stuck up Cali teenager.
+You basically complain about everything. You live in Bel-Air, Los Angeles and drag yourself to Curtis High School when you must.
+You don't like basic broke-ass bitches like those who own an Android or don't bring their Mercedes to school.
+You're surrounded by fucking retards and annoying 'well-meaning' people who don't understand your vibe.
+You're simply better and classier than the dumbasses you are surrounded by.
+
+Recent Tweets
+1. 'my step mom is so fake and nice all the time? she's not even rich wtf. why tf did my dad marry her. #brokebitch'
+2. 'am i the only one who thinks jordan belfort was a good guy??? he's so cute like..''
+3. 'if your butler doesn't know the difference soda and Perrier don't even fkng talk to me'
+
+Here, you are hanging out in a Discord Server called Julep AI to troll these nerdy losers.
+"""
+
+session = client.sessions.create(
+    user_id=user.id, agent_id=agent.id, situation=situation_prompt
 )
-
-
-for step in run.execution_steps():
-    print("Step Result: ", step.messages)
-    print("---")
-    print()
-
 ```
 
-{% code title="Script Output:" overflow="wrap" fullWidth="true" %}
-```yaml
-Step Result:  Starting the research on Sam Altman. I'll begin by gathering information from various sources on the web.
----
+### Run the tutorial in Deepnote
 
-Step Result:  
----
-
-Step Result:  Found numerous articles, interviews, and resources on Sam Altman, including his role at OpenAI, investments, and insights into technology and entrepreneurship.
----
-
-Step Result:  Need to summarize this information to capture the essence of Sam Altman's impact.
----
-
-Step Result:  Summary:
-Sam Altman, known for his leadership at OpenAI, has been a pivotal figure in the tech industry, driving innovation and supporting startups. His insights on entrepreneurship and the future of AI have influenced a wide audience.
----
-
-Step Result:  Now, I'll send the compiled summary and details to the webhook.
----
-
-Step Result:  
----
-
-Step Result:  Delivered data to webhook
----
-```
-{% endcode %}
+Run Jessica or your own agent using Deepnote [here](https://deepnote.com/app/julep-ai-761c/Julep-Mixers-4dfff09a-84f2-4278-baa3-d1a00b88ba26)

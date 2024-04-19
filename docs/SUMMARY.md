@@ -5,12 +5,7 @@
 * [Welcome to Julep](README.md)
 * [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
 * [Motivation](<README (1).md>)
-* [Core Concepts](introduction/core-concepts.md)
-
-## 🚀 Getting Started
-
 * [Agents Quickstart](getting-started/agents-quickstart.md)
-* [Model Quickstart](getting-started/python-setup.md)
 
 ## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
 
@@ -19,20 +14,7 @@
 * [Self-hosting](agents/self-hosting.md)
 * [Example: Jessica](agents/jessica.md)
 
-## 💁 S1 Model
-
-* [Overview](s1-model/overview.md)
-* [Tutorial](s1-model/tutorial.md)
-* [Concepts](s1-model/context-sections.md)
-* [Capabilities](s1-model/capabilities/README.md)
-  * [Human-like conversations](s1-model/capabilities/capabilities.md)
-
-## 🧪 Agent Studio
-
-* [Model Playground](agent-studio/playground.md)
-* [Agents Playground](agent-studio/agents-playground.md)
-
-## 🛠️ SDKs
+## 📖 API REFERENCE
 
 * [Python SDK](python-sdk-docs/README.md)
   * [Client](python-sdk-docs/julep/client.md)
@@ -52,10 +34,7 @@
   * [Session](js-sdk-docs/classes/managers_session.SessionsManager.md)
   * [Tool](js-sdk-docs/classes/managers_tool.ToolsManager.md)
   * [User](js-sdk-docs/classes/managers_user.UsersManager.md)
-
-## 📖 API REFERENCE
-
-* [Agents API (alpha)](api-reference/agents-api/README.md)
+* [Agents API](api-reference/agents-api/README.md)
   * [Agents](api-reference/agents-api/agents-api.md)
   * [Users](api-reference/agents-api/agents-api-1.md)
   * [Sessions](api-reference/agents-api/agents-api-2.md)
@@ -63,15 +42,10 @@
   * [Docs](api-reference/agents-api/agents-api-4.md)
   * [Tasks](api-reference/agents-api/agents-api-5.md)
   * [Task Runs](api-reference/agents-api/agents-api-6.md)
-* [Model API](api-reference/model-api.md)
-  * [Chat Completions](api-reference/model-api/model-api.md)
-  * [Completions (Advanced)](api-reference/model-api/model-api-1.md)
-  * [Generation Parameters](api-reference/model-api/generation-parameters.md)
 
 ## 🔍 FAQs
 
 * [General Questions](faqs/general-overview.md)
-* [Agent Studio](faqs/agent-prototyping.md)
 * [Memory and Learning](faqs/memory-and-learning.md)
 * [Sessions and Tasks](faqs/sessions-and-tasks.md)
 * [Technical Details](faqs/technical-details.md)

@@ -2,19 +2,12 @@
 description: Jessica
 ---
 
-# Jessica Playground
-
-## What is Jessica
 
 <figure><img src="../.gitbook/assets/jessica.png" alt="Jessica page"><figcaption></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/jessica-prompt.png" alt="Jessica prompt"><figcaption></figcaption></figure>
 
-Jessica is an example agent that uses the Julep Agents API that you can access at [https://jessica.julep.ai](https://jessica.julep.ai).
-
-The playground is also open source which you can access [here](https://github.com/julep-ai/jessica-public).
-
-## How to run and deploy
+Jessica is a satirical AI agent we designed using the Julep API for testing  interactions.  You can easily test and deploy Jessica or any custom-designed agent on the by visiting [this repo](https://github.com/julep-ai/jessica-public)
 
 To run your own agent using this playground, you simply need to modify the `.env` file and add the following variables.
 

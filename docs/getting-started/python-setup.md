@@ -301,17 +301,9 @@ curl --location 'https://api-alpha.julep.ai/v1/completions' \
        "max_tokens": 500,
        "temperature": 0.1,
        "seed": 21
-     }' | jq '.choices[0].text' 
+     }' | jq '.choices[0].text'
 ```
 
 ***
-
-## What's Next
-
-* Read more about [context sections](../s1-model/context-sections.md) and how they influence generation.&#x20;
-* Check out the [model capabilities](../s1-model/capabilities/) to explore all the features of the model and more detailed examples.
-* See our cookbook for in-depth API use cases and examples.
-
-
 
 [^1]: It's not in beta thought right?

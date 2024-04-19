@@ -81,7 +81,7 @@ You can create as many or as few sessions as your application needs but, for a t
 session = client.sessions.create(
     agent_id=agent.id,  # from above
     user_id=user.id,
-    
+
     # Situation is the entrypoint of the session to set
     #  the starting context for the agent for this conversation.
     situation="You are chatting with a random stranger from the Internet.",
@@ -103,7 +103,7 @@ result = client.sessions.chat(
     session_id=session.id,
     messages=[message],
     max_tokens=200,   # and any other generation parameters
-    
+
     # Memory options
     remember=True,    # "remember" / form memories about this user from the messages
     recall=True,      # "recall" / fetch past memories about this user.
@@ -217,7 +217,7 @@ You can create as many or as few sessions as your application needs but, for a t
 </strong>const session = await client.sessions.create({
     agentId: agent.id,  // from above
     userId: user.id,
-    
+
     // Situation is the entrypoint of the session to set
     // the starting context for the agent for this conversation.
     situation: "You are chatting with a random stranger from the Internet.",
@@ -243,7 +243,7 @@ const result = await client.sessions.chat({
     sessionId: session.id,
     messages: [message],
     maxTokens: 200,   // and any other generation parameters
-    
+
     // Memory options
     remember: true,    // "remember" / form memories about this user from the messages
     recall: true       // "recall" / fetch past memories about this user.
@@ -265,7 +265,3 @@ const history = await client.sessions.history({
 ```
 {% endtab %}
 {% endtabs %}
-
-###
-
-###
