@@ -5,7 +5,6 @@ from uuid import UUID
 
 from ...common.protocol.entries import Entry
 from ..utils import cozo_query
-from ...common.utils import json
 
 
 @cozo_query
