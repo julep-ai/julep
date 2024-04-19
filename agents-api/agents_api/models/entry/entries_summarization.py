@@ -83,18 +83,15 @@ def entries_summarization_query(
     # Create a list of relations indicating which entries the new entry summarizes.
 
     # Convert the new entry's source information into JSON format for storage.
-    source = json.dumps(new_entry.source)
-    role = json.dumps(new_entry.role)
-    content = json.dumps(new_entry.content)
 
     entries = [
         [
-            new_entry.id,
-            session_id,
-            source,
-            role,
+            str(new_entry.id),
+            str(session_id),
+            new_entry.source,
+            new_entry.role,
             new_entry.name or "",
-            content,
+            new_entry.content,
             new_entry.token_count,
             new_entry.tokenizer,
             new_entry.created_at,
