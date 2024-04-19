@@ -174,6 +174,25 @@ To self-host Julep AI:
 
 Self-hosting Julep AI allows you to run the platform on-premises, in your own cloud environment, or in any other infrastructure of your choice. It also enables you to contribute to the platform's development and propose enhancements that can benefit the entire community.
 
+## Frequently Asked Questions (FAQs)
+
+1. **What is the difference between a session and a task?**
+   - A session is a short-lived, direct interaction between a user and an AI agent, similar to a chat interface. Sessions are designed for immediate, real-time assistance using built-in tools like document retrieval or function-calling.
+   - A task, on the other hand, is a multi-step, long-running process designed to accomplish complex goals. Tasks are defined as state machines, allowing agents to autonomously navigate through the necessary steps and execute actions using background tools and APIs.
+
+2. **Can I use Julep AI with my existing data sources or APIs?**
+   Yes, you can integrate Julep AI with your existing data sources and APIs. Julep AI agents can make API calls based on OpenAPI specifications, allowing them to retrieve data from external services. Additionally, you can use the retrieval augmented generation (RAG) capabilities to enable agents to access and utilize your own knowledge bases.
+
+3. **How does the memory system work in Julep AI?**
+   The Julep AI memory system consists of three types of memory: episodic, implicit, and semantic. Episodic memory stores events that occur during an agent's interactions, implicit memory captures beliefs that the agent forms over time, and semantic memory maintains a graph of known entities, their attributes, and relationships. These memories are automatically stored and retrieved based on the context, allowing agents to provide personalized and contextually relevant responses.
+
+4. **Can I customize and extend the Julep AI platform?**
+   Yes, you can customize and extend the Julep AI platform to suit your specific needs. The open-source version of Julep AI allows you to modify the codebase, add new features, and integrate custom tools or services. You can also contribute your enhancements back to the community by submitting pull requests to the main repository.
+
+5. **What programming languages can I use with Julep AI?**
+   Julep AI provides a language-agnostic API, which means you can use any programming language that supports making HTTP requests to interact with the platform. However, for convenience, we offer SDKs for Python and TypeScript, which provide high-level abstractions and methods to simplify the integration process. If you prefer to use another language, you can still work with the API directly.
+
+
 ## Contributing
 
 We welcome contributions from the community to help improve and expand the Julep AI platform. There are several ways you can contribute:
