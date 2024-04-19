@@ -30,4 +30,4 @@ This is useful for enforcing a consistent model usage across different parts of 
 
 #### Defined in
 
-[src/utils/openaiPatch.ts:8](https://github.com/julep-ai/julep/blob/0867a4970807802493fd821a493094b35d4a2f7b/sdks/ts/src/utils/openaiPatch.ts#L8)
+[src/utils/openaiPatch.ts:8](https://github.com/julep-ai/julep/blob/ffa22d1914e2afd03e783042b5a4db5b43c71223/sdks/ts/src/utils/openaiPatch.ts#L8)
