@@ -1,53 +1,35 @@
 @julep/sdk / [Modules](modules.md)
 
 # Julep AI
-[![julep](https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Open%20platform%20for%20building%20AI%20agents&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&name=1&owner=1&stargazers=1&theme=Light)](https://github.com/julep-ai/julep)  
+[![julep](https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Open%20platform%20for%20building%20AI%20agents&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&name=1&owner=1&theme=Light)](https://github.com/julep-ai/julep)  
 
-[![Discord](https://img.shields.io/discord/1172458124020547584?style=social&logo=discord&label=discord)](https://discord.gg/JzfVWsy9fY)
-<span>&nbsp;</span>
-[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/julep_ai?style=social&logo=x)](https://twitter.com/julep_ai)
-<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-[![NPM Version](https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&logo=npm&link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk)](https://www.npmjs.com/package/@julep/sdk)
-<span>&nbsp;</span>
-[![PyPI - Version](https://img.shields.io/pypi/v/julep?style=social&logo=python&label=PyPI&link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep)](https://pypi.org/project/julep)
-<span>&nbsp;</span>
-[![Docker Image Version](https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=social&logo=docker&link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai)](https://hub.docker.com/u/julepai)<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-[![GitHub License](https://img.shields.io/github/license/julep-ai/julep)](https://choosealicense.com/licenses/apache/)
+<p align="center">
+<img src="https://github.com/julep-ai/julep/blob/dev/.github/julep-definition.png?raw=true" alt="Julep: an alcoholic drink containing whisky, crushed ice, sugar, and pieces of mint" />
+<img src="https://github.com/julep-ai/julep/blob/dev/.github/julep-cup.png?raw=true" alt="Julep: an alcoholic drink containing whisky, crushed ice, sugar, and pieces of mint" />
+</p>
 
-Julep AI is an advanced platform for creating stateful AI agents that can reason, plan, and execute complex tasks by leveraging tools and maintaining context throughout interactions. With Julep AI, developers can build sophisticated AI-powered applications that deliver personalized and context-aware user experiences.
+<p align="center">
+    <a href="https://discord.gg/JzfVWsy9fY"><img src="https://img.shields.io/discord/1172458124020547584?style=social&amp;logo=discord&amp;label=discord" alt="Discord"></a>
+    <span>&nbsp;</span>
+    <a href="https://twitter.com/julep_ai"><img src="https://img.shields.io/twitter/follow/julep_ai?style=social&amp;logo=x" alt="X (formerly Twitter) Follow"></a>
+    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version"></a>
+    <span>&nbsp;</span>
+    <a href="https://pypi.org/project/julep"><img src="https://img.shields.io/pypi/v/julep?style=social&amp;logo=python&amp;label=PyPI&amp;link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep" alt="PyPI - Version"></a>
+    <span>&nbsp;</span>
+    <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Docker Image Version"></a>
+    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License"></a>
+</p>
+
+[Julep AI](https://julep.ai) is an advanced platform for creating stateful AI agents that can reason, plan, and execute complex tasks by leveraging tools and maintaining context throughout interactions. In addition to this README, you can also read the [full documentation here](https://docs.julep.ai).
 
 ## Key Features
 
-### Stateful AI Agents
-
-At the core of Julep AI are stateful AI agents capable of breaking down complex requests into multiple steps, using different tools to accomplish each step, and maintaining state throughout the process. This allows agents to reason about a request, create a plan, execute the necessary actions, and dynamically adapt to the results of each step.
-
-### Tools and Capabilities
-
-Julep AI agents can access a variety of tools to enhance their capabilities and perform specific actions. These tools include:
-
-- Function-calling: Agents can respond in a structured format, allowing applications to interpret and execute the requested functions.
-- API calls: Agents can automatically make API calls based on a given OpenAPI specification, enabling them to retrieve data from external services (e.g., getting the weather for a specific place and time).
-- Retrieval Augmented Generation (RAG): Agents can efficiently retrieve and utilize relevant information from a knowledge base to generate more accurate and contextually appropriate responses.
-
-### Memory System
-
-Julep AI features a sophisticated memory system that enables agents to store and recall information in three categories:
-
-- Episodic Memory: Stores events that occur during an agent's interactions, such as a user asking for help with a specific task.
-- Implicit Memory: Captures beliefs that the agent forms over time, particularly about users, such as their preferences or habits.
-- Semantic Memory: Maintains a graph of known entities, their attributes, and relationships, allowing agents to reason about the world and provide more informed responses.
-
-These memory types work together to enable agents to continuously learn from interactions, adapt to user needs, and provide personalized experiences.
-
-### Sessions and Tasks
-
-Julep AI supports two main interaction modes: sessions and tasks.
-
-- Sessions are short-lived, direct interactions between a user and an agent, similar to a chat interface. During sessions, agents can use built-in tools like document retrieval or function-calling to provide immediate assistance.
-- Tasks, on the other hand, are multi-step, long-running processes designed to accomplish complex goals. Tasks are defined as state machines, allowing agents to autonomously navigate through the necessary steps and execute actions using background tools and APIs.
-
-While sessions cannot directly initiate long-term actions, they can start and monitor tasks defined for the same agent. Similarly, tasks can invoke other tasks, creating powerful abstractions and enabling agents to handle complex workflows seamlessly.
+- [**Stateful AI Agents**](/#features-in-detail): AI agents that can break down requests into multiple steps, use different tools, and maintaining state throughout the process.
+- [**Tools and Capabilities**](/#features-in-detail): Access to built-in tools (and via integrations) to perform actions including _function-calling_, _API calls_, and _RAG_.
+- [**Memory System**](/#features-in-detail): A sophisticated memory system that enables agents to store and recall information automatically.
+- [**Sessions and Tasks**](/#features-in-detail): Julep AI supports two main interaction modes: sessions and tasks. Sessions are short-lived, direct interactions with an agent, similar to chat. Tasks are multi-step, long-running processes designed to accomplish complex goals.
 
 ## Getting Started
 
@@ -152,6 +134,39 @@ npm install @julep/sdk
 
 For more information on using the TypeScript SDK, please refer to the [TypeScript SDK documentation](https://docs.julep.ai/sdks/typescript).
 
+## Features in Detail
+
+### Stateful AI Agents
+
+At the core of Julep AI are stateful AI agents capable of breaking down complex requests into multiple steps, using different tools to accomplish each step, and maintaining state throughout the process. This allows agents to reason about a request, create a plan, execute the necessary actions, and dynamically adapt to the results of each step.
+
+### Tools and Capabilities
+
+Julep AI agents can access a variety of tools to enhance their capabilities and perform specific actions. These tools include:
+
+- Function-calling: Agents can respond in a structured format, allowing applications to interpret and execute the requested functions.
+- API calls: Agents can automatically make API calls based on a given OpenAPI specification, enabling them to retrieve data from external services (e.g., getting the weather for a specific place and time).
+- Retrieval Augmented Generation (RAG): Agents can efficiently retrieve and utilize relevant information from a knowledge base to generate more accurate and contextually appropriate responses.
+
+### Memory System
+
+Julep AI features a sophisticated memory system that enables agents to store and recall information in three categories:
+
+- Episodic Memory: Stores events that occur during an agent's interactions, such as a user asking for help with a specific task.
+- Implicit Memory: Captures beliefs that the agent forms over time, particularly about users, such as their preferences or habits.
+- Semantic Memory: Maintains a graph of known entities, their attributes, and relationships, allowing agents to reason about the world and provide more informed responses.
+
+These memory types work together to enable agents to continuously learn from interactions, adapt to user needs, and provide personalized experiences.
+
+### Sessions and Tasks
+
+Julep AI supports two main interaction modes: sessions and tasks.
+
+- Sessions are short-lived, direct interactions between a user and an agent, similar to a chat interface. During sessions, agents can use built-in tools like document retrieval or function-calling to provide immediate assistance.
+- Tasks, on the other hand, are multi-step, long-running processes designed to accomplish complex goals. Tasks are defined as state machines, allowing agents to autonomously navigate through the necessary steps and execute actions using background tools and APIs.
+
+While sessions cannot directly initiate long-term actions, they can start and monitor tasks defined for the same agent. Similarly, tasks can invoke other tasks, creating powerful abstractions and enabling agents to handle complex workflows seamlessly.
+
 ## Deployment Options
 
 ### Cloud Platform
@@ -199,34 +214,7 @@ Self-hosting Julep AI allows you to run the platform on-premises, in your own cl
 
 ## Contributing
 
-We welcome contributions from the community to help improve and expand the Julep AI platform. There are several ways you can contribute:
-
-### Reporting Issues
-
-If you encounter any bugs, have feature requests, or want to discuss potential improvements, please open an issue on the [Julep AI GitHub repository](https://github.com/julep-ai/julep/issues). When reporting issues, please provide as much detail as possible, including steps to reproduce the problem, expected behavior, and any relevant code snippets or screenshots.
-
-### Submitting Pull Requests
-
-If you want to contribute code changes or additions to the Julep AI platform, please follow these steps:
-
-1. Fork the [Julep AI repository](https://github.com/julep-ai/julep) on GitHub
-2. Create a new branch for your changes
-3. Make your modifications and ensure that the code follows the project's coding conventions
-4. Write appropriate tests to cover your changes
-5. Commit your changes and push them to your forked repository
-6. Submit a pull request to the main Julep AI repository, clearly describing your changes and their benefits
-
-Our team will review your pull request and provide feedback. Once your changes are approved, they will be merged into the main repository and included in the next release.
-
-### Documentation Improvements
-
-Improving the documentation is another excellent way to contribute to the Julep AI project. If you find any errors, omissions, or areas that need clarification in the documentation, please submit a pull request with your proposed changes.
-
-### Sharing Feedback and Ideas
-
-We value your feedback and ideas! If you have any suggestions for improving Julep AI or have innovative use cases to share, please join our [community forum](https://community.julep.ai/) and start a discussion. Your input helps shape the future direction of the platform.
-
-By contributing to Julep AI, you help create a more robust, feature-rich, and user-friendly platform for building AI-driven applications. We appreciate your support and look forward to collaborating with you!
+We welcome contributions from the community to help improve and expand the Julep AI platform. See [CONTRIBUTING.md](/CONTRIBUTING.md)
 
 ## License
 
@@ -240,6 +228,6 @@ If you have any questions, need assistance, or want to get in touch with the Jul
 - [GitHub Issues](https://github.com/julep-ai/julep/issues): For technical issues, bug reports, and feature requests, please open an issue on the Julep AI GitHub repository.
 - [Email Support](mailto:support@julep.ai): If you need direct assistance from our support team, send an email to support@julep.ai, and we'll get back to you as soon as possible.
 
-Stay connected with Julep AI and get the latest updates by following us on [Twitter](https://twitter.com/JulepAI) and [LinkedIn](https://www.linkedin.com/company/julep-ai/).
+Stay connected with Julep AI and get the latest updates by following us on [Twitter](https://twitter.com/julep_ai) and [LinkedIn](https://www.linkedin.com/company/julep-ai/).
 
 We're excited to have you as part of the Julep AI community and look forward to seeing the amazing AI-driven applications you'll build with our platform!
