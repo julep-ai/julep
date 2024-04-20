@@ -33,4 +33,4 @@ True if the input is a valid UUID v4, otherwise false.
 
 #### Defined in
 
-[src/utils/isValidUuid4.ts:11](https://github.com/julep-ai/julep/blob/f0e26a1671b58ba36992e080b0a536f7e2d0a32c/sdks/ts/src/utils/isValidUuid4.ts#L11)
+[src/utils/isValidUuid4.ts:11](https://github.com/julep-ai/julep/blob/fe078a753b962235a54ed413801b60208fd8ab81/sdks/ts/src/utils/isValidUuid4.ts#L11)

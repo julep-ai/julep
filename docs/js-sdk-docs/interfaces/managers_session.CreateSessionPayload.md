@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[src/managers/session.ts:17](https://github.com/julep-ai/julep/blob/f0e26a1671b58ba36992e080b0a536f7e2d0a32c/sdks/ts/src/managers/session.ts#L17)
+[src/managers/session.ts:17](https://github.com/julep-ai/julep/blob/fe078a753b962235a54ed413801b60208fd8ab81/sdks/ts/src/managers/session.ts#L17)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:18](https://github.com/julep-ai/julep/blob/f0e26a1671b58ba36992e080b0a536f7e2d0a32c/sdks/ts/src/managers/session.ts#L18)
+[src/managers/session.ts:18](https://github.com/julep-ai/julep/blob/fe078a753b962235a54ed413801b60208fd8ab81/sdks/ts/src/managers/session.ts#L18)
 
 ___
 
@@ -40,4 +40,4 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:16](https://github.com/julep-ai/julep/blob/f0e26a1671b58ba36992e080b0a536f7e2d0a32c/sdks/ts/src/managers/session.ts#L16)
+[src/managers/session.ts:16](https://github.com/julep-ai/julep/blob/fe078a753b962235a54ed413801b60208fd8ab81/sdks/ts/src/managers/session.ts#L16)
