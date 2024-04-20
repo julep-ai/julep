@@ -1,0 +1,82 @@
+name: julep-api
+version: "3"
+
+services:
+  memory-store:
+    image: julepai/memory-store:dev
+    environment:
+      - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
+      - COZO_PORT=9070
+      - MNT_DIR=/data
+    container_name: julep-memory-store
+    volumes:
+      - cozo_data:/data
+    env_file:
+      - .env
+
+  agents-api:
+    image: julepai/agents-api:dev
+    container_name: julep-agents-api
+    depends_on:
+      memory-store:
+        condition: service_started
+      worker:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+
+  worker:
+    image: julepai/worker:dev
+    container_name: julep-worker
+    depends_on:
+      text-embeddings-inference:
+        condition: service_started
+      temporal:
+        condition: service_started
+    env_file:
+      - .env
+
+  text-embeddings-inference:
+    container_name: julep-embeddings
+    environment:
+      - DTYPE=float16
+      - MODEL_ID=BAAI/llm-embedder
+
+    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    env_file:
+      - .env
+
+  temporal:
+    image: julepai/temporal:dev
+    container_name: julep-temporal
+    volumes:
+      - temporal_data:/home/temporal
+    env_file:
+      - .env
+
+  cozo-migrate:
+    environment:
+      - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
+      - COZO_HOST=http://memory-store:9070
+    env_file:
+      - .env
+    image: julepai/cozo-migrate:dev
+    container_name: julep-cozo-migrate
+    depends_on:
+      memory-store:
+        condition: service_started
+    restart: "no" # Make sure to double quote this
+
+volumes:
+  temporal_data:
+  cozo_data:
