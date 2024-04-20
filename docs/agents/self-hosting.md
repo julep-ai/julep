@@ -10,16 +10,13 @@ Julep is available as a hosted service or as a self managed instance.  This guid
 
 Follow these steps to start Julep locally:
 
-{% code lineNumbers="true" %}
+{% code overflow="wrap" lineNumbers="true" %}
 ```bash
-# Get the code
-git clone --depth 1 https://github.com/julep-ai/julep
+# Add the docker compose to your project dir
+wget https://raw.githubusercontent.com/julep-ai/julep/dev/deploy/docker-compose.yml
 
-# Go to the docker folder
-cd julep/docker
-
-# Copy the fake env vars
-cp .env.example .env
+# Add the .env file to your project dir
+wget https://raw.githubusercontent.com/julep-ai/julep/dev/deploy/.env.example -O .env
 
 # Pull the latest images
 docker compose pull
@@ -41,26 +38,7 @@ docker compose ps
 
 You can use environment variables to control authentication and authorisation with the platform and in between services.
 
-You also need to define your OpenAI API Key here:
-
-{% code title=".env" %}
-```sh
-AGENTS_API_KEY=myauthkey
-AGENTS_API_KEY_HEADER_NAME=Authorization
-AGENTS_API_URL=http://agents-api:8080
-COZO_AUTH_TOKEN=myauthkey
-COZO_HOST=http://memory-store:9070
-EMBEDDING_SERVICE_URL=http://text-embeddings-inference/embed
-SKIP_CHECK_DEVELOPER_HEADERS=true
-TEMPORAL_ENDPOINT=temporal:7233
-TEMPORAL_NAMESPACE=default
-TEMPORAL_WORKER_URL=temporal:7233
-TRUNCATE_EMBED_TEXT=true
-WORKER_URL=temporal:7233
-
-OPENAI_API_KEY=your_openai_api_key
-```
-{% endcode %}
+You also need to define the OpenAI API Key here.
 
 ### Accessing the API
 
