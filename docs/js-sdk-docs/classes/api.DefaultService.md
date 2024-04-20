@@ -71,7 +71,7 @@
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:35](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L35)
+[src/api/services/DefaultService.ts:35](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L35)
 
 ## Properties
 
@@ -81,7 +81,7 @@
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:35](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L35)
+[src/api/services/DefaultService.ts:35](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L35)
 
 ## Methods
 
@@ -112,7 +112,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:404](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L404)
+[src/api/services/DefaultService.ts:404](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L404)
 
 ___
 
@@ -142,7 +142,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:180](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L180)
+[src/api/services/DefaultService.ts:180](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L180)
 
 ___
 
@@ -172,7 +172,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:668](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L668)
+[src/api/services/DefaultService.ts:668](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L668)
 
 ___
 
@@ -202,7 +202,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:857](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L857)
+[src/api/services/DefaultService.ts:857](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L857)
 
 ___
 
@@ -232,7 +232,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:42](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L42)
+[src/api/services/DefaultService.ts:42](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L42)
 
 ___
 
@@ -262,7 +262,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:111](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L111)
+[src/api/services/DefaultService.ts:111](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L111)
 
 ___
 
@@ -292,7 +292,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:740](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L740)
+[src/api/services/DefaultService.ts:740](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L740)
 
 ___
 
@@ -321,7 +321,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:556](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L556)
+[src/api/services/DefaultService.ts:556](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L556)
 
 ___
 
@@ -351,7 +351,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:783](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L783)
+[src/api/services/DefaultService.ts:783](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L783)
 
 ___
 
@@ -381,7 +381,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:804](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L804)
+[src/api/services/DefaultService.ts:804](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L804)
 
 ___
 
@@ -411,7 +411,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:879](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L879)
+[src/api/services/DefaultService.ts:879](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L879)
 
 ___
 
@@ -440,7 +440,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:266](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L266)
+[src/api/services/DefaultService.ts:266](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L266)
 
 ___
 
@@ -469,7 +469,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:386](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L386)
+[src/api/services/DefaultService.ts:386](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L386)
 
 ___
 
@@ -498,7 +498,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:480](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L480)
+[src/api/services/DefaultService.ts:480](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L480)
 
 ___
 
@@ -528,7 +528,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:762](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L762)
+[src/api/services/DefaultService.ts:762](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L762)
 
 ___
 
@@ -557,7 +557,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:542](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L542)
+[src/api/services/DefaultService.ts:542](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L542)
 
 ___
 
@@ -593,7 +593,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:619](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L619)
+[src/api/services/DefaultService.ts:619](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L619)
 
 ___
 
@@ -627,7 +627,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:432](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L432)
+[src/api/services/DefaultService.ts:432](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L432)
 
 ___
 
@@ -660,7 +660,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:826](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L826)
+[src/api/services/DefaultService.ts:826](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L826)
 
 ___
 
@@ -692,7 +692,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:358](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L358)
+[src/api/services/DefaultService.ts:358](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L358)
 
 ___
 
@@ -721,7 +721,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:950](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L950)
+[src/api/services/DefaultService.ts:950](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L950)
 
 ___
 
@@ -750,7 +750,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:248](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L248)
+[src/api/services/DefaultService.ts:248](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L248)
 
 ___
 
@@ -782,7 +782,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:329](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L329)
+[src/api/services/DefaultService.ts:329](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L329)
 
 ___
 
@@ -811,7 +811,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:466](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L466)
+[src/api/services/DefaultService.ts:466](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L466)
 
 ___
 
@@ -847,7 +847,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:691](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L691)
+[src/api/services/DefaultService.ts:691](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L691)
 
 ___
 
@@ -881,7 +881,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:201](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L201)
+[src/api/services/DefaultService.ts:201](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L201)
 
 ___
 
@@ -915,7 +915,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:63](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L63)
+[src/api/services/DefaultService.ts:63](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L63)
 
 ___
 
@@ -949,7 +949,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:132](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L132)
+[src/api/services/DefaultService.ts:132](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L132)
 
 ___
 
@@ -979,7 +979,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:596](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L596)
+[src/api/services/DefaultService.ts:596](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L596)
 
 ___
 
@@ -1010,7 +1010,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:925](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L925)
+[src/api/services/DefaultService.ts:925](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L925)
 
 ___
 
@@ -1040,7 +1040,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:306](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L306)
+[src/api/services/DefaultService.ts:306](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L306)
 
 ___
 
@@ -1070,7 +1070,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:520](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L520)
+[src/api/services/DefaultService.ts:520](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L520)
 
 ___
 
@@ -1100,7 +1100,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:574](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L574)
+[src/api/services/DefaultService.ts:574](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L574)
 
 ___
 
@@ -1131,7 +1131,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:900](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L900)
+[src/api/services/DefaultService.ts:900](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L900)
 
 ___
 
@@ -1161,7 +1161,7 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:284](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L284)
+[src/api/services/DefaultService.ts:284](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L284)
 
 ___
 
@@ -1191,4 +1191,4 @@ ApiError
 
 #### Defined in
 
-[src/api/services/DefaultService.ts:498](https://github.com/julep-ai/julep/blob/fd828a6f79ac74d87748a1b2073b93094482fe0d/sdks/ts/src/api/services/DefaultService.ts#L498)
+[src/api/services/DefaultService.ts:498](https://github.com/julep-ai/julep/blob/53f35ee0c596f184047a28cdbfd5e959ab8e9efb/sdks/ts/src/api/services/DefaultService.ts#L498)
