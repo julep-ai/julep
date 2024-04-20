@@ -37,7 +37,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    entrypoint: ["tail", "-f", "/dev/null"]
     depends_on:
       text-embeddings-inference:
         condition: service_started

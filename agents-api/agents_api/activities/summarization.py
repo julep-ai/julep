@@ -4,7 +4,6 @@ from uuid import UUID
 from typing import Callable
 from textwrap import dedent
 from temporalio import activity
-from agents_api.clients.cozo import client
 from agents_api.models.entry.entries_summarization import (
     get_toplevel_entries_query,
     entries_summarization_query,
@@ -154,9 +153,7 @@ async def summarization(session_id: str) -> None:
     session_id = UUID(session_id)
     entries = [
         Entry(**row)
-        for _, row in client.run(
-            get_toplevel_entries_query(session_id=session_id)
-        ).iterrows()
+        for _, row in get_toplevel_entries_query(session_id=session_id).iterrows()
     ]
 
     assert len(entries) > 0, "no need to summarize on empty entries list"
@@ -172,10 +169,8 @@ async def summarization(session_id: str) -> None:
         timestamp=entries[-1].timestamp + 0.01,
     )
 
-    client.run(
-        entries_summarization_query(
-            session_id=session_id,
-            new_entry=new_entry,
-            old_entry_ids=[e.id for e in entries],
-        )
+    entries_summarization_query(
+        session_id=session_id,
+        new_entry=new_entry,
+        old_entry_ids=[e.id for e in entries],
     )
