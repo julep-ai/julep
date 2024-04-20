@@ -1,15 +1,18 @@
 @julep/sdk / [Modules](modules.md)
 
 # Julep AI
-![julep](https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Open%20platform%20for%20building%20AI%20agents&language=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&name=1&owner=1&stargazers=1&theme=Light)  
+[![julep](https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Open%20platform%20for%20building%20AI%20agents&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&name=1&owner=1&stargazers=1&theme=Light)](https://github.com/julep-ai/julep)  
 
-![Discord](https://img.shields.io/discord/1172458124020547584)
-![GitHub License](https://img.shields.io/github/license/julep-ai/julep)
-![Docker Image Version](https://img.shields.io/docker/v/julepai/agents-api)
-![NPM Version](https://img.shields.io/npm/v/%40julep%2Fsdk)
-![PyPI - Version](https://img.shields.io/pypi/v/julep)
-![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Ftwitter.com%2Fjulep_ai)
-[![Apache License](https://img.shields.io/badge/License-Apache-green.svg)](https://choosealicense.com/licenses/apache/)
+[![Discord](https://img.shields.io/discord/1172458124020547584?style=social&logo=discord&label=discord)](https://discord.gg/JzfVWsy9fY)
+<span>&nbsp;</span>
+[![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/julep_ai?style=social&logo=x)](https://twitter.com/julep_ai)
+<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+[![NPM Version](https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&logo=npm&link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk)](https://www.npmjs.com/package/@julep/sdk)
+<span>&nbsp;</span>
+[![PyPI - Version](https://img.shields.io/pypi/v/julep?style=social&logo=python&label=PyPI&link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep)](https://pypi.org/project/julep)
+<span>&nbsp;</span>
+[![Docker Image Version](https://img.shields.io/docker/v/julepai/agents-api?sort=semver&style=social&logo=docker&link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai)](https://hub.docker.com/u/julepai)<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+[![GitHub License](https://img.shields.io/github/license/julep-ai/julep)](https://choosealicense.com/licenses/apache/)
 
 Julep AI is an advanced platform for creating stateful AI agents that can reason, plan, and execute complex tasks by leveraging tools and maintaining context throughout interactions. With Julep AI, developers can build sophisticated AI-powered applications that deliver personalized and context-aware user experiences.
 
