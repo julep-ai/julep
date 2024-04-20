@@ -11,7 +11,7 @@
 
 [Show source in user_metadata.py:14](../../../../../../../julep/api/types/user_metadata.py#L14)
 
-Optional metadata
+(Optional) metadata
 
 #### Signature
 
