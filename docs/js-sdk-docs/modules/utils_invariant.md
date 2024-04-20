@@ -29,4 +29,4 @@ Ensures that a condition is met, throwing a custom error message if not.
 
 #### Defined in
 
-[src/utils/invariant.ts:6](https://github.com/julep-ai/julep/blob/5906015d7586ca5097acc2c067e09861486e6e01/sdks/ts/src/utils/invariant.ts#L6)
+[src/utils/invariant.ts:6](https://github.com/julep-ai/julep/blob/016986cb5a9258919d55d3d6f888e7169fa7acc7/sdks/ts/src/utils/invariant.ts#L6)
