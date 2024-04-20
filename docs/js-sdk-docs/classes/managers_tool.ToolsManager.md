@@ -54,7 +54,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -70,7 +70,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
@@ -94,7 +94,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/managers/tool.ts#L32)
+[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/managers/tool.ts#L32)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/managers/tool.ts#L86)
+[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/managers/tool.ts#L86)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/managers/tool.ts#L12)
+[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/managers/tool.ts#L12)
 
 ___
 
@@ -163,4 +163,4 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/managers/tool.ts#L54)
+[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/managers/tool.ts#L54)

@@ -54,7 +54,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:6](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/api/core/CancelablePromise.ts#L6)
+[src/api/core/CancelablePromise.ts:6](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/api/core/CancelablePromise.ts#L6)
 
 ## Properties
 
@@ -159,7 +159,7 @@ node_modules/@types/node/globals.d.ts:30
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:11](https://github.com/julep-ai/julep/blob/1ca96f443af56130bdd7990da06820273976d35e/sdks/ts/src/api/core/CancelablePromise.ts#L11)
+[src/api/core/CancelablePromise.ts:11](https://github.com/julep-ai/julep/blob/91015ee001128ecd5fec92f5e99c4f01f3d338fe/sdks/ts/src/api/core/CancelablePromise.ts#L11)
 
 ## Methods
 
