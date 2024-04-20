@@ -1,10 +1,10 @@
 # Tutorial
 
-### Loom Demo
+### Intro to Concepts and Demo
 
 (Step by step code follows)
 
-{% embed url="https://www.loom.com/share/79646b058235467fb9042d242ce0d7a4?sid=86d9da76-87e5-4bf9-a2a8-0e9ee1c59f1c" %}
+{% embed url="https://www.youtube.com/watch?v=4VMMN--oMO8" %}
 
 ***
 
