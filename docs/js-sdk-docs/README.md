@@ -79,7 +79,7 @@ agent = client.agents.create(
 # Create a user (optional)
 user = client.users.create(
     name="John Doe",
-    attributes={...},  # Add any relevant user attributes
+    metadata={...},  # Add any relevant user attributes
 )
 
 # Start a session
@@ -89,9 +89,12 @@ session = client.sessions.create(
 )
 
 # Interact with the agent
-response = client.sessions.send_message(
+response = client.sessions.chat(
     session_id=session.id,
-    message="Hello, how can you help me today?",
+    messages=[{
+        "role": "assistant",
+        "content": "Hello, how can you help me today?",
+    }],
 )
 
 print(response.content)
