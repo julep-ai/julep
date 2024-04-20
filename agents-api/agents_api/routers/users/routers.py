@@ -183,7 +183,7 @@ async def create_user(
         developer_id=x_developer_id,
         user_id=uuid4(),
         name=request.name,
-        about=request.about,
+        about=request.about or "",
         metadata=request.metadata or {},
     )
 
