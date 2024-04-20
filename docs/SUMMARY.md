@@ -7,7 +7,7 @@
 * [Motivation](<README (1).md>)
 * [Agents Quickstart](getting-started/agents-quickstart.md)
 
-## 🤖 Agents (alpha) <a href="#agents" id="agents"></a>
+## 🤖 Agents&#x20;
 
 * [Overview](agents/overview.md)
 * [Tutorial](agents/tutorial.md)
@@ -27,13 +27,13 @@
   * [API](python-sdk-docs/julep/api/client.md)
 * [JS SDK](js-sdk-docs/README.md)
   * [API](js-sdk-docs/modules/api.md)
-  * [Client](js-sdk-docs/classes/api_JulepApiClient.JulepApiClient.md)
-  * [Agent](js-sdk-docs/classes/managers_agent.AgentsManager.md)
-  * [Doc](js-sdk-docs/classes/managers_doc.DocsManager.md)
-  * [Memory](js-sdk-docs/classes/managers_memory.MemoriesManager.md)
-  * [Session](js-sdk-docs/classes/managers_session.SessionsManager.md)
-  * [Tool](js-sdk-docs/classes/managers_tool.ToolsManager.md)
-  * [User](js-sdk-docs/classes/managers_user.UsersManager.md)
+  * [Client](js-sdk-docs/classes/api\_JulepApiClient.JulepApiClient.md)
+  * [Agent](js-sdk-docs/classes/managers\_agent.AgentsManager.md)
+  * [Doc](js-sdk-docs/classes/managers\_doc.DocsManager.md)
+  * [Memory](js-sdk-docs/classes/managers\_memory.MemoriesManager.md)
+  * [Session](js-sdk-docs/classes/managers\_session.SessionsManager.md)
+  * [Tool](js-sdk-docs/classes/managers\_tool.ToolsManager.md)
+  * [User](js-sdk-docs/classes/managers\_user.UsersManager.md)
 * [Agents API](api-reference/agents-api/README.md)
   * [Agents](api-reference/agents-api/agents-api.md)
   * [Users](api-reference/agents-api/agents-api-1.md)
