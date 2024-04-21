@@ -45,6 +45,7 @@ docker compose up -d
 The API is now available at the following endpoint:
 `http://IP:8000`
 
+> Make sure to add your OpenAI API Key in the `.env`
 
 ### 2. Download the SDK
 
