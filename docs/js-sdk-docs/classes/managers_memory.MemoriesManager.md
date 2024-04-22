@@ -51,7 +51,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -67,7 +67,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
@@ -96,4 +96,4 @@ A promise that resolves to an array of Memory objects.
 
 #### Defined in
 
-[src/managers/memory.ts:21](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/memory.ts#L21)
+[src/managers/memory.ts:21](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/memory.ts#L21)

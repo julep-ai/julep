@@ -34,7 +34,7 @@
 
 #### Defined in
 
-[src/api/JulepApiClient.ts:13](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/JulepApiClient.ts#L13)
+[src/api/JulepApiClient.ts:13](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/JulepApiClient.ts#L13)
 
 ## Properties
 
@@ -44,7 +44,7 @@
 
 #### Defined in
 
-[src/api/JulepApiClient.ts:11](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/JulepApiClient.ts#L11)
+[src/api/JulepApiClient.ts:11](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/JulepApiClient.ts#L11)
 
 ___
 
@@ -54,4 +54,4 @@ ___
 
 #### Defined in
 
-[src/api/JulepApiClient.ts:12](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/JulepApiClient.ts#L12)
+[src/api/JulepApiClient.ts:12](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/JulepApiClient.ts#L12)

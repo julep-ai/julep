@@ -57,7 +57,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/core/ApiError.ts:15](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/core/ApiError.ts#L15)
+[src/api/core/ApiError.ts:15](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/core/ApiError.ts#L15)
 
 ## Properties
 
@@ -67,7 +67,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/core/ApiError.ts:12](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/core/ApiError.ts#L12)
+[src/api/core/ApiError.ts:12](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/core/ApiError.ts#L12)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:13](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/core/ApiError.ts#L13)
+[src/api/core/ApiError.ts:13](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/core/ApiError.ts#L13)
 
 ___
 
@@ -129,7 +129,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:10](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/core/ApiError.ts#L10)
+[src/api/core/ApiError.ts:10](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/core/ApiError.ts#L10)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:11](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/core/ApiError.ts#L11)
+[src/api/core/ApiError.ts:11](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/core/ApiError.ts#L11)
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:9](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/api/core/ApiError.ts#L9)
+[src/api/core/ApiError.ts:9](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/api/core/ApiError.ts#L9)
 
 ___
 

@@ -55,7 +55,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -71,7 +71,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
@@ -91,7 +91,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/user.ts#L27)
+[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/user.ts#L27)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/user.ts#L63)
+[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/user.ts#L63)
 
 ___
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/user.ts#L15)
+[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/user.ts#L15)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/user.ts#L44)
+[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/user.ts#L44)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/user.ts#L73)
+[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/user.ts#L73)
 
 ▸ **update**(`userId`, `request`, `overwrite?`): `Promise`\<[`User`](../modules/api.md#user)\>
 
@@ -194,4 +194,4 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/534ef5d7b2866498fd015bdc7680d527a7838671/sdks/ts/src/managers/user.ts#L79)
+[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/7e0cd1ddad0ce1e315b5dcb1a50a56fc6a63a183/sdks/ts/src/managers/user.ts#L79)
