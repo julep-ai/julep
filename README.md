@@ -61,7 +61,6 @@ export JULEP_API_KEY=your_julep_api_key
 export JULEP_API_URL=https://api-alpha.julep.ai
 ```
 
-
 ### Installation
 
 ```
@@ -176,6 +175,7 @@ Julep offers a separation of concerns. Easing the burden and time taken to get u
 
 - **Statefulness By Design**: Build AI apps without needing to write code to embed, save and retrieve conversation history. Deals with context windows by using CozoDB; a transactional, relational-graph-vector database.
 - **Automatic Function Calling**: No need to handle function calling manually. Julep deals with calling the function, parsing the response, retrying in case of failures and passing the response into the context.
+- **Production-ready**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon!
 - ***Cron-like asynchronous functions**: Support for functions to be executed periodically and asynchronously.
 - ***90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://composio.dev/) natively.
 - ***Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise by changing only *one line of code*
@@ -219,6 +219,8 @@ For more information on using the TypeScript SDK, please refer to the [TypeScrip
 ---
 
 ## Deployment
+Check out the [self-hosting guide](https://docs.julep.ai/agents/self-hosting) to host the platform yourself.
+
 If you want to deploy Julep to production, [let's hop on a call](https://calendly.com/diwank-julep/45min)!
 
 We'll help you customise the platform and help you get set up with:
@@ -226,4 +228,22 @@ We'll help you customise the platform and help you get set up with:
 - Reverse proxy along with authentication and authorisation
 - Self-hosted LLMs
 - & more
+
+---
+## Contributing
+We welcome contributions from the community to help improve and expand the Julep AI platform. See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+## License
+Julep AI is released under the Apache 2.0 License. By using, contributing to, or distributing the Julep AI platform, you agree to the terms and conditions of this license.
+
+---
+## Contact and Support
+If you have any questions, need assistance, or want to get in touch with the Julep AI team, please use the following channels:
+
+- [Discord](https://discord.com/invite/vNbuaNFM): Join our community forum to discuss ideas, ask questions, and get help from other Julep AI users and the development team.
+- GitHub Issues: For technical issues, bug reports, and feature requests, please open an issue on the Julep AI GitHub repository.
+- Email Support: If you need direct assistance from our support team, send an email to diwank@julep.ai, and we'll get back to you as soon as possible.
+- Follow for updates on [X](https://twitter.com/julep_ai) & [LinkedIn](https://www.linkedin.com/company/julep-ai/)
+- [Hop on a call](https://calendly.com/diwank-julep): We wanna know what you're building and how we can tweak and tune Julep to help you build your next AI app.
 
