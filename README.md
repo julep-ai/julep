@@ -174,20 +174,15 @@ print("\n".join(textwrap.wrap(response.response[0][0].content, width=100)))
 Julep offers a separation of concerns. Easing the burden and time taken to get up and running with any AI app, be it conversational, functional or agentic.
 
 
-- **Statefulness By Design**:
-- **Automatic Function Calling**:
-- ***Work and switch between any LLMs anytime**
+- **Statefulness By Design**: Build AI apps without needing to write code to embed, save and retrieve conversation history. Deals with context windows by using CozoDB; a transactional, relational-graph-vector database.
+- **Automatic Function Calling**: No need to handle function calling manually. Julep deals with calling the function, parsing the response, retrying in case of failures and passing the response into the context.
+- ***Cron-like asynchronous functions**: Support for functions to be executed periodically and asynchronously.
+- ***90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://composio.dev/) natively.
+- ***Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise by changing only *one line of code*
 
+> (*) Features coming soon!
 
 ![alt text](image.png)
-
-1. Stateful AI Agents: AI agents that can break down requests into multiple steps, use different tools, and maintaining state throughout the process.
-
-2. Tools and Capabilities: Access to built-in tools (and via integrations) to perform actions including function-calling, API calls, and RAG.
-
-3. Memory System: A sophisticated memory system that enables agents to store and recall information automatically.
-
-4. Sessions and Tasks: Julep AI supports two main interaction modes: sessions and tasks. Sessions are short-lived, direct interactions with an agent, similar to chat. Tasks are multi-step, long-running processes designed to accomplish complex goals.
 
 ---
 ## What can you build with Julep?
