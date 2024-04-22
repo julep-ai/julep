@@ -53,9 +53,11 @@ def update_session_query(
     session_update_query = f"""
     {{
         input[{session_update_cols}] <- $session_update_vals
+        ids[session_id, developer_id] <- [[to_uuid($session_id), to_uuid($developer_id)]]
         
         ?[{all_fields}, updated_at] :=
             input[{session_update_cols}],
+            ids[session_id, developer_id],
             *sessions{{
                 {rest_fields}, @ "NOW"
             }},
