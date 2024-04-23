@@ -51,26 +51,27 @@ class BaseSession:
         messages: list[Entry],
         start_idx: int | None,
         end_idx: int | None,
-        token_count: float,
+        token_count: int,
         summarization_tokens_threshold: int,
         predicate: Callable[[Entry], bool],
-    ) -> tuple[list[Entry], float]:
+    ) -> tuple[list[Entry], int]:
         if len(messages) < abs((end_idx or len(messages)) - (start_idx or 0)):
             return messages, token_count
 
-        result: list[Entry] = messages[:start_idx]
+        result: list[Entry] = messages[: start_idx or 0]
         skip_check = False
         for m in messages[start_idx:end_idx]:
             if predicate(m) and not skip_check:
-                token_count -= len(m.content) / 3.5
-                if token_count < summarization_tokens_threshold:
+                token_count -= m.token_count
+                if token_count <= summarization_tokens_threshold:
                     skip_check = True
 
                 continue
 
             result.append(m)
 
-        result += messages[end_idx:]
+        if end_idx is not None:
+            result += messages[end_idx:]
 
         return result, token_count
 
@@ -83,9 +84,9 @@ class BaseSession:
         def rm_user_assistant(m):
             return m.role in ("user", "assistant")
 
-        token_count = reduce(lambda c, e: len(e.content) + c, messages, 0) / 3.5
+        token_count = reduce(lambda c, e: e.token_count + c, messages, 0)
 
-        if token_count < summarization_tokens_threshold and messages:
+        if token_count <= summarization_tokens_threshold:
             return messages
 
         for start_idx, end_idx, cond in [
@@ -102,7 +103,7 @@ class BaseSession:
                 cond,
             )
 
-            if token_count < summarization_tokens_threshold and messages:
+            if token_count <= summarization_tokens_threshold and messages:
                 return messages
 
         # TODO:

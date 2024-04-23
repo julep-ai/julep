@@ -19,7 +19,6 @@ openai = "^1.12.0"
 httpx = "^0.26.0"
 async-lru = "^2.0.4"
 sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
-ward = "^0.68.0b0"
 temporalio = "^1.4.0"
 pydantic = "^2.5.3"
 arrow = "^1.3.0"
@@ -38,6 +37,7 @@ poethepoet = "^0.25.1"
 pytype = ">=2024.4.11"
 julep = "^0.2.4"
 pyjwt = "^2.8.0"
+ward = "^0.68.0b0"
 
 [build-system]
 requires = ["poetry-core"]
