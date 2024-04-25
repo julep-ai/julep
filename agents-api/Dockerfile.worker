@@ -1,11 +1,11 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 ENV PYTHONUNBUFFERED True
 ENV POETRY_CACHE_DIR=/tmp/poetry_cache
 
 WORKDIR /app
 
-RUN pip install poetry==1.6.1 \
+RUN pip install 'poetry<=1.9.0' \
     && poetry config virtualenvs.create false
 
 COPY pyproject.toml poetry.lock ./
