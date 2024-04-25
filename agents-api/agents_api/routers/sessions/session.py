@@ -1,4 +1,5 @@
 import json
+from functools import reduce
 from json import JSONDecodeError
 from typing import Callable
 from uuid import uuid4
@@ -22,6 +23,11 @@ from agents_api.model_registry import (
 )
 from ...common.protocol.sessions import SessionData
 from .protocol import Settings
+from .exceptions import InputTooBigError
+
+
+THOUGHTS_STRIP_LEN = 2
+MESSAGES_STRIP_LEN = 4
 
 
 tool_query_instruction = (
@@ -40,6 +46,72 @@ class BaseSession:
     session_id: UUID4
     developer_id: UUID4
 
+    def _remove_messages(
+        self,
+        messages: list[Entry],
+        start_idx: int | None,
+        end_idx: int | None,
+        token_count: int,
+        summarization_tokens_threshold: int,
+        predicate: Callable[[Entry], bool],
+    ) -> tuple[list[Entry], int]:
+        if len(messages) < abs((end_idx or len(messages)) - (start_idx or 0)):
+            return messages, token_count
+
+        result: list[Entry] = messages[: start_idx or 0]
+        skip_check = False
+        for m in messages[start_idx:end_idx]:
+            if predicate(m) and not skip_check:
+                token_count -= m.token_count
+                if token_count <= summarization_tokens_threshold:
+                    skip_check = True
+
+                continue
+
+            result.append(m)
+
+        if end_idx is not None:
+            result += messages[end_idx:]
+
+        return result, token_count
+
+    def truncate(
+        self, messages: list[Entry], summarization_tokens_threshold: int
+    ) -> list[Entry]:
+        def rm_thoughts(m):
+            return m.role == "system" and m.name == "thought"
+
+        def rm_user_assistant(m):
+            return m.role in ("user", "assistant")
+
+        token_count = reduce(lambda c, e: e.token_count + c, messages, 0)
+
+        if token_count <= summarization_tokens_threshold:
+            return messages
+
+        for start_idx, end_idx, cond in [
+            (THOUGHTS_STRIP_LEN, -THOUGHTS_STRIP_LEN, rm_thoughts),
+            (None, None, rm_thoughts),
+            (MESSAGES_STRIP_LEN, -MESSAGES_STRIP_LEN, rm_user_assistant),
+        ]:
+            messages, token_count = self._remove_messages(
+                messages,
+                start_idx,
+                end_idx,
+                token_count,
+                summarization_tokens_threshold,
+                cond,
+            )
+
+            if token_count <= summarization_tokens_threshold and messages:
+                return messages
+
+        # TODO:
+        # Compress info sections using LLM Lingua
+        #   - If more space is still needed, remove info sections iteratively
+
+        raise InputTooBigError(token_count, summarization_tokens_threshold)
+
     async def run(
         self, new_input, settings: Settings
     ) -> tuple[ChatCompletion, Entry, Callable]:
@@ -53,7 +125,9 @@ class BaseSession:
             session_data, new_input, settings
         )
         # Generate response
-        response = await self.generate(init_context, final_settings)
+        response = await self.generate(
+            self.truncate(init_context, summarization_tokens_threshold), final_settings
+        )
         # Save response to session
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)

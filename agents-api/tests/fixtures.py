@@ -1,7 +1,15 @@
+from uuid import uuid4
 from ward import fixture
 from julep import AsyncClient, Client
+from agents_api.routers.sessions.session import BaseSession
+
 
 # TODO: make clients connect to real service
+
+
+@fixture(scope="global")
+def base_session():
+    return BaseSession(uuid4(), uuid4())
 
 
 @fixture(scope="global")
