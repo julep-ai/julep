@@ -86,7 +86,7 @@ class BaseSession:
         def rm_user_assistant(m):
             return m.role in ("user", "assistant")
 
-        token_count = reduce(lambda c, e: e.token_count + c, messages, 0)
+        token_count = reduce(lambda c, e: (e.token_count or 0) + c, messages, 0)
 
         if token_count <= summarization_tokens_threshold:
             return messages
