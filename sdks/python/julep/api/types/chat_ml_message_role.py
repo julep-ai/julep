@@ -8,7 +8,7 @@ T_Result = typing.TypeVar("T_Result")
 
 class ChatMlMessageRole(str, enum.Enum):
     """
-    ChatML role (system|assistant|user|function_call)
+    ChatML role (system|assistant|user|function_call|function)
     """
 
     USER = "user"

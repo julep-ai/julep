@@ -14,13 +14,6 @@ export const $CreateAgentRequest = {
       type: "string",
       description: `About the agent`,
     },
-    instructions: {
-      type: "array",
-      contains: {
-        type: "string",
-        description: `Instruction`,
-      },
-    },
     tools: {
       type: "array",
       contains: {
@@ -44,6 +37,21 @@ export const $CreateAgentRequest = {
     metadata: {
       description: `(Optional) metadata`,
       properties: {},
+    },
+    instructions: {
+      type: "one-of",
+      description: `Instructions for the agent`,
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "array",
+          contains: {
+            type: "string",
+          },
+        },
+      ],
     },
   },
 } as const;

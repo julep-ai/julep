@@ -3,6 +3,7 @@
 from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .agent_default_settings_preset import AgentDefaultSettingsPreset
+from .agent_instructions import AgentInstructions
 from .agent_metadata import AgentMetadata
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
@@ -17,6 +18,7 @@ from .chat_settings_response_format_schema import ChatSettingsResponseFormatSche
 from .chat_settings_response_format_type import ChatSettingsResponseFormatType
 from .chat_settings_stop import ChatSettingsStop
 from .completion_usage import CompletionUsage
+from .create_agent_request_instructions import CreateAgentRequestInstructions
 from .create_agent_request_metadata import CreateAgentRequestMetadata
 from .create_doc import CreateDoc
 from .create_doc_metadata import CreateDocMetadata
@@ -58,6 +60,7 @@ from .memory_entities_item import MemoryEntitiesItem
 from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
 from .partial_function_def import PartialFunctionDef
+from .patch_agent_request_instructions import PatchAgentRequestInstructions
 from .patch_agent_request_metadata import PatchAgentRequestMetadata
 from .patch_session_request_metadata import PatchSessionRequestMetadata
 from .patch_user_request_metadata import PatchUserRequestMetadata
@@ -71,6 +74,7 @@ from .suggestion_target import SuggestionTarget
 from .tool import Tool
 from .tool_choice_option import ToolChoiceOption
 from .tool_type import ToolType
+from .update_agent_request_instructions import UpdateAgentRequestInstructions
 from .update_agent_request_metadata import UpdateAgentRequestMetadata
 from .update_session_request_metadata import UpdateSessionRequestMetadata
 from .update_user_request_metadata import UpdateUserRequestMetadata
@@ -81,6 +85,7 @@ __all__ = [
     "Agent",
     "AgentDefaultSettings",
     "AgentDefaultSettingsPreset",
+    "AgentInstructions",
     "AgentMetadata",
     "ChatInputData",
     "ChatInputDataToolChoice",
@@ -95,6 +100,7 @@ __all__ = [
     "ChatSettingsResponseFormatType",
     "ChatSettingsStop",
     "CompletionUsage",
+    "CreateAgentRequestInstructions",
     "CreateAgentRequestMetadata",
     "CreateDoc",
     "CreateDocMetadata",
@@ -136,6 +142,7 @@ __all__ = [
     "NamedToolChoice",
     "NamedToolChoiceFunction",
     "PartialFunctionDef",
+    "PatchAgentRequestInstructions",
     "PatchAgentRequestMetadata",
     "PatchSessionRequestMetadata",
     "PatchUserRequestMetadata",
@@ -149,6 +156,7 @@ __all__ = [
     "Tool",
     "ToolChoiceOption",
     "ToolType",
+    "UpdateAgentRequestInstructions",
     "UpdateAgentRequestMetadata",
     "UpdateSessionRequestMetadata",
     "UpdateUserRequestMetadata",

@@ -4,9 +4,9 @@
 /* eslint-disable */
 export type InputChatMLMessage = {
   /**
-   * ChatML role (system|assistant|user|function_call)
+   * ChatML role (system|assistant|user|function_call|function|auto)
    */
-  role: "user" | "assistant" | "system" | "function_call" | "auto";
+  role: "user" | "assistant" | "system" | "function_call" | "function" | "auto";
   /**
    * ChatML content
    */

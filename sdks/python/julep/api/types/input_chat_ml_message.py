@@ -14,7 +14,14 @@ except ImportError:
 
 class InputChatMlMessage(pydantic.BaseModel):
     role: InputChatMlMessageRole = pydantic.Field(
-        description=("ChatML role (system\n" "assistant\n" "user\n" "function_call)\n")
+        description=(
+            "ChatML role (system\n"
+            "assistant\n"
+            "user\n"
+            "function_call\n"
+            "function\n"
+            "auto)\n"
+        )
     )
     content: str = pydantic.Field(description="ChatML content")
     name: typing.Optional[str] = pydantic.Field(description="ChatML name")

@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.10,<3.11"
 fastapi = "^0.110.1"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.23.2"

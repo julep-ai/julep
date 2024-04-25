@@ -12,10 +12,6 @@ export type UpdateAgentRequest = {
    */
   about: string;
   /**
-   * List of instructions for the agent
-   */
-  instructions?: Array<string>;
-  /**
    * Name of the agent
    */
   name: string;
@@ -31,4 +27,8 @@ export type UpdateAgentRequest = {
    * Optional metadata
    */
   metadata?: any;
+  /**
+   * Instructions for the agent
+   */
+  instructions?: string | Array<string>;
 };

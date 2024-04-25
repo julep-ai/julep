@@ -18,10 +18,6 @@ export type CreateAgentRequest = {
    */
   about?: string;
   /**
-   * List of instructions for the agent
-   */
-  instructions?: Array<string>;
-  /**
    * A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
    */
   tools?: Array<CreateToolRequest>;
@@ -41,4 +37,8 @@ export type CreateAgentRequest = {
    * (Optional) metadata
    */
   metadata?: any;
+  /**
+   * Instructions for the agent
+   */
+  instructions?: string | Array<string>;
 };

@@ -1165,12 +1165,6 @@ components:
           type: string
           description: About the agent
           default: ''
-        instructions:
-          type: array
-          items:
-            type: string
-            description: Instruction for the agent
-          description: List of instructions for the agent
         created_at:
           type: string
           format: date-time
@@ -1194,6 +1188,14 @@ components:
           type: object
           properties: {}
           description: Optional metadata
+        instructions:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+              description: List of instructions for the agent
+          description: Instructions for the agent
       required:
         - name
         - id
@@ -1344,12 +1346,6 @@ components:
           type: string
           description: About the agent
           default: ''
-        instructions:
-          type: array
-          items:
-            type: string
-            description: Instruction
-          description: List of instructions for the agent
         tools:
           type: array
           items:
@@ -1373,6 +1369,14 @@ components:
           type: object
           properties: {}
           description: (Optional) metadata
+        instructions:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+              description: List of instructions for the agent
+          description: Instructions for the agent
       required:
         - name
       description: A valid request payload for creating an agent
@@ -1397,12 +1401,6 @@ components:
         about:
           type: string
           description: About the agent
-        instructions:
-          type: array
-          items:
-            type: string
-            description: Instruction
-          description: List of instructions for the agent
         name:
           type: string
           description: Name of the agent
@@ -1416,6 +1414,14 @@ components:
           type: object
           properties: {}
           description: Optional metadata
+        instructions:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+              description: List of instructions for the agent
+          description: Instructions for the agent
       description: A valid request payload for updating an agent
       required:
         - about
@@ -1480,7 +1486,7 @@ components:
             - system
             - function_call
             - function
-          description: ChatML role (system|assistant|user|function_call)
+          description: ChatML role (system|assistant|user|function_call|function)
         content:
           type: string
           description: ChatML content
@@ -1511,8 +1517,9 @@ components:
             - assistant
             - system
             - function_call
+            - function
             - auto
-          description: ChatML role (system|assistant|user|function_call)
+          description: ChatML role (system|assistant|user|function_call|function|auto)
         content:
           type: string
           description: ChatML content
@@ -2169,12 +2176,6 @@ components:
         about:
           type: string
           description: About the agent
-        instructions:
-          type: array
-          items:
-            type: string
-            description: Instruction
-          description: List of instructions for the agent
         name:
           type: string
           description: Name of the agent
@@ -2188,6 +2189,14 @@ components:
           type: object
           properties: {}
           description: Optional metadata
+        instructions:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+              description: List of instructions for the agent
+          description: Instructions for the agent
       description: A request for patching an agent
     PatchSessionRequest:
       $schema: http://json-schema.org/draft-04/schema#

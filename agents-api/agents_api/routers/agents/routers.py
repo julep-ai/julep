@@ -527,12 +527,16 @@ async def update_tool(
 async def patch_tool(
     agent_id: UUID4, tool_id: UUID4, request: PatchToolRequest
 ) -> ResourceUpdatedResponse:
+    parameters = (
+        request.function.parameters.model_dump() if request.function.parameters else {}
+    )
+
     embeddings = await embed(
         [
             function_embed_instruction
             + (request.function.description or "")
             + "\nParameters: "
-            + json.dumps(request.function.parameters.model_dump())
+            + json.dumps(parameters)
         ],
         join_inputs=True,
     )

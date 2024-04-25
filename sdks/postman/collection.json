@@ -434,7 +434,7 @@
             "body": null
           },
           "description": "List of agents (sorted created_at descending order) with limit+offset pagination",
-          "body": "{\n    \"items\": [\n        {\n            \"name\": \"name\",\n            \"about\": \"about\",\n            \"instructions\": [\n                \"instructions\"\n            ],\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"id\": \"id\",\n            \"default_settings\": {\n                \"min_p\": 0.01\n            },\n            \"model\": \"model\"\n        }\n    ]\n}",
+          "body": "{\n    \"items\": [\n        {\n            \"name\": \"name\",\n            \"about\": \"about\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"id\": \"id\",\n            \"default_settings\": {\n                \"min_p\": 0.01\n            },\n            \"model\": \"model\",\n            \"instructions\": \"instructions\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1870,7 +1870,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"instructions\": [\n        \"instructions\"\n    ],\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"default_settings\": {\n        \"frequency_penalty\": 1.1,\n        \"length_penalty\": 1.1,\n        \"presence_penalty\": 1.1,\n        \"repetition_penalty\": 1.1,\n        \"temperature\": 0.75,\n        \"top_p\": 1,\n        \"min_p\": 0.01,\n        \"preset\": \"problem_solving\"\n    },\n    \"model\": \"model\"\n}",
+          "body": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"default_settings\": {\n        \"frequency_penalty\": 1.1,\n        \"length_penalty\": 1.1,\n        \"presence_penalty\": 1.1,\n        \"repetition_penalty\": 1.1,\n        \"temperature\": 0.75,\n        \"top_p\": 1,\n        \"min_p\": 0.01,\n        \"preset\": \"problem_solving\"\n    },\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]

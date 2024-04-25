@@ -3,9 +3,11 @@ from functools import reduce
 from json import JSONDecodeError
 from typing import Callable
 from uuid import uuid4
-from openai.types.chat.chat_completion import ChatCompletion
+
 from dataclasses import dataclass
+from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
+
 from agents_api.clients.embed import embed
 from agents_api.env import summarization_tokens_threshold
 from agents_api.clients.temporal import run_summarization_task
@@ -114,7 +116,7 @@ class BaseSession:
 
     async def run(
         self, new_input, settings: Settings
-    ) -> tuple[ChatCompletion, Entry, Callable]:
+    ) -> tuple[ChatCompletion, Entry, Callable | None]:
         # TODO: implement locking at some point
         # Get session data
         session_data = get_session_data(self.developer_id, self.session_id)
@@ -229,13 +231,11 @@ class BaseSession:
             # Else add to entries as is
             entries.append(
                 Entry(
-                    **{
-                        "role": row["role"],
-                        "name": row["name"],
-                        "content": row["content"],
-                        "session_id": self.session_id,
-                        "created_at": row["created_at"],
-                    }
+                    role=row["role"],
+                    name=row["name"],
+                    content=row["content"],
+                    session_id=self.session_id,
+                    created_at=row["created_at"],
                 )
             )
 

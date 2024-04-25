@@ -5,6 +5,7 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from .agent_default_settings import AgentDefaultSettings
+from .agent_instructions import AgentInstructions
 from .agent_metadata import AgentMetadata
 
 try:
@@ -16,9 +17,6 @@ except ImportError:
 class Agent(pydantic.BaseModel):
     name: str = pydantic.Field(description="Name of the agent")
     about: typing.Optional[str] = pydantic.Field(description="About the agent")
-    instructions: typing.Optional[typing.List[str]] = pydantic.Field(
-        description="List of instructions for the agent"
-    )
     created_at: typing.Optional[dt.datetime] = pydantic.Field(
         description="Agent created at (RFC-3339 format)"
     )
@@ -32,6 +30,9 @@ class Agent(pydantic.BaseModel):
     model: str = pydantic.Field(description="The model to use with this agent")
     metadata: typing.Optional[AgentMetadata] = pydantic.Field(
         description="Optional metadata"
+    )
+    instructions: typing.Optional[AgentInstructions] = pydantic.Field(
+        description="Instructions for the agent"
     )
 
     def json(self, **kwargs: typing.Any) -> str:
