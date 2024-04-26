@@ -6,6 +6,10 @@ import { setupClient } from "./fixtures";
 import { Client } from "../src";
 import { InputChatMLMessage } from "../src/api";
 
+const { TEST_MODEL } = process.env;
+
+const model: string = TEST_MODEL || "julep-ai/samantha-1-turbo";
+
 describe("Simple Agents Example", () => {
   let client: Client | undefined;
 
@@ -32,9 +36,10 @@ describe("Simple Agents Example", () => {
     };
 
     const agent = await client.agents.create({
-      name: name,
-      about: about,
-      instructions: instructions,
+      model,
+      name,
+      about,
+      instructions,
       default_settings: defaultSettings,
     });
 

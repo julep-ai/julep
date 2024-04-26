@@ -107,6 +107,9 @@ async def update_agent(
     request: UpdateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
+    if isinstance(request.instructions, str):
+        request.instructions = [request.instructions]
+
     try:
         resp = update_agent_query(
             agent_id=agent_id,
@@ -146,6 +149,9 @@ async def patch_agent(
     request: PatchAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
+    if isinstance(request.instructions, str):
+        request.instructions = [request.instructions]
+
     try:
         resp = patch_agent_query(
             agent_id=agent_id,
@@ -211,6 +217,9 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
+    if isinstance(request.instructions, str):
+        request.instructions = [request.instructions]
+
     validate_configuration(request.model)
     resp = create_agent_query(
         agent_id=uuid4(),

@@ -18,9 +18,7 @@ mock_agent = {
     "name": "test agent",
     "about": "test agent about",
     "model": TEST_MODEL,
-    "instructions": [
-        "test agent instructions",
-    ],
+    "instructions": "test agent instructions",
     "default_settings": {"temperature": 0.5},
     "metadata": {"test": "test"},
 }
