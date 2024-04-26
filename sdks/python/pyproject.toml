@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "julep"
-version = "0.2.13"
+version = "0.2.14"
 description = "Julep is a platform for creating agents with long-term memory"
 authors = ["Julep Developers <developers@julep.ai>"]
 license = "ISC"
@@ -34,7 +34,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poe.tasks]
 format = "black ."
 lint = "ruff julep/**/*.py tests/**/*.py --fix --unsafe-fixes"
-typecheck = "pytype -j auto -k --config=pytype.toml julep"
+typecheck = "pytype --config=pytype.toml"
 check = [
     "format",
     "lint",

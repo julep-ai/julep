@@ -1,6 +1,6 @@
 from ward import test
 
-from .fixtures import client
+from .fixtures import client, TEST_MODEL
 
 
 @test("simple agent example")
@@ -27,6 +27,7 @@ def _(client=client):
     agent = client.agents.create(
         name=name,
         about=about,
+        model=TEST_MODEL,
         instructions=instructions,
         default_settings=default_settings,
     )

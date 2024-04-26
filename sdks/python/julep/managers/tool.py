@@ -6,6 +6,7 @@ from beartype.typing import Awaitable, List, Union
 
 from ..api.types import (
     ResourceCreatedResponse,
+    ResourceDeletedResponse,
     FunctionDef,
     GetAgentToolsResponse,
     CreateToolRequest,
@@ -142,7 +143,7 @@ class BaseToolsManager(BaseManager):
         self,
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
-    ):
+    ) -> Union[ResourceDeletedResponse, Awaitable[ResourceDeletedResponse]]:
         """
         Delete a tool associated with an agent.
 
@@ -432,7 +433,7 @@ class AsyncToolsManager(BaseToolsManager):
         *,
         agent_id: Union[str, UUID],
         tool_id: Union[str, UUID],
-    ):
+    ) -> Awaitable[ResourceDeletedResponse]:
         """
         Asynchronously delete a specified agent-tool association.
 

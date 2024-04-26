@@ -9,6 +9,7 @@ from ..api.types import (
     CreateDoc,
     Doc,
     ResourceCreatedResponse,
+    ResourceDeletedResponse,
     GetAgentDocsResponse,
 )
 
@@ -165,7 +166,7 @@ class BaseDocsManager(BaseManager):
         agent_id: Optional[Union[str, UUID]],
         user_id: Optional[Union[str, UUID]],
         doc_id: Union[str, UUID],
-    ):
+    ) -> Union[ResourceDeletedResponse, Awaitable[ResourceDeletedResponse]]:
         """
         Delete docs based on either an agent_id or a user_id.
 
@@ -183,10 +184,12 @@ class BaseDocsManager(BaseManager):
                 AssertionError: If both `agent_id` and `user_id` are provided, neither are provided, or if the provided IDs are not valid UUID v4 strings.
                 Other exceptions related to the `api_client` operations could potentially be raised and depend on its implementation.
         """
-        assert (
-            (agent_id and is_valid_uuid4(agent_id))
-            or (user_id and is_valid_uuid4(user_id))
-            and not (agent_id and user_id)
+        assert bool(agent_id) ^ bool(
+            user_id
+        ), "One and only one of user_id or agent_id must be given."
+
+        assert (agent_id and is_valid_uuid4(agent_id)) or (
+            user_id and is_valid_uuid4(user_id)
         ), "One and only one of user_id or agent_id must be given and must be valid UUID v4"
 
         if agent_id is not None:
