@@ -5,7 +5,12 @@ import { setupClient } from "./fixtures"; // Adjust path if necessary
 import { Agent, User } from "../src/api";
 import { Client } from "../src";
 
+const { TEST_MODEL } = process.env;
+
+const model: string = TEST_MODEL || "julep-ai/samantha-1-turbo";
+
 const mockAgent = {
+  model,
   name: "test agent",
   about: "test agent about",
   instructions: ["test agent instructions"],

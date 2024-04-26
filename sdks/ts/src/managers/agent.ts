@@ -32,7 +32,7 @@ export class AgentsManager extends BaseManager {
   }: {
     name: string;
     about: string;
-    instructions: string[];
+    instructions: string[] | string;
     tools?: CreateToolRequest[];
     default_settings?: AgentDefaultSettings;
     model?: string;
