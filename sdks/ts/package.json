@@ -1,15 +1,8 @@
 {
   "name": "@julep/sdk",
-  "version": "0.2.13",
+  "version": "0.3.0",
   "description": "Julep is a platform for creating agents with long-term memory",
-  "keywords": [
-    "julep-ai",
-    "julep",
-    "agents",
-    "llms",
-    "memory",
-    "ai"
-  ],
+  "keywords": ["julep-ai", "julep", "agents", "llms", "memory", "ai"],
   "author": {
     "name": "Julep",
     "email": "developers@julep.ai"
@@ -82,7 +75,5 @@
     "prepublishOnly": "npm run build",
     "test": "npm run format && npm run start_mock_api && sleep 1 && jest && npm run kill_mock_api"
   },
-  "files": [
-    "dist"
-  ]
+  "files": ["dist"]
 }
