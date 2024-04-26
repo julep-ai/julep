@@ -26,6 +26,12 @@ const mockSession = {
   situation: "test situation",
 };
 
+const mockSessionWithTemplate = {
+  situation: "Say 'hello {{ session.metadata.arg }}'",
+  metadata: { arg: "banana" },
+  renderTemplates: true,
+};
+
 const mockSessionUpdate = {
   situation: "updated situation",
 };
@@ -97,26 +103,47 @@ describe("Sessions API", () => {
   });
 
   it("sessions.chat", async () => {
-    try {
-      const response = await client.sessions.chat(testSessionId, {
-        messages: [
-          {
-            role: "user",
-            content: "test content",
-            name: "test name",
-          },
-        ],
-        max_tokens: 1000,
-        presence_penalty: 0.5,
-        repetition_penalty: 0.5,
-        temperature: 0.7,
-        top_p: 0.9,
-      });
+    const response = await client.sessions.chat(testSessionId, {
+      messages: [
+        {
+          role: "user",
+          content: "test content",
+          name: "test name",
+        },
+      ],
+      max_tokens: 1000,
+      presence_penalty: 0.5,
+      repetition_penalty: 0.5,
+      temperature: 0.7,
+      top_p: 0.9,
+    });
 
-      expect(response.response).toBeDefined();
-    } catch (error) {
-      console.error("error", error);
-    }
+    expect(response.response).toBeDefined();
+  }, 5000);
+
+  it("sessions.chat with template", async () => {
+    const session = await client.sessions.create({
+      userId: testUser.id,
+      agentId: testAgent.id,
+      ...mockSessionWithTemplate,
+    });
+
+    const response = await client.sessions.chat(session.id, {
+      messages: [
+        {
+          role: "user",
+          content: "please say it",
+        },
+      ],
+      max_tokens: 10,
+    });
+
+    expect(response.response).toBeDefined();
+
+    // Check that the template was filled in
+    expect(response.response[0][0].content).toContain(
+      mockSessionWithTemplate.metadata.arg,
+    );
   }, 5000);
 
   //   it("sessions.suggestions", async () => {

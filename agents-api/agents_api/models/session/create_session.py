@@ -17,6 +17,7 @@ def create_session_query(
     user_id: UUID | None,
     situation: str | None,
     metadata: dict = {},
+    render_templates: bool = False,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new session in the database.
@@ -28,6 +29,7 @@ def create_session_query(
     - user_id (UUID | None): The unique identifier for the user, if applicable.
     - situation (str | None): The situation/context of the session.
     - metadata (dict): Additional metadata for the session.
+    - render_templates (bool): Specifies whether to render templates.
 
     Returns:
     - pd.DataFrame: The result of the query execution.
@@ -52,11 +54,12 @@ def create_session_query(
         }
     } {
         # Insert the new session data into the 'session' table with the specified columns.
-        ?[session_id, developer_id, situation, metadata] <- [[
+        ?[session_id, developer_id, situation, metadata, render_templates] <- [[
             $session_id,
             $developer_id,
             $situation,
             $metadata,
+            $render_templates,
         ]]
 
         :insert sessions {
@@ -64,6 +67,7 @@ def create_session_query(
             session_id,
             situation,
             metadata,
+            render_templates,
         }
         # Specify the data to return after the query execution, typically the newly created session's ID.
         :returning
@@ -79,5 +83,6 @@ def create_session_query(
             "developer_id": str(developer_id),
             "situation": situation,
             "metadata": metadata,
+            "render_templates": render_templates,
         },
     )

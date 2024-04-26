@@ -49,6 +49,12 @@ mock_session = {
     "metadata": {"type": "test"},
 }
 
+mock_session_with_template = {
+    "situation": "Say 'hello {{ session.metadata.arg }}'",
+    "metadata": {"type": "test", "arg": "banana"},
+    "render_templates": True,
+}
+
 mock_session_update = {
     "situation": "updated situation",
     "metadata": {"type": "test"},
@@ -182,6 +188,21 @@ def test_session(client=client, user=test_user, agent=test_agent) -> Session:
         user_id=user.id,
         agent_id=agent.id,
         **mock_session,
+    )
+
+    yield session
+
+    client.sessions.delete(session.id)
+
+
+@fixture
+def test_session_with_template(
+    client=client, user=test_user, agent=test_agent
+) -> Session:
+    session = client.sessions.create(
+        user_id=user.id,
+        agent_id=agent.id,
+        **mock_session_with_template,
     )
 
     yield session

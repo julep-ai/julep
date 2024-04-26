@@ -8,24 +8,26 @@ from dataclasses import dataclass
 from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
 
-from agents_api.clients.embed import embed
-from agents_api.env import summarization_tokens_threshold
-from agents_api.clients.temporal import run_summarization_task
-from agents_api.models.entry.add_entries import add_entries_query
-from agents_api.common.protocol.entries import Entry
-from agents_api.common.exceptions.sessions import SessionNotFoundError
-from agents_api.clients.worker.types import ChatML
-from agents_api.models.session.session_data import get_session_data
-from agents_api.models.entry.proc_mem_context import proc_mem_context_query
-from agents_api.autogen.openapi_model import InputChatMLMessage, Tool
-from agents_api.model_registry import (
+from ...autogen.openapi_model import InputChatMLMessage, Tool
+from ...clients.embed import embed
+from ...clients.temporal import run_summarization_task
+from ...clients.worker.types import ChatML
+from ...common.exceptions.sessions import SessionNotFoundError
+from ...common.protocol.entries import Entry
+from ...common.protocol.sessions import SessionData
+from ...common.utils.template import render_template
+from ...env import summarization_tokens_threshold
+from ...model_registry import (
     get_extra_settings,
     get_model_client,
     load_context,
 )
-from ...common.protocol.sessions import SessionData
-from .protocol import Settings
+from ...models.entry.add_entries import add_entries_query
+from ...models.entry.proc_mem_context import proc_mem_context_query
+from ...models.session.session_data import get_session_data
+
 from .exceptions import InputTooBigError
+from .protocol import Settings
 
 
 THOUGHTS_STRIP_LEN = 2
@@ -118,18 +120,22 @@ class BaseSession:
         self, new_input, settings: Settings
     ) -> tuple[ChatCompletion, Entry, Callable | None]:
         # TODO: implement locking at some point
+
         # Get session data
         session_data = get_session_data(self.developer_id, self.session_id)
         if session_data is None:
             raise SessionNotFoundError(self.developer_id, self.session_id)
+
         # Assemble context
         init_context, final_settings = await self.forward(
             session_data, new_input, settings
         )
+
         # Generate response
         response = await self.generate(
             self.truncate(init_context, summarization_tokens_threshold), final_settings
         )
+
         # Save response to session
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)
@@ -195,10 +201,11 @@ class BaseSession:
         )
 
         entries: list[Entry] = []
-        instructions = "IMPORTANT INSTRUCTIONS:\n\n"
+        instructions = "Instructions:\n\n"
         first_instruction_idx = -1
         first_instruction_created_at = 0
         tools = []
+
         for idx, row in proc_mem_context_query(
             session_id=self.session_id,
             tool_query_embedding=tool_query_embedding,
@@ -224,7 +231,7 @@ class BaseSession:
                     first_instruction_idx = idx
                     first_instruction_created_at = row["created_at"]
 
-                instructions += f"- {row['content']}\n"
+                instructions += f"{row['content']}\n\n"
 
                 continue
 
@@ -265,6 +272,36 @@ class BaseSession:
             for e in entries + new_input
             if e.content
         ]
+
+        # If render_templates=True, render the templates
+        if session_data is not None and session_data.render_templates:
+
+            template_data = {
+                "session": {
+                    "id": session_data.session_id,
+                    "situation": session_data.situation,
+                    "metadata": session_data.metadata,
+                },
+                "user": {
+                    "id": session_data.user_id,
+                    "name": session_data.user_name,
+                    "about": session_data.user_about,
+                    "metadata": session_data.user_metadata,
+                },
+                "agent": {
+                    "id": session_data.agent_id,
+                    "name": session_data.agent_name,
+                    "about": session_data.agent_about,
+                    "metadata": session_data.agent_metadata,
+                },
+            }
+
+            for i, msg in enumerate(messages):
+                # Only render templates for system/assistant messages
+                if msg.role not in ["system", "assistant"]:
+                    continue
+
+                messages[i].content = await render_template(msg.content, template_data)
 
         # FIXME: This sometimes returns "The model `` does not exist."
         if session_data is not None:
