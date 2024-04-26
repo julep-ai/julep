@@ -61,6 +61,14 @@ def _(client=client, session=test_session_no_user):
     assert session.id
 
 
+@test("sessions: sessions.get no user")
+def _(client=client, session=test_session_no_user):
+    response = client.sessions.get(id=session.id)
+
+    assert isinstance(response, Session)
+    assert response.id == session.id
+
+
 @test("sessions: sessions.get")
 def _(client=client, session=test_session):
     response = client.sessions.get(id=session.id)

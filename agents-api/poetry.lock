@@ -1240,13 +1240,13 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "julep"
-version = "0.2.13"
+version = "0.2.14"
 description = "Julep is a platform for creating agents with long-term memory"
 optional = false
 python-versions = "<3.14,>=3.8"
 files = [
-    {file = "julep-0.2.13-py3-none-any.whl", hash = "sha256:5a8aadfb31dc4caaab1dc0d098483eba8783042ac93461106f39a6a62f61146a"},
-    {file = "julep-0.2.13.tar.gz", hash = "sha256:a2e3f7e19e350c72640df48644e8b4ef86bbf57f08e49a9650188aa876fa5b0e"},
+    {file = "julep-0.2.14-py3-none-any.whl", hash = "sha256:bc3edab590b7942309e4c03ef3300689d58aa92fb362dc3642046f341ccebf75"},
+    {file = "julep-0.2.14.tar.gz", hash = "sha256:504ab31ec6e015f9dac1c5dc0d86a7f56ab1dba0228f215191ff5b016f159c82"},
 ]
 
 [package.dependencies]
