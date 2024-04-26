@@ -10,7 +10,7 @@ exclude = [
 
 # Space-separated list of files or directories to process.
 inputs = [
-    '.',
+    'julep',
 ]
 
 # Keep going past errors to analyze as many files as possible.
@@ -18,7 +18,7 @@ keep_going = false
 
 # Run N jobs in parallel. When 'auto' is used, this will be equivalent to the
 # number of CPUs on the host system.
-jobs = 4
+jobs = 'auto'
 
 # All pytype output goes here.
 output = '.pytype'
@@ -34,7 +34,7 @@ python_version = '3.10'
 
 # Bind 'self' in methods with non-transparent decorators. This flag is temporary
 # and will be removed once this behavior is enabled by default.
-bind_decorated_methods = false
+bind_decorated_methods = true
 
 # Don't allow None to match bool. This flag is temporary and will be removed
 # once this behavior is enabled by default.
@@ -43,15 +43,15 @@ none_is_not_bool = false
 # Enable parameter count checks for overriding methods with renamed arguments.
 # This flag is temporary and will be removed once this behavior is enabled by
 # default.
-overriding_renamed_parameter_count_checks = false
+overriding_renamed_parameter_count_checks = true
 
 # Variables initialized as None retain their None binding. This flag is
 # temporary and will be removed once this behavior is enabled by default.
-strict_none_binding = false
+strict_none_binding = true
 
 # Support the third-party fiddle library. This flag is temporary and will be
 # removed once this behavior is enabled by default.
-use_fiddle_overlay = false
+use_fiddle_overlay = true
 
 # Opt-in: Do not allow Any as a return type.
 no_return_any = false
@@ -61,13 +61,13 @@ no_return_any = false
 require_override_decorator = false
 
 # Experimental: Infer precise return types even for invalid function calls.
-precise_return = false
+precise_return = true
 
 # Experimental: Solve unknown types to label with structural types.
 protocols = false
 
 # Experimental: Only load submodules that are explicitly imported.
-strict_import = false
+strict_import = true
 
 # Experimental: Enable exhaustive checking of function parameter types.
 strict_parameter_checks = false
@@ -78,6 +78,9 @@ strict_primitive_comparisons = false
 
 # Experimental: Check that variables are defined in all possible code paths.
 strict_undefined_checks = false
+
+# Experimental: FOR TESTING ONLY. Use pytype/rewrite/.
+use_rewrite = false
 
 # Space-separated list of error names to ignore.
 disable = [
