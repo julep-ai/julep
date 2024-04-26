@@ -206,13 +206,7 @@ def run(client, *queries):
     query = joiner.join(queries)
     query = f"{{\n{query}\n}}"
 
-    try:
-        client.run(query)
-    except Exception as error:
-        print(error)
-        import pdb
-
-        pdb.set_trace()
+    client.run(query)
 
 
 def up(client):

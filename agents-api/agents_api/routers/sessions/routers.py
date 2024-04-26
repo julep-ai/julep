@@ -89,6 +89,7 @@ async def create_session(
         user_id=request.user_id,
         situation=request.situation,
         metadata=request.metadata or {},
+        render_templates=request.render_templates or False,
     )
 
     return ResourceCreatedResponse(

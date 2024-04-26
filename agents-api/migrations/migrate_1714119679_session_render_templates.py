@@ -12,7 +12,8 @@ extend_sessions = {
         summary,
         created_at,
         developer_id
-    }, metadata = {},
+    },
+    metadata = {},
     render_templates = false
 
     :replace sessions {

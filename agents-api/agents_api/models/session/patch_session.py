@@ -16,6 +16,9 @@ _fields = [
 ]
 
 
+# TODO: Add support for updating `render_templates` field
+
+
 @cozo_query
 def patch_session_query(
     session_id: UUID,
@@ -41,6 +44,7 @@ def patch_session_query(
         },
         session_id = to_uuid($session_id),
         developer_id = to_uuid($developer_id),
+
     # Assertion to ensure the session exists before updating.
     :assert some
     """

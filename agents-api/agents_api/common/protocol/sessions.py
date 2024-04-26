@@ -38,3 +38,7 @@ class SessionData(BaseModel):
     created_at: float
     model: str
     default_settings: SessionSettings
+    render_templates: bool = False
+    metadata: dict = {}
+    user_metadata: dict = {}
+    agent_metadata: dict = {}

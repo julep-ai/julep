@@ -14,6 +14,8 @@ _fields = [
     "developer_id",
 ]
 
+# TODO: Add support for updating `render_templates` field
+
 
 @cozo_query
 def update_session_query(

@@ -42,9 +42,10 @@ def session_data_query(
         agent_about,
         model,
         default_settings,
-        session_metadata,
-        users_metadata,
-        agents_metadata,
+        metadata,
+        render_templates,
+        user_metadata,
+        agent_metadata,
     ] := input[developer_id, session_id],
         *sessions{
             developer_id,
@@ -53,7 +54,8 @@ def session_data_query(
             summary,
             created_at,
             updated_at: validity,
-            metadata: session_metadata,
+            metadata,
+            render_templates,
             @ "NOW"
         },
         *session_lookup{
@@ -65,14 +67,14 @@ def session_data_query(
             user_id,
             name: user_name,
             about: user_about,
-            metadata: users_metadata,
+            metadata: user_metadata,
         },
         *agents{
             agent_id,
             name: agent_name,
             about: agent_about,
             model,
-            metadata: agents_metadata,
+            metadata: agent_metadata,
         },
         *agent_default_settings {
             agent_id,

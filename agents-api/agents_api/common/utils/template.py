@@ -1,22 +1,14 @@
-# flake8: noqa
-# This is so ruff doesn't remove * imports
-
-import inspect
-
 import arrow
-from jinja2 import Environment, ImmutableSandboxedEnvironment
+from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
-
-from .args import get_fn_signature
-from .lang import inflect
 
 __all__ = [
     "render_template",
 ]
 
 # jinja environment
-jinja_env: Environment = ImmutableSandboxedEnvironment(
+jinja_env = ImmutableSandboxedEnvironment(
     autoescape=False,
     trim_blocks=True,
     lstrip_blocks=True,

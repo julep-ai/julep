@@ -39,6 +39,7 @@ class SessionCreateArgs(TypedDict):
     agent_id: Union[str, UUID]
     situation: Optional[str] = None
     metadata: Dict[str, Any] = {}
+    render_templates: bool = False
 
 
 class SessionUpdateArgs(TypedDict):
@@ -46,6 +47,7 @@ class SessionUpdateArgs(TypedDict):
     situation: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
     overwrite: bool = False
+    render_templates: bool = False
 
 
 class BaseSessionsManager(BaseManager):
@@ -179,6 +181,7 @@ class BaseSessionsManager(BaseManager):
         user_id: Optional[Union[str, UUID]] = None,
         situation: Optional[str] = None,
         metadata: Dict[str, Any] = {},
+        render_templates: bool = False,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -191,6 +194,7 @@ class BaseSessionsManager(BaseManager):
             user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
             situation (Optional[str], optional): An optional description of the situation.
             metadata (Dict[str, Any])
+            render_templates (bool, optional): Whether to render templates in the metadata. Defaults to False.
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response from the API client upon successful session creation, which can be a synchronous `ResourceCreatedResponse` or an asynchronous `Awaitable` of it.
@@ -208,6 +212,7 @@ class BaseSessionsManager(BaseManager):
             agent_id=agent_id,
             situation=situation,
             metadata=metadata,
+            render_templates=render_templates,
         )
 
     def _list_items(
