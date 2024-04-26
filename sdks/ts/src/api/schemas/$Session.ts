@@ -13,7 +13,6 @@ export const $Session = {
     user_id: {
       type: "string",
       description: `User ID of user associated with this session`,
-      isRequired: true,
       format: "uuid",
     },
     agent_id: {

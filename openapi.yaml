@@ -1285,7 +1285,6 @@ components:
           default: false
       required:
         - id
-        - user_id
         - agent_id
     CreateUserRequest:
       $schema: http://json-schema.org/draft-04/schema#
