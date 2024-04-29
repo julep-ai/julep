@@ -1,4 +1,5 @@
 ---
+description: Get started with Julep
 layout:
   title:
     visible: true
@@ -9,15 +10,41 @@ layout:
   outline:
     visible: false
   pagination:
-    visible: false
+    visible: true
 ---
 
-# Welcome to Julep
+# Introduction
 
-{% hint style="success" %}
-Julep is a platform for building AI agents that have memory and can plan and execute tasks. It is:
+Julep is a platform for developing stateful and functional LLM-powered applications.
 
-* [Open source](https://github.com/julep-ai/julep)
-{% endhint %}
+## Why Julep?
 
-<table data-column-title-hidden data-view="cards"><thead><tr><th>Title</th><th>Description</th><th data-hidden data-card-target data-type="content-ref">Link 1</th></tr></thead><tbody><tr><td><h3><mark style="color:blue;">I'm just curious...</mark></h3></td><td>Read more about the <a href="introduction/julep-in-a-nutshell.md">Julep Platform</a> and <a href="README (1).md">why we are building it</a>.</td><td><a href="introduction/julep-in-a-nutshell.md">julep-in-a-nutshell.md</a></td></tr><tr><td><h3><mark style="color:green;">I want to learn more.</mark></h3></td><td>Learn <a href="introduction/core-concepts.md">core concepts</a> behind the Julep Platform.</td><td><a href="introduction/core-concepts.md">core-concepts.md</a></td></tr><tr><td><h3><mark style="color:purple;">I'm in, let's go!</mark></h3></td><td>Get started building your <a href="broken-reference">first agent</a>.</td><td><a href="getting-started/agents-quickstart.md">agents-quickstart.md</a></td></tr><tr><td><h3><mark style="color:orange;">Learn more about Agents</mark></h3></td><td>Read the <a href="agents/overview.md">Agents Overview</a> or follow the <a href="agents/tutorial.md">Tutorial</a>.</td><td><a href="agents/overview.md">overview.md</a></td></tr><tr><td><h3><mark style="color:green;">API Reference</mark></h3></td><td>Read more about our model or learn how to use it.</td><td><a href="api-reference/agents-api/README.md">overview.md</a></td></tr><tr><td><h3><mark style="color:red;">I'm stuck. Need help!</mark></h3></td><td>Get help on our <a href="https://discord.gg/RdaGyrzpC8">discord community</a>, create a <a href="https://github.com/julep-ai/platform">Github issue</a> or <a href="faqs/technical-details.md">check out FAQs</a>.</td><td><a href="https://discord.gg/RdaGyrzpC8">https://discord.gg/RdaGyrzpC8</a></td></tr><tr><td><h3>SDKs</h3></td><td></td><td><a href="sdks/available-sdks.md">available-sdks.md</a></td></tr><tr><td><h3>FAQs</h3></td><td></td><td><a href="faqs/general-overview.md">general-overview.md</a></td></tr><tr><td><h3>API Reference</h3></td><td></td><td><a href="api-reference/agents-api/">agents-api</a></td></tr></tbody></table>
+We've built a lot of AI apps and understand how difficult it is to evaluate hundreds of tools, techniques, and models, and then make them work well together. In our early days, we built sales bots for Shopify stores and had to repeat this process several times.
+
+Even for simple apps you have to:
+
+* pick the right language model for your use case
+* pick the right framework
+* pick the right embedding model
+* choose the vector store and RAG pipeline
+* build integrations&#x20;
+* tweak all of the parameters (temp, penalty, max tokens, similarity thresholds, chunk size, and so on)&#x20;
+* write and iterate on prompts for them to work
+* and repeat this whole process when a new framework, model or integration comes out next week
+
+This is so tiring and cumbersome. We want to build a better way that "just works" so you can build your _AI app 10x faster with 0 decision burden_**.**
+
+
+
+{% embed url="https://www.youtube.com/watch?v=4VMMN--oMO8" %}
+A short intro to Julep
+{% endembed %}
+
+## Features
+
+* **Statefulness By Design**: Build AI apps without needing to write code to embed, save, and retrieve conversation history. Deals with context windows by using CozoDB; a transactional, relational-graph-vector database.
+* **Automatic Function Calling**: Julep deals with calling the function, parsing the response, retrying in case of failures, and passing the response into the context.
+* **Production-ready**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon!
+* \***Cron-like asynchronous functions**: Support for functions to be executed periodically and asynchronously.
+* \***90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://composio.dev/) natively.
+* \***Use and switch between any LLMs anytime**: Switch and use different LLMs, providers, and models, self-hosted or otherwise by changing only _one line of code_

@@ -1,18 +1,21 @@
 # Table of contents
 
-## ✨ INTRODUCTION
+## ✨ Concepts
 
-* [Welcome to Julep](README.md)
-* [Julep in a nutshell](introduction/julep-in-a-nutshell.md)
-* [Motivation](<README (1).md>)
-* [Agents Quickstart](getting-started/agents-quickstart.md)
+* [Introduction](README.md)
+* [🤖 Agents](concepts/agents.md)
+* [🙎 Users](concepts/users.md)
+* [🔁 Sessions](concepts/sessions.md)
 
-## 🤖 Agents&#x20;
+## 📖 Guides
 
-* [Overview](agents/overview.md)
-* [Tutorial](agents/tutorial.md)
-* [Self-hosting](agents/self-hosting.md)
-* [Example: Jessica](agents/jessica.md)
+* [Quickstart](guides/quickstart.md)
+* [Self-hosting](guides/self-hosting.md)
+* [🚧 LLMs](guides/llms.md)
+
+## 🧑‍🍳 Cookbooks
+
+* [Example Apps](cookbooks/example-apps.md)
 
 ## 📖 API REFERENCE
 
@@ -43,15 +46,9 @@
   * [Tasks](api-reference/agents-api/agents-api-5.md)
   * [Task Runs](api-reference/agents-api/agents-api-6.md)
 
-## 🔍 FAQs
-
-* [General Questions](faqs/general-overview.md)
-* [Memory and Learning](faqs/memory-and-learning.md)
-* [Sessions and Tasks](faqs/sessions-and-tasks.md)
-* [Technical Details](faqs/technical-details.md)
-
 ***
 
+* [⭐ Github](https://github.com/julep-ai/julep)
 * [⭐ Github](https://github.com/julep-ai/agents)
 * [🫂 Discord Community](https://discord.gg/RdaGyrzpC8)
 * [🐍 PyPI package](https://pypi.org/project/julep/)
