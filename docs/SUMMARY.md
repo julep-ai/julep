@@ -49,7 +49,6 @@
 ***
 
 * [⭐ Github](https://github.com/julep-ai/julep)
-* [⭐ Github](https://github.com/julep-ai/agents)
 * [🫂 Discord Community](https://discord.gg/RdaGyrzpC8)
 * [🐍 PyPI package](https://pypi.org/project/julep/)
 * [📦 npm package](https://www.npmjs.com/package/@julep/sdk)
