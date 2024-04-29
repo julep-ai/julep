@@ -257,7 +257,7 @@ def proc_mem_context_query(
                 tail: entry_id,
             }},
             index = 6,
-            source == "api_request" || source == "api_response",
+            source == "api_request" || source == "api_response" || source == "summarizer",
 
         # Save in temp table
         :create _entries {{
