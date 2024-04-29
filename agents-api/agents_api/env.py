@@ -32,6 +32,9 @@ summarization_ratio_threshold: float = env.float(
 summarization_tokens_threshold: int = env.int(
     "SUMMARIZATION_TOKENS_THRESHOLD", default=2048
 )
+summarization_model_name: str = env.str(
+    "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
+)
 worker_url: str = env.str("WORKER_URL", default=None)
 
 sentry_dsn: str = env.str("SENTRY_DSN", default=None)

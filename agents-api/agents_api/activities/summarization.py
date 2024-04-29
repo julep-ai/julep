@@ -9,7 +9,8 @@ from agents_api.models.entry.entries_summarization import (
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
-from agents_api.clients.model import julep_client
+from agents_api.model_registry import get_model_client
+from ..env import summarization_model_name
 
 
 example_previous_memory = """
@@ -128,8 +129,9 @@ async def run_prompt(
     **kwargs,
 ) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
+    client = get_model_client(model)
 
-    response = await julep_client.chat.completions.create(
+    response = await client.chat.completions.create(
         model=model,
         messages=[
             {
@@ -158,7 +160,9 @@ async def summarization(session_id: str) -> None:
 
     assert len(entries) > 0, "no need to summarize on empty entries list"
 
-    response = await run_prompt(entries, [])
+    response = await run_prompt(
+        dialog=entries, previous_memories=[], model=summarization_model_name
+    )
 
     new_entry = Entry(
         session_id=session_id,
