@@ -1,4 +1,4 @@
-from typing import Callable, Literal
+from typing import Literal
 from uuid import UUID
 
 
@@ -13,8 +13,7 @@ def create_docs_query(
     owner_id: UUID,
     id: UUID,
     title: str,
-    content: str,
-    split_fn: Callable[[str], list[str]] = lambda x: x.split("\n\n"),
+    content: list[str],
     metadata: dict = {},
 ) -> tuple[str, dict]:
     """
@@ -26,19 +25,16 @@ def create_docs_query(
     - id (UUID): The UUID of the document to be created.
     - title (str): The title of the document.
     - content (str): The content of the document, which will be split into snippets.
-    - split_fn (Callable[[str], list[str]]): A function to split the content into snippets. Defaults to splitting by double newlines.
     - metadata (dict): Metadata associated with the document. Defaults to an empty dictionary.
 
     Returns:
     pd.DataFrame: A DataFrame containing the results of the query execution.
     """
     created_at: float = utcnow().timestamp()
-
-    snippets = split_fn(content)
     snippet_cols, snippet_rows = "", []
 
     # Process each content snippet and prepare data for the datalog query.
-    for snippet_idx, snippet in enumerate(snippets):
+    for snippet_idx, snippet in enumerate(content):
         snippet_cols, new_snippet_rows = cozo_process_mutate_data(
             dict(
                 doc_id=str(id),

@@ -55,6 +55,10 @@ embedding_service_url: str = env.str(
     "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8082/embed"
 )
 
+embedding_model_id: str = env.str(
+    "EMBEDDING_MODEL_ID", default="BAAI/bge-large-en-v1.5"
+)
+
 truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=False)
 
 # Temporal

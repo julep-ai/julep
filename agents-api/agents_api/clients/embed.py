@@ -1,5 +1,5 @@
 import httpx
-from ..env import embedding_service_url, truncate_embed_text
+from ..env import embedding_service_url, truncate_embed_text, embedding_model_id
 
 
 async def embed(
@@ -17,6 +17,7 @@ async def embed(
                 "normalize": True,
                 # FIXME: We should control the truncation ourselves and truncate before sending
                 "truncate": truncate_embed_text,
+                "model_id": embedding_model_id,
             },
         )
         resp.raise_for_status()
