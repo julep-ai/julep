@@ -3,7 +3,6 @@ Model Registry maintains a list of supported models and their configs.
 """
 
 from typing import Dict
-from agents_api.clients.model import julep_client, openai_client
 from agents_api.clients.worker.types import ChatML
 from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
@@ -12,6 +11,7 @@ from agents_api.common.exceptions.agents import (
 from openai import AsyncOpenAI
 import litellm
 from litellm.utils import get_valid_models
+from agents_api.env import model_inference_url, model_api_key
 
 GPT4_MODELS: Dict[str, int] = {
     # stable model names:
@@ -115,15 +115,6 @@ def validate_configuration(model: str):
     elif model not in get_valid_models():
         raise MissingAgentModelAPIKeyError(model)
 
-
-def get_model_client(model: str) -> AsyncOpenAI:
-    """
-    Returns the model serving client based on the model
-    """
-    if model in JULEP_MODELS:
-        return julep_client
-    elif model in OPENAI_MODELS:
-        return openai_client
 
 
 def load_context(init_context: list[ChatML], model: str):

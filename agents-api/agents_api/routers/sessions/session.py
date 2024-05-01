@@ -21,6 +21,7 @@ from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
 from ...env import summarization_tokens_threshold
 from ...model_registry import (
+    JULEP_MODELS,
     get_extra_settings,
     load_context,
 )
@@ -30,7 +31,7 @@ from ...models.session.session_data import get_session_data
 
 from .exceptions import InputTooBigError
 from .protocol import Settings
-
+from ...env import model_inference_url, model_api_key
 
 THOUGHTS_STRIP_LEN = 2
 MESSAGES_STRIP_LEN = 4
@@ -321,15 +322,23 @@ class BaseSession:
     ) -> ChatCompletion:
         init_context = load_context(init_context, settings.model)
         tools = None
+        api_base = None
+        api_key = None
+        if settings.model in JULEP_MODELS:
+            api_base = model_inference_url
+            api_key = model_api_key
+            model = f"openai/{settings.model}"
+
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
+
         extra_body = get_extra_settings(settings)
 
         litellm.drop_params = True
         litellm.add_function_to_prompt = True
 
         res = await acompletion(
-            model=settings.model,
+            model=model,
             messages=init_context,
             max_tokens=settings.max_tokens,
             stop=settings.stop,
@@ -340,6 +349,8 @@ class BaseSession:
             stream=settings.stream,
             tools=tools,
             response_format=settings.response_format,
+            api_base=api_base,
+            api_key=api_key,
             **extra_body
         )
         return res
