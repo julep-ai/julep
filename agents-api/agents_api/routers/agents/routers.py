@@ -66,6 +66,8 @@ from agents_api.autogen.openapi_model import (
     PatchToolRequest,
     PatchAgentRequest,
 )
+from agents_api.env import embedding_model_id
+from agents_api.embed_models_registry import EmbeddingModel
 
 
 class AgentList(BaseModel):
@@ -319,9 +321,13 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
     )
 
     indices, snippets = list(zip(*enumerate(content)))
-    embeddings = await embed(
+    model = EmbeddingModel.from_model_name(embedding_model_id)
+    embeddings = await model.embed(
         [
-            snippet_embed_instruction + request.title + "\n\n" + snippet
+            {
+                "instruction": snippet_embed_instruction,
+                "text": request.title + "\n\n" + snippet,
+            }
             for snippet in snippets
         ]
     )
