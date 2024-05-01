@@ -106,6 +106,7 @@ CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
 ALL_AVAILABLE_MODELS = litellm.model_list + list(JULEP_MODELS.keys())
 VALID_MODELS = get_valid_models() + list(JULEP_MODELS.keys())
 
+
 def validate_configuration(model: str):
     """
     Validates the model specified in the request
