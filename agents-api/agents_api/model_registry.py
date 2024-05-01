@@ -3,14 +3,13 @@ Model Registry maintains a list of supported models and their configs.
 """
 
 from typing import Dict
-from agents_api.clients.model import julep_client, openai_client
 from agents_api.clients.worker.types import ChatML
 from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
     MissingAgentModelAPIKeyError,
 )
-from openai import AsyncOpenAI
-
+import litellm
+from litellm.utils import get_valid_models
 
 GPT4_MODELS: Dict[str, int] = {
     # stable model names:
@@ -101,14 +100,9 @@ JULEP_MODELS = {
 
 CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
 
-ALL_AVAILABLE_MODELS = {
-    **JULEP_MODELS,
-    **GPT4_MODELS,
-    **TURBO_MODELS,
-    **GPT3_5_MODELS,
-    **GPT3_MODELS,
-    # **CLAUDE_MODELS,
-}
+
+ALL_AVAILABLE_MODELS = litellm.model_list + list(JULEP_MODELS.keys())
+VALID_MODELS = get_valid_models() + list(JULEP_MODELS.keys())
 
 
 def validate_configuration(model: str):
@@ -116,27 +110,16 @@ def validate_configuration(model: str):
     Validates the model specified in the request
     """
     if model not in ALL_AVAILABLE_MODELS:
-        raise AgentModelNotValid(model, list(ALL_AVAILABLE_MODELS.keys()))
-    model_client = get_model_client(model)
-    if model_client.api_key == "":
+        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
+    elif model not in get_valid_models():
         raise MissingAgentModelAPIKeyError(model)
-
-
-def get_model_client(model: str) -> AsyncOpenAI:
-    """
-    Returns the model serving client based on the model
-    """
-    if model in JULEP_MODELS:
-        return julep_client
-    elif model in OPENAI_MODELS:
-        return openai_client
 
 
 def load_context(init_context: list[ChatML], model: str):
     """
     Converts the message history into a format supported by the model.
     """
-    if model in OPENAI_MODELS:
+    if model in litellm.utils.get_valid_models():
         init_context = [
             {
                 "role": "assistant" if msg.role == "function_call" else msg.role,
@@ -149,10 +132,11 @@ def load_context(init_context: list[ChatML], model: str):
             {"name": msg.name, "role": msg.role, "content": msg.content}
             for msg in init_context
         ]
+    else:
+        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
     return init_context
 
 
-# TODO: add type hint for Settings
 def get_extra_settings(settings):
     extra_settings = (
         dict(
@@ -164,7 +148,7 @@ def get_extra_settings(settings):
             preset=settings.preset.name if settings.preset else None,
         )
         if settings.model in JULEP_MODELS
-        else None
+        else {}
     )
 
     return extra_settings

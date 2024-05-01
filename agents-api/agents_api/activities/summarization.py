@@ -4,12 +4,12 @@ from uuid import UUID
 from typing import Callable
 from textwrap import dedent
 from temporalio import activity
+from litellm import acompletion
 from agents_api.models.entry.entries_summarization import (
     get_toplevel_entries_query,
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
-from agents_api.model_registry import get_model_client
 from ..env import summarization_model_name
 
 
@@ -129,9 +129,7 @@ async def run_prompt(
     **kwargs,
 ) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
-    client = get_model_client(model)
-
-    response = await client.chat.completions.create(
+    response = await acompletion(
         model=model,
         messages=[
             {

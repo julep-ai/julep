@@ -8,6 +8,9 @@ from dataclasses import dataclass
 from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
 
+import litellm
+from litellm import acompletion
+
 from ...autogen.openapi_model import InputChatMLMessage, Tool
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
@@ -18,8 +21,8 @@ from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
 from ...env import summarization_tokens_threshold
 from ...model_registry import (
+    JULEP_MODELS,
     get_extra_settings,
-    get_model_client,
     load_context,
 )
 from ...models.entry.add_entries import add_entries_query
@@ -28,7 +31,7 @@ from ...models.session.session_data import get_session_data
 
 from .exceptions import InputTooBigError
 from .protocol import Settings
-
+from ...env import model_inference_url, model_api_key
 
 THOUGHTS_STRIP_LEN = 2
 MESSAGES_STRIP_LEN = 4
@@ -319,24 +322,37 @@ class BaseSession:
     ) -> ChatCompletion:
         init_context = load_context(init_context, settings.model)
         tools = None
+        api_base = None
+        api_key = None
+        model = settings.model
+        if model in JULEP_MODELS:
+            api_base = model_inference_url
+            api_key = model_api_key
+            model = f"openai/{model}"
+
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
-        model_client = get_model_client(settings.model)
+
         extra_body = get_extra_settings(settings)
 
-        res = await model_client.chat.completions.create(
-            model=settings.model,
+        litellm.drop_params = True
+        litellm.add_function_to_prompt = True
+
+        res = await acompletion(
+            model=model,
             messages=init_context,
             max_tokens=settings.max_tokens,
             stop=settings.stop,
             temperature=settings.temperature,
             frequency_penalty=settings.frequency_penalty,
-            extra_body=extra_body,
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
             tools=tools,
             response_format=settings.response_format,
+            api_base=api_base,
+            api_key=api_key,
+            **extra_body,
         )
         return res
 

@@ -25,6 +25,7 @@ arrow = "^1.3.0"
 jinja2 = "^3.1.3"
 jinja2schema = "^0.1.4"
 jsonschema = "^4.21.1"
+litellm = "^1.35.32"
 
 
 [tool.poetry.group.dev.dependencies]
