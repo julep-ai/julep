@@ -351,7 +351,7 @@ class BaseSession:
             response_format=settings.response_format,
             api_base=api_base,
             api_key=api_key,
-            **extra_body
+            **extra_body,
         )
         return res
 
