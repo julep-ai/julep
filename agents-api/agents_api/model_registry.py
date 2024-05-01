@@ -8,10 +8,8 @@ from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
     MissingAgentModelAPIKeyError,
 )
-from openai import AsyncOpenAI
 import litellm
 from litellm.utils import get_valid_models
-from agents_api.env import model_inference_url, model_api_key
 
 GPT4_MODELS: Dict[str, int] = {
     # stable model names:
@@ -115,7 +113,6 @@ def validate_configuration(model: str):
         raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
     elif model not in get_valid_models():
         raise MissingAgentModelAPIKeyError(model)
-
 
 
 def load_context(init_context: list[ChatML], model: str):
