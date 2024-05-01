@@ -324,10 +324,11 @@ class BaseSession:
         tools = None
         api_base = None
         api_key = None
-        if settings.model in JULEP_MODELS:
+        model = settings.model
+        if model in JULEP_MODELS:
             api_base = model_inference_url
             api_key = model_api_key
-            model = f"openai/{settings.model}"
+            model = f"openai/{model}"
 
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
