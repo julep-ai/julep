@@ -238,12 +238,13 @@ async def list_users(
 @router.post("/users/{user_id}/docs", tags=["users"])
 async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
+    content = [request.content] if isinstance(request.content, str) else request.content
     resp: pd.DataFrame = create_docs_query(
         owner_type="user",
         owner_id=user_id,
         id=doc_id,
         title=request.title,
-        content=request.content,
+        content=content,
         metadata=request.metadata or {},
     )
 
@@ -253,7 +254,7 @@ async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResp
         created_at=resp["created_at"][0],
     )
 
-    indices, snippets = list(zip(*enumerate(request.content.split("\n\n"))))
+    indices, snippets = list(zip(*enumerate(content)))
     embeddings = await embed(
         [
             snippet_embed_instruction + request.title + "\n\n" + snippet
