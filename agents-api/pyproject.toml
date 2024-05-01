@@ -44,6 +44,8 @@ pytype = ">=2024.4.11"
 julep = "^0.2.4"
 pyjwt = "^2.8.0"
 ward = "^0.68.0b0"
+jupyterlab = "^4.1.8"
+ipywidgets = "^8.1.2"
 
 [build-system]
 requires = ["poetry-core"]
