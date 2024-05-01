@@ -340,7 +340,7 @@ class BaseSession:
             stream=settings.stream,
             tools=tools,
             response_format=settings.response_format,
-            **extra_body
+            **extra_body,
         )
         return res
 
