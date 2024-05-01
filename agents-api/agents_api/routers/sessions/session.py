@@ -8,6 +8,9 @@ from dataclasses import dataclass
 from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
 
+import litellm
+from litellm import acompletion
+
 from ...autogen.openapi_model import InputChatMLMessage, Tool
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
@@ -19,7 +22,6 @@ from ...common.utils.template import render_template
 from ...env import summarization_tokens_threshold
 from ...model_registry import (
     get_extra_settings,
-    get_model_client,
     load_context,
 )
 from ...models.entry.add_entries import add_entries_query
@@ -321,22 +323,24 @@ class BaseSession:
         tools = None
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
-        model_client = get_model_client(settings.model)
         extra_body = get_extra_settings(settings)
 
-        res = await model_client.chat.completions.create(
+        litellm.drop_params = True
+        litellm.add_function_to_prompt = True
+
+        res = await acompletion(
             model=settings.model,
             messages=init_context,
             max_tokens=settings.max_tokens,
             stop=settings.stop,
             temperature=settings.temperature,
             frequency_penalty=settings.frequency_penalty,
-            extra_body=extra_body,
             top_p=settings.top_p,
             presence_penalty=settings.presence_penalty,
             stream=settings.stream,
             tools=tools,
             response_format=settings.response_format,
+            **extra_body
         )
         return res
 

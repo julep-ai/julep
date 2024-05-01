@@ -110,6 +110,7 @@ async def update_agent(
     if isinstance(request.instructions, str):
         request.instructions = [request.instructions]
 
+    validate_configuration(request.model)
     try:
         resp = update_agent_query(
             agent_id=agent_id,
