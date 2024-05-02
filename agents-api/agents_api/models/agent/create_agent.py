@@ -39,6 +39,9 @@ def create_agent_query(
     pd.DataFrame: A DataFrame containing the results of the query execution.
     """
 
+    preset = default_settings["preset"]
+    default_settings["preset"] = getattr(preset, "value", preset)
+
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
             **default_settings,
