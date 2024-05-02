@@ -66,7 +66,7 @@
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:33](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L33)
+[src/api/core/CancelablePromise.ts:33](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L33)
 
 ## Properties
 
@@ -76,7 +76,7 @@
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:28](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L28)
+[src/api/core/CancelablePromise.ts:28](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L28)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:27](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L27)
+[src/api/core/CancelablePromise.ts:27](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L27)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:26](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L26)
+[src/api/core/CancelablePromise.ts:26](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L26)
 
 ___
 
@@ -106,7 +106,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:25](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L25)
+[src/api/core/CancelablePromise.ts:25](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L25)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:29](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L29)
+[src/api/core/CancelablePromise.ts:29](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L29)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:31](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L31)
+[src/api/core/CancelablePromise.ts:31](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L31)
 
 ___
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:30](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L30)
+[src/api/core/CancelablePromise.ts:30](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L30)
 
 ## Accessors
 
@@ -182,7 +182,7 @@ Promise.[toStringTag]
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:87](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L87)
+[src/api/core/CancelablePromise.ts:87](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L87)
 
 ___
 
@@ -196,7 +196,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:127](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L127)
+[src/api/core/CancelablePromise.ts:127](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L127)
 
 ## Methods
 
@@ -210,7 +210,7 @@ ___
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:108](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L108)
+[src/api/core/CancelablePromise.ts:108](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L108)
 
 ___
 
@@ -240,7 +240,7 @@ Promise.catch
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:98](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L98)
+[src/api/core/CancelablePromise.ts:98](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L98)
 
 ___
 
@@ -264,7 +264,7 @@ Promise.finally
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:104](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L104)
+[src/api/core/CancelablePromise.ts:104](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L104)
 
 ___
 
@@ -296,4 +296,4 @@ Promise.then
 
 #### Defined in
 
-[src/api/core/CancelablePromise.ts:91](https://github.com/julep-ai/julep/blob/472c7c79a6f1d35727cab63befac5c1e433e62fa/sdks/ts/src/api/core/CancelablePromise.ts#L91)
+[src/api/core/CancelablePromise.ts:91](https://github.com/julep-ai/julep/blob/2d416216346fc13cf033416ba57de9872a3c177d/sdks/ts/src/api/core/CancelablePromise.ts#L91)
