@@ -227,7 +227,7 @@ async def create_agent(
         developer_id=x_developer_id,
         name=request.name,
         about=request.about,
-        instructions=request.instructions,
+        instructions=request.instructions or [],
         model=request.model,
         default_settings=(
             request.default_settings or AgentDefaultSettings()
