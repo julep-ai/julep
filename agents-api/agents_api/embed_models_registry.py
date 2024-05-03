@@ -78,7 +78,7 @@ class EmbeddingModel:
         embeddings: list[np.ndarray | list[float]] = []
 
         if self.embedding_provider == "julep":
-            embeddings = await embed(input)
+            embeddings = await embed(input, embed_model_name=self.embedding_model_name)
         elif self.embedding_provider == "openai":
             embeddings = (
                 await openai_client.embeddings.create(

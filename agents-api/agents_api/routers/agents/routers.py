@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
+from agents_api.autogen.openapi_model import ContentItem
 from agents_api.model_registry import validate_configuration
 from fastapi import APIRouter, HTTPException, status, Depends
 import pandas as pd
@@ -304,7 +305,13 @@ async def list_agents(
 @router.post("/agents/{agent_id}/docs", tags=["agents"])
 async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
-    content = [request.content] if isinstance(request.content, str) else request.content
+    content = [
+        (c.model_dump() if isinstance(c, ContentItem) else c)
+        for c in (
+            [request.content] if isinstance(request.content, str) else request.content
+        )
+    ]
+
     resp: pd.DataFrame = create_docs_query(
         owner_type="agent",
         owner_id=agent_id,
