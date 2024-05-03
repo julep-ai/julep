@@ -2,7 +2,7 @@ import tiktoken
 import numpy as np
 from typing import TypedDict, Any
 from dataclasses import dataclass
-from transformers import PreTrainedTokenizer
+from tokenizers import Tokenizer
 from agents_api.clients.model import openai_client
 from agents_api.clients.embed import embed
 from agents_api.exceptions import (
@@ -10,7 +10,6 @@ from agents_api.exceptions import (
     PromptTooBigError,
     UnknownTokenizerError,
 )
-
 
 def normalize_l2(x):
     x = np.array(x)
@@ -73,9 +72,9 @@ class EmbeddingModel:
 
     async def embed(
         self, inputs: list[EmbeddingInput]
-    ) -> list[np.NDArray | list[float]]:
+    ) -> list[np.ndarray | list[float]]:
         input = self.preprocess(inputs)
-        embeddings: list[np.NDArray | list[float]] = []
+        embeddings: list[np.ndarray | list[float]] = []
 
         if self.embedding_provider == "julep":
             embeddings = await embed(input)
@@ -91,8 +90,8 @@ class EmbeddingModel:
         return self.normalize(embeddings)
 
     def normalize(
-        self, embeddings: list[np.NDArray | list[float]]
-    ) -> list[np.NDArray | list[float]]:
+        self, embeddings: list[np.ndarray | list[float]]
+    ) -> list[np.ndarray | list[float]]:
         return [
             (
                 e
@@ -104,21 +103,21 @@ class EmbeddingModel:
 
 
 _embedding_model_registry = {
-    "text-embeddings-3-small": EmbeddingModel(
+    "text-embedding-3-small": EmbeddingModel(
         embedding_provider="openai",
-        embedding_model_name="text-embeddings-3-small",
+        embedding_model_name="text-embedding-3-small",
         original_embedding_dimensions=1024,
         output_embedding_dimensions=1024,
         context_window=8192,
-        tokenizer=tiktoken.encoding_for_model("text-embeddings-3-small"),
+        tokenizer=tiktoken.encoding_for_model("text-embedding-3-small"),
     ),
-    "text-embeddings-3-large": EmbeddingModel(
+    "text-embedding-3-large": EmbeddingModel(
         embedding_provider="openai",
-        embedding_model_name="text-embeddings-3-large",
+        embedding_model_name="text-embedding-3-large",
         original_embedding_dimensions=1024,
         output_embedding_dimensions=1024,
         context_window=8192,
-        tokenizer=tiktoken.encoding_for_model("text-embeddings-3-large"),
+        tokenizer=tiktoken.encoding_for_model("text-embedding-3-large"),
     ),
     "Alibaba-NLP/gte-large-en-v1.5": EmbeddingModel(
         embedding_provider="julep",
@@ -126,7 +125,7 @@ _embedding_model_registry = {
         original_embedding_dimensions=1024,
         output_embedding_dimensions=1024,
         context_window=8192,
-        tokenizer=PreTrainedTokenizer.from_pretrained("Alibaba-NLP/gte-large-en-v1.5"),
+        tokenizer=Tokenizer.from_pretrained("Alibaba-NLP/gte-large-en-v1.5"),
     ),
     "BAAI/bge-m3": EmbeddingModel(
         embedding_provider="julep",
@@ -134,7 +133,7 @@ _embedding_model_registry = {
         original_embedding_dimensions=1024,
         output_embedding_dimensions=1024,
         context_window=8192,
-        tokenizer=PreTrainedTokenizer.from_pretrained("BAAI/bge-m3"),
+        tokenizer=Tokenizer.from_pretrained("BAAI/bge-m3"),
     ),
     "BAAI/llm-embedder": EmbeddingModel(
         embedding_provider="julep",
@@ -142,6 +141,6 @@ _embedding_model_registry = {
         original_embedding_dimensions=1024,
         output_embedding_dimensions=1024,
         context_window=8192,
-        tokenizer=PreTrainedTokenizer.from_pretrained("BAAI/llm-embedder"),
+        tokenizer=Tokenizer.from_pretrained("BAAI/llm-embedder"),
     ),
 }
