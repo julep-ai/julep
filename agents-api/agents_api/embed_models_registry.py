@@ -11,6 +11,7 @@ from agents_api.exceptions import (
     UnknownTokenizerError,
 )
 
+
 def normalize_l2(x):
     x = np.array(x)
     if x.ndim == 1:
