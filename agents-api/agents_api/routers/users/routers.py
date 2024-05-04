@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
+from agents_api.autogen.openapi_model import ContentItem
 from fastapi import APIRouter, HTTPException, status, Depends
 import pandas as pd
 from pycozo.client import QueryException
@@ -46,6 +47,7 @@ from agents_api.autogen.openapi_model import (
     Doc,
     PatchUserRequest,
 )
+from agents_api.env import docs_embedding_model_id, docs_embedding_service_url
 
 
 class UserList(BaseModel):
@@ -238,7 +240,12 @@ async def list_users(
 @router.post("/users/{user_id}/docs", tags=["users"])
 async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
-    content = [request.content] if isinstance(request.content, str) else request.content
+    content = [
+        (c.model_dump() if isinstance(c, ContentItem) else c)
+        for c in (
+            [request.content] if isinstance(request.content, str) else request.content
+        )
+    ]
     resp: pd.DataFrame = create_docs_query(
         owner_type="user",
         owner_id=user_id,
@@ -259,7 +266,9 @@ async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResp
         [
             snippet_embed_instruction + request.title + "\n\n" + snippet
             for snippet in snippets
-        ]
+        ],
+        embedding_service_url=docs_embedding_service_url,
+        embedding_model_name=docs_embedding_model_id,
     )
 
     embed_docs_snippets_query(

@@ -67,7 +67,7 @@ from agents_api.autogen.openapi_model import (
     PatchToolRequest,
     PatchAgentRequest,
 )
-from agents_api.env import embedding_model_id
+from agents_api.env import docs_embedding_model_id
 from agents_api.embed_models_registry import EmbeddingModel
 
 
@@ -112,8 +112,10 @@ async def update_agent(
 ) -> ResourceUpdatedResponse:
     if isinstance(request.instructions, str):
         request.instructions = [request.instructions]
+    
+    model = request.model or "julep-ai/samantha-1-turbo"
 
-    validate_configuration(request.model)
+    validate_configuration(model)
     try:
         resp = update_agent_query(
             agent_id=agent_id,
@@ -123,7 +125,7 @@ async def update_agent(
             ).model_dump(),
             name=request.name,
             about=request.about,
-            model=request.model or "julep-ai/samantha-1-turbo",
+            model=model,
             metadata=request.metadata,
             instructions=request.instructions or [],
         )
@@ -328,7 +330,7 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
     )
 
     indices, snippets = list(zip(*enumerate(content)))
-    model = EmbeddingModel.from_model_name(embedding_model_id)
+    model = EmbeddingModel.from_model_name(docs_embedding_model_id)
     embeddings = await model.embed(
         [
             {
