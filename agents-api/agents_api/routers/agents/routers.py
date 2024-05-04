@@ -112,7 +112,7 @@ async def update_agent(
 ) -> ResourceUpdatedResponse:
     if isinstance(request.instructions, str):
         request.instructions = [request.instructions]
-    
+
     model = request.model or "julep-ai/samantha-1-turbo"
 
     validate_configuration(model)
