@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import Annotated
 from uuid import uuid4
 
+from agents_api.autogen.openapi_model import ContentItem
 from agents_api.model_registry import validate_configuration
 from fastapi import APIRouter, HTTPException, status, Depends
 import pandas as pd
@@ -66,6 +67,8 @@ from agents_api.autogen.openapi_model import (
     PatchToolRequest,
     PatchAgentRequest,
 )
+from agents_api.env import docs_embedding_model_id
+from agents_api.embed_models_registry import EmbeddingModel
 
 
 class AgentList(BaseModel):
@@ -110,7 +113,9 @@ async def update_agent(
     if isinstance(request.instructions, str):
         request.instructions = [request.instructions]
 
-    validate_configuration(request.model)
+    model = request.model or "julep-ai/samantha-1-turbo"
+
+    validate_configuration(model)
     try:
         resp = update_agent_query(
             agent_id=agent_id,
@@ -120,7 +125,7 @@ async def update_agent(
             ).model_dump(),
             name=request.name,
             about=request.about,
-            model=request.model or "julep-ai/samantha-1-turbo",
+            model=model,
             metadata=request.metadata,
             instructions=request.instructions or [],
         )
@@ -302,7 +307,13 @@ async def list_agents(
 @router.post("/agents/{agent_id}/docs", tags=["agents"])
 async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
-    content = [request.content] if isinstance(request.content, str) else request.content
+    content = [
+        (c.model_dump() if isinstance(c, ContentItem) else c)
+        for c in (
+            [request.content] if isinstance(request.content, str) else request.content
+        )
+    ]
+
     resp: pd.DataFrame = create_docs_query(
         owner_type="agent",
         owner_id=agent_id,
@@ -319,9 +330,13 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
     )
 
     indices, snippets = list(zip(*enumerate(content)))
-    embeddings = await embed(
+    model = EmbeddingModel.from_model_name(docs_embedding_model_id)
+    embeddings = await model.embed(
         [
-            snippet_embed_instruction + request.title + "\n\n" + snippet
+            {
+                "instruction": snippet_embed_instruction,
+                "text": request.title + "\n\n" + snippet,
+            }
             for snippet in snippets
         ]
     )
