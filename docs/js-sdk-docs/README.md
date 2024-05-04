@@ -242,6 +242,6 @@ If you have any questions, need assistance, or want to get in touch with the Jul
 
 - [Discord](https://discord.com/invite/vNbuaNFM): Join our community forum to discuss ideas, ask questions, and get help from other Julep AI users and the development team.
 - GitHub Issues: For technical issues, bug reports, and feature requests, please open an issue on the Julep AI GitHub repository.
-- Email Support: If you need direct assistance from our support team, send an email to diwank@julep.ai, and we'll get back to you as soon as possible.
+- Email Support: If you need direct assistance from our support team, send an email to hey@julep.ai, and we'll get back to you as soon as possible.
 - Follow for updates on [X](https://twitter.com/julep_ai) & [LinkedIn](https://www.linkedin.com/company/julep-ai/)
 - [Hop on a call](https://calendly.com/diwank-julep): We wanna know what you're building and how we can tweak and tune Julep to help you build your next AI app.
