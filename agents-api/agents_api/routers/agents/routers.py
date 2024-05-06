@@ -247,12 +247,18 @@ async def create_agent(
 
     if request.docs:
         for info in request.docs:
+            content = [
+                (c.model_dump() if isinstance(c, ContentItem) else c)
+                for c in (
+                    [info.content] if isinstance(info.content, str) else info.content
+                )
+            ]
             create_docs_query(
                 owner_type="agent",
                 owner_id=new_agent_id,
                 id=uuid4(),
                 title=info.title,
-                content=info.content,
+                content=content,
                 metadata=info.metadata or {},
             )
 
