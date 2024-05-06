@@ -8,17 +8,31 @@
 Start your project with conversation history, support for any LLM, agentic workflows, integrations & more.
 </h2>
 
+  <p align="center">
+    <br />
+    <a href="https://docs.julep.ai" rel="dofollow"><strong>Explore the docs »</strong></a>
+    <br />
+  <br/>
+    <a href="https://github.com/julep-ai/julep/issues/new">Report Bug</a>
+    ·
+    <a href="https://github.com/julep-ai/julep/discussions/293">Request Feature</a>
+    ·
+    <a href="https://discord.gg/JzfVWsy9fY">Join Our Discord</a>
+    ·
+    <a href="https://x.com/julep_ai">X</a>
+    ·
+    <a href="https://www.linkedin.com/company/julep-ai">LinkedIn</a>
+
+</p>
+
+
 <p align="center">
-    <a href="https://discord.gg/JzfVWsy9fY"><img src="https://img.shields.io/discord/1172458124020547584?style=social&amp;logo=discord&amp;label=discord" alt="Discord"></a>
-    <span>&nbsp;</span>
-    <a href="https://twitter.com/julep_ai"><img src="https://img.shields.io/twitter/follow/julep_ai?style=social&amp;logo=x" alt="X (formerly Twitter) Follow"></a>
-    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version"></a>
     <span>&nbsp;</span>
     <a href="https://pypi.org/project/julep"><img src="https://img.shields.io/pypi/v/julep?style=social&amp;logo=python&amp;label=PyPI&amp;link=https%3A%2F%2Fpypi.org%2Fproject%2Fjulep" alt="PyPI - Version"></a>
     <span>&nbsp;</span>
     <a href="https://hub.docker.com/u/julepai"><img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Docker Image Version"></a>
-    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <span>&nbsp;</span>
     <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License"></a>
 </p>
 
