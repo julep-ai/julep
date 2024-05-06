@@ -19,7 +19,11 @@ from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
-from ...env import summarization_tokens_threshold
+from ...env import (
+    summarization_tokens_threshold,
+    docs_embedding_service_url,
+    docs_embedding_model_id,
+)
 from ...model_registry import (
     JULEP_MODELS,
     get_extra_settings,
@@ -201,6 +205,8 @@ class BaseSession:
                 ]
             ],
             join_inputs=False,
+            embedding_service_url=docs_embedding_service_url,
+            embedding_model_name=docs_embedding_model_id,
         )
 
         entries: list[Entry] = []
