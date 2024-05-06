@@ -29,7 +29,7 @@ def proc_mem_context_query(
     Return type:
         A pandas DataFrame containing the query results.
     """
-    VECTOR_SIZE = 768
+    VECTOR_SIZE = 1024
     session_id = str(session_id)
     assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
 
