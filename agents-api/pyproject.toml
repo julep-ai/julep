@@ -46,6 +46,8 @@ pyjwt = "^2.8.0"
 ward = "^0.68.0b0"
 jupyterlab = "^4.1.8"
 ipywidgets = "^8.1.2"
+jupyter-ai = "^2.14.1"
+langchain-openai = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

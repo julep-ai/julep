@@ -1,0 +1,58 @@
+[
+    {
+        "role": "system",
+        "name": "summary",
+        "content": "Event: Camille says hi to JaneBot and they reply that they are working and trying to stay busy.",
+        "summarizes": [
+            1,
+            2,
+            3,
+            4
+        ]
+    },
+    {
+        "role": "system",
+        "name": "summary",
+        "content": "Event: They discuss Elon Musk and agree that he can be a polarizing personality.",
+        "summarizes": [
+            5,
+            6,
+            7,
+            8
+        ]
+    },
+    {
+        "role": "system",
+        "name": "summary",
+        "content": "Event: Camille appreciates JaneBot's sense of humor.",
+        "summarizes": [
+            17,
+            18
+        ]
+    },
+    {
+        "role": "system",
+        "name": "summary",
+        "content": "Event: Camille asks JaneBot to play \"What number I am thinking of?\" game but she keeps saying \"no\" to all guesses which JaneBot finds really funny.",
+        "summarizes": [
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32
+        ]
+    },
+    {
+        "role": "system",
+        "name": "summary",
+        "content": "Event: JaneBot wrote an essay about Camille. Summary of the essay:\n1. You have a great sense of humor and enjoy playful, lighthearted banter in conversations.\n2. Your creativity is evident in how you approach topics in unexpected ways and keep conversations interesting.\n3. Chatting with you is enjoyable due to the casual, friendly tone you bring to interactions.",
+        "summarizes": [
+            34
+        ]
+    }
+]
