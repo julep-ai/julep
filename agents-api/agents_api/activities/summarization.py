@@ -10,7 +10,8 @@ from agents_api.models.entry.entries_summarization import (
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
-from ..env import summarization_model_name
+from ..model_registry import JULEP_MODELS
+from ..env import summarization_model_name, model_inference_url, model_api_key
 
 
 example_previous_memory = """
@@ -128,6 +129,12 @@ async def run_prompt(
     parser: Callable[[str], str] = lambda x: x,
     **kwargs,
 ) -> str:
+    api_base = None
+    api_key = None
+    if model in JULEP_MODELS:
+        api_base = model_inference_url
+        api_key = model_api_key
+        model = f"openai/{model}"
     prompt = make_prompt(dialog, previous_memories, **kwargs)
     response = await acompletion(
         model=model,
@@ -141,6 +148,8 @@ async def run_prompt(
         temperature=temperature,
         stop=["<", "<|"],
         stream=False,
+        api_base=api_base,
+        api_key=api_key,
     )
 
     content = response.choices[0].message.content
@@ -159,7 +168,7 @@ async def summarization(session_id: str) -> None:
     assert len(entries) > 0, "no need to summarize on empty entries list"
 
     response = await run_prompt(
-        dialog=entries, previous_memories=[], model=summarization_model_name
+        dialog=entries, previous_memories=[], model=f"openai/{summarization_model_name}"
     )
 
     new_entry = Entry(
