@@ -18,7 +18,6 @@ def proc_mem_context_query(
 
     Parameters:
         session_id (UUID),
-        tool_query_embedding (list[float]),
         doc_query_embedding (list[float]),
         tools_confidence (float),
         docs_confidence (float),
@@ -31,7 +30,6 @@ def proc_mem_context_query(
     """
     VECTOR_SIZE = 1024
     session_id = str(session_id)
-    assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
 
     tools_radius: float = 1.0 - tools_confidence
     docs_radius: float = 1.0 - docs_confidence
@@ -41,14 +39,14 @@ def proc_mem_context_query(
     {{
         # Input table for the query
         # (This is temporary to this query)
-        input[session_id, tool_query, doc_query] <- [[
+        input[session_id, doc_query] <- [[
             to_uuid($session_id),
-            $tool_query_embedding,
+            # $tool_query_embedding,
             $doc_query_embedding,
         ]]
 
-        ?[session_id, tool_query, doc_query, agent_id, user_id] :=
-            input[session_id, tool_query, doc_query],
+        ?[session_id, doc_query, agent_id, user_id] :=
+            input[session_id, doc_query],
             *session_lookup{{
                 session_id,
                 agent_id,
@@ -59,7 +57,7 @@ def proc_mem_context_query(
             session_id: Uuid,
             agent_id: Uuid,
             user_id: Uuid,
-            tool_query: <F32; {VECTOR_SIZE}>,
+            # tool_query: <F32; {VECTOR_SIZE}>,
             doc_query: <F32; {VECTOR_SIZE}>,
         }}
     }} {{
