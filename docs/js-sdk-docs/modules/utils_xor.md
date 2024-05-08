@@ -27,4 +27,4 @@
 
 #### Defined in
 
-[src/utils/xor.ts:1](https://github.com/julep-ai/julep/blob/adff5226141266ad6888be76c218a81451160ba8/sdks/ts/src/utils/xor.ts#L1)
+[src/utils/xor.ts:1](https://github.com/julep-ai/julep/blob/f3ac1cb0a0d96013b99775f23b1dcd922ffda0a1/sdks/ts/src/utils/xor.ts#L1)
