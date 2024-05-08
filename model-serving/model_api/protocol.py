@@ -93,7 +93,7 @@ class Type(Enum):
 class Tool(BaseModel):
     type: Type
     function: FunctionDef
-    id: str
+    id: str | None = None
 
 
 class SamplingParams(SamplingParams):

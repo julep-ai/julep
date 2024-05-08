@@ -45,7 +45,6 @@ from agents_api.models.docs.embed_docs import (
     embed_docs_snippets_query,
 )
 from agents_api.models.tools.create_tools import create_function_query
-from agents_api.models.tools.embed_tools import embed_functions_query
 from agents_api.models.tools.list_tools import list_functions_by_agent_query
 from agents_api.models.tools.get_tools import get_function_by_id_query
 from agents_api.models.tools.delete_tools import delete_function_by_id_query
@@ -247,30 +246,36 @@ async def create_agent(
 
     if request.docs:
         for info in request.docs:
+            content = [
+                (c.model_dump() if isinstance(c, ContentItem) else c)
+                for c in (
+                    [info.content] if isinstance(info.content, str) else info.content
+                )
+            ]
             create_docs_query(
                 owner_type="agent",
                 owner_id=new_agent_id,
                 id=uuid4(),
                 title=info.title,
-                content=info.content,
+                content=content,
                 metadata=info.metadata or {},
             )
 
     if request.tools:
         functions = [t.function for t in request.tools]
-        embeddings = await embed(
-            [
-                function_embed_instruction
-                + f"{function.name}, {function.description}, "
-                + "required_params:"
-                + function.parameters.model_dump_json()
-                for function in functions
-            ]
-        )
+        # embeddings = await embed(
+        #     [
+        #         function_embed_instruction
+        #         + f"{function.name}, {function.description}, "
+        #         + "required_params:"
+        #         + function.parameters.model_dump_json()
+        #         for function in functions
+        #     ]
+        # )
         create_tools_query(
             new_agent_id,
             functions,
-            embeddings,
+            [[0.0] * 768],
         )
 
     return res
@@ -435,20 +440,20 @@ async def create_tool(
         created_at=resp["created_at"][0],
     )
 
-    embeddings = await embed(
-        [
-            function_embed_instruction
-            + request.function.description
-            + "\nParameters: "
-            + json.dumps(request.function.parameters.model_dump())
-        ]
-    )
+    # embeddings = await embed(
+    #     [
+    #         function_embed_instruction
+    #         + request.function.description
+    #         + "\nParameters: "
+    #         + json.dumps(request.function.parameters.model_dump())
+    #     ]
+    # )
 
-    embed_functions_query(
-        agent_id=agent_id,
-        tool_ids=[tool_id],
-        embeddings=embeddings,
-    )
+    # embed_functions_query(
+    #     agent_id=agent_id,
+    #     tool_ids=[tool_id],
+    #     embeddings=embeddings,
+    # )
 
     return res
 
