@@ -275,7 +275,7 @@ async def create_agent(
         create_tools_query(
             new_agent_id,
             functions,
-            [[0.0] * 768],
+            [[0.0] * 768] * len(functions),
         )
 
     return res
