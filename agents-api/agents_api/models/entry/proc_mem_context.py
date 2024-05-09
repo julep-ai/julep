@@ -128,7 +128,7 @@ def proc_mem_context_query(
 
         # Search for tools
         ?[role, name, content, token_count, created_at, index] :=
-            #*_input{{agent_id, tool_query}},
+            *_input{{agent_id}},
             # ~agent_functions:embedding_space {{
             #     agent_id,
             #     name: fn_name,
