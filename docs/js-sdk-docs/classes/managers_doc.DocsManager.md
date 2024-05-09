@@ -54,7 +54,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/ee885862c9152eefc9e7303f9a4e0ecb563b7904/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/8464f9a823e2fa8a973bd49acc3ab1c1ef211d53/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -70,7 +70,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/ee885862c9152eefc9e7303f9a4e0ecb563b7904/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/8464f9a823e2fa8a973bd49acc3ab1c1ef211d53/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
@@ -103,7 +103,7 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:133](https://github.com/julep-ai/julep/blob/ee885862c9152eefc9e7303f9a4e0ecb563b7904/sdks/ts/src/managers/doc.ts#L133)
+[src/managers/doc.ts:133](https://github.com/julep-ai/julep/blob/8464f9a823e2fa8a973bd49acc3ab1c1ef211d53/sdks/ts/src/managers/doc.ts#L133)
 
 ___
 
@@ -136,7 +136,7 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:186](https://github.com/julep-ai/julep/blob/ee885862c9152eefc9e7303f9a4e0ecb563b7904/sdks/ts/src/managers/doc.ts#L186)
+[src/managers/doc.ts:186](https://github.com/julep-ai/julep/blob/8464f9a823e2fa8a973bd49acc3ab1c1ef211d53/sdks/ts/src/managers/doc.ts#L186)
 
 ___
 
@@ -170,7 +170,7 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:22](https://github.com/julep-ai/julep/blob/ee885862c9152eefc9e7303f9a4e0ecb563b7904/sdks/ts/src/managers/doc.ts#L22)
+[src/managers/doc.ts:22](https://github.com/julep-ai/julep/blob/8464f9a823e2fa8a973bd49acc3ab1c1ef211d53/sdks/ts/src/managers/doc.ts#L22)
 
 ___
 
@@ -206,4 +206,4 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:74](https://github.com/julep-ai/julep/blob/ee885862c9152eefc9e7303f9a4e0ecb563b7904/sdks/ts/src/managers/doc.ts#L74)
+[src/managers/doc.ts:74](https://github.com/julep-ai/julep/blob/8464f9a823e2fa8a973bd49acc3ab1c1ef211d53/sdks/ts/src/managers/doc.ts#L74)

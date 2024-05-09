@@ -19,7 +19,7 @@ Start your project with conversation history, support for any LLM, agentic workf
     ·
     <a href="https://github.com/julep-ai/julep/discussions/293">Request Feature</a>
     ·
-    <a href="https://discord.gg/JzfVWsy9fY">Join Our Discord</a>
+    <a href="https://discord.com/invite/JTSBGRZrzj">Join Our Discord</a>
     ·
     <a href="https://x.com/julep_ai">X</a>
     ·
@@ -236,7 +236,7 @@ Julep AI is released under the Apache 2.0 License. By using, contributing to, or
 ## Contact and Support
 If you have any questions, need assistance, or want to get in touch with the Julep AI team, please use the following channels:
 
-- [Discord](https://discord.com/invite/vNbuaNFM): Join our community forum to discuss ideas, ask questions, and get help from other Julep AI users and the development team.
+- [Discord](https://discord.com/invite/JTSBGRZrzj): Join our community forum to discuss ideas, ask questions, and get help from other Julep AI users and the development team.
 - GitHub Issues: For technical issues, bug reports, and feature requests, please open an issue on the Julep AI GitHub repository.
 - Email Support: If you need direct assistance from our support team, send an email to diwank@julep.ai, and we'll get back to you as soon as possible.
 - Follow for updates on [X](https://twitter.com/julep_ai) & [LinkedIn](https://www.linkedin.com/company/julep-ai/)
