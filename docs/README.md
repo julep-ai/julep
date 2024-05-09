@@ -34,9 +34,9 @@ Even for simple apps you have to:
 
 This is so tiring and cumbersome. We want to build a better way that "just works" so you can build your _AI app 10x faster with 0 decision burden_**.**
 
-[https://youtu.be/Z6Ifxv6rAkk](https://youtu.be/Z6Ifxv6rAkk)
 
-{% embed url="https://youtu.be/Z6Ifxv6rAkk" %}
+
+{% embed url="https://youtu.be/LhQMBAehL_Q" %}
 
 ## Features
 
