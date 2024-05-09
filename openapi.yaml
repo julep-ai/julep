@@ -1699,11 +1699,14 @@ components:
             format: uuid
           uniqueItems: true
           description: IDs (if any) of jobs created as part of this request
+        doc_ids:
+          $ref: '#/components/schemas/DocIds'
       required:
         - usage
         - response
         - finish_reason
         - id
+        - doc_ids
     Memory:
       $schema: http://json-schema.org/draft-04/schema#
       type: object
@@ -2326,6 +2329,20 @@ components:
         parameters:
           $ref: '#/components/schemas/FunctionParameters'
           description: Parameters accepeted by this function
+    DocIds:
+      type: object
+      properties:
+        agent_doc_ids:
+          type: array
+          items:
+            type: string
+        user_doc_ids:
+          type: array
+          items:
+            type: string
+      required:
+        - agent_doc_ids
+        - user_doc_ids
   securitySchemes:
     api-key:
       type: apiKey

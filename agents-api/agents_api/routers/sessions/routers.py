@@ -292,7 +292,9 @@ async def session_chat(
         min_p=request.min_p,
         preset=request.preset,
     )
-    response, new_entry, bg_task = await session.run(request.messages, settings)
+    response, new_entry, bg_task, doc_ids = await session.run(
+        request.messages, settings
+    )
 
     jobs = None
     if bg_task:
@@ -308,4 +310,5 @@ async def session_chat(
         response=[resp],
         usage=CompletionUsage(**response.usage.model_dump()),
         jobs=jobs,
+        doc_ids=doc_ids,
     )

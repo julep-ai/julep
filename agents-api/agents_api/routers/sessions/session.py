@@ -11,7 +11,7 @@ from pydantic import UUID4
 import litellm
 from litellm import acompletion
 
-from ...autogen.openapi_model import InputChatMLMessage, Tool
+from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
 from ...clients.worker.types import ChatML
@@ -125,7 +125,7 @@ class BaseSession:
 
     async def run(
         self, new_input, settings: Settings
-    ) -> tuple[ChatCompletion, Entry, Callable | None]:
+    ) -> tuple[ChatCompletion, Entry, Callable | None, DocIds]:
         # TODO: implement locking at some point
 
         # Get session data
@@ -134,7 +134,7 @@ class BaseSession:
             raise SessionNotFoundError(self.developer_id, self.session_id)
 
         # Assemble context
-        init_context, final_settings = await self.forward(
+        init_context, final_settings, doc_ids = await self.forward(
             session_data, new_input, settings
         )
 
@@ -180,14 +180,14 @@ class BaseSession:
             new_input, total_tokens, new_entry, final_settings
         )
 
-        return response, new_entry, backward_pass
+        return response, new_entry, backward_pass, doc_ids
 
     async def forward(
         self,
         session_data: SessionData | None,
         new_input: list[Entry],
         settings: Settings,
-    ) -> tuple[list[ChatML], Settings]:
+    ) -> tuple[list[ChatML], Settings, DocIds]:
         # role, name, content, token_count, created_at
         string_to_embed = "\n".join(
             [f"{msg.name or msg.role}: {msg.content}" for msg in new_input]
@@ -214,12 +214,22 @@ class BaseSession:
         first_instruction_idx = -1
         first_instruction_created_at = 0
         tools = []
+        doc_ids = DocIds(agent_doc_ids=[], user_doc_ids=[])
 
         for idx, row in proc_mem_context_query(
             session_id=self.session_id,
             tool_query_embedding=tool_query_embedding,
             doc_query_embedding=doc_query_embedding,
         ).iterrows():
+            agent_doc_id = row.get("agent_doc_id")
+            user_doc_id = row.get("user_doc_id")
+
+            if agent_doc_id is not None:
+                doc_ids.agent_doc_ids.append(agent_doc_id)
+
+            if user_doc_id is not None:
+                doc_ids.user_doc_ids.append(user_doc_id)
+
             # If a `functions` message is encountered, extract into tools list
             if row["name"] == "functions":
                 # FIXME: This might also break if {role: system, name: functions, content} but content not valid json object
@@ -321,7 +331,7 @@ class BaseSession:
             settings.tools = settings.tools or []
             settings.tools.extend(tools)
 
-        return messages, settings
+        return messages, settings, doc_ids
 
     async def generate(
         self, init_context: list[ChatML], settings: Settings

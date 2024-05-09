@@ -175,11 +175,11 @@ def proc_mem_context_query(
         # Collect docs
 
         # Search for agent docs
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id] :=
             *_input{{agent_id, doc_query}},
             *agent_docs {{
                 agent_id,
-                doc_id,
+                doc_id: agent_doc_id,
                 created_at,
             }},
             ~information_snippets:embedding_space {{
@@ -201,11 +201,11 @@ def proc_mem_context_query(
             index = 5 + (snippet_idx * 0.01)
 
         # Search for user docs
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, user_doc_id] :=
             *_input{{user_id, doc_query}},
             *user_docs {{
                 user_id,
-                doc_id,
+                doc_id: user_doc_id,
                 created_at,
             }},
             ~information_snippets:embedding_space {{
@@ -234,6 +234,8 @@ def proc_mem_context_query(
             token_count: Int,
             created_at: Float,
             index: Float,
+            agent_doc_id: Uuid default null,
+            user_doc_id: Uuid default null,
         }}
     }} {{
         # Collect all entries related to the session.
@@ -269,13 +271,14 @@ def proc_mem_context_query(
     }} {{
         # Combine all collected data into a structured format.
         # Combine all
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_preamble{{
                 role, name, content, token_count, created_at, index,
             }},
+            agent_doc_id = null, user_doc_id = null,
 
         # Now let's get instructions
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_input{{agent_id}},
             *agents{{
                 agent_id,
@@ -288,21 +291,24 @@ def proc_mem_context_query(
             content = instruction,
             token_count = round(length(instruction) / 3.5),
             instruction in instructions,
+            agent_doc_id = null, user_doc_id = null,
 
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_tools{{
                 role, name, content, token_count, created_at, index
             }},
+            agent_doc_id = null, user_doc_id = null,
 
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_docs {{
-                role, name, content, token_count, created_at, index
+                role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id
             }},
 
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_entries{{
                 role, name, content, token_count, created_at, index
             }},
+            agent_doc_id = null, user_doc_id = null,
 
         :sort index, created_at
     }}
