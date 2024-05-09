@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, TypeAlias, Union
+from typing import Literal, TypeAlias, Union, Optional
 from pydantic import BaseModel, Field, ConfigDict, validator
 from vllm.entrypoints.openai.protocol import (
     CompletionRequest,
@@ -93,7 +93,7 @@ class Type(Enum):
 class Tool(BaseModel):
     type: Type
     function: FunctionDef
-    id: str | None = None
+    id: Optional[str] = None
 
 
 class SamplingParams(SamplingParams):
