@@ -175,7 +175,7 @@ def proc_mem_context_query(
         # Collect docs
 
         # Search for agent docs
-        ?[role, name, content, token_count, created_at, index, agent_doc_id] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_input{{agent_id, doc_query}},
             *agent_docs {{
                 agent_id,
@@ -198,10 +198,11 @@ def proc_mem_context_query(
             content = concat(title, ':\n...', snippet),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = 5 + (snippet_idx * 0.01)
+            index = 5 + (snippet_idx * 0.01),
+            user_doc_id = null,
 
         # Search for user docs
-        ?[role, name, content, token_count, created_at, index, user_doc_id] :=
+        ?[role, name, content, token_count, created_at, index, user_doc_id, agent_doc_id] :=
             *_input{{user_id, doc_query}},
             *user_docs {{
                 user_id,
@@ -224,7 +225,8 @@ def proc_mem_context_query(
             content = concat(title, ':\n...', snippet),
             num_chars = length(content),
             token_count = to_int(num_chars / 3.5),
-            index = 5 + (snippet_idx * 0.01)
+            index = 5 + (snippet_idx * 0.01),
+            agent_doc_id = null,
 
         # Save in temp table
         :create _docs {{
