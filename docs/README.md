@@ -38,6 +38,10 @@ This is so tiring and cumbersome. We want to build a better way that "just works
 
 {% embed url="https://youtu.be/LhQMBAehL_Q" %}
 
+
+
+{% embed url="https://www.youtube.com/watch?v=LhQMBAehL_Q" %}
+
 ## Features
 
 * **Statefulness By Design**: Build AI apps without needing to write code to embed, save, and retrieve conversation history. Deals with context windows by using CozoDB; a transactional, relational-graph-vector database.

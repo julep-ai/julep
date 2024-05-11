@@ -48,6 +48,7 @@
 
 ***
 
+* [🫂 Discord Community](https://discord.com/invite/JTSBGRZrzj)
 * [⭐ Github](https://github.com/julep-ai/julep)
 * [🫂 Discord Community](https://discord.gg/RdaGyrzpC8)
 * [🐍 PyPI package](https://pypi.org/project/julep/)
