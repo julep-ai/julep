@@ -41,9 +41,6 @@ from agents_api.models.docs.delete_docs import (
 from agents_api.models.docs.get_docs import (
     get_docs_snippets_by_id_query,
 )
-from agents_api.models.docs.embed_docs import (
-    embed_docs_snippets_query,
-)
 from agents_api.models.tools.create_tools import create_function_query
 from agents_api.models.tools.list_tools import list_functions_by_agent_query
 from agents_api.models.tools.get_tools import get_function_by_id_query
@@ -66,8 +63,7 @@ from agents_api.autogen.openapi_model import (
     PatchToolRequest,
     PatchAgentRequest,
 )
-from agents_api.env import docs_embedding_model_id
-from agents_api.embed_models_registry import EmbeddingModel
+from ...clients.temporal import run_embed_docs_task
 
 
 class AgentList(BaseModel):
@@ -239,27 +235,27 @@ async def create_agent(
         metadata=request.metadata or {},
     )
     new_agent_id = resp["agent_id"][0]
-    res = ResourceCreatedResponse(
-        id=new_agent_id,
-        created_at=resp["created_at"][0],
-    )
+    docs = request.docs or []
+    job_ids = [uuid4()] * len(docs)
+    for job_id, doc in zip(job_ids, docs):
+        content = [
+            (c.model_dump() if isinstance(c, ContentItem) else c)
+            for c in ([doc.content] if isinstance(doc.content, str) else doc.content)
+        ]
+        docs_resp = create_docs_query(
+            owner_type="agent",
+            owner_id=new_agent_id,
+            id=uuid4(),
+            title=doc.title,
+            content=content,
+            metadata=doc.metadata or {},
+        )
 
-    if request.docs:
-        for info in request.docs:
-            content = [
-                (c.model_dump() if isinstance(c, ContentItem) else c)
-                for c in (
-                    [info.content] if isinstance(info.content, str) else info.content
-                )
-            ]
-            create_docs_query(
-                owner_type="agent",
-                owner_id=new_agent_id,
-                id=uuid4(),
-                title=info.title,
-                content=content,
-                metadata=info.metadata or {},
-            )
+        doc_id = docs_resp["doc_id"][0]
+
+        await run_embed_docs_task(
+            doc_id=doc_id, title=doc.title, content=doc.content, job_id=job_id
+        )
 
     if request.tools:
         functions = [t.function for t in request.tools]
@@ -278,7 +274,11 @@ async def create_agent(
             [[0.0] * 768] * len(functions),
         )
 
-    return res
+    return ResourceCreatedResponse(
+        id=new_agent_id,
+        created_at=resp["created_at"][0],
+        jobs=set(job_ids),
+    )
 
 
 @router.get("/agents", tags=["agents"])
@@ -328,28 +328,16 @@ async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedRes
         metadata=request.metadata or {},
     )
 
+    job_id = uuid4()
     doc_id = resp["doc_id"][0]
     res = ResourceCreatedResponse(
         id=doc_id,
         created_at=resp["created_at"][0],
+        jobs={job_id},
     )
 
-    indices, snippets = list(zip(*enumerate(content)))
-    model = EmbeddingModel.from_model_name(docs_embedding_model_id)
-    embeddings = await model.embed(
-        [
-            {
-                "instruction": snippet_embed_instruction,
-                "text": request.title + "\n\n" + snippet,
-            }
-            for snippet in snippets
-        ]
-    )
-
-    embed_docs_snippets_query(
-        doc_id=doc_id,
-        snippet_indices=indices,
-        embeddings=embeddings,
+    await run_embed_docs_task(
+        doc_id=doc_id, title=request.title, content=content, job_id=job_id
     )
 
     return res

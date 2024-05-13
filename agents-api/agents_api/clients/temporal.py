@@ -33,3 +33,16 @@ async def run_summarization_task(session_id: UUID, job_id: UUID):
         task_queue="memory-task-queue",
         id=str(job_id),
     )
+
+
+async def run_embed_docs_task(
+    doc_id: UUID, title: str, content: list[str], job_id: UUID
+):
+    client = await get_client()
+
+    await client.execute_workflow(
+        "EmbedDocsWorkflow",
+        args=[str(doc_id), title, content],
+        task_queue="memory-task-queue",
+        id=str(job_id),
+    )
