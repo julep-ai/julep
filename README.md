@@ -48,7 +48,6 @@ We've built a lot of AI apps and understand how difficult it is to evaluate hund
 - **Statefulness By Design**: Manages context by default. Uses [CozoDB](https://cozodb.org/) to save & retrieve conversation history, OpenAPI specification tools & documents.
 - **Support for Users & Agents**: Allows creating different user <-> agent interactions like `One Agent <-> Many Users`; `Many Agents <-> One User` etc. Read more: https://docs.julep.ai/concepts/
 - **Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise.
-- **Automatic Function Calling**: No need to handle function calling manually. Julep deals with calling the function, parsing the response, retrying in case of failures and passing the response into the context.
 - **Production-ready**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon!
 - **90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://docs.composio.dev/framework/julep/) natively.
 - ***GitHub Actions-like workflows for tasks**: Define agentic workflows to be executed asynchronously with one ore more without worrying about timeouts or multiplying hallucinations.
