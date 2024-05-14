@@ -38,30 +38,22 @@ Start your project with conversation history, support for any LLM, agentic workf
 
 ---
 ## Why Julep?
-We've built a lot of AI apps and understand how difficult it is to evaluate hundreds of tools, techniques, and models, and then make them work well together. 
+We've built a lot of AI apps and understand how difficult it is to evaluate hundreds of tools, techniques, and models, and then make them work well together.
 
-**The Problem**
-
-Even for simple apps you have to:
-- pick the right language model for your use case
-- pick the right framework
-- pick the right embedding model
-- choose the vector store and RAG pipeline
-- build integrations 
-- tweak all of the parameters (temp, penalty, max tokens, similarity thresholds, chunk size, and so on) 
-- write and iterate on prompts for them to work
+**The Problems**
+1. The barrier to making LLM apps with memory, knowledge & tools is too high.
+2. Agentic behaviour is hard to control when done through multi-agent frameworks.
 
 **The Solution**:
-Julep eases the burden and time taken to get up and running with any AI app.
-
 - **Statefulness By Design**: Manages context by default. Uses [CozoDB](https://cozodb.org/) to save & retrieve conversation history, OpenAPI specification tools & documents.
 - **Support for Users & Agents**: Allows creating different user <-> agent interactions like `One Agent <-> Many Users`; `Many Agents <-> One User` etc. Read more: https://docs.julep.ai/concepts/
 - **Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise.
 - **Automatic Function Calling**: No need to handle function calling manually. Julep deals with calling the function, parsing the response, retrying in case of failures and passing the response into the context.
 - **Production-ready**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon!
 - **90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://docs.composio.dev/framework/julep/) natively.
-- ***GitHub Actions-like workflows for tasks**: Define agentic workflows to be executed asynchronously without worrying about timeouts.
-> (*) Features coming soon!
+- ***GitHub Actions-like workflows for tasks**: Define agentic workflows to be executed asynchronously with one ore more without worrying about timeouts or multiplying hallucinations.
+
+> (*) Coming soon!
 
 <!-- ![alt text](image.png) -->
 
