@@ -183,7 +183,7 @@ def proc_mem_context_query(
                 created_at,
             }},
             ~information_snippets:embedding_space {{
-                doc_id,
+                doc_id: agent_doc_id,
                 snippet_idx,
                 title,
                 snippet |
@@ -210,7 +210,7 @@ def proc_mem_context_query(
                 created_at,
             }},
             ~information_snippets:embedding_space {{
-                doc_id,
+                doc_id: user_doc_id,
                 snippet_idx,
                 title,
                 snippet |
