@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+from datetime import timedelta
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
@@ -13,7 +14,6 @@ class EmbedDocsWorkflow:
     async def run(self, doc_id: str, title: str, content: list[str]) -> None:
         return await workflow.execute_activity(
             embed_docs,
-            doc_id,
-            title,
-            content,
+            args=[doc_id, title, content],
+            schedule_to_close_timeout=timedelta(seconds=600),
         )
