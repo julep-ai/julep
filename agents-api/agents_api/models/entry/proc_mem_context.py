@@ -12,7 +12,7 @@ def proc_mem_context_query(
     tools_confidence: float = 0,
     docs_confidence: float = 0.4,
     k_tools: int = 3,
-    k_docs: int = 2,
+    k_docs: int = 3,
 ) -> tuple[str, dict]:
     """Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
 
@@ -172,7 +172,7 @@ def proc_mem_context_query(
         }}
     }} {{
         # Collect document information based on agent ID and document query embedding.
-        # Collect docs
+        # Collect agent docs
 
         # Search for agent docs
         ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
@@ -200,6 +200,21 @@ def proc_mem_context_query(
             token_count = to_int(num_chars / 3.5),
             index = 5 + (snippet_idx * 0.01),
             user_doc_id = null,
+
+        # Save in temp table
+        :create _agent_docs {{
+            role: String,
+            content: String,
+            token_count: Int,
+            created_at: Float,
+            index: Float,
+            name: String? default null,
+            agent_doc_id: Uuid? default null,
+            user_doc_id: Uuid? default null,
+        }}
+    }} {{
+        # Collect document information based on agent ID and document query embedding.
+        # Collect user docs
 
         # Search for user docs
         ?[role, name, content, token_count, created_at, index, user_doc_id, agent_doc_id] :=
@@ -229,15 +244,15 @@ def proc_mem_context_query(
             agent_doc_id = null,
 
         # Save in temp table
-        :create _docs {{
+        :create _user_docs {{
             role: String,
-            name: String?,
             content: String,
             token_count: Int,
             created_at: Float,
             index: Float,
-            agent_doc_id: Uuid default null,
-            user_doc_id: Uuid default null,
+            name: String? default null,
+            agent_doc_id: Uuid? default null,
+            user_doc_id: Uuid? default null,
         }}
     }} {{
         # Collect all entries related to the session.
@@ -302,9 +317,16 @@ def proc_mem_context_query(
             agent_doc_id = null, user_doc_id = null,
 
         ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
-            *_docs {{
-                role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id
+            *_agent_docs {{
+                role, name, content, token_count, created_at, index, agent_doc_id
             }},
+            user_doc_id = null,
+        
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
+            *_user_docs {{
+                role, name, content, token_count, created_at, index, user_doc_id
+            }},
+            agent_doc_id = null,
 
         ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_entries{{
