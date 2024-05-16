@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { ChatMLMessage } from "./ChatMLMessage";
 import type { CompletionUsage } from "./CompletionUsage";
+import type { DocIds } from "./DocIds";
 /**
  * Represents a chat completion response returned by model, based on the provided input.
  */
@@ -30,4 +31,5 @@ export type ChatResponse = {
    * IDs (if any) of jobs created as part of this request
    */
   jobs?: Array<string>;
+  doc_ids: DocIds;
 };

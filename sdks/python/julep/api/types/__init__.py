@@ -21,12 +21,15 @@ from .completion_usage import CompletionUsage
 from .create_agent_request_instructions import CreateAgentRequestInstructions
 from .create_agent_request_metadata import CreateAgentRequestMetadata
 from .create_doc import CreateDoc
+from .create_doc_content import CreateDocContent
 from .create_doc_metadata import CreateDocMetadata
 from .create_session_request_metadata import CreateSessionRequestMetadata
 from .create_tool_request import CreateToolRequest
 from .create_tool_request_type import CreateToolRequestType
 from .create_user_request_metadata import CreateUserRequestMetadata
 from .doc import Doc
+from .doc_content import DocContent
+from .doc_ids import DocIds
 from .doc_metadata import DocMetadata
 from .function_call_option import FunctionCallOption
 from .function_def import FunctionDef
@@ -103,12 +106,15 @@ __all__ = [
     "CreateAgentRequestInstructions",
     "CreateAgentRequestMetadata",
     "CreateDoc",
+    "CreateDocContent",
     "CreateDocMetadata",
     "CreateSessionRequestMetadata",
     "CreateToolRequest",
     "CreateToolRequestType",
     "CreateUserRequestMetadata",
     "Doc",
+    "DocContent",
+    "DocIds",
     "DocMetadata",
     "FunctionCallOption",
     "FunctionDef",

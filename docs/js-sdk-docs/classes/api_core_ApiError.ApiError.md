@@ -1,8 +1,8 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / [api](../modules/api.md) / ApiError
+[@julep/sdk](../README.md) / [Exports](../modules.md) / [api/core/ApiError](../modules/api_core_ApiError.md) / ApiError
 
 # Class: ApiError
 
-[api](../modules/api.md).ApiError
+[api/core/ApiError](../modules/api_core_ApiError.md).ApiError
 
 ## Hierarchy
 
@@ -14,42 +14,42 @@
 
 ### Constructors
 
-- [constructor](api.ApiError.md#constructor)
+- [constructor](api_core_ApiError.ApiError.md#constructor)
 
 ### Properties
 
-- [body](api.ApiError.md#body)
-- [message](api.ApiError.md#message)
-- [name](api.ApiError.md#name)
-- [request](api.ApiError.md#request)
-- [stack](api.ApiError.md#stack)
-- [status](api.ApiError.md#status)
-- [statusText](api.ApiError.md#statustext)
-- [url](api.ApiError.md#url)
-- [prepareStackTrace](api.ApiError.md#preparestacktrace)
-- [stackTraceLimit](api.ApiError.md#stacktracelimit)
+- [body](api_core_ApiError.ApiError.md#body)
+- [message](api_core_ApiError.ApiError.md#message)
+- [name](api_core_ApiError.ApiError.md#name)
+- [request](api_core_ApiError.ApiError.md#request)
+- [stack](api_core_ApiError.ApiError.md#stack)
+- [status](api_core_ApiError.ApiError.md#status)
+- [statusText](api_core_ApiError.ApiError.md#statustext)
+- [url](api_core_ApiError.ApiError.md#url)
+- [prepareStackTrace](api_core_ApiError.ApiError.md#preparestacktrace)
+- [stackTraceLimit](api_core_ApiError.ApiError.md#stacktracelimit)
 
 ### Methods
 
-- [captureStackTrace](api.ApiError.md#capturestacktrace)
+- [captureStackTrace](api_core_ApiError.ApiError.md#capturestacktrace)
 
 ## Constructors
 
 ### constructor
 
-• **new ApiError**(`request`, `response`, `message`): [`ApiError`](api.ApiError.md)
+• **new ApiError**(`request`, `response`, `message`): [`ApiError`](api_core_ApiError.ApiError.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `request` | `ApiRequestOptions` |
-| `response` | `ApiResult` |
+| `request` | [`ApiRequestOptions`](../modules/api_core_ApiRequestOptions.md#apirequestoptions) |
+| `response` | [`ApiResult`](../modules/api_core_ApiResult.md#apiresult) |
 | `message` | `string` |
 
 #### Returns
 
-[`ApiError`](api.ApiError.md)
+[`ApiError`](api_core_ApiError.ApiError.md)
 
 #### Overrides
 
@@ -57,7 +57,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/core/ApiError.ts:15](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/core/ApiError.ts#L15)
+[src/api/core/ApiError.ts:15](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/ApiError.ts#L15)
 
 ## Properties
 
@@ -67,7 +67,7 @@ Error.constructor
 
 #### Defined in
 
-[src/api/core/ApiError.ts:12](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/core/ApiError.ts#L12)
+[src/api/core/ApiError.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/ApiError.ts#L12)
 
 ___
 
@@ -101,11 +101,11 @@ ___
 
 ### request
 
-• `Readonly` **request**: `ApiRequestOptions`
+• `Readonly` **request**: [`ApiRequestOptions`](../modules/api_core_ApiRequestOptions.md#apirequestoptions)
 
 #### Defined in
 
-[src/api/core/ApiError.ts:13](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/core/ApiError.ts#L13)
+[src/api/core/ApiError.ts:13](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/ApiError.ts#L13)
 
 ___
 
@@ -129,7 +129,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:10](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/core/ApiError.ts#L10)
+[src/api/core/ApiError.ts:10](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/ApiError.ts#L10)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:11](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/core/ApiError.ts#L11)
+[src/api/core/ApiError.ts:11](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/ApiError.ts#L11)
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[src/api/core/ApiError.ts:9](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/core/ApiError.ts#L9)
+[src/api/core/ApiError.ts:9](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/ApiError.ts#L9)
 
 ___
 

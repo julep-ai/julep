@@ -7,6 +7,7 @@ from ..core.datetime_utils import serialize_datetime
 from .chat_ml_message import ChatMlMessage
 from .chat_response_finish_reason import ChatResponseFinishReason
 from .completion_usage import CompletionUsage
+from .doc_ids import DocIds
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -30,6 +31,7 @@ class ChatResponse(pydantic.BaseModel):
     jobs: typing.Optional[typing.List[str]] = pydantic.Field(
         description="IDs (if any) of jobs created as part of this request"
     )
+    doc_ids: DocIds
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

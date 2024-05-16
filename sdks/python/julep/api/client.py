@@ -1356,7 +1356,6 @@ class JulepApi:
             agent_id="agent_id",
             request=CreateDoc(
                 title="title",
-                content="content",
             ),
         )
         """
@@ -1458,7 +1457,6 @@ class JulepApi:
             user_id="user_id",
             request=CreateDoc(
                 title="title",
-                content="content",
             ),
         )
         """
@@ -3121,7 +3119,6 @@ class AsyncJulepApi:
             agent_id="agent_id",
             request=CreateDoc(
                 title="title",
-                content="content",
             ),
         )
         """
@@ -3223,7 +3220,6 @@ class AsyncJulepApi:
             user_id="user_id",
             request=CreateDoc(
                 title="title",
-                content="content",
             ),
         )
         """

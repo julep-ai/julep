@@ -10,7 +10,7 @@ export type Doc = {
   /**
    * Information content
    */
-  content: string;
+  content: Array<string> | string;
   /**
    * ID of doc
    */

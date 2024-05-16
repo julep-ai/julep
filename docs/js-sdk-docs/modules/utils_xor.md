@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / utils/xor
+[@julep/sdk](../README.md) / [Exports](../modules.md) / utils/xor
 
 # Module: utils/xor
 
@@ -27,4 +27,4 @@
 
 #### Defined in
 
-[src/utils/xor.ts:1](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/utils/xor.ts#L1)
+[src/utils/xor.ts:1](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/utils/xor.ts#L1)

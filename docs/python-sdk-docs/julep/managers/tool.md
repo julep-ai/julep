@@ -11,7 +11,7 @@
 
 ## AsyncToolsManager
 
-[Show source in tool.py:351](../../../../../../julep/managers/tool.py#L351)
+[Show source in tool.py:352](../../../../../../julep/managers/tool.py#L352)
 
 A manager for asynchronous tools handling.
 
@@ -38,7 +38,7 @@ class AsyncToolsManager(BaseToolsManager): ...
 
 ### AsyncToolsManager().create
 
-[Show source in tool.py:402](../../../../../../julep/managers/tool.py#L402)
+[Show source in tool.py:403](../../../../../../julep/managers/tool.py#L403)
 
 Create a new resource asynchronously.
 
@@ -68,7 +68,7 @@ async def create(
 
 ### AsyncToolsManager().delete
 
-[Show source in tool.py:429](../../../../../../julep/managers/tool.py#L429)
+[Show source in tool.py:430](../../../../../../julep/managers/tool.py#L430)
 
 Asynchronously delete a specified agent-tool association.
 
@@ -97,12 +97,14 @@ Raises:
 
 ```python
 @beartype
-async def delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]): ...
+async def delete(
+    self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]
+) -> Awaitable[ResourceDeletedResponse]: ...
 ```
 
 ### AsyncToolsManager().get
 
-[Show source in tool.py:367](../../../../../../julep/managers/tool.py#L367)
+[Show source in tool.py:368](../../../../../../julep/managers/tool.py#L368)
 
 Asynchronously get a list of Tool objects based on provided filters.
 
@@ -139,7 +141,7 @@ async def get(
 
 ### AsyncToolsManager().update
 
-[Show source in tool.py:465](../../../../../../julep/managers/tool.py#L465)
+[Show source in tool.py:466](../../../../../../julep/managers/tool.py#L466)
 
 Asynchronously updates a resource identified by the agent_id and tool_id with a new definition.
 
@@ -175,7 +177,7 @@ async def update(
 
 ## BaseToolsManager
 
-[Show source in tool.py:21](../../../../../../julep/managers/tool.py#L21)
+[Show source in tool.py:22](../../../../../../julep/managers/tool.py#L22)
 
 A class to manage tools by interacting with an API client.
 
@@ -207,7 +209,7 @@ class BaseToolsManager(BaseManager): ...
 
 ### BaseToolsManager()._create
 
-[Show source in tool.py:76](../../../../../../julep/managers/tool.py#L76)
+[Show source in tool.py:77](../../../../../../julep/managers/tool.py#L77)
 
 Create a new tool associated with a given agent.
 
@@ -229,7 +231,7 @@ def _create(
 
 ### BaseToolsManager()._delete
 
-[Show source in tool.py:141](../../../../../../julep/managers/tool.py#L141)
+[Show source in tool.py:142](../../../../../../julep/managers/tool.py#L142)
 
 Delete a tool associated with an agent.
 
@@ -246,12 +248,14 @@ Raises:
 #### Signature
 
 ```python
-def _delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]): ...
+def _delete(
+    self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]
+) -> Union[ResourceDeletedResponse, Awaitable[ResourceDeletedResponse]]: ...
 ```
 
 ### BaseToolsManager()._get
 
-[Show source in tool.py:44](../../../../../../julep/managers/tool.py#L44)
+[Show source in tool.py:45](../../../../../../julep/managers/tool.py#L45)
 
 Retrieve tools associated with the given agent.
 
@@ -288,7 +292,7 @@ def _get(
 
 ### BaseToolsManager()._update
 
-[Show source in tool.py:101](../../../../../../julep/managers/tool.py#L101)
+[Show source in tool.py:102](../../../../../../julep/managers/tool.py#L102)
 
 Update the tool definition for a given agent.
 
@@ -320,7 +324,7 @@ def _update(
 
 ## ToolsManager
 
-[Show source in tool.py:169](../../../../../../julep/managers/tool.py#L169)
+[Show source in tool.py:170](../../../../../../julep/managers/tool.py#L170)
 
 A manager class for handling tools related to agents.
 
@@ -380,7 +384,7 @@ class ToolsManager(BaseToolsManager): ...
 
 ### ToolsManager().create
 
-[Show source in tool.py:251](../../../../../../julep/managers/tool.py#L251)
+[Show source in tool.py:252](../../../../../../julep/managers/tool.py#L252)
 
 Create a new resource with the provided agent identifier and tool information.
 
@@ -420,7 +424,7 @@ def create(
 
 ### ToolsManager().delete
 
-[Show source in tool.py:289](../../../../../../julep/managers/tool.py#L289)
+[Show source in tool.py:290](../../../../../../julep/managers/tool.py#L290)
 
 Deletes an agent's access to a specific tool.
 
@@ -446,7 +450,7 @@ def delete(self, agent_id: Union[str, UUID], tool_id: Union[str, UUID]): ...
 
 ### ToolsManager().get
 
-[Show source in tool.py:220](../../../../../../julep/managers/tool.py#L220)
+[Show source in tool.py:221](../../../../../../julep/managers/tool.py#L221)
 
 Retrieve a list of Tool objects for the specified agent.
 
@@ -478,7 +482,7 @@ def get(
 
 ### ToolsManager().update
 
-[Show source in tool.py:314](../../../../../../julep/managers/tool.py#L314)
+[Show source in tool.py:315](../../../../../../julep/managers/tool.py#L315)
 
 Update a specific tool definition for an agent.
 

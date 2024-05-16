@@ -1296,7 +1296,7 @@
             }
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"finish_reason\": \"stop\",\n    \"response\": [\n        [\n            {\n                \"role\": \"user\",\n                \"content\": \"content\",\n                \"created_at\": \"2024-01-15T09:30:00Z\",\n                \"id\": \"id\"\n            }\n        ]\n    ],\n    \"usage\": {\n        \"completion_tokens\": 1,\n        \"prompt_tokens\": 1,\n        \"total_tokens\": 1\n    },\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"finish_reason\": \"stop\",\n    \"response\": [\n        [\n            {\n                \"role\": \"user\",\n                \"content\": \"content\",\n                \"created_at\": \"2024-01-15T09:30:00Z\",\n                \"id\": \"id\"\n            }\n        ]\n    ],\n    \"usage\": {\n        \"completion_tokens\": 1,\n        \"prompt_tokens\": 1,\n        \"total_tokens\": 1\n    },\n    \"jobs\": [\n        \"jobs\"\n    ],\n    \"doc_ids\": {\n        \"agent_doc_ids\": [\n            \"agent_doc_ids\"\n        ],\n        \"user_doc_ids\": [\n            \"user_doc_ids\"\n        ]\n    }\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2256,7 +2256,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"items\": [\n        {\n            \"title\": \"title\",\n            \"content\": \"content\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
+          "body": "{\n    \"items\": [\n        {\n            \"title\": \"title\",\n            \"content\": [\n                \"content\"\n            ],\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2302,7 +2302,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"title\": \"title\",\n    \"content\": \"content\"\n}",
+          "raw": "{\n    \"title\": \"title\",\n    \"content\": [\n        \"content\"\n    ]\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2353,7 +2353,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"title\": \"title\",\n    \"content\": \"content\"\n}",
+              "raw": "{\n    \"title\": \"title\",\n    \"content\": [\n        \"content\"\n    ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2452,7 +2452,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"items\": [\n        {\n            \"title\": \"title\",\n            \"content\": \"content\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
+          "body": "{\n    \"items\": [\n        {\n            \"title\": \"title\",\n            \"content\": [\n                \"content\"\n            ],\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2498,7 +2498,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"title\": \"title\",\n    \"content\": \"content\"\n}",
+          "raw": "{\n    \"title\": \"title\",\n    \"content\": [\n        \"content\"\n    ]\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2549,7 +2549,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"title\": \"title\",\n    \"content\": \"content\"\n}",
+              "raw": "{\n    \"title\": \"title\",\n    \"content\": [\n        \"content\"\n    ]\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / [api/JulepApiClient](../modules/api_JulepApiClient.md) / JulepApiClient
+[@julep/sdk](../README.md) / [Exports](../modules.md) / [api/JulepApiClient](../modules/api_JulepApiClient.md) / JulepApiClient
 
 # Class: JulepApiClient
 
@@ -25,7 +25,7 @@
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `config?` | `Partial`\<[`OpenAPIConfig`](../modules/api.md#openapiconfig)\> | `undefined` |
+| `config?` | `Partial`\<[`OpenAPIConfig`](../modules/api_core_OpenAPI.md#openapiconfig)\> | `undefined` |
 | `HttpRequest` | `HttpRequestConstructor` | `AxiosHttpRequest` |
 
 #### Returns
@@ -34,24 +34,24 @@
 
 #### Defined in
 
-[src/api/JulepApiClient.ts:13](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/JulepApiClient.ts#L13)
+[src/api/JulepApiClient.ts:13](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/JulepApiClient.ts#L13)
 
 ## Properties
 
 ### default
 
-• `Readonly` **default**: [`DefaultService`](api.DefaultService.md)
+• `Readonly` **default**: [`DefaultService`](api_services_DefaultService.DefaultService.md)
 
 #### Defined in
 
-[src/api/JulepApiClient.ts:11](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/JulepApiClient.ts#L11)
+[src/api/JulepApiClient.ts:11](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/JulepApiClient.ts#L11)
 
 ___
 
 ### request
 
-• `Readonly` **request**: [`BaseHttpRequest`](api.BaseHttpRequest.md)
+• `Readonly` **request**: [`BaseHttpRequest`](api_core_BaseHttpRequest.BaseHttpRequest.md)
 
 #### Defined in
 
-[src/api/JulepApiClient.ts:12](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/api/JulepApiClient.ts#L12)
+[src/api/JulepApiClient.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/JulepApiClient.ts#L12)

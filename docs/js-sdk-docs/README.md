@@ -1,4 +1,4 @@
-@julep/sdk / [Modules](modules.md)
+@julep/sdk / [Exports](modules.md)
 
 <div align="center">
     <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Open-source%20platform%20for%20building%20stateful%20AI%20apps&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
@@ -39,34 +39,32 @@ Start your project with conversation history, support for any LLM, agentic workf
 
 ---
 ## Why Julep?
-We've built a lot of AI apps and understand how difficult it is to evaluate hundreds of tools, techniques, and models, and then make them work well together. 
+We've built a lot of AI apps and understand how difficult it is to evaluate hundreds of tools, techniques, and models, and then make them work well together.
 
-**The Problem**
+**The Problems**
+1. The barrier to making LLM apps with memory, knowledge & tools is too high.
+2. Agentic behaviour is hard to control when done through multi-agent frameworks.
 
-Even for simple apps you have to:
-- pick the right language model for your use case
-- pick the right framework
-- pick the right embedding model
-- choose the vector store and RAG pipeline
-- build integrations 
-- tweak all of the parameters (temp, penalty, max tokens, similarity thresholds, chunk size, and so on) 
-- write and iterate on prompts for them to work
-
-**The Solution**: 
-Julep eases the burden and time taken to get up and running with any AI app.
-
-- **Statefulness By Design**: Build AI apps without needing to write code to embed, save and retrieve conversation history. Deals with context windows by using CozoDB; a transactional, relational-graph-vector database.
-- **Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise by changing only *one line of code*
-- **Automatic Function Calling**: No need to handle function calling manually. Julep deals with calling the function, parsing the response, retrying in case of failures and passing the response into the context.
+**The Solution**:
+- **Statefulness By Design**: Manages context by default. Uses [CozoDB](https://cozodb.org/) to save & retrieve conversation history, OpenAPI specification tools & documents.
+- **Support for Users & Agents**: Allows creating different user <-> agent interactions like `One Agent <-> Many Users`; `Many Agents <-> One User` etc. Read more: https://docs.julep.ai/concepts/
+- **Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise.
 - **Production-ready**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon!
 - **90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://docs.composio.dev/framework/julep/) natively.
-- ***GitHub Actions-like workflows for task**: Define agentic workflows to be executed asynchronously without worrying about timeouts.
-> (*) Features coming soon!
+- ***GitHub Actions-like workflows for tasks**: Define agentic workflows to be executed asynchronously with one ore more without worrying about timeouts or multiplying hallucinations.
+
+> (*) Coming soon!
 
 <!-- ![alt text](image.png) -->
 
 ## Quickstart
-### Option 1: Install and run Julep locally
+### Option 1: Use the Julep Cloud
+Our hosted platform is in Beta! 
+
+To get access:
+[Join our Discord](https://discord.com/invite/JTSBGRZrzj) or Drop a "Hey" over at sid@julep.ai!
+
+### Option 2: Install and run Julep locally
 - Download the `docker-compose.yml` file along with the `.env` file for configuration to run the Julep platform locally
 
 ```bash
@@ -81,20 +79,12 @@ docker compose up -d
 ```
 - The API would now be available at: `http://0.0.0.0:8080`
 
-- Next, add your OpenAI API Key to the `.env`
+- Next, add your OpenAI/Anthropic API Key to the `.env`
 
 - Set your environment variables
 ```bash
 export JULEP_API_KEY=myauthkey
 export JULEP_API_URL=http://0.0.0.0:8080
-```
-### Option 2: Use the Julep Cloud
-- Generate an API key from https://platform.julep.ai
-- Set your environment variables
-
-```bash
-export JULEP_API_KEY=your_julep_api_key
-export JULEP_API_URL=https://api-alpha.julep.ai
 ```
 
 ### Installation
