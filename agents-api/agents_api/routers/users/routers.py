@@ -11,7 +11,6 @@ from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_202_ACCEPTED
 
 from agents_api.clients.cozo import client
-from agents_api.clients.embed import embed
 from agents_api.common.utils.datetime import utcnow
 from agents_api.common.exceptions.users import UserNotFoundError, UserDocNotFoundError
 from agents_api.models.user.create_user import create_user_query
@@ -32,9 +31,6 @@ from agents_api.models.docs.delete_docs import (
 from agents_api.models.docs.get_docs import (
     get_docs_snippets_by_id_query,
 )
-from agents_api.models.docs.embed_docs import (
-    embed_docs_snippets_query,
-)
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.autogen.openapi_model import (
     User,
@@ -47,7 +43,7 @@ from agents_api.autogen.openapi_model import (
     Doc,
     PatchUserRequest,
 )
-from agents_api.env import docs_embedding_model_id, docs_embedding_service_url
+from ...clients.temporal import run_embed_docs_task
 
 
 class UserList(BaseModel):
@@ -190,23 +186,33 @@ async def create_user(
     )
 
     new_user_id = resp["user_id"][0]
-    res = ResourceCreatedResponse(
+    docs = request.docs or []
+    job_ids = [uuid4()] * len(docs)
+    for job_id, doc in zip(job_ids, docs):
+        content = [
+            (c.model_dump() if isinstance(c, ContentItem) else c)
+            for c in ([doc.content] if isinstance(doc.content, str) else doc.content)
+        ]
+        docs_resp = create_docs_query(
+            owner_type="user",
+            owner_id=new_user_id,
+            id=uuid4(),
+            title=doc.title,
+            content=content,
+            metadata=doc.metadata or {},
+        )
+
+        doc_id = docs_resp["doc_id"][0]
+
+        await run_embed_docs_task(
+            doc_id=doc_id, title=doc.title, content=content, job_id=job_id
+        )
+
+    return ResourceCreatedResponse(
         id=new_user_id,
         created_at=resp["created_at"][0],
+        jobs=set(job_ids),
     )
-
-    if request.docs:
-        for info in request.docs:
-            create_docs_query(
-                owner_type="user",
-                owner_id=new_user_id,
-                id=uuid4(),
-                title=info.title,
-                content=info.content,
-                metadata=info.metadata or {},
-            )
-
-    return res
 
 
 @router.get("/users", tags=["users"])
@@ -255,26 +261,16 @@ async def create_docs(user_id: UUID4, request: CreateDoc) -> ResourceCreatedResp
         metadata=request.metadata or {},
     )
 
+    job_id = uuid4()
     doc_id = resp["doc_id"][0]
     res = ResourceCreatedResponse(
         id=doc_id,
         created_at=resp["created_at"][0],
+        jobs={job_id},
     )
 
-    indices, snippets = list(zip(*enumerate(content)))
-    embeddings = await embed(
-        [
-            snippet_embed_instruction + request.title + "\n\n" + snippet
-            for snippet in snippets
-        ],
-        embedding_service_url=docs_embedding_service_url,
-        embedding_model_name=docs_embedding_model_id,
-    )
-
-    embed_docs_snippets_query(
-        doc_id=doc_id,
-        snippet_indices=indices,
-        embeddings=embeddings,
+    await run_embed_docs_task(
+        doc_id=doc_id, title=request.title, content=content, job_id=job_id
     )
 
     return res
