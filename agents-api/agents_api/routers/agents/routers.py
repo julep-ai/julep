@@ -254,7 +254,7 @@ async def create_agent(
         doc_id = docs_resp["doc_id"][0]
 
         await run_embed_docs_task(
-            doc_id=doc_id, title=doc.title, content=doc.content, job_id=job_id
+            doc_id=doc_id, title=doc.title, content=content, job_id=job_id
         )
 
     if request.tools:
