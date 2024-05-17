@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / managers/agent
+[@julep/sdk](../README.md) / [Exports](../modules.md) / managers/agent
 
 # Module: managers/agent
 

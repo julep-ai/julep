@@ -19,7 +19,7 @@ class ChatMlMessage(pydantic.BaseModel): ...
 
 ### ChatMlMessage().dict
 
-[Show source in chat_ml_message.py:34](../../../../../../../julep/api/types/chat_ml_message.py#L34)
+[Show source in chat_ml_message.py:40](../../../../../../../julep/api/types/chat_ml_message.py#L40)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ChatMlMessage().json
 
-[Show source in chat_ml_message.py:26](../../../../../../../julep/api/types/chat_ml_message.py#L26)
+[Show source in chat_ml_message.py:32](../../../../../../../julep/api/types/chat_ml_message.py#L32)
 
 #### Signature
 

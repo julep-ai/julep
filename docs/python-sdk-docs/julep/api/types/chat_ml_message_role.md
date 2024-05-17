@@ -11,7 +11,7 @@
 
 [Show source in chat_ml_message_role.py:9](../../../../../../../julep/api/types/chat_ml_message_role.py#L9)
 
-ChatML role (system|assistant|user|function_call)
+ChatML role (system|assistant|user|function_call|function)
 
 #### Signature
 

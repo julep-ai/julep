@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / managers/session
+[@julep/sdk](../README.md) / [Exports](../modules.md) / managers/session
 
 # Module: managers/session
 

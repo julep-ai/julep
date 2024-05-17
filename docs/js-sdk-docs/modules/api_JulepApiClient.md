@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / api/JulepApiClient
+[@julep/sdk](../README.md) / [Exports](../modules.md) / api/JulepApiClient
 
 # Module: api/JulepApiClient
 

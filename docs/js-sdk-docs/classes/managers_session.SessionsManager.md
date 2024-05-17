@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/session](../modules/managers_session.md) / SessionsManager
+[@julep/sdk](../README.md) / [Exports](../modules.md) / [managers/session](../modules/managers_session.md) / SessionsManager
 
 # Class: SessionsManager
 
@@ -59,7 +59,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -75,34 +75,34 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
 ### chat
 
-▸ **chat**(`sessionId`, `«destructured»`): `Promise`\<[`ChatResponse`](../modules/api.md#chatresponse)\>
+▸ **chat**(`sessionId`, `«destructured»`): `Promise`\<[`ChatResponse`](../modules/api_models_ChatResponse.md#chatresponse)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `sessionId` | `string` |
-| `«destructured»` | [`ChatInput`](../modules/api.md#chatinput) |
+| `«destructured»` | [`ChatInput`](../modules/api_models_ChatInput.md#chatinput) |
 
 #### Returns
 
-`Promise`\<[`ChatResponse`](../modules/api.md#chatresponse)\>
+`Promise`\<[`ChatResponse`](../modules/api_models_ChatResponse.md#chatresponse)\>
 
 #### Defined in
 
-[src/managers/session.ts:104](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L104)
+[src/managers/session.ts:104](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L104)
 
 ___
 
 ### create
 
-▸ **create**(`«destructured»`): `Promise`\<[`ResourceCreatedResponse`](../modules/api.md#resourcecreatedresponse)\>
+▸ **create**(`«destructured»`): `Promise`\<[`ResourceCreatedResponse`](../modules/api_models_ResourceCreatedResponse.md#resourcecreatedresponse)\>
 
 #### Parameters
 
@@ -112,11 +112,11 @@ ___
 
 #### Returns
 
-`Promise`\<[`ResourceCreatedResponse`](../modules/api.md#resourcecreatedresponse)\>
+`Promise`\<[`ResourceCreatedResponse`](../modules/api_models_ResourceCreatedResponse.md#resourcecreatedresponse)\>
 
 #### Defined in
 
-[src/managers/session.ts:33](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L33)
+[src/managers/session.ts:33](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L33)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:83](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L83)
+[src/managers/session.ts:83](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L83)
 
 ___
 
@@ -156,13 +156,13 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:188](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L188)
+[src/managers/session.ts:188](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L188)
 
 ___
 
 ### get
 
-▸ **get**(`sessionId`): `Promise`\<[`Session`](../modules/api.md#session)\>
+▸ **get**(`sessionId`): `Promise`\<[`Session`](../modules/api_models_Session.md#session)\>
 
 Retrieves a session by its ID.
 
@@ -174,19 +174,19 @@ Retrieves a session by its ID.
 
 #### Returns
 
-`Promise`\<[`Session`](../modules/api.md#session)\>
+`Promise`\<[`Session`](../modules/api_models_Session.md#session)\>
 
 A promise that resolves with the session object.
 
 #### Defined in
 
-[src/managers/session.ts:29](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L29)
+[src/managers/session.ts:29](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L29)
 
 ___
 
 ### history
 
-▸ **history**(`sessionId`, `«destructured»?`): `Promise`\<[`ChatMLMessage`](../modules/api.md#chatmlmessage)[]\>
+▸ **history**(`sessionId`, `«destructured»?`): `Promise`\<[`ChatMLMessage`](../modules/api_models_ChatMLMessage.md#chatmlmessage)[]\>
 
 #### Parameters
 
@@ -199,17 +199,17 @@ ___
 
 #### Returns
 
-`Promise`\<[`ChatMLMessage`](../modules/api.md#chatmlmessage)[]\>
+`Promise`\<[`ChatMLMessage`](../modules/api_models_ChatMLMessage.md#chatmlmessage)[]\>
 
 #### Defined in
 
-[src/managers/session.ts:173](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L173)
+[src/managers/session.ts:173](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L173)
 
 ___
 
 ### list
 
-▸ **list**(`«destructured»?`): `Promise`\<[`Session`](../modules/api.md#session)[]\>
+▸ **list**(`«destructured»?`): `Promise`\<[`Session`](../modules/api_models_Session.md#session)[]\>
 
 #### Parameters
 
@@ -222,17 +222,17 @@ ___
 
 #### Returns
 
-`Promise`\<[`Session`](../modules/api.md#session)[]\>
+`Promise`\<[`Session`](../modules/api_models_Session.md#session)[]\>
 
 #### Defined in
 
-[src/managers/session.ts:63](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L63)
+[src/managers/session.ts:63](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L63)
 
 ___
 
 ### suggestions
 
-▸ **suggestions**(`sessionId`, `«destructured»?`): `Promise`\<[`Suggestion`](../modules/api.md#suggestion)[]\>
+▸ **suggestions**(`sessionId`, `«destructured»?`): `Promise`\<[`Suggestion`](../modules/api_models_Suggestion.md#suggestion)[]\>
 
 #### Parameters
 
@@ -245,17 +245,17 @@ ___
 
 #### Returns
 
-`Promise`\<[`Suggestion`](../modules/api.md#suggestion)[]\>
+`Promise`\<[`Suggestion`](../modules/api_models_Suggestion.md#suggestion)[]\>
 
 #### Defined in
 
-[src/managers/session.ts:158](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L158)
+[src/managers/session.ts:158](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L158)
 
 ___
 
 ### update
 
-▸ **update**(`sessionId`, `«destructured»`, `overwrite?`): `Promise`\<[`ResourceUpdatedResponse`](../modules/api.md#resourceupdatedresponse)\>
+▸ **update**(`sessionId`, `«destructured»`, `overwrite?`): `Promise`\<[`ResourceUpdatedResponse`](../modules/api_models_ResourceUpdatedResponse.md#resourceupdatedresponse)\>
 
 #### Parameters
 
@@ -269,8 +269,8 @@ ___
 
 #### Returns
 
-`Promise`\<[`ResourceUpdatedResponse`](../modules/api.md#resourceupdatedresponse)\>
+`Promise`\<[`ResourceUpdatedResponse`](../modules/api_models_ResourceUpdatedResponse.md#resourceupdatedresponse)\>
 
 #### Defined in
 
-[src/managers/session.ts:89](https://github.com/julep-ai/julep/blob/5fd292d2b36b7388e396daec0948fa7ee9ff5bcd/sdks/ts/src/managers/session.ts#L89)
+[src/managers/session.ts:89](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/session.ts#L89)

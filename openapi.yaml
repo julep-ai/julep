@@ -2058,7 +2058,14 @@ components:
           type: string
           description: Title describing what this bit of information contains
         content:
-          type: string
+          oneOf:
+            - type: array
+              description: List of document chunks
+              items:
+                type: string
+                minItems: 1
+            - type: string
+              description: A single document chunk
           description: Information content
         id:
           type: string
