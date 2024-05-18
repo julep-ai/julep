@@ -120,7 +120,7 @@ def main(
     log_level="info",
 ):
     uvicorn.run(
-        "web:app",
+        app,
         host=host,
         port=port,
         log_level=log_level,
