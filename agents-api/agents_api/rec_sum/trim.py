@@ -1,6 +1,6 @@
 import json
 
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt
 
 from .data import trim_example_chat, trim_example_result
 from .generate import generate
@@ -19,7 +19,6 @@ Thinking step by step:
 - Message 7 is short enough and doesn't need any edits."""
 
 
-
 trim_instructions = """\
 Your goal is to identify messages in the session that are needlessly verbose and then trim them in length without losing any meaning or changing the tone of the message.
 
@@ -34,54 +33,22 @@ Instructions:
 # It is important to make keep the tone, setting and flow of the conversation consistent while trimming the messages.
 
 
-make_trim_prompt = lambda session, user="a user", assistant="gpt-4-turbo", **_: [f"""\
-You are given a session history of a chat between {user or "a user"} and {assistant or "gpt-4-turbo"}. The session is formatted in the ChatML JSON format (from OpenAI).
-
-{trim_instructions}
-
-<ct:example-session>
-{json.dumps(add_indices(trim_example_chat), indent=2)}
-</ct:example-session>
-
-<ct:example-plan>
-{trim_example_plan}
-</ct:example-plan>
-
-<ct:example-trimmed>
-{json.dumps(trim_example_result, indent=2)}
-</ct:example-trimmed>""",
-
-f"""\
-Begin! Write the trimmed messages as a json list. First write your plan inside <ct:plan></ct:plan> and then your answer between <ct:trimmed></ct:trimmed>.
-
-<ct:session>
-{json.dumps(add_indices(session), indent=2)}
-
-</ct:session>"""]
-
+def make_trim_prompt(session, user="a user", assistant="gpt-4-turbo", **_):
+    return [
+        f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{trim_instructions}\n\n<ct:example-session>\n{json.dumps(add_indices(trim_example_chat), indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{trim_example_plan}\n</ct:example-plan>\n\n<ct:example-trimmed>\n{json.dumps(trim_example_result, indent=2)}\n</ct:example-trimmed>",
+        f"Begin! Write the trimmed messages as a json list. First write your plan inside <ct:plan></ct:plan> and then your answer between <ct:trimmed></ct:trimmed>.\n\n<ct:session>\n{json.dumps(add_indices(session), indent=2)}\n\n</ct:session>",
+    ]
 
 
 @retry(stop=stop_after_attempt(2))
 async def trim_messages(
     chat_session,
-    model="gpt-4-turbo", 
-    stop=["</ct:trimmed"], 
+    model="gpt-4-turbo",
+    stop=["</ct:trimmed"],
     temperature=0.7,
     **kwargs,
 ):
     assert len(chat_session) > 2, "Session is too short"
-
-    offset = 0
-    
-    # Remove the system prompt if present
-    if (
-        chat_session[0]["role"] == "system"
-        and chat_session[0].get("name") != "entities"
-    ):
-        chat_session = chat_session[1:]
-        
-        # The indices are not matched up correctly
-        offset = 1
 
     names = get_names_from_session(chat_session)
     system_prompt, user_message = make_trim_prompt(chat_session, **names)
@@ -100,9 +67,6 @@ async def trim_messages(
     assert all((msg.get("index") is not None for msg in trimmed_messages))
 
     # Correct offset
-    trimmed_messages = [
-        {**msg, "index": msg["index"] + offset}
-        for msg in trimmed_messages
-    ]
-    
+    trimmed_messages = [{**msg, "index": msg["index"]} for msg in trimmed_messages]
+
     return trimmed_messages

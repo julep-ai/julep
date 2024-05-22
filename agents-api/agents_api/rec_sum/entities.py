@@ -1,6 +1,6 @@
 import json
 
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt
 
 from .data import entities_example_chat
 from .generate import generate
@@ -41,50 +41,23 @@ Instructions:
 - See the example to get a better idea of the task."""
 
 
-make_entities_prompt = lambda session, user="a user", assistant="gpt-4-turbo", **_: [f"""\
-You are given a session history of a chat between {user or "a user"} and {assistant or "gpt-4-turbo"}. The session is formatted in the ChatML JSON format (from OpenAI).
-
-{entities_instructions}
-
-<ct:example-session>
-{json.dumps(entities_example_chat, indent=2)}
-</ct:example-session>
-
-<ct:example-plan>
-{entities_example_plan}
-</ct:example-plan>
-
-<ct:example-entities>
-{entities_example_result}
-</ct:example-entities>""",
-
-f"""\
-Begin! Write the entities as a Markdown formatted list. First write your plan inside <ct:plan></ct:plan> and then the extracted entities between <ct:entities></ct:entities>.
-
-<ct:session>
-{json.dumps(session, indent=2)}
-
-</ct:session>"""]
-
+def make_entities_prompt(session, user="a user", assistant="gpt-4-turbo", **_):
+    return [
+        f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{entities_instructions}\n\n<ct:example-session>\n{json.dumps(entities_example_chat, indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{entities_example_plan}\n</ct:example-plan>\n\n<ct:example-entities>\n{entities_example_result}\n</ct:example-entities>",
+        f"Begin! Write the entities as a Markdown formatted list. First write your plan inside <ct:plan></ct:plan> and then the extracted entities between <ct:entities></ct:entities>.\n\n<ct:session>\n{json.dumps(session, indent=2)}\n\n</ct:session>",
+    ]
 
 
 @retry(stop=stop_after_attempt(2))
 async def get_entities(
     chat_session,
-    model="gpt-4-turbo", 
-    stop=["</ct:entities"], 
+    model="gpt-4-turbo",
+    stop=["</ct:entities"],
     temperature=0.7,
     **kwargs,
 ):
     assert len(chat_session) > 2, "Session is too short"
 
-    # Remove the system prompt if present
-    if (
-        chat_session[0]["role"] == "system"
-        and chat_session[0].get("name") != "entities"
-    ):
-        chat_session = chat_session[1:]
-        
     names = get_names_from_session(chat_session)
     system_prompt, user_message = make_entities_prompt(chat_session, **names)
     messages = [chatml.system(system_prompt), chatml.user(user_message)]
@@ -100,5 +73,5 @@ async def get_entities(
     result["content"] = result["content"].split("<ct:entities>")[-1].strip()
     result["role"] = "system"
     result["name"] = "entities"
-    
+
     return chatml.make(**result)
