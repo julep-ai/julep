@@ -61,3 +61,50 @@ def delete_entries_query(session_id: UUID) -> tuple[str, dict]:
     }"""
 
     return (query, {"session_id": str(session_id)})
+
+
+@cozo_query
+def delete_entries_by_ids_query(entry_ids: list[UUID]) -> tuple[str, dict]:
+    entry_ids = [f'to_uuid("{id}")' for id in entry_ids]
+
+    query = """
+    {
+        input[entry_id] <- $entry_ids
+
+        ?[
+            session_id,
+            entry_id,
+            role,
+            name,
+            content,
+            source,
+            token_count,
+            created_at,
+            timestamp,
+        ] := input[entry_id],
+            *entries{
+                session_id,
+                entry_id,
+                role,
+                name,
+                content,
+                source,
+                token_count,
+                created_at,
+                timestamp,
+            }
+        
+        :delete entries {
+            session_id,
+            entry_id,
+            role,
+            name,
+            content,
+            source,
+            token_count,
+            created_at,
+            timestamp,
+        }
+    }"""
+
+    return (query, {"entry_ids": entry_ids})

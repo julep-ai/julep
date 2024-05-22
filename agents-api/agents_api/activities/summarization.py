@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 
+import asyncio
+from pycozo.client import QueryException
 from uuid import UUID
 from typing import Callable
 from textwrap import dedent
 from temporalio import activity
 from litellm import acompletion
+from agents_api.models.entry.add_entries import add_entries_query
+from agents_api.models.entry.delete_entries import delete_entries_by_ids_query
 from agents_api.models.entry.entries_summarization import (
     get_toplevel_entries_query,
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
 from ..model_registry import JULEP_MODELS
-from ..env import summarization_model_name, model_inference_url, model_api_key
+from ..env import model_inference_url, model_api_key
+from agents_api.rec_sum.entities import get_entities
+from agents_api.rec_sum.summarize import summarize_messages
+from agents_api.rec_sum.trim import trim_messages
+from agents_api.activities.logger import logger
 
 
 example_previous_memory = """
@@ -157,31 +165,85 @@ async def run_prompt(
     return parser(content.strip() if content is not None else "")
 
 
+# @activity.defn
+# async def summarization(session_id: str) -> None:
+#     session_id = UUID(session_id)
+#     entries = [
+#         Entry(**row)
+#         for _, row in get_toplevel_entries_query(session_id=session_id).iterrows()
+#     ]
+
+#     assert len(entries) > 0, "no need to summarize on empty entries list"
+
+#     response = await run_prompt(
+#         dialog=entries, previous_memories=[], model=summarization_model_name
+#     )
+
+#     new_entry = Entry(
+#         session_id=session_id,
+#         source="summarizer",
+#         role="system",
+#         name="information",
+#         content=response,
+#         timestamp=entries[-1].timestamp + 0.01,
+#     )
+
+#     entries_summarization_query(
+#         session_id=session_id,
+#         new_entry=new_entry,
+#         old_entry_ids=[e.id for e in entries],
+#     )
+
+
 @activity.defn
 async def summarization(session_id: str) -> None:
     session_id = UUID(session_id)
-    entries = [
-        Entry(**row)
-        for _, row in get_toplevel_entries_query(session_id=session_id).iterrows()
-    ]
+    entries = []
+    entities_entry_ids = []
+    for _, row in get_toplevel_entries_query(session_id=session_id).iterrows():
+        if row["role"] == "system" and row.get("name") == "entities":
+            entities_entry_ids.append(row["entry_id"])
+        else:
+            entries.append(row)
 
     assert len(entries) > 0, "no need to summarize on empty entries list"
 
-    response = await run_prompt(
-        dialog=entries, previous_memories=[], model=f"openai/{summarization_model_name}"
+    trimmed_messages, entities = await asyncio.gather(
+        trim_messages(entries),
+        get_entities(entries),
+    )
+    summarized = await summarize_messages(trimmed_messages)
+
+    ts_delta = (entries[1]["timestamp"] - entries[0]["timestamp"]) / 2
+
+    add_entries_query(
+        Entry(
+            session_id=session_id,
+            source="summarizer",
+            role="system",
+            name="entities",
+            content=entities["content"],
+            timestamp=entries[0]["timestamp"] + ts_delta,
+        )
     )
 
-    new_entry = Entry(
-        session_id=session_id,
-        source="summarizer",
-        role="system",
-        name="information",
-        content=response,
-        timestamp=entries[-1].timestamp + 0.01,
-    )
+    try:
+        delete_entries_by_ids_query(entry_ids=entities_entry_ids)
+    except QueryException as e:
+        logger.exception(e)
 
-    entries_summarization_query(
-        session_id=session_id,
-        new_entry=new_entry,
-        old_entry_ids=[e.id for e in entries],
-    )
+    for msg in summarized:
+        new_entry = Entry(
+            session_id=session_id,
+            source="summarizer",
+            role="system",
+            name="information",
+            content=msg["content"],
+            timestamp=entries[-1]["timestamp"] + 0.01,
+        )
+
+        entries_summarization_query(
+            session_id=session_id,
+            new_entry=new_entry,
+            old_entry_ids=[entries[idx]["entry_id"] for idx in msg["summarizes"]],
+        )
