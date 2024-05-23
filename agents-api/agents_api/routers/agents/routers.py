@@ -368,6 +368,7 @@ async def list_docs(
                 id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
+                metadata=row.get("metadata")
             )
             for _, row in resp.iterrows()
         ]

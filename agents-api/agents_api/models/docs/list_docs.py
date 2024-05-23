@@ -69,14 +69,13 @@ def list_docs_snippets_by_owner_query(
                 created_at,
                 metadata,
             }},
-            {metadata_filter_str}
-
             *information_snippets {{
                 doc_id,
                 snippet_idx,
                 title,
                 snippet,
-            }}
+            }},
+            {metadata_filter_str}
     }}"""
 
     return (query, {"owner_id": owner_id})
