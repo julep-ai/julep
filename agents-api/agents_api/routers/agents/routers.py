@@ -355,19 +355,10 @@ async def list_docs(
             detail="metadata_filter is not a valid JSON",
         )
 
-    # TODO: Implement metadata filter
-    if metadata_filter:
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="metadata_filter is not implemented",
-        )
-
-    if not len(list(ensure_owner_exists_query("agent", agent_id).iterrows())):
-        raise AgentNotFoundError("", agent_id)
-
     resp = list_docs_snippets_by_owner_query(
         owner_type="agent",
         owner_id=agent_id,
+        metadata_filter=metadata_filter,
     )
 
     return DocsList(
@@ -377,6 +368,7 @@ async def list_docs(
                 id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
+                metadata=row.get("metadata"),
             )
             for _, row in resp.iterrows()
         ]
