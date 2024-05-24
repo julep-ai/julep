@@ -1,5 +1,7 @@
 import json
+import pandas as pd
 
+from typing import Any
 from tenacity import retry, stop_after_attempt
 
 from .data import entities_example_chat
@@ -41,10 +43,15 @@ Instructions:
 - See the example to get a better idea of the task."""
 
 
-def make_entities_prompt(session, user="a user", assistant="gpt-4-turbo", **_):
+def make_entities_prompt(
+    session: list[pd.Series] | list[Any], user="a user", assistant="gpt-4-turbo", **_
+):
+    session = [m.to_dict() if isinstance(m, pd.Series) else m for m in session]
+    session_json_str = json.dumps(session, indent=2)
+
     return [
         f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{entities_instructions}\n\n<ct:example-session>\n{json.dumps(entities_example_chat, indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{entities_example_plan}\n</ct:example-plan>\n\n<ct:example-entities>\n{entities_example_result}\n</ct:example-entities>",
-        f"Begin! Write the entities as a Markdown formatted list. First write your plan inside <ct:plan></ct:plan> and then the extracted entities between <ct:entities></ct:entities>.\n\n<ct:session>\n{json.dumps(session, indent=2)}\n\n</ct:session>",
+        f"Begin! Write the entities as a Markdown formatted list. First write your plan inside <ct:plan></ct:plan> and then the extracted entities between <ct:entities></ct:entities>.\n\n<ct:session>\n{session_json_str}\n\n</ct:session>",
     ]
 
 
