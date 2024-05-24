@@ -15,7 +15,7 @@ from agents_api.models.entry.entries_summarization import (
 )
 from agents_api.common.protocol.entries import Entry
 from ..model_registry import JULEP_MODELS
-from ..env import model_inference_url, model_api_key
+from ..env import model_inference_url, model_api_key, summarization_model_name
 from agents_api.rec_sum.entities import get_entities
 from agents_api.rec_sum.summarize import summarize_messages
 from agents_api.rec_sum.trim import trim_messages
@@ -209,8 +209,8 @@ async def summarization(session_id: str) -> None:
     assert len(entries) > 0, "no need to summarize on empty entries list"
 
     trimmed_messages, entities = await asyncio.gather(
-        trim_messages(entries),
-        get_entities(entries),
+        trim_messages(entries, model=summarization_model_name),
+        get_entities(entries, model=summarization_model_name),
     )
     summarized = await summarize_messages(trimmed_messages)
 
