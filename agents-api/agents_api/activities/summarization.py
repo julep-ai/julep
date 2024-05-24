@@ -165,36 +165,6 @@ async def run_prompt(
     return parser(content.strip() if content is not None else "")
 
 
-# @activity.defn
-# async def summarization(session_id: str) -> None:
-#     session_id = UUID(session_id)
-#     entries = [
-#         Entry(**row)
-#         for _, row in get_toplevel_entries_query(session_id=session_id).iterrows()
-#     ]
-
-#     assert len(entries) > 0, "no need to summarize on empty entries list"
-
-#     response = await run_prompt(
-#         dialog=entries, previous_memories=[], model=summarization_model_name
-#     )
-
-#     new_entry = Entry(
-#         session_id=session_id,
-#         source="summarizer",
-#         role="system",
-#         name="information",
-#         content=response,
-#         timestamp=entries[-1].timestamp + 0.01,
-#     )
-
-#     entries_summarization_query(
-#         session_id=session_id,
-#         new_entry=new_entry,
-#         old_entry_ids=[e.id for e in entries],
-#     )
-
-
 @activity.defn
 async def summarization(session_id: str) -> None:
     session_id = UUID(session_id)
