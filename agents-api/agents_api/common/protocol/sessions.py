@@ -11,6 +11,7 @@ from .agents import AgentDefaultSettings
 
 from typing import Optional, Dict
 
+
 class SessionSettings(AgentDefaultSettings):
     """
     A placeholder for session-specific settings, inheriting from AgentDefaultSettings.
