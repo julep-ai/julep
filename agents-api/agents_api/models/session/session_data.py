@@ -97,6 +97,74 @@ def session_data_query(
             "min_p": min_p,
             "preset": preset,
         }
+    ?[
+        agent_id,
+        user_id,
+        session_id,
+        situation,
+        summary,
+        updated_at,
+        created_at,
+        user_name,
+        user_about,
+        agent_name,
+        agent_about,
+        model,
+        default_settings,
+        metadata,
+        render_templates,
+        user_metadata,
+        agent_metadata,
+    ] := input[developer_id, session_id],
+        *sessions{
+            developer_id,
+            session_id,
+            situation,
+            summary,
+            created_at,
+            updated_at: validity,
+            metadata,
+            render_templates,
+            @ "NOW"
+        },
+        *session_lookup{
+            agent_id,
+            user_id,
+            session_id,
+        }, updated_at = to_int(validity),
+        not *users{
+            user_id
+        }, user_name=null, user_about=null, user_metadata=null,
+        *agents{
+            agent_id,
+            name: agent_name,
+            about: agent_about,
+            model,
+            metadata: agent_metadata,
+        },
+        *agent_default_settings {
+            agent_id,
+            frequency_penalty,
+            presence_penalty,
+            length_penalty,
+            repetition_penalty,
+            top_p,
+            temperature,
+            min_p,
+            preset,
+        },
+        default_settings = {
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "length_penalty": length_penalty,
+            "repetition_penalty": repetition_penalty,
+            "top_p": top_p,
+            "temperature": temperature,
+            "min_p": min_p,
+            "preset": preset,
+        }
+
+
     """
 
     return (query, {"developer_id": str(developer_id), "session_id": str(session_id)})
