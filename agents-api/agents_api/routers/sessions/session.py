@@ -66,7 +66,8 @@ def cache(f):
                     "init_context": [c.model_dump() for c in init_context],
                     "settings": settings.model_dump(),
                 },
-                cls=CustomJSONEncoder, default_empty_value="",
+                cls=CustomJSONEncoder,
+                default_empty_value="",
             )
         ).hexdigest()
         result = get_cached_response(key=key)
