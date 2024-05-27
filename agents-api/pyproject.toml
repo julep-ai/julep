@@ -48,6 +48,9 @@ ward = "^0.68.0b0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+agents-api = "scripts.agents_api:run"
+
 [tool.poe.tasks]
 format = "black ."
 lint = "ruff agents_api/**/*.py migrations/**/*.py tests/**/*.py --fix --unsafe-fixes"
