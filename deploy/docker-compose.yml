@@ -56,6 +56,28 @@ services:
     env_file:
       - .env
 
+  docs-text-embeddings-inference:
+    container_name: docs-text-embeddings-inference
+    environment:
+      - DTYPE=float16
+      - MODEL_ID=BAAI/bge-m3
+
+    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    ports:
+      - "8083:80"
+    volumes:
+      - ~/.cache/huggingface/hub:/data
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    env_file:
+      - .env
+
   temporal:
     image: julepai/temporal:dev
     container_name: julep-temporal
