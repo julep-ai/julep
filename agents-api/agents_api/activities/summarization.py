@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import asyncio
-from pycozo.client import QueryException
 from uuid import UUID
 from typing import Callable
 from textwrap import dedent
 from temporalio import activity
 from litellm import acompletion
 from agents_api.models.entry.add_entries import add_entries_query
-from agents_api.models.entry.delete_entries import delete_entries_by_ids_query
 from agents_api.models.entry.entries_summarization import (
     get_toplevel_entries_query,
     entries_summarization_query,
@@ -19,7 +17,6 @@ from ..env import model_inference_url, model_api_key, summarization_model_name
 from agents_api.rec_sum.entities import get_entities
 from agents_api.rec_sum.summarize import summarize_messages
 from agents_api.rec_sum.trim import trim_messages
-from agents_api.activities.logger import logger
 
 
 example_previous_memory = """
@@ -183,24 +180,22 @@ async def summarization(session_id: str) -> None:
         get_entities(entries, model=summarization_model_name),
     )
     summarized = await summarize_messages(trimmed_messages)
-
     ts_delta = (entries[1]["timestamp"] - entries[0]["timestamp"]) / 2
-
-    add_entries_query(
-        Entry(
-            session_id=session_id,
-            source="summarizer",
-            role="system",
-            name="entities",
-            content=entities["content"],
-            timestamp=entries[0]["timestamp"] + ts_delta,
-        )
+    new_entities_entry = Entry(
+        session_id=session_id,
+        source="summarizer",
+        role="system",
+        name="entities",
+        content=entities["content"],
+        timestamp=entries[0]["timestamp"] + ts_delta,
     )
 
-    try:
-        delete_entries_by_ids_query(entry_ids=entities_entry_ids)
-    except QueryException as e:
-        logger.exception(e)
+    add_entries_query(new_entities_entry)
+    entries_summarization_query(
+        session_id=session_id,
+        new_entry=new_entities_entry,
+        old_entry_ids=entities_entry_ids,
+    )
 
     for msg in summarized:
         new_entry = Entry(
