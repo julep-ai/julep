@@ -3,6 +3,7 @@
 import typing
 
 from .named_tool_choice import NamedToolChoice
+from .named_tool_choice_function import NamedToolChoiceFunction
 from .tool_choice_option import ToolChoiceOption
 
 ChatInputDataToolChoice = typing.Union[ToolChoiceOption, NamedToolChoice]

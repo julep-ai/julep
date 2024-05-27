@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "support_multimodal_chatml"
 CREATED_AT = 1716847597.155657
@@ -84,8 +84,10 @@ update_entries = {
     """,
 }
 
+
 def up(client):
     client.run(update_entries["up"])
+
 
 def down(client):
     client.run(update_entries["down"])
