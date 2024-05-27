@@ -2373,12 +2373,12 @@ components:
           pattern: ''
           enum:
             - text
-        content:
+        text:
           type: string
           description: Text content part
       required:
         - type
-        - content
+        - text
     ChatMLImageContentPart:
       type: object
       properties:
@@ -2389,12 +2389,29 @@ components:
           pattern: ''
           enum:
             - image_url
-        content:
-          type: string
+        image_url:
+          type: object
+          properties:
+            url:
+              type: string
+              description: >-
+                URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64
+                encoded image>`)
+            detail:
+              type: string
+              description: image detail to feed into the model can be low | high | auto
+              default: auto
+              pattern: ''
+              enum:
+                - low
+                - high
+                - auto
           description: Image content part, can be a URL or a base64-encoded image
+          required:
+            - url
       required:
         - type
-        - content
+        - image_url
   securitySchemes:
     api-key:
       type: apiKey
