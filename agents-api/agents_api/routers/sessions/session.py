@@ -15,11 +15,12 @@ from litellm import acompletion
 from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
-from ...clients.worker.types import ChatML, UUIDEncoder
+from ...clients.worker.types import ChatML
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
+from ...common.utils.json import CustomJSONEncoder
 from ...env import (
     summarization_tokens_threshold,
     docs_embedding_service_url,
@@ -65,7 +66,7 @@ def cache(f):
                     "init_context": [c.model_dump() for c in init_context],
                     "settings": settings.model_dump(),
                 },
-                cls=UUIDEncoder,
+                cls=CustomJSONEncoder, default_empty_value="",
             )
         ).hexdigest()
         result = get_cached_response(key=key)
