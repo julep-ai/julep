@@ -1504,7 +1504,14 @@ components:
             - function
           description: ChatML role (system|assistant|user|function_call|function)
         content:
-          type: string
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ChatMLTextContentPart'
+            - type: array
+              items:
+                $ref: '#/components/schemas/ChatMLImageContentPart'
           description: ChatML content
         name:
           type: string
@@ -1537,9 +1544,15 @@ components:
             - auto
           description: ChatML role (system|assistant|user|function_call|function|auto)
         content:
-          type: string
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ChatMLTextContentPart'
+            - type: array
+              items:
+                $ref: '#/components/schemas/ChatMLImageContentPart'
           description: ChatML content
-          default: ''
         name:
           type: string
           description: ChatML name
@@ -2350,6 +2363,38 @@ components:
       required:
         - agent_doc_ids
         - user_doc_ids
+    ChatMLTextContentPart:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Fixed to 'text'
+          default: text
+          pattern: ''
+          enum:
+            - text
+        content:
+          type: string
+          description: Text content part
+      required:
+        - type
+        - content
+    ChatMLImageContentPart:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Fixed to 'image_url'
+          default: image_url
+          pattern: ''
+          enum:
+            - image_url
+        content:
+          type: string
+          description: Image content part, can be a URL or a base64-encoded image
+      required:
+        - type
+        - content
   securitySchemes:
     api-key:
       type: apiKey
