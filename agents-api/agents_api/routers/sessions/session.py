@@ -69,14 +69,11 @@ def cache(f):
             )
         ).hexdigest()
         result = get_cached_response(key=key)
-        print(result.to_dict())
         if not result.size:
             resp = await f(self, init_context, settings)
             set_cached_response(key=key, value=resp.model_dump())
             return resp
         choices = result.iloc[0].to_dict()["value"]
-        print(choices)
-
         return ChatCompletion(**choices)
 
     return wrapper
@@ -401,7 +398,6 @@ class BaseSession:
             api_key=api_key,
             **extra_body,
         )
-        print(f"[!] Using LLM response")
 
         return res
 
