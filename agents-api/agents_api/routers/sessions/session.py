@@ -15,7 +15,7 @@ from litellm import acompletion
 from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
-from ...clients.worker.types import ChatML
+from ...clients.worker.types import ChatML, UUIDEncoder
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
@@ -64,17 +64,20 @@ def cache(f):
                 {
                     "init_context": [c.model_dump() for c in init_context],
                     "settings": settings.model_dump(),
-                }
+                },
+                cls=UUIDEncoder,
             )
         ).hexdigest()
         result = get_cached_response(key=key)
-
+        print(result.to_dict())
         if not result.size:
             resp = await f(self, init_context, settings)
             set_cached_response(key=key, value=resp.model_dump())
             return resp
+        choices = result.iloc[0].to_dict()["value"]
+        print(choices)
 
-        return ChatCompletion(**result.iloc[0].to_dict())
+        return ChatCompletion(**choices)
 
     return wrapper
 
@@ -398,6 +401,7 @@ class BaseSession:
             api_key=api_key,
             **extra_body,
         )
+        print(f"[!] Using LLM response")
 
         return res
 

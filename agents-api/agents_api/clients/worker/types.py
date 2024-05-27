@@ -1,7 +1,14 @@
 from typing import Callable, Literal, Optional, Protocol
 from uuid import UUID
-
+import json
 from pydantic import BaseModel
+
+
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        return super().default(obj)
 
 
 class PromptModule(Protocol):
