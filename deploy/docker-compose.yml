@@ -45,7 +45,11 @@ services:
       - MODEL_ID=BAAI/llm-embedder
 
     image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    ports:
+      - "8082:80"
     shm_size: "2gb"
+    volumes:
+      - ~/.cache/huggingface/hub:/data
     deploy:
       resources:
         reservations:
@@ -81,6 +85,8 @@ services:
   temporal:
     image: julepai/temporal:dev
     container_name: julep-temporal
+    ports:
+      - 7233:7233
     volumes:
       - temporal_data:/home/temporal
     env_file:
