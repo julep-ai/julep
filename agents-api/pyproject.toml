@@ -29,6 +29,7 @@ litellm = "^1.35.32"
 numpy = "^1.26.4"
 transformers = "^4.40.1"
 tiktoken = "^0.6.0"
+xxhash = "^3.4.1"
 
 
 [tool.poetry.group.dev.dependencies]
