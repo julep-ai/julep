@@ -56,7 +56,7 @@ def proc_mem_context_query(
         :create _input {{
             session_id: Uuid,
             agent_id: Uuid,
-            user_id: Uuid,
+            user_id: Uuid?,
             # tool_query: <F32; {VECTOR_SIZE}>,
             doc_query: <F32; {VECTOR_SIZE}>,
         }}
@@ -213,7 +213,7 @@ def proc_mem_context_query(
             user_doc_id: Uuid? default null,
         }}
     }} {{
-        # Collect document information based on agent ID and document query embedding.
+        # Collect document information based on user ID and document query embedding.
         # Collect user docs
 
         # Search for user docs
