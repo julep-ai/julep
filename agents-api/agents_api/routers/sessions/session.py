@@ -1,4 +1,5 @@
 import json
+import xxhash
 from functools import reduce
 from json import JSONDecodeError
 from typing import Callable
@@ -19,6 +20,7 @@ from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
+from ...common.utils.json import CustomJSONEncoder
 from ...env import (
     summarization_tokens_threshold,
     docs_embedding_service_url,
@@ -32,6 +34,8 @@ from ...model_registry import (
 from ...models.entry.add_entries import add_entries_query
 from ...models.entry.proc_mem_context import proc_mem_context_query
 from ...models.session.session_data import get_session_data
+from ...models.session.get_cached_response import get_cached_response
+from ...models.session.set_cached_response import set_cached_response
 
 from .exceptions import InputTooBigError
 from .protocol import Settings
@@ -50,6 +54,30 @@ instruction_query_instruction = (
 doc_query_instruction = (
     "Encode this query and context for searching relevant passages: "
 )
+
+
+def cache(f):
+    async def wrapper(
+        self, init_context: list[ChatML], settings: Settings
+    ) -> ChatCompletion:
+        key = xxhash.xxh64(
+            json.dumps(
+                {
+                    "init_context": [c.model_dump() for c in init_context],
+                    "settings": settings.model_dump(),
+                },
+                cls=CustomJSONEncoder, default_empty_value="",
+            )
+        ).hexdigest()
+        result = get_cached_response(key=key)
+        if not result.size:
+            resp = await f(self, init_context, settings)
+            set_cached_response(key=key, value=resp.model_dump())
+            return resp
+        choices = result.iloc[0].to_dict()["value"]
+        return ChatCompletion(**choices)
+
+    return wrapper
 
 
 @dataclass
@@ -333,6 +361,7 @@ class BaseSession:
 
         return messages, settings, doc_ids
 
+    @cache
     async def generate(
         self, init_context: list[ChatML], settings: Settings
     ) -> ChatCompletion:
@@ -370,6 +399,7 @@ class BaseSession:
             api_key=api_key,
             **extra_body,
         )
+
         return res
 
     async def backward(
