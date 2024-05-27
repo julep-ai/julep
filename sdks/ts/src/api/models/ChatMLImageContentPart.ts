@@ -10,5 +10,14 @@ export type ChatMLImageContentPart = {
   /**
    * Image content part, can be a URL or a base64-encoded image
    */
-  content: string;
+  image_url: {
+    /**
+     * URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)
+     */
+    url: string;
+    /**
+     * image detail to feed into the model can be low | high | auto
+     */
+    detail?: "low" | "high" | "auto";
+  };
 };

@@ -3,10 +3,10 @@
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
-from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
+from .chat_ml_image_content_part_image_url_detail import (
+    ChatMlImageContentPartImageUrlDetail,
+)
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -14,12 +14,18 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class ChatMlImageContentPart(pydantic.BaseModel):
-    type: typing_extensions.Literal["image_url"] = pydantic.Field(
-        description="Fixed to 'image_url'"
+class ChatMlImageContentPartImageUrl(pydantic.BaseModel):
+    """
+    Image content part, can be a URL or a base64-encoded image
+    """
+
+    url: str = pydantic.Field(
+        description="URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)"
     )
-    image_url: ChatMlImageContentPartImageUrl = pydantic.Field(
-        description="Image content part, can be a URL or a base64-encoded image"
+    detail: typing.Optional[ChatMlImageContentPartImageUrlDetail] = pydantic.Field(
+        description=(
+            "image detail to feed into the model can be low \n" " high \n" " auto\n"
+        )
     )
 
     def json(self, **kwargs: typing.Any) -> str:

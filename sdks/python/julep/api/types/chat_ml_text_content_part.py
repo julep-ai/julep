@@ -17,7 +17,7 @@ class ChatMlTextContentPart(pydantic.BaseModel):
     type: typing_extensions.Literal["text"] = pydantic.Field(
         description="Fixed to 'text'"
     )
-    content: str = pydantic.Field(description="Text content part")
+    text: str = pydantic.Field(description="Text content part")
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

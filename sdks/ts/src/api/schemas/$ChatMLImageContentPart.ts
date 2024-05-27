@@ -8,9 +8,18 @@ export const $ChatMLImageContentPart = {
       type: "Enum",
       isRequired: true,
     },
-    content: {
-      type: "string",
+    image_url: {
       description: `Image content part, can be a URL or a base64-encoded image`,
+      properties: {
+        url: {
+          type: "string",
+          description: `URL or base64 data url (e.g. \`data:image/jpeg;base64,<the base64 encoded image>\`)`,
+          isRequired: true,
+        },
+        detail: {
+          type: "Enum",
+        },
+      },
       isRequired: true,
     },
   },

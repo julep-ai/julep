@@ -8,6 +8,10 @@ from .agent_metadata import AgentMetadata
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .chat_ml_image_content_part import ChatMlImageContentPart
+from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
+from .chat_ml_image_content_part_image_url_detail import (
+    ChatMlImageContentPartImageUrlDetail,
+)
 from .chat_ml_message import ChatMlMessage
 from .chat_ml_message_content import ChatMlMessageContent
 from .chat_ml_message_role import ChatMlMessageRole
@@ -97,6 +101,8 @@ __all__ = [
     "ChatInputData",
     "ChatInputDataToolChoice",
     "ChatMlImageContentPart",
+    "ChatMlImageContentPartImageUrl",
+    "ChatMlImageContentPartImageUrlDetail",
     "ChatMlMessage",
     "ChatMlMessageContent",
     "ChatMlMessageRole",

@@ -8,7 +8,7 @@ export const $ChatMLTextContentPart = {
       type: "Enum",
       isRequired: true,
     },
-    content: {
+    text: {
       type: "string",
       description: `Text content part`,
       isRequired: true,

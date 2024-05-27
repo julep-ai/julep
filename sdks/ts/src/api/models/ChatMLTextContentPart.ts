@@ -10,5 +10,5 @@ export type ChatMLTextContentPart = {
   /**
    * Text content part
    */
-  content: string;
+  text: string;
 };
