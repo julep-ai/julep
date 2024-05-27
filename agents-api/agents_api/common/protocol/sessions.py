@@ -9,6 +9,8 @@ from pydantic import BaseModel
 
 from .agents import AgentDefaultSettings
 
+from typing import Optional, Dict
+
 
 class SessionSettings(AgentDefaultSettings):
     """
@@ -26,19 +28,19 @@ class SessionData(BaseModel):
     """
 
     agent_id: UUID
-    user_id: UUID
+    user_id: Optional[UUID]
     session_id: UUID
     situation: str
-    summary: str | None
-    user_name: str | None
-    user_about: str
-    agent_name: str | None
+    summary: Optional[str]
+    user_name: Optional[str]
+    user_about: Optional[str]
+    agent_name: Optional[str]
     agent_about: str
     updated_at: float
     created_at: float
     model: str
     default_settings: SessionSettings
     render_templates: bool = False
-    metadata: dict = {}
-    user_metadata: dict = {}
-    agent_metadata: dict = {}
+    metadata: Dict = {}
+    user_metadata: Optional[Dict] = None
+    agent_metadata: Dict = {}

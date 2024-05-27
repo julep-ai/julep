@@ -64,6 +64,8 @@ services:
     image: ghcr.io/huggingface/text-embeddings-inference:1.0
     ports:
       - "8082:80"
+    volumes:
+      - ~/.cache/huggingface/hub:/data
     shm_size: "2gb"
     deploy:
       resources:
@@ -82,6 +84,8 @@ services:
     image: ghcr.io/huggingface/text-embeddings-inference:1.0
     ports:
       - "8083:80"
+    volumes:
+      - ~/.cache/huggingface/hub:/data
     shm_size: "2gb"
     deploy:
       resources:
