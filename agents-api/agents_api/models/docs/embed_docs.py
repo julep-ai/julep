@@ -2,11 +2,12 @@
 
 from uuid import UUID
 
+from beartype import beartype
 
 from ..utils import cozo_query
 
-
 @cozo_query
+@beartype
 def embed_docs_snippets_query(
     doc_id: UUID,
     snippet_indices: list[int],

@@ -4,7 +4,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, computed_field
-from agents_api.autogen.openapi_model import Role
+from agents_api.autogen.openapi_model import Role, ChatMLImageContentPart, ChatMLTextContentPart
 
 EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
 Tokenizer = Literal["character_count"]
@@ -20,7 +20,7 @@ class Entry(BaseModel):
     source: EntrySource = Field(default="api_request")
     role: Role
     name: str | None = None
-    content: str
+    content: str | list[ChatMLTextContentPart] | list[ChatMLImageContentPart] | dict
     tokenizer: str = Field(default="character_count")
     created_at: float = Field(
         default_factory=lambda: datetime.utcnow().timestamp()

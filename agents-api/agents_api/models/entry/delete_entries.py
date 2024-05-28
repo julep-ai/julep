@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def delete_entries_query(session_id: UUID) -> tuple[str, dict]:
     """
     Constructs and returns a datalog query for deleting entries associated with a given session ID from the 'cozodb' database.

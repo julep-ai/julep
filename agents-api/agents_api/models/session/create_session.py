@@ -3,6 +3,8 @@ This module contains the functionality for creating a new session in the 'cozodb
 It constructs and executes a datalog query to insert session data.
 """
 
+from beartype import beartype
+
 from uuid import UUID
 
 
@@ -10,6 +12,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def create_session_query(
     session_id: UUID,
     developer_id: UUID,

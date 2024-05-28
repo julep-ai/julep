@@ -1,6 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
+from beartype import beartype
 
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import cozo_query
@@ -8,14 +9,15 @@ from ...common.utils.datetime import utcnow
 
 
 @cozo_query
+@beartype
 def create_docs_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
     id: UUID,
     title: str,
-    content: list[str],
+    content: list[str] | str,
     metadata: dict = {},
-) -> tuple[str, dict]:
+):
     """
     Constructs and executes a datalog query to create a new document and its associated snippets in the 'cozodb' database.
 
@@ -30,6 +32,10 @@ def create_docs_query(
     Returns:
     pd.DataFrame: A DataFrame containing the results of the query execution.
     """
+
+    if isinstance(content, str):
+        content = [content]
+
     created_at: float = utcnow().timestamp()
     snippet_cols, snippet_rows = "", []
 

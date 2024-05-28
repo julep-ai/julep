@@ -3,11 +3,14 @@
 from typing import Literal
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def get_docs_snippets_by_id_query(
     owner_type: Literal["user", "agent"],
     doc_id: UUID,

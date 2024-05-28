@@ -32,6 +32,7 @@ tiktoken = "^0.6.0"
 xxhash = "^3.4.1"
 
 
+beartype = "^0.18.5"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.18.1"
 black = "^24.4.0"
