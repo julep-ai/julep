@@ -46,20 +46,13 @@ services:
       - DTYPE=float16
       - MODEL_ID=BAAI/llm-embedder
 
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.0
     platform: linux/x86_64
     ports:
       - "8082:80"
     shm_size: "2gb"
     volumes:
       - ~/.cache/huggingface/hub:/data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     env_file:
       - .env
 
@@ -68,21 +61,13 @@ services:
     environment:
       - DTYPE=float16
       - MODEL_ID=BAAI/bge-m3
-
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.0
     platform: linux/x86_64
     ports:
       - "8083:80"
     volumes:
       - ~/.cache/huggingface/hub:/data
     shm_size: "2gb"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     env_file:
       - .env
 
