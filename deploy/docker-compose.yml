@@ -1,9 +1,9 @@
 name: julep-api
-version: "3"
 
 services:
   memory-store:
     image: julepai/memory-store:dev
+    platform: linux/x86_64
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
       - COZO_PORT=9070
@@ -16,6 +16,7 @@ services:
 
   agents-api:
     image: julepai/agents-api:dev
+    platform: linux/x86_64
     container_name: julep-agents-api
     depends_on:
       memory-store:
@@ -29,6 +30,7 @@ services:
 
   worker:
     image: julepai/worker:dev
+    platform: linux/x86_64
     container_name: julep-worker
     depends_on:
       text-embeddings-inference:
@@ -44,19 +46,13 @@ services:
       - DTYPE=float16
       - MODEL_ID=BAAI/llm-embedder
 
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.0
+    platform: linux/x86_64
     ports:
       - "8082:80"
     shm_size: "2gb"
     volumes:
       - ~/.cache/huggingface/hub:/data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     env_file:
       - .env
 
@@ -65,25 +61,19 @@ services:
     environment:
       - DTYPE=float16
       - MODEL_ID=BAAI/bge-m3
-
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.0
+    platform: linux/x86_64
     ports:
       - "8083:80"
     volumes:
       - ~/.cache/huggingface/hub:/data
     shm_size: "2gb"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     env_file:
       - .env
 
   temporal:
     image: julepai/temporal:dev
+    platform: linux/x86_64
     container_name: julep-temporal
     ports:
       - 7233:7233
@@ -99,6 +89,7 @@ services:
     env_file:
       - .env
     image: julepai/cozo-migrate:dev
+    platform: linux/x86_64
     container_name: julep-cozo-migrate
     depends_on:
       memory-store:
