@@ -2,7 +2,7 @@ import json
 import xxhash
 from functools import reduce
 from json import JSONDecodeError
-from typing import Callable
+from typing import Callable, cast
 from uuid import uuid4
 
 from dataclasses import dataclass
@@ -219,24 +219,25 @@ class BaseSession:
         new_input: list[Entry],
         settings: Settings,
     ) -> tuple[list[ChatML], Settings, DocIds]:
-        stringified_input = [
-            (
-                msg.role,
-                msg.name,
-                " ".join(
-                    [
-                        part["text"]
-                        for part in (
-                            msg.content
-                            if isinstance(msg.content, list)
-                            else [{"type": "text", "text": msg.content}]
-                        )
-                        if part["type"] == "text"
-                    ]
-                ),
+        stringified_input = []
+        for msg in new_input:
+            content = ""
+            if isinstance(msg.content, list):
+                content = " ".join(
+                    [part.text for part in msg.content if part.type == "text"]
+                )
+            elif isinstance(msg.content, str):
+                content = msg.content
+            elif isinstance(msg.content, dict) and msg.content["type"] == "text":
+                content = cast(str, msg.content["text"])
+
+            stringified_input.append(
+                (
+                    msg.role,
+                    msg.name,
+                    content,
+                )
             )
-            for msg in new_input
-        ]
 
         # role, name, content, token_count, created_at
         string_to_embed = "\n".join(
@@ -353,9 +354,9 @@ class BaseSession:
             if (
                 isinstance(message.content, list)
                 and len(message.content) == 1
-                and message.content[0]["type"] == "text"
+                and message.content[0].type == "text"
             ):
-                message.content = message.content[0]["text"]
+                message.content = message.content[0].text
 
         # If render_templates=True, render the templates
         if session_data is not None and session_data.render_templates:
