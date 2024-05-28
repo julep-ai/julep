@@ -1508,10 +1508,9 @@ components:
             - type: string
             - type: array
               items:
-                $ref: '#/components/schemas/ChatMLTextContentPart'
-            - type: array
-              items:
-                $ref: '#/components/schemas/ChatMLImageContentPart'
+                oneOf:
+                  - $ref: '#/components/schemas/ChatMLTextContentPart'
+                  - $ref: '#/components/schemas/ChatMLImageContentPart'
           description: ChatML content
         name:
           type: string
@@ -1548,10 +1547,9 @@ components:
             - type: string
             - type: array
               items:
-                $ref: '#/components/schemas/ChatMLTextContentPart'
-            - type: array
-              items:
-                $ref: '#/components/schemas/ChatMLImageContentPart'
+                oneOf:
+                  - $ref: '#/components/schemas/ChatMLTextContentPart'
+                  - $ref: '#/components/schemas/ChatMLImageContentPart'
           description: ChatML content
         name:
           type: string

@@ -14,6 +14,11 @@ from .chat_ml_image_content_part_image_url_detail import (
 )
 from .chat_ml_message import ChatMlMessage
 from .chat_ml_message_content import ChatMlMessageContent
+from .chat_ml_message_content_item import (
+    ChatMlMessageContentItem,
+    ChatMlMessageContentItem_ImageUrl,
+    ChatMlMessageContentItem_Text,
+)
 from .chat_ml_message_role import ChatMlMessageRole
 from .chat_ml_text_content_part import ChatMlTextContentPart
 from .chat_response import ChatResponse
@@ -53,6 +58,11 @@ from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
 from .input_chat_ml_message import InputChatMlMessage
 from .input_chat_ml_message_content import InputChatMlMessageContent
+from .input_chat_ml_message_content_item import (
+    InputChatMlMessageContentItem,
+    InputChatMlMessageContentItem_ImageUrl,
+    InputChatMlMessageContentItem_Text,
+)
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .job_status import JobStatus
 from .job_status_state import JobStatusState
@@ -105,6 +115,9 @@ __all__ = [
     "ChatMlImageContentPartImageUrlDetail",
     "ChatMlMessage",
     "ChatMlMessageContent",
+    "ChatMlMessageContentItem",
+    "ChatMlMessageContentItem_ImageUrl",
+    "ChatMlMessageContentItem_Text",
     "ChatMlMessageRole",
     "ChatMlTextContentPart",
     "ChatResponse",
@@ -144,6 +157,9 @@ __all__ = [
     "GetUserDocsResponse",
     "InputChatMlMessage",
     "InputChatMlMessageContent",
+    "InputChatMlMessageContentItem",
+    "InputChatMlMessageContentItem_ImageUrl",
+    "InputChatMlMessageContentItem_Text",
     "InputChatMlMessageRole",
     "JobStatus",
     "JobStatusState",

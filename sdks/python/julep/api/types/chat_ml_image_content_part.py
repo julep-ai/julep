@@ -3,8 +3,6 @@
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
 from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
 
@@ -15,9 +13,6 @@ except ImportError:
 
 
 class ChatMlImageContentPart(pydantic.BaseModel):
-    type: typing_extensions.Literal["image_url"] = pydantic.Field(
-        description="Fixed to 'image_url'"
-    )
     image_url: ChatMlImageContentPartImageUrl = pydantic.Field(
         description="Image content part, can be a URL or a base64-encoded image"
     )

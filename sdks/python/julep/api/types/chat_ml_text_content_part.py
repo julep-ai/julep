@@ -3,8 +3,6 @@
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
 
 try:
@@ -14,9 +12,6 @@ except ImportError:
 
 
 class ChatMlTextContentPart(pydantic.BaseModel):
-    type: typing_extensions.Literal["text"] = pydantic.Field(
-        description="Fixed to 'text'"
-    )
     text: str = pydantic.Field(description="Text content part")
 
     def json(self, **kwargs: typing.Any) -> str:
