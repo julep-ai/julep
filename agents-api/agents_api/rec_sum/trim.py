@@ -62,7 +62,9 @@ async def trim_messages(
     )
 
     assert "<ct:trimmed>" in result["content"]
-    trimmed_messages = json.loads(result["content"].split("<ct:trimmed>")[-1].strip())
+    trimmed_messages = json.loads(
+        result["content"].split("<ct:trimmed>")[-1].replace("</ct:trimmed>", "").strip()
+    )
 
     assert all((msg.get("index") is not None for msg in trimmed_messages))
 
