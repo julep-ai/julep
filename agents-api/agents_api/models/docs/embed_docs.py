@@ -6,6 +6,7 @@ from beartype import beartype
 
 from ..utils import cozo_query
 
+
 @cozo_query
 @beartype
 def embed_docs_snippets_query(

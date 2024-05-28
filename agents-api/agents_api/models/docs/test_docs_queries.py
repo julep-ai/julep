@@ -5,7 +5,6 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
-from ...common.utils.debug import pdb_on_exception
 
 from .create_docs import create_docs_query
 from .delete_docs import delete_docs_by_id_query
@@ -16,6 +15,7 @@ from .search_docs import search_docs_snippets_by_embedding_query
 
 
 EMBEDDING_SIZE: int = 1024
+
 
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
