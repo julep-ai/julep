@@ -77,7 +77,10 @@ async def summarize_messages(
 
     assert "<ct:summarized-messages>" in result["content"]
     summarized_messages = json.loads(
-        result["content"].split("<ct:summarized-messages>")[-1].strip()
+        result["content"]
+        .split("<ct:summarized-messages>")[-1]
+        .replace("</ct:summarized-messages>", "")
+        .strip()
     )
 
     assert all((msg.get("summarizes") is not None for msg in summarized_messages))
