@@ -3,10 +3,7 @@
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
-from .named_tool_choice_function import NamedToolChoiceFunction
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -14,15 +11,8 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class NamedToolChoice(pydantic.BaseModel):
-    """
-    Specifies a tool the model should use. Use to force the model to call a specific function.
-    """
-
-    type: typing_extensions.Literal["function"] = pydantic.Field(
-        description="The type of the tool. Currently, only `function` is supported."
-    )
-    function: NamedToolChoiceFunction
+class ErrorWorkflowStep(pydantic.BaseModel):
+    error: str
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

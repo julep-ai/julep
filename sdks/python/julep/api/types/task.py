@@ -3,10 +3,8 @@
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
-from .named_tool_choice_function import NamedToolChoiceFunction
+from .workflow_step import WorkflowStep
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -14,15 +12,27 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class NamedToolChoice(pydantic.BaseModel):
+class Task(pydantic.BaseModel):
     """
-    Specifies a tool the model should use. Use to force the model to call a specific function.
+    Describes a Task
     """
 
-    type: typing_extensions.Literal["function"] = pydantic.Field(
-        description="The type of the tool. Currently, only `function` is supported."
+    name: str = pydantic.Field(description="Name of the Task")
+    description: typing.Optional[str] = pydantic.Field(
+        description="Optional Description of the Task"
     )
-    function: NamedToolChoiceFunction
+    tools_available: typing.Optional[typing.List[str]] = pydantic.Field(
+        description="Available Tools for the Task"
+    )
+    input_schema: typing.Optional[typing.Dict[str, typing.Any]] = pydantic.Field(
+        description="JSON Schema of parameters"
+    )
+    main: typing.List[WorkflowStep] = pydantic.Field(
+        description="Entrypoint Workflow for the Task"
+    )
+    id: str = pydantic.Field(description="ID of the Task")
+    created_at: dt.datetime
+    agent_id: str
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

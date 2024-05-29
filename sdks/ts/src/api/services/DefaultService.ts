@@ -8,10 +8,14 @@ import type { ChatMLMessage } from "../models/ChatMLMessage";
 import type { ChatResponse } from "../models/ChatResponse";
 import type { CreateAgentRequest } from "../models/CreateAgentRequest";
 import type { CreateDoc } from "../models/CreateDoc";
+import type { CreateExecution } from "../models/CreateExecution";
 import type { CreateSessionRequest } from "../models/CreateSessionRequest";
+import type { CreateTask } from "../models/CreateTask";
 import type { CreateToolRequest } from "../models/CreateToolRequest";
 import type { CreateUserRequest } from "../models/CreateUserRequest";
 import type { Doc } from "../models/Doc";
+import type { Execution } from "../models/Execution";
+import type { ExecutionTransition } from "../models/ExecutionTransition";
 import type { JobStatus } from "../models/JobStatus";
 import type { Memory } from "../models/Memory";
 import type { PatchAgentRequest } from "../models/PatchAgentRequest";
@@ -23,7 +27,9 @@ import type { ResourceDeletedResponse } from "../models/ResourceDeletedResponse"
 import type { ResourceUpdatedResponse } from "../models/ResourceUpdatedResponse";
 import type { Session } from "../models/Session";
 import type { Suggestion } from "../models/Suggestion";
+import type { Task } from "../models/Task";
 import type { Tool } from "../models/Tool";
+import type { ToolResponse } from "../models/ToolResponse";
 import type { UpdateAgentRequest } from "../models/UpdateAgentRequest";
 import type { UpdateSessionRequest } from "../models/UpdateSessionRequest";
 import type { UpdateToolRequest } from "../models/UpdateToolRequest";
@@ -958,6 +964,134 @@ export class DefaultService {
       path: {
         job_id: jobId,
       },
+    });
+  }
+  /**
+   * Get a list of tasks
+   * @returns Task
+   * @throws ApiError
+   */
+  public listTasks(): CancelablePromise<Array<Task>> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/tasks",
+    });
+  }
+  /**
+   * Create a Task
+   * @returns ResourceCreatedResponse
+   * @throws ApiError
+   */
+  public createTask({
+    requestBody,
+  }: {
+    requestBody?: CreateTask;
+  }): CancelablePromise<ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/tasks",
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Create (or start) an execution of a Task
+   * @returns ResourceCreatedResponse
+   * @throws ApiError
+   */
+  public startTaskExecution({
+    taskId,
+    requestBody,
+  }: {
+    taskId: string;
+    requestBody?: CreateExecution;
+  }): CancelablePromise<ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/tasks/{task_id}/execution",
+      path: {
+        task_id: taskId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Get execution (status) of a Task
+   * @returns Execution
+   * @throws ApiError
+   */
+  public getTaskExecution({
+    taskId,
+  }: {
+    taskId: string;
+  }): CancelablePromise<Execution> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/tasks/{task_id}/execution",
+      path: {
+        task_id: taskId,
+      },
+    });
+  }
+  /**
+   * Get a Task by ID
+   * @returns Execution
+   * @throws ApiError
+   */
+  public getTask({ taskId }: { taskId: string }): CancelablePromise<Execution> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/tasks/{task_id}",
+      path: {
+        task_id: taskId,
+      },
+    });
+  }
+  /**
+   * @returns ExecutionTransition
+   * @throws ApiError
+   */
+  public getExecutionTransition({
+    executionId,
+    transitionId,
+  }: {
+    executionId: string;
+    transitionId: string;
+  }): CancelablePromise<Array<ExecutionTransition>> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/execution/{execution_id}/transition/{transition_id}",
+      path: {
+        execution_id: executionId,
+        transition_id: transitionId,
+      },
+    });
+  }
+  /**
+   * @returns ResourceUpdatedResponse
+   * @throws ApiError
+   */
+  public resumeToolExecution({
+    executionId,
+    transitionId,
+    requestBody,
+  }: {
+    executionId: string;
+    transitionId: string;
+    requestBody?: {
+      responses: Array<ToolResponse>;
+    };
+  }): CancelablePromise<ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/execution/{execution_id}/transition/{transition_id}",
+      path: {
+        execution_id: executionId,
+        transition_id: transitionId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
 }

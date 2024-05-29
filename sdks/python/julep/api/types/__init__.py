@@ -5,6 +5,7 @@ from .agent_default_settings import AgentDefaultSettings
 from .agent_default_settings_preset import AgentDefaultSettingsPreset
 from .agent_instructions import AgentInstructions
 from .agent_metadata import AgentMetadata
+from .cel_object import CelObject
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .chat_ml_message import ChatMlMessage
@@ -31,6 +32,11 @@ from .doc import Doc
 from .doc_content import DocContent
 from .doc_ids import DocIds
 from .doc_metadata import DocMetadata
+from .error_workflow_step import ErrorWorkflowStep
+from .evaluate_workflow_step import EvaluateWorkflowStep
+from .execution import Execution
+from .execution_status import ExecutionStatus
+from .execution_transition import ExecutionTransition
 from .function_call_option import FunctionCallOption
 from .function_def import FunctionDef
 from .function_parameters import FunctionParameters
@@ -44,6 +50,7 @@ from .get_suggestions_response import GetSuggestionsResponse
 from .get_user_docs_request_order import GetUserDocsRequestOrder
 from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
+from .if_else_workflow_step import IfElseWorkflowStep
 from .input_chat_ml_message import InputChatMlMessage
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .job_status import JobStatus
@@ -67,6 +74,7 @@ from .patch_agent_request_instructions import PatchAgentRequestInstructions
 from .patch_agent_request_metadata import PatchAgentRequestMetadata
 from .patch_session_request_metadata import PatchSessionRequestMetadata
 from .patch_user_request_metadata import PatchUserRequestMetadata
+from .prompt_workflow_step import PromptWorkflowStep
 from .resource_created_response import ResourceCreatedResponse
 from .resource_deleted_response import ResourceDeletedResponse
 from .resource_updated_response import ResourceUpdatedResponse
@@ -74,8 +82,11 @@ from .session import Session
 from .session_metadata import SessionMetadata
 from .suggestion import Suggestion
 from .suggestion_target import SuggestionTarget
+from .task import Task
 from .tool import Tool
+from .tool_call_workflow_step import ToolCallWorkflowStep
 from .tool_choice_option import ToolChoiceOption
+from .tool_response import ToolResponse
 from .tool_type import ToolType
 from .update_agent_request_instructions import UpdateAgentRequestInstructions
 from .update_agent_request_metadata import UpdateAgentRequestMetadata
@@ -83,6 +94,8 @@ from .update_session_request_metadata import UpdateSessionRequestMetadata
 from .update_user_request_metadata import UpdateUserRequestMetadata
 from .user import User
 from .user_metadata import UserMetadata
+from .workflow_step import WorkflowStep
+from .yield_workflow_step import YieldWorkflowStep
 
 __all__ = [
     "Agent",
@@ -90,6 +103,7 @@ __all__ = [
     "AgentDefaultSettingsPreset",
     "AgentInstructions",
     "AgentMetadata",
+    "CelObject",
     "ChatInputData",
     "ChatInputDataToolChoice",
     "ChatMlMessage",
@@ -116,6 +130,11 @@ __all__ = [
     "DocContent",
     "DocIds",
     "DocMetadata",
+    "ErrorWorkflowStep",
+    "EvaluateWorkflowStep",
+    "Execution",
+    "ExecutionStatus",
+    "ExecutionTransition",
     "FunctionCallOption",
     "FunctionDef",
     "FunctionParameters",
@@ -129,6 +148,7 @@ __all__ = [
     "GetUserDocsRequestOrder",
     "GetUserDocsRequestSortBy",
     "GetUserDocsResponse",
+    "IfElseWorkflowStep",
     "InputChatMlMessage",
     "InputChatMlMessageRole",
     "JobStatus",
@@ -152,6 +172,7 @@ __all__ = [
     "PatchAgentRequestMetadata",
     "PatchSessionRequestMetadata",
     "PatchUserRequestMetadata",
+    "PromptWorkflowStep",
     "ResourceCreatedResponse",
     "ResourceDeletedResponse",
     "ResourceUpdatedResponse",
@@ -159,8 +180,11 @@ __all__ = [
     "SessionMetadata",
     "Suggestion",
     "SuggestionTarget",
+    "Task",
     "Tool",
+    "ToolCallWorkflowStep",
     "ToolChoiceOption",
+    "ToolResponse",
     "ToolType",
     "UpdateAgentRequestInstructions",
     "UpdateAgentRequestMetadata",
@@ -168,4 +192,6 @@ __all__ = [
     "UpdateUserRequestMetadata",
     "User",
     "UserMetadata",
+    "WorkflowStep",
+    "YieldWorkflowStep",
 ]
