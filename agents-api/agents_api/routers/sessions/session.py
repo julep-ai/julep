@@ -446,9 +446,8 @@ class BaseSession:
         new_entry: Entry,
         final_settings: Settings,
     ) -> Callable | None:
-        # FIXME: Re-enable when fixed
-        # if not final_settings.remember:
-        #     return
+        if not final_settings.remember:
+            return
 
         entries: list[Entry] = []
         for m in new_input:

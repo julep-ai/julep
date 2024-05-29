@@ -351,6 +351,12 @@ class BaseSessionsManager(BaseManager):
         Raises:
             It is not specified what exceptions this function might raise. Typically, one would expect potential exceptions to be associated with the underlying API client's `chat` method failure modes, such as network issues, invalid parameters, etc.
         """
+        if recall is None:
+            recall = True
+
+        if remember is None:
+            remember = True
+
         return self.api_client.chat(
             session_id=session_id,
             messages=messages,
