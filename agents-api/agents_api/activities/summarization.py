@@ -6,7 +6,6 @@ from typing import Callable
 from textwrap import dedent
 from temporalio import activity
 from litellm import acompletion
-from agents_api.models.entry.add_entries import add_entries_query
 from agents_api.models.entry.entries_summarization import (
     get_toplevel_entries_query,
     entries_summarization_query,
@@ -190,7 +189,6 @@ async def summarization(session_id: str) -> None:
         timestamp=entries[0]["timestamp"] + ts_delta,
     )
 
-    add_entries_query([new_entities_entry])
     entries_summarization_query(
         session_id=session_id,
         new_entry=new_entities_entry,
