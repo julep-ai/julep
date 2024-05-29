@@ -11,7 +11,7 @@ from ..utils import cozo_query
 @beartype
 def embed_docs_snippets_query(
     doc_id: UUID,
-    snippet_indices: list[int],
+    snippet_indices: list[int] | tuple[int],
     embeddings: list[list[float]],
 ) -> tuple[str, dict]:
     """Embeds document snippets in the cozodb database.
