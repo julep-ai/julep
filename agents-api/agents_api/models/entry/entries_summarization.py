@@ -88,6 +88,14 @@ def entries_summarization_query(
 
     # Convert the new entry's source information into JSON format for storage.
 
+    content = []
+    if isinstance(new_entry.content, str):
+        content = [{"type": "text", "text": new_entry.content}]
+    elif isinstance(new_entry.content, list):
+        content = [m.model_dump() for m in new_entry.content]
+    elif isinstance(new_entry.content, dict):
+        content = [new_entry.content]
+
     entries = [
         [
             str(new_entry.id),
