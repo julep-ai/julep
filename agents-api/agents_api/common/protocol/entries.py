@@ -42,7 +42,7 @@ class Entry(BaseModel):
             if isinstance(self.content, str):
                 content_length = len(self.content)
             elif isinstance(self.content, dict):
-                content_length = json.dumps(self.content)
+                content_length = len(json.dumps(self.content))
             elif isinstance(self.content, list):
                 text = ""
                 for part in self.content:
