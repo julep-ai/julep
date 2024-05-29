@@ -77,7 +77,12 @@ async def get_entities(
     )
 
     assert "<ct:entities>" in result["content"]
-    result["content"] = result["content"].split("<ct:entities>")[-1].strip()
+    result["content"] = (
+        result["content"]
+        .split("<ct:entities>")[-1]
+        .replace("</ct:entities>", "")
+        .strip()
+    )
     result["role"] = "system"
     result["name"] = "entities"
 
