@@ -790,11 +790,9 @@ class JulepApi:
         )
         client.chat(
             session_id="session_id",
-            min_p=0.01,
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
-                    content="content",
                 )
             ],
         )
@@ -831,7 +829,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # type: ignore
+            _request["preset"] = preset.value  # pytype: disable=attribute-error
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -2553,11 +2551,9 @@ class AsyncJulepApi:
         )
         await client.chat(
             session_id="session_id",
-            min_p=0.01,
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
-                    content="content",
                 )
             ],
         )
@@ -2594,7 +2590,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # type: ignore
+            _request["preset"] = preset.value  # pytype: disable=attribute-error
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:

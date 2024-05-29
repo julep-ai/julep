@@ -9,8 +9,25 @@ export const $ChatMLMessage = {
       isRequired: true,
     },
     content: {
-      type: "string",
+      type: "one-of",
       description: `ChatML content`,
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "array",
+          contains: {
+            type: "ChatMLTextContentPart",
+          },
+        },
+        {
+          type: "array",
+          contains: {
+            type: "ChatMLImageContentPart",
+          },
+        },
+      ],
       isRequired: true,
     },
     name: {

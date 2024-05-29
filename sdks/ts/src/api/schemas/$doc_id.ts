@@ -4,5 +4,4 @@
 /* eslint-disable */
 export const $doc_id = {
   type: "string",
-  format: "uuid",
 } as const;

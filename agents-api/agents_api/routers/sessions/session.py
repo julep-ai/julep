@@ -2,7 +2,7 @@ import json
 import xxhash
 from functools import reduce
 from json import JSONDecodeError
-from typing import Callable
+from typing import Callable, cast
 from uuid import uuid4
 
 from dataclasses import dataclass
@@ -176,9 +176,12 @@ class BaseSession:
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)
 
+        # FIXME: Implement support for multiple choices, will need a revisit to the schema
         message = response.choices[0].message
         role = message.role
         content = message.content
+
+        # FIXME: Implement support for multiple tool calls
 
         # Unpack tool calls if present
         # TODO: implement changes in the openapi spec
@@ -187,11 +190,8 @@ class BaseSession:
         # Ref: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_call_functions_with_chat_models.ipynb
         if not message.content and message.tool_calls:
             role = "function_call"
-            function_call = message.tool_calls[0].function.model_dump()
-            content = json.dumps(function_call)
-            # FIXME: what?? why is this happening?? could be a bug in the model api
-            # this is only a hack for samantha-1-turbo
-            # content = content[content.index("{", 1) :]
+            content = message.tool_calls[0].function.model_dump()
+
         elif not message.content:
             raise ValueError("No content in response")
 
@@ -204,6 +204,7 @@ class BaseSession:
             content=content,
             token_count=completion_tokens,
         )
+
         # Return response and the backward pass as a background task (dont await here)
         backward_pass = await self.backward(
             new_input, total_tokens, new_entry, final_settings
@@ -217,11 +218,36 @@ class BaseSession:
         new_input: list[Entry],
         settings: Settings,
     ) -> tuple[list[ChatML], Settings, DocIds]:
+        stringified_input = []
+        for msg in new_input:
+            content = ""
+            if isinstance(msg.content, list):
+                content = " ".join(
+                    [part.text for part in msg.content if part.type == "text"]
+                )
+            elif isinstance(msg.content, str):
+                content = msg.content
+            elif isinstance(msg.content, dict) and msg.content["type"] == "text":
+                content = cast(str, msg.content["text"])
+
+            stringified_input.append(
+                (
+                    msg.role,
+                    msg.name,
+                    content,
+                )
+            )
+
         # role, name, content, token_count, created_at
         string_to_embed = "\n".join(
-            [f"{msg.name or msg.role}: {msg.content}" for msg in new_input]
+            [
+                f"{name or role}: {content}"
+                for (role, name, content) in stringified_input
+                if content
+            ]
         )
 
+        # FIXME: bge-m3 does not require instructions
         (
             tool_query_embedding,
             doc_query_embedding,
@@ -263,7 +289,12 @@ class BaseSession:
             if row["name"] == "functions":
                 # FIXME: This might also break if {role: system, name: functions, content} but content not valid json object
                 try:
-                    saved_function = json.loads(row["content"])
+                    # FIXME: This is a hack for now, need to fix to support multiple function calls
+                    assert (
+                        len(row["content"]) == 1
+                    ), "Only one function can be called at a time"
+                    content = row["content"][0]["text"]
+                    saved_function = json.loads(content)
                 except JSONDecodeError as e:
                     # FIXME: raise a proper error that can be caught by the router
                     raise ValueError(str(e))
@@ -279,7 +310,7 @@ class BaseSession:
                     first_instruction_idx = idx
                     first_instruction_created_at = row["created_at"]
 
-                instructions += f"{row['content']}\n\n"
+                instructions += f"{row['content'][0]['text']}" + "\n\n"
 
                 continue
 
@@ -311,15 +342,20 @@ class BaseSession:
             ChatML(
                 role=e.role.value if hasattr(e.role, "value") else e.role,
                 name=e.name,
-                content=(
-                    e.content
-                    if not isinstance(e.content, list)
-                    else "\n".join(e.content)
-                ),
+                content=e.content,
             )
             for e in entries + new_input
             if e.content
         ]
+
+        # Simplify messages if possible
+        for message in messages:
+            if (
+                isinstance(message.content, list)
+                and len(message.content) == 1
+                and message.content[0].type == "text"
+            ):
+                message.content = message.content[0].text
 
         # If render_templates=True, render the templates
         if session_data is not None and session_data.render_templates:

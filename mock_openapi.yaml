@@ -1504,7 +1504,13 @@ components:
             - function
           description: ChatML role (system|assistant|user|function_call|function)
         content:
-          type: string
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/ChatMLTextContentPart'
+                  - $ref: '#/components/schemas/ChatMLImageContentPart'
           description: ChatML content
         name:
           type: string
@@ -1537,9 +1543,14 @@ components:
             - auto
           description: ChatML role (system|assistant|user|function_call|function|auto)
         content:
-          type: string
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/ChatMLTextContentPart'
+                  - $ref: '#/components/schemas/ChatMLImageContentPart'
           description: ChatML content
-          default: ''
         name:
           type: string
           description: ChatML name
@@ -2350,6 +2361,55 @@ components:
       required:
         - agent_doc_ids
         - user_doc_ids
+    ChatMLTextContentPart:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Fixed to 'text'
+          default: text
+          pattern: ''
+          enum:
+            - text
+        text:
+          type: string
+          description: Text content part
+      required:
+        - type
+        - text
+    ChatMLImageContentPart:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Fixed to 'image_url'
+          default: image_url
+          pattern: ''
+          enum:
+            - image_url
+        image_url:
+          type: object
+          properties:
+            url:
+              type: string
+              description: >-
+                URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64
+                encoded image>`)
+            detail:
+              type: string
+              description: image detail to feed into the model can be low | high | auto
+              default: auto
+              pattern: ''
+              enum:
+                - low
+                - high
+                - auto
+          description: Image content part, can be a URL or a base64-encoded image
+          required:
+            - url
+      required:
+        - type
+        - image_url
   securitySchemes:
     api-key:
       type: apiKey

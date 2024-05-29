@@ -22,7 +22,7 @@ jinja_env.globals["arrow"] = arrow
 
 
 # Funcs
-async def render_template(
+async def render_template_string(
     template_string: str, variables: dict, check: bool = False
 ) -> str:
     # Parse template
@@ -36,3 +36,47 @@ async def render_template(
     # Render
     rendered = await template.render_async(**variables)
     return rendered
+
+
+async def render_template_parts(
+    template_strings: list[dict], variables: dict, check: bool = False
+) -> list[dict]:
+    # Parse template
+    templates = [
+        (jinja_env.from_string(msg["text"]) if msg["type"] == "text" else None)
+        for msg in template_strings
+    ]
+
+    # If check is required, get required vars from template and validate variables
+    if check:
+        for template in templates:
+            if template is None:
+                continue
+
+            schema = to_json_schema(infer(template))
+            validate(instance=variables, schema=schema)
+
+    # Render
+    rendered = [
+        (
+            {"type": "text", "text": await template.render_async(**variables)}
+            if template is not None
+            else msg
+        )
+        for template, msg in zip(templates, template_strings)
+    ]
+
+    return rendered
+
+
+async def render_template(
+    template_string: str | list[dict], variables: dict, check: bool = False
+) -> str | list[dict]:
+    if isinstance(template_string, str):
+        return await render_template_string(template_string, variables, check)
+
+    elif isinstance(template_string, list):
+        return await render_template_parts(template_string, variables, check)
+
+    else:
+        raise ValueError("template_string should be str or list[dict]")

@@ -1,5 +1,7 @@
 import pandas as pd
 
+from beartype import beartype
+
 from ...common.protocol.entries import Entry
 from ..utils import cozo_query
 from ...common.utils import json
@@ -7,6 +9,7 @@ from ...common.utils.datetime import utcnow
 
 
 @cozo_query
+@beartype
 def add_entries_query(entries: list[Entry]) -> tuple[str, dict]:
     """
     Parameters:
@@ -22,10 +25,15 @@ def add_entries_query(entries: list[Entry]) -> tuple[str, dict]:
         ts = utcnow().timestamp()
         source = e.source
         role = e.role
-        # Convert the content of each entry to a string, serializing JSON objects.
-        content: str = (
-            e.content if isinstance(e.content, str) else json.dumps(e.content)
-        )
+
+        # Convert the content of each entry to list of text parts if it is a string or a dictionary.
+        content: list = []
+        if isinstance(e.content, str):
+            content = [{"type": "text", "text": e.content}]
+
+        elif isinstance(e.content, dict):
+            content = [{"type": "text", "text": json.dumps(e.content, indent=4)}]
+
         # Append entries with non-empty content to the list for database insertion.
         if e.content:
             entries_lst.append(

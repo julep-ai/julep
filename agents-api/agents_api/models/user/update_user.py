@@ -1,11 +1,14 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 from ...common.utils.cozo import cozo_process_mutate_data
 
 
 @cozo_query
+@beartype
 def update_user_query(
     developer_id: UUID, user_id: UUID, **update_data
 ) -> tuple[str, dict]:

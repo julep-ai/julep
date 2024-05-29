@@ -1,5 +1,7 @@
 """This module contains the implementation for deleting sessions from the 'cozodb' database using datalog queries."""
 
+from beartype import beartype
+
 from uuid import UUID
 
 
@@ -7,6 +9,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def delete_session_query(
     developer_id: UUID,
     session_id: UUID,

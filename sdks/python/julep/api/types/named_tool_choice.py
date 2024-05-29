@@ -19,7 +19,9 @@ class NamedToolChoice(pydantic.BaseModel):
     Specifies a tool the model should use. Use to force the model to call a specific function.
     """
 
-    type: typing_extensions.Literal["function"]
+    type: typing_extensions.Literal["function"] = pydantic.Field(
+        description="The type of the tool. Currently, only `function` is supported."
+    )
     function: NamedToolChoiceFunction
 
     def json(self, **kwargs: typing.Any) -> str:
