@@ -176,6 +176,7 @@ class BaseSession:
         # if final_settings.get("remember"):
         #     await self.add_to_session(new_input, response)
 
+        # FIXME: Implement support for multiple choices, will need a revisit to the schema
         message = response.choices[0].message
         role = message.role
         content = message.content
@@ -190,9 +191,7 @@ class BaseSession:
         if not message.content and message.tool_calls:
             role = "function_call"
             content = message.tool_calls[0].function.model_dump()
-            # FIXME: what?? why is this happening?? could be a bug in the model api
-            # this is only a hack for samantha-1-turbo
-            # content = content[content.index("{", 1) :]
+
         elif not message.content:
             raise ValueError("No content in response")
 
@@ -447,8 +446,9 @@ class BaseSession:
         new_entry: Entry,
         final_settings: Settings,
     ) -> Callable | None:
-        if not final_settings.remember:
-            return
+        # FIXME: Re-enable when fixed
+        # if not final_settings.remember:
+        #     return
 
         entries: list[Entry] = []
         for m in new_input:
