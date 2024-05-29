@@ -169,7 +169,7 @@ async def summarization(session_id: str) -> None:
     entities_entry_ids = []
     for _, row in get_toplevel_entries_query(session_id=session_id).iterrows():
         if row["role"] == "system" and row.get("name") == "entities":
-            entities_entry_ids.append(row["entry_id"])
+            entities_entry_ids.append(UUID(row["entry_id"], version=4))
         else:
             entries.append(row)
 
@@ -210,5 +210,7 @@ async def summarization(session_id: str) -> None:
         entries_summarization_query(
             session_id=session_id,
             new_entry=new_entry,
-            old_entry_ids=[entries[idx]["entry_id"] for idx in msg["summarizes"]],
+            old_entry_ids=[
+                UUID(entries[idx]["entry_id"], version=4) for idx in msg["summarizes"]
+            ],
         )
