@@ -2,7 +2,7 @@ import json
 import xxhash
 from functools import reduce
 from json import JSONDecodeError
-from typing import Callable, cast
+from typing import Callable
 from uuid import uuid4
 
 from dataclasses import dataclass
@@ -21,6 +21,7 @@ from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
+from ...common.utils.messages import stringify_content
 from ...env import (
     summarization_tokens_threshold,
     docs_embedding_service_url,
@@ -220,21 +221,11 @@ class BaseSession:
     ) -> tuple[list[ChatML], Settings, DocIds]:
         stringified_input = []
         for msg in new_input:
-            content = ""
-            if isinstance(msg.content, list):
-                content = " ".join(
-                    [part.text for part in msg.content if part.type == "text"]
-                )
-            elif isinstance(msg.content, str):
-                content = msg.content
-            elif isinstance(msg.content, dict) and msg.content["type"] == "text":
-                content = cast(str, msg.content["text"])
-
             stringified_input.append(
                 (
                     msg.role,
                     msg.name,
-                    content,
+                    stringify_content(msg.content),
                 )
             )
 
