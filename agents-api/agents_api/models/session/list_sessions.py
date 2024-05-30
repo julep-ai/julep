@@ -1,5 +1,7 @@
 """This module contains functions for querying session data from the 'cozodb' database."""
 
+from beartype import beartype
+
 from typing import Any
 from uuid import UUID
 
@@ -9,6 +11,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def list_sessions_query(
     developer_id: UUID,
     limit: int = 100,

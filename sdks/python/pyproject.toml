@@ -26,6 +26,7 @@ ipython = "<8.13"
 pyright = "^1.1.348"
 handsdown = "^2.1.0"
 jupyterlab = "^4.1.0"
+pycozo = {extras = ["embedded", "pandas", "requests"], version = "^0.7.6"}
 
 [build-system]
 requires = ["poetry-core"]

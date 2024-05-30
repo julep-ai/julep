@@ -1,5 +1,7 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
+from beartype import beartype
+
 from typing import Literal
 from uuid import UUID
 
@@ -8,6 +10,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def search_docs_snippets_by_embedding_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,

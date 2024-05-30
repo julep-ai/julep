@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from beartype import beartype
+
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client as cozo_client
@@ -8,6 +10,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def session_data_query(
     developer_id: UUID,
     session_id: UUID,

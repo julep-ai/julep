@@ -23,6 +23,14 @@ mock_agent = {
     "metadata": {"test": "test"},
 }
 
+mock_gpt_4o_agent = {
+    "name": "Test GPT-4o",
+    "about": "This agent tests the ability for model to process images",
+    "model": "gpt-4o",
+    "instructions": ["Describe the images in the user messages below"],
+    "metadata": {"test": "test"},
+}
+
 mock_agent_update = {
     "name": "updated agent",
     "about": "updated agent about",
@@ -150,6 +158,17 @@ def test_agent(client=client) -> Agent:
 
 
 @fixture
+def test_gpt_4o_agent(client=client) -> Agent:
+    agent = client.agents.create(
+        **mock_gpt_4o_agent,
+    )
+
+    yield agent
+
+    client.agents.delete(agent.id)
+
+
+@fixture
 async def test_agent_async(async_client=async_client, client=client) -> Agent:
     agent = await async_client.agents.create(
         **mock_agent,
@@ -225,6 +244,18 @@ def test_session_agent_user(client=client, user=test_user, agent=test_agent) -> 
 
 @fixture
 def test_session_no_user(client=client, agent=test_agent) -> Session:
+    session = client.sessions.create(
+        agent_id=agent.id,
+        **mock_session,
+    )
+
+    yield session
+
+    client.sessions.delete(session.id)
+
+
+@fixture
+def test_multimodal_session(client=client, agent=test_gpt_4o_agent) -> Session:
     session = client.sessions.create(
         agent_id=agent.id,
         **mock_session,

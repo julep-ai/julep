@@ -1,12 +1,15 @@
 from typing import Any
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 from ...common.utils import json
 
 
 @cozo_query
+@beartype
 def list_users_query(
     developer_id: UUID,
     limit: int = 100,

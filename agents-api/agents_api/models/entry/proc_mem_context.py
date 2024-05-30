@@ -1,10 +1,12 @@
 from uuid import UUID
 
+from beartype import beartype
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def proc_mem_context_query(
     session_id: UUID,
     tool_query_embedding: list[float],
@@ -13,7 +15,7 @@ def proc_mem_context_query(
     docs_confidence: float = 0.4,
     k_tools: int = 3,
     k_docs: int = 3,
-) -> tuple[str, dict]:
+):
     """Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
 
     Parameters:
@@ -67,10 +69,11 @@ def proc_mem_context_query(
             *_input{{session_id}},
             *sessions{{
                 session_id,
-                situation: content,
+                situation: situation_text,
                 created_at,
                 @ "NOW"
             }},
+            content = [{{"type": "text", "text": situation_text}}],
             index = 0,  # Situation entry should be the first entry
             role = "system",
             name = "situation",
@@ -90,8 +93,9 @@ def proc_mem_context_query(
             index = 1,
             role = "system",
             name = "information",
-            content = concat('About me (', agent_name, ') ', about),
-            num_chars = length(content),
+            about_text = concat('About me (', agent_name, ') '),
+            content = [{{"type": "text", "text": about_text}}],
+            num_chars = length(about_text),
             token_count = to_int(num_chars / 3.5),
             num_chars > 0
 
@@ -108,8 +112,9 @@ def proc_mem_context_query(
             index = 2,
             role = "system",
             name = "information",
-            content = concat('About the user ', if(length(user_name) > 0, concat('(', user_name, ') '), ""), about),
-            num_chars = length(content),
+            about_text = concat('About the user ', if(length(user_name) > 0, concat('(', user_name, ') '), ""), about),
+            content = [{{"type": "text", "text": about_text}}],
+            num_chars = length(about_text),
             token_count = to_int(num_chars / 3.5),
             num_chars > 0
 
@@ -117,7 +122,7 @@ def proc_mem_context_query(
         :create _preamble {{
             role: String,
             name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -156,8 +161,9 @@ def proc_mem_context_query(
                 "description": description,
                 "parameters": parameters
             }},
-            content = dump_json(fn_data),
-            num_chars = length(content),
+            fn_json = dump_json(fn_data),
+            content = [{{"type": "json", "text": fn_json}}],
+            num_chars = length(fn_json),
             token_count = to_int(num_chars / 3.5),
             index = 4
 
@@ -165,7 +171,7 @@ def proc_mem_context_query(
         :create _tools {{
             role: String,
             name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -195,8 +201,9 @@ def proc_mem_context_query(
             }},
             role = "system",
             name = "information",
-            content = concat(title, ':\n...', snippet),
-            num_chars = length(content),
+            information_text = concat(title, ':\n...', snippet),
+            content = [{{"type": "text", "text": information_text}}],
+            num_chars = length(information_text),
             token_count = to_int(num_chars / 3.5),
             index = 5 + (snippet_idx * 0.01),
             user_doc_id = null,
@@ -204,7 +211,7 @@ def proc_mem_context_query(
         # Save in temp table
         :create _agent_docs {{
             role: String,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -237,8 +244,9 @@ def proc_mem_context_query(
             }},
             role = "system",
             name = "information",
-            content = concat(title, ':\n...', snippet),
-            num_chars = length(content),
+            information_text = concat(title, ':\n...', snippet),
+            content = [{{"type": "text", "text": information_text}}],
+            num_chars = length(information_text),
             token_count = to_int(num_chars / 3.5),
             index = 5 + (snippet_idx * 0.01),
             agent_doc_id = null,
@@ -246,7 +254,7 @@ def proc_mem_context_query(
         # Save in temp table
         :create _user_docs {{
             role: String,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -280,7 +288,7 @@ def proc_mem_context_query(
         :create _entries {{
             role: String,
             name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -305,7 +313,7 @@ def proc_mem_context_query(
             role = "system",
             name = "instruction",
             index = 3,
-            content = instruction,
+            content = [{{"type": "text", "text": instruction}}],
             token_count = round(length(instruction) / 3.5),
             instruction in instructions,
             agent_doc_id = null, user_doc_id = null,

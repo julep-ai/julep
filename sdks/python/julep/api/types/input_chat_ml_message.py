@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .input_chat_ml_message_content import InputChatMlMessageContent
 from .input_chat_ml_message_role import InputChatMlMessageRole
 
 try:
@@ -23,7 +24,7 @@ class InputChatMlMessage(pydantic.BaseModel):
             "auto)\n"
         )
     )
-    content: str = pydantic.Field(description="ChatML content")
+    content: InputChatMlMessageContent = pydantic.Field(description="ChatML content")
     name: typing.Optional[str] = pydantic.Field(description="ChatML name")
     continue_: typing.Optional[bool] = pydantic.Field(
         alias="continue",

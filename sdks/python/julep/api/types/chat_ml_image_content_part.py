@@ -4,8 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
-from .chat_ml_message_content import ChatMlMessageContent
-from .chat_ml_message_role import ChatMlMessageRole
+from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -13,22 +12,10 @@ except ImportError:
     import pydantic  # type: ignore
 
 
-class ChatMlMessage(pydantic.BaseModel):
-    role: ChatMlMessageRole = pydantic.Field(
-        description=(
-            "ChatML role (system\n"
-            "assistant\n"
-            "user\n"
-            "function_call\n"
-            "function)\n"
-        )
+class ChatMlImageContentPart(pydantic.BaseModel):
+    image_url: ChatMlImageContentPartImageUrl = pydantic.Field(
+        description="Image content part, can be a URL or a base64-encoded image"
     )
-    content: ChatMlMessageContent = pydantic.Field(description="ChatML content")
-    name: typing.Optional[str] = pydantic.Field(description="ChatML name")
-    created_at: dt.datetime = pydantic.Field(
-        description="Message created at (RFC-3339 format)"
-    )
-    id: str = pydantic.Field(description="Message ID")
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

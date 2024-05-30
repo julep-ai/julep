@@ -1,5 +1,7 @@
 from uuid import uuid4, UUID
 
+from beartype import beartype
+
 
 from ...autogen.openapi_model import FunctionDef
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -8,6 +10,7 @@ from ...common.utils.datetime import utcnow
 
 
 @cozo_query
+@beartype
 def create_function_query(
     agent_id: UUID,
     id: UUID,
@@ -44,6 +47,7 @@ def create_function_query(
 
 
 @cozo_query
+@beartype
 def create_multiple_functions_query(
     agent_id: UUID,
     functions: list[FunctionDef],
