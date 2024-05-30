@@ -58,6 +58,9 @@ async def create_task(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     task_id = uuid4()
+
+    # TODO: Do thorough validation of the task spec
+
     resp: pd.DataFrame = create_task_query(
         task_id=task_id,
         developer_id=x_developer_id,
@@ -73,6 +76,9 @@ async def create_task_execution(
     request: CreateExecution,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
+    # TODO: Do thorough validation of the input against task input schema
+    # DO NOT let the user specify the status
+
     resp = create_execution_query()
     return ResourceCreatedResponse(
         id=resp["execution_id"][0], created_at=resp["created_at"][0]
@@ -98,3 +104,7 @@ async def get_execution_transition(
     resp = get_execution_transition_query(execution_id, transition_id, x_developer_id)
 
     pass
+
+# @router.get("/executions/{execution_id}")  # -> get the execution object
+# @router.put("/executions/{execution_id}/transitions/{transition_id}")  # -> update a waiting transition
+# @router.get("/executions/{execution_id}/transitions")  # -> get all transitions for an execution
