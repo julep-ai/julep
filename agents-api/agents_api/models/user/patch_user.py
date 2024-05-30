@@ -39,6 +39,7 @@ def patch_user_query(
     )
 
     # Construct the datalog query for updating user information.
+    # TODO: Modify user update to modify `updated_at` field
     query = f"""
         # update the user
         input[{user_update_cols}] <- $user_update_vals

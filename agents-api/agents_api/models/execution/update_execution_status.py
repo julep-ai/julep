@@ -5,15 +5,32 @@ from typing import Literal, Dict, Any
 
 
 @cozo_query
-def create_execution_query(
+def update_execution_status_query(
     task_id: UUID,
     execution_id: UUID,
     status: Literal[
         "queued", "starting", "running", "waiting-for-input", "success", "failed"
-    ] = "queued",
+    ],
     arguments: Dict[str, Any] = {},
 ) -> tuple[str, dict]:
-    query = """"""
+    query = """
+{
+    ?[execution_id, task_id, status, updated_at] <- [[
+        to_uuid($execution_id),
+        to_uuid($task_id),
+        $status,
+        now()
+    ]]
+
+    :update executions {
+        execution_id,
+        task_id,
+        status,
+        updated_at
+    }
+}
+
+"""
     return (
         query,
         {

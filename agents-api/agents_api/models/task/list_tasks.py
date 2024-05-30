@@ -1,13 +1,12 @@
-from typing import Any
 from uuid import UUID
 
-from ...common.utils import json
 from ..utils import cozo_query
 
 
 @cozo_query
 def list_tasks_query(
     agent_id: UUID,
+    developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
     # metadata_filter: dict[str, Any] = {},
@@ -21,7 +20,7 @@ def list_tasks_query(
     Returns:
         pd.DataFrame: A DataFrame containing the queried task data.
     """
-
+    # TODO: Accepts developer ID. Checks if the developer can get this agent, by relation can get the tasks. Assert that the agent exists under the developer.
     query = """
     ?[
         task_id,

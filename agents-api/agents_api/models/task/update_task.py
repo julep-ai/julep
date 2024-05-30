@@ -4,14 +4,14 @@ It constructs and executes a datalog query to insert Task data.
 """
 
 from uuid import UUID
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 
 
 from ..utils import cozo_query
 
 
 @cozo_query
-def create_task_query(
+def cupdate_task_query(
     task_id: UUID,
     developer_id: UUID,
     agent_id: UUID,
@@ -21,4 +21,5 @@ def create_task_query(
     tools_available: List[UUID] = [],
     workflows: List[Dict[str, Any]] = [],
 ) -> tuple[str, dict]:
+    # NOT TO IMPLEMENT FOR NOW
     pass

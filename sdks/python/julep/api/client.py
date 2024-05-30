@@ -1834,21 +1834,27 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def list_tasks(self) -> typing.List[Task]:
+    def list_tasks(self, agent_id: str) -> typing.List[Task]:
         """
 
 
+        Parameters:
+            - agent_id: str.
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
             api_key="YOUR_API_KEY",
         )
-        client.list_tasks()
+        client.list_tasks(
+            agent_id="agent_id",
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -1862,6 +1868,7 @@ class JulepApi:
 
     def create_task(
         self,
+        agent_id: str,
         *,
         name: str,
         description: typing.Optional[str] = OMIT,
@@ -1873,6 +1880,8 @@ class JulepApi:
 
 
         Parameters:
+            - agent_id: str.
+
             - name: str. Name of the Task
 
             - description: typing.Optional[str]. Optional Description of the Task
@@ -1889,6 +1898,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.create_task(
+            agent_id="agent_id",
             name="name",
         )
         """
@@ -1901,7 +1911,9 @@ class JulepApi:
             _request["input_schema"] = input_schema
         _response = self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
+            ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -1914,12 +1926,16 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_task_execution(self, task_id: str) -> Execution:
+    def get_task_execution(
+        self, task_id: str, execution_id: str
+    ) -> typing.List[Execution]:
         """
 
 
         Parameters:
             - task_id: str.
+
+            - execution_id: str.
         ---
         from julep.client import JulepApi
 
@@ -1928,18 +1944,20 @@ class JulepApi:
         )
         client.get_task_execution(
             task_id="task_id",
+            execution_id="execution_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+                f"{self._client_wrapper.get_base_url()}/",
+                f"tasks/{task_id}/executions/{execution_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(typing.List[Execution], _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -1948,6 +1966,7 @@ class JulepApi:
 
     def start_task_execution(
         self,
+        agent_id: str,
         task_id: str,
         *,
         create_execution_task_id: str,
@@ -1958,6 +1977,8 @@ class JulepApi:
 
 
         Parameters:
+            - agent_id: str.
+
             - task_id: str.
 
             - create_execution_task_id: str.
@@ -1972,6 +1993,7 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.start_task_execution(
+            agent_id="agent_id",
             task_id="task_id",
             create_execution_task_id="task_id",
             arguments={},
@@ -1981,7 +2003,8 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+                f"{self._client_wrapper.get_base_url()}/",
+                f"agents/{agent_id}/tasks/{task_id}/executions",
             ),
             json=jsonable_encoder(
                 {
@@ -2001,11 +2024,13 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_task(self, task_id: str) -> Execution:
+    def get_task(self, agent_id: str, task_id: str) -> Task:
         """
 
 
         Parameters:
+            - agent_id: str.
+
             - task_id: str.
         ---
         from julep.client import JulepApi
@@ -2014,19 +2039,21 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.get_task(
+            agent_id="agent_id",
             task_id="task_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}"
+                f"{self._client_wrapper.get_base_url()}/",
+                f"agents/{agent_id}/tasks/{task_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(Task, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -2034,15 +2061,13 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def get_execution_transition(
-        self, execution_id: str, transition_id: str
+        self, execution_id: str
     ) -> typing.List[ExecutionTransition]:
         """
 
 
         Parameters:
             - execution_id: str.
-
-            - transition_id: str.
         ---
         from julep.client import JulepApi
 
@@ -2051,14 +2076,13 @@ class JulepApi:
         )
         client.get_execution_transition(
             execution_id="execution_id",
-            transition_id="transition_id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"execution/{execution_id}/transition/{transition_id}",
+                f"executions/{execution_id}/transitions/",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -2108,7 +2132,7 @@ class JulepApi:
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"execution/{execution_id}/transition/{transition_id}",
+                f"executions/{execution_id}/transitions/{transition_id}",
             ),
             json=jsonable_encoder({"responses": responses}),
             headers=self._client_wrapper.get_headers(),
@@ -3883,21 +3907,27 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def list_tasks(self) -> typing.List[Task]:
+    async def list_tasks(self, agent_id: str) -> typing.List[Task]:
         """
 
 
+        Parameters:
+            - agent_id: str.
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
             api_key="YOUR_API_KEY",
         )
-        await client.list_tasks()
+        await client.list_tasks(
+            agent_id="agent_id",
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
+            ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
@@ -3911,6 +3941,7 @@ class AsyncJulepApi:
 
     async def create_task(
         self,
+        agent_id: str,
         *,
         name: str,
         description: typing.Optional[str] = OMIT,
@@ -3922,6 +3953,8 @@ class AsyncJulepApi:
 
 
         Parameters:
+            - agent_id: str.
+
             - name: str. Name of the Task
 
             - description: typing.Optional[str]. Optional Description of the Task
@@ -3938,6 +3971,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.create_task(
+            agent_id="agent_id",
             name="name",
         )
         """
@@ -3950,7 +3984,9 @@ class AsyncJulepApi:
             _request["input_schema"] = input_schema
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
+            ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -3963,12 +3999,16 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_task_execution(self, task_id: str) -> Execution:
+    async def get_task_execution(
+        self, task_id: str, execution_id: str
+    ) -> typing.List[Execution]:
         """
 
 
         Parameters:
             - task_id: str.
+
+            - execution_id: str.
         ---
         from julep.client import AsyncJulepApi
 
@@ -3977,18 +4017,20 @@ class AsyncJulepApi:
         )
         await client.get_task_execution(
             task_id="task_id",
+            execution_id="execution_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+                f"{self._client_wrapper.get_base_url()}/",
+                f"tasks/{task_id}/executions/{execution_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(typing.List[Execution], _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -3997,6 +4039,7 @@ class AsyncJulepApi:
 
     async def start_task_execution(
         self,
+        agent_id: str,
         task_id: str,
         *,
         create_execution_task_id: str,
@@ -4007,6 +4050,8 @@ class AsyncJulepApi:
 
 
         Parameters:
+            - agent_id: str.
+
             - task_id: str.
 
             - create_execution_task_id: str.
@@ -4021,6 +4066,7 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.start_task_execution(
+            agent_id="agent_id",
             task_id="task_id",
             create_execution_task_id="task_id",
             arguments={},
@@ -4030,7 +4076,8 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+                f"{self._client_wrapper.get_base_url()}/",
+                f"agents/{agent_id}/tasks/{task_id}/executions",
             ),
             json=jsonable_encoder(
                 {
@@ -4050,11 +4097,13 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_task(self, task_id: str) -> Execution:
+    async def get_task(self, agent_id: str, task_id: str) -> Task:
         """
 
 
         Parameters:
+            - agent_id: str.
+
             - task_id: str.
         ---
         from julep.client import AsyncJulepApi
@@ -4063,19 +4112,21 @@ class AsyncJulepApi:
             api_key="YOUR_API_KEY",
         )
         await client.get_task(
+            agent_id="agent_id",
             task_id="task_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}"
+                f"{self._client_wrapper.get_base_url()}/",
+                f"agents/{agent_id}/tasks/{task_id}",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(Task, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -4083,15 +4134,13 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def get_execution_transition(
-        self, execution_id: str, transition_id: str
+        self, execution_id: str
     ) -> typing.List[ExecutionTransition]:
         """
 
 
         Parameters:
             - execution_id: str.
-
-            - transition_id: str.
         ---
         from julep.client import AsyncJulepApi
 
@@ -4100,14 +4149,13 @@ class AsyncJulepApi:
         )
         await client.get_execution_transition(
             execution_id="execution_id",
-            transition_id="transition_id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"execution/{execution_id}/transition/{transition_id}",
+                f"executions/{execution_id}/transitions/",
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
@@ -4157,7 +4205,7 @@ class AsyncJulepApi:
             "PUT",
             urllib.parse.urljoin(
                 f"{self._client_wrapper.get_base_url()}/",
-                f"execution/{execution_id}/transition/{transition_id}",
+                f"executions/{execution_id}/transitions/{transition_id}",
             ),
             json=jsonable_encoder({"responses": responses}),
             headers=self._client_wrapper.get_headers(),

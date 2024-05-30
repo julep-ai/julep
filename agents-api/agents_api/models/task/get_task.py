@@ -1,10 +1,16 @@
 from uuid import UUID
 
+from beartype import beartype
+
 from ..utils import cozo_query
 
 
 @cozo_query
-def get_task_query(agent_id: UUID, task_id: UUID) -> tuple[str, dict]:
+@beartype
+def get_task_query(
+    agent_id: UUID, task_id: UUID, developer_id: UUID
+) -> tuple[str, dict]:
+    # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
     query = """
     ?[
         name,

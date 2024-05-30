@@ -5,15 +5,25 @@ from ..utils import cozo_query
 
 @cozo_query
 def get_execution_transition_query(
-    execution_id: UUID, transition_id: UUID, developer_id: UUID
+    execution_id: UUID, transition_id: UUID
 ) -> tuple[str, dict]:
 
-    query = """"""
+    query = """
+{
+    ?[type, from, to, output] := *transitions {
+        execution_id: to_uuid($execution_id),
+        transition_id: to_uuid($transition_id),
+        type,
+        from,
+        to,
+        output
+    }
+}
+"""
     return (
         query,
         {
             "execution_id": str(execution_id),
             "transition_id": str(transition_id),
-            "developer_id": str(developer_id),
         },
     )
