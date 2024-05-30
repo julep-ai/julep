@@ -3490,6 +3490,674 @@
           "_postman_previewlanguage": "json"
         }
       ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Get a list of tasks",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks"
+          ],
+          "query": [],
+          "variable": []
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null,
+            "body": null
+          },
+          "description": "",
+          "body": "[\n    {\n        \"name\": \"name\",\n        \"description\": \"description\",\n        \"tools_available\": [\n            \"tools_available\"\n        ],\n        \"input_schema\": {\n            \"input_schema\": {\n                \"key\": \"value\"\n            }\n        },\n        \"main\": [\n            {\n                \"prompt\": [\n                    {\n                        \"role\": \"user\",\n                        \"content\": \"content\"\n                    }\n                ],\n                \"settings\": {\n                    \"min_p\": 0.01\n                }\n            }\n        ],\n        \"id\": \"id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"agent_id\": \"agent_id\"\n    }\n]",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Create a Task",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks"
+          ],
+          "query": [],
+          "variable": []
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"main\": {\n        \"prompt\": [\n            {\n                \"role\": \"user\",\n                \"content\": \"content\"\n            }\n        ],\n        \"settings\": {}\n    }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"name\",\n    \"main\": {\n        \"prompt\": [\n            {\n                \"role\": \"user\",\n                \"content\": \"content\"\n            }\n        ],\n        \"settings\": {}\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Get execution (status) of a Task",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/tasks/:task_id/execution",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks",
+            ":task_id",
+            "execution"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "task_id",
+              "description": "",
+              "value": "task_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/tasks/:task_id/execution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                ":task_id",
+                "execution"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "task_id",
+                  "description": "",
+                  "value": "task_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null,
+            "body": null
+          },
+          "description": "",
+          "body": "{\n    \"id\": \"id\",\n    \"task_id\": \"task_id\",\n    \"created_at\": \"created_at\",\n    \"arguments\": {\n        \"arguments\": {\n            \"key\": \"value\"\n        }\n    },\n    \"status\": \"status\"\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Create (or start) an execution of a Task",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/tasks/:task_id/execution",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks",
+            ":task_id",
+            "execution"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "task_id",
+              "description": "",
+              "value": "task_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"task_id\": \"task_id\",\n    \"arguments\": {},\n    \"status\": \"status\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/tasks/:task_id/execution",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                ":task_id",
+                "execution"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "task_id",
+                  "description": "",
+                  "value": "task_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"task_id\": \"task_id\",\n    \"arguments\": {},\n    \"status\": \"status\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Get a Task by ID",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/tasks/:task_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "tasks",
+            ":task_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "task_id",
+              "description": "",
+              "value": "task_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/tasks/:task_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tasks",
+                ":task_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "task_id",
+                  "description": "",
+                  "value": "task_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null,
+            "body": null
+          },
+          "description": "",
+          "body": "{\n    \"id\": \"id\",\n    \"task_id\": \"task_id\",\n    \"created_at\": \"created_at\",\n    \"arguments\": {\n        \"arguments\": {\n            \"key\": \"value\"\n        }\n    },\n    \"status\": \"status\"\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Get Execution Transition",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "execution",
+            ":execution_id",
+            "transition",
+            ":transition_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "execution_id",
+              "description": "",
+              "value": "execution_id"
+            },
+            {
+              "key": "transition_id",
+              "description": "",
+              "value": "transition_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "execution",
+                ":execution_id",
+                "transition",
+                ":transition_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "execution_id",
+                  "description": "",
+                  "value": "execution_id"
+                },
+                {
+                  "key": "transition_id",
+                  "description": "",
+                  "value": "transition_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null,
+            "body": null
+          },
+          "description": "",
+          "body": "[\n    {\n        \"id\": \"id\",\n        \"execution_id\": \"execution_id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"outputs\": {\n            \"outputs\": {\n                \"key\": \"value\"\n            }\n        },\n        \"from\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"to\": [\n            {\n                \"key\": \"value\"\n            }\n        ]\n    }\n]",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "",
+      "request": {
+        "description": "",
+        "url": {
+          "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "execution",
+            ":execution_id",
+            "transition",
+            ":transition_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "execution_id",
+              "description": "",
+              "value": "execution_id"
+            },
+            {
+              "key": "transition_id",
+              "description": "",
+              "value": "transition_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "PUT",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"responses\": [\n        {\n            \"output\": {}\n        }\n    ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "",
+            "url": {
+              "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "execution",
+                ":execution_id",
+                "transition",
+                ":transition_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "execution_id",
+                  "description": "",
+                  "value": "execution_id"
+                },
+                {
+                  "key": "transition_id",
+                  "description": "",
+                  "value": "transition_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"responses\": [\n        {\n            \"output\": {}\n        }\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
     }
   ]
 }

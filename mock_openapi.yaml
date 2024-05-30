@@ -1134,6 +1134,163 @@ paths:
           type: string
           format: uuid
         required: true
+  /api/tasks:
+    get:
+      summary: Get a list of tasks
+      description: ''
+      operationId: ListTasks
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+      security:
+        - api-key: []
+    post:
+      summary: Create a Task
+      description: ''
+      operationId: CreateTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceCreatedResponse'
+      security:
+        - api-key: []
+  /api/tasks/{task_id}/execution:
+    post:
+      summary: Create (or start) an execution of a Task
+      description: ''
+      operationId: StartTaskExecution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExecution'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceCreatedResponse'
+      security:
+        - api-key: []
+    get:
+      summary: Get execution (status) of a Task
+      description: ''
+      operationId: GetTaskExecution
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Execution'
+      security:
+        - api-key: []
+    parameters:
+      - in: path
+        name: task_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
+  /api/tasks/{task_id}:
+    get:
+      summary: Get a Task by ID
+      description: ''
+      operationId: GetTask
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Execution'
+      security:
+        - api-key: []
+    parameters:
+      - in: path
+        name: task_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
+  /api/execution/{execution_id}/transition/{transition_id}:
+    get:
+      description: ''
+      operationId: GetExecutionTransition
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExecutionTransition'
+      security:
+        - api-key: []
+    parameters:
+      - in: path
+        name: execution_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: transition_id
+        description: ''
+        schema:
+          type: string
+        required: true
+    put:
+      summary: ''
+      description: ''
+      operationId: ResumeToolExecution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                responses:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ToolResponse'
+              required:
+                - responses
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
 components:
   schemas:
     User:
@@ -2410,6 +2567,270 @@ components:
       required:
         - type
         - image_url
+    Task:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Task
+        description:
+          type: string
+          description: Optional Description of the Task
+        tools_available:
+          type: array
+          items:
+            type: string
+            description: Tool UUID
+            format: uuid
+          minItems: null
+          uniqueItems: true
+          description: Available Tools for the Task
+        input_schema:
+          type: object
+          properties: {}
+          additionalProperties: true
+          description: JSON Schema of parameters
+        main:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStep'
+          description: Entrypoint Workflow for the Task
+        id:
+          type: string
+          format: uuid
+          description: ID of the Task
+        created_at:
+          type: string
+          format: date-time
+        agent_id:
+          type: string
+          format: uuid
+      description: Describes a Task
+      required:
+        - name
+        - main
+        - id
+        - created_at
+        - agent_id
+    WorkflowStep:
+      anyOf:
+        - $ref: '#/components/schemas/PromptWorkflowStep'
+          description: Workflow Step for the Prompt
+        - $ref: '#/components/schemas/EvaluateWorkflowStep'
+          description: Workflow Step for the Evaluate using CEL
+        - $ref: '#/components/schemas/YieldWorkflowStep'
+          description: Workflow Step to call another Workflow
+        - $ref: '#/components/schemas/ToolCallWorkflowStep'
+          description: Workflow Step for calling a Tool
+        - $ref: '#/components/schemas/ErrorWorkflowStep'
+          description: Workflow Step for handling an Error
+        - $ref: '#/components/schemas/IfElseWorkflowStep'
+          description: Workflow Step for If, Then, Else
+    CreateTask:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Task
+        description:
+          type: string
+          description: Optional Description of the Task
+        tools_available:
+          type: array
+          items:
+            type: string
+            description: Tool UUID
+            format: uuid
+          uniqueItems: true
+          description: Available Tools for the Task
+        input_schema:
+          type: object
+          properties: {}
+          additionalProperties: true
+          description: JSON Schema of parameters
+        main:
+          $ref: '#/components/schemas/WorkflowStep'
+          description: Entrypoint Workflow for the Task
+      description: Describes a Task
+      required:
+        - name
+        - main
+        - field_1
+    Execution:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: uuid
+        arguments:
+          type: object
+          properties: {}
+          additionalProperties: true
+          description: JSON Schema of parameters
+        status:
+          $ref: '#/components/schemas/ExecutionStatus'
+      required:
+        - id
+        - task_id
+        - created_at
+        - arguments
+        - status
+        - ''
+        - ''
+    ExecutionTransition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        execution_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        outputs:
+          type: object
+          additionalProperties: true
+          description: Outputs from an Execution Transition
+        from:
+          type: array
+          items:
+            - type: string
+              description: Canonical name of the workflow
+            - type: integer
+              description: Step index
+        to:
+          type: array
+          nullable: true
+          items:
+            - type: string
+              description: Canonical name of the workflow
+            - type: integer
+              description: Step index
+      required:
+        - id
+        - execution_id
+        - type
+        - created_at
+        - outputs
+        - outputs
+        - workflow_name
+        - step_id
+        - from
+        - to
+        - from
+        - field_1
+        - from
+        - field_0
+    PromptWorkflowStep:
+      type: object
+      properties:
+        prompt:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputChatMLMessage'
+          description: List of ChatML Messages in Jinja Templates
+        settings:
+          $ref: '#/components/schemas/ChatSettings'
+      required:
+        - prompt
+        - settings
+    EvaluateWorkflowStep:
+      type: object
+      properties:
+        evaluate:
+          $ref: '#/components/schemas/CELObject'
+      required:
+        - evaluate
+    CELObject:
+      type: object
+      properties: {}
+      additionalProperties: true
+    YieldWorkflowStep:
+      type: object
+      properties:
+        workflow:
+          type: string
+        arguments:
+          $ref: '#/components/schemas/CELObject'
+      required:
+        - workflow
+        - arguments
+    ToolCallWorkflowStep:
+      type: object
+      properties:
+        tool_id:
+          type: string
+        arguments:
+          $ref: '#/components/schemas/CELObject'
+      required:
+        - tool_id
+        - arguments
+    ErrorWorkflowStep:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    IfElseWorkflowStep:
+      type: object
+      properties:
+        if:
+          type: string
+        then:
+          $ref: '#/components/schemas/YieldWorkflowStep'
+        else:
+          $ref: '#/components/schemas/YieldWorkflowStep'
+      required:
+        - if
+        - then
+        - else
+    ExecutionStatus:
+      type: string
+      pattern: ^(queued|starting|running|waiting_for_input|success|failed)$
+      description: Execution Status
+    CreateExecution:
+      type: object
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        arguments:
+          type: object
+          properties: {}
+          additionalProperties: true
+          description: JSON Schema of parameters
+        status:
+          $ref: '#/components/schemas/ExecutionStatus'
+      required:
+        - id
+        - task_id
+        - created_at
+        - arguments
+        - status
+        - ''
+        - ''
+    ToolResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Optional Tool ID
+          format: uuid
+        output:
+          type: object
+          properties: {}
+          additionalProperties: true
+      required:
+        - output
   securitySchemes:
     api-key:
       type: apiKey
@@ -2474,6 +2895,26 @@ components:
       schema:
         type: string
         format: uuid
+    task_id:
+      in: path
+      required: false
+      description: ''
+      schema:
+        type: string
+    execution_id:
+      in: path
+      required: false
+      description: ''
+      schema:
+        type: string
+      name: execution_id
+    transition_id:
+      in: path
+      required: false
+      description: ''
+      schema:
+        type: string
+      name: transition_id
   requestBodies: {}
 security:
   - api-key: []

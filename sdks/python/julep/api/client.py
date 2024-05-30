@@ -24,6 +24,9 @@ from .types.create_doc import CreateDoc
 from .types.create_session_request_metadata import CreateSessionRequestMetadata
 from .types.create_tool_request import CreateToolRequest
 from .types.create_user_request_metadata import CreateUserRequestMetadata
+from .types.execution import Execution
+from .types.execution_status import ExecutionStatus
+from .types.execution_transition import ExecutionTransition
 from .types.function_def import FunctionDef
 from .types.get_agent_docs_request_order import GetAgentDocsRequestOrder
 from .types.get_agent_docs_request_sort_by import GetAgentDocsRequestSortBy
@@ -54,12 +57,15 @@ from .types.patch_user_request_metadata import PatchUserRequestMetadata
 from .types.resource_created_response import ResourceCreatedResponse
 from .types.resource_updated_response import ResourceUpdatedResponse
 from .types.session import Session
+from .types.task import Task
 from .types.tool import Tool
+from .types.tool_response import ToolResponse
 from .types.update_agent_request_instructions import UpdateAgentRequestInstructions
 from .types.update_agent_request_metadata import UpdateAgentRequestMetadata
 from .types.update_session_request_metadata import UpdateSessionRequestMetadata
 from .types.update_user_request_metadata import UpdateUserRequestMetadata
 from .types.user import User
+from .types.workflow_step import WorkflowStep
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -829,7 +835,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # pytype: disable=attribute-error
+            _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -1828,6 +1834,294 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def list_tasks(self) -> typing.List[Task]:
+        """
+
+
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.list_tasks()
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(typing.List[Task], _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def create_task(
+        self,
+        *,
+        name: str,
+        description: typing.Optional[str] = OMIT,
+        tools_available: typing.Optional[typing.List[str]] = OMIT,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        main: WorkflowStep,
+    ) -> ResourceCreatedResponse:
+        """
+
+
+        Parameters:
+            - name: str. Name of the Task
+
+            - description: typing.Optional[str]. Optional Description of the Task
+
+            - tools_available: typing.Optional[typing.List[str]]. Available Tools for the Task
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. JSON Schema of parameters
+
+            - main: WorkflowStep. Entrypoint Workflow for the Task
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.create_task(
+            name="name",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {"name": name, "main": main}
+        if description is not OMIT:
+            _request["description"] = description
+        if tools_available is not OMIT:
+            _request["tools_available"] = tools_available
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def get_task_execution(self, task_id: str) -> Execution:
+        """
+
+
+        Parameters:
+            - task_id: str.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_task_execution(
+            task_id="task_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def start_task_execution(
+        self,
+        task_id: str,
+        *,
+        create_execution_task_id: str,
+        arguments: typing.Dict[str, typing.Any],
+        status: ExecutionStatus,
+    ) -> ResourceCreatedResponse:
+        """
+
+
+        Parameters:
+            - task_id: str.
+
+            - create_execution_task_id: str.
+
+            - arguments: typing.Dict[str, typing.Any]. JSON Schema of parameters
+
+            - status: ExecutionStatus.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.start_task_execution(
+            task_id="task_id",
+            create_execution_task_id="task_id",
+            arguments={},
+            status="status",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+            ),
+            json=jsonable_encoder(
+                {
+                    "task_id": create_execution_task_id,
+                    "arguments": arguments,
+                    "status": status,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def get_task(self, task_id: str) -> Execution:
+        """
+
+
+        Parameters:
+            - task_id: str.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_task(
+            task_id="task_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def get_execution_transition(
+        self, execution_id: str, transition_id: str
+    ) -> typing.List[ExecutionTransition]:
+        """
+
+
+        Parameters:
+            - execution_id: str.
+
+            - transition_id: str.
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.get_execution_transition(
+            execution_id="execution_id",
+            transition_id="transition_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"execution/{execution_id}/transition/{transition_id}",
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(typing.List[ExecutionTransition], _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def resume_tool_execution(
+        self,
+        execution_id: str,
+        transition_id: str,
+        *,
+        responses: typing.List[ToolResponse],
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - execution_id: str.
+
+            - transition_id: str.
+
+            - responses: typing.List[ToolResponse].
+        ---
+        from julep import ToolResponse
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        client.resume_tool_execution(
+            execution_id="execution_id",
+            transition_id="transition_id",
+            responses=[
+                ToolResponse(
+                    output={},
+                )
+            ],
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"execution/{execution_id}/transition/{transition_id}",
+            ),
+            json=jsonable_encoder({"responses": responses}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
 
 class AsyncJulepApi:
     def __init__(
@@ -2590,7 +2884,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # pytype: disable=attribute-error
+            _request["preset"] = preset.value
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -3583,6 +3877,294 @@ class AsyncJulepApi:
         )
         if 200 <= _response.status_code < 300:
             return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def list_tasks(self) -> typing.List[Task]:
+        """
+
+
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.list_tasks()
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(typing.List[Task], _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def create_task(
+        self,
+        *,
+        name: str,
+        description: typing.Optional[str] = OMIT,
+        tools_available: typing.Optional[typing.List[str]] = OMIT,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        main: WorkflowStep,
+    ) -> ResourceCreatedResponse:
+        """
+
+
+        Parameters:
+            - name: str. Name of the Task
+
+            - description: typing.Optional[str]. Optional Description of the Task
+
+            - tools_available: typing.Optional[typing.List[str]]. Available Tools for the Task
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. JSON Schema of parameters
+
+            - main: WorkflowStep. Entrypoint Workflow for the Task
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.create_task(
+            name="name",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {"name": name, "main": main}
+        if description is not OMIT:
+            _request["description"] = description
+        if tools_available is not OMIT:
+            _request["tools_available"] = tools_available
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def get_task_execution(self, task_id: str) -> Execution:
+        """
+
+
+        Parameters:
+            - task_id: str.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_task_execution(
+            task_id="task_id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def start_task_execution(
+        self,
+        task_id: str,
+        *,
+        create_execution_task_id: str,
+        arguments: typing.Dict[str, typing.Any],
+        status: ExecutionStatus,
+    ) -> ResourceCreatedResponse:
+        """
+
+
+        Parameters:
+            - task_id: str.
+
+            - create_execution_task_id: str.
+
+            - arguments: typing.Dict[str, typing.Any]. JSON Schema of parameters
+
+            - status: ExecutionStatus.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.start_task_execution(
+            task_id="task_id",
+            create_execution_task_id="task_id",
+            arguments={},
+            status="status",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}/execution"
+            ),
+            json=jsonable_encoder(
+                {
+                    "task_id": create_execution_task_id,
+                    "arguments": arguments,
+                    "status": status,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def get_task(self, task_id: str) -> Execution:
+        """
+
+
+        Parameters:
+            - task_id: str.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_task(
+            task_id="task_id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{task_id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(Execution, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def get_execution_transition(
+        self, execution_id: str, transition_id: str
+    ) -> typing.List[ExecutionTransition]:
+        """
+
+
+        Parameters:
+            - execution_id: str.
+
+            - transition_id: str.
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.get_execution_transition(
+            execution_id="execution_id",
+            transition_id="transition_id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"execution/{execution_id}/transition/{transition_id}",
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(typing.List[ExecutionTransition], _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def resume_tool_execution(
+        self,
+        execution_id: str,
+        transition_id: str,
+        *,
+        responses: typing.List[ToolResponse],
+    ) -> ResourceUpdatedResponse:
+        """
+
+
+        Parameters:
+            - execution_id: str.
+
+            - transition_id: str.
+
+            - responses: typing.List[ToolResponse].
+        ---
+        from julep import ToolResponse
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            api_key="YOUR_API_KEY",
+        )
+        await client.resume_tool_execution(
+            execution_id="execution_id",
+            transition_id="transition_id",
+            responses=[
+                ToolResponse(
+                    output={},
+                )
+            ],
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"execution/{execution_id}/transition/{transition_id}",
+            ),
+            json=jsonable_encoder({"responses": responses}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
