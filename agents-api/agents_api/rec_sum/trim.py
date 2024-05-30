@@ -48,7 +48,7 @@ async def trim_messages(
     temperature=0.7,
     **kwargs,
 ):
-    assert len(chat_session) > 2, "Session is too short"
+    assert len(chat_session) >= 2, "Session is too short"
 
     names = get_names_from_session(chat_session)
     system_prompt, user_message = make_trim_prompt(chat_session, **names)
