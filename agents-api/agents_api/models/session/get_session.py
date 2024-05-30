@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def get_session_query(
     developer_id: UUID,
     session_id: UUID,

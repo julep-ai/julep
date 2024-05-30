@@ -1,5 +1,7 @@
 """This module contains functions for querying document-related data from the 'cozodb' database using datalog queries."""
 
+from beartype import beartype
+
 import json
 from typing import Literal, Any
 from uuid import UUID
@@ -9,6 +11,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def ensure_owner_exists_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
@@ -33,6 +36,7 @@ def ensure_owner_exists_query(
 
 
 @cozo_query
+@beartype
 def list_docs_snippets_by_owner_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,

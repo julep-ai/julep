@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def get_entries_query(
     session_id: UUID, limit: int = 100, offset: int = 0
 ) -> tuple[str, dict]:

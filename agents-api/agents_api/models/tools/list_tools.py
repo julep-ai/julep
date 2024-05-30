@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def list_functions_by_agent_query(
     agent_id: UUID,
     limit: int = 100,

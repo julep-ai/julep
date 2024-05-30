@@ -1,6 +1,10 @@
 from typing import Callable, Literal, Optional, Protocol
 from uuid import UUID
 from pydantic import BaseModel
+from agents_api.autogen.openapi_model import (
+    ChatMLTextContentPart,
+    ChatMLImageContentPart,
+)
 
 
 class PromptModule(Protocol):
@@ -12,7 +16,7 @@ class PromptModule(Protocol):
 
 class ChatML(BaseModel):
     role: Literal["system", "user", "assistant", "function_call"]
-    content: str
+    content: str | dict | list[ChatMLTextContentPart] | list[ChatMLImageContentPart]
 
     name: Optional[str] = None
     entry_id: Optional[UUID] = None

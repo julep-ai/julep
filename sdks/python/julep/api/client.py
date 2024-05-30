@@ -799,7 +799,6 @@ class JulepApi:
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
-                    content="content",
                 )
             ],
         )
@@ -2849,7 +2848,6 @@ class AsyncJulepApi:
             messages=[
                 InputChatMlMessage(
                     role=InputChatMlMessageRole.USER,
-                    content="content",
                 )
             ],
         )

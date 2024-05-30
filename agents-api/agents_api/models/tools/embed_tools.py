@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def embed_functions_query(
     agent_id: UUID,
     tool_ids: list[UUID],

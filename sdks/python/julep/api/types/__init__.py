@@ -8,8 +8,20 @@ from .agent_metadata import AgentMetadata
 from .cel_object import CelObject
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
+from .chat_ml_image_content_part import ChatMlImageContentPart
+from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
+from .chat_ml_image_content_part_image_url_detail import (
+    ChatMlImageContentPartImageUrlDetail,
+)
 from .chat_ml_message import ChatMlMessage
+from .chat_ml_message_content import ChatMlMessageContent
+from .chat_ml_message_content_item import (
+    ChatMlMessageContentItem,
+    ChatMlMessageContentItem_ImageUrl,
+    ChatMlMessageContentItem_Text,
+)
 from .chat_ml_message_role import ChatMlMessageRole
+from .chat_ml_text_content_part import ChatMlTextContentPart
 from .chat_response import ChatResponse
 from .chat_response_finish_reason import ChatResponseFinishReason
 from .chat_settings import ChatSettings
@@ -52,6 +64,12 @@ from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
 from .if_else_workflow_step import IfElseWorkflowStep
 from .input_chat_ml_message import InputChatMlMessage
+from .input_chat_ml_message_content import InputChatMlMessageContent
+from .input_chat_ml_message_content_item import (
+    InputChatMlMessageContentItem,
+    InputChatMlMessageContentItem_ImageUrl,
+    InputChatMlMessageContentItem_Text,
+)
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .job_status import JobStatus
 from .job_status_state import JobStatusState
@@ -106,8 +124,16 @@ __all__ = [
     "CelObject",
     "ChatInputData",
     "ChatInputDataToolChoice",
+    "ChatMlImageContentPart",
+    "ChatMlImageContentPartImageUrl",
+    "ChatMlImageContentPartImageUrlDetail",
     "ChatMlMessage",
+    "ChatMlMessageContent",
+    "ChatMlMessageContentItem",
+    "ChatMlMessageContentItem_ImageUrl",
+    "ChatMlMessageContentItem_Text",
     "ChatMlMessageRole",
+    "ChatMlTextContentPart",
     "ChatResponse",
     "ChatResponseFinishReason",
     "ChatSettings",
@@ -150,6 +176,10 @@ __all__ = [
     "GetUserDocsResponse",
     "IfElseWorkflowStep",
     "InputChatMlMessage",
+    "InputChatMlMessageContent",
+    "InputChatMlMessageContentItem",
+    "InputChatMlMessageContentItem_ImageUrl",
+    "InputChatMlMessageContentItem_Text",
     "InputChatMlMessageRole",
     "JobStatus",
     "JobStatusState",

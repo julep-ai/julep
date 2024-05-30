@@ -5,12 +5,16 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
+
 from .create_docs import create_docs_query
 from .delete_docs import delete_docs_by_id_query
 from .get_docs import get_docs_snippets_by_id_query
 from .list_docs import list_docs_snippets_by_owner_query
 from .embed_docs import embed_docs_snippets_query
 from .search_docs import search_docs_snippets_by_embedding_query
+
+
+EMBEDDING_SIZE: int = 1024
 
 
 def cozo_client(migrations_dir: str = "./migrations"):
@@ -110,11 +114,11 @@ def _():
         ### Add embedding to the snippet
         client.update(
             "information_snippets",
-            dict(doc_id=str(id), snippet_idx=0, embedding=[1.0] * 768),
+            dict(doc_id=str(id), snippet_idx=0, embedding=[1.0] * EMBEDDING_SIZE),
         )
 
         ### Search
-        query_embedding = [0.99] * 768
+        query_embedding = [0.99] * EMBEDDING_SIZE
 
         result = search_docs_snippets_by_embedding_query(
             owner_type, owner_id, query_embedding, client=client
@@ -142,14 +146,13 @@ def _():
             owner_id,
             id,
             title="Hi",
-            content="\n\n".join(snippets),
-            split_fn=lambda x: x.split("\n\n"),
+            content=snippets,
             client=client,
         )
 
         ### Add embedding to the snippet
         snippet_indices = [*range(len(snippets))]
 
-        embeddings = [[1.0] * 768 for _ in snippets]
+        embeddings = [[1.0] * EMBEDDING_SIZE for _ in snippets]
 
         embed_docs_snippets_query(id, snippet_indices, embeddings, client=client)

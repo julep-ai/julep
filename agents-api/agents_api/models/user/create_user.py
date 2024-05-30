@@ -3,6 +3,8 @@ This module contains the functionality for creating a new user in the CozoDB dat
 It defines a query for inserting user data into the 'users' relation.
 """
 
+from beartype import beartype
+
 from uuid import UUID
 
 
@@ -10,6 +12,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def create_user_query(
     user_id: UUID,
     developer_id: UUID,

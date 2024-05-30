@@ -8,7 +8,9 @@ from ..env import skip_check_developer_headers
 from .exceptions import InvalidHeaderFormat
 
 
-async def get_developer_id(x_developer_id: Annotated[str | None, Header()] = None):
+async def get_developer_id(
+    x_developer_id: Annotated[uuid.UUID | None, Header()] = None
+):
     if skip_check_developer_headers:
         return x_developer_id or uuid.UUID("00000000-0000-0000-0000-000000000000")
 

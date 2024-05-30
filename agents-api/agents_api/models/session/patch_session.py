@@ -1,5 +1,7 @@
 """This module contains functions for patching session data in the 'cozodb' database using datalog queries."""
 
+from beartype import beartype
+
 from uuid import UUID
 
 
@@ -20,6 +22,7 @@ _fields = [
 
 
 @cozo_query
+@beartype
 def patch_session_query(
     session_id: UUID,
     developer_id: UUID,

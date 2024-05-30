@@ -3,6 +3,12 @@
 import typing
 
 from .cel_object import CelObject
+from .chat_ml_image_content_part import ChatMlImageContentPart
+from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
+from .chat_ml_image_content_part_image_url_detail import (
+    ChatMlImageContentPartImageUrlDetail,
+)
+from .chat_ml_text_content_part import ChatMlTextContentPart
 from .chat_settings import ChatSettings
 from .chat_settings_preset import ChatSettingsPreset
 from .chat_settings_response_format import ChatSettingsResponseFormat
@@ -13,6 +19,8 @@ from .error_workflow_step import ErrorWorkflowStep
 from .evaluate_workflow_step import EvaluateWorkflowStep
 from .if_else_workflow_step import IfElseWorkflowStep
 from .input_chat_ml_message import InputChatMlMessage
+from .input_chat_ml_message_content import InputChatMlMessageContent
+from .input_chat_ml_message_content_item import InputChatMlMessageContentItem
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .prompt_workflow_step import PromptWorkflowStep
 from .tool_call_workflow_step import ToolCallWorkflowStep

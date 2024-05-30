@@ -9,8 +9,13 @@ export const $InputChatMLMessage = {
       isRequired: true,
     },
     content: {
-      type: "string",
+      type: "one-of",
       description: `ChatML content`,
+      contains: [
+        {
+          type: "string",
+        },
+      ],
       isRequired: true,
     },
     name: {
