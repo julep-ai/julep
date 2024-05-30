@@ -50,7 +50,7 @@ async def summarize_messages(
     temperature=0.8,
     **kwargs,
 ):
-    assert len(chat_session) > 2, "Session is too short"
+    assert len(chat_session) >= 2, "Session is too short"
 
     offset = 0
 

@@ -63,7 +63,7 @@ async def get_entities(
     temperature=0.7,
     **kwargs,
 ):
-    assert len(chat_session) > 2, "Session is too short"
+    assert len(chat_session) >= 2, "Session is too short"
 
     names = get_names_from_session(chat_session)
     system_prompt, user_message = make_entities_prompt(chat_session, **names)
