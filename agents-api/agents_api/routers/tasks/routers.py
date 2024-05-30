@@ -67,7 +67,7 @@ async def create_task(
     )
 
 
-@router.post("/tasks/{task_id}/execution", status_code=HTTP_201_CREATED, tags=["tasks"])
+@router.post("/tasks/{task_id}/executions", status_code=HTTP_201_CREATED, tags=["tasks"])
 async def create_task_execution(
     task_id: UUID4,
     request: CreateExecution,
@@ -79,7 +79,7 @@ async def create_task_execution(
     )
 
 
-@router.get("/tasks/{task_id}/execution", tags=["tasks"])
+@router.get("/tasks/{task_id}/executions", tags=["tasks"])
 async def get_task_execution_status(
     task_id: UUID4,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
@@ -89,7 +89,7 @@ async def get_task_execution_status(
     pass
 
 
-@router.get("/execution/{execution_id}/transition/{transition_id}")
+@router.get("/executions/{execution_id}/transitions/{transition_id}")
 async def get_execution_transition(
     execution_id: UUID4,
     transition_id: UUID4,
