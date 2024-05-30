@@ -35,7 +35,7 @@ router = APIRouter()
 
 
 @router.get("/tasks", tags=["tasks"])
-async def list_sessions(
+async def list_tasks(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> TaskList:
     query_results = list_tasks_query(x_developer_id)
