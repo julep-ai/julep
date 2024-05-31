@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / utils/requestConstructor
+[@julep/sdk](../README.md) / [Modules](../modules.md) / utils/requestConstructor
 
 # Module: utils/requestConstructor
 
