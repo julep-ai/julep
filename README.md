@@ -4,6 +4,10 @@
 
 ---
 
+💸🤑 **Announcing our Bounty Program:** Help the Julep community fix bugs and ship features and get paid. More details [here](https://github.com/julep-ai/julep/discussions/categories/bounty-program).
+      
+---
+
 <h2 align="center">
 Start your project with conversation history, support for any LLM, agentic workflows, integrations & more.
 </h2>
