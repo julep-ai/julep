@@ -2,7 +2,4 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $doc_id = {
-  type: "string",
-  format: "uuid",
-} as const;
+export type memory_id = string;

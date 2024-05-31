@@ -15,18 +15,6 @@ export const $InputChatMLMessage = {
         {
           type: "string",
         },
-        {
-          type: "array",
-          contains: {
-            type: "ChatMLTextContentPart",
-          },
-        },
-        {
-          type: "array",
-          contains: {
-            type: "ChatMLImageContentPart",
-          },
-        },
       ],
       isRequired: true,
     },

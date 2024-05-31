@@ -2,8 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ChatMLImageContentPart } from "./ChatMLImageContentPart";
-import type { ChatMLTextContentPart } from "./ChatMLTextContentPart";
 export type InputChatMLMessage = {
   /**
    * ChatML role (system|assistant|user|function_call|function|auto)
@@ -12,10 +10,7 @@ export type InputChatMLMessage = {
   /**
    * ChatML content
    */
-  content:
-    | string
-    | Array<ChatMLTextContentPart>
-    | Array<ChatMLImageContentPart>;
+  content: string;
   /**
    * ChatML name
    */
