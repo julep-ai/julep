@@ -1,7 +1,7 @@
 import json
 from json import JSONDecodeError
 from typing import Annotated
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from agents_api.autogen.openapi_model import ContentItem
 from agents_api.model_registry import validate_configuration
@@ -234,7 +234,7 @@ async def create_agent(
         ).model_dump(),
         metadata=request.metadata or {},
     )
-    new_agent_id = resp["agent_id"][0]
+    new_agent_id = UUID(resp["agent_id"][0], version=4)
     docs = request.docs or []
     job_ids = [uuid4()] * len(docs)
     for job_id, doc in zip(job_ids, docs):
