@@ -5,7 +5,9 @@ from agents_api.autogen.openapi_model import (
 )
 
 
-def content_to_json(content: str | list[ChatMLTextContentPart] | list[ChatMLImageContentPart] | dict):
+def content_to_json(
+    content: str | list[ChatMLTextContentPart] | list[ChatMLImageContentPart] | dict,
+):
     result = []
     if isinstance(content, str):
         result = [{"type": "text", "text": content}]

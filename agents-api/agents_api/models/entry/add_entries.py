@@ -4,10 +4,8 @@ from beartype import beartype
 
 from ...common.protocol.entries import Entry
 from ..utils import cozo_query
-from ...common.utils import json
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
-from agents_api.autogen.openapi_model import ChatMLTextContentPart
 
 
 @cozo_query
