@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / [managers/user](../modules/managers_user.md) / UsersManager
+[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/user](../modules/managers_user.md) / UsersManager
 
 # Class: UsersManager
 
@@ -55,7 +55,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -71,27 +71,27 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
 ### create
 
-▸ **create**(`«destructured»?`): `Promise`\<[`User`](../modules/api_models_User.md#user)\>
+▸ **create**(`«destructured»?`): `Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `«destructured»` | [`CreateUserRequest`](../modules/api_models_CreateUserRequest.md#createuserrequest) |
+| `«destructured»` | [`CreateUserRequest`](../modules/api.md#createuserrequest) |
 
 #### Returns
 
-`Promise`\<[`User`](../modules/api_models_User.md#user)\>
+`Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Defined in
 
-[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/user.ts#L27)
+[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/user.ts#L27)
 
 ___
 
@@ -111,13 +111,13 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/user.ts#L63)
+[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/user.ts#L63)
 
 ___
 
 ### get
 
-▸ **get**(`userId`): `Promise`\<[`User`](../modules/api_models_User.md#user)\>
+▸ **get**(`userId`): `Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Parameters
 
@@ -127,17 +127,17 @@ ___
 
 #### Returns
 
-`Promise`\<[`User`](../modules/api_models_User.md#user)\>
+`Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Defined in
 
-[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/user.ts#L15)
+[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/user.ts#L15)
 
 ___
 
 ### list
 
-▸ **list**(`«destructured»?`): `Promise`\<[`User`](../modules/api_models_User.md#user)[]\>
+▸ **list**(`«destructured»?`): `Promise`\<[`User`](../modules/api.md#user)[]\>
 
 #### Parameters
 
@@ -150,48 +150,48 @@ ___
 
 #### Returns
 
-`Promise`\<[`User`](../modules/api_models_User.md#user)[]\>
+`Promise`\<[`User`](../modules/api.md#user)[]\>
 
 #### Defined in
 
-[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/user.ts#L44)
+[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/user.ts#L44)
 
 ___
 
 ### update
 
-▸ **update**(`userId`, `request`, `overwrite`): `Promise`\<[`User`](../modules/api_models_User.md#user)\>
+▸ **update**(`userId`, `request`, `overwrite`): `Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `userId` | `string` |
-| `request` | [`UpdateUserRequest`](../modules/api_models_UpdateUserRequest.md#updateuserrequest) |
+| `request` | [`UpdateUserRequest`](../modules/api.md#updateuserrequest) |
 | `overwrite` | ``true`` |
 
 #### Returns
 
-`Promise`\<[`User`](../modules/api_models_User.md#user)\>
+`Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Defined in
 
-[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/user.ts#L73)
+[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/user.ts#L73)
 
-▸ **update**(`userId`, `request`, `overwrite?`): `Promise`\<[`User`](../modules/api_models_User.md#user)\>
+▸ **update**(`userId`, `request`, `overwrite?`): `Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `userId` | `string` |
-| `request` | [`PatchUserRequest`](../modules/api_models_PatchUserRequest.md#patchuserrequest) |
+| `request` | [`PatchUserRequest`](../modules/api.md#patchuserrequest) |
 | `overwrite?` | ``false`` |
 
 #### Returns
 
-`Promise`\<[`User`](../modules/api_models_User.md#user)\>
+`Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Defined in
 
-[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/user.ts#L79)
+[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/user.ts#L79)

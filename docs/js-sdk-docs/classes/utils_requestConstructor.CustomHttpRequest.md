@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / [utils/requestConstructor](../modules/utils_requestConstructor.md) / CustomHttpRequest
+[@julep/sdk](../README.md) / [Modules](../modules.md) / [utils/requestConstructor](../modules/utils_requestConstructor.md) / CustomHttpRequest
 
 # Class: CustomHttpRequest
 
@@ -6,7 +6,7 @@
 
 ## Hierarchy
 
-- [`AxiosHttpRequest`](api_core_AxiosHttpRequest.AxiosHttpRequest.md)
+- `AxiosHttpRequest`
 
   ↳ **`CustomHttpRequest`**
 
@@ -34,7 +34,7 @@
 
 | Name | Type |
 | :------ | :------ |
-| `config` | [`OpenAPIConfig`](../modules/api_core_OpenAPI.md#openapiconfig) |
+| `config` | [`OpenAPIConfig`](../modules/api.md#openapiconfig) |
 
 #### Returns
 
@@ -42,33 +42,31 @@
 
 #### Overrides
 
-[AxiosHttpRequest](api_core_AxiosHttpRequest.AxiosHttpRequest.md).[constructor](api_core_AxiosHttpRequest.AxiosHttpRequest.md#constructor)
+AxiosHttpRequest.constructor
 
 #### Defined in
 
-[src/utils/requestConstructor.ts:16](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/utils/requestConstructor.ts#L16)
+[src/utils/requestConstructor.ts:16](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/utils/requestConstructor.ts#L16)
 
 ## Properties
 
 ### config
 
-• `Readonly` **config**: [`OpenAPIConfig`](../modules/api_core_OpenAPI.md#openapiconfig)
+• `Readonly` **config**: [`OpenAPIConfig`](../modules/api.md#openapiconfig)
 
 #### Inherited from
 
-[AxiosHttpRequest](api_core_AxiosHttpRequest.AxiosHttpRequest.md).[config](api_core_AxiosHttpRequest.AxiosHttpRequest.md#config)
+AxiosHttpRequest.config
 
 #### Defined in
 
-[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
+[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
 
 ## Methods
 
 ### request
 
-▸ **request**\<`T`\>(`options`): [`CancelablePromise`](api_core_CancelablePromise.CancelablePromise.md)\<`T`\>
-
-Request method
+▸ **request**\<`T`\>(`options`): [`CancelablePromise`](api.CancelablePromise.md)\<`T`\>
 
 #### Type parameters
 
@@ -78,24 +76,18 @@ Request method
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `options` | [`ApiRequestOptions`](../modules/api_core_ApiRequestOptions.md#apirequestoptions) | The request options from the service |
+| Name | Type |
+| :------ | :------ |
+| `options` | `ApiRequestOptions` |
 
 #### Returns
 
-[`CancelablePromise`](api_core_CancelablePromise.CancelablePromise.md)\<`T`\>
-
-CancelablePromise<T>
-
-**`Throws`**
-
-ApiError
+[`CancelablePromise`](api.CancelablePromise.md)\<`T`\>
 
 #### Overrides
 
-[AxiosHttpRequest](api_core_AxiosHttpRequest.AxiosHttpRequest.md).[request](api_core_AxiosHttpRequest.AxiosHttpRequest.md#request)
+AxiosHttpRequest.request
 
 #### Defined in
 
-[src/utils/requestConstructor.ts:21](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/utils/requestConstructor.ts#L21)
+[src/utils/requestConstructor.ts:21](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/utils/requestConstructor.ts#L21)

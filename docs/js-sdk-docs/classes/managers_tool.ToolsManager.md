@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / [managers/tool](../modules/managers_tool.md) / ToolsManager
+[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/tool](../modules/managers_tool.md) / ToolsManager
 
 # Class: ToolsManager
 
@@ -54,7 +54,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -70,13 +70,13 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
 ### create
 
-▸ **create**(`«destructured»`): `Promise`\<[`Tool`](../modules/api_models_Tool.md#tool)\>
+▸ **create**(`«destructured»`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
 
 #### Parameters
 
@@ -85,16 +85,16 @@ The JulepApiClient instance used for API interactions.
 | `«destructured»` | `Object` |
 | › `agentId` | `string` |
 | › `tool` | `Object` |
-| › `tool.function` | [`FunctionDef`](../modules/api_models_FunctionDef.md#functiondef) |
+| › `tool.function` | [`FunctionDef`](../modules/api.md#functiondef) |
 | › `tool.type` | ``"function"`` \| ``"webhook"`` |
 
 #### Returns
 
-`Promise`\<[`Tool`](../modules/api_models_Tool.md#tool)\>
+`Promise`\<[`Tool`](../modules/api.md#tool)\>
 
 #### Defined in
 
-[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/tool.ts#L32)
+[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/tool.ts#L32)
 
 ___
 
@@ -116,13 +116,13 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/tool.ts#L86)
+[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/tool.ts#L86)
 
 ___
 
 ### list
 
-▸ **list**(`agentId`, `«destructured»?`): `Promise`\<[`Tool`](../modules/api_models_Tool.md#tool)[]\>
+▸ **list**(`agentId`, `«destructured»?`): `Promise`\<[`Tool`](../modules/api.md#tool)[]\>
 
 #### Parameters
 
@@ -135,17 +135,17 @@ ___
 
 #### Returns
 
-`Promise`\<[`Tool`](../modules/api_models_Tool.md#tool)[]\>
+`Promise`\<[`Tool`](../modules/api.md#tool)[]\>
 
 #### Defined in
 
-[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/tool.ts#L12)
+[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/tool.ts#L12)
 
 ___
 
 ### update
 
-▸ **update**(`«destructured»`, `overwrite?`): `Promise`\<[`Tool`](../modules/api_models_Tool.md#tool)\>
+▸ **update**(`«destructured»`, `overwrite?`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
 
 #### Parameters
 
@@ -153,14 +153,14 @@ ___
 | :------ | :------ | :------ |
 | `«destructured»` | `Object` | `undefined` |
 | › `agentId` | `string` | `undefined` |
-| › `tool` | [`UpdateToolRequest`](../modules/api_models_UpdateToolRequest.md#updatetoolrequest) | `undefined` |
+| › `tool` | [`UpdateToolRequest`](../modules/api.md#updatetoolrequest) | `undefined` |
 | › `toolId` | `string` | `undefined` |
 | `overwrite` | `boolean` | `false` |
 
 #### Returns
 
-`Promise`\<[`Tool`](../modules/api_models_Tool.md#tool)\>
+`Promise`\<[`Tool`](../modules/api.md#tool)\>
 
 #### Defined in
 
-[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/tool.ts#L54)
+[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/managers/tool.ts#L54)

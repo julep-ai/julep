@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / utils/isValidUuid4
+[@julep/sdk](../README.md) / [Modules](../modules.md) / utils/isValidUuid4
 
 # Module: utils/isValidUuid4
 
@@ -33,4 +33,4 @@ True if the input is a valid UUID v4, otherwise false.
 
 #### Defined in
 
-[src/utils/isValidUuid4.ts:11](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/utils/isValidUuid4.ts#L11)
+[src/utils/isValidUuid4.ts:11](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/utils/isValidUuid4.ts#L11)
