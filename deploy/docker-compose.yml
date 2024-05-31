@@ -13,6 +13,8 @@ services:
       - cozo_data:/data
     env_file:
       - .env
+    ports:
+      - "9070:9070"
 
   agents-api:
     image: julepai/agents-api:dev
@@ -77,6 +79,9 @@ services:
     container_name: julep-temporal
     ports:
       - 7233:7233
+    build:
+      context: .
+      dockerfile: Dockerfile.temporal
     volumes:
       - temporal_data:/home/temporal
     env_file:
