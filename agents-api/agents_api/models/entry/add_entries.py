@@ -6,6 +6,8 @@ from ...common.protocol.entries import Entry
 from ..utils import cozo_query
 from ...common.utils import json
 from ...common.utils.datetime import utcnow
+from ...common.utils.messages import content_to_json
+from agents_api.autogen.openapi_model import ChatMLTextContentPart
 
 
 @cozo_query
@@ -27,15 +29,9 @@ def add_entries_query(entries: list[Entry]) -> tuple[str, dict]:
         role = e.role
 
         # Convert the content of each entry to list of text parts if it is a string or a dictionary.
-        content: list = []
-        if isinstance(e.content, str):
-            content = [{"type": "text", "text": e.content}]
-
-        elif isinstance(e.content, dict):
-            content = [{"type": "text", "text": json.dumps(e.content, indent=4)}]
-
         # Append entries with non-empty content to the list for database insertion.
-        if e.content:
+        content = content_to_json(e.content)
+        if content:
             entries_lst.append(
                 [
                     str(e.id),

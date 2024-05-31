@@ -49,6 +49,7 @@ class Entry(BaseModel):
                     # TODO: how to calc token count for images?
                     if isinstance(part, ChatMLTextContentPart):
                         text += part.text
+                content_length = len(text)
 
             # Divide the content length by 3.5 to estimate token count based on character count.
             return int(content_length // 3.5)
