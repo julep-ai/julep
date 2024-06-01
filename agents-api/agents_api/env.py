@@ -26,12 +26,6 @@ prediction_api_endpoint: str = env.str(
 model_api_key: str = env.str("MODEL_API_KEY", default=None)
 model_inference_url: str = env.str("MODEL_INFERENCE_URL", default=None)
 openai_api_key: str = env.str("OPENAI_API_KEY", default="")
-summarization_ratio_threshold: float = env.float(
-    "MAX_TOKENS_RATIO_TO_SUMMARIZE", default=0.5
-)
-summarization_tokens_threshold: int = env.int(
-    "SUMMARIZATION_TOKENS_THRESHOLD", default=2048
-)
 summarization_model_name: str = env.str(
     "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )
@@ -78,8 +72,6 @@ environment = dict(
     debug=debug,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,
-    summarization_ratio_threshold=summarization_ratio_threshold,
-    summarization_tokens_threshold=summarization_tokens_threshold,
     worker_url=worker_url,
     sentry_dsn=sentry_dsn,
     temporal_endpoint=temporal_endpoint,

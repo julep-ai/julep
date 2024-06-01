@@ -44,6 +44,8 @@ def get_session_query(
         created_at,
         metadata,
         render_templates,
+        token_budget,
+        context_overflow,
     ] := input[developer_id, id],
         *sessions{
             developer_id,
@@ -54,6 +56,8 @@ def get_session_query(
             updated_at: validity,
             metadata,
             render_templates,
+            token_budget,
+            context_overflow,
             @ "NOW"
         },
         *session_lookup{

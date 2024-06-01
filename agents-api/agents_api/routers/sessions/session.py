@@ -12,7 +12,7 @@ from pydantic import UUID4
 import litellm
 from litellm import acompletion
 
-from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
+from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds, Role
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
 from ...clients.worker.types import ChatML
@@ -23,7 +23,6 @@ from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
 from ...common.utils.messages import stringify_content
 from ...env import (
-    summarization_tokens_threshold,
     docs_embedding_service_url,
     docs_embedding_model_id,
 )
@@ -116,14 +115,17 @@ class BaseSession:
 
         return result, token_count
 
-    def truncate(
-        self, messages: list[Entry], summarization_tokens_threshold: int
+    def _truncate_context(
+        self, messages: list[Entry], summarization_tokens_threshold: int | None
     ) -> list[Entry]:
         def rm_thoughts(m):
             return m.role == "system" and m.name == "thought"
 
         def rm_user_assistant(m):
             return m.role in ("user", "assistant")
+
+        if summarization_tokens_threshold is None:
+            return messages
 
         token_count = reduce(lambda c, e: (e.token_count or 0) + c, messages, 0)
 
@@ -153,6 +155,31 @@ class BaseSession:
 
         raise InputTooBigError(token_count, summarization_tokens_threshold)
 
+    def _truncate_entries(
+        self, messages: list[Entry], token_count_threshold: int
+    ) -> list[Entry]:
+        if not len(messages):
+            return messages
+
+        result: list[Entry] = []
+        token_cnt, offset = 0, 0
+        if messages[0].role == Role.system:
+            result: list[Entry] = messages[0]
+            token_cnt, offset = messages[0].token_count, 1
+
+        for m in reversed(messages[offset:]):
+            if token_cnt < token_count_threshold:
+                result.append(m)
+            else:
+                break
+
+            token_cnt += m.token_count
+
+        if offset:
+            result.append(messages[0])
+
+        return list(reversed(result))
+
     async def run(
         self, new_input, settings: Settings
     ) -> tuple[ChatCompletion, Entry, Callable | None, DocIds]:
@@ -170,7 +197,8 @@ class BaseSession:
 
         # Generate response
         response = await self.generate(
-            self.truncate(init_context, summarization_tokens_threshold), final_settings
+            self._truncate_context(init_context, final_settings.token_budget),
+            final_settings,
         )
 
         # Save response to session
@@ -219,6 +247,10 @@ class BaseSession:
         new_input: list[Entry],
         settings: Settings,
     ) -> tuple[list[ChatML], Settings, DocIds]:
+        if session_data is not None:
+            settings.token_budget = session_data.token_budget
+            settings.context_overflow = session_data.context_overflow
+
         stringified_input = []
         for msg in new_input:
             stringified_input.append(
@@ -452,10 +484,20 @@ class BaseSession:
             )
 
         entries.append(new_entry)
+        summarization_task = None
+
+        if (
+            final_settings.token_budget is not None
+            and total_tokens >= final_settings.token_budget
+        ):
+            if final_settings.context_overflow == "truncate":
+                entries = self._truncate_entries(entries, final_settings.token_budget)
+            elif final_settings.context_overflow == "adaptive":
+                summarization_task = run_summarization_task
+
         add_entries_query(entries)
 
-        if total_tokens >= summarization_tokens_threshold:
-            return run_summarization_task
+        return summarization_task
 
 
 class PlainCompletionSession(BaseSession):
