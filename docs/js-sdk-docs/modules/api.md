@@ -152,7 +152,7 @@ Re-exports [JulepApiClient](../classes/api_JulepApiClient.JulepApiClient.md)
 
 #### Defined in
 
-[src/api/models/Agent.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/Agent.ts#L6)
+[src/api/models/Agent.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/Agent.ts#L6)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-[src/api/models/AgentDefaultSettings.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/AgentDefaultSettings.ts#L5)
+[src/api/models/AgentDefaultSettings.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/AgentDefaultSettings.ts#L5)
 
 ___
 
@@ -185,7 +185,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ChatInput.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatInput.ts#L8)
+[src/api/models/ChatInput.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatInput.ts#L8)
 
 ___
 
@@ -203,7 +203,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ChatInputData.ts:9](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatInputData.ts#L9)
+[src/api/models/ChatInputData.ts:9](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatInputData.ts#L9)
 
 ___
 
@@ -222,7 +222,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ChatMLImageContentPart.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatMLImageContentPart.ts#L5)
+[src/api/models/ChatMLImageContentPart.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatMLImageContentPart.ts#L5)
 
 ___
 
@@ -242,7 +242,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatMLMessage.ts#L5)
+[src/api/models/ChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatMLMessage.ts#L5)
 
 ___
 
@@ -259,7 +259,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ChatMLTextContentPart.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatMLTextContentPart.ts#L5)
+[src/api/models/ChatMLTextContentPart.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatMLTextContentPart.ts#L5)
 
 ___
 
@@ -282,7 +282,7 @@ Represents a chat completion response returned by model, based on the provided i
 
 #### Defined in
 
-[src/api/models/ChatResponse.ts:11](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatResponse.ts#L11)
+[src/api/models/ChatResponse.ts:11](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatResponse.ts#L11)
 
 ___
 
@@ -314,7 +314,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ChatSettings.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ChatSettings.ts#L5)
+[src/api/models/ChatSettings.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ChatSettings.ts#L5)
 
 ___
 
@@ -334,7 +334,7 @@ Usage statistics for the completion request.
 
 #### Defined in
 
-[src/api/models/CompletionUsage.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/CompletionUsage.ts#L8)
+[src/api/models/CompletionUsage.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/CompletionUsage.ts#L8)
 
 ___
 
@@ -359,7 +359,7 @@ A valid request payload for creating an agent
 
 #### Defined in
 
-[src/api/models/CreateAgentRequest.ts:11](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/CreateAgentRequest.ts#L11)
+[src/api/models/CreateAgentRequest.ts:11](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/CreateAgentRequest.ts#L11)
 
 ___
 
@@ -377,7 +377,7 @@ ___
 
 #### Defined in
 
-[src/api/models/CreateDoc.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/CreateDoc.ts#L5)
+[src/api/models/CreateDoc.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/CreateDoc.ts#L5)
 
 ___
 
@@ -399,7 +399,7 @@ A valid request payload for creating a session
 
 #### Defined in
 
-[src/api/models/CreateSessionRequest.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/CreateSessionRequest.ts#L8)
+[src/api/models/CreateSessionRequest.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/CreateSessionRequest.ts#L8)
 
 ___
 
@@ -416,7 +416,7 @@ ___
 
 #### Defined in
 
-[src/api/models/CreateToolRequest.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/CreateToolRequest.ts#L6)
+[src/api/models/CreateToolRequest.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/CreateToolRequest.ts#L6)
 
 ___
 
@@ -437,7 +437,7 @@ A valid request payload for creating a user
 
 #### Defined in
 
-[src/api/models/CreateUserRequest.ts:9](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/CreateUserRequest.ts#L9)
+[src/api/models/CreateUserRequest.ts:9](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/CreateUserRequest.ts#L9)
 
 ___
 
@@ -457,7 +457,7 @@ ___
 
 #### Defined in
 
-[src/api/models/Doc.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/Doc.ts#L5)
+[src/api/models/Doc.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/Doc.ts#L5)
 
 ___
 
@@ -474,7 +474,7 @@ ___
 
 #### Defined in
 
-[src/api/models/DocIds.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/DocIds.ts#L5)
+[src/api/models/DocIds.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/DocIds.ts#L5)
 
 ___
 
@@ -492,7 +492,7 @@ Specifying a particular function via `{"name": "my_function"}` forces the model 
 
 #### Defined in
 
-[src/api/models/FunctionCallOption.ts:9](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/FunctionCallOption.ts#L9)
+[src/api/models/FunctionCallOption.ts:9](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/FunctionCallOption.ts#L9)
 
 ___
 
@@ -510,7 +510,7 @@ ___
 
 #### Defined in
 
-[src/api/models/FunctionDef.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/FunctionDef.ts#L6)
+[src/api/models/FunctionDef.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/FunctionDef.ts#L6)
 
 ___
 
@@ -522,7 +522,7 @@ The parameters the functions accepts, described as a JSON Schema object.
 
 #### Defined in
 
-[src/api/models/FunctionParameters.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/FunctionParameters.ts#L8)
+[src/api/models/FunctionParameters.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/FunctionParameters.ts#L8)
 
 ___
 
@@ -541,7 +541,7 @@ ___
 
 #### Defined in
 
-[src/api/models/InputChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/InputChatMLMessage.ts#L5)
+[src/api/models/InputChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/InputChatMLMessage.ts#L5)
 
 ___
 
@@ -564,7 +564,7 @@ ___
 
 #### Defined in
 
-[src/api/models/JobStatus.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/JobStatus.ts#L5)
+[src/api/models/JobStatus.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/JobStatus.ts#L5)
 
 ___
 
@@ -588,7 +588,7 @@ ___
 
 #### Defined in
 
-[src/api/models/Memory.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/Memory.ts#L5)
+[src/api/models/Memory.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/Memory.ts#L5)
 
 ___
 
@@ -606,7 +606,7 @@ ___
 
 #### Defined in
 
-[src/api/models/MemoryAccessOptions.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/MemoryAccessOptions.ts#L5)
+[src/api/models/MemoryAccessOptions.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/MemoryAccessOptions.ts#L5)
 
 ___
 
@@ -626,7 +626,7 @@ Specifies a tool the model should use. Use to force the model to call a specific
 
 #### Defined in
 
-[src/api/models/NamedToolChoice.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/NamedToolChoice.ts#L8)
+[src/api/models/NamedToolChoice.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/NamedToolChoice.ts#L8)
 
 ___
 
@@ -650,7 +650,7 @@ ___
 
 #### Defined in
 
-[src/api/core/OpenAPI.ts:10](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/core/OpenAPI.ts#L10)
+[src/api/core/OpenAPI.ts:10](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/core/OpenAPI.ts#L10)
 
 ___
 
@@ -668,7 +668,7 @@ ___
 
 #### Defined in
 
-[src/api/models/PartialFunctionDef.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/PartialFunctionDef.ts#L6)
+[src/api/models/PartialFunctionDef.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/PartialFunctionDef.ts#L6)
 
 ___
 
@@ -691,7 +691,7 @@ A request for patching an agent
 
 #### Defined in
 
-[src/api/models/PatchAgentRequest.ts:9](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/PatchAgentRequest.ts#L9)
+[src/api/models/PatchAgentRequest.ts:9](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/PatchAgentRequest.ts#L9)
 
 ___
 
@@ -710,7 +710,7 @@ A request for patching a session
 
 #### Defined in
 
-[src/api/models/PatchSessionRequest.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/PatchSessionRequest.ts#L8)
+[src/api/models/PatchSessionRequest.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/PatchSessionRequest.ts#L8)
 
 ___
 
@@ -726,7 +726,7 @@ ___
 
 #### Defined in
 
-[src/api/models/PatchToolRequest.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/PatchToolRequest.ts#L6)
+[src/api/models/PatchToolRequest.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/PatchToolRequest.ts#L6)
 
 ___
 
@@ -746,7 +746,7 @@ A request for patching a user
 
 #### Defined in
 
-[src/api/models/PatchUserRequest.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/PatchUserRequest.ts#L8)
+[src/api/models/PatchUserRequest.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/PatchUserRequest.ts#L8)
 
 ___
 
@@ -764,7 +764,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ResourceCreatedResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ResourceCreatedResponse.ts#L5)
+[src/api/models/ResourceCreatedResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ResourceCreatedResponse.ts#L5)
 
 ___
 
@@ -782,7 +782,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ResourceDeletedResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ResourceDeletedResponse.ts#L5)
+[src/api/models/ResourceDeletedResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ResourceDeletedResponse.ts#L5)
 
 ___
 
@@ -800,7 +800,7 @@ ___
 
 #### Defined in
 
-[src/api/models/ResourceUpdatedResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ResourceUpdatedResponse.ts#L5)
+[src/api/models/ResourceUpdatedResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ResourceUpdatedResponse.ts#L5)
 
 ___
 
@@ -824,7 +824,7 @@ ___
 
 #### Defined in
 
-[src/api/models/Session.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/Session.ts#L5)
+[src/api/models/Session.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/Session.ts#L5)
 
 ___
 
@@ -844,7 +844,7 @@ ___
 
 #### Defined in
 
-[src/api/models/Suggestion.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/Suggestion.ts#L5)
+[src/api/models/Suggestion.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/Suggestion.ts#L5)
 
 ___
 
@@ -862,7 +862,7 @@ ___
 
 #### Defined in
 
-[src/api/models/Tool.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/Tool.ts#L6)
+[src/api/models/Tool.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/Tool.ts#L6)
 
 ___
 
@@ -879,7 +879,7 @@ Specifying a particular function via `{"type: "function", "function": {"name": "
 
 #### Defined in
 
-[src/api/models/ToolChoiceOption.ts:15](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/ToolChoiceOption.ts#L15)
+[src/api/models/ToolChoiceOption.ts:15](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/ToolChoiceOption.ts#L15)
 
 ___
 
@@ -902,7 +902,7 @@ A valid request payload for updating an agent
 
 #### Defined in
 
-[src/api/models/UpdateAgentRequest.ts:9](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/UpdateAgentRequest.ts#L9)
+[src/api/models/UpdateAgentRequest.ts:9](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/UpdateAgentRequest.ts#L9)
 
 ___
 
@@ -921,7 +921,7 @@ A valid request payload for updating a session
 
 #### Defined in
 
-[src/api/models/UpdateSessionRequest.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/UpdateSessionRequest.ts#L8)
+[src/api/models/UpdateSessionRequest.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/UpdateSessionRequest.ts#L8)
 
 ___
 
@@ -937,7 +937,7 @@ ___
 
 #### Defined in
 
-[src/api/models/UpdateToolRequest.ts:6](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/UpdateToolRequest.ts#L6)
+[src/api/models/UpdateToolRequest.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/UpdateToolRequest.ts#L6)
 
 ___
 
@@ -957,7 +957,7 @@ A valid request payload for updating a user
 
 #### Defined in
 
-[src/api/models/UpdateUserRequest.ts:8](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/UpdateUserRequest.ts#L8)
+[src/api/models/UpdateUserRequest.ts:8](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/UpdateUserRequest.ts#L8)
 
 ___
 
@@ -978,7 +978,7 @@ ___
 
 #### Defined in
 
-[src/api/models/User.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/User.ts#L5)
+[src/api/models/User.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/User.ts#L5)
 
 ___
 
@@ -988,7 +988,7 @@ ___
 
 #### Defined in
 
-[src/api/models/agent_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/agent_id.ts#L5)
+[src/api/models/agent_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/agent_id.ts#L5)
 
 ___
 
@@ -998,7 +998,7 @@ ___
 
 #### Defined in
 
-[src/api/models/doc_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/doc_id.ts#L5)
+[src/api/models/doc_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/doc_id.ts#L5)
 
 ___
 
@@ -1008,7 +1008,7 @@ ___
 
 #### Defined in
 
-[src/api/models/job_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/job_id.ts#L5)
+[src/api/models/job_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/job_id.ts#L5)
 
 ___
 
@@ -1018,7 +1018,7 @@ ___
 
 #### Defined in
 
-[src/api/models/memory_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/memory_id.ts#L5)
+[src/api/models/memory_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/memory_id.ts#L5)
 
 ___
 
@@ -1028,7 +1028,7 @@ ___
 
 #### Defined in
 
-[src/api/models/message_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/message_id.ts#L5)
+[src/api/models/message_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/message_id.ts#L5)
 
 ___
 
@@ -1038,7 +1038,7 @@ ___
 
 #### Defined in
 
-[src/api/models/session_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/session_id.ts#L5)
+[src/api/models/session_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/session_id.ts#L5)
 
 ___
 
@@ -1048,7 +1048,7 @@ ___
 
 #### Defined in
 
-[src/api/models/tool_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/tool_id.ts#L5)
+[src/api/models/tool_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/tool_id.ts#L5)
 
 ___
 
@@ -1058,7 +1058,7 @@ ___
 
 #### Defined in
 
-[src/api/models/user_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/models/user_id.ts#L5)
+[src/api/models/user_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/models/user_id.ts#L5)
 
 ## Variables
 
@@ -1108,7 +1108,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$Agent.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$Agent.ts#L5)
+[src/api/schemas/$Agent.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$Agent.ts#L5)
 
 ___
 
@@ -1163,7 +1163,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$AgentDefaultSettings.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$AgentDefaultSettings.ts#L5)
+[src/api/schemas/$AgentDefaultSettings.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$AgentDefaultSettings.ts#L5)
 
 ___
 
@@ -1180,7 +1180,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatInput.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatInput.ts#L5)
+[src/api/schemas/$ChatInput.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatInput.ts#L5)
 
 ___
 
@@ -1211,7 +1211,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatInputData.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatInputData.ts#L5)
+[src/api/schemas/$ChatInputData.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatInputData.ts#L5)
 
 ___
 
@@ -1240,7 +1240,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatMLImageContentPart.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatMLImageContentPart.ts#L5)
+[src/api/schemas/$ChatMLImageContentPart.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatMLImageContentPart.ts#L5)
 
 ___
 
@@ -1277,7 +1277,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatMLMessage.ts#L5)
+[src/api/schemas/$ChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatMLMessage.ts#L5)
 
 ___
 
@@ -1300,7 +1300,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatMLTextContentPart.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatMLTextContentPart.ts#L5)
+[src/api/schemas/$ChatMLTextContentPart.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatMLTextContentPart.ts#L5)
 
 ___
 
@@ -1343,7 +1343,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatResponse.ts#L5)
+[src/api/schemas/$ChatResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatResponse.ts#L5)
 
 ___
 
@@ -1435,7 +1435,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ChatSettings.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ChatSettings.ts#L5)
+[src/api/schemas/$ChatSettings.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ChatSettings.ts#L5)
 
 ___
 
@@ -1464,7 +1464,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$CompletionUsage.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$CompletionUsage.ts#L5)
+[src/api/schemas/$CompletionUsage.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$CompletionUsage.ts#L5)
 
 ___
 
@@ -1509,7 +1509,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$CreateAgentRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$CreateAgentRequest.ts#L5)
+[src/api/schemas/$CreateAgentRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$CreateAgentRequest.ts#L5)
 
 ___
 
@@ -1537,7 +1537,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$CreateDoc.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$CreateDoc.ts#L5)
+[src/api/schemas/$CreateDoc.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$CreateDoc.ts#L5)
 
 ___
 
@@ -1572,7 +1572,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$CreateSessionRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$CreateSessionRequest.ts#L5)
+[src/api/schemas/$CreateSessionRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$CreateSessionRequest.ts#L5)
 
 ___
 
@@ -1596,7 +1596,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$CreateToolRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$CreateToolRequest.ts#L5)
+[src/api/schemas/$CreateToolRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$CreateToolRequest.ts#L5)
 
 ___
 
@@ -1626,7 +1626,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$CreateUserRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$CreateUserRequest.ts#L5)
+[src/api/schemas/$CreateUserRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$CreateUserRequest.ts#L5)
 
 ___
 
@@ -1664,7 +1664,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$Doc.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$Doc.ts#L5)
+[src/api/schemas/$Doc.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$Doc.ts#L5)
 
 ___
 
@@ -1690,7 +1690,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$DocIds.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$DocIds.ts#L5)
+[src/api/schemas/$DocIds.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$DocIds.ts#L5)
 
 ___
 
@@ -1711,7 +1711,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$FunctionCallOption.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$FunctionCallOption.ts#L5)
+[src/api/schemas/$FunctionCallOption.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$FunctionCallOption.ts#L5)
 
 ___
 
@@ -1738,7 +1738,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$FunctionDef.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$FunctionDef.ts#L5)
+[src/api/schemas/$FunctionDef.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$FunctionDef.ts#L5)
 
 ___
 
@@ -1756,7 +1756,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$FunctionParameters.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$FunctionParameters.ts#L5)
+[src/api/schemas/$FunctionParameters.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$FunctionParameters.ts#L5)
 
 ___
 
@@ -1786,7 +1786,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$InputChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$InputChatMLMessage.ts#L5)
+[src/api/schemas/$InputChatMLMessage.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$InputChatMLMessage.ts#L5)
 
 ___
 
@@ -1833,7 +1833,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$JobStatus.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$JobStatus.ts#L5)
+[src/api/schemas/$JobStatus.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$JobStatus.ts#L5)
 
 ___
 
@@ -1891,7 +1891,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$Memory.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$Memory.ts#L5)
+[src/api/schemas/$Memory.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$Memory.ts#L5)
 
 ___
 
@@ -1916,7 +1916,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$MemoryAccessOptions.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$MemoryAccessOptions.ts#L5)
+[src/api/schemas/$MemoryAccessOptions.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$MemoryAccessOptions.ts#L5)
 
 ___
 
@@ -1943,7 +1943,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$NamedToolChoice.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$NamedToolChoice.ts#L5)
+[src/api/schemas/$NamedToolChoice.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$NamedToolChoice.ts#L5)
 
 ___
 
@@ -1968,7 +1968,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$PartialFunctionDef.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$PartialFunctionDef.ts#L5)
+[src/api/schemas/$PartialFunctionDef.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$PartialFunctionDef.ts#L5)
 
 ___
 
@@ -2004,7 +2004,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$PatchAgentRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$PatchAgentRequest.ts#L5)
+[src/api/schemas/$PatchAgentRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$PatchAgentRequest.ts#L5)
 
 ___
 
@@ -2027,7 +2027,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$PatchSessionRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$PatchSessionRequest.ts#L5)
+[src/api/schemas/$PatchSessionRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$PatchSessionRequest.ts#L5)
 
 ___
 
@@ -2047,7 +2047,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$PatchToolRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$PatchToolRequest.ts#L5)
+[src/api/schemas/$PatchToolRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$PatchToolRequest.ts#L5)
 
 ___
 
@@ -2073,7 +2073,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$PatchUserRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$PatchUserRequest.ts#L5)
+[src/api/schemas/$PatchUserRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$PatchUserRequest.ts#L5)
 
 ___
 
@@ -2102,7 +2102,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ResourceCreatedResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ResourceCreatedResponse.ts#L5)
+[src/api/schemas/$ResourceCreatedResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ResourceCreatedResponse.ts#L5)
 
 ___
 
@@ -2131,7 +2131,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ResourceDeletedResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ResourceDeletedResponse.ts#L5)
+[src/api/schemas/$ResourceDeletedResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ResourceDeletedResponse.ts#L5)
 
 ___
 
@@ -2160,7 +2160,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ResourceUpdatedResponse.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ResourceUpdatedResponse.ts#L5)
+[src/api/schemas/$ResourceUpdatedResponse.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ResourceUpdatedResponse.ts#L5)
 
 ___
 
@@ -2210,7 +2210,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$Session.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$Session.ts#L5)
+[src/api/schemas/$Session.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$Session.ts#L5)
 
 ___
 
@@ -2247,7 +2247,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$Suggestion.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$Suggestion.ts#L5)
+[src/api/schemas/$Suggestion.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$Suggestion.ts#L5)
 
 ___
 
@@ -2276,7 +2276,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$Tool.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$Tool.ts#L5)
+[src/api/schemas/$Tool.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$Tool.ts#L5)
 
 ___
 
@@ -2294,7 +2294,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$ToolChoiceOption.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$ToolChoiceOption.ts#L5)
+[src/api/schemas/$ToolChoiceOption.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$ToolChoiceOption.ts#L5)
 
 ___
 
@@ -2332,7 +2332,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$UpdateAgentRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$UpdateAgentRequest.ts#L5)
+[src/api/schemas/$UpdateAgentRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$UpdateAgentRequest.ts#L5)
 
 ___
 
@@ -2356,7 +2356,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$UpdateSessionRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$UpdateSessionRequest.ts#L5)
+[src/api/schemas/$UpdateSessionRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$UpdateSessionRequest.ts#L5)
 
 ___
 
@@ -2376,7 +2376,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$UpdateToolRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$UpdateToolRequest.ts#L5)
+[src/api/schemas/$UpdateToolRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$UpdateToolRequest.ts#L5)
 
 ___
 
@@ -2404,7 +2404,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$UpdateUserRequest.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$UpdateUserRequest.ts#L5)
+[src/api/schemas/$UpdateUserRequest.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$UpdateUserRequest.ts#L5)
 
 ___
 
@@ -2442,7 +2442,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$User.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$User.ts#L5)
+[src/api/schemas/$User.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$User.ts#L5)
 
 ___
 
@@ -2459,7 +2459,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$agent_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$agent_id.ts#L5)
+[src/api/schemas/$agent_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$agent_id.ts#L5)
 
 ___
 
@@ -2476,7 +2476,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$doc_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$doc_id.ts#L5)
+[src/api/schemas/$doc_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$doc_id.ts#L5)
 
 ___
 
@@ -2493,7 +2493,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$job_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$job_id.ts#L5)
+[src/api/schemas/$job_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$job_id.ts#L5)
 
 ___
 
@@ -2510,7 +2510,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$memory_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$memory_id.ts#L5)
+[src/api/schemas/$memory_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$memory_id.ts#L5)
 
 ___
 
@@ -2527,7 +2527,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$message_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$message_id.ts#L5)
+[src/api/schemas/$message_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$message_id.ts#L5)
 
 ___
 
@@ -2544,7 +2544,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$session_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$session_id.ts#L5)
+[src/api/schemas/$session_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$session_id.ts#L5)
 
 ___
 
@@ -2561,7 +2561,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$tool_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$tool_id.ts#L5)
+[src/api/schemas/$tool_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$tool_id.ts#L5)
 
 ___
 
@@ -2578,7 +2578,7 @@ ___
 
 #### Defined in
 
-[src/api/schemas/$user_id.ts:5](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/schemas/$user_id.ts#L5)
+[src/api/schemas/$user_id.ts:5](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/schemas/$user_id.ts#L5)
 
 ___
 
@@ -2588,4 +2588,4 @@ ___
 
 #### Defined in
 
-[src/api/core/OpenAPI.ts:22](https://github.com/julep-ai/julep/blob/9f8ec90a029652c01affdefce61df7876de7a53f/sdks/ts/src/api/core/OpenAPI.ts#L22)
+[src/api/core/OpenAPI.ts:22](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/api/core/OpenAPI.ts#L22)
