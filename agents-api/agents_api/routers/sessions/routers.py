@@ -90,6 +90,8 @@ async def create_session(
         situation=request.situation,
         metadata=request.metadata or {},
         render_templates=request.render_templates or False,
+        token_budget=request.token_budget,
+        context_overflow=request.context_overflow,
     )
 
     return ResourceCreatedResponse(
@@ -151,6 +153,8 @@ async def update_session(
             developer_id=x_developer_id,
             situation=request.situation,
             metadata=request.metadata,
+            token_budget=request.token_budget,
+            context_overflow=request.context_overflow,
         )
 
         return ResourceUpdatedResponse(
@@ -182,6 +186,8 @@ async def patch_session(
             developer_id=x_developer_id,
             situation=request.situation,
             metadata=request.metadata,
+            token_budget=request.token_budget,
+            context_overflow=request.context_overflow,
         )
 
         return ResourceUpdatedResponse(
