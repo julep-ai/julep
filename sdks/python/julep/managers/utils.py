@@ -61,7 +61,7 @@ def rewrap_in_class(cls: type[Model]):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             result = await func(*args, **kwargs)
-            return cls.model_construct(**kwargs, **result.dict())
+            return pydantic_model_construct(cls, **kwargs, **result.dict())
 
         # This wrapper handles synchronous functions, directly calling them and processing their results with `cls.construct`.
         @wraps(func)
