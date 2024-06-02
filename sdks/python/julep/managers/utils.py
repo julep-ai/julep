@@ -4,7 +4,7 @@ from typing import Callable
 from uuid import UUID
 from typing_extensions import ParamSpec
 
-from pydantic.main import Model
+from pydantic import BaseModel
 
 from ..api.types import ResourceCreatedResponse
 
@@ -40,7 +40,7 @@ def is_valid_uuid4(uuid_to_test: str) -> bool:
     return True
 
 
-def pydantic_model_construct(cls: type[Model], **kwargs):
+def pydantic_model_construct(cls: type[BaseModel], **kwargs):
     import pydantic
 
     pydantic_version = int(pydantic.__version__[0])
@@ -55,7 +55,7 @@ def pydantic_model_construct(cls: type[Model], **kwargs):
     return cls.model_construct(**kwargs)
 
 
-def rewrap_in_class(cls: type[Model]):
+def rewrap_in_class(cls: type[BaseModel]):
     def decorator(func: Callable[P, ResourceCreatedResponse]):
         # This wrapper is used for asynchronous functions to ensure they are properly awaited and their results are processed by `cls.construct`.
         @wraps(func)
