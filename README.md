@@ -211,7 +211,7 @@ You can test different examples of using Julep to make apps in the [example app 
 ## Deployment
 Check out the [self-hosting guide](https://docs.julep.ai/agents/self-hosting) to host the platform yourself.
 
-If you want to deploy Julep to production, [let's hop on a call](https://calendly.com/diwank-julep/45min)!
+If you want to deploy Julep to production, [let's hop on a call](https://cal.com/ishitaj/15min)!
 
 We'll help you customise the platform and help you get set up with:
 - Multi-tenancy
@@ -235,4 +235,4 @@ If you have any questions, need assistance, or want to get in touch with the Jul
 - GitHub Issues: For technical issues, bug reports, and feature requests, please open an issue on the Julep AI GitHub repository.
 - Email Support: If you need direct assistance from our support team, send an email to diwank@julep.ai, and we'll get back to you as soon as possible.
 - Follow for updates on [X](https://twitter.com/julep_ai) & [LinkedIn](https://www.linkedin.com/company/julep-ai/)
-- [Hop on a call](https://calendly.com/diwank-julep): We wanna know what you're building and how we can tweak and tune Julep to help you build your next AI app.
+- [Hop on a call](https://cal.com/ishitaj/15min): We wanna know what you're building and how we can tweak and tune Julep to help you build your next AI app.
