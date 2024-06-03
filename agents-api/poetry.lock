@@ -454,13 +454,13 @@ files = [
 
 [[package]]
 name = "certifi"
-version = "2024.2.2"
+version = "2024.6.2"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "certifi-2024.2.2-py3-none-any.whl", hash = "sha256:dc383c07b76109f368f6106eee2b593b04a011ea4d55f652c6ca24a754d1cdd1"},
-    {file = "certifi-2024.2.2.tar.gz", hash = "sha256:0569859f95fc761b18b45ef421b1290a0f65f147e92a1e5eb3e635f9a5e4e66f"},
+    {file = "certifi-2024.6.2-py3-none-any.whl", hash = "sha256:ddc6c8ce995e6987e7faf5e3f1b02b302836a0e5d98ece18392cb1a36c72ad56"},
+    {file = "certifi-2024.6.2.tar.gz", hash = "sha256:3cd43f1c6fa7dedc5899d69d3ad0398fd018ad1a17fba83ddaf78aa46c747516"},
 ]
 
 [[package]]
@@ -762,19 +762,19 @@ develop = ["coverage", "invoke", "path.py", "pylint", "pytest (>=3.2)", "pytest-
 
 [[package]]
 name = "dask"
-version = "2024.5.1"
+version = "2024.5.2"
 description = "Parallel PyData with Task Scheduling"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "dask-2024.5.1-py3-none-any.whl", hash = "sha256:af1cadd1fd1d1d44600ff5de43dd029e5668fdf87422131f4e3e3aa2a6a63555"},
-    {file = "dask-2024.5.1.tar.gz", hash = "sha256:e071fda67031c314569e37ca70b3e88bb30f1d91ff8ee4122b541845847cc264"},
+    {file = "dask-2024.5.2-py3-none-any.whl", hash = "sha256:acc2cfe41d9e0151c216ac40396dbe34df13bc3d8c51dfece190349e4f2243af"},
+    {file = "dask-2024.5.2.tar.gz", hash = "sha256:5c9722c44d0195e78b6e54197aa3302e6fcaaac2310fd3014560bcb86253dcb3"},
 ]
 
 [package.dependencies]
 click = ">=8.1"
 cloudpickle = ">=1.5.0"
-distributed = {version = "2024.5.1", optional = true, markers = "extra == \"distributed\""}
+distributed = {version = "2024.5.2", optional = true, markers = "extra == \"distributed\""}
 fsspec = ">=2021.09.0"
 importlib-metadata = {version = ">=4.13.0", markers = "python_version < \"3.12\""}
 packaging = ">=20.0"
@@ -787,7 +787,7 @@ array = ["numpy (>=1.21)"]
 complete = ["dask[array,dataframe,diagnostics,distributed]", "lz4 (>=4.3.2)", "pyarrow (>=7.0)", "pyarrow-hotfix"]
 dataframe = ["dask-expr (>=1.1,<1.2)", "dask[array]", "pandas (>=1.3)"]
 diagnostics = ["bokeh (>=2.4.2)", "jinja2 (>=2.10.3)"]
-distributed = ["distributed (==2024.5.1)"]
+distributed = ["distributed (==2024.5.2)"]
 test = ["pandas[test]", "pre-commit", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist"]
 
 [[package]]
@@ -900,19 +900,19 @@ files = [
 
 [[package]]
 name = "distributed"
-version = "2024.5.1"
+version = "2024.5.2"
 description = "Distributed scheduler for Dask"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "distributed-2024.5.1-py3-none-any.whl", hash = "sha256:cf77583ce67f6696aa716c30f1cba3403ac866241c00d6e9a0bc1500c6818b40"},
-    {file = "distributed-2024.5.1.tar.gz", hash = "sha256:c4e641e5fc014de3b43c584c70f703a7d44557b51b1143db812b8bc861aa84e2"},
+    {file = "distributed-2024.5.2-py3-none-any.whl", hash = "sha256:c0fd59d5c34179d9c9b5dc5acb42a00a06d163107b79f66c2dc73e9479a92286"},
+    {file = "distributed-2024.5.2.tar.gz", hash = "sha256:4cee41093e98340d04d9254012c7d521065f64b3f33546dd0b02b00becb41e21"},
 ]
 
 [package.dependencies]
 click = ">=8.0"
 cloudpickle = ">=1.5.0"
-dask = "2024.5.1"
+dask = "2024.5.2"
 jinja2 = ">=2.10.3"
 locket = ">=1.0.0"
 msgpack = ">=1.0.0"
@@ -1329,13 +1329,13 @@ requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 
 [[package]]
 name = "google-cloud-aiplatform"
-version = "1.52.0"
+version = "1.53.0"
 description = "Vertex AI API client library"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "google-cloud-aiplatform-1.52.0.tar.gz", hash = "sha256:932a56e3050b4bc9a2c0630e6af3c0bd52f0bcf72b5dc01c059874231099edd3"},
-    {file = "google_cloud_aiplatform-1.52.0-py2.py3-none-any.whl", hash = "sha256:8c62f5d0ec39e008737ebba4875105ed7563dd0958f591f95dc7816e4b30f92a"},
+    {file = "google-cloud-aiplatform-1.53.0.tar.gz", hash = "sha256:574cfad8ac5fa5d57ef717f5335ce05636a5fa9b8aeea0f5c325b46b9448e6b1"},
+    {file = "google_cloud_aiplatform-1.53.0-py2.py3-none-any.whl", hash = "sha256:9dfb1f110e6d4795b45afcfab79108fc5c8ed9aa4eaf899e433bc2ca1b76c778"},
 ]
 
 [package.dependencies]
@@ -1935,13 +1935,13 @@ test = ["flaky", "ipyparallel", "pre-commit", "pytest (>=7.0)", "pytest-asyncio 
 
 [[package]]
 name = "ipython"
-version = "8.24.0"
+version = "8.25.0"
 description = "IPython: Productive Interactive Computing"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "ipython-8.24.0-py3-none-any.whl", hash = "sha256:d7bf2f6c4314984e3e02393213bab8703cf163ede39672ce5918c51fe253a2a3"},
-    {file = "ipython-8.24.0.tar.gz", hash = "sha256:010db3f8a728a578bb641fdd06c063b9fb8e96a9464c63aec6310fbcb5e80501"},
+    {file = "ipython-8.25.0-py3-none-any.whl", hash = "sha256:53eee7ad44df903a06655871cbab66d156a051fd86f3ec6750470ac9604ac1ab"},
+    {file = "ipython-8.25.0.tar.gz", hash = "sha256:c6ed726a140b6e725b911528f80439c534fac915246af3efc39440a6b0f9d716"},
 ]
 
 [package.dependencies]
@@ -1960,7 +1960,7 @@ typing-extensions = {version = ">=4.6", markers = "python_version < \"3.12\""}
 [package.extras]
 all = ["ipython[black,doc,kernel,matplotlib,nbconvert,nbformat,notebook,parallel,qtconsole]", "ipython[test,test-extra]"]
 black = ["black"]
-doc = ["docrepr", "exceptiongroup", "ipykernel", "ipython[test]", "matplotlib", "setuptools (>=18.5)", "sphinx (>=1.3)", "sphinx-rtd-theme", "sphinxcontrib-jquery", "stack-data", "typing-extensions"]
+doc = ["docrepr", "exceptiongroup", "intersphinx-registry", "ipykernel", "ipython[test]", "matplotlib", "setuptools (>=18.5)", "sphinx (>=1.3)", "sphinx-rtd-theme", "sphinxcontrib-jquery", "tomli", "typing-extensions"]
 kernel = ["ipykernel"]
 matplotlib = ["matplotlib"]
 nbconvert = ["nbconvert"]
@@ -2316,13 +2316,13 @@ jupyter-server = ">=1.1.2"
 
 [[package]]
 name = "jupyter-server"
-version = "2.14.0"
+version = "2.14.1"
 description = "The backend—i.e. core services, APIs, and REST endpoints—to Jupyter web applications."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_server-2.14.0-py3-none-any.whl", hash = "sha256:fb6be52c713e80e004fac34b35a0990d6d36ba06fd0a2b2ed82b899143a64210"},
-    {file = "jupyter_server-2.14.0.tar.gz", hash = "sha256:659154cea512083434fd7c93b7fe0897af7a2fd0b9dd4749282b42eaac4ae677"},
+    {file = "jupyter_server-2.14.1-py3-none-any.whl", hash = "sha256:16f7177c3a4ea8fe37784e2d31271981a812f0b2874af17339031dc3510cc2a5"},
+    {file = "jupyter_server-2.14.1.tar.gz", hash = "sha256:12558d158ec7a0653bf96cc272bc7ad79e0127d503b982ed144399346694f726"},
 ]
 
 [package.dependencies]
@@ -2347,7 +2347,7 @@ traitlets = ">=5.6.0"
 websocket-client = ">=1.7"
 
 [package.extras]
-docs = ["ipykernel", "jinja2", "jupyter-client", "jupyter-server", "myst-parser", "nbformat", "prometheus-client", "pydata-sphinx-theme", "send2trash", "sphinx-autodoc-typehints", "sphinxcontrib-github-alt", "sphinxcontrib-openapi (>=0.8.0)", "sphinxcontrib-spelling", "sphinxemoji", "tornado", "typing-extensions"]
+docs = ["ipykernel", "jinja2", "jupyter-client", "myst-parser", "nbformat", "prometheus-client", "pydata-sphinx-theme", "send2trash", "sphinx-autodoc-typehints", "sphinxcontrib-github-alt", "sphinxcontrib-openapi (>=0.8.0)", "sphinxcontrib-spelling", "sphinxemoji", "tornado", "typing-extensions"]
 test = ["flaky", "ipykernel", "pre-commit", "pytest (>=7.0,<9)", "pytest-console-scripts", "pytest-jupyter[server] (>=0.7)", "pytest-timeout", "requests"]
 
 [[package]]
@@ -2572,13 +2572,13 @@ extended-testing = ["beautifulsoup4 (>=4.12.3,<5.0.0)", "lxml (>=4.9.3,<6.0)"]
 
 [[package]]
 name = "langsmith"
-version = "0.1.63"
+version = "0.1.67"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.63-py3-none-any.whl", hash = "sha256:7810afdf5e3f3b472fc581a29371fb96cd843dde2149e048d1b9610325159d1e"},
-    {file = "langsmith-0.1.63.tar.gz", hash = "sha256:a609405b52f6f54df442a142cbf19ab38662d54e532f96028b4c546434d4afdf"},
+    {file = "langsmith-0.1.67-py3-none-any.whl", hash = "sha256:7eb2e1c1b375925ff47700ed8071e10c15e942e9d1d634b4a449a9060364071a"},
+    {file = "langsmith-0.1.67.tar.gz", hash = "sha256:149558669a2ac4f21471cd964e61072687bba23b7c1ccb51f190a8f59b595b39"},
 ]
 
 [package.dependencies]
@@ -2628,13 +2628,13 @@ dev = ["Sphinx (>=5.1.1)", "black (==23.12.1)", "build (>=0.10.0)", "coverage (>
 
 [[package]]
 name = "litellm"
-version = "1.39.2"
+version = "1.40.0"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.39.2-py3-none-any.whl", hash = "sha256:843cb9a4d45c89ba6da95529815ec83ee7e4b7fe07aa0ed633102f600fddd9ad"},
-    {file = "litellm-1.39.2.tar.gz", hash = "sha256:96c4f3d522ccf32817357b1e9f5f63fa36a4a884f336314e1f6d66c0576d689e"},
+    {file = "litellm-1.40.0-py3-none-any.whl", hash = "sha256:c3055767ae144585699fdb07b3ad678e66738c2eff19abd7761c8fe22d6e636f"},
+    {file = "litellm-1.40.0.tar.gz", hash = "sha256:12b4c0ad850ede5aebdb2f48e3a8e898efb25df5bc915ff89929ad963cb92f54"},
 ]
 
 [package.dependencies]
@@ -3238,13 +3238,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.30.4"
+version = "1.30.5"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.30.4-py3-none-any.whl", hash = "sha256:fb2635efd270efaf9fac2e07558d7948373b940637d3ae3ab624c1a983d4f03f"},
-    {file = "openai-1.30.4.tar.gz", hash = "sha256:f3488d9a1c4e0d332b019377d27d7cb4b3d6103fd5d0a416c7ceac780d1d9b88"},
+    {file = "openai-1.30.5-py3-none-any.whl", hash = "sha256:2ad95e926de0d2e09cde632a9204b0a6dca4a03c2cdcc84329b01f355784355a"},
+    {file = "openai-1.30.5.tar.gz", hash = "sha256:5366562eb2c5917e6116ae0391b7ae6e3acd62b0ae3f565ada32b35d8fcfa106"},
 ]
 
 [package.dependencies]
@@ -4305,13 +4305,13 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.32.2"
+version = "2.32.3"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "requests-2.32.2-py3-none-any.whl", hash = "sha256:fc06670dd0ed212426dfeb94fc1b983d917c4f9847c863f313c9dfaaffb7c23c"},
-    {file = "requests-2.32.2.tar.gz", hash = "sha256:dd951ff5ecf3e3b3aa26b40703ba77495dab41da839ae72ef3c8e5d8e2433289"},
+    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
+    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
 ]
 
 [package.dependencies]
@@ -5313,13 +5313,13 @@ test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,
 
 [[package]]
 name = "transformers"
-version = "4.41.1"
+version = "4.41.2"
 description = "State-of-the-art Machine Learning for JAX, PyTorch and TensorFlow"
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "transformers-4.41.1-py3-none-any.whl", hash = "sha256:f0680e0b1a01067eccd11f62f0522409422c7d6f91d532fe0f50b136a406129d"},
-    {file = "transformers-4.41.1.tar.gz", hash = "sha256:fa859e4c66f0896633a3bf534e0d9a29a9a88478a49f94c5d8270537dc61cc42"},
+    {file = "transformers-4.41.2-py3-none-any.whl", hash = "sha256:05555d20e43f808de1ef211ab64803cdb513170cef70d29a888b589caebefc67"},
+    {file = "transformers-4.41.2.tar.gz", hash = "sha256:80a4db216533d573e9cc7388646c31ed9480918feb7c55eb211249cb23567f87"},
 ]
 
 [package.dependencies]
@@ -5418,13 +5418,13 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.12.0"
+version = "4.12.1"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.12.0-py3-none-any.whl", hash = "sha256:b349c66bea9016ac22978d800cfff206d5f9816951f12a7d0ec5578b0a819594"},
-    {file = "typing_extensions-4.12.0.tar.gz", hash = "sha256:8cbcdc8606ebcb0d95453ad7dc5065e6237b6aa230a31e81d0f440c30fed5fd8"},
+    {file = "typing_extensions-4.12.1-py3-none-any.whl", hash = "sha256:6024b58b69089e5a89c347397254e35f1bf02a907728ec7fee9bf0fe837d203a"},
+    {file = "typing_extensions-4.12.1.tar.gz", hash = "sha256:915f5e35ff76f56588223f15fdd5938f9a1cf9195c0de25130c627e4d597f6d1"},
 ]
 
 [[package]]
@@ -5821,18 +5821,18 @@ files = [
 
 [[package]]
 name = "zipp"
-version = "3.19.0"
+version = "3.19.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "zipp-3.19.0-py3-none-any.whl", hash = "sha256:96dc6ad62f1441bcaccef23b274ec471518daf4fbbc580341204936a5a3dddec"},
-    {file = "zipp-3.19.0.tar.gz", hash = "sha256:952df858fb3164426c976d9338d3961e8e8b3758e2e059e0f754b8c4262625ee"},
+    {file = "zipp-3.19.1-py3-none-any.whl", hash = "sha256:2828e64edb5386ea6a52e7ba7cdb17bb30a73a858f5eb6eb93d8d36f5ea26091"},
+    {file = "zipp-3.19.1.tar.gz", hash = "sha256:35427f6d5594f4acf82d25541438348c26736fa9b3afa2754bcd63cdb99d8e8f"},
 ]
 
 [package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
+test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [metadata]
 lock-version = "2.0"
