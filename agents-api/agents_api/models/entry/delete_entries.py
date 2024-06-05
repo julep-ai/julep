@@ -65,7 +65,7 @@ def delete_entries_query(session_id: UUID) -> tuple[str, dict]:
 
 @cozo_query
 def delete_entries_by_ids_query(entry_ids: list[UUID]) -> tuple[str, dict]:
-    entry_ids = [f'to_uuid("{id}")' for id in entry_ids]
+    entry_ids = [[f'to_uuid("{id}")'] for id in entry_ids]
 
     query = """
     {
