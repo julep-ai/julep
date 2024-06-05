@@ -11,7 +11,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
-def cupdate_task_query(
+def update_task_query(
     task_id: UUID,
     developer_id: UUID,
     agent_id: UUID,

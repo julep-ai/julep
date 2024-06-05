@@ -13,12 +13,12 @@ from ..utils import cozo_query
 @cozo_query
 @beartype
 def create_task_query(
+    developer_id: UUID,
     agent_id: UUID,
     task_id: UUID,
-    developer_id: UUID,
     name: str,
     description: str,
-    input_schema: Dict[str, any],
+    input_schema: Dict[str, Any],
     tools_available: List[UUID] = [],
     workflows: List[Dict[str, Any]] = [],
 ) -> tuple[str, dict]:
@@ -26,8 +26,8 @@ def create_task_query(
     query = """
 {
     ?[agent_id, task_id, name, description, input_schema, tools_available, workflows] <- [[
-        to_uuid($agent_id), to_uuid($task_id), $name, $description, $input_schema, [to_uuid($tools_available)], $workflows
-        ]]
+        to_uuid($agent_id), to_uuid($task_id), $name, $description, $input_schema, $tools_available, $workflows
+    ]]
 
     :insert tasks {
         agent_id,
