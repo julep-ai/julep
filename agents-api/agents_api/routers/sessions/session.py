@@ -36,6 +36,7 @@ from ...models.entry.proc_mem_context import proc_mem_context_query
 from ...models.session.session_data import get_session_data
 from ...models.session.get_cached_response import get_cached_response
 from ...models.session.set_cached_response import set_cached_response
+from ...exceptions import PromptTooBigError
 
 from .exceptions import InputTooBigError
 from .protocol import Settings
@@ -164,16 +165,14 @@ class BaseSession:
         result: list[Entry] = []
         token_cnt, offset = 0, 0
         if messages[0].role == Role.system:
-            result: list[Entry] = messages[0]
             token_cnt, offset = messages[0].token_count, 1
 
         for m in reversed(messages[offset:]):
+            token_cnt += m.token_count
             if token_cnt < token_count_threshold:
                 result.append(m)
             else:
                 break
-
-            token_cnt += m.token_count
 
         if offset:
             result.append(messages[0])
@@ -494,6 +493,8 @@ class BaseSession:
                 entries = self._truncate_entries(entries, final_settings.token_budget)
             elif final_settings.context_overflow == "adaptive":
                 summarization_task = run_summarization_task
+            else:
+                raise PromptTooBigError(total_tokens, final_settings.token_budget)
 
         add_entries_query(entries)
 
