@@ -1,3 +1,5 @@
+<sup>[English](/) | 中文翻译</sup>
+
 <div align="center">
     <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=%E7%94%A8%E4%BA%8E%E6%9E%84%E5%BB%BA%E6%9C%89%E7%8A%B6%E6%80%81%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E5%BA%94%E7%94%A8%E7%9A%84%E5%BC%80%E6%BA%90%E5%B9%B3%E5%8F%B0&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Dark" alt="julep" width="640" height="320" />
 </div>
