@@ -48,49 +48,38 @@ We've built a lot of AI apps and understand how difficult it is to evaluate hund
 1. The barrier to making LLM apps with memory, knowledge & tools is too high.
 2. Agentic behaviour is hard to control when done through multi-agent frameworks.
 
-**The Solution**:
-- **Statefulness By Design**: Manages context by default. Uses [CozoDB](https://cozodb.org/) to save & retrieve conversation history, OpenAPI specification tools & documents.
-- **Support for Users & Agents**: Allows creating different user <-> agent interactions like `One Agent <-> Many Users`; `Many Agents <-> One User` etc. Read more: https://docs.julep.ai/concepts/
-- **Use and switch between any LLMs anytime**: Switch and use different LLMs, providers and models, self-hosted or otherwise.
-- **Production-ready**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon!
-- **90+ tools built-in**: Connect your AI app to 150+ third-party applications using [Composio](https://docs.composio.dev/framework/julep/) natively.
-- ***GitHub Actions-like workflows for tasks**: Define agentic workflows to be executed asynchronously with one ore more without worrying about timeouts or multiplying hallucinations.
+---
+## Features
+- **Statefulness By Design**: Manages conversation history by default. Use simple flags; `remember` & `recall` to tune whether to save or retrieve conversation history.
+- **Support for Users & Agents**: Allows creating different user <-> agent interactions like `One Agent <-> Many Users`; `Many Agents <-> One User` etc. [Read more,](https://docs.julep.ai/concepts/).
+- **Built-in RAG**: Add, delete & update documents to give the LLM context about the user or an agent depending on your use case. [Read more here.](https://docs.julep.ai/guides/build-a-retrieval-augmented-generation-rag-agent)
+- **90+ tools built-in**: Connect your AI app to 90+ third-party applications using [Composio](https://docs.composio.dev/framework/julep/) natively. `toolset.handle_tool_calls(julep_client, session.id, response)` will call and handle your tools for you! [See example](https://docs.julep.ai/guides/use-julep-with-composio)
+- **Local-first**: Julep comes ready to be deployed to production using Docker Compose. Support for k8s coming soon! 
+- **Switch LLMs on the fly**: Update the Agent to switch between LLMs from OpenAI, Anthropic or Ollama. All the while preserving state.
+- ***Assign Tasks to Agents**: Define agentic workflows to be executed asynchronously with one ore more without worrying about timeouts or multiplying hallucinations. [Work in progress](https://github.com/julep-ai/julep/discussions/387)
 
 > (*) Coming soon!
 
-<!-- ![alt text](image.png) -->
-
+---
+## Guides
+You can view the different features of Julep in action in the [guide docs](https://docs.julep.ai/guides/).
+1. [Simple Conversational Bot](https://deepnote.com/app/julep-ai-761c/Julep-Mixers-4dfff09a-84f2-4278-baa3-d1a00b88ba26)
+2. [Search Agent](https://docs.julep.ai/guides/)
+3. [RAG Agent](https://docs.julep.ai/guides/build-a-retrieval-augmented-generation-rag-agent)
+5. [GitHub Agent with Composio](https://docs.julep.ai/guides/use-julep-with-composio)
+5. [GPT 4o for Vision](https://docs.julep.ai/guides/image-+-text-with-gpt-4o)
+---
 
 ## Quickstart
 ### Option 1: Use the Julep Cloud
 Our hosted platform is in Beta! 
 
 To get access:
-[Join our Discord](https://discord.com/invite/JTSBGRZrzj) or Drop a "Hey" over at sid@julep.ai!
+- Head over to https://platform.julep.ai
+- Generate and add your `JULEP_API_KEY` in `.env`
 
 ### Option 2: Install and run Julep locally
-- Download the `docker-compose.yml` file along with the `.env` file for configuration to run the Julep platform locally
-
-```bash
-# Add the docker compose to your project dir
-wget https://raw.githubusercontent.com/julep-ai/julep/dev/deploy/docker-compose.yml
-# Add the .env file to your project dir
-wget https://raw.githubusercontent.com/julep-ai/julep/dev/deploy/.env.example -O .env
-# Pull the latest images
-docker compose pull
-# Start the services (in detached mode)
-docker compose up -d
-```
-- The API would now be available at: `http://0.0.0.0:8080`
-
-- Next, add your OpenAI/Anthropic API Key to the `.env`
-
-- Set your environment variables
-```bash
-export JULEP_API_KEY=myauthkey
-export JULEP_API_URL=http://0.0.0.0:8080
-```
-
+Head over to docs on [self-hosting](https://docs.julep.ai/guides/self-hosting) to see how to run Julep locally!
 ### Installation
 
 ```
@@ -198,14 +187,6 @@ npm install @julep/sdk
 
 For more information on using the TypeScript SDK, please refer to the [TypeScript SDK documentation](https://docs.julep.ai/api-reference/js-sdk-docs).
 
----
-## Examples
-You can test different examples of using Julep to make apps in the [example app docs](https://docs.julep.ai/cookbooks/example-apps).
-
-1. [Simple Conversational Bot](https://deepnote.com/app/julep-ai-761c/Julep-Mixers-4dfff09a-84f2-4278-baa3-d1a00b88ba26)
-2. [Discord Bot with Long-Term Memory](https://replit.com/@alt-glitch/LLM-App-with-Long-Term-Memory)
-3. [AI Dungeon Master](https://github.com/julep-ai/julep-examples/tree/main/dungeon-master)
-4. [Community Feedback Agent](https://github.com/julep-ai/julep-examples/tree/main/community-feedback)
 ---
 
 ## Deployment
