@@ -3,11 +3,11 @@ import uuid
 from ward import test
 from agents_api.common.protocol.entries import Entry
 from agents_api.autogen.openapi_model import Role
-from tests.fixtures import base_session
+from agents_api.activities.truncation import get_extra_entry_ids
 
 
-@test("truncate entries, do not strip system message")
-def _(session=base_session):
+@test("get extra entries, do not strip system message")
+def _():
     session_ids = [uuid.uuid4()] * 3
     entry_ids = [uuid.uuid4()] * 3
     now = time.time()
@@ -38,32 +38,14 @@ def _(session=base_session):
         ),
     ]
 
-    expected_result = [
-        Entry(
-            entry_id=entry_ids[0],
-            session_id=session_ids[0],
-            role=Role.system,
-            content="content 1",
-            created_at=now,
-            timestamp=now,
-        ),
-        Entry(
-            entry_id=entry_ids[2],
-            session_id=session_ids[2],
-            role=Role.user,
-            content="content 3",
-            created_at=now,
-            timestamp=now,
-        ),
-    ]
     threshold = sum([m.token_count for m in messages]) - 1
-    result = session._truncate_entries(messages, threshold)
+    result = get_extra_entry_ids(messages, threshold)
 
-    assert result == expected_result
+    assert result == {entry_ids[1]}
 
 
-@test("truncate entries")
-def _(session=base_session):
+@test("get extra entries")
+def _():
     session_ids = [uuid.uuid4()] * 3
     entry_ids = [uuid.uuid4()] * 3
     now = time.time()
@@ -94,33 +76,15 @@ def _(session=base_session):
         ),
     ]
 
-    expected_result = [
-        Entry(
-            entry_id=entry_ids[1],
-            session_id=session_ids[1],
-            role=Role.assistant,
-            content="content 2",
-            created_at=now,
-            timestamp=now,
-        ),
-        Entry(
-            entry_id=entry_ids[2],
-            session_id=session_ids[2],
-            role=Role.user,
-            content="content 3",
-            created_at=now,
-            timestamp=now,
-        ),
-    ]
     threshold = sum([m.token_count for m in messages]) - 1
-    result = session._truncate_entries(messages, threshold)
+    result = get_extra_entry_ids(messages, threshold)
 
-    assert result == expected_result
+    assert result == {entry_ids[0]}
 
 
-@test("truncate entries, no change if empty")
-def _(session=base_session):
+@test("get extra entries, no change if empty")
+def _():
     messages = []
-    result = session._truncate_entries(messages, 1)
+    result = get_extra_entry_ids(messages, 1)
 
     assert result == []

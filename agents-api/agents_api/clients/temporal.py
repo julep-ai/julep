@@ -46,3 +46,16 @@ async def run_embed_docs_task(
         task_queue="memory-task-queue",
         id=str(job_id),
     )
+
+
+async def run_truncation_task(
+    token_count_threshold: int, session_id: UUID, job_id: UUID
+):
+    client = await get_client()
+
+    await client.execute_workflow(
+        "TruncationWorkflow",
+        args=[str(session_id), token_count_threshold],
+        task_queue="memory-task-queue",
+        id=str(job_id),
+    )

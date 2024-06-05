@@ -4,6 +4,7 @@ from functools import reduce
 from json import JSONDecodeError
 from typing import Callable
 from uuid import uuid4
+from functools import partial
 
 from dataclasses import dataclass
 from openai.types.chat.chat_completion import ChatCompletion
@@ -12,9 +13,10 @@ from pydantic import UUID4
 import litellm
 from litellm import acompletion
 
-from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds, Role
+from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
+from ...clients.temporal import run_truncation_task
 from ...clients.worker.types import ChatML
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
@@ -155,29 +157,6 @@ class BaseSession:
         #   - If more space is still needed, remove info sections iteratively
 
         raise InputTooBigError(token_count, summarization_tokens_threshold)
-
-    def _truncate_entries(
-        self, messages: list[Entry], token_count_threshold: int
-    ) -> list[Entry]:
-        if not len(messages):
-            return messages
-
-        result: list[Entry] = []
-        token_cnt, offset = 0, 0
-        if messages[0].role == Role.system:
-            token_cnt, offset = messages[0].token_count, 1
-
-        for m in reversed(messages[offset:]):
-            token_cnt += m.token_count
-            if token_cnt < token_count_threshold:
-                result.append(m)
-            else:
-                break
-
-        if offset:
-            result.append(messages[0])
-
-        return list(reversed(result))
 
     async def run(
         self, new_input, settings: Settings
@@ -483,22 +462,22 @@ class BaseSession:
             )
 
         entries.append(new_entry)
-        summarization_task = None
+        bg_task = None
 
         if (
             final_settings.token_budget is not None
             and total_tokens >= final_settings.token_budget
         ):
             if final_settings.context_overflow == "truncate":
-                entries = self._truncate_entries(entries, final_settings.token_budget)
+                bg_task = partial(run_truncation_task, final_settings.token_budget)
             elif final_settings.context_overflow == "adaptive":
-                summarization_task = run_summarization_task
+                bg_task = run_summarization_task
             else:
                 raise PromptTooBigError(total_tokens, final_settings.token_budget)
 
         add_entries_query(entries)
 
-        return summarization_task
+        return bg_task
 
 
 class PlainCompletionSession(BaseSession):
