@@ -4,6 +4,7 @@ from beartype import beartype
 
 
 from ..utils import cozo_query
+from ...common.protocol.entries import Entry
 
 
 @cozo_query
@@ -64,47 +65,37 @@ def delete_entries_query(session_id: UUID) -> tuple[str, dict]:
 
 
 @cozo_query
-def delete_entries_by_ids_query(entry_ids: list[UUID]) -> tuple[str, dict]:
-    entry_ids = [[f'to_uuid("{id}")'] for id in entry_ids]
+def delete_entries(entries: list[Entry]) -> tuple[str, dict]:
+    entry_keys = [
+        [
+            f'to_uuid("{e.id}")',
+            f'to_uuid("{e.session_id}")',
+            e.source,
+            e.role.value,
+            e.name,
+        ]
+        for e in entries
+    ]
 
     query = """
     {
-        input[entry_id] <- $entry_ids
-
         ?[
-            session_id,
             entry_id,
+            session_id,
+            source,
             role,
             name,
-            content,
-            source,
-            token_count,
-            created_at,
-            timestamp,
-        ] := input[entry_id],
-            *entries{
-                session_id,
-                entry_id,
-                role,
-                name,
-                content,
-                source,
-                token_count,
-                created_at,
-                timestamp,
-            }
+        ] <- $entry_keys
         
         :delete entries {
-            session_id,
             entry_id,
+            session_id,
+            source,
             role,
             name,
-            content,
-            source,
-            token_count,
-            created_at,
-            timestamp,
         }
+
+        :returning
     }"""
 
-    return (query, {"entry_ids": entry_ids})
+    return (query, {"entry_keys": entry_keys})

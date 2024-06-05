@@ -3,7 +3,7 @@ import uuid
 from ward import test
 from agents_api.common.protocol.entries import Entry
 from agents_api.autogen.openapi_model import Role
-from agents_api.activities.truncation import get_extra_entry_ids
+from agents_api.activities.truncation import get_extra_entries
 
 
 @test("get extra entries, do not strip system message")
@@ -39,9 +39,9 @@ def _():
     ]
 
     threshold = sum([m.token_count for m in messages]) - 1
-    result = get_extra_entry_ids(messages, threshold)
+    result = get_extra_entries(messages, threshold)
 
-    assert result == {entry_ids[1]}
+    assert result == [messages[1]]
 
 
 @test("get extra entries")
@@ -77,14 +77,14 @@ def _():
     ]
 
     threshold = sum([m.token_count for m in messages]) - 1
-    result = get_extra_entry_ids(messages, threshold)
+    result = get_extra_entries(messages, threshold)
 
-    assert result == {entry_ids[0]}
+    assert result == [messages[0]]
 
 
 @test("get extra entries, no change if empty")
 def _():
     messages = []
-    result = get_extra_entry_ids(messages, 1)
+    result = get_extra_entries(messages, 1)
 
     assert result == []
