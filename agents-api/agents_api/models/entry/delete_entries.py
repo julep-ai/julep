@@ -73,7 +73,7 @@ def delete_entries(entries: list[Entry]) -> tuple[str, dict]:
             f'to_uuid("{e.session_id}")',
             e.source,
             e.role.value if hasattr(e.role, "value") else e.role,
-            e.name,
+            e.name or None,
             content_to_json(e.content),
             e.token_count,
             e.tokenizer,
