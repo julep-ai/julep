@@ -87,7 +87,7 @@ def delete_entries(entries: list[Entry]) -> tuple[str, dict]:
             name,
         ] <- $entry_keys
         
-        :delete entries {
+        :rm entries {
             entry_id,
             session_id,
             source,
