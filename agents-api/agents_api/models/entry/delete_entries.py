@@ -5,6 +5,7 @@ from beartype import beartype
 
 from ..utils import cozo_query
 from ...common.protocol.entries import Entry
+from ...common.utils.messages import content_to_json
 
 
 @cozo_query
@@ -73,6 +74,11 @@ def delete_entries(entries: list[Entry]) -> tuple[str, dict]:
             e.source,
             e.role.value if hasattr(e.role, "value") else e.role,
             e.name,
+            content_to_json(e.content),
+            e.token_count,
+            e.tokenizer,
+            e.created_at,
+            e.timestamp,
         ]
         for e in entries
     ]
@@ -85,14 +91,24 @@ def delete_entries(entries: list[Entry]) -> tuple[str, dict]:
             source,
             role,
             name,
+            content,
+            token_count,
+            tokenizer,
+            created_at,
+            timestamp,
         ] <- $entry_keys
         
-        :rm entries {
+        :delete entries {
             entry_id,
             session_id,
             source,
             role,
             name,
+            content,
+            token_count,
+            tokenizer,
+            created_at,
+            timestamp,
         }
 
         :returning
