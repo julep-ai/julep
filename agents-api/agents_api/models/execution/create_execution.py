@@ -1,17 +1,20 @@
+from typing import Literal, Dict, Any
 from uuid import UUID
 
+from beartype import beartype
+
 from ..utils import cozo_query
-from typing import Literal, Dict, Any
 
 
 @cozo_query
+@beartype
 def create_execution_query(
+    developer_id: UUID,
     agent_id: UUID,
     task_id: UUID,
     execution_id: UUID,
-    developer_id: UUID,
     status: Literal[
-        "queued", "starting", "running", "waiting-for-input", "success", "failed"
+        "queued", "starting", "running", "waiting_for_input", "success", "failed"
     ] = "queued",
     arguments: Dict[str, Any] = {},
 ) -> tuple[str, dict]:

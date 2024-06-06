@@ -1,15 +1,18 @@
+from typing import Literal, Dict, Any
 from uuid import UUID
 
+from beartype import beartype
+
 from ..utils import cozo_query
-from typing import Literal, Dict, Any
 
 
 @cozo_query
+@beartype
 def update_execution_status_query(
     task_id: UUID,
     execution_id: UUID,
     status: Literal[
-        "queued", "starting", "running", "waiting-for-input", "success", "failed"
+        "queued", "starting", "running", "waiting_for_input", "success", "failed"
     ],
     arguments: Dict[str, Any] = {},
 ) -> tuple[str, dict]:
@@ -28,6 +31,8 @@ def update_execution_status_query(
         status,
         updated_at
     }
+
+    :returning
 }
 
 """

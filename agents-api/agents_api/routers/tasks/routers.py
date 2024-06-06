@@ -96,6 +96,7 @@ async def get_task(
             row.to_dict()
             for _, row in get_task_query(agent_id, task_id, x_developer_id).iterrows()
         ][0]
+
         return Task(**resp)
     except (IndexError, KeyError):
         raise HTTPException(
@@ -107,6 +108,8 @@ async def get_task(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
             )
+
+        raise
 
 
 @router.post(
@@ -209,8 +212,10 @@ async def update_execution_transition(
 ) -> ResourceUpdatedResponse:
     # try:
     #     resp = update_execution_transition_query(execution_id, transition_id, request)
-    pass
+
     # OpenAPI Model doesn't have update execution transition
+
+    raise NotImplementedError("Not implemented yet")
 
 
 @router.get("/executions/{execution_id}/transitions")

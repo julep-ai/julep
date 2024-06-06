@@ -8,7 +8,6 @@ from ward import test
 from .create_task import create_task_query
 from .get_task import get_task_query
 from .list_tasks import list_tasks_query
-from .update_task import update_task_query
 
 
 def cozo_client(migrations_dir: str = "./migrations"):
@@ -38,6 +37,7 @@ def _():
         input_schema={"type": "object", "additionalProperties": True},
         client=client,
     )
+
 
 @test("model: list tasks")
 def _():
@@ -80,9 +80,11 @@ def _():
 
 # @test("model: delete task")
 # def _():
+#     TODO: Implement this test
 #     raise NotImplementedError
 
 
 # @test("model: update task")
 # def _():
+#     TODO: Implement this test
 #     raise NotImplementedError

@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 from ..utils import cozo_query
 
 
 @cozo_query
-def list_execution_transition_query(execution_id: UUID) -> tuple[str, dict]:
+@beartype
+def list_execution_transitions_query(execution_id: UUID) -> tuple[str, dict]:
 
     query = """
 {
