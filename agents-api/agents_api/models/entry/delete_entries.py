@@ -67,7 +67,7 @@ def delete_entries_query(session_id: UUID) -> tuple[str, dict]:
 def delete_entries(entry_ids: list[UUID]) -> tuple[str, dict]:
     query = """
     {
-        input[entry_id_str] <- $entry_keys
+        input[entry_id_str] <- $entry_ids
         
         ?[
             entry_id,
