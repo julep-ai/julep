@@ -1,6 +1,6 @@
 {
   "name": "@julep/sdk",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Julep is a platform for creating agents with long-term memory",
   "keywords": [
     "julep-ai",
@@ -75,7 +75,7 @@
     "start_mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
     "kill_mock_api": "kill $(pgrep -f 'prism .*') || echo bye",
     "format": "prettier -w .",
-    "openapi-codegen": "bash -c 'openapi -c axios --name JulepApiClient --useOptions --indent 2 -i <(yq -o=json \".\" ../../openapi.yaml) -o src/api --exportSchemas true --useUnionTypes true'",
+    "openapi-codegen": "bash -c 'openapi -c axios --name JulepApiClient --useOptions --indent 2 -i <(yq \".\" ../../openapi.yaml) -o src/api --exportSchemas true --useUnionTypes true'",
     "codegen": "npm run openapi-codegen && npm run format",
     "generate-docs": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/js-sdk-docs src/**/*.ts",
     "test-inspect": "node --inspect-brk node_modules/.bin/jest --runInBand",
