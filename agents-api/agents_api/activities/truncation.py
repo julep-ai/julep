@@ -6,11 +6,11 @@ from agents_api.autogen.openapi_model import Role
 from agents_api.common.protocol.entries import Entry
 
 
-def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[Entry]:
+def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[UUID]:
     if not len(messages):
         return messages
 
-    result: list[Entry] = []
+    result: list[UUID] = []
     token_cnt, offset = 0, 0
     if messages[0].role == Role.system:
         token_cnt, offset = messages[0].token_count, 1
@@ -20,7 +20,7 @@ def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list
         if token_cnt < token_count_threshold:
             continue
         else:
-            result.append(m)
+            result.append(m.id)
 
     return result
 

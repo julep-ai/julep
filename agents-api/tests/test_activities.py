@@ -41,7 +41,7 @@ def _():
     threshold = sum([m.token_count for m in messages]) - 1
     result = get_extra_entries(messages, threshold)
 
-    assert result == [messages[1]]
+    assert result == [messages[1].id]
 
 
 @test("get extra entries")
@@ -79,7 +79,7 @@ def _():
     threshold = sum([m.token_count for m in messages]) - 1
     result = get_extra_entries(messages, threshold)
 
-    assert result == [messages[0]]
+    assert result == [messages[0].id]
 
 
 @test("get extra entries, no change if empty")
