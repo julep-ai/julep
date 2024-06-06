@@ -8,34 +8,33 @@ from ..utils import cozo_query
 
 @cozo_query
 @beartype
-def create_execution_query(
-    developer_id: UUID,
-    agent_id: UUID,
+def update_execution_status_query(
     task_id: UUID,
     execution_id: UUID,
     status: Literal[
         "queued", "starting", "running", "waiting_for_input", "success", "failed"
-    ] = "queued",
+    ],
     arguments: Dict[str, Any] = {},
 ) -> tuple[str, dict]:
-    # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
-
     query = """
 {
-    ?[task_id, execution_id, status, arguments] <- [[
-        to_uuid($task_id),
+    ?[execution_id, task_id, status, updated_at] <- [[
         to_uuid($execution_id),
+        to_uuid($task_id),
         $status,
-        $arguments
+        now()
     ]]
 
-    :insert executions {
-        task_id,
+    :update executions {
         execution_id,
+        task_id,
         status,
-        arguments
+        updated_at
     }
+
+    :returning
 }
+
 """
     return (
         query,

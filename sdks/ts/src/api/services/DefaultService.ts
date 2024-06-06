@@ -971,10 +971,17 @@ export class DefaultService {
    * @returns Task
    * @throws ApiError
    */
-  public listTasks(): CancelablePromise<Array<Task>> {
+  public listTasks({
+    agentId,
+  }: {
+    agentId: string;
+  }): CancelablePromise<Array<Task>> {
     return this.httpRequest.request({
       method: "GET",
-      url: "/tasks",
+      url: "/agents/{agent_id}/tasks",
+      path: {
+        agent_id: agentId,
+      },
     });
   }
   /**
@@ -983,13 +990,18 @@ export class DefaultService {
    * @throws ApiError
    */
   public createTask({
+    agentId,
     requestBody,
   }: {
+    agentId: string;
     requestBody?: CreateTask;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
-      url: "/tasks",
+      url: "/agents/{agent_id}/tasks",
+      path: {
+        agent_id: agentId,
+      },
       body: requestBody,
       mediaType: "application/json",
     });
@@ -1000,16 +1012,19 @@ export class DefaultService {
    * @throws ApiError
    */
   public startTaskExecution({
+    agentId,
     taskId,
     requestBody,
   }: {
+    agentId: string;
     taskId: string;
     requestBody?: CreateExecution;
   }): CancelablePromise<ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
-      url: "/tasks/{task_id}/execution",
+      url: "/agents/{agent_id}/tasks/{task_id}/executions",
       path: {
+        agent_id: agentId,
         task_id: taskId,
       },
       body: requestBody,
@@ -1017,38 +1032,49 @@ export class DefaultService {
     });
   }
   /**
-   * Get execution (status) of a Task
+   * List Executions of a Task
    * @returns Execution
    * @throws ApiError
    */
   public getTaskExecution({
+    agentId,
     taskId,
   }: {
+    agentId: string;
     taskId: string;
-  }): CancelablePromise<Execution> {
+  }): CancelablePromise<Array<Execution>> {
     return this.httpRequest.request({
       method: "GET",
-      url: "/tasks/{task_id}/execution",
+      url: "/agents/{agent_id}/tasks/{task_id}/executions",
       path: {
+        agent_id: agentId,
         task_id: taskId,
       },
     });
   }
   /**
    * Get a Task by ID
-   * @returns Execution
+   * @returns Task
    * @throws ApiError
    */
-  public getTask({ taskId }: { taskId: string }): CancelablePromise<Execution> {
+  public getTask({
+    agentId,
+    taskId,
+  }: {
+    agentId: string;
+    taskId: string;
+  }): CancelablePromise<Task> {
     return this.httpRequest.request({
       method: "GET",
-      url: "/tasks/{task_id}",
+      url: "/agents/{agent_id}/tasks/{task_id}",
       path: {
+        agent_id: agentId,
         task_id: taskId,
       },
     });
   }
   /**
+   * Get an Execution Transition
    * @returns ExecutionTransition
    * @throws ApiError
    */
@@ -1058,10 +1084,10 @@ export class DefaultService {
   }: {
     executionId: string;
     transitionId: string;
-  }): CancelablePromise<Array<ExecutionTransition>> {
+  }): CancelablePromise<ExecutionTransition> {
     return this.httpRequest.request({
       method: "GET",
-      url: "/execution/{execution_id}/transition/{transition_id}",
+      url: "/executions/{execution_id}/transitions/{transition_id}",
       path: {
         execution_id: executionId,
         transition_id: transitionId,
@@ -1085,13 +1111,52 @@ export class DefaultService {
   }): CancelablePromise<ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
-      url: "/execution/{execution_id}/transition/{transition_id}",
+      url: "/executions/{execution_id}/transitions/{transition_id}",
       path: {
         execution_id: executionId,
         transition_id: transitionId,
       },
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+  /**
+   * Get Task Execution By ID
+   * @returns Execution
+   * @throws ApiError
+   */
+  public getTaskExecution1({
+    taskId,
+    executionId,
+  }: {
+    taskId: string;
+    executionId: string;
+  }): CancelablePromise<Array<Execution>> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/tasks/{task_id}/executions/{execution_id}",
+      path: {
+        task_id: taskId,
+        execution_id: executionId,
+      },
+    });
+  }
+  /**
+   * List Transitions of an Execution
+   * @returns ExecutionTransition
+   * @throws ApiError
+   */
+  public getExecutionTransition1({
+    executionId,
+  }: {
+    executionId: string;
+  }): CancelablePromise<Array<ExecutionTransition>> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/executions/{execution_id}/transitions/",
+      path: {
+        execution_id: executionId,
+      },
     });
   }
 }

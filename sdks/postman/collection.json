@@ -3497,15 +3497,23 @@
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/tasks",
+          "raw": "{{baseUrl}}/agents/:agent_id/tasks",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
+            "agents",
+            ":agent_id",
             "tasks"
           ],
           "query": [],
-          "variable": []
+          "variable": [
+            {
+              "key": "agent_id",
+              "description": "",
+              "value": "agent_id"
+            }
+          ]
         },
         "header": [
           {
@@ -3532,15 +3540,23 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/tasks",
+              "raw": "{{baseUrl}}/agents/:agent_id/tasks",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "agents",
+                ":agent_id",
                 "tasks"
               ],
               "query": [],
-              "variable": []
+              "variable": [
+                {
+                  "key": "agent_id",
+                  "description": "",
+                  "value": "agent_id"
+                }
+              ]
             },
             "header": [
               {
@@ -3571,15 +3587,23 @@
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/tasks",
+          "raw": "{{baseUrl}}/agents/:agent_id/tasks",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
+            "agents",
+            ":agent_id",
             "tasks"
           ],
           "query": [],
-          "variable": []
+          "variable": [
+            {
+              "key": "agent_id",
+              "description": "",
+              "value": "agent_id"
+            }
+          ]
         },
         "header": [
           {
@@ -3614,15 +3638,23 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/tasks",
+              "raw": "{{baseUrl}}/agents/:agent_id/tasks",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "agents",
+                ":agent_id",
                 "tasks"
               ],
               "query": [],
-              "variable": []
+              "variable": [
+                {
+                  "key": "agent_id",
+                  "description": "",
+                  "value": "agent_id"
+                }
+              ]
             },
             "header": [
               {
@@ -3657,18 +3689,19 @@
     },
     {
       "_type": "endpoint",
-      "name": "Get execution (status) of a Task",
+      "name": "Get Task Execution By ID",
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/tasks/:task_id/execution",
+          "raw": "{{baseUrl}}/tasks/:task_id/executions/:execution_id",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "tasks",
             ":task_id",
-            "execution"
+            "executions",
+            ":execution_id"
           ],
           "query": [],
           "variable": [
@@ -3676,6 +3709,11 @@
               "key": "task_id",
               "description": "",
               "value": "task_id"
+            },
+            {
+              "key": "execution_id",
+              "description": "",
+              "value": "execution_id"
             }
           ]
         },
@@ -3704,14 +3742,15 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/tasks/:task_id/execution",
+              "raw": "{{baseUrl}}/tasks/:task_id/executions/:execution_id",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "tasks",
                 ":task_id",
-                "execution"
+                "executions",
+                ":execution_id"
               ],
               "query": [],
               "variable": [
@@ -3719,6 +3758,11 @@
                   "key": "task_id",
                   "description": "",
                   "value": "task_id"
+                },
+                {
+                  "key": "execution_id",
+                  "description": "",
+                  "value": "execution_id"
                 }
               ]
             },
@@ -3740,7 +3784,7 @@
             "body": null
           },
           "description": "",
-          "body": "{\n    \"id\": \"id\",\n    \"task_id\": \"task_id\",\n    \"created_at\": \"created_at\",\n    \"arguments\": {\n        \"arguments\": {\n            \"key\": \"value\"\n        }\n    },\n    \"status\": \"status\"\n}",
+          "body": "[\n    {\n        \"id\": \"id\",\n        \"task_id\": \"task_id\",\n        \"created_at\": \"created_at\",\n        \"arguments\": {\n            \"arguments\": {\n                \"key\": \"value\"\n            }\n        },\n        \"status\": \"status\"\n    }\n]",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -3751,17 +3795,24 @@
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/tasks/:task_id/execution",
+          "raw": "{{baseUrl}}/agents/:agent_id/tasks/:task_id/executions",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
+            "agents",
+            ":agent_id",
             "tasks",
             ":task_id",
-            "execution"
+            "executions"
           ],
           "query": [],
           "variable": [
+            {
+              "key": "agent_id",
+              "description": "",
+              "value": "agent_id"
+            },
             {
               "key": "task_id",
               "description": "",
@@ -3802,17 +3853,24 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/tasks/:task_id/execution",
+              "raw": "{{baseUrl}}/agents/:agent_id/tasks/:task_id/executions",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "agents",
+                ":agent_id",
                 "tasks",
                 ":task_id",
-                "execution"
+                "executions"
               ],
               "query": [],
               "variable": [
+                {
+                  "key": "agent_id",
+                  "description": "",
+                  "value": "agent_id"
+                },
                 {
                   "key": "task_id",
                   "description": "",
@@ -3857,16 +3915,23 @@
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/tasks/:task_id",
+          "raw": "{{baseUrl}}/agents/:agent_id/tasks/:task_id",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
+            "agents",
+            ":agent_id",
             "tasks",
             ":task_id"
           ],
           "query": [],
           "variable": [
+            {
+              "key": "agent_id",
+              "description": "",
+              "value": "agent_id"
+            },
             {
               "key": "task_id",
               "description": "",
@@ -3899,16 +3964,23 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/tasks/:task_id",
+              "raw": "{{baseUrl}}/agents/:agent_id/tasks/:task_id",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "agents",
+                ":agent_id",
                 "tasks",
                 ":task_id"
               ],
               "query": [],
               "variable": [
+                {
+                  "key": "agent_id",
+                  "description": "",
+                  "value": "agent_id"
+                },
                 {
                   "key": "task_id",
                   "description": "",
@@ -3934,26 +4006,25 @@
             "body": null
           },
           "description": "",
-          "body": "{\n    \"id\": \"id\",\n    \"task_id\": \"task_id\",\n    \"created_at\": \"created_at\",\n    \"arguments\": {\n        \"arguments\": {\n            \"key\": \"value\"\n        }\n    },\n    \"status\": \"status\"\n}",
+          "body": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"tools_available\": [\n        \"tools_available\"\n    ],\n    \"input_schema\": {\n        \"input_schema\": {\n            \"key\": \"value\"\n        }\n    },\n    \"main\": [\n        {\n            \"prompt\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": \"content\"\n                }\n            ],\n            \"settings\": {\n                \"min_p\": 0.01\n            }\n        }\n    ],\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"agent_id\": \"agent_id\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
     },
     {
       "_type": "endpoint",
-      "name": "Get Execution Transition",
+      "name": "List Transitions of an Execution",
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+          "raw": "{{baseUrl}}/executions/:execution_id/transitions",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
-            "execution",
+            "executions",
             ":execution_id",
-            "transition",
-            ":transition_id"
+            "transitions"
           ],
           "query": [],
           "variable": [
@@ -3961,11 +4032,6 @@
               "key": "execution_id",
               "description": "",
               "value": "execution_id"
-            },
-            {
-              "key": "transition_id",
-              "description": "",
-              "value": "transition_id"
             }
           ]
         },
@@ -3994,15 +4060,14 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+              "raw": "{{baseUrl}}/executions/:execution_id/transitions",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "execution",
+                "executions",
                 ":execution_id",
-                "transition",
-                ":transition_id"
+                "transitions"
               ],
               "query": [],
               "variable": [
@@ -4010,11 +4075,6 @@
                   "key": "execution_id",
                   "description": "",
                   "value": "execution_id"
-                },
-                {
-                  "key": "transition_id",
-                  "description": "",
-                  "value": "transition_id"
                 }
               ]
             },
@@ -4047,14 +4107,14 @@
       "request": {
         "description": "",
         "url": {
-          "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+          "raw": "{{baseUrl}}/executions/:execution_id/transitions/:transition_id",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
-            "execution",
+            "executions",
             ":execution_id",
-            "transition",
+            "transitions",
             ":transition_id"
           ],
           "query": [],
@@ -4104,14 +4164,14 @@
           "originalRequest": {
             "description": "",
             "url": {
-              "raw": "{{baseUrl}}/execution/:execution_id/transition/:transition_id",
+              "raw": "{{baseUrl}}/executions/:execution_id/transitions/:transition_id",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "execution",
+                "executions",
                 ":execution_id",
-                "transition",
+                "transitions",
                 ":transition_id"
               ],
               "query": [],

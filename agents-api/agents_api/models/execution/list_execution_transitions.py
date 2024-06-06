@@ -7,26 +7,27 @@ from ..utils import cozo_query
 
 @cozo_query
 @beartype
-def get_execution_transition_query(
-    execution_id: UUID, transition_id: UUID
-) -> tuple[str, dict]:
+def list_execution_transitions_query(execution_id: UUID) -> tuple[str, dict]:
 
     query = """
 {
-    ?[type, from, to, output] := *transitions {
+    ?[transition_id, type, from, to, output, updated_at, created_at] := *transitions {
         execution_id: to_uuid($execution_id),
-        transition_id: to_uuid($transition_id),
+        transition_id,
         type,
         from,
         to,
-        output
+        output,
+        updated_at,
+        created_at,
     }
+    :limit 100
+    :offset 0
 }
 """
     return (
         query,
         {
             "execution_id": str(execution_id),
-            "transition_id": str(transition_id),
         },
     )

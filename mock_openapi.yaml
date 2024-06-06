@@ -1134,7 +1134,7 @@ paths:
           type: string
           format: uuid
         required: true
-  /api/tasks:
+  /api/agents/{agent_id}/tasks:
     get:
       summary: Get a list of tasks
       description: ''
@@ -1170,7 +1170,14 @@ paths:
                 $ref: '#/components/schemas/ResourceCreatedResponse'
       security:
         - api-key: []
-  /api/tasks/{task_id}/execution:
+    parameters:
+      - in: path
+        name: agent_id
+        description: ''
+        schema: &ref_0
+          type: string
+        required: true
+  /api/agents/{agent_id}/tasks/{task_id}/executions:
     post:
       summary: Create (or start) an execution of a Task
       description: ''
@@ -1191,28 +1198,35 @@ paths:
       security:
         - api-key: []
     get:
-      summary: Get execution (status) of a Task
+      summary: List Executions of a Task
       description: ''
       operationId: GetTaskExecution
-      responses:
+      responses: &ref_1
         '200':
           description: ''
           headers: {}
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Execution'
-      security:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Execution'
+      security: &ref_2
         - api-key: []
     parameters:
       - in: path
+        name: agent_id
+        description: ''
+        schema: *ref_0
+        required: true
+      - in: path
         name: task_id
         description: ''
-        schema:
+        schema: &ref_3
           type: string
           format: uuid
         required: true
-  /api/tasks/{task_id}:
+  /api/agents/{agent_id}/tasks/{task_id}:
     get:
       summary: Get a Task by ID
       description: ''
@@ -1224,10 +1238,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Execution'
+                $ref: '#/components/schemas/Task'
       security:
         - api-key: []
     parameters:
+      - in: path
+        name: agent_id
+        description: ''
+        schema: *ref_0
+        required: true
       - in: path
         name: task_id
         description: ''
@@ -1235,24 +1254,24 @@ paths:
           type: string
           format: uuid
         required: true
-  /api/execution/{execution_id}/transition/{transition_id}:
+  /api/executions/{execution_id}/transitions/{transition_id}:
     get:
       description: ''
       operationId: GetExecutionTransition
       responses:
         '200':
           description: ''
-          headers: {}
+          headers: &ref_4 {}
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExecutionTransition'
-      security:
+                $ref: '#/components/schemas/ExecutionTransition'
+      security: &ref_5
         - api-key: []
+      summary: Get an Execution Transition
     parameters:
-      - in: path
+      - &ref_6
+        in: path
         name: execution_id
         description: ''
         schema:
@@ -1291,6 +1310,42 @@ paths:
                 $ref: '#/components/schemas/ResourceUpdatedResponse'
       security:
         - api-key: []
+  /api/tasks/{task_id}/executions/{execution_id}:
+    get:
+      summary: Get Task Execution By ID
+      description: ''
+      operationId: GetTaskExecution
+      responses: *ref_1
+      security: *ref_2
+    parameters:
+      - in: path
+        name: task_id
+        description: ''
+        schema: *ref_0
+        required: true
+      - in: path
+        name: execution_id
+        description: ''
+        schema: *ref_3
+        required: true
+  /api/executions/{execution_id}/transitions/:
+    get:
+      description: ''
+      operationId: GetExecutionTransition
+      responses:
+        '200':
+          description: ''
+          headers: *ref_4
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExecutionTransition'
+      security: *ref_5
+      summary: List Transitions of an Execution
+    parameters:
+      - *ref_6
 components:
   schemas:
     User:
