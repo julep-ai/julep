@@ -112,4 +112,4 @@ def delete_entries(entry_ids: list[UUID]) -> tuple[str, dict]:
         :returning
     }"""
 
-    return (query, {"entry_ids": [str(id) for id in entry_ids]})
+    return (query, {"entry_ids": [[str(id)] for id in entry_ids]})
