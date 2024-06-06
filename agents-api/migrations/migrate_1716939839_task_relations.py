@@ -37,7 +37,7 @@ create_execution_relation_query = dict(
         execution_id: Uuid,
         =>
         status: String default 'queued',
-        # one of: "queued", "starting", "running", "waiting_for_input", "success", "failed"
+        # one of: "queued", "starting", "running", "awaiting_input", "succeeded", "failed"
 
         arguments: Json,
         created_at: Float default now(),
@@ -54,7 +54,7 @@ create_transition_relation_query = dict(
         transition_id: Uuid,
         =>
         type: String,
-        # one of: "finished", "waiting", "error", "step"
+        # one of: "finish", "wait", "error", "step"
 
         from: (String, Int),
         to: (String, Int)?,
