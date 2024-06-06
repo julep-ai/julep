@@ -178,7 +178,9 @@ async def summarization(session_id: str) -> None:
         trim_messages(entries, model=summarization_model_name),
         get_entities(entries, model=summarization_model_name),
     )
-    summarized = await summarize_messages(trimmed_messages)
+    summarized = await summarize_messages(
+        trimmed_messages, model=summarization_model_name
+    )
     ts_delta = (entries[1]["timestamp"] - entries[0]["timestamp"]) / 2
     new_entities_entry = Entry(
         session_id=session_id,
