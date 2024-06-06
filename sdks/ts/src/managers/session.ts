@@ -37,10 +37,11 @@ export class SessionsManager extends BaseManager {
     metadata = {},
     renderTemplates = false,
   }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
-    userId && invariant(
-      isValidUuid4(userId),
-      `userId must be a valid UUID v4. Got "${userId}"`,
-    );
+    userId &&
+      invariant(
+        isValidUuid4(userId),
+        `userId must be a valid UUID v4. Got "${userId}"`,
+      );
 
     invariant(
       isValidUuid4(agentId),
