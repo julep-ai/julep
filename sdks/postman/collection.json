@@ -3622,7 +3622,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"main\": {\n        \"prompt\": [\n            {\n                \"role\": \"user\",\n                \"content\": \"content\"\n            }\n        ],\n        \"settings\": {}\n    }\n}",
+          "raw": "{\n    \"name\": \"name\",\n    \"main\": [\n        {\n            \"prompt\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": \"content\"\n                }\n            ],\n            \"settings\": {}\n        }\n    ]\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3673,7 +3673,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"main\": {\n        \"prompt\": [\n            {\n                \"role\": \"user\",\n                \"content\": \"content\"\n            }\n        ],\n        \"settings\": {}\n    }\n}",
+              "raw": "{\n    \"name\": \"name\",\n    \"main\": [\n        {\n            \"prompt\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": \"content\"\n                }\n            ],\n            \"settings\": {}\n        }\n    ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4096,7 +4096,7 @@
             "body": null
           },
           "description": "",
-          "body": "[\n    {\n        \"id\": \"id\",\n        \"execution_id\": \"execution_id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"outputs\": {\n            \"outputs\": {\n                \"key\": \"value\"\n            }\n        },\n        \"from\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"to\": [\n            {\n                \"key\": \"value\"\n            }\n        ]\n    }\n]",
+          "body": "[\n    {\n        \"id\": \"id\",\n        \"execution_id\": \"execution_id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"outputs\": {\n            \"outputs\": {\n                \"key\": \"value\"\n            }\n        },\n        \"from\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"to\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"type\": \"type\"\n    }\n]",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -4148,7 +4148,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"responses\": [\n        {\n            \"output\": {}\n        }\n    ]\n}",
+          "raw": "{\n    \"responses\": [\n        {\n            \"id\": \"id\",\n            \"output\": {}\n        }\n    ]\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -4205,7 +4205,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"responses\": [\n        {\n            \"output\": {}\n        }\n    ]\n}",
+              "raw": "{\n    \"responses\": [\n        {\n            \"id\": \"id\",\n            \"output\": {}\n        }\n    ]\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .transition_type import TransitionType
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -20,6 +21,7 @@ class ExecutionTransition(pydantic.BaseModel):
     )
     from_: typing.List[typing.Any] = pydantic.Field(alias="from")
     to: typing.Optional[typing.List[typing.Any]]
+    type: TransitionType
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

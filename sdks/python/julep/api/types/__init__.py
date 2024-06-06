@@ -106,6 +106,7 @@ from .tool_call_workflow_step import ToolCallWorkflowStep
 from .tool_choice_option import ToolChoiceOption
 from .tool_response import ToolResponse
 from .tool_type import ToolType
+from .transition_type import TransitionType
 from .update_agent_request_instructions import UpdateAgentRequestInstructions
 from .update_agent_request_metadata import UpdateAgentRequestMetadata
 from .update_session_request_metadata import UpdateSessionRequestMetadata
@@ -216,6 +217,7 @@ __all__ = [
     "ToolChoiceOption",
     "ToolResponse",
     "ToolType",
+    "TransitionType",
     "UpdateAgentRequestInstructions",
     "UpdateAgentRequestMetadata",
     "UpdateSessionRequestMetadata",
