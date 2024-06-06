@@ -209,6 +209,7 @@ async def summarization(session_id: str) -> None:
             session_id=session_id,
             new_entry=new_entry,
             old_entry_ids=[
-                UUID(entries[idx]["entry_id"], version=4) for idx in msg["summarizes"]
+                UUID(entries[idx - 1]["entry_id"], version=4)
+                for idx in msg["summarizes"]
             ],
         )
