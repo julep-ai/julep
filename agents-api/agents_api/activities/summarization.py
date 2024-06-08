@@ -174,13 +174,11 @@ async def summarization(session_id: str) -> None:
 
     assert len(entries) > 0, "no need to summarize on empty entries list"
 
-    trimmed_messages, entities = await asyncio.gather(
-        trim_messages(entries, model=summarization_model_name),
+    summarized, entities = await asyncio.gather(
+        summarize_messages(entries, model=summarization_model_name),
         get_entities(entries, model=summarization_model_name),
     )
-    summarized = await summarize_messages(
-        trimmed_messages, model=summarization_model_name
-    )
+    trimmed_messages = await trim_messages(summarized, model=summarization_model_name)
     ts_delta = (entries[1]["timestamp"] - entries[0]["timestamp"]) / 2
     new_entities_entry = Entry(
         session_id=session_id,
@@ -197,13 +195,17 @@ async def summarization(session_id: str) -> None:
         old_entry_ids=entities_entry_ids,
     )
 
-    for msg in summarized:
+    trimmed_map = {
+        m["index"]: m["content"] for m in trimmed_messages if m.get("index") is not None
+    }
+
+    for idx, msg in enumerate(summarized):
         new_entry = Entry(
             session_id=session_id,
             source="summarizer",
             role="system",
             name="information",
-            content=msg["content"],
+            content=trimmed_map.get(idx, msg["content"]),
             timestamp=entries[-1]["timestamp"] + 0.01,
         )
 
