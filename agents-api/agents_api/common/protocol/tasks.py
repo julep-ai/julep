@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from ...autogen.openapi_model import (
     Agent,
@@ -50,14 +50,15 @@ class TaskWorkflow(BaseModel):
 
 
 class TaskSpec(BaseModel):
-    name: str
-    description: str
-    tools_available: list[str] | Literal["all"]
-    input_schema: dict[str, Any]
+    name: str | None
+    description: str | None
+    tools_available: list[str] | Literal["all"] | None = "all"
+    input_schema: dict[str, Any] | None = {}
     workflows: list[TaskWorkflow]
 
 
 class TaskProtocol(SerializableTask):
+    @computed_field
     @property
     def spec(self) -> TaskSpec:
         workflows = [

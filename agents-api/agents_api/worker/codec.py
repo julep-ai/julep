@@ -22,18 +22,16 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
         return "text/pydantic-json"
 
     def to_payload(self, value: Any) -> Optional[Payload]:
-        # if isinstance(value, BaseModel):
-        if True:
-            return Payload(
-                metadata={
-                    "encoding": self.encoding.encode(),
-                    "model_name": value.__class__.__name__.encode(),
-                    "model_module": value.__class__.__module__.encode(),
-                },
-                data=value.model_dump_json().encode(),
-            )
+        data = value.model_dump_json().encode()
 
-        return None
+        return Payload(
+            metadata={
+                "encoding": self.encoding.encode(),
+                "model_name": value.__class__.__name__.encode(),
+                "model_module": value.__class__.__module__.encode(),
+            },
+            data=data,
+        )
 
     def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
         model_name = payload.metadata["model_name"].decode()
@@ -41,6 +39,7 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
         model_class = model_class_map[model_module + "." + model_name]
 
         data = json.loads(payload.data.decode())
+
         return model_class(**data)
 
 
