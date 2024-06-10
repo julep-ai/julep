@@ -2789,6 +2789,7 @@ components:
           type: string
           format: uuid
       description: Describes a Task
+      additionalProperties: true
       required:
         - name
         - main
