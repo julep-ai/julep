@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel
@@ -27,6 +28,20 @@ WorkflowStep = (
 )
 
 
+# Make Task serializable (created_at is a datetime)
+class SerializableTask(Task):
+    def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        dump = super().model_dump(*args, **kwargs)
+        dump["created_at"] = self.created_at.isoformat()
+
+        return dump
+    
+    # And load it back
+    @classmethod
+    def model_load(cls, data: dict[str, Any], *args, **kwargs) -> "SerializableTask":
+        data["created_at"] = datetime.fromisoformat(data["created_at"])
+        return super().model_load(data, *args, **kwargs)
+
 class TaskWorkflow(BaseModel):
     name: str
 
@@ -42,7 +57,7 @@ class TaskSpec(BaseModel):
     workflows: list[TaskWorkflow]
 
 
-class TaskProtocol(Task):
+class TaskProtocol(SerializableTask):
     @property
     def spec(self) -> TaskSpec:
         workflows = [
@@ -63,12 +78,12 @@ class TaskProtocol(Task):
 
 
 class ExecutionInput(BaseModel):
-    execution: Execution
-    task: Task
-    agent: Agent
-    user: User | None
-    session: Session | None
-    tools: list[Tool]
+    # execution: Execution
+    task: TaskProtocol
+    # agent: Agent
+    # user: User | None
+    # session: Session | None
+    # tools: list[Tool]
     arguments: dict[str, Any]
 
 

@@ -35,8 +35,8 @@ class TaskExecutionWorkflow:
     async def run(
         self,
         execution_input: ExecutionInput,
-        start: tuple[str, int],
-        previous_inputs: list[dict],
+        start: tuple[str, int]=("main", 0),
+        previous_inputs: list[dict]=[],
     ) -> None:
         wf_name, step_idx = start
         spec = execution_input.task.spec
@@ -46,12 +46,12 @@ class TaskExecutionWorkflow:
         step = current_workflow[step_idx]
 
         context = StepContext(
-            execution=execution_input.execution,
+            # execution=execution_input.execution,
             task=execution_input.task,
-            agent=execution_input.agent,
-            user=execution_input.user,
-            session=execution_input.session,
-            tools=execution_input.tools,
+            # agent=execution_input.agent,
+            # user=execution_input.user,
+            # session=execution_input.session,
+            # tools=execution_input.tools,
             arguments=execution_input.arguments,
             definition=step,
             inputs=previous_inputs,
