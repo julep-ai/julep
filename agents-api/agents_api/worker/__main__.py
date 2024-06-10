@@ -45,6 +45,7 @@ from ..workflows.relationship_summary import RelationshipSummaryWorkflow
 from ..workflows.salient_questions import SalientQuestionsWorkflow
 from ..workflows.task_execution import TaskExecutionWorkflow
 
+from .codec import pydantic_data_converter
 
 async def main():
     """
@@ -67,6 +68,7 @@ async def main():
         temporal_endpoint,
         namespace=temporal_namespace,
         tls=tls_config,
+        data_converter=pydantic_data_converter,
     )
 
     task_activities = [
