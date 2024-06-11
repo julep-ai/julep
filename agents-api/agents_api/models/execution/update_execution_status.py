@@ -12,7 +12,7 @@ def update_execution_status_query(
     task_id: UUID,
     execution_id: UUID,
     status: Literal[
-        "queued", "starting", "running", "waiting_for_input", "success", "failed"
+        "queued", "starting", "running", "awaiting_input", "succeeded", "failed"
     ],
     arguments: Dict[str, Any] = {},
 ) -> tuple[str, dict]:

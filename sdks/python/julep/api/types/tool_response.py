@@ -12,7 +12,7 @@ except ImportError:
 
 
 class ToolResponse(pydantic.BaseModel):
-    id: typing.Optional[str] = pydantic.Field(description="Optional Tool ID")
+    id: str = pydantic.Field(description="Optional Tool ID")
     output: typing.Dict[str, typing.Any]
 
     def json(self, **kwargs: typing.Any) -> str:

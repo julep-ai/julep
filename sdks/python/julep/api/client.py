@@ -835,7 +835,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # pytype: disable=attribute-error
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -1874,7 +1874,7 @@ class JulepApi:
         description: typing.Optional[str] = OMIT,
         tools_available: typing.Optional[typing.List[str]] = OMIT,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        main: WorkflowStep,
+        main: typing.List[WorkflowStep],
     ) -> ResourceCreatedResponse:
         """
 
@@ -1890,7 +1890,7 @@ class JulepApi:
 
             - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. JSON Schema of parameters
 
-            - main: WorkflowStep. Entrypoint Workflow for the Task
+            - main: typing.List[WorkflowStep]. Entrypoint Workflow for the Task
         ---
         from julep.client import JulepApi
 
@@ -1900,6 +1900,7 @@ class JulepApi:
         client.create_task(
             agent_id="agent_id",
             name="name",
+            main=[],
         )
         """
         _request: typing.Dict[str, typing.Any] = {"name": name, "main": main}
@@ -2123,6 +2124,7 @@ class JulepApi:
             transition_id="transition_id",
             responses=[
                 ToolResponse(
+                    id="id",
                     output={},
                 )
             ],
@@ -2908,7 +2910,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # pytype: disable=attribute-error
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -3947,7 +3949,7 @@ class AsyncJulepApi:
         description: typing.Optional[str] = OMIT,
         tools_available: typing.Optional[typing.List[str]] = OMIT,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        main: WorkflowStep,
+        main: typing.List[WorkflowStep],
     ) -> ResourceCreatedResponse:
         """
 
@@ -3963,7 +3965,7 @@ class AsyncJulepApi:
 
             - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. JSON Schema of parameters
 
-            - main: WorkflowStep. Entrypoint Workflow for the Task
+            - main: typing.List[WorkflowStep]. Entrypoint Workflow for the Task
         ---
         from julep.client import AsyncJulepApi
 
@@ -3973,6 +3975,7 @@ class AsyncJulepApi:
         await client.create_task(
             agent_id="agent_id",
             name="name",
+            main=[],
         )
         """
         _request: typing.Dict[str, typing.Any] = {"name": name, "main": main}
@@ -4196,6 +4199,7 @@ class AsyncJulepApi:
             transition_id="transition_id",
             responses=[
                 ToolResponse(
+                    id="id",
                     output={},
                 )
             ],

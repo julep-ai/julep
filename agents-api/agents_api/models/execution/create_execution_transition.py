@@ -12,7 +12,7 @@ def create_execution_transition_query(
     developer_id: UUID,
     execution_id: UUID,
     transition_id: UUID,
-    type_: Literal["finished", "waiting", "error", "step"],
+    type_: Literal["finish", "wait", "error", "step"],
     from_: tuple[str, int],
     to: tuple[str, int] | None,
     output: Dict[str, Any],

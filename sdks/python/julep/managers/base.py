@@ -1,6 +1,6 @@
 from typing import Union
 
-from ..client import JulepApi, AsyncJulepApi
+from ..api.client import JulepApi, AsyncJulepApi
 
 
 # Purpose: Base class for all managers
