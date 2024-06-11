@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / [managers/base](../modules/managers_base.md) / BaseManager
+[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/base](../modules/managers_base.md) / BaseManager
 
 # Class: BaseManager
 
@@ -53,7 +53,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -65,4 +65,4 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)

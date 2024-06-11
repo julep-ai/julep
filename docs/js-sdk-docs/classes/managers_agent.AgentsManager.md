@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / [managers/agent](../modules/managers_agent.md) / AgentsManager
+[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/agent](../modules/managers_agent.md) / AgentsManager
 
 # Class: AgentsManager
 
@@ -55,7 +55,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -71,13 +71,13 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
 ### create
 
-▸ **create**(`«destructured»`): `Promise`\<`Partial`\<[`Agent`](../modules/api_models_Agent.md#agent)\> & \{ `id`: `string`  }\>
+▸ **create**(`«destructured»`): `Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
 #### Parameters
 
@@ -85,20 +85,20 @@ The JulepApiClient instance used for API interactions.
 | :------ | :------ | :------ |
 | `«destructured»` | `Object` | `undefined` |
 | › `about` | `string` | `undefined` |
-| › `default_settings?` | [`AgentDefaultSettings`](../modules/api_models_AgentDefaultSettings.md#agentdefaultsettings) | `undefined` |
-| › `docs?` | [`Doc`](../modules/api_models_Doc.md#doc)[] | `[]` |
+| › `default_settings?` | [`AgentDefaultSettings`](../modules/api.md#agentdefaultsettings) | `undefined` |
+| › `docs?` | [`Doc`](../modules/api.md#doc)[] | `[]` |
 | › `instructions` | `string` \| `string`[] | `[]` |
 | › `model?` | `string` | `"julep-ai/samantha-1-turbo"` |
 | › `name` | `string` | `undefined` |
-| › `tools?` | [`CreateToolRequest`](../modules/api_models_CreateToolRequest.md#createtoolrequest)[] | `undefined` |
+| › `tools?` | [`CreateToolRequest`](../modules/api.md#createtoolrequest)[] | `undefined` |
 
 #### Returns
 
-`Promise`\<`Partial`\<[`Agent`](../modules/api_models_Agent.md#agent)\> & \{ `id`: `string`  }\>
+`Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
 #### Defined in
 
-[src/managers/agent.ts:24](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/agent.ts#L24)
+[src/managers/agent.ts:24](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/agent.ts#L24)
 
 ___
 
@@ -118,13 +118,13 @@ ___
 
 #### Defined in
 
-[src/managers/agent.ts:85](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/agent.ts#L85)
+[src/managers/agent.ts:85](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/agent.ts#L85)
 
 ___
 
 ### get
 
-▸ **get**(`agentId`): `Promise`\<[`Agent`](../modules/api_models_Agent.md#agent)\>
+▸ **get**(`agentId`): `Promise`\<[`Agent`](../modules/api.md#agent)\>
 
 #### Parameters
 
@@ -134,17 +134,17 @@ ___
 
 #### Returns
 
-`Promise`\<[`Agent`](../modules/api_models_Agent.md#agent)\>
+`Promise`\<[`Agent`](../modules/api.md#agent)\>
 
 #### Defined in
 
-[src/managers/agent.ts:18](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/agent.ts#L18)
+[src/managers/agent.ts:18](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/agent.ts#L18)
 
 ___
 
 ### list
 
-▸ **list**(`«destructured»?`): `Promise`\<[`Agent`](../modules/api_models_Agent.md#agent)[]\>
+▸ **list**(`«destructured»?`): `Promise`\<[`Agent`](../modules/api.md#agent)[]\>
 
 #### Parameters
 
@@ -157,48 +157,48 @@ ___
 
 #### Returns
 
-`Promise`\<[`Agent`](../modules/api_models_Agent.md#agent)[]\>
+`Promise`\<[`Agent`](../modules/api.md#agent)[]\>
 
 #### Defined in
 
-[src/managers/agent.ts:65](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/agent.ts#L65)
+[src/managers/agent.ts:65](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/agent.ts#L65)
 
 ___
 
 ### update
 
-▸ **update**(`agentId`, `request`, `overwrite?`): `Promise`\<`Partial`\<[`Agent`](../modules/api_models_Agent.md#agent)\> & \{ `id`: `string`  }\>
+▸ **update**(`agentId`, `request`, `overwrite?`): `Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `agentId` | `string` |
-| `request` | [`PatchAgentRequest`](../modules/api_models_PatchAgentRequest.md#patchagentrequest) |
+| `request` | [`PatchAgentRequest`](../modules/api.md#patchagentrequest) |
 | `overwrite?` | ``false`` |
 
 #### Returns
 
-`Promise`\<`Partial`\<[`Agent`](../modules/api_models_Agent.md#agent)\> & \{ `id`: `string`  }\>
+`Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
 #### Defined in
 
-[src/managers/agent.ts:92](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/agent.ts#L92)
+[src/managers/agent.ts:92](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/agent.ts#L92)
 
-▸ **update**(`agentId`, `request`, `overwrite`): `Promise`\<`Partial`\<[`Agent`](../modules/api_models_Agent.md#agent)\> & \{ `id`: `string`  }\>
+▸ **update**(`agentId`, `request`, `overwrite`): `Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `agentId` | `string` |
-| `request` | [`UpdateAgentRequest`](../modules/api_models_UpdateAgentRequest.md#updateagentrequest) |
+| `request` | [`UpdateAgentRequest`](../modules/api.md#updateagentrequest) |
 | `overwrite` | ``true`` |
 
 #### Returns
 
-`Promise`\<`Partial`\<[`Agent`](../modules/api_models_Agent.md#agent)\> & \{ `id`: `string`  }\>
+`Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
 #### Defined in
 
-[src/managers/agent.ts:98](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/agent.ts#L98)
+[src/managers/agent.ts:98](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/agent.ts#L98)

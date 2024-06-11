@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / [managers/doc](../modules/managers_doc.md) / DocsManager
+[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/doc](../modules/managers_doc.md) / DocsManager
 
 # Class: DocsManager
 
@@ -54,7 +54,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -70,13 +70,13 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
 ### create
 
-▸ **create**(`params`): `Promise`\<[`Doc`](../modules/api_models_Doc.md#doc)\>
+▸ **create**(`params`): `Promise`\<[`Doc`](../modules/api.md#doc)\>
 
 Creates a document based on the provided agentId or userId.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -88,12 +88,12 @@ Validates the provided agentId or userId using isValidUuid4.
 | :------ | :------ | :------ |
 | `params` | `Object` | The parameters for creating a document. |
 | `params.agentId?` | `string` | The agent's unique identifier, if creating for an agent. |
-| `params.doc` | [`CreateDoc`](../modules/api_models_CreateDoc.md#createdoc) | The document to be created. |
+| `params.doc` | [`CreateDoc`](../modules/api.md#createdoc) | The document to be created. |
 | `params.userId?` | `string` | The user's unique identifier, if creating for a user. |
 
 #### Returns
 
-`Promise`\<[`Doc`](../modules/api_models_Doc.md#doc)\>
+`Promise`\<[`Doc`](../modules/api.md#doc)\>
 
 The created document.
 
@@ -103,7 +103,7 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:133](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/doc.ts#L133)
+[src/managers/doc.ts:133](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/doc.ts#L133)
 
 ___
 
@@ -136,13 +136,13 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:186](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/doc.ts#L186)
+[src/managers/doc.ts:186](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/doc.ts#L186)
 
 ___
 
 ### get
 
-▸ **get**(`params`): `Promise`\<\{ `items?`: [`Doc`](../modules/api_models_Doc.md#doc)[]  }\>
+▸ **get**(`params`): `Promise`\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\>
 
 Retrieves documents based on the provided agentId or userId.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -160,7 +160,7 @@ Validates the provided agentId or userId using isValidUuid4.
 
 #### Returns
 
-`Promise`\<\{ `items?`: [`Doc`](../modules/api_models_Doc.md#doc)[]  }\>
+`Promise`\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\>
 
 The retrieved documents.
 
@@ -170,13 +170,13 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:22](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/doc.ts#L22)
+[src/managers/doc.ts:22](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/doc.ts#L22)
 
 ___
 
 ### list
 
-▸ **list**(`params?`): `Promise`\<[`Doc`](../modules/api_models_Doc.md#doc)[]\>
+▸ **list**(`params?`): `Promise`\<[`Doc`](../modules/api.md#doc)[]\>
 
 Lists documents based on the provided agentId or userId, with optional metadata filtering.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -196,7 +196,7 @@ Allows for filtering based on metadata.
 
 #### Returns
 
-`Promise`\<[`Doc`](../modules/api_models_Doc.md#doc)[]\>
+`Promise`\<[`Doc`](../modules/api.md#doc)[]\>
 
 The list of filtered documents.
 
@@ -206,4 +206,4 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:74](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/managers/doc.ts#L74)
+[src/managers/doc.ts:74](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/doc.ts#L74)

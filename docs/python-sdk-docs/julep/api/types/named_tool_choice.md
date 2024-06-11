@@ -21,7 +21,7 @@ class NamedToolChoice(pydantic.BaseModel): ...
 
 ### NamedToolChoice().dict
 
-[Show source in named_tool_choice.py:33](../../../../../../../julep/api/types/named_tool_choice.py#L33)
+[Show source in named_tool_choice.py:35](../../../../../../../julep/api/types/named_tool_choice.py#L35)
 
 #### Signature
 
@@ -31,7 +31,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### NamedToolChoice().json
 
-[Show source in named_tool_choice.py:25](../../../../../../../julep/api/types/named_tool_choice.py#L25)
+[Show source in named_tool_choice.py:27](../../../../../../../julep/api/types/named_tool_choice.py#L27)
 
 #### Signature
 

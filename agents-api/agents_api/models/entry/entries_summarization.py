@@ -6,6 +6,7 @@ from uuid import UUID
 
 
 from ...common.protocol.entries import Entry
+from ...common.utils.messages import content_to_json
 from ..utils import cozo_query
 
 
@@ -94,7 +95,7 @@ def entries_summarization_query(
             new_entry.source,
             new_entry.role,
             new_entry.name or "",
-            new_entry.content,
+            content_to_json(new_entry.content),
             new_entry.token_count,
             new_entry.tokenizer,
             new_entry.created_at,

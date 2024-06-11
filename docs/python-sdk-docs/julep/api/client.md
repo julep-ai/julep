@@ -15,7 +15,7 @@
 
 ## AsyncJulepApi
 
-[Show source in client.py:1834](../../../../../../julep/api/client.py#L1834)
+[Show source in client.py:1832](../../../../../../julep/api/client.py#L1832)
 
 #### Signature
 
@@ -33,7 +33,7 @@ class AsyncJulepApi:
 
 ### AsyncJulepApi().chat
 
-[Show source in client.py:2471](../../../../../../julep/api/client.py#L2471)
+[Show source in client.py:2469](../../../../../../julep/api/client.py#L2469)
 
 #### Arguments
 
@@ -93,11 +93,9 @@ client = AsyncJulepApi(
 )
 await client.chat(
     session_id="session_id",
-    min_p=0.01,
     messages=[
         InputChatMlMessage(
             role=InputChatMlMessageRole.USER,
-            content="content",
         )
     ],
 )
@@ -137,7 +135,7 @@ async def chat(
 
 ### AsyncJulepApi().create_agent
 
-[Show source in client.py:2120](../../../../../../julep/api/client.py#L2120)
+[Show source in client.py:2118](../../../../../../julep/api/client.py#L2118)
 
 Create a new agent
 
@@ -190,7 +188,7 @@ async def create_agent(
 
 ### AsyncJulepApi().create_agent_doc
 
-[Show source in client.py:3101](../../../../../../julep/api/client.py#L3101)
+[Show source in client.py:3097](../../../../../../julep/api/client.py#L3097)
 
 #### Arguments
 
@@ -221,7 +219,7 @@ async def create_agent_doc(
 
 ### AsyncJulepApi().create_agent_tool
 
-[Show source in client.py:3394](../../../../../../julep/api/client.py#L3394)
+[Show source in client.py:3390](../../../../../../julep/api/client.py#L3390)
 
 #### Arguments
 
@@ -256,7 +254,7 @@ async def create_agent_tool(
 
 ### AsyncJulepApi().create_session
 
-[Show source in client.py:1907](../../../../../../julep/api/client.py#L1907)
+[Show source in client.py:1905](../../../../../../julep/api/client.py#L1905)
 
 Create a session between an agent and a user
 
@@ -300,7 +298,7 @@ async def create_session(
 
 ### AsyncJulepApi().create_user
 
-[Show source in client.py:2016](../../../../../../julep/api/client.py#L2016)
+[Show source in client.py:2014](../../../../../../julep/api/client.py#L2014)
 
 Create a new user
 
@@ -339,7 +337,7 @@ async def create_user(
 
 ### AsyncJulepApi().create_user_doc
 
-[Show source in client.py:3202](../../../../../../julep/api/client.py#L3202)
+[Show source in client.py:3198](../../../../../../julep/api/client.py#L3198)
 
 #### Arguments
 
@@ -370,7 +368,7 @@ async def create_user_doc(
 
 ### AsyncJulepApi().delete_agent
 
-[Show source in client.py:2941](../../../../../../julep/api/client.py#L2941)
+[Show source in client.py:2937](../../../../../../julep/api/client.py#L2937)
 
 #### Arguments
 
@@ -393,7 +391,7 @@ async def delete_agent(self, agent_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_doc
 
-[Show source in client.py:3279](../../../../../../julep/api/client.py#L3279)
+[Show source in client.py:3275](../../../../../../julep/api/client.py#L3275)
 
 #### Arguments
 
@@ -419,7 +417,7 @@ async def delete_agent_doc(self, agent_id: str, doc_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_memory
 
-[Show source in client.py:3315](../../../../../../julep/api/client.py#L3315)
+[Show source in client.py:3311](../../../../../../julep/api/client.py#L3311)
 
 #### Arguments
 
@@ -445,7 +443,7 @@ async def delete_agent_memory(self, agent_id: str, memory_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_agent_tool
 
-[Show source in client.py:3485](../../../../../../julep/api/client.py#L3485)
+[Show source in client.py:3481](../../../../../../julep/api/client.py#L3481)
 
 #### Arguments
 
@@ -471,7 +469,7 @@ async def delete_agent_tool(self, agent_id: str, tool_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_session
 
-[Show source in client.py:2270](../../../../../../julep/api/client.py#L2270)
+[Show source in client.py:2268](../../../../../../julep/api/client.py#L2268)
 
 #### Arguments
 
@@ -494,7 +492,7 @@ async def delete_session(self, session_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_session_history
 
-[Show source in client.py:2438](../../../../../../julep/api/client.py#L2438)
+[Show source in client.py:2436](../../../../../../julep/api/client.py#L2436)
 
 #### Arguments
 
@@ -517,7 +515,7 @@ async def delete_session_history(self, session_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_user
 
-[Show source in client.py:2758](../../../../../../julep/api/client.py#L2758)
+[Show source in client.py:2754](../../../../../../julep/api/client.py#L2754)
 
 #### Arguments
 
@@ -540,7 +538,7 @@ async def delete_user(self, user_id: str) -> None: ...
 
 ### AsyncJulepApi().delete_user_doc
 
-[Show source in client.py:3243](../../../../../../julep/api/client.py#L3243)
+[Show source in client.py:3239](../../../../../../julep/api/client.py#L3239)
 
 #### Arguments
 
@@ -566,7 +564,7 @@ async def delete_user_doc(self, user_id: str, doc_id: str) -> None: ...
 
 ### AsyncJulepApi().get_agent
 
-[Show source in client.py:2843](../../../../../../julep/api/client.py#L2843)
+[Show source in client.py:2839](../../../../../../julep/api/client.py#L2839)
 
 #### Arguments
 
@@ -589,7 +587,7 @@ async def get_agent(self, agent_id: str) -> Agent: ...
 
 ### AsyncJulepApi().get_agent_docs
 
-[Show source in client.py:3041](../../../../../../julep/api/client.py#L3041)
+[Show source in client.py:3037](../../../../../../julep/api/client.py#L3037)
 
 Sorted (created_at descending)
 
@@ -632,7 +630,7 @@ async def get_agent_docs(
 
 ### AsyncJulepApi().get_agent_memories
 
-[Show source in client.py:2623](../../../../../../julep/api/client.py#L2623)
+[Show source in client.py:2619](../../../../../../julep/api/client.py#L2619)
 
 Sorted (created_at descending)
 
@@ -673,7 +671,7 @@ async def get_agent_memories(
 
 ### AsyncJulepApi().get_agent_tools
 
-[Show source in client.py:3351](../../../../../../julep/api/client.py#L3351)
+[Show source in client.py:3347](../../../../../../julep/api/client.py#L3347)
 
 Sorted (created_at descending)
 
@@ -707,7 +705,7 @@ async def get_agent_tools(
 
 ### AsyncJulepApi().get_history
 
-[Show source in client.py:2394](../../../../../../julep/api/client.py#L2394)
+[Show source in client.py:2392](../../../../../../julep/api/client.py#L2392)
 
 Sorted (created_at ascending)
 
@@ -741,7 +739,7 @@ async def get_history(
 
 ### AsyncJulepApi().get_job_status
 
-[Show source in client.py:3564](../../../../../../julep/api/client.py#L3564)
+[Show source in client.py:3560](../../../../../../julep/api/client.py#L3560)
 
 #### Arguments
 
@@ -764,7 +762,7 @@ async def get_job_status(self, job_id: str) -> JobStatus: ...
 
 ### AsyncJulepApi().get_session
 
-[Show source in client.py:2191](../../../../../../julep/api/client.py#L2191)
+[Show source in client.py:2189](../../../../../../julep/api/client.py#L2189)
 
 #### Arguments
 
@@ -787,7 +785,7 @@ async def get_session(self, session_id: str) -> Session: ...
 
 ### AsyncJulepApi().get_suggestions
 
-[Show source in client.py:2350](../../../../../../julep/api/client.py#L2350)
+[Show source in client.py:2348](../../../../../../julep/api/client.py#L2348)
 
 Sorted (created_at descending)
 
@@ -821,7 +819,7 @@ async def get_suggestions(
 
 ### AsyncJulepApi().get_user
 
-[Show source in client.py:2675](../../../../../../julep/api/client.py#L2675)
+[Show source in client.py:2671](../../../../../../julep/api/client.py#L2671)
 
 #### Arguments
 
@@ -844,7 +842,7 @@ async def get_user(self, user_id: str) -> User: ...
 
 ### AsyncJulepApi().get_user_docs
 
-[Show source in client.py:3142](../../../../../../julep/api/client.py#L3142)
+[Show source in client.py:3138](../../../../../../julep/api/client.py#L3138)
 
 Sorted (created_at descending)
 
@@ -887,7 +885,7 @@ async def get_user_docs(
 
 ### AsyncJulepApi().list_agents
 
-[Show source in client.py:2067](../../../../../../julep/api/client.py#L2067)
+[Show source in client.py:2065](../../../../../../julep/api/client.py#L2065)
 
 List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
@@ -925,7 +923,7 @@ async def list_agents(
 
 ### AsyncJulepApi().list_sessions
 
-[Show source in client.py:1854](../../../../../../julep/api/client.py#L1854)
+[Show source in client.py:1852](../../../../../../julep/api/client.py#L1852)
 
 List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
@@ -963,7 +961,7 @@ async def list_sessions(
 
 ### AsyncJulepApi().list_users
 
-[Show source in client.py:1963](../../../../../../julep/api/client.py#L1963)
+[Show source in client.py:1961](../../../../../../julep/api/client.py#L1961)
 
 List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
 
@@ -1001,7 +999,7 @@ async def list_users(
 
 ### AsyncJulepApi().patch_agent
 
-[Show source in client.py:2973](../../../../../../julep/api/client.py#L2973)
+[Show source in client.py:2969](../../../../../../julep/api/client.py#L2969)
 
 #### Arguments
 
@@ -1049,7 +1047,7 @@ async def patch_agent(
 
 ### AsyncJulepApi().patch_agent_tool
 
-[Show source in client.py:3521](../../../../../../julep/api/client.py#L3521)
+[Show source in client.py:3517](../../../../../../julep/api/client.py#L3517)
 
 #### Arguments
 
@@ -1081,7 +1079,7 @@ async def patch_agent_tool(
 
 ### AsyncJulepApi().patch_session
 
-[Show source in client.py:2302](../../../../../../julep/api/client.py#L2302)
+[Show source in client.py:2300](../../../../../../julep/api/client.py#L2300)
 
 #### Arguments
 
@@ -1117,7 +1115,7 @@ async def patch_session(
 
 ### AsyncJulepApi().patch_user
 
-[Show source in client.py:2790](../../../../../../julep/api/client.py#L2790)
+[Show source in client.py:2786](../../../../../../julep/api/client.py#L2786)
 
 #### Arguments
 
@@ -1156,7 +1154,7 @@ async def patch_user(
 
 ### AsyncJulepApi().update_agent
 
-[Show source in client.py:2875](../../../../../../julep/api/client.py#L2875)
+[Show source in client.py:2871](../../../../../../julep/api/client.py#L2871)
 
 #### Arguments
 
@@ -1206,7 +1204,7 @@ async def update_agent(
 
 ### AsyncJulepApi().update_agent_tool
 
-[Show source in client.py:3439](../../../../../../julep/api/client.py#L3439)
+[Show source in client.py:3435](../../../../../../julep/api/client.py#L3435)
 
 #### Arguments
 
@@ -1241,7 +1239,7 @@ async def update_agent_tool(
 
 ### AsyncJulepApi().update_session
 
-[Show source in client.py:2223](../../../../../../julep/api/client.py#L2223)
+[Show source in client.py:2221](../../../../../../julep/api/client.py#L2221)
 
 #### Arguments
 
@@ -1278,7 +1276,7 @@ async def update_session(
 
 ### AsyncJulepApi().update_user
 
-[Show source in client.py:2707](../../../../../../julep/api/client.py#L2707)
+[Show source in client.py:2703](../../../../../../julep/api/client.py#L2703)
 
 #### Arguments
 
@@ -1399,11 +1397,9 @@ client = JulepApi(
 )
 client.chat(
     session_id="session_id",
-    min_p=0.01,
     messages=[
         InputChatMlMessage(
             role=InputChatMlMessageRole.USER,
-            content="content",
         )
     ],
 )
@@ -1496,7 +1492,7 @@ def create_agent(
 
 ### JulepApi().create_agent_doc
 
-[Show source in client.py:1338](../../../../../../julep/api/client.py#L1338)
+[Show source in client.py:1336](../../../../../../julep/api/client.py#L1336)
 
 #### Arguments
 
@@ -1527,7 +1523,7 @@ def create_agent_doc(
 
 ### JulepApi().create_agent_tool
 
-[Show source in client.py:1631](../../../../../../julep/api/client.py#L1631)
+[Show source in client.py:1629](../../../../../../julep/api/client.py#L1629)
 
 #### Arguments
 
@@ -1645,7 +1641,7 @@ def create_user(
 
 ### JulepApi().create_user_doc
 
-[Show source in client.py:1439](../../../../../../julep/api/client.py#L1439)
+[Show source in client.py:1437](../../../../../../julep/api/client.py#L1437)
 
 #### Arguments
 
@@ -1676,7 +1672,7 @@ def create_user_doc(
 
 ### JulepApi().delete_agent
 
-[Show source in client.py:1178](../../../../../../julep/api/client.py#L1178)
+[Show source in client.py:1176](../../../../../../julep/api/client.py#L1176)
 
 #### Arguments
 
@@ -1699,7 +1695,7 @@ def delete_agent(self, agent_id: str) -> None: ...
 
 ### JulepApi().delete_agent_doc
 
-[Show source in client.py:1516](../../../../../../julep/api/client.py#L1516)
+[Show source in client.py:1514](../../../../../../julep/api/client.py#L1514)
 
 #### Arguments
 
@@ -1725,7 +1721,7 @@ def delete_agent_doc(self, agent_id: str, doc_id: str) -> None: ...
 
 ### JulepApi().delete_agent_memory
 
-[Show source in client.py:1552](../../../../../../julep/api/client.py#L1552)
+[Show source in client.py:1550](../../../../../../julep/api/client.py#L1550)
 
 #### Arguments
 
@@ -1751,7 +1747,7 @@ def delete_agent_memory(self, agent_id: str, memory_id: str) -> None: ...
 
 ### JulepApi().delete_agent_tool
 
-[Show source in client.py:1722](../../../../../../julep/api/client.py#L1722)
+[Show source in client.py:1720](../../../../../../julep/api/client.py#L1720)
 
 #### Arguments
 
@@ -1823,7 +1819,7 @@ def delete_session_history(self, session_id: str) -> None: ...
 
 ### JulepApi().delete_user
 
-[Show source in client.py:995](../../../../../../julep/api/client.py#L995)
+[Show source in client.py:993](../../../../../../julep/api/client.py#L993)
 
 #### Arguments
 
@@ -1846,7 +1842,7 @@ def delete_user(self, user_id: str) -> None: ...
 
 ### JulepApi().delete_user_doc
 
-[Show source in client.py:1480](../../../../../../julep/api/client.py#L1480)
+[Show source in client.py:1478](../../../../../../julep/api/client.py#L1478)
 
 #### Arguments
 
@@ -1872,7 +1868,7 @@ def delete_user_doc(self, user_id: str, doc_id: str) -> None: ...
 
 ### JulepApi().get_agent
 
-[Show source in client.py:1080](../../../../../../julep/api/client.py#L1080)
+[Show source in client.py:1078](../../../../../../julep/api/client.py#L1078)
 
 #### Arguments
 
@@ -1895,7 +1891,7 @@ def get_agent(self, agent_id: str) -> Agent: ...
 
 ### JulepApi().get_agent_docs
 
-[Show source in client.py:1278](../../../../../../julep/api/client.py#L1278)
+[Show source in client.py:1276](../../../../../../julep/api/client.py#L1276)
 
 Sorted (created_at descending)
 
@@ -1938,7 +1934,7 @@ def get_agent_docs(
 
 ### JulepApi().get_agent_memories
 
-[Show source in client.py:860](../../../../../../julep/api/client.py#L860)
+[Show source in client.py:858](../../../../../../julep/api/client.py#L858)
 
 Sorted (created_at descending)
 
@@ -1979,7 +1975,7 @@ def get_agent_memories(
 
 ### JulepApi().get_agent_tools
 
-[Show source in client.py:1588](../../../../../../julep/api/client.py#L1588)
+[Show source in client.py:1586](../../../../../../julep/api/client.py#L1586)
 
 Sorted (created_at descending)
 
@@ -2047,7 +2043,7 @@ def get_history(
 
 ### JulepApi().get_job_status
 
-[Show source in client.py:1801](../../../../../../julep/api/client.py#L1801)
+[Show source in client.py:1799](../../../../../../julep/api/client.py#L1799)
 
 #### Arguments
 
@@ -2127,7 +2123,7 @@ def get_suggestions(
 
 ### JulepApi().get_user
 
-[Show source in client.py:912](../../../../../../julep/api/client.py#L912)
+[Show source in client.py:910](../../../../../../julep/api/client.py#L910)
 
 #### Arguments
 
@@ -2150,7 +2146,7 @@ def get_user(self, user_id: str) -> User: ...
 
 ### JulepApi().get_user_docs
 
-[Show source in client.py:1379](../../../../../../julep/api/client.py#L1379)
+[Show source in client.py:1377](../../../../../../julep/api/client.py#L1377)
 
 Sorted (created_at descending)
 
@@ -2307,7 +2303,7 @@ def list_users(
 
 ### JulepApi().patch_agent
 
-[Show source in client.py:1210](../../../../../../julep/api/client.py#L1210)
+[Show source in client.py:1208](../../../../../../julep/api/client.py#L1208)
 
 #### Arguments
 
@@ -2355,7 +2351,7 @@ def patch_agent(
 
 ### JulepApi().patch_agent_tool
 
-[Show source in client.py:1758](../../../../../../julep/api/client.py#L1758)
+[Show source in client.py:1756](../../../../../../julep/api/client.py#L1756)
 
 #### Arguments
 
@@ -2423,7 +2419,7 @@ def patch_session(
 
 ### JulepApi().patch_user
 
-[Show source in client.py:1027](../../../../../../julep/api/client.py#L1027)
+[Show source in client.py:1025](../../../../../../julep/api/client.py#L1025)
 
 #### Arguments
 
@@ -2462,7 +2458,7 @@ def patch_user(
 
 ### JulepApi().update_agent
 
-[Show source in client.py:1112](../../../../../../julep/api/client.py#L1112)
+[Show source in client.py:1110](../../../../../../julep/api/client.py#L1110)
 
 #### Arguments
 
@@ -2512,7 +2508,7 @@ def update_agent(
 
 ### JulepApi().update_agent_tool
 
-[Show source in client.py:1676](../../../../../../julep/api/client.py#L1676)
+[Show source in client.py:1674](../../../../../../julep/api/client.py#L1674)
 
 #### Arguments
 
@@ -2584,7 +2580,7 @@ def update_session(
 
 ### JulepApi().update_user
 
-[Show source in client.py:944](../../../../../../julep/api/client.py#L944)
+[Show source in client.py:942](../../../../../../julep/api/client.py#L942)
 
 #### Arguments
 

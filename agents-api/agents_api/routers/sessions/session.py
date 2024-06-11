@@ -190,7 +190,7 @@ class BaseSession:
         # Ref: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_call_functions_with_chat_models.ipynb
         if not message.content and message.tool_calls:
             role = "function_call"
-            content = message.tool_calls[0].function.model_dump()
+            content = message.tool_calls[0].function.model_dump_json()
 
         elif not message.content:
             raise ValueError("No content in response")

@@ -1,4 +1,4 @@
-[@julep/sdk](../README.md) / [Exports](../modules.md) / utils/invariant
+[@julep/sdk](../README.md) / [Modules](../modules.md) / utils/invariant
 
 # Module: utils/invariant
 
@@ -29,4 +29,4 @@ Ensures that a condition is met, throwing a custom error message if not.
 
 #### Defined in
 
-[src/utils/invariant.ts:6](https://github.com/julep-ai/julep/blob/035e7f91b35da5c19151875490e535b6923a07fe/sdks/ts/src/utils/invariant.ts#L6)
+[src/utils/invariant.ts:6](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/utils/invariant.ts#L6)

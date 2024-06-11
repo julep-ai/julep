@@ -2,7 +2,14 @@ from asyncio import iscoroutinefunction
 from functools import wraps
 from typing import Callable
 from uuid import UUID
+from typing_extensions import ParamSpec
+
+from pydantic import BaseModel
+
 from ..api.types import ResourceCreatedResponse
+
+
+P = ParamSpec("P")
 
 
 class NotSet:
@@ -33,19 +40,35 @@ def is_valid_uuid4(uuid_to_test: str) -> bool:
     return True
 
 
-def rewrap_in_class(cls):
-    def decorator(func: Callable[..., ResourceCreatedResponse]):
-        @wraps(func)
+def pydantic_model_construct(cls: type[BaseModel], **kwargs):
+    import pydantic
+
+    pydantic_version = int(pydantic.__version__[0])
+
+    if pydantic_version < 2:
+        return cls.construct(**kwargs)
+
+    # Is it running in compatibility mode?
+    if pydantic.v1.main.BaseModel in cls.__mro__:
+        return cls.construct(**kwargs)
+
+    return cls.model_construct(**kwargs)
+
+
+def rewrap_in_class(cls: type[BaseModel]):
+    def decorator(func: Callable[P, ResourceCreatedResponse]):
         # This wrapper is used for asynchronous functions to ensure they are properly awaited and their results are processed by `cls.construct`.
+        @wraps(func)
         async def async_wrapper(*args, **kwargs):
             result = await func(*args, **kwargs)
-            return cls.construct(**kwargs, **result.dict())
+            return pydantic_model_construct(cls, **kwargs, **result.dict())
 
         # This wrapper handles synchronous functions, directly calling them and processing their results with `cls.construct`.
+        @wraps(func)
         def sync_wrapper(*args, **kwargs):
             # Logging at this point might be useful for debugging, but should use a proper logging framework instead of print statements for production code.
             result = func(*args, **kwargs)
-            return cls.construct(**kwargs, **result.dict())
+            return pydantic_model_construct(cls, **kwargs, **result.dict())
 
         return async_wrapper if iscoroutinefunction(func) else sync_wrapper
 
