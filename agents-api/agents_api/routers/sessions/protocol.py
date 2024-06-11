@@ -23,6 +23,8 @@ class Settings(BaseModel):
     min_p: float | None = Field(default=0.01)
     preset: Preset | None = Field(default=None)
     tools: list[Tool] | None = Field(default=None)
+    token_budget: int | None = Field(default=None)
+    context_overflow: str | None = Field(default=None)
 
     @field_validator("max_tokens")
     def set_max_tokens(cls, max_tokens):

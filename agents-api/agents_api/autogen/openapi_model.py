@@ -124,6 +124,14 @@ class Session(BaseModel):
     """
     Render system and assistant message content as jinja templates
     """
+    token_budget: int | None = None
+    """
+    Threshold value for the adaptive context functionality
+    """
+    context_overflow: str | None = None
+    """
+    Action to start on context window overflow
+    """
 
 
 class CreateSessionRequest(BaseModel):
@@ -151,6 +159,14 @@ class CreateSessionRequest(BaseModel):
     """
     Render system and assistant message content as jinja templates
     """
+    token_budget: int | None = None
+    """
+    Threshold value for the adaptive context functionality
+    """
+    context_overflow: str | None = None
+    """
+    Action to start on context window overflow
+    """
 
 
 class UpdateSessionRequest(BaseModel):
@@ -165,6 +181,14 @@ class UpdateSessionRequest(BaseModel):
     metadata: Dict[str, Any] | None = None
     """
     Optional metadata
+    """
+    token_budget: int | None = None
+    """
+    Threshold value for the adaptive context functionality
+    """
+    context_overflow: str | None = None
+    """
+    Action to start on context window overflow
     """
 
 
@@ -752,6 +776,14 @@ class PatchSessionRequest(BaseModel):
     metadata: Dict[str, Any] | None = None
     """
     Optional metadata
+    """
+    token_budget: int | None = None
+    """
+    Threshold value for the adaptive context functionality
+    """
+    context_overflow: str | None = None
+    """
+    Action to start on context window overflow
     """
 
 

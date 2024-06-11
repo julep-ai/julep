@@ -7,11 +7,16 @@ from agents_api.autogen.openapi_model import (
     Role,
     ChatMLImageContentPart,
     ChatMLTextContentPart,
+    Detail,
 )
 from agents_api.common.utils.datetime import utcnow
 
 EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
 Tokenizer = Literal["character_count"]
+
+
+LOW_IMAGE_TOKEN_COUNT = 85
+HIGH_IMAGE_TOKEN_COUNT = 85 + 4 * 170
 
 
 class Entry(BaseModel):
@@ -44,12 +49,15 @@ class Entry(BaseModel):
             elif isinstance(self.content, dict):
                 content_length = len(json.dumps(self.content))
             elif isinstance(self.content, list):
-                text = ""
                 for part in self.content:
-                    # TODO: how to calc token count for images?
                     if isinstance(part, ChatMLTextContentPart):
-                        text += part.text
-                content_length = len(text)
+                        content_length += len(part.text)
+                    elif isinstance(part, ChatMLImageContentPart):
+                        content_length += (
+                            LOW_IMAGE_TOKEN_COUNT
+                            if part.image_url.detail == Detail.low
+                            else HIGH_IMAGE_TOKEN_COUNT
+                        )
 
             # Divide the content length by 3.5 to estimate token count based on character count.
             return int(content_length // 3.5)

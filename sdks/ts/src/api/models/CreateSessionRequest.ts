@@ -26,4 +26,12 @@ export type CreateSessionRequest = {
    * Render system and assistant message content as jinja templates
    */
   render_templates?: boolean;
+  /**
+   * Threshold value for the adaptive context functionality
+   */
+  token_budget?: number;
+  /**
+   * Action to start on context window overflow
+   */
+  context_overflow?: string;
 };
