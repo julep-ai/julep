@@ -35,8 +35,8 @@ class TaskExecutionWorkflow:
     async def run(
         self,
         execution_input: ExecutionInput,
-        start: tuple[str, int]=("main", 0),
-        previous_inputs: list[dict]=[],
+        start: tuple[str, int] = ("main", 0),
+        previous_inputs: list[dict] = [],
     ) -> None:
         wf_name, step_idx = start
         spec = execution_input.task.spec
@@ -99,9 +99,11 @@ class TaskExecutionWorkflow:
         # Transition to the next step
         await workflow.execute_activity(
             transition_step,
-            context,
-            start,
-            result,
+            args=[
+                context,
+                start,
+                result,
+            ],
             schedule_to_close_timeout=timedelta(seconds=600),
         )
 

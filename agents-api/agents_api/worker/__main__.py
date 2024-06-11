@@ -47,6 +47,7 @@ from ..workflows.task_execution import TaskExecutionWorkflow
 
 from .codec import pydantic_data_converter
 
+
 async def main():
     """
     Initializes the Temporal client and worker with TLS configuration (if provided),

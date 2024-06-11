@@ -4,18 +4,13 @@ from typing import Any, Literal
 from pydantic import BaseModel, computed_field
 
 from ...autogen.openapi_model import (
-    Agent,
-    Execution,
     PromptWorkflowStep,
     EvaluateWorkflowStep,
     YieldWorkflowStep,
     ToolCallWorkflowStep,
     ErrorWorkflowStep,
     IfElseWorkflowStep,
-    Session,
     Task,
-    Tool,
-    User,
 )
 
 WorkflowStep = (
@@ -35,17 +30,16 @@ class SerializableTask(Task):
         dump["created_at"] = self.created_at.isoformat()
 
         return dump
-    
+
     # And load it back
     @classmethod
     def model_load(cls, data: dict[str, Any], *args, **kwargs) -> "SerializableTask":
         data["created_at"] = datetime.fromisoformat(data["created_at"])
         return super().model_load(data, *args, **kwargs)
 
+
 class TaskWorkflow(BaseModel):
     name: str
-
-    # FIXME: Create a unified type for this union
     steps: list[WorkflowStep]
 
 
@@ -61,12 +55,18 @@ class TaskProtocol(SerializableTask):
     @computed_field
     @property
     def spec(self) -> TaskSpec:
+        other_workflows = {
+            workflow_name: getattr(self, workflow_name)
+            for workflow_name in self.model_extra.keys()
+            if workflow_name not in Task.model_fields.keys() and workflow_name != "spec"
+        }
+
         workflows = [
             TaskWorkflow(name="main", steps=self.main),
             # ... others
         ] + [
             TaskWorkflow(name=workflow_name, steps=workflow_steps)
-            for workflow_name, workflow_steps in self.model_extra.items()
+            for workflow_name, workflow_steps in other_workflows.items()
         ]
 
         return TaskSpec(
