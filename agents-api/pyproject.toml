@@ -33,6 +33,7 @@ xxhash = "^3.4.1"
 
 
 beartype = "^0.18.5"
+cel-python = "^0.1.5"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.18.1"
 black = "^24.4.0"
