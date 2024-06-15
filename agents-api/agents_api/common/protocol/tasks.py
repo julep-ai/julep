@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, List, Literal
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, UUID4, computed_field
 
 from ...autogen.openapi_model import (
     PromptWorkflowStep,
@@ -78,7 +78,9 @@ class TaskProtocol(SerializableTask):
         )
 
 
+# FIXME: Enable all of these
 class ExecutionInput(BaseModel):
+    developer_id: UUID4
     # execution: Execution
     task: TaskProtocol
     # agent: Agent
@@ -94,7 +96,17 @@ class StepContext(ExecutionInput):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
+
         dump["$"] = self.inputs[-1]
         dump["outputs"] = self.inputs[1:]
 
+        del dump["developer_id"]
+
         return dump
+
+
+class TransitionInfo(BaseModel):
+    from_: Annotated[List[str | int], Field(alias="from")]
+    to: List[str | int]
+    type: Annotated[str, Field(pattern="^(finish|wait|error|step)$")]
+    outputs: dict[str, Any]

@@ -57,9 +57,7 @@ doc_query_instruction = (
 
 
 def cache(f):
-    async def wrapper(
-        self, init_context: list[ChatML], settings: Settings
-    ) -> ChatCompletion:
+    async def wrapper(init_context: list[ChatML], settings: Settings) -> ChatCompletion:
         key = xxhash.xxh64(
             json.dumps(
                 {
@@ -72,13 +70,57 @@ def cache(f):
         ).hexdigest()
         result = get_cached_response(key=key)
         if not result.size:
-            resp = await f(self, init_context, settings)
+            resp = await f(init_context, settings)
             set_cached_response(key=key, value=resp.model_dump())
             return resp
         choices = result.iloc[0].to_dict()["value"]
         return ChatCompletion(**choices)
 
     return wrapper
+
+
+# FIXME: Refactor llm_generate and cache for use inside tasks as well
+# - these should probably be moved to a separate module
+@cache
+async def llm_generate(
+    init_context: list[ChatML], settings: Settings
+) -> ChatCompletion:
+    init_context = load_context(init_context, settings.model)
+    tools = None
+    api_base = None
+    api_key = None
+    model = settings.model
+    if model in JULEP_MODELS:
+        api_base = model_inference_url
+        api_key = model_api_key
+        model = f"openai/{model}"
+
+    if settings.tools:
+        tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
+
+    extra_body = get_extra_settings(settings)
+
+    litellm.drop_params = True
+    litellm.add_function_to_prompt = True
+
+    res = await acompletion(
+        model=model,
+        messages=init_context,
+        max_tokens=settings.max_tokens,
+        stop=settings.stop,
+        temperature=settings.temperature,
+        frequency_penalty=settings.frequency_penalty,
+        top_p=settings.top_p,
+        presence_penalty=settings.presence_penalty,
+        stream=settings.stream,
+        tools=tools,
+        response_format=settings.response_format,
+        api_base=api_base,
+        api_key=api_key,
+        **extra_body,
+    )
+
+    return res
 
 
 @dataclass
@@ -398,46 +440,10 @@ class BaseSession:
 
         return messages, settings, doc_ids
 
-    @cache
     async def generate(
         self, init_context: list[ChatML], settings: Settings
     ) -> ChatCompletion:
-        init_context = load_context(init_context, settings.model)
-        tools = None
-        api_base = None
-        api_key = None
-        model = settings.model
-        if model in JULEP_MODELS:
-            api_base = model_inference_url
-            api_key = model_api_key
-            model = f"openai/{model}"
-
-        if settings.tools:
-            tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
-
-        extra_body = get_extra_settings(settings)
-
-        litellm.drop_params = True
-        litellm.add_function_to_prompt = True
-
-        res = await acompletion(
-            model=model,
-            messages=init_context,
-            max_tokens=settings.max_tokens,
-            stop=settings.stop,
-            temperature=settings.temperature,
-            frequency_penalty=settings.frequency_penalty,
-            top_p=settings.top_p,
-            presence_penalty=settings.presence_penalty,
-            stream=settings.stream,
-            tools=tools,
-            response_format=settings.response_format,
-            api_base=api_base,
-            api_key=api_key,
-            **extra_body,
-        )
-
-        return res
+        return await llm_generate(init_context, settings)
 
     async def backward(
         self,

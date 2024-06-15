@@ -2,6 +2,8 @@ import dataclasses
 import json
 from typing import Any, Optional, Type
 
+import openai.types as openai_types
+import openai.types.chat as openai_chat_types
 from pydantic import BaseModel
 import temporalio.converter
 from temporalio.api.common.v1 import Payload
@@ -11,16 +13,26 @@ from temporalio.converter import (
     EncodingPayloadConverter,
 )
 
-# Use this instead of the default pydantic model
 import agents_api.common.protocol.tasks as tasks
 import agents_api.autogen.openapi_model as openapi_model
 
+
+# Map of model name to class so that we can look up the class when deserializing
 model_class_map = {
     subclass.__module__ + "." + subclass.__name__: subclass
-    for subclass in {**tasks.__dict__, **openapi_model.__dict__}.values()
+    for subclass in {
+        # All the models we want to support
+        **openai_types.__dict__,
+        **openai_chat_types.__dict__,
+        **openapi_model.__dict__,
+        **tasks.__dict__,
+    }.values()
+    #
+    # Filter out the ones that aren't pydantic models
     if isinstance(subclass, type) and issubclass(subclass, BaseModel)
 }
 
+# Also include dict
 model_class_map["builtins.dict"] = dict
 
 

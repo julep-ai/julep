@@ -1,89 +1,120 @@
-import celpy
-from temporalio import activity
-from jinja2 import Environment
+import asyncio
 
-from agents_api.autogen.openapi_model import (
-    PromptWorkflowStep, 
-    EvaluateWorkflowStep, 
-    YieldWorkflowStep,
-    ToolCallWorkflowStep,
-    ErrorWorkflowStep,
-    IfElseWorkflowStep,
+# import celpy
+from openai.types import ChatCompletion
+from temporalio import activity
+from uuid import uuid4
+
+from ...autogen.openapi_model import (
+    PromptWorkflowStep,
+    # EvaluateWorkflowStep,
+    # YieldWorkflowStep,
+    # ToolCallWorkflowStep,
+    # ErrorWorkflowStep,
+    # IfElseWorkflowStep,
+    InputChatMLMessage,
 )
+
 from ...common.protocol.tasks import (
     StepContext,
+    TransitionInfo,
 )
+
+from ...common.utils.template import render_template
+
+from ...models.execution.create_execution_transition import (
+    create_execution_transition_query,
+)
+from ...routers.sessions.session import llm_generate
 
 
 @activity.defn
 async def prompt_step(context: StepContext) -> dict:
-    # TODO: get the template string somehow
-    template_str = "..."
-    if not isinstance(context.definition, PromptWorkflowStep):
-        return {}
-    
-    env = Environment()
-    template = env.from_string(template_str)
-    prompt = template.render(prompt=context.definition.prompt)
+    assert isinstance(context.definition, PromptWorkflowStep)
 
-    return {"test": "result"}
+    # Get context data
+    context_data: dict = context.model_dump()
 
+    # Render template messages
+    template_messages: list[InputChatMLMessage] = context.definition.prompt
+    messages: list[InputChatMLMessage] = asyncio.gather(
+        *[render_template(msg.content, context_data) for msg in template_messages]
+    )
 
-@activity.defn
-async def evaluate_step(context: StepContext) -> dict:
-    if not isinstance(context.definition, EvaluateWorkflowStep):
-        return {}
-    
-    #FIXME: set the field to keep source code
-    source: str = context.definition.evaluate
-    env = celpy.Environment()
-    ast = env.compile(source)
-    prog = env.program(ast)
-    # TODO: set args
-    args = {}
-    result = prog.evaluate(args)
-    return {"result": result}
+    # Get settings and run llm
+    response: ChatCompletion = await llm_generate(messages, context_data)
+
+    return response
 
 
-@activity.defn
-async def yield_step(context: StepContext) -> dict:
-    if not isinstance(context.definition, YieldWorkflowStep):
-        return {}
-    
-    #TODO: implement
+# @activity.defn
+# async def evaluate_step(context: StepContext) -> dict:
+#     if not isinstance(context.definition, EvaluateWorkflowStep):
+#         return {}
 
-    return {"test": "result"}
-
-
-@activity.defn
-async def tool_call_step(context: StepContext) -> dict:
-    if not isinstance(context.definition, ToolCallWorkflowStep):
-        return {}
-
-    #TODO: implement
-
-    return {"test": "result"}
+#     # FIXME: set the field to keep source code
+#     source: str = context.definition.evaluate
+#     env = celpy.Environment()
+#     ast = env.compile(source)
+#     prog = env.program(ast)
+#     # TODO: set args
+#     args = {}
+#     result = prog.evaluate(args)
+#     return {"result": result}
 
 
-@activity.defn
-async def error_step(context: StepContext) -> dict:
-    if not isinstance(context.definition, ErrorWorkflowStep):
-        return {}
+# @activity.defn
+# async def yield_step(context: StepContext) -> dict:
+#     if not isinstance(context.definition, YieldWorkflowStep):
+#         return {}
 
-    return {"error": context.definition.error}
+#     # TODO: implement
+
+#     return {"test": "result"}
 
 
-@activity.defn
-async def if_else_step(context: StepContext) -> dict:
-    if not isinstance(context.definition, IfElseWorkflowStep):
-        return {}
+# @activity.defn
+# async def tool_call_step(context: StepContext) -> dict:
+#     if not isinstance(context.definition, ToolCallWorkflowStep):
+#         return {}
 
-    return {"test": "result"}
+#     # TODO: implement
+
+#     return {"test": "result"}
+
+
+# @activity.defn
+# async def error_step(context: StepContext) -> dict:
+#     if not isinstance(context.definition, ErrorWorkflowStep):
+#         return {}
+
+#     return {"error": context.definition.error}
+
+
+# @activity.defn
+# async def if_else_step(context: StepContext) -> dict:
+#     if not isinstance(context.definition, IfElseWorkflowStep):
+#         return {}
+
+#     return {"test": "result"}
 
 
 @activity.defn
 async def transition_step(
-    context: StepContext, start: tuple[str, int], result: dict
+    developer_id: str,
+    context: StepContext,
+    transition_info: TransitionInfo,
 ) -> dict:
     print("Running transition step")
-    return {"test": "result"}
+    assert NotImplementedError()
+
+    # Get transition info
+    transition_data = transition_info.model_dump(by_alias=False)
+
+    # Create transition
+    create_execution_transition_query(
+        developer_id=context.developer_id,
+        execution_id=context.execution.id,
+        transition_id=uuid4(),
+        **transition_data,
+    )
