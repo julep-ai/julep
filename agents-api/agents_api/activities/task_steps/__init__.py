@@ -1,7 +1,7 @@
 import asyncio
 
 # import celpy
-from openai.types import ChatCompletion
+from openai.types.chat.chat_completion import ChatCompletion
 from temporalio import activity
 from uuid import uuid4
 
