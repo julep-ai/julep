@@ -100,7 +100,7 @@ class TaskExecutionWorkflow:
 
         # Transition type
         transition_type = (
-            "finish" if is_last else ("awaiting_input" if should_wait else "step")
+            "awaiting_input" if should_wait else ("finish" if is_last else "step")
         )
 
         # Transition to the next step
