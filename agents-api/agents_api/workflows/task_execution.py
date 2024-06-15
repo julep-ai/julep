@@ -123,7 +123,7 @@ class TaskExecutionWorkflow:
         # -----
 
         # End if the last step
-        if step_idx + 1 == len(current_workflow):
+        if is_last:
             return outputs
 
         # Otherwise, recurse to the next step
