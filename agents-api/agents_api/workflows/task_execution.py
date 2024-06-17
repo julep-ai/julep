@@ -6,7 +6,6 @@ from datetime import timedelta
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-
     from ..activities.task_steps import (
         prompt_step,
         transition_step,
@@ -42,6 +41,7 @@ class TaskExecutionWorkflow:
         step = current_workflow[step_idx]
 
         context = StepContext(
+            developer_id=execution_input.developer_id,
             # execution=execution_input.execution,
             task=execution_input.task,
             # agent=execution_input.agent,

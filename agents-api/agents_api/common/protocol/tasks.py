@@ -100,8 +100,6 @@ class StepContext(ExecutionInput):
         dump["$"] = self.inputs[-1]
         dump["outputs"] = self.inputs[1:]
 
-        del dump["developer_id"]
-
         return dump
 
 

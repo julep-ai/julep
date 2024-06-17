@@ -20,11 +20,11 @@ from ..activities.salient_questions import salient_questions
 from ..activities.embed_docs import embed_docs
 from ..activities.task_steps import (
     prompt_step,
-    evaluate_step,
-    yield_step,
-    tool_call_step,
-    error_step,
-    if_else_step,
+    # evaluate_step,
+    # yield_step,
+    # tool_call_step,
+    # error_step,
+    # if_else_step,
     transition_step,
 )
 
@@ -74,11 +74,11 @@ async def main():
 
     task_activities = [
         prompt_step,
-        evaluate_step,
-        yield_step,
-        tool_call_step,
-        error_step,
-        if_else_step,
+        # evaluate_step,
+        # yield_step,
+        # tool_call_step,
+        # error_step,
+        # if_else_step,
         transition_step,
     ]
 

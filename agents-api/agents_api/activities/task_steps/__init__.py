@@ -26,6 +26,7 @@ from ...models.execution.create_execution_transition import (
     create_execution_transition_query,
 )
 from ...routers.sessions.session import llm_generate
+from ...routers.sessions.protocol import Settings
 
 
 @activity.defn
@@ -38,11 +39,20 @@ async def prompt_step(context: StepContext) -> dict:
     # Render template messages
     template_messages: list[InputChatMLMessage] = context.definition.prompt
     messages: list[InputChatMLMessage] = asyncio.gather(
-        *[render_template(msg.content, context_data) for msg in template_messages]
+        *[
+            render_template(msg.content, context_data, skip_vars=["developer_id"])
+            for msg in template_messages
+        ]
     )
 
     # Get settings and run llm
-    response: ChatCompletion = await llm_generate(messages, context_data)
+    response: ChatCompletion = await llm_generate(
+        messages,
+        Settings(
+            model=context.definition.settings.model or "gpt-4-turbo",
+            response_format=None,
+        ),
+    )
 
     return response
 
