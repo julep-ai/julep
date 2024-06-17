@@ -1,99 +1,100 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/memory](../modules/managers_memory.md) / MemoriesManager
+# Memory
 
-# Class: MemoriesManager
+[@julep/sdk](../) / [Modules](../modules.md) / [managers/memory](../modules/managers\_memory.md) / MemoriesManager
 
-[managers/memory](../modules/managers_memory.md).MemoriesManager
+## Class: MemoriesManager
 
-BaseManager serves as the base class for all manager classes that interact with the Julep API.
-It provides common functionality needed for API interactions.
+[managers/memory](../modules/managers\_memory.md).MemoriesManager
 
-## Hierarchy
+BaseManager serves as the base class for all manager classes that interact with the Julep API. It provides common functionality needed for API interactions.
 
-- [`BaseManager`](managers_base.BaseManager.md)
+### Hierarchy
 
-  ↳ **`MemoriesManager`**
+*   [`BaseManager`](managers\_base.BaseManager.md)
 
-## Table of contents
+    ↳ **`MemoriesManager`**
+
+### Table of contents
+
+#### Constructors
+
+* [constructor](managers\_memory.MemoriesManager.md#constructor)
+
+#### Properties
+
+* [apiClient](managers\_memory.MemoriesManager.md#apiclient)
+
+#### Methods
+
+* [list](managers\_memory.MemoriesManager.md#list)
 
 ### Constructors
 
-- [constructor](managers_memory.MemoriesManager.md#constructor)
+#### constructor
 
-### Properties
-
-- [apiClient](managers_memory.MemoriesManager.md#apiclient)
-
-### Methods
-
-- [list](managers_memory.MemoriesManager.md#list)
-
-## Constructors
-
-### constructor
-
-• **new MemoriesManager**(`apiClient`): [`MemoriesManager`](managers_memory.MemoriesManager.md)
+• **new MemoriesManager**(`apiClient`): [`MemoriesManager`](managers\_memory.MemoriesManager.md)
 
 Constructs a new instance of BaseManager.
 
-#### Parameters
+**Parameters**
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `apiClient` | [`JulepApiClient`](api_JulepApiClient.JulepApiClient.md) | The JulepApiClient instance used for API interactions. |
+| Name        | Type                                                      | Description                                            |
+| ----------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| `apiClient` | [`JulepApiClient`](api\_JulepApiClient.JulepApiClient.md) | The JulepApiClient instance used for API interactions. |
 
-#### Returns
+**Returns**
 
-[`MemoriesManager`](managers_memory.MemoriesManager.md)
+[`MemoriesManager`](managers\_memory.MemoriesManager.md)
 
-#### Inherited from
+**Inherited from**
 
-[BaseManager](managers_base.BaseManager.md).[constructor](managers_base.BaseManager.md#constructor)
+[BaseManager](managers\_base.BaseManager.md).[constructor](managers\_base.BaseManager.md#constructor)
 
-#### Defined in
+**Defined in**
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
-## Properties
+### Properties
 
-### apiClient
+#### apiClient
 
-• **apiClient**: [`JulepApiClient`](api_JulepApiClient.JulepApiClient.md)
+• **apiClient**: [`JulepApiClient`](api\_JulepApiClient.JulepApiClient.md)
 
 The JulepApiClient instance used for API interactions.
 
-#### Inherited from
+**Inherited from**
 
-[BaseManager](managers_base.BaseManager.md).[apiClient](managers_base.BaseManager.md#apiclient)
+[BaseManager](managers\_base.BaseManager.md).[apiClient](managers\_base.BaseManager.md#apiclient)
 
-#### Defined in
+**Defined in**
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
-## Methods
+### Methods
 
-### list
+#### list
 
-▸ **list**(`«destructured»`): `Promise`\<[`Memory`](../modules/api.md#memory)[]\>
+▸ **list**(`«destructured»`): `Promise`<[`Memory`](../modules/api.md#memory)\[]>
 
 Lists memories based on the provided parameters.
 
-#### Parameters
+**Parameters**
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `«destructured»` | `Object` | `undefined` |
-| › `agentId` | `string` | `undefined` |
-| › `limit?` | `number` | `100` |
-| › `offset?` | `number` | `0` |
-| › `query` | `string` | `undefined` |
-| › `userId?` | `string` | `undefined` |
+| Name             | Type     | Default value |
+| ---------------- | -------- | ------------- |
+| `«destructured»` | `Object` | `undefined`   |
+| › `agentId`      | `string` | `undefined`   |
+| › `limit?`       | `number` | `100`         |
+| › `offset?`      | `number` | `0`           |
+| › `query`        | `string` | `undefined`   |
+| › `userId?`      | `string` | `undefined`   |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`Memory`](../modules/api.md#memory)[]\>
+`Promise`<[`Memory`](../modules/api.md#memory)\[]>
 
 A promise that resolves to an array of Memory objects.
 
-#### Defined in
+**Defined in**
 
-[src/managers/memory.ts:21](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/memory.ts#L21)
+[src/managers/memory.ts:21](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/memory.ts#L21)

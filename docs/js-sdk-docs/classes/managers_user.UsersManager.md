@@ -1,197 +1,198 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/user](../modules/managers_user.md) / UsersManager
+# User
 
-# Class: UsersManager
+[@julep/sdk](../) / [Modules](../modules.md) / [managers/user](../modules/managers\_user.md) / UsersManager
 
-[managers/user](../modules/managers_user.md).UsersManager
+## Class: UsersManager
 
-BaseManager serves as the base class for all manager classes that interact with the Julep API.
-It provides common functionality needed for API interactions.
+[managers/user](../modules/managers\_user.md).UsersManager
 
-## Hierarchy
+BaseManager serves as the base class for all manager classes that interact with the Julep API. It provides common functionality needed for API interactions.
 
-- [`BaseManager`](managers_base.BaseManager.md)
+### Hierarchy
 
-  ↳ **`UsersManager`**
+*   [`BaseManager`](managers\_base.BaseManager.md)
 
-## Table of contents
+    ↳ **`UsersManager`**
+
+### Table of contents
+
+#### Constructors
+
+* [constructor](managers\_user.UsersManager.md#constructor)
+
+#### Properties
+
+* [apiClient](managers\_user.UsersManager.md#apiclient)
+
+#### Methods
+
+* [create](managers\_user.UsersManager.md#create)
+* [delete](managers\_user.UsersManager.md#delete)
+* [get](managers\_user.UsersManager.md#get)
+* [list](managers\_user.UsersManager.md#list)
+* [update](managers\_user.UsersManager.md#update)
 
 ### Constructors
 
-- [constructor](managers_user.UsersManager.md#constructor)
+#### constructor
 
-### Properties
-
-- [apiClient](managers_user.UsersManager.md#apiclient)
-
-### Methods
-
-- [create](managers_user.UsersManager.md#create)
-- [delete](managers_user.UsersManager.md#delete)
-- [get](managers_user.UsersManager.md#get)
-- [list](managers_user.UsersManager.md#list)
-- [update](managers_user.UsersManager.md#update)
-
-## Constructors
-
-### constructor
-
-• **new UsersManager**(`apiClient`): [`UsersManager`](managers_user.UsersManager.md)
+• **new UsersManager**(`apiClient`): [`UsersManager`](managers\_user.UsersManager.md)
 
 Constructs a new instance of BaseManager.
 
-#### Parameters
+**Parameters**
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `apiClient` | [`JulepApiClient`](api_JulepApiClient.JulepApiClient.md) | The JulepApiClient instance used for API interactions. |
+| Name        | Type                                                      | Description                                            |
+| ----------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| `apiClient` | [`JulepApiClient`](api\_JulepApiClient.JulepApiClient.md) | The JulepApiClient instance used for API interactions. |
 
-#### Returns
+**Returns**
 
-[`UsersManager`](managers_user.UsersManager.md)
+[`UsersManager`](managers\_user.UsersManager.md)
 
-#### Inherited from
+**Inherited from**
 
-[BaseManager](managers_base.BaseManager.md).[constructor](managers_base.BaseManager.md#constructor)
+[BaseManager](managers\_base.BaseManager.md).[constructor](managers\_base.BaseManager.md#constructor)
 
-#### Defined in
+**Defined in**
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
-## Properties
+### Properties
 
-### apiClient
+#### apiClient
 
-• **apiClient**: [`JulepApiClient`](api_JulepApiClient.JulepApiClient.md)
+• **apiClient**: [`JulepApiClient`](api\_JulepApiClient.JulepApiClient.md)
 
 The JulepApiClient instance used for API interactions.
 
-#### Inherited from
+**Inherited from**
 
-[BaseManager](managers_base.BaseManager.md).[apiClient](managers_base.BaseManager.md#apiclient)
+[BaseManager](managers\_base.BaseManager.md).[apiClient](managers\_base.BaseManager.md#apiclient)
 
-#### Defined in
+**Defined in**
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
-## Methods
+### Methods
 
-### create
+#### create
 
-▸ **create**(`«destructured»?`): `Promise`\<[`User`](../modules/api.md#user)\>
+▸ **create**(`«destructured»?`): `Promise`<[`User`](../modules/api.md#user)>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
+| Name             | Type                                                       |
+| ---------------- | ---------------------------------------------------------- |
 | `«destructured»` | [`CreateUserRequest`](../modules/api.md#createuserrequest) |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`User`](../modules/api.md#user)\>
+`Promise`<[`User`](../modules/api.md#user)>
 
-#### Defined in
+**Defined in**
 
-[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/user.ts#L27)
+[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/user.ts#L27)
 
-___
+***
 
-### delete
+#### delete
 
-▸ **delete**(`userId`): `Promise`\<`void`\>
+▸ **delete**(`userId`): `Promise`<`void`>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
+| Name     | Type     |
+| -------- | -------- |
 | `userId` | `string` |
 
-#### Returns
+**Returns**
 
-`Promise`\<`void`\>
+`Promise`<`void`>
 
-#### Defined in
+**Defined in**
 
-[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/user.ts#L63)
+[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/user.ts#L63)
 
-___
+***
 
-### get
+#### get
 
-▸ **get**(`userId`): `Promise`\<[`User`](../modules/api.md#user)\>
+▸ **get**(`userId`): `Promise`<[`User`](../modules/api.md#user)>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
+| Name     | Type     |
+| -------- | -------- |
 | `userId` | `string` |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`User`](../modules/api.md#user)\>
+`Promise`<[`User`](../modules/api.md#user)>
 
-#### Defined in
+**Defined in**
 
-[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/user.ts#L15)
+[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/user.ts#L15)
 
-___
+***
 
-### list
+#### list
 
-▸ **list**(`«destructured»?`): `Promise`\<[`User`](../modules/api.md#user)[]\>
+▸ **list**(`«destructured»?`): `Promise`<[`User`](../modules/api.md#user)\[]>
 
-#### Parameters
+**Parameters**
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `10` |
-| › `metadataFilter?` | `Object` | `{}` |
-| › `offset?` | `number` | `0` |
+| Name                | Type     | Default value |
+| ------------------- | -------- | ------------- |
+| `«destructured»`    | `Object` | `{}`          |
+| › `limit?`          | `number` | `10`          |
+| › `metadataFilter?` | `Object` | `{}`          |
+| › `offset?`         | `number` | `0`           |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`User`](../modules/api.md#user)[]\>
+`Promise`<[`User`](../modules/api.md#user)\[]>
 
-#### Defined in
+**Defined in**
 
-[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/user.ts#L44)
+[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/user.ts#L44)
 
-___
+***
 
-### update
+#### update
 
-▸ **update**(`userId`, `request`, `overwrite`): `Promise`\<[`User`](../modules/api.md#user)\>
+▸ **update**(`userId`, `request`, `overwrite`): `Promise`<[`User`](../modules/api.md#user)>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
-| `userId` | `string` |
-| `request` | [`UpdateUserRequest`](../modules/api.md#updateuserrequest) |
-| `overwrite` | ``true`` |
+| Name        | Type                                                       |
+| ----------- | ---------------------------------------------------------- |
+| `userId`    | `string`                                                   |
+| `request`   | [`UpdateUserRequest`](../modules/api.md#updateuserrequest) |
+| `overwrite` | `true`                                                     |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`User`](../modules/api.md#user)\>
+`Promise`<[`User`](../modules/api.md#user)>
 
-#### Defined in
+**Defined in**
 
-[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/user.ts#L73)
+[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/user.ts#L73)
 
-▸ **update**(`userId`, `request`, `overwrite?`): `Promise`\<[`User`](../modules/api.md#user)\>
+▸ **update**(`userId`, `request`, `overwrite?`): `Promise`<[`User`](../modules/api.md#user)>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
-| `userId` | `string` |
-| `request` | [`PatchUserRequest`](../modules/api.md#patchuserrequest) |
-| `overwrite?` | ``false`` |
+| Name         | Type                                                     |
+| ------------ | -------------------------------------------------------- |
+| `userId`     | `string`                                                 |
+| `request`    | [`PatchUserRequest`](../modules/api.md#patchuserrequest) |
+| `overwrite?` | `false`                                                  |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`User`](../modules/api.md#user)\>
+`Promise`<[`User`](../modules/api.md#user)>
 
-#### Defined in
+**Defined in**
 
-[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/user.ts#L79)
+[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/user.ts#L79)

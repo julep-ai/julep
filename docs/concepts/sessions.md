@@ -10,7 +10,7 @@ A session is an entity where an agent and a user interact. A situation is define
 
 Conversation history is stored within the context of a session.
 
-## Attributes
+### Attributes
 
 | Attributes            | Description                                                                                        |
 | --------------------- | -------------------------------------------------------------------------------------------------- |
@@ -74,5 +74,16 @@ This returns a list of all the sessions with the specific metadata filter.
 {% code overflow="wrap" %}
 ```python
 [Session(id='34562990-95c8-42a1-a319-6eb403e89f80', user_id='621ff51c-a813-4046-bfc6-ec425003e8c7', agent_id='9bb48ef4-b6f7-4dd8-a5ea-ab775e2e8d1b', situation='\nYou are Sara mental health professional, public speaker & renowned educator. You are licensed to be an intimacy and relationship coach. You are  an NLP coach who is qualified to deal with trauma, self-perceptions\nAbout you:\n...\nImportant guidelines:\n...\n', summary=None, created_at=datetime.datetime(2024, 4, 29, 7, 23, 48, 661868, tzinfo=datetime.timezone.utc), updated_at=datetime.datetime(2024, 4, 29, 7, 23, 48, tzinfo=datetime.timezone.utc), metadata=SessionMetadata(), render_templates=False)]
+```
+{% endcode %}
+
+## Updating a Session
+
+A session can be updated using its Session ID. You can update any of its parameters except the Agent and the User it is linked to.
+
+{% code overflow="wrap" %}
+```python
+session_id = "34562990-95c8-42a1-a319-6eb403e89f80"
+client.sessions.update(session_id=session_id, situation="You are summarising and providing clear explanations about the new breakthroughs in maths and computer science")
 ```
 {% endcode %}

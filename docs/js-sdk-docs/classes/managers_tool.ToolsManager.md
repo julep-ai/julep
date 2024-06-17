@@ -1,166 +1,167 @@
-[@julep/sdk](../README.md) / [Modules](../modules.md) / [managers/tool](../modules/managers_tool.md) / ToolsManager
+# Tool
 
-# Class: ToolsManager
+[@julep/sdk](../) / [Modules](../modules.md) / [managers/tool](../modules/managers\_tool.md) / ToolsManager
 
-[managers/tool](../modules/managers_tool.md).ToolsManager
+## Class: ToolsManager
 
-BaseManager serves as the base class for all manager classes that interact with the Julep API.
-It provides common functionality needed for API interactions.
+[managers/tool](../modules/managers\_tool.md).ToolsManager
 
-## Hierarchy
+BaseManager serves as the base class for all manager classes that interact with the Julep API. It provides common functionality needed for API interactions.
 
-- [`BaseManager`](managers_base.BaseManager.md)
+### Hierarchy
 
-  ↳ **`ToolsManager`**
+*   [`BaseManager`](managers\_base.BaseManager.md)
 
-## Table of contents
+    ↳ **`ToolsManager`**
+
+### Table of contents
+
+#### Constructors
+
+* [constructor](managers\_tool.ToolsManager.md#constructor)
+
+#### Properties
+
+* [apiClient](managers\_tool.ToolsManager.md#apiclient)
+
+#### Methods
+
+* [create](managers\_tool.ToolsManager.md#create)
+* [delete](managers\_tool.ToolsManager.md#delete)
+* [list](managers\_tool.ToolsManager.md#list)
+* [update](managers\_tool.ToolsManager.md#update)
 
 ### Constructors
 
-- [constructor](managers_tool.ToolsManager.md#constructor)
+#### constructor
 
-### Properties
-
-- [apiClient](managers_tool.ToolsManager.md#apiclient)
-
-### Methods
-
-- [create](managers_tool.ToolsManager.md#create)
-- [delete](managers_tool.ToolsManager.md#delete)
-- [list](managers_tool.ToolsManager.md#list)
-- [update](managers_tool.ToolsManager.md#update)
-
-## Constructors
-
-### constructor
-
-• **new ToolsManager**(`apiClient`): [`ToolsManager`](managers_tool.ToolsManager.md)
+• **new ToolsManager**(`apiClient`): [`ToolsManager`](managers\_tool.ToolsManager.md)
 
 Constructs a new instance of BaseManager.
 
-#### Parameters
+**Parameters**
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `apiClient` | [`JulepApiClient`](api_JulepApiClient.JulepApiClient.md) | The JulepApiClient instance used for API interactions. |
+| Name        | Type                                                      | Description                                            |
+| ----------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| `apiClient` | [`JulepApiClient`](api\_JulepApiClient.JulepApiClient.md) | The JulepApiClient instance used for API interactions. |
 
-#### Returns
+**Returns**
 
-[`ToolsManager`](managers_tool.ToolsManager.md)
+[`ToolsManager`](managers\_tool.ToolsManager.md)
 
-#### Inherited from
+**Inherited from**
 
-[BaseManager](managers_base.BaseManager.md).[constructor](managers_base.BaseManager.md#constructor)
+[BaseManager](managers\_base.BaseManager.md).[constructor](managers\_base.BaseManager.md#constructor)
 
-#### Defined in
+**Defined in**
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
-## Properties
+### Properties
 
-### apiClient
+#### apiClient
 
-• **apiClient**: [`JulepApiClient`](api_JulepApiClient.JulepApiClient.md)
+• **apiClient**: [`JulepApiClient`](api\_JulepApiClient.JulepApiClient.md)
 
 The JulepApiClient instance used for API interactions.
 
-#### Inherited from
+**Inherited from**
 
-[BaseManager](managers_base.BaseManager.md).[apiClient](managers_base.BaseManager.md#apiclient)
+[BaseManager](managers\_base.BaseManager.md).[apiClient](managers\_base.BaseManager.md#apiclient)
 
-#### Defined in
+**Defined in**
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/base.ts#L12)
 
-## Methods
+### Methods
 
-### create
+#### create
 
-▸ **create**(`«destructured»`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
+▸ **create**(`«destructured»`): `Promise`<[`Tool`](../modules/api.md#tool)>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
+| Name              | Type                                           |
+| ----------------- | ---------------------------------------------- |
+| `«destructured»`  | `Object`                                       |
+| › `agentId`       | `string`                                       |
+| › `tool`          | `Object`                                       |
+| › `tool.function` | [`FunctionDef`](../modules/api.md#functiondef) |
+| › `tool.type`     | `"function"` \| `"webhook"`                    |
+
+**Returns**
+
+`Promise`<[`Tool`](../modules/api.md#tool)>
+
+**Defined in**
+
+[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/tool.ts#L32)
+
+***
+
+#### delete
+
+▸ **delete**(`«destructured»`): `Promise`<`void`>
+
+**Parameters**
+
+| Name             | Type     |
+| ---------------- | -------- |
 | `«destructured»` | `Object` |
-| › `agentId` | `string` |
-| › `tool` | `Object` |
-| › `tool.function` | [`FunctionDef`](../modules/api.md#functiondef) |
-| › `tool.type` | ``"function"`` \| ``"webhook"`` |
+| › `agentId`      | `string` |
+| › `toolId`       | `string` |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`Tool`](../modules/api.md#tool)\>
+`Promise`<`void`>
 
-#### Defined in
+**Defined in**
 
-[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/tool.ts#L32)
+[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/tool.ts#L86)
 
-___
+***
 
-### delete
+#### list
 
-▸ **delete**(`«destructured»`): `Promise`\<`void`\>
+▸ **list**(`agentId`, `«destructured»?`): `Promise`<[`Tool`](../modules/api.md#tool)\[]>
 
-#### Parameters
+**Parameters**
 
-| Name | Type |
-| :------ | :------ |
-| `«destructured»` | `Object` |
-| › `agentId` | `string` |
-| › `toolId` | `string` |
+| Name             | Type     | Default value |
+| ---------------- | -------- | ------------- |
+| `agentId`        | `string` | `undefined`   |
+| `«destructured»` | `Object` | `{}`          |
+| › `limit?`       | `number` | `10`          |
+| › `offset?`      | `number` | `0`           |
 
-#### Returns
+**Returns**
 
-`Promise`\<`void`\>
+`Promise`<[`Tool`](../modules/api.md#tool)\[]>
 
-#### Defined in
+**Defined in**
 
-[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/tool.ts#L86)
+[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/tool.ts#L12)
 
-___
+***
 
-### list
+#### update
 
-▸ **list**(`agentId`, `«destructured»?`): `Promise`\<[`Tool`](../modules/api.md#tool)[]\>
+▸ **update**(`«destructured»`, `overwrite?`): `Promise`<[`Tool`](../modules/api.md#tool)>
 
-#### Parameters
+**Parameters**
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `agentId` | `string` | `undefined` |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `10` |
-| › `offset?` | `number` | `0` |
+| Name             | Type                                                       | Default value |
+| ---------------- | ---------------------------------------------------------- | ------------- |
+| `«destructured»` | `Object`                                                   | `undefined`   |
+| › `agentId`      | `string`                                                   | `undefined`   |
+| › `tool`         | [`UpdateToolRequest`](../modules/api.md#updatetoolrequest) | `undefined`   |
+| › `toolId`       | `string`                                                   | `undefined`   |
+| `overwrite`      | `boolean`                                                  | `false`       |
 
-#### Returns
+**Returns**
 
-`Promise`\<[`Tool`](../modules/api.md#tool)[]\>
+`Promise`<[`Tool`](../modules/api.md#tool)>
 
-#### Defined in
+**Defined in**
 
-[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/tool.ts#L12)
-
-___
-
-### update
-
-▸ **update**(`«destructured»`, `overwrite?`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
-
-#### Parameters
-
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `«destructured»` | `Object` | `undefined` |
-| › `agentId` | `string` | `undefined` |
-| › `tool` | [`UpdateToolRequest`](../modules/api.md#updatetoolrequest) | `undefined` |
-| › `toolId` | `string` | `undefined` |
-| `overwrite` | `boolean` | `false` |
-
-#### Returns
-
-`Promise`\<[`Tool`](../modules/api.md#tool)\>
-
-#### Defined in
-
-[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/f25608c6f19a46bc5cbd8331aef8a3bbd88bc33c/sdks/ts/src/managers/tool.ts#L54)
+[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/0ca1d07766d1438171f2d4e9652f8251741cf335/sdks/ts/src/managers/tool.ts#L54)
