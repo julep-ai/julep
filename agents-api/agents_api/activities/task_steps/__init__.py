@@ -27,6 +27,7 @@ from ...models.execution.create_execution_transition import (
 )
 from ...routers.sessions.session import llm_generate
 from ...routers.sessions.protocol import Settings
+from ...clients.worker.types import ChatML
 
 
 @activity.defn
@@ -38,12 +39,17 @@ async def prompt_step(context: StepContext) -> dict:
 
     # Render template messages
     template_messages: list[InputChatMLMessage] = context.definition.prompt
-    messages: list[InputChatMLMessage] = asyncio.gather(
+    messages = await asyncio.gather(
         *[
             render_template(msg.content, context_data, skip_vars=["developer_id"])
             for msg in template_messages
         ]
     )
+
+    messages = [
+        ChatML(role="user", content=m) if isinstance(m, str) else ChatML(**m)
+        for m in messages
+    ]
 
     # Get settings and run llm
     response: ChatCompletion = await llm_generate(

@@ -28,6 +28,7 @@ from ...env import (
 )
 from ...model_registry import (
     JULEP_MODELS,
+    OLLAMA_MODELS,
     get_extra_settings,
     load_context,
 )
@@ -94,6 +95,8 @@ async def llm_generate(
         api_base = model_inference_url
         api_key = model_api_key
         model = f"openai/{model}"
+    if model in OLLAMA_MODELS:
+        model = f"ollama/{model}"
 
     if settings.tools:
         tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]

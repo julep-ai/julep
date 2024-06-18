@@ -53,6 +53,7 @@ class TaskExecutionWorkflow:
             inputs=previous_inputs,
         )
 
+        should_wait = False
         # Run the step
         match step:
             case PromptWorkflowStep():
@@ -62,8 +63,9 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(seconds=600),
                 )
 
-                if outputs.tool_calls is not None:
-                    should_wait = True
+                # TODO: ChatCompletion does not have tool_calls
+                # if outputs.tool_calls is not None:
+                #     should_wait = True
 
                 is_last = step_idx + 1 == len(current_workflow)
 

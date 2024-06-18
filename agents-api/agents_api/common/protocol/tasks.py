@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, List, Literal
+from typing import Annotated, Any, List, Literal, Tuple
 
 from pydantic import BaseModel, Field, UUID4, computed_field
 
@@ -104,7 +104,7 @@ class StepContext(ExecutionInput):
 
 
 class TransitionInfo(BaseModel):
-    from_: Annotated[List[str | int], Field(alias="from")]
-    to: List[str | int]
+    from_: List[str | int] | Tuple[str | int]
+    to: List[str | int] | None = None
     type: Annotated[str, Field(pattern="^(finish|wait|error|step)$")]
-    outputs: dict[str, Any]
+    outputs: dict[str, Any] | None = None

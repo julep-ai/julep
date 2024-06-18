@@ -6,6 +6,7 @@ import openai.types as openai_types
 import openai.types.chat as openai_chat_types
 from pydantic import BaseModel
 import temporalio.converter
+from litellm.utils import ModelResponse
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
     CompositePayloadConverter,
@@ -34,6 +35,7 @@ model_class_map = {
 
 # Also include dict
 model_class_map["builtins.dict"] = dict
+model_class_map["litellm.utils.ModelResponse"] = ModelResponse
 
 
 class PydanticEncodingPayloadConverter(EncodingPayloadConverter):

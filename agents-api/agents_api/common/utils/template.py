@@ -44,6 +44,7 @@ async def render_template_parts(
     template_strings: list[dict], variables: dict, check: bool = False
 ) -> list[dict]:
     # Parse template
+    # FIXME: should template_strings contain a list of ChatMLTextContentPart? Should we handle it somehow?
     templates = [
         (jinja_env.from_string(msg["text"]) if msg["type"] == "text" else None)
         for msg in template_strings
@@ -79,7 +80,7 @@ async def render_template(
 ) -> str | list[dict]:
     variables = {
         name: val
-        for name, val in variables
+        for name, val in variables.items()
         if not (skip_vars is not None and isinstance(name, str) and name in skip_vars)
     }
     if isinstance(template_string, str):
