@@ -6,12 +6,15 @@
 * [🤖 Agents](concepts/agents.md)
 * [🙎 Users](concepts/users.md)
 * [🔁 Sessions](concepts/sessions.md)
+* [📖 Documents](concepts/documents.md)
 
 ## 📖 Guides
 
-* [Quickstart](guides/quickstart.md)
-* [Self-hosting](guides/self-hosting.md)
-* [🚧 LLMs](guides/llms.md)
+* [(Quickstart) Build a Basic Agent](guides/quickstart.md)
+* [Self-hosting Julep](guides/self-hosting.md)
+* [Build a Retrieval Augmented Generation (RAG) Agent](guides/build-a-retrieval-augmented-generation-rag-agent.md)
+* [Use Julep with Composio](guides/use-julep-with-composio.md)
+* [Image + Text with GPT-4o](guides/image-+-text-with-gpt-4o.md)
 
 ## 🧑‍🍳 Cookbooks
 

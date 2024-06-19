@@ -40,6 +40,8 @@ class SessionCreateArgs(TypedDict):
     situation: Optional[str] = None
     metadata: Dict[str, Any] = {}
     render_templates: bool = False
+    token_budget: Optional[int] = None
+    context_overflow: Optional[str] = None
 
 
 class SessionUpdateArgs(TypedDict):
@@ -48,6 +50,8 @@ class SessionUpdateArgs(TypedDict):
     metadata: Optional[Dict[str, Any]] = None
     overwrite: bool = False
     render_templates: bool = False
+    token_budget: Optional[int] = None
+    context_overflow: Optional[str] = None
 
 
 class BaseSessionsManager(BaseManager):
@@ -182,6 +186,8 @@ class BaseSessionsManager(BaseManager):
         situation: Optional[str] = None,
         metadata: Dict[str, Any] = {},
         render_templates: bool = False,
+        token_budget: Optional[int] = None,
+        context_overflow: Optional[str] = None,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -213,6 +219,8 @@ class BaseSessionsManager(BaseManager):
             situation=situation,
             metadata=metadata,
             render_templates=render_templates,
+            token_budget=token_budget,
+            context_overflow=context_overflow,
         )
 
     def _list_items(
@@ -267,6 +275,8 @@ class BaseSessionsManager(BaseManager):
         situation: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         overwrite: bool = False,
+        token_budget: Optional[int] = None,
+        context_overflow: Optional[str] = None,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update a session with a given situation.
@@ -293,6 +303,8 @@ class BaseSessionsManager(BaseManager):
             session_id=session_id,
             situation=situation,
             metadata=metadata,
+            token_budget=token_budget,
+            context_overflow=context_overflow,
         )
 
     def _chat(

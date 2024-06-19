@@ -1589,6 +1589,12 @@ components:
           type: boolean
           description: Render system and assistant message content as jinja templates
           default: false
+        token_budget:
+          type: integer
+          description: Threshold value for the adaptive context functionality
+        context_overflow:
+          type: string
+          description: Action to start on context window overflow
       required:
         - id
         - agent_id
@@ -1639,6 +1645,12 @@ components:
           type: boolean
           description: Render system and assistant message content as jinja templates
           default: false
+        token_budget:
+          type: integer
+          description: Threshold value for the adaptive context functionality
+        context_overflow:
+          type: string
+          description: Action to start on context window overflow
       required:
         - agent_id
       description: A valid request payload for creating a session
@@ -1702,6 +1714,12 @@ components:
           type: object
           properties: {}
           description: Optional metadata
+        token_budget:
+          type: integer
+          description: Threshold value for the adaptive context functionality
+        context_overflow:
+          type: string
+          description: Action to start on context window overflow
       description: A valid request payload for updating a session
       required:
         - situation
@@ -2649,6 +2667,12 @@ components:
           type: object
           properties: {}
           description: Optional metadata
+        token_budget:
+          type: integer
+          description: Threshold value for the adaptive context functionality
+        context_overflow:
+          type: string
+          description: Action to start on context window overflow
       description: A request for patching a session
 
 

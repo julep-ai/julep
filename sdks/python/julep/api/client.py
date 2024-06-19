@@ -155,6 +155,8 @@ class JulepApi:
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a session between an agent and a user
@@ -169,6 +171,10 @@ class JulepApi:
             - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
 
             - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
         ---
         from julep.client import JulepApi
 
@@ -188,6 +194,10 @@ class JulepApi:
             _request["metadata"] = metadata
         if render_templates is not OMIT:
             _request["render_templates"] = render_templates
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
         _response = self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
@@ -469,6 +479,8 @@ class JulepApi:
         *,
         situation: str,
         metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -479,6 +491,10 @@ class JulepApi:
             - situation: str. Updated situation for this session
 
             - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
         ---
         from julep.client import JulepApi
 
@@ -493,6 +509,10 @@ class JulepApi:
         _request: typing.Dict[str, typing.Any] = {"situation": situation}
         if metadata is not OMIT:
             _request["metadata"] = metadata
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
@@ -548,6 +568,8 @@ class JulepApi:
         *,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -558,6 +580,10 @@ class JulepApi:
             - situation: typing.Optional[str]. Updated situation for this session
 
             - metadata: typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
         ---
         from julep.client import JulepApi
 
@@ -573,6 +599,10 @@ class JulepApi:
             _request["situation"] = situation
         if metadata is not OMIT:
             _request["metadata"] = metadata
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
         _response = self._client_wrapper.httpx_client.request(
             "PATCH",
             urllib.parse.urljoin(
@@ -2230,6 +2260,8 @@ class AsyncJulepApi:
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a session between an agent and a user
@@ -2244,6 +2276,10 @@ class AsyncJulepApi:
             - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
 
             - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
         ---
         from julep.client import AsyncJulepApi
 
@@ -2263,6 +2299,10 @@ class AsyncJulepApi:
             _request["metadata"] = metadata
         if render_templates is not OMIT:
             _request["render_templates"] = render_templates
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
             urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
@@ -2544,6 +2584,8 @@ class AsyncJulepApi:
         *,
         situation: str,
         metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -2554,6 +2596,10 @@ class AsyncJulepApi:
             - situation: str. Updated situation for this session
 
             - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
         ---
         from julep.client import AsyncJulepApi
 
@@ -2568,6 +2614,10 @@ class AsyncJulepApi:
         _request: typing.Dict[str, typing.Any] = {"situation": situation}
         if metadata is not OMIT:
             _request["metadata"] = metadata
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
@@ -2623,6 +2673,8 @@ class AsyncJulepApi:
         *,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -2633,6 +2685,10 @@ class AsyncJulepApi:
             - situation: typing.Optional[str]. Updated situation for this session
 
             - metadata: typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
         ---
         from julep.client import AsyncJulepApi
 
@@ -2648,6 +2704,10 @@ class AsyncJulepApi:
             _request["situation"] = situation
         if metadata is not OMIT:
             _request["metadata"] = metadata
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
         _response = await self._client_wrapper.httpx_client.request(
             "PATCH",
             urllib.parse.urljoin(

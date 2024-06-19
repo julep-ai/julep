@@ -21,6 +21,8 @@ def create_session_query(
     situation: str | None,
     metadata: dict = {},
     render_templates: bool = False,
+    token_budget: int | None = None,
+    context_overflow: str | None = None,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new session in the database.
@@ -33,6 +35,8 @@ def create_session_query(
     - situation (str | None): The situation/context of the session.
     - metadata (dict): Additional metadata for the session.
     - render_templates (bool): Specifies whether to render templates.
+    - token_budget (int | None): Token count threshold to consider it as a context window overflow
+    - context_overflow (str | None): Action to take on context window overflow
 
     Returns:
     - pd.DataFrame: The result of the query execution.
@@ -57,12 +61,14 @@ def create_session_query(
         }
     } {
         # Insert the new session data into the 'session' table with the specified columns.
-        ?[session_id, developer_id, situation, metadata, render_templates] <- [[
+        ?[session_id, developer_id, situation, metadata, render_templates, token_budget, context_overflow] <- [[
             $session_id,
             $developer_id,
             $situation,
             $metadata,
             $render_templates,
+            $token_budget,
+            $context_overflow,
         ]]
 
         :insert sessions {
@@ -71,6 +77,8 @@ def create_session_query(
             situation,
             metadata,
             render_templates,
+            token_budget,
+            context_overflow,
         }
         # Specify the data to return after the query execution, typically the newly created session's ID.
         :returning
@@ -87,5 +95,7 @@ def create_session_query(
             "situation": situation,
             "metadata": metadata,
             "render_templates": render_templates,
+            "token_budget": token_budget,
+            "context_overflow": context_overflow,
         },
     )

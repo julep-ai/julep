@@ -30,6 +30,7 @@ numpy = "^1.26.4"
 transformers = "^4.40.1"
 tiktoken = "^0.6.0"
 xxhash = "^3.4.1"
+tenacity = "^8.3.0"
 
 
 beartype = "^0.18.5"
@@ -45,6 +46,10 @@ pytype = ">=2024.4.11"
 julep = "^0.2.4"
 pyjwt = "^2.8.0"
 ward = "^0.68.0b0"
+jupyterlab = "^4.1.8"
+ipywidgets = "^8.1.2"
+jupyter-ai = "^2.14.1"
+langchain-openai = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

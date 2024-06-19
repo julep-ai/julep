@@ -44,3 +44,5 @@ class SessionData(BaseModel):
     metadata: Dict = {}
     user_metadata: Optional[Dict] = None
     agent_metadata: Dict = {}
+    token_budget: int | None = None
+    context_overflow: str | None = None

@@ -28,6 +28,7 @@ from ..activities.task_steps import (
     transition_step,
 )
 
+from ..activities.truncation import truncation
 from ..env import (
     temporal_endpoint,
     temporal_task_queue,
@@ -44,6 +45,7 @@ from ..workflows.mem_rating import MemRatingWorkflow
 from ..workflows.relationship_summary import RelationshipSummaryWorkflow
 from ..workflows.salient_questions import SalientQuestionsWorkflow
 from ..workflows.task_execution import TaskExecutionWorkflow
+from ..workflows.truncation import TruncationWorkflow
 
 from .codec import pydantic_data_converter
 
@@ -97,6 +99,7 @@ async def main():
             SalientQuestionsWorkflow,
             EmbedDocsWorkflow,
             TaskExecutionWorkflow,
+            TruncationWorkflow,
         ],
         activities=[
             *task_activities,
@@ -108,6 +111,7 @@ async def main():
             relationship_summary,
             salient_questions,
             embed_docs,
+            truncation,
         ],
     )
 

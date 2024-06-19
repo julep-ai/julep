@@ -17,7 +17,7 @@ Users are _optional_ but recommended for applications where:
 
 > Memories are formed and saved for each user separately so that the agent can refer to them as and when needed.
 
-## Attributes
+### Attributes
 
 | Attributes             | Description                                                                                     |
 | ---------------------- | ----------------------------------------------------------------------------------------------- |
@@ -74,3 +74,12 @@ This returns a list of all the users with the specific metadata filter.
 [User(name='Anon', about='A 25 year old man with acute recurring headache.', created_at=datetime.datetime(2024, 4, 29, 6, 18, 48, 173889, tzinfo=datetime.timezone.utc), updated_at=datetime.datetime(2024, 4, 29, 6, 18, 48, 173890, tzinfo=datetime.timezone.utc), id='621ff51c-a813-4046-bfc6-ec425003e8c7', metadata=UserMetadata())]
 ```
 {% endcode %}
+
+## Updating a User
+
+A user can be updated using its User ID. You can update any of its parameters.
+
+```python
+user_id = "621ff51c-a813-4046-bfc6-ec425003e8c7"
+client.users.update(user_id=user_id, metadata={"db_uuid": "12345"})
+```

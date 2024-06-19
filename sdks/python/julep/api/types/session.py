@@ -38,6 +38,12 @@ class Session(pydantic.BaseModel):
     render_templates: typing.Optional[bool] = pydantic.Field(
         description="Render system and assistant message content as jinja templates"
     )
+    token_budget: typing.Optional[int] = pydantic.Field(
+        description="Threshold value for the adaptive context functionality"
+    )
+    context_overflow: typing.Optional[str] = pydantic.Field(
+        description="Action to start on context window overflow"
+    )
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

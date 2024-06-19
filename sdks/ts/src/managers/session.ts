@@ -13,7 +13,7 @@ import { isValidUuid4 } from "../utils/isValidUuid4";
 import { BaseManager } from "./base";
 
 export interface CreateSessionPayload {
-  userId: string;
+  userId?: string;
   agentId: string;
   situation?: string;
   metadata?: Record<string, any>;
@@ -37,10 +37,11 @@ export class SessionsManager extends BaseManager {
     metadata = {},
     renderTemplates = false,
   }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
-    invariant(
-      isValidUuid4(userId),
-      `userId must be a valid UUID v4. Got "${userId}"`,
-    );
+    userId &&
+      invariant(
+        isValidUuid4(userId),
+        `userId must be a valid UUID v4. Got "${userId}"`,
+      );
 
     invariant(
       isValidUuid4(agentId),

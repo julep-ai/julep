@@ -47,6 +47,8 @@ def session_data_query(
         default_settings,
         metadata,
         render_templates,
+        token_budget,
+        context_overflow,
         user_metadata,
         agent_metadata,
     ] := input[developer_id, session_id],
@@ -59,6 +61,8 @@ def session_data_query(
             updated_at: validity,
             metadata,
             render_templates,
+            token_budget,
+            context_overflow,
             @ "NOW"
         },
         *session_lookup{
@@ -116,6 +120,8 @@ def session_data_query(
         default_settings,
         metadata,
         render_templates,
+        token_budget,
+        context_overflow,
         user_metadata,
         agent_metadata,
     ] := input[developer_id, session_id],
@@ -128,6 +134,8 @@ def session_data_query(
             updated_at: validity,
             metadata,
             render_templates,
+            token_budget,
+            context_overflow,
             @ "NOW"
         },
         *session_lookup{

@@ -2,8 +2,9 @@ import json
 import xxhash
 from functools import reduce
 from json import JSONDecodeError
-from typing import Callable, cast
+from typing import Callable
 from uuid import uuid4
+from functools import partial
 
 from dataclasses import dataclass
 from openai.types.chat.chat_completion import ChatCompletion
@@ -15,14 +16,15 @@ from litellm import acompletion
 from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task
+from ...clients.temporal import run_truncation_task
 from ...clients.worker.types import ChatML
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
 from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
+from ...common.utils.messages import stringify_content
 from ...env import (
-    summarization_tokens_threshold,
     docs_embedding_service_url,
     docs_embedding_model_id,
 )
@@ -37,6 +39,7 @@ from ...models.entry.proc_mem_context import proc_mem_context_query
 from ...models.session.session_data import get_session_data
 from ...models.session.get_cached_response import get_cached_response
 from ...models.session.set_cached_response import set_cached_response
+from ...exceptions import PromptTooBigError
 
 from .exceptions import InputTooBigError
 from .protocol import Settings
@@ -160,14 +163,17 @@ class BaseSession:
 
         return result, token_count
 
-    def truncate(
-        self, messages: list[Entry], summarization_tokens_threshold: int
+    def _truncate_context(
+        self, messages: list[Entry], summarization_tokens_threshold: int | None
     ) -> list[Entry]:
         def rm_thoughts(m):
             return m.role == "system" and m.name == "thought"
 
         def rm_user_assistant(m):
             return m.role in ("user", "assistant")
+
+        if summarization_tokens_threshold is None:
+            return messages
 
         token_count = reduce(lambda c, e: (e.token_count or 0) + c, messages, 0)
 
@@ -214,7 +220,8 @@ class BaseSession:
 
         # Generate response
         response = await self.generate(
-            self.truncate(init_context, summarization_tokens_threshold), final_settings
+            self._truncate_context(init_context, final_settings.token_budget),
+            final_settings,
         )
 
         # Save response to session
@@ -263,23 +270,17 @@ class BaseSession:
         new_input: list[Entry],
         settings: Settings,
     ) -> tuple[list[ChatML], Settings, DocIds]:
+        if session_data is not None:
+            settings.token_budget = session_data.token_budget
+            settings.context_overflow = session_data.context_overflow
+
         stringified_input = []
         for msg in new_input:
-            content = ""
-            if isinstance(msg.content, list):
-                content = " ".join(
-                    [part.text for part in msg.content if part.type == "text"]
-                )
-            elif isinstance(msg.content, str):
-                content = msg.content
-            elif isinstance(msg.content, dict) and msg.content["type"] == "text":
-                content = cast(str, msg.content["text"])
-
             stringified_input.append(
                 (
                     msg.role,
                     msg.name,
-                    content,
+                    stringify_content(msg.content),
                 )
             )
 
@@ -470,10 +471,22 @@ class BaseSession:
             )
 
         entries.append(new_entry)
+        bg_task = None
+
+        if (
+            final_settings.token_budget is not None
+            and total_tokens >= final_settings.token_budget
+        ):
+            if final_settings.context_overflow == "truncate":
+                bg_task = partial(run_truncation_task, final_settings.token_budget)
+            elif final_settings.context_overflow == "adaptive":
+                bg_task = run_summarization_task
+            else:
+                raise PromptTooBigError(total_tokens, final_settings.token_budget)
+
         add_entries_query(entries)
 
-        if total_tokens >= summarization_tokens_threshold:
-            return run_summarization_task
+        return bg_task
 
 
 class PlainCompletionSession(BaseSession):
