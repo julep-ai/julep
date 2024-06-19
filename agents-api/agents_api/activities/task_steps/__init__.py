@@ -117,7 +117,6 @@ async def prompt_step(context: StepContext) -> dict:
 
 @activity.defn
 async def transition_step(
-    developer_id: str,
     context: StepContext,
     transition_info: TransitionInfo,
 ) -> dict:
