@@ -12,13 +12,16 @@ def create_execution_transition_query(
     developer_id: UUID,
     execution_id: UUID,
     transition_id: UUID,
-    type_: Literal["finish", "wait", "error", "step"],
+    type: Literal["finish", "wait", "error", "step"],
     from_: tuple[str, int],
     to: tuple[str, int] | None,
-    outputs: Dict[str, Any],
+    outputs: Dict[str, Any] | None,
 ) -> tuple[str, dict]:
     # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
     # TODO: Check for task and execution
+
+    if outputs is None:
+        outputs = {}
 
     query = """
 {
@@ -41,7 +44,7 @@ def create_execution_transition_query(
         {
             "execution_id": str(execution_id),
             "transition_id": str(transition_id),
-            "type": type_,
+            "type": type,
             "from": from_,
             "to": to,
             "output": outputs,

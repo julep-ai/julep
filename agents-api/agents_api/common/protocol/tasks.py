@@ -11,6 +11,7 @@ from ...autogen.openapi_model import (
     ErrorWorkflowStep,
     IfElseWorkflowStep,
     Task,
+    Execution,
 )
 
 WorkflowStep = (
@@ -81,7 +82,7 @@ class TaskProtocol(SerializableTask):
 # FIXME: Enable all of these
 class ExecutionInput(BaseModel):
     developer_id: UUID4
-    # execution: Execution
+    execution: Execution
     task: TaskProtocol
     # agent: Agent
     # user: User | None
@@ -104,7 +105,7 @@ class StepContext(ExecutionInput):
 
 
 class TransitionInfo(BaseModel):
-    from_: List[str | int] | Tuple[str | int]
+    from_: Tuple[str, int]
     to: List[str | int] | None = None
     type: Annotated[str, Field(pattern="^(finish|wait|error|step)$")]
     outputs: dict[str, Any] | None = None

@@ -13,6 +13,7 @@ from temporalio.converter import (
     DefaultPayloadConverter,
     EncodingPayloadConverter,
 )
+from agents_api.common.utils.json import dumps as json_dumps
 
 import agents_api.common.protocol.tasks as tasks
 import agents_api.autogen.openapi_model as openapi_model
@@ -47,7 +48,7 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
         data: str = (
             value.model_dump_json()
             if hasattr(value, "model_dump_json")
-            else json.dumps(value)
+            else json_dumps(value)
         )
 
         return Payload(

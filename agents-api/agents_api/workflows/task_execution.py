@@ -42,7 +42,7 @@ class TaskExecutionWorkflow:
 
         context = StepContext(
             developer_id=execution_input.developer_id,
-            # execution=execution_input.execution,
+            execution=execution_input.execution,
             task=execution_input.task,
             # agent=execution_input.agent,
             # user=execution_input.user,
