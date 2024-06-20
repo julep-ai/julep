@@ -45,6 +45,26 @@ def _():
     )
 
 
+@test("model: create execution with session")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
+    task_id = uuid4()
+    execution_id = uuid4()
+    session_id = uuid4()
+
+    create_execution_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        execution_id=execution_id,
+        session_id=session_id,
+        arguments={"input": "test"},
+        client=client,
+    )
+
+
 @test("model: get execution")
 def _():
     client = cozo_client()
@@ -171,10 +191,10 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        type_="step",
+        type="step",
         from_=("test", 1),
         to=("test", 2),
-        output={"input": "test"},
+        outputs={"input": "test"},
         client=client,
     )
 
@@ -190,10 +210,10 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        type_="step",
+        type="step",
         from_=("test", 1),
         to=("test", 2),
-        output={"input": "test"},
+        outputs={"input": "test"},
         client=client,
     )
 
@@ -215,10 +235,10 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        type_="step",
+        type="step",
         from_=("test", 1),
         to=("test", 2),
-        output={"input": "test"},
+        outputs={"input": "test"},
         client=client,
     )
 
@@ -238,10 +258,10 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        type_="step",
+        type="step",
         from_=("test", 1),
         to=("test", 2),
-        output={"input": "test"},
+        outputs={"input": "test"},
         client=client,
     )
 

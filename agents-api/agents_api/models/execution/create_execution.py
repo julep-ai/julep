@@ -13,6 +13,7 @@ def create_execution_query(
     agent_id: UUID,
     task_id: UUID,
     execution_id: UUID,
+    session_id: UUID | None = None,
     status: Literal[
         "queued", "starting", "running", "awaiting_input", "succeeded", "failed"
     ] = "queued",
@@ -22,16 +23,17 @@ def create_execution_query(
 
     query = """
 {
-    ?[task_id, execution_id, status, arguments] <- [[
-        to_uuid($task_id),
-        to_uuid($execution_id),
-        $status,
-        $arguments
-    ]]
+    ?[task_id, execution_id, session_id, status, arguments] :=
+        task_id = to_uuid($task_id),
+        execution_id = to_uuid($execution_id),
+        session_id = if(is_null($session_id), null, to_uuid($session_id)),
+        status = $status,
+        arguments = $arguments
 
     :insert executions {
         task_id,
         execution_id,
+        session_id,
         status,
         arguments
     }
@@ -42,6 +44,7 @@ def create_execution_query(
         {
             "task_id": str(task_id),
             "execution_id": str(execution_id),
+            "session_id": str(session_id) if session_id is not None else None,
             "status": status,
             "arguments": arguments,
         },
