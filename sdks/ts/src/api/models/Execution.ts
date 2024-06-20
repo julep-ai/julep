@@ -6,10 +6,13 @@ import type { ExecutionStatus } from "./ExecutionStatus";
 export type Execution = {
   id: string;
   task_id: string;
-  created_at: string;
+  status: ExecutionStatus;
   /**
-   * JSON Schema of parameters
+   * JSON of parameters
    */
   arguments: Record<string, any>;
-  status: ExecutionStatus;
+  user_id?: string | null;
+  session_id?: string | null;
+  created_at: string;
+  updated_at: string;
 };

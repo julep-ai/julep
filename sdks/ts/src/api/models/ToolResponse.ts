@@ -6,6 +6,6 @@ export type ToolResponse = {
   /**
    * Optional Tool ID
    */
-  id?: string;
+  id: string;
   output: Record<string, any>;
 };

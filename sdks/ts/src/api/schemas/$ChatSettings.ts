@@ -120,5 +120,9 @@ export const $ChatSettings = {
     preset: {
       type: "Enum",
     },
+    model: {
+      type: "string",
+      description: `Model name`,
+    },
   },
 } as const;

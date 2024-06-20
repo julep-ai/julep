@@ -7,6 +7,7 @@ export const $ToolResponse = {
     id: {
       type: "string",
       description: `Optional Tool ID`,
+      isRequired: true,
       format: "uuid",
     },
     output: {

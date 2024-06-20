@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $ExecutionStatus = {
+export const $TransitionType = {
   type: "string",
   description: `Execution Status`,
-  pattern: "^(queued|starting|running|awaiting_input|succeeded|failed)$",
+  pattern: "^(finish|wait|error|step)$",
 } as const;

@@ -3784,7 +3784,7 @@
             "body": null
           },
           "description": "",
-          "body": "[\n    {\n        \"id\": \"id\",\n        \"task_id\": \"task_id\",\n        \"created_at\": \"created_at\",\n        \"arguments\": {\n            \"arguments\": {\n                \"key\": \"value\"\n            }\n        },\n        \"status\": \"status\"\n    }\n]",
+          "body": "[\n    {\n        \"id\": \"id\",\n        \"task_id\": \"task_id\",\n        \"status\": \"status\",\n        \"arguments\": {\n            \"arguments\": {\n                \"key\": \"value\"\n            }\n        },\n        \"user_id\": \"user_id\",\n        \"session_id\": \"session_id\",\n        \"created_at\": \"created_at\",\n        \"updated_at\": \"updated_at\"\n    }\n]",
           "_postman_previewlanguage": "json"
         }
       ]

@@ -762,6 +762,7 @@ class JulepApi:
         top_p: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
         preset: typing.Optional[ChatSettingsPreset] = OMIT,
+        model: typing.Optional[str] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         record: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
@@ -811,6 +812,8 @@ class JulepApi:
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
             - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+
+            - model: typing.Optional[str]. Model name
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -866,6 +869,8 @@ class JulepApi:
             _request["min_p"] = min_p
         if preset is not OMIT:
             _request["preset"] = preset.value  # pytype: disable=attribute-error
+        if model is not OMIT:
+            _request["model"] = model
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -2867,6 +2872,7 @@ class AsyncJulepApi:
         top_p: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
         preset: typing.Optional[ChatSettingsPreset] = OMIT,
+        model: typing.Optional[str] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         record: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
@@ -2916,6 +2922,8 @@ class AsyncJulepApi:
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
             - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+
+            - model: typing.Optional[str]. Model name
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -2971,6 +2979,8 @@ class AsyncJulepApi:
             _request["min_p"] = min_p
         if preset is not OMIT:
             _request["preset"] = preset.value  # pytype: disable=attribute-error
+        if model is not OMIT:
+            _request["model"] = model
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:

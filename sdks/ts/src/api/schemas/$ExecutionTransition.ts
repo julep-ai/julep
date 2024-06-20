@@ -41,5 +41,9 @@ export const $ExecutionTransition = {
       isRequired: true,
       isNullable: true,
     },
+    type: {
+      type: "TransitionType",
+      isRequired: true,
+    },
   },
 } as const;

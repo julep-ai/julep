@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { TransitionType } from "./TransitionType";
 export type ExecutionTransition = {
   id: string;
   execution_id: string;
@@ -12,4 +13,5 @@ export type ExecutionTransition = {
   outputs: Record<string, any>;
   from: Array<any>;
   to: Array<any> | null;
+  type: TransitionType;
 };
