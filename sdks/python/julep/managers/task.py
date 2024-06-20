@@ -391,7 +391,7 @@ class AsyncTasksManager(BaseTasksManager):
                 Execution: A newly created execution object
 
         list(self, agent_id: Union[UUID, str]) -> List[Task]:
-            Retrieves a list of tasks.
+            Asynchronously retrieves a list of tasks.
 
             Args:
                 agent_id (Union[UUID, str]): Agent ID
@@ -402,7 +402,7 @@ class AsyncTasksManager(BaseTasksManager):
     @beartype
     async def list(self, agent_id: Union[UUID, str]) -> List[Task]:
         """
-        Retrieves a list of tasks.
+        Asynchronously retrieves a list of tasks.
 
         Args:
             agent_id (Union[UUID, str]): Agent ID
@@ -411,11 +411,8 @@ class AsyncTasksManager(BaseTasksManager):
         """
         assert is_valid_uuid4(agent_id)
 
-        return cast(
-            List[Task],
-            self._list(
-                agent_id=agent_id,
-            ),
+        return await self._list(
+            agent_id=agent_id,
         )
 
     @beartype
