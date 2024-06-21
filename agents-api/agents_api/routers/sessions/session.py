@@ -29,7 +29,7 @@ from ...env import (
     docs_embedding_model_id,
 )
 from ...model_registry import (
-    JULEP_MODELS,
+    LOCAL_MODELS,
     get_extra_settings,
     load_context,
 )
@@ -261,8 +261,8 @@ class BaseSession:
                 ]
             ],
             join_inputs=False,
-            embedding_service_url=docs_embedding_service_url,
-            embedding_model_name=docs_embedding_model_id,
+            # embedding_service_url=docs_embedding_service_url,
+            # embedding_model_name=docs_embedding_model_id,
         )
 
         entries: list[Entry] = []
@@ -408,9 +408,11 @@ class BaseSession:
         api_base = None
         api_key = None
         model = settings.model
-        if model in JULEP_MODELS:
+        if model in LOCAL_MODELS:
+            print("Using local model")
+            print(api_base)
             api_base = model_inference_url
-            api_key = model_api_key
+            # api_key = model_api_key
             model = f"openai/{model}"
 
         if settings.tools:

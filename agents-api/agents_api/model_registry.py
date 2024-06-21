@@ -93,16 +93,18 @@ CLAUDE_MODELS: Dict[str, int] = {
 
 OPENAI_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **GPT3_5_MODELS, **GPT3_MODELS}
 
-JULEP_MODELS = {
+LOCAL_MODELS = {
     "julep-ai/samantha-1-turbo": 32768,
     "julep-ai/samantha-1-turbo-awq": 32768,
+    "TinyLlama/TinyLlama_v1.1": 2048,
+    "casperhansen/llama-3-8b-instruct-awq": 8192
 }
 
 CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
 
 
-ALL_AVAILABLE_MODELS = litellm.model_list + list(JULEP_MODELS.keys())
-VALID_MODELS = get_valid_models() + list(JULEP_MODELS.keys())
+ALL_AVAILABLE_MODELS = litellm.model_list + list(LOCAL_MODELS.keys())
+VALID_MODELS = get_valid_models() + list(LOCAL_MODELS.keys())
 
 
 def validate_configuration(model: str):
@@ -127,7 +129,7 @@ def load_context(init_context: list[ChatML], model: str):
             }
             for msg in init_context
         ]
-    elif model in JULEP_MODELS:
+    elif model in LOCAL_MODELS:
         init_context = [
             {"name": msg.name, "role": msg.role, "content": msg.content}
             for msg in init_context
@@ -147,7 +149,7 @@ def get_extra_settings(settings):
             logit_bias=settings.logit_bias,
             preset=settings.preset.name if settings.preset else None,
         )
-        if settings.model in JULEP_MODELS
+        if settings.model in LOCAL_MODELS
         else {}
     )
 
