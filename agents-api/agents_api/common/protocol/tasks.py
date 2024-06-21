@@ -116,7 +116,9 @@ class ExecutionInput(BaseModel):
     arguments: dict[str, Any]
 
     @classmethod
-    def fetch(cls, *, developer_id: UUID4, task_id: UUID4, execution_id: UUID4, client: Any) -> "ExecutionInput":
+    def fetch(
+        cls, *, developer_id: UUID4, task_id: UUID4, execution_id: UUID4, client: Any
+    ) -> "ExecutionInput":
         [data] = get_execution_input_query(
             task_id=task_id,
             execution_id=execution_id,
@@ -139,7 +141,10 @@ class ExecutionInput(BaseModel):
         execution = Execution(**data["execution"])
         user = User(**data["user"]) if data["user"] else None
         session = Session(**data["session"]) if data["session"] else None
-        tools = [Tool(type="function", id=function["id"], function=FunctionDef(**function)) for function in data["tools"]]
+        tools = [
+            Tool(type="function", id=function["id"], function=FunctionDef(**function))
+            for function in data["tools"]
+        ]
         arguments = execution.arguments
 
         return cls(

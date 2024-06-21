@@ -21,8 +21,8 @@ class Execution(pydantic.BaseModel):
     )
     user_id: typing.Optional[str]
     session_id: typing.Optional[str]
-    created_at: str
-    updated_at: str
+    created_at: dt.datetime
+    updated_at: dt.datetime
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

@@ -72,8 +72,7 @@ async def create_task(
 
     workflows = [
         {"name": "main", "steps": request.main},
-    ] + [{"name": name, "steps": steps} for name, steps in request.model_extra
-    ]
+    ] + [{"name": name, "steps": steps} for name, steps in request.model_extra]
 
     resp: pd.DataFrame = create_task_query(
         agent_id=agent_id,

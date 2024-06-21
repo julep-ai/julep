@@ -207,7 +207,9 @@ def _():
 
     result = ExecutionInput.fetch(
         developer_id=developer_id,
-        task_id=task_id, execution_id=execution_id, client=client
+        task_id=task_id,
+        execution_id=execution_id,
+        client=client,
     )
 
     assert result.execution.id == execution_id
