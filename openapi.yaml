@@ -2807,13 +2807,8 @@ components:
         execution_id:
           type: string
           format: uuid
-        created_at:
-          type: string
-          format: date-time
-        outputs:
-          type: object
-          additionalProperties: true
-          description: Outputs from an Execution Transition
+        type:
+          $ref: '#/components/schemas/TransitionType'
         from:
           type: array
           items:
@@ -2829,13 +2824,25 @@ components:
               description: Canonical name of the workflow
             - type: integer
               description: Step index
+        task_token:
+          type: string
+          default: null
+          nullable: true
+        outputs:
+          type: object
+          additionalProperties: true
+          description: Outputs from an Execution Transition
         metadata:
           type: object
           properties: {}
           additionalProperties: true
           description: (Optional) metadata
-        type:
-          $ref: '#/components/schemas/TransitionType'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
       required:
         - id
         - execution_id
