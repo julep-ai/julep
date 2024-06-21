@@ -6,6 +6,7 @@ services:
     env_file: "../.env"
 
     environment:
+      - MODEL_NAME=${MODEL_NAME}
       - HF_TOKEN=${HF_TOKEN}
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
       - SENTRY_DSN=${SENTRY_DSN}
