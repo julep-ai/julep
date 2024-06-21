@@ -1666,13 +1666,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.35.2"
+version = "1.35.3"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.35.2-py3-none-any.whl", hash = "sha256:205fc3800a3a65ec1fc755d76b16080c7b6d50ab38caf88a9e52337df13744e0"},
-    {file = "openai-1.35.2.tar.gz", hash = "sha256:60fb1a36c547ab3bab571187df3449319ad3d9587c7044724e7ba86c2d461224"},
+    {file = "openai-1.35.3-py3-none-any.whl", hash = "sha256:7b26544cef80f125431c073ffab3811d2421fbb9e30d3bd5c2436aba00b042d5"},
+    {file = "openai-1.35.3.tar.gz", hash = "sha256:d6177087f150b381d49499be782d764213fdf638d391b29ca692b84dd675a389"},
 ]
 
 [package.dependencies]
@@ -1857,13 +1857,13 @@ files = [
 
 [[package]]
 name = "pip"
-version = "24.0"
+version = "24.1"
 description = "The PyPA recommended tool for installing Python packages."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pip-24.0-py3-none-any.whl", hash = "sha256:ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc"},
-    {file = "pip-24.0.tar.gz", hash = "sha256:ea9bd1a847e8c5774a5777bb398c19e80bcd4e2aa16a4b301b718fe6f593aba2"},
+    {file = "pip-24.1-py3-none-any.whl", hash = "sha256:a775837439bf5da2c1a0c2fa43d5744854497c689ddbd9344cf3ea6d00598540"},
+    {file = "pip-24.1.tar.gz", hash = "sha256:bdae551038c0ce6a83030b4aedef27fc95f0daa683593fea22fa05e55ed8e317"},
 ]
 
 [[package]]

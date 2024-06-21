@@ -32,6 +32,7 @@ class Task(pydantic.BaseModel):
     )
     id: str = pydantic.Field(description="ID of the Task")
     created_at: dt.datetime
+    updated_at: typing.Optional[dt.datetime]
     agent_id: str
 
     def json(self, **kwargs: typing.Any) -> str:
