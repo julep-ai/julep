@@ -2684,9 +2684,13 @@ components:
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
         agent_id:
           type: string
           format: uuid
+      additionalProperties: true
       description: Describes a Task
       required:
         - name
