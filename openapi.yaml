@@ -2773,10 +2773,10 @@ components:
           default: null
         created_at:
           type: string
-          format: uuid
+          format: date-time
         updated_at:
           type: string
-          format: uuid
+          format: date-time
       required:
         - id
         - task_id

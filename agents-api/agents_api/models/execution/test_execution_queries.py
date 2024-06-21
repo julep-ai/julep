@@ -18,6 +18,8 @@ from .get_execution_transition import get_execution_transition_query
 from .list_execution_transitions import list_execution_transitions_query
 from .update_execution_transition import update_execution_transition_query
 
+from ...common.protocol.tasks import ExecutionInput
+
 
 def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
@@ -162,6 +164,53 @@ def _():
     )
 
     assert len(result["execution"]) == 1
+
+
+@test("model: fetch execution input")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
+    task_id = uuid4()
+    execution_id = uuid4()
+
+    create_agent_query(
+        agent_id=agent_id,
+        developer_id=developer_id,
+        name="test",
+        about="test",
+        model="gpt-4",
+        metadata={"test": "test"},
+        client=client,
+    )
+
+    create_task_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        name="test",
+        description="test",
+        input_schema={"test": "test"},
+        tools_available=[],
+        workflows=[{"name": "main", "steps": []}],
+        client=client,
+    )
+
+    create_execution_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        execution_id=execution_id,
+        arguments={"input": "test"},
+        client=client,
+    )
+
+    result = ExecutionInput.fetch(
+        developer_id=developer_id,
+        task_id=task_id, execution_id=execution_id, client=client
+    )
+
+    assert result.execution.id == execution_id
 
 
 @test("model: list executions empty")

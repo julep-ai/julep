@@ -199,24 +199,6 @@ def get_execution_input_query(
         "updated_at": tool_updated_at,
       }
 
-    found_sessions[collect(session)] :=
-      *_session {
-        session_id,
-        situation,
-        summary,
-        metadata,
-        created_at,
-        updated_at,
-      },
-      session = {
-        "id": session_id,
-        "situation": situation,
-        "summary": summary,
-        "metadata": metadata,
-        "created_at": created_at,
-        "updated_at": updated_at,
-      }
-
     found_users[collect(user)] :=
       *_user {
         user_id,
@@ -235,50 +217,34 @@ def get_execution_input_query(
         "updated_at": updated_at,
       }
 
+    found_sessions[collect(session)] :=
+      found_users[_users],
+      *_agent { agent_id },
+      *_session {
+        session_id,
+        situation,
+        summary,
+        metadata,
+        created_at,
+        updated_at,
+      },
+      session = {
+        "id": session_id,
+        "agent_id": agent_id,
+        "user_id": if(to_bool(_users), _users->0->"user_id"),
+        "situation": situation,
+        "summary": summary,
+        "metadata": metadata,
+        "created_at": created_at,
+        "updated_at": updated_at,
+      }
+
     ?[execution, task, agent, user, session, tools] :=
       collected_tools[tools],
       found_sessions[_sessions],
       found_users[_users],
       session = _sessions->0,
       user = _users->0,
-
-      *_execution {
-        execution_id,
-        created_at: execution_created_at,
-        updated_at: execution_updated_at,
-        arguments: execution_arguments,
-        session_id: execution_session_id,
-        status: execution_status,
-      },
-      execution = {
-        "id": execution_id,
-        "created_at": execution_created_at,
-        "updated_at": execution_updated_at,
-        "arguments": execution_arguments,
-        "session_id": execution_session_id,
-        "status": execution_status,
-      },
-
-      *_task {
-        task_id,
-        name: task_name,
-        description: task_description,
-        input_schema: task_input_schema,
-        tools_available: task_tools_available,
-        workflows: task_workflows,
-        created_at: task_created_at,
-        updated_at: task_updated_at,
-      },
-      task = {
-        "id": task_id,
-        "name": task_name,
-        "description": task_description,
-        "input_schema": task_input_schema,
-        "tools_available": task_tools_available,
-        "workflows": task_workflows,
-        "created_at": task_created_at,
-        "updated_at": task_updated_at,
-      },
 
       *_agent {
         agent_id,
@@ -302,6 +268,48 @@ def get_execution_input_query(
         "created_at": agent_created_at,
         "updated_at": agent_updated_at,
       },
+
+      *_task {
+        task_id,
+        name: task_name,
+        description: task_description,
+        input_schema: task_input_schema,
+        tools_available: task_tools_available,
+        workflows: task_workflows,
+        created_at: task_created_at,
+        updated_at: task_updated_at,
+      },
+      task = {
+        "id": task_id,
+        "agent_id": agent_id,
+        "name": task_name,
+        "description": task_description,
+        "input_schema": task_input_schema,
+        "tools_available": task_tools_available,
+        "workflows": task_workflows,
+        "created_at": task_created_at,
+        "updated_at": task_updated_at,
+      },
+
+      *_execution {
+        execution_id,
+        created_at: execution_created_at,
+        updated_at: execution_updated_at,
+        arguments: execution_arguments,
+        session_id: execution_session_id,
+        status: execution_status,
+      },
+      execution = {
+        "id": execution_id,
+        "task_id": task_id,
+        "user_id": if(to_bool(_users), _users->0->"user_id"),
+        "created_at": execution_created_at,
+        "updated_at": execution_updated_at,
+        "arguments": execution_arguments,
+        "session_id": execution_session_id,
+        "status": execution_status,
+      },
+
 }
 
 """
