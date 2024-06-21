@@ -14,16 +14,8 @@ export const $ExecutionTransition = {
       isRequired: true,
       format: "uuid",
     },
-    created_at: {
-      type: "string",
-      isRequired: true,
-      format: "date-time",
-    },
-    outputs: {
-      type: "dictionary",
-      contains: {
-        properties: {},
-      },
+    type: {
+      type: "TransitionType",
       isRequired: true,
     },
     from: {
@@ -41,9 +33,31 @@ export const $ExecutionTransition = {
       isRequired: true,
       isNullable: true,
     },
-    type: {
-      type: "TransitionType",
+    task_token: {
+      type: "string",
+      isNullable: true,
+    },
+    outputs: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
       isRequired: true,
+    },
+    metadata: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+    },
+    created_at: {
+      type: "string",
+      isRequired: true,
+      format: "date-time",
+    },
+    updated_at: {
+      type: "string",
+      format: "date-time",
     },
   },
 } as const;

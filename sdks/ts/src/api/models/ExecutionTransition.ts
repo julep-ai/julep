@@ -6,12 +6,18 @@ import type { TransitionType } from "./TransitionType";
 export type ExecutionTransition = {
   id: string;
   execution_id: string;
-  created_at: string;
+  type: TransitionType;
+  from: Array<any>;
+  to: Array<any> | null;
+  task_token?: string | null;
   /**
    * Outputs from an Execution Transition
    */
   outputs: Record<string, any>;
-  from: Array<any>;
-  to: Array<any> | null;
-  type: TransitionType;
+  /**
+   * (Optional) metadata
+   */
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at?: string;
 };

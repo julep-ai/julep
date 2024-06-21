@@ -19,11 +19,8 @@ from .types.chat_settings_preset import ChatSettingsPreset
 from .types.chat_settings_response_format import ChatSettingsResponseFormat
 from .types.chat_settings_stop import ChatSettingsStop
 from .types.create_agent_request_instructions import CreateAgentRequestInstructions
-from .types.create_agent_request_metadata import CreateAgentRequestMetadata
 from .types.create_doc import CreateDoc
-from .types.create_session_request_metadata import CreateSessionRequestMetadata
 from .types.create_tool_request import CreateToolRequest
-from .types.create_user_request_metadata import CreateUserRequestMetadata
 from .types.execution import Execution
 from .types.execution_status import ExecutionStatus
 from .types.execution_transition import ExecutionTransition
@@ -51,9 +48,6 @@ from .types.list_users_request_sort_by import ListUsersRequestSortBy
 from .types.list_users_response import ListUsersResponse
 from .types.partial_function_def import PartialFunctionDef
 from .types.patch_agent_request_instructions import PatchAgentRequestInstructions
-from .types.patch_agent_request_metadata import PatchAgentRequestMetadata
-from .types.patch_session_request_metadata import PatchSessionRequestMetadata
-from .types.patch_user_request_metadata import PatchUserRequestMetadata
 from .types.resource_created_response import ResourceCreatedResponse
 from .types.resource_updated_response import ResourceUpdatedResponse
 from .types.session import Session
@@ -61,9 +55,6 @@ from .types.task import Task
 from .types.tool import Tool
 from .types.tool_response import ToolResponse
 from .types.update_agent_request_instructions import UpdateAgentRequestInstructions
-from .types.update_agent_request_metadata import UpdateAgentRequestMetadata
-from .types.update_session_request_metadata import UpdateSessionRequestMetadata
-from .types.update_user_request_metadata import UpdateUserRequestMetadata
 from .types.user import User
 from .types.workflow_step import WorkflowStep
 
@@ -153,7 +144,7 @@ class JulepApi:
         user_id: typing.Optional[str] = OMIT,
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
@@ -168,7 +159,7 @@ class JulepApi:
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
 
-            - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
 
@@ -272,7 +263,7 @@ class JulepApi:
         name: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new user
@@ -284,7 +275,7 @@ class JulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
 
-            - metadata: typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
         ---
         from julep.client import JulepApi
 
@@ -379,7 +370,7 @@ class JulepApi:
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[CreateAgentRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         instructions: typing.Optional[CreateAgentRequestInstructions] = OMIT,
     ) -> ResourceCreatedResponse:
         """
@@ -398,7 +389,7 @@ class JulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 
-            - metadata: typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
 
             - instructions: typing.Optional[CreateAgentRequestInstructions]. Instructions for the agent
         ---
@@ -478,7 +469,7 @@ class JulepApi:
         session_id: str,
         *,
         situation: str,
-        metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
@@ -490,7 +481,7 @@ class JulepApi:
 
             - situation: str. Updated situation for this session
 
-            - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
 
@@ -567,7 +558,7 @@ class JulepApi:
         session_id: str,
         *,
         situation: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
@@ -579,7 +570,7 @@ class JulepApi:
 
             - situation: typing.Optional[str]. Updated situation for this session
 
-            - metadata: typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
 
@@ -868,7 +859,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # pytype: disable=attribute-error
+            _request["preset"] = preset.value
         if model is not OMIT:
             _request["model"] = model
         if recall is not OMIT:
@@ -986,7 +977,7 @@ class JulepApi:
         *,
         about: str,
         name: str,
-        metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -998,7 +989,7 @@ class JulepApi:
 
             - name: str. Name of the user
 
-            - metadata: typing.Optional[UpdateUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -1069,7 +1060,7 @@ class JulepApi:
         *,
         about: typing.Optional[str] = OMIT,
         name: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[PatchUserRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -1081,7 +1072,7 @@ class JulepApi:
 
             - name: typing.Optional[str]. Name of the user
 
-            - metadata: typing.Optional[PatchUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
         ---
         from julep.client import JulepApi
 
@@ -1156,7 +1147,7 @@ class JulepApi:
         name: str,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         instructions: typing.Optional[UpdateAgentRequestInstructions] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -1173,7 +1164,7 @@ class JulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-            - metadata: typing.Optional[UpdateAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - instructions: typing.Optional[UpdateAgentRequestInstructions]. Instructions for the agent
         ---
@@ -1254,7 +1245,7 @@ class JulepApi:
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[PatchAgentRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         instructions: typing.Optional[PatchAgentRequestInstructions] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -1271,7 +1262,7 @@ class JulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-            - metadata: typing.Optional[PatchAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - instructions: typing.Optional[PatchAgentRequestInstructions]. Instructions for the agent
         ---
@@ -2263,7 +2254,7 @@ class AsyncJulepApi:
         user_id: typing.Optional[str] = OMIT,
         agent_id: str,
         situation: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
@@ -2278,7 +2269,7 @@ class AsyncJulepApi:
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
 
-            - metadata: typing.Optional[CreateSessionRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
 
@@ -2382,7 +2373,7 @@ class AsyncJulepApi:
         name: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
     ) -> ResourceCreatedResponse:
         """
         Create a new user
@@ -2394,7 +2385,7 @@ class AsyncJulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
 
-            - metadata: typing.Optional[CreateUserRequestMetadata]. (Optional) metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -2489,7 +2480,7 @@ class AsyncJulepApi:
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
         model: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[CreateAgentRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         instructions: typing.Optional[CreateAgentRequestInstructions] = OMIT,
     ) -> ResourceCreatedResponse:
         """
@@ -2508,7 +2499,7 @@ class AsyncJulepApi:
 
             - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
 
-            - metadata: typing.Optional[CreateAgentRequestMetadata]. (Optional) metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
 
             - instructions: typing.Optional[CreateAgentRequestInstructions]. Instructions for the agent
         ---
@@ -2588,7 +2579,7 @@ class AsyncJulepApi:
         session_id: str,
         *,
         situation: str,
-        metadata: typing.Optional[UpdateSessionRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
@@ -2600,7 +2591,7 @@ class AsyncJulepApi:
 
             - situation: str. Updated situation for this session
 
-            - metadata: typing.Optional[UpdateSessionRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
 
@@ -2677,7 +2668,7 @@ class AsyncJulepApi:
         session_id: str,
         *,
         situation: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[PatchSessionRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
     ) -> ResourceUpdatedResponse:
@@ -2689,7 +2680,7 @@ class AsyncJulepApi:
 
             - situation: typing.Optional[str]. Updated situation for this session
 
-            - metadata: typing.Optional[PatchSessionRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
 
@@ -2978,7 +2969,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # pytype: disable=attribute-error
+            _request["preset"] = preset.value
         if model is not OMIT:
             _request["model"] = model
         if recall is not OMIT:
@@ -3096,7 +3087,7 @@ class AsyncJulepApi:
         *,
         about: str,
         name: str,
-        metadata: typing.Optional[UpdateUserRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -3108,7 +3099,7 @@ class AsyncJulepApi:
 
             - name: str. Name of the user
 
-            - metadata: typing.Optional[UpdateUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -3179,7 +3170,7 @@ class AsyncJulepApi:
         *,
         about: typing.Optional[str] = OMIT,
         name: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[PatchUserRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
 
@@ -3191,7 +3182,7 @@ class AsyncJulepApi:
 
             - name: typing.Optional[str]. Name of the user
 
-            - metadata: typing.Optional[PatchUserRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
         ---
         from julep.client import AsyncJulepApi
 
@@ -3266,7 +3257,7 @@ class AsyncJulepApi:
         name: str,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[UpdateAgentRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         instructions: typing.Optional[UpdateAgentRequestInstructions] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -3283,7 +3274,7 @@ class AsyncJulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-            - metadata: typing.Optional[UpdateAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - instructions: typing.Optional[UpdateAgentRequestInstructions]. Instructions for the agent
         ---
@@ -3364,7 +3355,7 @@ class AsyncJulepApi:
         name: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[PatchAgentRequestMetadata] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         instructions: typing.Optional[PatchAgentRequestInstructions] = OMIT,
     ) -> ResourceUpdatedResponse:
         """
@@ -3381,7 +3372,7 @@ class AsyncJulepApi:
 
             - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
 
-            - metadata: typing.Optional[PatchAgentRequestMetadata]. Optional metadata
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - instructions: typing.Optional[PatchAgentRequestInstructions]. Instructions for the agent
         ---

@@ -26,5 +26,5 @@ export type User = {
   /**
    * (Optional) metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
 };

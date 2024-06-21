@@ -17,5 +17,5 @@ export type UpdateUserRequest = {
   /**
    * Optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
 };

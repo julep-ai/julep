@@ -10,8 +10,10 @@ export const $PatchSessionRequest = {
       description: `Updated situation for this session`,
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
     token_budget: {
       type: "number",

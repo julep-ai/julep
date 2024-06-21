@@ -26,7 +26,7 @@ export type UpdateAgentRequest = {
   /**
    * Optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
   /**
    * Instructions for the agent
    */

@@ -2215,13 +2215,13 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "jupyter-ai"
-version = "2.18.0"
+version = "2.18.1"
 description = "A generative AI extension for JupyterLab"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_ai-2.18.0-py3-none-any.whl", hash = "sha256:6b7997f4f670b6f101f146c70b735542e61cc335bbbed0993d801bd5c5303258"},
-    {file = "jupyter_ai-2.18.0.tar.gz", hash = "sha256:f90cd1e43e0f570d33b721e44a538c8399f5f49c7a0ab4b299586687ed1451a8"},
+    {file = "jupyter_ai-2.18.1-py3-none-any.whl", hash = "sha256:f6eb5af6d5db3d74c69753ea27f2fa63b4fb66f52e00cd92fee95d12ea087691"},
+    {file = "jupyter_ai-2.18.1.tar.gz", hash = "sha256:d2fecbbc7c25b020f6edef4335e48ed4ce5c8c429dfb7c7cd6a950a44ca3d537"},
 ]
 
 [package.dependencies]
@@ -2243,13 +2243,13 @@ test = ["coverage", "jupyter-server[test] (>=1.6,<3)", "pytest", "pytest-asyncio
 
 [[package]]
 name = "jupyter-ai-magics"
-version = "2.18.0"
+version = "2.18.1"
 description = "Jupyter AI magics Python package. Not published on NPM."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_ai_magics-2.18.0-py3-none-any.whl", hash = "sha256:c32ef167ff8b9abac1060bc4f8fda011a5adc71da8b0e119bf7be12b5e57afe9"},
-    {file = "jupyter_ai_magics-2.18.0.tar.gz", hash = "sha256:95fb34b95a2ac7c5249d4052a598f9c0d2b70b0d189858a980ff2c74eaa15e01"},
+    {file = "jupyter_ai_magics-2.18.1-py3-none-any.whl", hash = "sha256:54af7a833eae553c3bccf00eff845071826b0fb84b77c8238845f058541fd70d"},
+    {file = "jupyter_ai_magics-2.18.1.tar.gz", hash = "sha256:df028a0566cd04555bd59dbdb5c08cb4eaf8150157a5ec176376390c73d4ac5b"},
 ]
 
 [package.dependencies]
@@ -2261,7 +2261,7 @@ langchain = ">=0.1.0,<0.2.0"
 typing-extensions = ">=4.5.0"
 
 [package.extras]
-all = ["ai21", "boto3", "cohere (>4.40,<5)", "gpt4all", "huggingface-hub", "ipywidgets", "langchain-anthropic", "langchain-google-genai", "langchain-mistralai", "langchain-nvidia-ai-endpoints", "langchain-openai", "pillow", "qianfan", "together"]
+all = ["ai21", "boto3", "gpt4all", "huggingface-hub", "ipywidgets", "langchain-anthropic", "langchain-cohere", "langchain-google-genai", "langchain-mistralai", "langchain-nvidia-ai-endpoints", "langchain-openai", "pillow", "qianfan", "together"]
 dev = ["pre-commit (>=3.3.3,<4)"]
 test = ["coverage", "pytest", "pytest-asyncio", "pytest-cov"]
 

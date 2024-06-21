@@ -612,7 +612,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"id\": \"id\",\n    \"user_id\": \"user_id\",\n    \"agent_id\": \"agent_id\",\n    \"situation\": \"situation\",\n    \"summary\": \"summary\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"render_templates\": true,\n    \"token_budget\": 1,\n    \"context_overflow\": \"context_overflow\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"user_id\": \"user_id\",\n    \"agent_id\": \"agent_id\",\n    \"situation\": \"situation\",\n    \"summary\": \"summary\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"render_templates\": true,\n    \"token_budget\": 1,\n    \"context_overflow\": \"context_overflow\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1486,7 +1486,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\"\n}",
+          "body": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    }\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1870,7 +1870,7 @@
             "body": null
           },
           "description": null,
-          "body": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"default_settings\": {\n        \"frequency_penalty\": 1.1,\n        \"length_penalty\": 1.1,\n        \"presence_penalty\": 1.1,\n        \"repetition_penalty\": 1.1,\n        \"temperature\": 0.75,\n        \"top_p\": 1,\n        \"min_p\": 0.01,\n        \"preset\": \"problem_solving\"\n    },\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
+          "body": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\",\n    \"default_settings\": {\n        \"frequency_penalty\": 1.1,\n        \"length_penalty\": 1.1,\n        \"presence_penalty\": 1.1,\n        \"repetition_penalty\": 1.1,\n        \"temperature\": 0.75,\n        \"top_p\": 1,\n        \"min_p\": 0.01,\n        \"preset\": \"problem_solving\"\n    },\n    \"model\": \"model\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"instructions\": \"instructions\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -4096,7 +4096,7 @@
             "body": null
           },
           "description": "",
-          "body": "[\n    {\n        \"id\": \"id\",\n        \"execution_id\": \"execution_id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"outputs\": {\n            \"outputs\": {\n                \"key\": \"value\"\n            }\n        },\n        \"from\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"to\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"type\": \"type\"\n    }\n]",
+          "body": "[\n    {\n        \"id\": \"id\",\n        \"execution_id\": \"execution_id\",\n        \"type\": \"type\",\n        \"from\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"to\": [\n            {\n                \"key\": \"value\"\n            }\n        ],\n        \"task_token\": \"task_token\",\n        \"outputs\": {\n            \"outputs\": {\n                \"key\": \"value\"\n            }\n        },\n        \"metadata\": {\n            \"metadata\": {\n                \"key\": \"value\"\n            }\n        },\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n]",
           "_postman_previewlanguage": "json"
         }
       ]

@@ -29,8 +29,10 @@ export const $User = {
       format: "uuid",
     },
     metadata: {
-      description: `(Optional) metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
   },
 } as const;

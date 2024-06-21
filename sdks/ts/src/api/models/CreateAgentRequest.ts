@@ -36,7 +36,7 @@ export type CreateAgentRequest = {
   /**
    * (Optional) metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
   /**
    * Instructions for the agent
    */

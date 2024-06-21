@@ -15,13 +15,18 @@ except ImportError:
 class ExecutionTransition(pydantic.BaseModel):
     id: str
     execution_id: str
-    created_at: dt.datetime
+    type: TransitionType
+    from_: typing.List[typing.Any] = pydantic.Field(alias="from")
+    to: typing.Optional[typing.List[typing.Any]]
+    task_token: typing.Optional[str]
     outputs: typing.Dict[str, typing.Any] = pydantic.Field(
         description="Outputs from an Execution Transition"
     )
-    from_: typing.List[typing.Any] = pydantic.Field(alias="from")
-    to: typing.Optional[typing.List[typing.Any]]
-    type: TransitionType
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = pydantic.Field(
+        description="(Optional) metadata"
+    )
+    created_at: dt.datetime
+    updated_at: typing.Optional[dt.datetime]
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
