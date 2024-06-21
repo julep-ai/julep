@@ -60,6 +60,7 @@ create_transition_relation_query = dict(
         from: (String, Int),
         to: (String, Int)?,
         output: Json,
+        metadata: Json default {},
         created_at: Float default now(),
         updated_at: Float default now(),
     }

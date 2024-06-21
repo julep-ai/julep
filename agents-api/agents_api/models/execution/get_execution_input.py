@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from ..utils import cozo_query
-
 from beartype import beartype
+
+from ..utils import cozo_query
 
 
 @cozo_query
