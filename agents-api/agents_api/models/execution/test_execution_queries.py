@@ -5,9 +5,12 @@ from cozo_migrate.api import init, apply
 from pycozo import Client
 from ward import test
 
+from ..agent.create_agent import create_agent_query
+from ..task.create_task import create_task_query
 from .create_execution import create_execution_query
-from .get_execution_status import get_execution_status_query
 from .get_execution import get_execution_query
+from .get_execution_status import get_execution_status_query
+from .get_execution_input import get_execution_input_query
 from .list_executions import list_task_executions_query
 from .update_execution_status import update_execution_status_query
 from .create_execution_transition import create_execution_transition_query
@@ -113,6 +116,52 @@ def _():
 
     assert len(result["status"]) == 1
     assert result["status"][0] == "queued"
+
+
+@test("model: get execution input")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
+    task_id = uuid4()
+    execution_id = uuid4()
+
+    create_agent_query(
+        agent_id=agent_id,
+        developer_id=developer_id,
+        name="test",
+        about="test",
+        model="gpt-4",
+        metadata={"test": "test"},
+        client=client,
+    )
+
+    create_task_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        name="test",
+        description="test",
+        input_schema={"test": "test"},
+        tools_available=[],
+        workflows=[],
+        client=client,
+    )
+
+    create_execution_query(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        task_id=task_id,
+        execution_id=execution_id,
+        arguments={"input": "test"},
+        client=client,
+    )
+
+    result = get_execution_input_query(
+        task_id=task_id, execution_id=execution_id, client=client
+    )
+
+    assert len(result["execution"]) == 1
 
 
 @test("model: list executions empty")
