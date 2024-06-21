@@ -79,3 +79,15 @@ def session(user=user, agent=agent, client=client):
         agent_id=agent.id,
         situation="test situation",
     )
+
+
+@fixture
+def task(agent=agent, client=client):
+    return client.tasks.create(
+        agent_id=agent.id,
+        name="task1",
+        description="task 1",
+        tools_available=["tool1"],
+        input_schema={},
+        main=[],
+    )
