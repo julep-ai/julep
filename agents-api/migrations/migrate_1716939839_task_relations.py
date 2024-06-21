@@ -40,6 +40,7 @@ create_execution_relation_query = dict(
         # one of: "queued", "starting", "running", "awaiting_input", "succeeded", "failed"
 
         arguments: Json,
+        session_id: Uuid? default null,
         created_at: Float default now(),
         updated_at: Float default now(),
     }

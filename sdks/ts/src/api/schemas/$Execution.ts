@@ -14,10 +14,9 @@ export const $Execution = {
       isRequired: true,
       format: "uuid",
     },
-    created_at: {
-      type: "string",
+    status: {
+      type: "ExecutionStatus",
       isRequired: true,
-      format: "uuid",
     },
     arguments: {
       type: "dictionary",
@@ -26,9 +25,25 @@ export const $Execution = {
       },
       isRequired: true,
     },
-    status: {
-      type: "ExecutionStatus",
+    user_id: {
+      type: "string",
+      isNullable: true,
+      format: "uuid",
+    },
+    session_id: {
+      type: "string",
+      isNullable: true,
+      format: "uuid",
+    },
+    created_at: {
+      type: "string",
       isRequired: true,
+      format: "date-time",
+    },
+    updated_at: {
+      type: "string",
+      isRequired: true,
+      format: "date-time",
     },
   },
 } as const;

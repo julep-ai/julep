@@ -2684,9 +2684,13 @@ components:
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
         agent_id:
           type: string
           format: uuid
+      additionalProperties: true
       description: Describes a Task
       required:
         - name
@@ -2750,22 +2754,36 @@ components:
         task_id:
           type: string
           format: uuid
-        created_at:
-          type: string
-          format: uuid
+        status:
+          $ref: '#/components/schemas/ExecutionStatus'
         arguments:
           type: object
           properties: {}
           additionalProperties: true
-          description: JSON Schema of parameters
-        status:
-          $ref: '#/components/schemas/ExecutionStatus'
+          description: JSON of parameters
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+          default: null
+        session_id:
+          type: string
+          format: uuid
+          nullable: true
+          default: null
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
       required:
         - id
         - task_id
-        - created_at
-        - arguments
         - status
+        - arguments
+        - created_at
+        - updated_at
     ExecutionTransition:
       type: object
       properties:

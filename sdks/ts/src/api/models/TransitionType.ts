@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Task = {
-  type: "dictionary",
-  contains: {
-    properties: {},
-  },
-} as const;
+/**
+ * Execution Status
+ */
+export type TransitionType = string;

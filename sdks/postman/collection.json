@@ -3576,7 +3576,7 @@
             "body": null
           },
           "description": "",
-          "body": "[\n    {\n        \"name\": \"name\",\n        \"description\": \"description\",\n        \"tools_available\": [\n            \"tools_available\"\n        ],\n        \"input_schema\": {\n            \"input_schema\": {\n                \"key\": \"value\"\n            }\n        },\n        \"main\": [\n            {\n                \"prompt\": [\n                    {\n                        \"role\": \"user\",\n                        \"content\": \"content\"\n                    }\n                ],\n                \"settings\": {\n                    \"min_p\": 0.01\n                }\n            }\n        ],\n        \"id\": \"id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"agent_id\": \"agent_id\"\n    }\n]",
+          "body": "[\n    {\n        \"name\": \"name\",\n        \"description\": \"description\",\n        \"tools_available\": [\n            \"tools_available\"\n        ],\n        \"input_schema\": {\n            \"input_schema\": {\n                \"key\": \"value\"\n            }\n        },\n        \"main\": [\n            {\n                \"prompt\": [\n                    {\n                        \"role\": \"user\",\n                        \"content\": \"content\"\n                    }\n                ],\n                \"settings\": {\n                    \"min_p\": 0.01\n                }\n            }\n        ],\n        \"id\": \"id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"updated_at\": \"2024-01-15T09:30:00Z\",\n        \"agent_id\": \"agent_id\"\n    }\n]",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -3784,7 +3784,7 @@
             "body": null
           },
           "description": "",
-          "body": "[\n    {\n        \"id\": \"id\",\n        \"task_id\": \"task_id\",\n        \"created_at\": \"created_at\",\n        \"arguments\": {\n            \"arguments\": {\n                \"key\": \"value\"\n            }\n        },\n        \"status\": \"status\"\n    }\n]",
+          "body": "[\n    {\n        \"id\": \"id\",\n        \"task_id\": \"task_id\",\n        \"status\": \"status\",\n        \"arguments\": {\n            \"arguments\": {\n                \"key\": \"value\"\n            }\n        },\n        \"user_id\": \"user_id\",\n        \"session_id\": \"session_id\",\n        \"created_at\": \"2024-01-15T09:30:00Z\",\n        \"updated_at\": \"2024-01-15T09:30:00Z\"\n    }\n]",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -4006,7 +4006,7 @@
             "body": null
           },
           "description": "",
-          "body": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"tools_available\": [\n        \"tools_available\"\n    ],\n    \"input_schema\": {\n        \"input_schema\": {\n            \"key\": \"value\"\n        }\n    },\n    \"main\": [\n        {\n            \"prompt\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": \"content\"\n                }\n            ],\n            \"settings\": {\n                \"min_p\": 0.01\n            }\n        }\n    ],\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"agent_id\": \"agent_id\"\n}",
+          "body": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"tools_available\": [\n        \"tools_available\"\n    ],\n    \"input_schema\": {\n        \"input_schema\": {\n            \"key\": \"value\"\n        }\n    },\n    \"main\": [\n        {\n            \"prompt\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": \"content\"\n                }\n            ],\n            \"settings\": {\n                \"min_p\": 0.01\n            }\n        }\n    ],\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"agent_id\": \"agent_id\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]

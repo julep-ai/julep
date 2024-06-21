@@ -4,6 +4,11 @@ from typing import Annotated, Any, List, Literal, Tuple
 from pydantic import BaseModel, Field, UUID4, computed_field
 
 from ...autogen.openapi_model import (
+    User,
+    Agent,
+    Session,
+    Tool,
+    FunctionDef,
     PromptWorkflowStep,
     EvaluateWorkflowStep,
     YieldWorkflowStep,
@@ -13,6 +18,9 @@ from ...autogen.openapi_model import (
     Task,
     Execution,
 )
+
+from ...models.execution.get_execution_input import get_execution_input_query
+from ..utils.cozo import uuid_int_list_to_uuid4
 
 WorkflowStep = (
     PromptWorkflowStep
@@ -53,6 +61,24 @@ class TaskSpec(BaseModel):
 
 
 class TaskProtocol(SerializableTask):
+    @classmethod
+    def from_cozo_data(cls, task_data: dict[str, Any]) -> "SerializableTask":
+
+        workflows = task_data.pop("workflows")
+        assert len(workflows) > 0
+
+        main_wf_idx, main_wf = next(
+            (i, wf) for i, wf in enumerate(workflows) if wf["name"] == "main"
+        )
+
+        task_data["main"] = main_wf["steps"]
+        workflows.pop(main_wf_idx)
+
+        for workflow in workflows:
+            task_data[workflow["name"]] = workflow["steps"]
+
+        return cls(**task_data)
+
     @computed_field
     @property
     def spec(self) -> TaskSpec:
@@ -79,16 +105,58 @@ class TaskProtocol(SerializableTask):
         )
 
 
-# FIXME: Enable all of these
 class ExecutionInput(BaseModel):
     developer_id: UUID4
     execution: Execution
     task: TaskProtocol
-    # agent: Agent
-    # user: User | None
-    # session: Session | None
-    # tools: list[Tool]
+    agent: Agent
+    user: User | None
+    session: Session | None
+    tools: list[Tool]
     arguments: dict[str, Any]
+
+    @classmethod
+    def fetch(
+        cls, *, developer_id: UUID4, task_id: UUID4, execution_id: UUID4, client: Any
+    ) -> "ExecutionInput":
+        [data] = get_execution_input_query(
+            task_id=task_id,
+            execution_id=execution_id,
+            client=client,
+        ).to_dict(orient="records")
+
+        # FIXME: Need to manually convert id from list of int to UUID4
+        # because cozo has a bug with UUID4
+        # See: https://github.com/cozodb/cozo/issues/269
+        for kind in ["task", "execution", "agent", "user", "session"]:
+            if not data[kind]:
+                continue
+
+            for key in data[kind]:
+                if key == "id" or key.endswith("_id") and data[kind][key] is not None:
+                    data[kind][key] = uuid_int_list_to_uuid4(data[kind][key])
+
+        agent = Agent(**data["agent"])
+        task = TaskProtocol.from_cozo_data(data["task"])
+        execution = Execution(**data["execution"])
+        user = User(**data["user"]) if data["user"] else None
+        session = Session(**data["session"]) if data["session"] else None
+        tools = [
+            Tool(type="function", id=function["id"], function=FunctionDef(**function))
+            for function in data["tools"]
+        ]
+        arguments = execution.arguments
+
+        return cls(
+            developer_id=developer_id,
+            execution=execution,
+            task=task,
+            agent=agent,
+            user=user,
+            session=session,
+            tools=tools,
+            arguments=arguments,
+        )
 
 
 class StepContext(ExecutionInput):

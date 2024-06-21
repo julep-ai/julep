@@ -13,11 +13,12 @@ def get_execution_query(
 ) -> tuple[str, dict]:
     query = """
 {
-    ?[status, arguments, created_at, updated_at] := *executions {
+    ?[status, arguments, session_id, created_at, updated_at] := *executions {
         task_id: to_uuid($task_id),
         execution_id: to_uuid($execution_id),
         status,
         arguments,
+        session_id,
         created_at,
         updated_at,
     }

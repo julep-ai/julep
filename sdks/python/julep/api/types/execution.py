@@ -15,11 +15,14 @@ except ImportError:
 class Execution(pydantic.BaseModel):
     id: str
     task_id: str
-    created_at: str
-    arguments: typing.Dict[str, typing.Any] = pydantic.Field(
-        description="JSON Schema of parameters"
-    )
     status: ExecutionStatus
+    arguments: typing.Dict[str, typing.Any] = pydantic.Field(
+        description="JSON of parameters"
+    )
+    user_id: typing.Optional[str]
+    session_id: typing.Optional[str]
+    created_at: dt.datetime
+    updated_at: dt.datetime
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

@@ -70,6 +70,10 @@ async def create_task(
 
     # TODO: Do thorough validation of the task spec
 
+    workflows = [
+        {"name": "main", "steps": request.main},
+    ] + [{"name": name, "steps": steps} for name, steps in request.model_extra]
+
     resp: pd.DataFrame = create_task_query(
         agent_id=agent_id,
         task_id=task_id,
@@ -78,7 +82,7 @@ async def create_task(
         description=request.description,
         input_schema=request.input_schema,
         tools_available=request.tools_available,
-        workflows=request.workflows,
+        workflows=workflows,
     )
     return ResourceCreatedResponse(
         id=resp["task_id"][0], created_at=resp["created_at"][0]
