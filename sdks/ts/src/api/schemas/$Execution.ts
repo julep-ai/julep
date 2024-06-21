@@ -38,12 +38,12 @@ export const $Execution = {
     created_at: {
       type: "string",
       isRequired: true,
-      format: "uuid",
+      format: "date-time",
     },
     updated_at: {
       type: "string",
       isRequired: true,
-      format: "uuid",
+      format: "date-time",
     },
   },
 } as const;
