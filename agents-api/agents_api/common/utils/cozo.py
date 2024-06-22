@@ -19,6 +19,6 @@ cozo_process_mutate_data = _fake_client._process_mutate_data = lambda data: (
     Client._process_mutate_data(_fake_client, data)
 )
 
-uuid_int_list_to_uuid4 = lambda data: UUID(
-    bytes=b"".join([i.to_bytes(1, "big") for i in data])
-)
+
+def uuid_int_list_to_uuid4(data):
+    return UUID(bytes=b"".join([i.to_bytes(1, "big") for i in data]))
