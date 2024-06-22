@@ -17,5 +17,5 @@ export type PatchUserRequest = {
   /**
    * Optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
 };

@@ -14,5 +14,5 @@ export type CreateDoc = {
   /**
    * Optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
 };

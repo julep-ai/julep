@@ -22,5 +22,5 @@ export type Doc = {
   /**
    * optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
 };

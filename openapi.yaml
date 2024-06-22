@@ -1374,6 +1374,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: (Optional) metadata
       required:
         - id
@@ -1410,6 +1411,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         instructions:
           oneOf:
@@ -1505,6 +1507,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         render_templates:
           type: boolean
@@ -1539,6 +1542,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: (Optional) metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
@@ -1559,6 +1563,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         render_templates:
           type: boolean
@@ -1608,6 +1613,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: (Optional) metadata
         instructions:
           oneOf:
@@ -1630,6 +1636,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         token_budget:
           type: integer
@@ -1659,6 +1666,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         instructions:
           oneOf:
@@ -1685,6 +1693,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
       description: A valid request payload for updating a user
       required:
@@ -2322,6 +2331,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: optional metadata
       required:
         - title
@@ -2347,6 +2357,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
       required:
         - title
@@ -2512,6 +2523,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
       description: A request for patching a user
     PatchAgentRequest:
@@ -2533,6 +2545,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         instructions:
           oneOf:
@@ -2553,6 +2566,7 @@ components:
         metadata:
           type: object
           properties: {}
+          additionalProperties: true
           description: Optional metadata
         token_budget:
           type: integer
@@ -2793,13 +2807,8 @@ components:
         execution_id:
           type: string
           format: uuid
-        created_at:
-          type: string
-          format: date-time
-        outputs:
-          type: object
-          additionalProperties: true
-          description: Outputs from an Execution Transition
+        type:
+          $ref: '#/components/schemas/TransitionType'
         from:
           type: array
           items:
@@ -2815,8 +2824,25 @@ components:
               description: Canonical name of the workflow
             - type: integer
               description: Step index
-        type:
-          $ref: '#/components/schemas/TransitionType'
+        task_token:
+          type: string
+          default: null
+          nullable: true
+        outputs:
+          type: object
+          additionalProperties: true
+          description: Outputs from an Execution Transition
+        metadata:
+          type: object
+          properties: {}
+          additionalProperties: true
+          description: (Optional) metadata
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
       required:
         - id
         - execution_id

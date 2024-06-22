@@ -16,6 +16,8 @@ def create_execution_transition_query(
     from_: tuple[str, int],
     to: tuple[str, int] | None,
     outputs: Dict[str, Any] | None,
+    task_token: str | None = None,
+    metadata: Dict[str, Any] = {},
 ) -> tuple[str, dict]:
     # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
     # TODO: Check for task and execution
@@ -25,17 +27,19 @@ def create_execution_transition_query(
 
     query = """
 {
-    ?[execution_id, transition_id, type, from, to, output] <- [[
+    ?[execution_id, transition_id, type, from, to, output, task_token, metadata] <- [[
         to_uuid($execution_id),
         to_uuid($transition_id),
         $type,
         $from,
         $to,
         $output,
+        $task_token,
+        $metadata,
     ]]
 
     :insert transitions {
-        execution_id, transition_id, type, from, to, output
+        execution_id, transition_id, type, from, to, output, task_token, metadata,
     }
 }
 """
@@ -48,5 +52,7 @@ def create_execution_transition_query(
             "from": from_,
             "to": to,
             "output": outputs,
+            "task_token": task_token,
+            "metadata": metadata,
         },
     )

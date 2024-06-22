@@ -14,8 +14,10 @@ export const $PatchUserRequest = {
       description: `Name of the user`,
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
   },
 } as const;

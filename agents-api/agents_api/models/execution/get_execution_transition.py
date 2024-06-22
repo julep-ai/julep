@@ -19,7 +19,11 @@ def get_execution_transition_query(
         type,
         from,
         to,
-        output
+        output,
+        metadata,
+        task_token,
+        created_at,
+        updated_at,
     }
 }
 """
