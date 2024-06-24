@@ -32,6 +32,7 @@ from ...model_registry import (
     LOCAL_MODELS,
     get_extra_settings,
     load_context,
+    validate_and_extract_tool_calls
 )
 from ...models.entry.add_entries import add_entries_query
 from ...models.entry.proc_mem_context import proc_mem_context_query
@@ -357,7 +358,10 @@ class BaseSession:
                 and message.content[0].type == "text"
             ):
                 message.content = message.content[0].text
-
+                # Add tools to settings
+        if tools:
+            settings.tools = settings.tools or []
+            settings.tools.extend(tools)
         # If render_templates=True, render the templates
         if session_data is not None and session_data.render_templates:
 
@@ -378,6 +382,7 @@ class BaseSession:
                     "name": session_data.agent_name,
                     "about": session_data.agent_about,
                     "metadata": session_data.agent_metadata,
+                    "tools": settings.tools,
                 },
             }
 
@@ -387,15 +392,12 @@ class BaseSession:
                     continue
 
                 messages[i].content = await render_template(msg.content, template_data)
+                print(messages[i].content)
 
         # FIXME: This sometimes returns "The model `` does not exist."
         if session_data is not None:
             settings.model = session_data.model
 
-        # Add tools to settings
-        if tools:
-            settings.tools = settings.tools or []
-            settings.tools.extend(tools)
 
         return messages, settings, doc_ids
 
@@ -419,7 +421,8 @@ class BaseSession:
 
         litellm.drop_params = True
         litellm.add_function_to_prompt = True
-
+        litellm.set_verbose = True
+        print(f"PRINTING init_context:\n\n{init_context}")
         res = await acompletion(
             model=model,
             messages=init_context,
@@ -433,10 +436,11 @@ class BaseSession:
             tools=tools,
             response_format=settings.response_format,
             api_base=api_base,
-            api_key=api_key,
-            **extra_body,
+            # api_key=api_key,
+            # **extra_body,
         )
-
+        tool_call = validate_and_extract_tool_calls(res.choices[0].message.content)
+        print(tool_call)
         return res
 
     async def backward(
