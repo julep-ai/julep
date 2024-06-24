@@ -2,11 +2,12 @@ import uuid
 from typing import List
 from ward import test
 from tests.fixtures import client, async_client, task, agent
-from julep.api.types import Task, Execution
 
 
 @test("create task")
 def _(client=client, agent=agent):
+    from julep.api.types import Task
+
     task = client.tasks.create(
         agent_id=agent.id,
         name="task1",
@@ -30,6 +31,8 @@ def _(client=client, agent=agent):
 
 @test("get task")
 def _(client=client, agent=agent, task=task):
+    from julep.api.types import Task
+
     task = client.tasks.get(
         agent_id=agent.id,
         task_id=task.id,
@@ -49,6 +52,8 @@ def _(client=client, agent=agent, task=task):
 
 @test("list task")
 def _(client=client, agent=agent):
+    from julep.api.types import Task
+
     tasks = client.tasks.list(
         agent_id=agent.id,
     )
@@ -71,6 +76,8 @@ def _(client=client, agent=agent):
 
 @test("start task execution")
 def _(client=client, agent=agent, task=task):
+    from julep.api.types import Execution
+
     execution = client.tasks.start_task_execution(
         agent_id=agent.id,
         task_id=task.id,
@@ -83,6 +90,8 @@ def _(client=client, agent=agent, task=task):
 
 @test("create task")
 async def _(client=async_client, agent=agent):
+    from julep.api.types import Task
+
     task = await client.tasks.create(
         agent_id=agent.id,
         name="task1",
@@ -106,6 +115,8 @@ async def _(client=async_client, agent=agent):
 
 @test("get task")
 async def _(client=async_client, agent=agent, task=task):
+    from julep.api.types import Task
+
     task = await client.tasks.get(
         agent_id=agent.id,
         task_id=task.id,
@@ -125,6 +136,8 @@ async def _(client=async_client, agent=agent, task=task):
 
 @test("list task")
 async def _(client=async_client, agent=agent):
+    from julep.api.types import Task
+
     tasks = await client.tasks.list(
         agent_id=agent.id,
     )
@@ -147,6 +160,8 @@ async def _(client=async_client, agent=agent):
 
 @test("start task execution")
 async def _(client=async_client, agent=agent, task=task):
+    from julep.api.types import Execution
+
     execution = await client.tasks.start_task_execution(
         agent_id=agent.id,
         task_id=task.id,

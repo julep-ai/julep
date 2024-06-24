@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Any, List, Literal, Tuple
+from uuid import uuid4
 
 from pydantic import BaseModel, Field, UUID4, computed_field
 
@@ -156,6 +157,38 @@ class ExecutionInput(BaseModel):
             session=session,
             tools=tools,
             arguments=arguments,
+        )
+
+    @classmethod
+    def mocked(cls) -> "ExecutionInput":
+        return cls(
+            developer_id=uuid4(),
+            execution=dict(
+                id=uuid4(),
+                task_id=uuid4(),
+                status="running",
+                created_at=datetime.now(tz=timezone.utc),
+                updated_at=datetime.now(tz=timezone.utc),
+                arguments={},
+            ),
+            task=dict(
+                id=uuid4(),
+                name="Test Task",
+                description="Test Task Description",
+                tools_available="all",
+                input_schema={},
+                main=[],
+            ),
+            agent=dict(
+                id=uuid4(),
+                name="Test Agent",
+                description="Test Agent Description",
+                type="test",
+            ),
+            user=None,
+            session=None,
+            tools=[],
+            arguments={},
         )
 
 
