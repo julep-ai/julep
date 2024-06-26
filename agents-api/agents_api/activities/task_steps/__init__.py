@@ -121,7 +121,7 @@ async def transition_step(
     transition_info: TransitionInfo,
 ) -> dict:
     print("Running transition step")
-    raise NotImplementedError()
+    # raise NotImplementedError()
 
     # Get transition info
     transition_data = transition_info.model_dump(by_alias=False)

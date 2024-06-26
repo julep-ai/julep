@@ -5,9 +5,6 @@ from agents_api.models.execution.get_execution import get_execution_query
 from agents_api.models.execution.get_execution_transition import (
     get_execution_transition_query,
 )
-from agents_api.models.execution.list_execution_transitions import (
-    list_execution_transition_query,
-)
 from agents_api.models.execution.list_executions import list_task_executions_query
 from agents_api.models.task.create_task import create_task_query
 from agents_api.models.task.get_task import get_task_query
@@ -71,8 +68,8 @@ async def create_task(
     # TODO: Do thorough validation of the task spec
 
     workflows = [
-        {"name": "main", "steps": request.main},
-    ] + [{"name": name, "steps": steps} for name, steps in request.model_extra]
+        {"name": "main", "steps": [w.model_dump() for w in request.main]},
+    ] + [{"name": name, "steps": steps} for name, steps in request.model_extra.items()]
 
     resp: pd.DataFrame = create_task_query(
         agent_id=agent_id,
@@ -80,10 +77,11 @@ async def create_task(
         developer_id=x_developer_id,
         name=request.name,
         description=request.description,
-        input_schema=request.input_schema,
-        tools_available=request.tools_available,
+        input_schema=request.input_schema or {},
+        tools_available=request.tools_available or [],
         workflows=workflows,
     )
+
     return ResourceCreatedResponse(
         id=resp["task_id"][0], created_at=resp["created_at"][0]
     )

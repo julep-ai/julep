@@ -38,6 +38,8 @@ def create_task_query(
         tools_available,
         workflows
     }
+
+    :returning
 }
 """
 
