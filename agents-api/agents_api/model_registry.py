@@ -107,11 +107,13 @@ LOCAL_MODELS = {
     "julep-ai/samantha-1-turbo-awq": 32768,
     "TinyLlama/TinyLlama_v1.1": 2048,
     "casperhansen/llama-3-8b-instruct-awq": 8192,
-    "NousResearch/Hermes-2-Theta-Llama-3-8B": 8192
+    "NousResearch/Hermes-2-Theta-Llama-3-8B": 8192,
+    "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768
 }
 
 LOCAL_MODELS_WITH_TOOL_CALLS = {
-    "NousResearch/Hermes-2-Theta-Llama-3-8B": 8192
+    "NousResearch/Hermes-2-Theta-Llama-3-8B": 8192,
+    "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768
 }
 
 CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}

@@ -30,6 +30,7 @@ from ...env import (
 )
 from ...model_registry import (
     LOCAL_MODELS,
+    LOCAL_MODELS_WITH_TOOL_CALLS,
     get_extra_settings,
     load_context,
     validate_and_extract_tool_calls
@@ -439,8 +440,12 @@ class BaseSession:
             # api_key=api_key,
             # **extra_body,
         )
-        tool_call = validate_and_extract_tool_calls(res.choices[0].message.content)
-        print(tool_call)
+        tool_call_exists, tool_call = validate_and_extract_tool_calls(res.choices[0].message.content)
+        if (model in LOCAL_MODELS_WITH_TOOL_CALLS & tool_call_exists):
+            res.choices[0].message.role = "function_call" if tool_call else "assistant"
+            res.choices[0].finish_reason = "tool_calls"
+            res.choices[0].message.tool_calls = tool_call
+            res.choices[0].message.content = tool_call
         return res
 
     async def backward(
