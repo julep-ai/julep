@@ -25,8 +25,11 @@ def list_tasks_query(
     """
     # TODO: Accepts developer ID. Checks if the developer can get this agent, by relation can get the tasks. Assert that the agent exists under the developer.
     query = """
+    input[agent_id] <- [[to_uuid($agent_id)]]
+
     ?[
         id,
+        agent_id,
         name,
         description,
         input_schema,
@@ -34,8 +37,9 @@ def list_tasks_query(
         workflows,
         created_at,
         updated_at,
-    ] := *tasks {
-            agent_id: to_uuid($agent_id),
+    ] := input[agent_id], 
+        *tasks {
+            agent_id,
             task_id: id,
             updated_at_ms,
             name,

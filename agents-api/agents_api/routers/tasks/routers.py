@@ -50,11 +50,25 @@ router = APIRouter()
 async def list_tasks(
     agent_id: UUID4,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    limit: int = 100,
+    offset: int = 0,
 ) -> TaskList:
-    query_results = list_tasks_query(agent_id, x_developer_id)
-    return TaskList(
-        items=[Task(**row.to_dict()) for _, row in query_results.iterrows()]
+    query_results = list_tasks_query(
+        agent_id=agent_id, developer_id=x_developer_id, limit=limit, offset=offset
     )
+
+    items = []
+    for _, row in query_results.iterrows():
+        row_dict = row.to_dict()
+
+        for workflow in row_dict["workflows"]:
+            if workflow["name"] == "main":
+                row_dict["main"] = workflow["steps"]
+                break
+
+        items.append(Task(**row_dict))
+
+    return TaskList(items=items)
 
 
 @router.post("/agents/{agent_id}/tasks", status_code=HTTP_201_CREATED, tags=["tasks"])
@@ -96,8 +110,15 @@ async def get_task(
     try:
         resp = [
             row.to_dict()
-            for _, row in get_task_query(agent_id, task_id, x_developer_id).iterrows()
+            for _, row in get_task_query(
+                agent_id=agent_id, task_id=task_id, developer_id=x_developer_id
+            ).iterrows()
         ][0]
+
+        for workflow in resp["workflows"]:
+            if workflow["name"] == "main":
+                resp["main"] = workflow["steps"]
+                break
 
         return Task(**resp)
     except (IndexError, KeyError):
@@ -222,7 +243,8 @@ async def update_execution_transition(
 
 @router.get("/executions/{execution_id}/transitions")
 async def list_execution_transitions(execution_id: UUID4) -> ExecutionTransitionList:
-    res = list_execution_transition_query(execution_id)
+    # TODO: implement/replace list_execution_transition_query
+    res = pd.DataFrame()  # list_execution_transition_query(execution_id)
     return ExecutionTransitionList(
         items=[ExecutionTransition(**row.to_dict()) for _, row in res.iterrows()]
     )
