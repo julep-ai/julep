@@ -440,12 +440,13 @@ class BaseSession:
             # api_key=api_key,
             # **extra_body,
         )
-        tool_call_exists, tool_call = validate_and_extract_tool_calls(res.choices[0].message.content)
-        if (model in LOCAL_MODELS_WITH_TOOL_CALLS & tool_call_exists):
+        validation, tool_call, error_msg = validate_and_extract_tool_calls(res.choices[0].message.content)
+        if (validation and model in LOCAL_MODELS_WITH_TOOL_CALLS):
+            print("[!] Tool Call Detected!")
             res.choices[0].message.role = "function_call" if tool_call else "assistant"
             res.choices[0].finish_reason = "tool_calls"
             res.choices[0].message.tool_calls = tool_call
-            res.choices[0].message.content = tool_call
+            res.choices[0].message.content = json.dumps(tool_call)
         return res
 
     async def backward(
