@@ -23,13 +23,6 @@
     ],
     "strictNullChecks": true
   },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/__mocks__",
-    "dist",
-    "tests"
-  ]
+  "include": ["./src/**/*.ts"],
+  "exclude": ["node_modules", "**/__mocks__", "dist", "tests"]
 }
