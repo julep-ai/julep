@@ -16,8 +16,10 @@ export const $UpdateUserRequest = {
       isRequired: true,
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
   },
 } as const;

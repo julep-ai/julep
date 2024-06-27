@@ -24,8 +24,10 @@ export const $UpdateAgentRequest = {
       description: `Default model settings to start every session with`,
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
     instructions: {
       type: "one-of",

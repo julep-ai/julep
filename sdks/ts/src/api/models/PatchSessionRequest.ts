@@ -13,7 +13,7 @@ export type PatchSessionRequest = {
   /**
    * Optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
   /**
    * Threshold value for the adaptive context functionality
    */

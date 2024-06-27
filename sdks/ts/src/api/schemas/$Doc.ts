@@ -40,8 +40,10 @@ export const $Doc = {
       format: "date-time",
     },
     metadata: {
-      description: `optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
   },
 } as const;

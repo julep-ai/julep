@@ -5,7 +5,7 @@ from ward import fixture
 
 from julep import AsyncClient, Client
 
-from julep.api.types import Agent, User, Session
+from julep.api.types import Agent, User, Session, Task
 
 env = Env()
 
@@ -103,6 +103,15 @@ mock_doc = {
     "metadata": {"type": "test"},
 }
 
+mock_task = {
+    "name": "task 1",
+    "description": "task 1 description",
+    "tools_available": ["tool 1"],
+    "input_schema": {"key", "val"},
+    "main": [],
+    "agent_id": "e4509e29-c412-4304-bbb9-0a27c0765cf2",
+}
+
 
 def cleanup(client: Client):
     for session in client.sessions.list(metadata_filter={"type": "test"}):
@@ -155,6 +164,24 @@ def test_agent(client=client) -> Agent:
     yield agent
 
     client.agents.delete(agent.id)
+
+
+@fixture
+def test_task(client=client) -> Task:
+    task = client.tasks.create(
+        **mock_task,
+    )
+
+    yield task
+
+
+@fixture
+async def test_task_async(client=client) -> Task:
+    task = await client.tasks.create(
+        **mock_task,
+    )
+
+    yield task
 
 
 @fixture

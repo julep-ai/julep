@@ -21,6 +21,7 @@ from .managers.memory import MemoriesManager, AsyncMemoriesManager
 
 from .managers.session import SessionsManager, AsyncSessionsManager
 from .managers.tool import ToolsManager, AsyncToolsManager
+from .managers.task import TasksManager, AsyncTasksManager
 from .utils.openai_patch import (
     patch_chat_acreate,
     patch_chat_create,
@@ -71,6 +72,7 @@ class Client:
     docs: DocsManager
     memories: MemoriesManager
     tools: ToolsManager
+    tasks: TasksManager
 
     chat: Chat
     completions: Completions
@@ -134,6 +136,7 @@ class Client:
         self.docs = DocsManager(api_client=self._api_client)
         self.memories = MemoriesManager(api_client=self._api_client)
         self.tools = ToolsManager(api_client=self._api_client)
+        self.tasks = TasksManager(api_client=self._api_client)
 
         # Set up the OpenAI client
         openai_base_url = f"{get_base_url(base_url)}/v1"
@@ -193,6 +196,7 @@ class AsyncClient:
     docs: AsyncDocsManager
     memories: AsyncMemoriesManager
     tools: AsyncToolsManager
+    tasks: AsyncTasksManager
 
     chat: AsyncChat
     completions: AsyncCompletions
@@ -251,6 +255,7 @@ class AsyncClient:
         self.docs = AsyncDocsManager(api_client=self._api_client)
         self.memories = AsyncMemoriesManager(api_client=self._api_client)
         self.tools = AsyncToolsManager(api_client=self._api_client)
+        self.tasks = AsyncTasksManager(api_client=self._api_client)
 
         # Set up the OpenAI client
         openai_base_url = f"{get_base_url(base_url)}/v1"

@@ -98,6 +98,10 @@ JULEP_MODELS = {
     "julep-ai/samantha-1-turbo-awq": 32768,
 }
 
+OLLAMA_MODELS = {
+    "llama2": 4096,
+}
+
 CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
 
 

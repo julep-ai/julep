@@ -40,8 +40,10 @@ export const $Session = {
       format: "date-time",
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
     render_templates: {
       type: "boolean",

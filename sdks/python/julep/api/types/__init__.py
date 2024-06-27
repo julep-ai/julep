@@ -4,7 +4,7 @@ from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .agent_default_settings_preset import AgentDefaultSettingsPreset
 from .agent_instructions import AgentInstructions
-from .agent_metadata import AgentMetadata
+from .cel_object import CelObject
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
 from .chat_ml_image_content_part import ChatMlImageContentPart
@@ -31,18 +31,18 @@ from .chat_settings_response_format_type import ChatSettingsResponseFormatType
 from .chat_settings_stop import ChatSettingsStop
 from .completion_usage import CompletionUsage
 from .create_agent_request_instructions import CreateAgentRequestInstructions
-from .create_agent_request_metadata import CreateAgentRequestMetadata
 from .create_doc import CreateDoc
 from .create_doc_content import CreateDocContent
-from .create_doc_metadata import CreateDocMetadata
-from .create_session_request_metadata import CreateSessionRequestMetadata
 from .create_tool_request import CreateToolRequest
 from .create_tool_request_type import CreateToolRequestType
-from .create_user_request_metadata import CreateUserRequestMetadata
 from .doc import Doc
 from .doc_content import DocContent
 from .doc_ids import DocIds
-from .doc_metadata import DocMetadata
+from .error_workflow_step import ErrorWorkflowStep
+from .evaluate_workflow_step import EvaluateWorkflowStep
+from .execution import Execution
+from .execution_status import ExecutionStatus
+from .execution_transition import ExecutionTransition
 from .function_call_option import FunctionCallOption
 from .function_def import FunctionDef
 from .function_parameters import FunctionParameters
@@ -56,6 +56,7 @@ from .get_suggestions_response import GetSuggestionsResponse
 from .get_user_docs_request_order import GetUserDocsRequestOrder
 from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
+from .if_else_workflow_step import IfElseWorkflowStep
 from .input_chat_ml_message import InputChatMlMessage
 from .input_chat_ml_message_content import InputChatMlMessageContent
 from .input_chat_ml_message_content_item import (
@@ -82,32 +83,31 @@ from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
 from .partial_function_def import PartialFunctionDef
 from .patch_agent_request_instructions import PatchAgentRequestInstructions
-from .patch_agent_request_metadata import PatchAgentRequestMetadata
-from .patch_session_request_metadata import PatchSessionRequestMetadata
-from .patch_user_request_metadata import PatchUserRequestMetadata
+from .prompt_workflow_step import PromptWorkflowStep
 from .resource_created_response import ResourceCreatedResponse
 from .resource_deleted_response import ResourceDeletedResponse
 from .resource_updated_response import ResourceUpdatedResponse
 from .session import Session
-from .session_metadata import SessionMetadata
 from .suggestion import Suggestion
 from .suggestion_target import SuggestionTarget
+from .task import Task
 from .tool import Tool
+from .tool_call_workflow_step import ToolCallWorkflowStep
 from .tool_choice_option import ToolChoiceOption
+from .tool_response import ToolResponse
 from .tool_type import ToolType
+from .transition_type import TransitionType
 from .update_agent_request_instructions import UpdateAgentRequestInstructions
-from .update_agent_request_metadata import UpdateAgentRequestMetadata
-from .update_session_request_metadata import UpdateSessionRequestMetadata
-from .update_user_request_metadata import UpdateUserRequestMetadata
 from .user import User
-from .user_metadata import UserMetadata
+from .workflow_step import WorkflowStep
+from .yield_workflow_step import YieldWorkflowStep
 
 __all__ = [
     "Agent",
     "AgentDefaultSettings",
     "AgentDefaultSettingsPreset",
     "AgentInstructions",
-    "AgentMetadata",
+    "CelObject",
     "ChatInputData",
     "ChatInputDataToolChoice",
     "ChatMlImageContentPart",
@@ -130,18 +130,18 @@ __all__ = [
     "ChatSettingsStop",
     "CompletionUsage",
     "CreateAgentRequestInstructions",
-    "CreateAgentRequestMetadata",
     "CreateDoc",
     "CreateDocContent",
-    "CreateDocMetadata",
-    "CreateSessionRequestMetadata",
     "CreateToolRequest",
     "CreateToolRequestType",
-    "CreateUserRequestMetadata",
     "Doc",
     "DocContent",
     "DocIds",
-    "DocMetadata",
+    "ErrorWorkflowStep",
+    "EvaluateWorkflowStep",
+    "Execution",
+    "ExecutionStatus",
+    "ExecutionTransition",
     "FunctionCallOption",
     "FunctionDef",
     "FunctionParameters",
@@ -155,6 +155,7 @@ __all__ = [
     "GetUserDocsRequestOrder",
     "GetUserDocsRequestSortBy",
     "GetUserDocsResponse",
+    "IfElseWorkflowStep",
     "InputChatMlMessage",
     "InputChatMlMessageContent",
     "InputChatMlMessageContentItem",
@@ -179,23 +180,22 @@ __all__ = [
     "NamedToolChoiceFunction",
     "PartialFunctionDef",
     "PatchAgentRequestInstructions",
-    "PatchAgentRequestMetadata",
-    "PatchSessionRequestMetadata",
-    "PatchUserRequestMetadata",
+    "PromptWorkflowStep",
     "ResourceCreatedResponse",
     "ResourceDeletedResponse",
     "ResourceUpdatedResponse",
     "Session",
-    "SessionMetadata",
     "Suggestion",
     "SuggestionTarget",
+    "Task",
     "Tool",
+    "ToolCallWorkflowStep",
     "ToolChoiceOption",
+    "ToolResponse",
     "ToolType",
+    "TransitionType",
     "UpdateAgentRequestInstructions",
-    "UpdateAgentRequestMetadata",
-    "UpdateSessionRequestMetadata",
-    "UpdateUserRequestMetadata",
     "User",
-    "UserMetadata",
+    "WorkflowStep",
+    "YieldWorkflowStep",
 ]

@@ -35,8 +35,10 @@ export const $CreateAgentRequest = {
       },
     },
     metadata: {
-      description: `(Optional) metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
     instructions: {
       type: "one-of",

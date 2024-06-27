@@ -11,8 +11,10 @@ export const $UpdateSessionRequest = {
       isRequired: true,
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
     token_budget: {
       type: "number",

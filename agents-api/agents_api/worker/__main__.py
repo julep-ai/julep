@@ -18,6 +18,16 @@ from ..activities.mem_rating import mem_rating
 from ..activities.relationship_summary import relationship_summary
 from ..activities.salient_questions import salient_questions
 from ..activities.embed_docs import embed_docs
+from ..activities.task_steps import (
+    prompt_step,
+    # evaluate_step,
+    # yield_step,
+    # tool_call_step,
+    # error_step,
+    # if_else_step,
+    transition_step,
+)
+
 from ..activities.truncation import truncation
 from ..env import (
     temporal_endpoint,
@@ -34,7 +44,10 @@ from ..workflows.mem_mgmt import MemMgmtWorkflow
 from ..workflows.mem_rating import MemRatingWorkflow
 from ..workflows.relationship_summary import RelationshipSummaryWorkflow
 from ..workflows.salient_questions import SalientQuestionsWorkflow
+from ..workflows.task_execution import TaskExecutionWorkflow
 from ..workflows.truncation import TruncationWorkflow
+
+from .codec import pydantic_data_converter
 
 
 async def main():
@@ -58,7 +71,18 @@ async def main():
         temporal_endpoint,
         namespace=temporal_namespace,
         tls=tls_config,
+        data_converter=pydantic_data_converter,
     )
+
+    task_activities = [
+        prompt_step,
+        # evaluate_step,
+        # yield_step,
+        # tool_call_step,
+        # error_step,
+        # if_else_step,
+        transition_step,
+    ]
 
     print(f"Queue: {temporal_task_queue}")
     # Initialize the worker with the specified task queue, workflows, and activities
@@ -74,9 +98,11 @@ async def main():
             RelationshipSummaryWorkflow,
             SalientQuestionsWorkflow,
             EmbedDocsWorkflow,
+            TaskExecutionWorkflow,
             TruncationWorkflow,
         ],
         activities=[
+            *task_activities,
             summarization,
             co_density,
             dialog_insights,

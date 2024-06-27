@@ -20,8 +20,10 @@ export const $CreateUserRequest = {
       },
     },
     metadata: {
-      description: `(Optional) metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
   },
 } as const;

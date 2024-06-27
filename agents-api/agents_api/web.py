@@ -23,6 +23,7 @@ from agents_api.routers import (
     sessions,
     users,
     jobs,
+    tasks,
 )
 
 
@@ -92,6 +93,7 @@ app.include_router(agents.router)
 app.include_router(sessions.router)
 app.include_router(users.router)
 app.include_router(jobs.router)
+app.include_router(tasks.router)
 
 
 @app.exception_handler(RPCError)

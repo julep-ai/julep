@@ -87,6 +87,7 @@ class ChatSettings(pydantic.BaseModel):
             "multilingual)\n"
         )
     )
+    model: typing.Optional[str] = pydantic.Field(description="Model name")
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

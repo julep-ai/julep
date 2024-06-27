@@ -21,8 +21,10 @@ export const $CreateSessionRequest = {
       description: `A specific situation that sets the background for this session`,
     },
     metadata: {
-      description: `Optional metadata`,
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
     render_templates: {
       type: "boolean",

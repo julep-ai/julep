@@ -4,7 +4,6 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
-from .user_metadata import UserMetadata
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -22,7 +21,7 @@ class User(pydantic.BaseModel):
         description="User updated at (RFC-3339 format)"
     )
     id: str = pydantic.Field(description="User id (UUID)")
-    metadata: typing.Optional[UserMetadata] = pydantic.Field(
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = pydantic.Field(
         description="(Optional) metadata"
     )
 

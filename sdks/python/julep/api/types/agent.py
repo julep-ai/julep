@@ -6,7 +6,6 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from .agent_default_settings import AgentDefaultSettings
 from .agent_instructions import AgentInstructions
-from .agent_metadata import AgentMetadata
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -28,7 +27,7 @@ class Agent(pydantic.BaseModel):
         description="Default settings for all sessions created by this agent"
     )
     model: str = pydantic.Field(description="The model to use with this agent")
-    metadata: typing.Optional[AgentMetadata] = pydantic.Field(
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = pydantic.Field(
         description="Optional metadata"
     )
     instructions: typing.Optional[AgentInstructions] = pydantic.Field(

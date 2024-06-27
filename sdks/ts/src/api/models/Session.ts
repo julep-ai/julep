@@ -34,7 +34,7 @@ export type Session = {
   /**
    * Optional metadata
    */
-  metadata?: any;
+  metadata?: Record<string, any>;
   /**
    * Render system and assistant message content as jinja templates
    */
