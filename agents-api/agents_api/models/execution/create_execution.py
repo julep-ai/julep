@@ -37,6 +37,8 @@ def create_execution_query(
         status,
         arguments
     }
+
+    :returning
 }
 """
     return (

@@ -12,17 +12,22 @@ def get_task_query(
 ) -> tuple[str, dict]:
     # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
     query = """
+    input[agent_id] <- [[to_uuid($agent_id)]]
+
     ?[
         id,
         name,
+        agent_id,
         description,
         input_schema,
         tools_available,
         workflows,
         created_at,
         updated_at,
-    ] := *tasks {
-            agent_id: to_uuid($agent_id),
+    ] := 
+        input[agent_id],
+        *tasks {
+            agent_id,
             task_id: to_uuid($task_id),
             updated_at_ms,
             name,

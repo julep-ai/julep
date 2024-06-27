@@ -13,16 +13,20 @@ def list_task_executions_query(
     # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
     query = f"""
 {{
+    input[task_id] <- [[to_uuid($task_id)]]
+
     ?[
-        execution_id,
+        id,
+        task_id,
         status,
         arguments,
         session_id,
         created_at,
         updated_at,
-    ] := *executions {{
-            task_id: to_uuid($task_id),
-            execution_id,
+    ] := input[task_id],
+        *executions {{
+            task_id,
+            execution_id: id,
             status,
             arguments,
             session_id,
