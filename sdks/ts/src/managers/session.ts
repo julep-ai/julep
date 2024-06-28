@@ -18,6 +18,10 @@ export interface CreateSessionPayload {
   situation?: string;
   metadata?: Record<string, any>;
   renderTemplates?: boolean;
+  tokenBudget?: number;
+
+  // Can only be one of the following values: "truncate", "adaptive"
+  contextOverflow?: "truncate" | "adaptive";
 }
 
 export class SessionsManager extends BaseManager {
@@ -34,6 +38,8 @@ export class SessionsManager extends BaseManager {
     userId,
     agentId,
     situation,
+    tokenBudget,
+    contextOverflow,
     metadata = {},
     renderTemplates = false,
   }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
@@ -54,7 +60,17 @@ export class SessionsManager extends BaseManager {
       situation,
       metadata,
       render_templates: renderTemplates,
+      token_budget: tokenBudget,
+      context_overflow: contextOverflow,
     };
+
+    type rkey = keyof typeof requestBody;
+
+    for (const key of Object.keys(requestBody)) {
+      if (requestBody[key as rkey] === undefined) {
+        delete requestBody[key as rkey];
+      }
+    }
 
     return this.apiClient.default
       .createSession({ requestBody })
@@ -89,11 +105,34 @@ export class SessionsManager extends BaseManager {
 
   async update(
     sessionId: string,
-    { situation, metadata = {} }: { situation: string; metadata?: any },
+    {
+      situation,
+      tokenBudget,
+      contextOverflow,
+      metadata = {},
+    }: {
+      situation: string;
+      tokenBudget?: number;
+      contextOverflow?: "truncate" | "adaptive";
+      metadata?: any;
+    },
     overwrite = false,
   ): Promise<ResourceUpdatedResponse> {
     invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
-    const requestBody = { situation, metadata };
+    const requestBody = {
+      situation,
+      metadata,
+      token_budget: tokenBudget,
+      context_overflow: contextOverflow,
+    };
+
+    type rkey = keyof typeof requestBody;
+
+    for (const key of Object.keys(requestBody)) {
+      if (requestBody[key as rkey] === undefined) {
+        delete requestBody[key as rkey];
+      }
+    }
 
     if (overwrite) {
       return this.apiClient.default.updateSession({ sessionId, requestBody });
