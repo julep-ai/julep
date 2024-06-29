@@ -393,7 +393,6 @@ class BaseSession:
                     continue
 
                 messages[i].content = await render_template(msg.content, template_data)
-                print(messages[i].content)
 
         # FIXME: This sometimes returns "The model `` does not exist."
         if session_data is not None:
@@ -422,8 +421,6 @@ class BaseSession:
 
         litellm.drop_params = True
         litellm.add_function_to_prompt = True
-        litellm.set_verbose = True
-        print(f"PRINTING init_context:\n\n{init_context}")
         res = await acompletion(
             model=model,
             messages=init_context,
@@ -441,8 +438,7 @@ class BaseSession:
             # **extra_body,
         )
         validation, tool_call, error_msg = validate_and_extract_tool_calls(res.choices[0].message.content)
-        if (validation and model in LOCAL_MODELS_WITH_TOOL_CALLS):
-            print("[!] Tool Call Detected!")
+        if (validation):
             res.choices[0].message.role = "function_call" if tool_call else "assistant"
             res.choices[0].finish_reason = "tool_calls"
             res.choices[0].message.tool_calls = tool_call
