@@ -1,1 +1,3 @@
-from .routers import router  # noqa: F401
+from fastapi import APIRouter
+
+router = APIRouter()
