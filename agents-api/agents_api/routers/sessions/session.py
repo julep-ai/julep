@@ -412,12 +412,11 @@ class BaseSession:
         model = settings.model
         if model in LOCAL_MODELS:
             api_base = model_inference_url
+            api_key = model_api_key
             model = f"openai/{model}"
 
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
-
-        extra_body = get_extra_settings(settings)
 
         litellm.drop_params = True
         litellm.add_function_to_prompt = True
@@ -434,15 +433,15 @@ class BaseSession:
             tools=tools,
             response_format=settings.response_format,
             api_base=api_base,
-            # api_key=api_key,
-            # **extra_body,
+            api_key=api_key,
         )
-        validation, tool_call, error_msg = validate_and_extract_tool_calls(res.choices[0].message.content)
-        if (validation):
-            res.choices[0].message.role = "function_call" if tool_call else "assistant"
-            res.choices[0].finish_reason = "tool_calls"
-            res.choices[0].message.tool_calls = tool_call
-            res.choices[0].message.content = json.dumps(tool_call)
+        if model in LOCAL_MODELS_WITH_TOOL_CALLS:
+            validation, tool_call, error_msg = validate_and_extract_tool_calls(res.choices[0].message.content)
+            if (validation):
+                res.choices[0].message.role = "function_call" if tool_call else "assistant"
+                res.choices[0].finish_reason = "tool_calls"
+                res.choices[0].message.tool_calls = tool_call
+                res.choices[0].message.content = json.dumps(tool_call)
         return res
 
     async def backward(

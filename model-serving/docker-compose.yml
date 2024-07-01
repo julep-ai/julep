@@ -7,6 +7,7 @@ services:
 
     environment:
       - MODEL_NAME=${MODEL_NAME}
+      - MODEL_API_KEY=${MODEL_API_KEY}
       - HF_TOKEN=${HF_TOKEN}
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
       - SENTRY_DSN=${SENTRY_DSN}

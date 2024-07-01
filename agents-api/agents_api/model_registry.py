@@ -152,51 +152,36 @@ class PromptSchema(BaseModel):
     Instructions: str
 
 
-class PromptManager:
-    def __init__(self):
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+def validate_configuration(model: str):
+    """
+    Validates the model specified in the request
+    """
+    if model not in ALL_AVAILABLE_MODELS:
+        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
+    elif model not in VALID_MODELS:
+        raise MissingAgentModelAPIKeyError(model)
 
-    def format_yaml_prompt(self, prompt_schema: PromptSchema, variables: Dict) -> str:
-        formatted_prompt = ""
-        for field, value in prompt_schema.dict().items():
-            formatted_value = value.format(**variables)
-            if field == "Instructions":
-                formatted_prompt += f"{formatted_value}"
-            else:
-                formatted_value = formatted_value.replace("\n", " ")
-                formatted_prompt += f"{formatted_value}"
-        return formatted_prompt
 
-    def read_yaml_file(self, file_path: str) -> PromptSchema:
-        with open(file_path, "r") as file:
-            yaml_content = yaml.safe_load(file)
-
-        prompt_schema = PromptSchema(
-            Role=yaml_content.get("Role", ""),
-            Objective=yaml_content.get("Objective", ""),
-            Tools=yaml_content.get("Tools", ""),
-            Schema=yaml_content.get("Schema", ""),
-            Instructions=yaml_content.get("Instructions", ""),
-        )
-        return prompt_schema
-
-    def generate_prompt(self, user_prompt, tools):
-        prompt_path = os.path.join(self.script_dir, "prompt_assets", "sys_prompt.yml")
-        prompt_schema = self.read_yaml_file(prompt_path)
-
-        schema_json = json.loads(FunctionCall.schema_json())
-        # schema = schema_json.get("properties", {})
-
-        variables = {
-            "date": datetime.date.today(),
-            "tools": tools,
-            "schema": schema_json,
-        }
-        sys_prompt = self.format_yaml_prompt(prompt_schema, variables)
-
-        prompt = [{"content": sys_prompt, "role": "system"}]
-        # prompt.extend(user_prompt)
-        return prompt
+def load_context(init_context: list[ChatML], model: str):
+    """
+    Converts the message history into a format supported by the model.
+    """
+    if model in litellm.utils.get_valid_models():
+        init_context = [
+            {
+                "role": "assistant" if msg.role == "function_call" else msg.role,
+                "content": msg.content,
+            }
+            for msg in init_context
+        ]
+    elif model in LOCAL_MODELS:
+        init_context = [
+            {"name": msg.name, "role": msg.role, "content": msg.content}
+            for msg in init_context
+        ]
+    else:
+        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
+    return init_context
 
 
 def validate_and_extract_tool_calls(assistant_content):
@@ -240,39 +225,6 @@ def validate_and_extract_tool_calls(assistant_content):
 
     # Return default values if no valid data is extracted
     return validation_result, tool_calls, error_message
-
-
-
-def validate_configuration(model: str):
-    """
-    Validates the model specified in the request
-    """
-    if model not in ALL_AVAILABLE_MODELS:
-        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
-    elif model not in VALID_MODELS:
-        raise MissingAgentModelAPIKeyError(model)
-
-
-def load_context(init_context: list[ChatML], model: str):
-    """
-    Converts the message history into a format supported by the model.
-    """
-    if model in litellm.utils.get_valid_models():
-        init_context = [
-            {
-                "role": "assistant" if msg.role == "function_call" else msg.role,
-                "content": msg.content,
-            }
-            for msg in init_context
-        ]
-    elif model in LOCAL_MODELS:
-        init_context = [
-            {"name": msg.name, "role": msg.role, "content": msg.content}
-            for msg in init_context
-        ]
-    else:
-        raise AgentModelNotValid(model, ALL_AVAILABLE_MODELS)
-    return init_context
 
 
 def get_extra_settings(settings):
