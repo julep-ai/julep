@@ -6,6 +6,9 @@ from agents_api.models.execution.get_execution_transition import (
     get_execution_transition_query,
 )
 from agents_api.models.execution.list_executions import list_task_executions_query
+from agents_api.models.execution.list_execution_transitions import (
+    list_execution_transitions_query,
+)
 from agents_api.models.task.create_task import create_task_query
 from agents_api.models.task.get_task import get_task_query
 from agents_api.models.task.list_tasks import list_tasks_query
@@ -43,7 +46,7 @@ class ExecutionTransitionList(BaseModel):
 router = APIRouter()
 
 # TODO: Fix arguments (named or positional)
-# TODO: Add :limit 1 to all get queries from cozo
+# TODO: Add :limit 1 to all _get_ queries from cozo
 
 
 @router.get("/agents/{agent_id}/tasks", tags=["tasks"])
@@ -148,6 +151,7 @@ async def create_task_execution(
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the input against task input schema
     # DO NOT let the user specify the status
+    # status should be set as pending
 
     resp = create_execution_query(
         agent_id=agent_id,
@@ -189,23 +193,6 @@ async def get_execution(task_id: UUID4, execution_id: UUID4) -> Execution:
         )
 
 
-# @router.get("/tasks/{task_id}/executions/{execution_id}/status", tags=["tasks"])
-# async def get_task_execution_status(
-#     task_id: UUID4,
-#     execution_id: UUID4,
-# ) -> Literal["queued", "starting", "running", "waiting_for_input", "success", "failed"]:
-#     try:
-#         res = [
-#             row.to_dict()
-#             for _, row in get_execution_status_query(task_id, execution_id).iterrows()
-#         ][0]
-#         return res["status"]
-#     except (IndexError, KeyError):
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Execution not found",
-#         )
-
 
 @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
 async def get_execution_transition(
@@ -243,8 +230,8 @@ async def update_execution_transition(
 
 @router.get("/executions/{execution_id}/transitions", tags=["tasks"])
 async def list_execution_transitions(execution_id: UUID4) -> ExecutionTransitionList:
-    # TODO: implement/replace list_execution_transition_query
-    res = pd.DataFrame()  # list_execution_transition_query(execution_id)
+    # lists out the execution transitions
+    res = list_execution_transitions_query(execution_id)
     return ExecutionTransitionList(
         items=[ExecutionTransition(**row.to_dict()) for _, row in res.iterrows()]
     )

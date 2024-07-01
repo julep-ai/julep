@@ -40,6 +40,7 @@ def get_task_query(
         },
         updated_at = to_int(updated_at_ms) / 1000,
         id = to_uuid($task_id),
+        :limit 1
     """
 
     return (query, {"agent_id": str(agent_id), "task_id": str(task_id)})
