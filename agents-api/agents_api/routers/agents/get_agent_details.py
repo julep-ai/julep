@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import Depends, HTTPException
 from pydantic import UUID4
 from starlette.status import HTTP_404_NOT_FOUND
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.agent.get_agent import get_agent_query
-from agents_api.common.exceptions.agents import AgentNotFoundError
-from agents_api.autogen.openapi_model import Agent
+from ...dependencies.developer_id import get_developer_id
+from ...models.agent.get_agent import get_agent_query
+from ...common.exceptions.agents import AgentNotFoundError
+from ...autogen.openapi_model import Agent
 
-router = APIRouter()
+from .router import router
+
 
 @router.get("/agents/{agent_id}", tags=["agents"])
 async def get_agent_details(
@@ -17,10 +20,7 @@ async def get_agent_details(
     try:
         agent = get_agent_query(developer_id=x_developer_id, agent_id=agent_id)
         if not agent:
-            raise AgentNotFoundError(f"Agent with ID {agent_id} not found")
+            raise AgentNotFoundError(x_developer_id, agent_id)
         return Agent(**agent)
     except AgentNotFoundError as e:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e))

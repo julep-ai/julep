@@ -1,13 +1,20 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel, UUID4
 from typing import Annotated
 from uuid import uuid4
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.session.create_session import create_session_query
-from agents_api.autogen.openapi_model import CreateSessionRequest, ResourceCreatedResponse
+from fastapi import Depends
+from pydantic import UUID4
+import pandas as pd
+from starlette.status import HTTP_201_CREATED
 
-router = APIRouter()
+from ...dependencies.developer_id import get_developer_id
+from ...models.session.create_session import create_session_query
+from ...autogen.openapi_model import (
+    CreateSessionRequest,
+    ResourceCreatedResponse,
+)
+
+from .router import router
+
 
 @router.post("/sessions", status_code=HTTP_201_CREATED, tags=["sessions"])
 async def create_session(

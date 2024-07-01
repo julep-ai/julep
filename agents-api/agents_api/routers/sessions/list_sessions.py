@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends
+import json
+from json import JSONDecodeError
 from typing import Annotated
-from pydantic import UUID4
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.session.list_sessions import list_sessions_query
-from agents_api.autogen.openapi_model import Session
 
-router = APIRouter()
+from fastapi import Depends, HTTPException, status
+from pydantic import UUID4, BaseModel
+
+from ...dependencies.developer_id import get_developer_id
+from ...models.session.list_sessions import list_sessions_query
+from ...autogen.openapi_model import Session
+
+from .router import router
+
 
 class SessionList(BaseModel):
     items: list[Session]
+
 
 @router.get("/sessions", tags=["sessions"])
 async def list_sessions(

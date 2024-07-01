@@ -1,13 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import Depends, HTTPException
 from pydantic import UUID4
 from starlette.status import HTTP_404_NOT_FOUND
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.session.patch_session import patch_session_query
-from agents_api.autogen.openapi_model import PatchSessionRequest, ResourceUpdatedResponse
-from agents_api.common.exceptions.sessions import SessionNotFoundError
+from ...common.exceptions.sessions import SessionNotFoundError
+from ...dependencies.developer_id import get_developer_id
+from ...models.session.patch_session import patch_session_query
+from ...autogen.openapi_model import (
+    PatchSessionRequest,
+    ResourceUpdatedResponse,
+)
 
-router = APIRouter()
+from .router import router
+
 
 @router.patch("/sessions/{session_id}", tags=["sessions"])
 async def patch_session(

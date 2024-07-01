@@ -1,13 +1,16 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel, UUID4
-from typing import Optional
+from typing import Annotated
 from uuid import uuid4
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.user.create_user import create_user_query
-from agents_api.autogen.openapi_model import CreateUserRequest, ResourceCreatedResponse
+from fastapi import Depends
+from pydantic import UUID4
+from starlette.status import HTTP_201_CREATED
 
-router = APIRouter()
+from ...dependencies.developer_id import get_developer_id
+from ...models.user.create_user import create_user_query
+from ...autogen.openapi_model import CreateUserRequest, ResourceCreatedResponse
+
+from .router import router
+
 
 @router.post("/users", status_code=HTTP_201_CREATED, tags=["users"])
 async def create_user(
@@ -20,9 +23,8 @@ async def create_user(
         user_id=user_id,
         name=request.name,
         about=request.about,
-        metadata=request.metadata
+        metadata=request.metadata,
     )
     return ResourceCreatedResponse(
-        id=str(user_id),
-        created_at=created_user["created_at"]
+        id=str(user_id), created_at=created_user["created_at"]
     )

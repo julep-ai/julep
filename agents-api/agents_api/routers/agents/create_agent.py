@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import UUID4
 from typing import Annotated
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.agent.create_agent import create_agent_query
-from agents_api.autogen.openapi_model import CreateAgentRequest, ResourceCreatedResponse
-from agents_api.common.utils.datetime import utcnow
+from fastapi import Depends
+from pydantic import UUID4
+from starlette.status import HTTP_201_CREATED
 
-router = APIRouter()
+from ...dependencies.developer_id import get_developer_id
+from ...models.agent.create_agent import create_agent_query
+from ...autogen.openapi_model import CreateAgentRequest, ResourceCreatedResponse
+from ...common.utils.datetime import utcnow
+
+from .router import router
+
 
 @router.post("/agents", status_code=HTTP_201_CREATED, tags=["agents"])
 async def create_agent(

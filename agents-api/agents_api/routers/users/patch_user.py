@@ -1,13 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
+from typing import Annotated
+
+from fastapi import HTTPException, Depends
 from pydantic import UUID4
 from starlette.status import HTTP_404_NOT_FOUND
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.common.exceptions.users import UserNotFoundError
-from agents_api.models.user.patch_user import patch_user_query
-from agents_api.autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
+from ...dependencies.developer_id import get_developer_id
+from ...common.exceptions.users import UserNotFoundError
+from ...models.user.patch_user import patch_user_query
+from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
 
-router = APIRouter()
+from .router import router
+
 
 @router.patch("/users/{user_id}", tags=["users"])
 async def patch_user(
@@ -34,7 +37,4 @@ async def patch_user(
             detail="User not found",
         )
     except UserNotFoundError as e:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=str(e))

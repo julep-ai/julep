@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import UUID4
 from typing import Annotated
 
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.session.get_session import get_session_query
-from agents_api.autogen.openapi_model import Session
+from fastapi import Depends, HTTPException
+from pydantic import UUID4
 
-router = APIRouter()
+from ...dependencies.developer_id import get_developer_id
+from ...models.session.get_session import get_session_query
+from ...autogen.openapi_model import Session
+
+from .router import router
+
 
 @router.get("/sessions/{session_id}", tags=["sessions"])
 async def get_session(
