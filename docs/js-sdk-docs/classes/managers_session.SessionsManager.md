@@ -59,7 +59,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/base.ts#L12)
 
 ## Properties
 
@@ -75,7 +75,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/base.ts#L12)
 
 ## Methods
 
@@ -96,7 +96,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/session.ts:110](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L110)
+[src/managers/session.ts:144](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L144)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:35](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L35)
+[src/managers/session.ts:37](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L37)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:81](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L81)
+[src/managers/session.ts:100](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L100)
 
 ___
 
@@ -156,7 +156,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:206](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L206)
+[src/managers/session.ts:228](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L228)
 
 ___
 
@@ -180,7 +180,7 @@ A promise that resolves with the session object.
 
 #### Defined in
 
-[src/managers/session.ts:27](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L27)
+[src/managers/session.ts:33](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L33)
 
 ___
 
@@ -203,7 +203,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:187](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L187)
+[src/managers/session.ts:213](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L213)
 
 ___
 
@@ -226,7 +226,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:61](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L61)
+[src/managers/session.ts:80](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L80)
 
 ___
 
@@ -249,7 +249,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:168](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L168)
+[src/managers/session.ts:198](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L198)
 
 ___
 
@@ -275,4 +275,4 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:91](https://github.com/julep-ai/julep/blob/d206df9c18b678b444460f400a6d3d846e8dbdd4/sdks/ts/src/managers/session.ts#L91)
+[src/managers/session.ts:106](https://github.com/julep-ai/julep/blob/92b27b3b04bf87600dfd390dfdcb15dc2cd204dd/sdks/ts/src/managers/session.ts#L106)
