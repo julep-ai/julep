@@ -9,6 +9,7 @@ from agents_api.models.execution.list_executions import list_task_executions_que
 from agents_api.models.execution.list_execution_transitions import (
     list_execution_transitions_query,
 )
+from agents_api.models.execution.update_execution_transition import update_execution_transition_query
 from agents_api.models.task.create_task import create_task_query
 from agents_api.models.task.get_task import get_task_query
 from agents_api.models.task.list_tasks import list_tasks_query
@@ -150,17 +151,14 @@ async def create_task_execution(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the input against task input schema
-    # DO NOT let the user specify the status
-    # status should be set as pending
-
     resp = create_execution_query(
         agent_id=agent_id,
         task_id=task_id,
         execution_id=uuid4(),
         developer_id=x_developer_id,
-        status=request.status,
         arguments=request.arguments,
     )
+
     return ResourceCreatedResponse(
         id=resp["execution_id"][0], created_at=resp["created_at"][0]
     )
@@ -220,18 +218,24 @@ async def get_execution_transition(
 async def update_execution_transition(
     execution_id: UUID4, transition_id: UUID4, request
 ) -> ResourceUpdatedResponse:
-    # try:
-    #     resp = update_execution_transition_query(execution_id, transition_id, request)
+    try:
+        resp = update_execution_transition_query(execution_id, transition_id, **request)
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transition not found",
+        )
 
     # OpenAPI Model doesn't have update execution transition
 
-    raise NotImplementedError("Not implemented yet")
-
 
 @router.get("/executions/{execution_id}/transitions", tags=["tasks"])
-async def list_execution_transitions(execution_id: UUID4) -> ExecutionTransitionList:
-    # lists out the execution transitions
-    res = list_execution_transitions_query(execution_id)
+async def list_execution_transitions(
+    execution_id: UUID4,
+    limit: int = 100,
+    offset: int = 0,
+) -> ExecutionTransitionList:
+    res = list_execution_transitions_query(execution_id=execution_id, limit=limit, offset=offset)
     return ExecutionTransitionList(
         items=[ExecutionTransition(**row.to_dict()) for _, row in res.iterrows()]
     )
