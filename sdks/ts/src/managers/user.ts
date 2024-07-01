@@ -1,3 +1,5 @@
+import typia, { tags } from "typia";
+
 import type {
   User,
   CreateUserRequest,
@@ -6,50 +8,55 @@ import type {
   UpdateUserRequest,
 } from "../api";
 
-import { invariant } from "../utils/invariant";
-import { isValidUuid4 } from "../utils/isValidUuid4";
-
 import { BaseManager } from "./base";
 
 export class UsersManager extends BaseManager {
-  async get(userId: string): Promise<User> {
-    try {
-      invariant(isValidUuid4(userId), "id must be a valid UUID v4");
+  async get(userId: string & tags.Format<"uuid">): Promise<User> {
+    typia.assertGuard<string & tags.Format<"uuid">>(userId);
 
-      // Fetches a user by ID using the API client
-      const user = await this.apiClient.default.getUser({ userId });
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    // Fetches a user by ID using the API client
+    const user = await this.apiClient.default.getUser({ userId });
+    return user;
   }
 
-  async create({
-    name,
-    about,
-    docs = [],
-  }: CreateUserRequest = {}): Promise<User> {
-    try {
-      const requestBody = { name, about, docs };
-      const result: ResourceCreatedResponse =
-        await this.apiClient.default.createUser({ requestBody });
+  async create(options: CreateUserRequest = {}): Promise<User> {
+    const {
+      name,
+      about,
+      docs = [],
+    }: CreateUserRequest = typia.assert<CreateUserRequest>(options);
 
-      const user: User = { ...result, ...requestBody };
-      return user;
-    } catch (error) {
-      throw error;
-    }
+    const requestBody = { name, about, docs };
+    const result: ResourceCreatedResponse =
+      await this.apiClient.default.createUser({ requestBody });
+
+    const user: User = { ...result, ...requestBody };
+    return user;
   }
 
-  async list({
-    limit = 10,
-    offset = 0,
-    metadataFilter = {},
-  }: {
-    limit?: number;
-    offset?: number;
-    metadataFilter?: { [key: string]: any };
-  } = {}): Promise<Array<User>> {
+  async list(
+    options: {
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+      metadataFilter?: { [key: string]: any };
+    } = {},
+  ): Promise<Array<User>> {
+    const {
+      limit = 10,
+      offset = 0,
+      metadataFilter = {},
+    } = typia.assert<{
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+      metadataFilter?: { [key: string]: any };
+    }>(options);
+
     const metadataFilterString: string = JSON.stringify(metadataFilter);
     const result = await this.apiClient.default.listUsers({
       limit,
@@ -60,14 +67,10 @@ export class UsersManager extends BaseManager {
     return result.items;
   }
 
-  async delete(userId: string): Promise<void> {
-    try {
-      invariant(isValidUuid4(userId), "id must be a valid UUID v4");
+  async delete(userId: string & tags.Format<"uuid">): Promise<void> {
+    typia.assertGuard<string & tags.Format<"uuid">>(userId);
 
-      await this.apiClient.default.deleteUser({ userId });
-    } catch (error) {
-      throw error;
-    }
+    await this.apiClient.default.deleteUser({ userId });
   }
 
   async update(
@@ -83,37 +86,37 @@ export class UsersManager extends BaseManager {
   ): Promise<User>;
 
   async update(
-    userId: string,
-    { about, name }: PatchUserRequest | UpdateUserRequest,
+    userId: string & tags.Format<"uuid">,
+    options: PatchUserRequest | UpdateUserRequest,
     overwrite = false,
   ): Promise<User> {
-    try {
-      invariant(isValidUuid4(userId), "id must be a valid UUID v4");
+    typia.assertGuard<string & tags.Format<"uuid">>(userId);
 
-      // Tests won't pass if ternary is used
-      //   const updateFn = overwrite
-      //     ? this.apiClient.default.updateUser
-      //     : this.apiClient.default.patchUser;
+    const { about, name }: PatchUserRequest | UpdateUserRequest = typia.assert<
+      PatchUserRequest | UpdateUserRequest
+    >(options);
 
-      if (overwrite) {
-        const requestBody = { name: name!, about: about! };
-        const result = await this.apiClient.default.updateUser({
-          userId,
-          requestBody,
-        });
-        const user: User = { ...result, ...requestBody };
-        return user;
-      } else {
-        const requestBody = { name, about };
-        const result = await this.apiClient.default.patchUser({
-          userId,
-          requestBody,
-        });
-        const user: User = { ...result, ...requestBody };
-        return user;
-      }
-    } catch (error) {
-      throw error;
+    // Tests won't pass if ternary is used
+    //   const updateFn = overwrite
+    //     ? this.apiClient.default.updateUser
+    //     : this.apiClient.default.patchUser;
+
+    if (overwrite) {
+      const requestBody = { name: name!, about: about! };
+      const result = await this.apiClient.default.updateUser({
+        userId,
+        requestBody,
+      });
+      const user: User = { ...result, ...requestBody };
+      return user;
+    } else {
+      const requestBody = { name, about };
+      const result = await this.apiClient.default.patchUser({
+        userId,
+        requestBody,
+      });
+      const user: User = { ...result, ...requestBody };
+      return user;
     }
   }
 }
