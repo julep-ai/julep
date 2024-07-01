@@ -1,10 +1,9 @@
 // Utility functions for constructing and handling API requests.
-import type { OpenAPIConfig } from "../api";
-
-import type { ApiRequestOptions } from "../api/core/ApiRequestOptions";
-
 import { isPlainObject, mapKeys, camelCase } from "lodash";
+import typia from "typia";
 
+import { type OpenAPIConfig } from "../api";
+import { type ApiRequestOptions } from "../api/core/ApiRequestOptions";
 import { AxiosHttpRequest } from "../api/core/AxiosHttpRequest";
 import { CancelablePromise } from "../api/core/CancelablePromise";
 
@@ -14,11 +13,14 @@ const camelCaseify = (responseBody: any) =>
 
 export class CustomHttpRequest extends AxiosHttpRequest {
   constructor(config: OpenAPIConfig) {
+    typia.assertGuard<OpenAPIConfig>(config);
     super(config);
   }
 
   // Overrides the base request method to apply additional processing on the response, such as camelCasing keys and handling collections.
   public override request<T>(options: ApiRequestOptions): CancelablePromise<T> {
+    typia.assertGuard<ApiRequestOptions>(options);
+
     const cancelableResponse = super.request(options);
 
     return new CancelablePromise<T>((resolve, reject, onCancel) => {
