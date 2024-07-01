@@ -54,7 +54,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
 
 ## Properties
 
@@ -70,23 +70,23 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
 
 ## Methods
 
 ### create
 
-▸ **create**(`«destructured»`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
+▸ **create**(`options`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `«destructured»` | `Object` |
-| › `agentId` | `string` |
-| › `tool` | `Object` |
-| › `tool.function` | [`FunctionDef`](../modules/api.md#functiondef) |
-| › `tool.type` | ``"function"`` \| ``"webhook"`` |
+| `options` | `Object` |
+| `options.agentId` | `string` & `Format`\<``"uuid"``\> |
+| `options.tool` | `Object` |
+| `options.tool.function` | [`FunctionDef`](../modules/api.md#functiondef) |
+| `options.tool.type` | ``"function"`` \| ``"webhook"`` |
 
 #### Returns
 
@@ -94,21 +94,21 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/tool.ts:32](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/tool.ts#L32)
+[src/managers/tool.ts:44](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/tool.ts#L44)
 
 ___
 
 ### delete
 
-▸ **delete**(`«destructured»`): `Promise`\<`void`\>
+▸ **delete**(`options`): `Promise`\<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `«destructured»` | `Object` |
-| › `agentId` | `string` |
-| › `toolId` | `string` |
+| `options` | `Object` |
+| `options.agentId` | `string` & `Format`\<``"uuid"``\> |
+| `options.toolId` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -116,22 +116,22 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:86](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/tool.ts#L86)
+[src/managers/tool.ts:105](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/tool.ts#L105)
 
 ___
 
 ### list
 
-▸ **list**(`agentId`, `«destructured»?`): `Promise`\<[`Tool`](../modules/api.md#tool)[]\>
+▸ **list**(`agentId`, `options?`): `Promise`\<[`Tool`](../modules/api.md#tool)[]\>
 
 #### Parameters
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `agentId` | `string` | `undefined` |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `10` |
-| › `offset?` | `number` | `0` |
+| Name | Type |
+| :------ | :------ |
+| `agentId` | `string` & `Format`\<``"uuid"``\> |
+| `options` | `Object` |
+| `options.limit?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.offset?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``0``\> |
 
 #### Returns
 
@@ -139,22 +139,22 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/tool.ts#L12)
+[src/managers/tool.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/tool.ts#L14)
 
 ___
 
 ### update
 
-▸ **update**(`«destructured»`, `overwrite?`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
+▸ **update**(`options`, `overwrite?`): `Promise`\<[`Tool`](../modules/api.md#tool)\>
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `«destructured»` | `Object` | `undefined` |
-| › `agentId` | `string` | `undefined` |
-| › `tool` | [`UpdateToolRequest`](../modules/api.md#updatetoolrequest) | `undefined` |
-| › `toolId` | `string` | `undefined` |
+| `options` | `Object` | `undefined` |
+| `options.agentId` | `string` & `Format`\<``"uuid"``\> | `undefined` |
+| `options.tool` | [`UpdateToolRequest`](../modules/api.md#updatetoolrequest) | `undefined` |
+| `options.toolId` | `string` & `Format`\<``"uuid"``\> | `undefined` |
 | `overwrite` | `boolean` | `false` |
 
 #### Returns
@@ -163,4 +163,4 @@ ___
 
 #### Defined in
 
-[src/managers/tool.ts:54](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/tool.ts#L54)
+[src/managers/tool.ts:71](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/tool.ts#L71)

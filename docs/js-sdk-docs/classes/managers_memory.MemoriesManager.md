@@ -51,7 +51,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
 
 ## Properties
 
@@ -67,26 +67,26 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
 
 ## Methods
 
 ### list
 
-▸ **list**(`«destructured»`): `Promise`\<[`Memory`](../modules/api.md#memory)[]\>
+▸ **list**(`options`): `Promise`\<[`Memory`](../modules/api.md#memory)[]\>
 
 Lists memories based on the provided parameters.
 
 #### Parameters
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `«destructured»` | `Object` | `undefined` |
-| › `agentId` | `string` | `undefined` |
-| › `limit?` | `number` | `100` |
-| › `offset?` | `number` | `0` |
-| › `query` | `string` | `undefined` |
-| › `userId?` | `string` | `undefined` |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.agentId` | `string` & `Format`\<``"uuid"``\> |
+| `options.limit?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.offset?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``0``\> |
+| `options.query` | `string` |
+| `options.userId?` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -96,4 +96,4 @@ A promise that resolves to an array of Memory objects.
 
 #### Defined in
 
-[src/managers/memory.ts:21](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/memory.ts#L21)
+[src/managers/memory.ts:21](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/memory.ts#L21)

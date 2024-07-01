@@ -54,7 +54,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
 
 ## Properties
 
@@ -70,13 +70,13 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
 
 ## Methods
 
 ### create
 
-▸ **create**(`params`): `Promise`\<[`Doc`](../modules/api.md#doc)\>
+▸ **create**(`options`): `Promise`\<[`Doc`](../modules/api.md#doc)\>
 
 Creates a document based on the provided agentId or userId.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -84,12 +84,12 @@ Validates the provided agentId or userId using isValidUuid4.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `params` | `Object` | The parameters for creating a document. |
-| `params.agentId?` | `string` | The agent's unique identifier, if creating for an agent. |
-| `params.doc` | [`CreateDoc`](../modules/api.md#createdoc) | The document to be created. |
-| `params.userId?` | `string` | The user's unique identifier, if creating for a user. |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.agentId?` | `string` & `Format`\<``"uuid"``\> |
+| `options.doc` | [`CreateDoc`](../modules/api.md#createdoc) |
+| `options.userId?` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -103,13 +103,13 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:133](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/doc.ts#L133)
+[src/managers/doc.ts:162](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/doc.ts#L162)
 
 ___
 
 ### delete
 
-▸ **delete**(`params`): `Promise`\<`void`\>
+▸ **delete**(`options`): `Promise`\<`void`\>
 
 Deletes a document based on the provided agentId or userId and the specific docId.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -117,12 +117,12 @@ Validates the provided agentId or userId using isValidUuid4.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `params` | `Object` | The parameters for deleting a document. |
-| `params.agentId?` | `string` | The agent's unique identifier, if deleting for an agent. |
-| `params.docId` | `string` | The unique identifier of the document to be deleted. |
-| `params.userId?` | `string` | The user's unique identifier, if deleting for a user. |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.agentId?` | `string` & `Format`\<``"uuid"``\> |
+| `options.docId` | `string` |
+| `options.userId?` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -136,13 +136,13 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:186](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/doc.ts#L186)
+[src/managers/doc.ts:214](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/doc.ts#L214)
 
 ___
 
 ### get
 
-▸ **get**(`params`): `Promise`\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\>
+▸ **get**(`options?`): `Promise`\<[`CancelablePromise`](api.CancelablePromise.md)\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\> \| [`CancelablePromise`](api.CancelablePromise.md)\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\>\>
 
 Retrieves documents based on the provided agentId or userId.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -150,17 +150,17 @@ Validates the provided agentId or userId using isValidUuid4.
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `params` | `Object` | `undefined` | The parameters for retrieving documents. |
-| `params.agentId?` | `string` | `undefined` | The agent's unique identifier. |
-| `params.limit?` | `number` | `100` | The maximum number of documents to return. |
-| `params.offset?` | `number` | `0` | The offset from which to start the document retrieval. |
-| `params.userId?` | `string` | `undefined` | The user's unique identifier. |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.agentId?` | `string` & `Format`\<``"uuid"``\> |
+| `options.limit?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.offset?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``0``\> |
+| `options.userId?` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
-`Promise`\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\>
+`Promise`\<[`CancelablePromise`](api.CancelablePromise.md)\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\> \| [`CancelablePromise`](api.CancelablePromise.md)\<\{ `items?`: [`Doc`](../modules/api.md#doc)[]  }\>\>
 
 The retrieved documents.
 
@@ -170,13 +170,13 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:22](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/doc.ts#L22)
+[src/managers/doc.ts:23](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/doc.ts#L23)
 
 ___
 
 ### list
 
-▸ **list**(`params?`): `Promise`\<[`Doc`](../modules/api.md#doc)[]\>
+▸ **list**(`options?`): `Promise`\<[`Doc`](../modules/api.md#doc)[]\>
 
 Lists documents based on the provided agentId or userId, with optional metadata filtering.
 Ensures that only one of agentId or userId is provided using xor function.
@@ -185,14 +185,14 @@ Allows for filtering based on metadata.
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `params` | `Object` | `{}` | The parameters for listing documents, including filtering options. |
-| `params.agentId?` | `string` | `undefined` | The agent's unique identifier, if filtering by agent. |
-| `params.limit?` | `number` | `100` | The maximum number of documents to return. |
-| `params.metadataFilter?` | `Object` | `{}` | Optional metadata to filter the documents. |
-| `params.offset?` | `number` | `0` | The offset from which to start the document listing. |
-| `params.userId?` | `string` | `undefined` | The user's unique identifier, if filtering by user. |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.agentId?` | `string` & `Format`\<``"uuid"``\> |
+| `options.limit?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.metadataFilter?` | `Object` |
+| `options.offset?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``0``\> |
+| `options.userId?` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -206,4 +206,4 @@ If neither agentId nor userId is provided.
 
 #### Defined in
 
-[src/managers/doc.ts:74](https://github.com/julep-ai/julep/blob/14c08d97001b8adf9223981b8dcab2e2cd1c3962/sdks/ts/src/managers/doc.ts#L74)
+[src/managers/doc.ts:90](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/doc.ts#L90)
