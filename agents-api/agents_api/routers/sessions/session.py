@@ -25,8 +25,8 @@ from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
 from ...common.utils.messages import stringify_content
 from ...env import (
-    docs_embedding_service_url,
-    docs_embedding_model_id,
+    embedding_service_url,
+    embedding_model_id,
 )
 from ...model_registry import (
     LOCAL_MODELS,
@@ -263,8 +263,8 @@ class BaseSession:
                 ]
             ],
             join_inputs=False,
-            embedding_service_url=docs_embedding_service_url,
-            embedding_model_name=docs_embedding_model_id,
+            embedding_service_url=embedding_service_url,
+            embedding_model_name=embedding_model_id,
         )
 
         entries: list[Entry] = []
