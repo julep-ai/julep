@@ -9,7 +9,7 @@
 
 ## ChatMlMessage
 
-[Show source in chat_ml_message.py:15](../../../../../../../julep/api/types/chat_ml_message.py#L15)
+[Show source in chat_ml_message.py:16](../../../../../../../julep/api/types/chat_ml_message.py#L16)
 
 #### Signature
 
@@ -19,7 +19,7 @@ class ChatMlMessage(pydantic.BaseModel): ...
 
 ### ChatMlMessage().dict
 
-[Show source in chat_ml_message.py:34](../../../../../../../julep/api/types/chat_ml_message.py#L34)
+[Show source in chat_ml_message.py:41](../../../../../../../julep/api/types/chat_ml_message.py#L41)
 
 #### Signature
 
@@ -29,7 +29,7 @@ def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]: ...
 
 ### ChatMlMessage().json
 
-[Show source in chat_ml_message.py:26](../../../../../../../julep/api/types/chat_ml_message.py#L26)
+[Show source in chat_ml_message.py:33](../../../../../../../julep/api/types/chat_ml_message.py#L33)
 
 #### Signature
 

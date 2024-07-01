@@ -13,13 +13,6 @@ export const $Agent = {
       type: "string",
       description: `About the agent`,
     },
-    instructions: {
-      type: "array",
-      contains: {
-        type: "string",
-        description: `Instruction for the agent`,
-      },
-    },
     created_at: {
       type: "string",
       description: `Agent created at (RFC-3339 format)`,
@@ -48,6 +41,21 @@ export const $Agent = {
     metadata: {
       description: `Optional metadata`,
       properties: {},
+    },
+    instructions: {
+      type: "one-of",
+      description: `Instructions for the agent`,
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "array",
+          contains: {
+            type: "string",
+          },
+        },
+      ],
     },
   },
 } as const;

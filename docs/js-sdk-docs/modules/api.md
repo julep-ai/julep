@@ -22,7 +22,9 @@
 - [AgentDefaultSettings](api.md#agentdefaultsettings)
 - [ChatInput](api.md#chatinput)
 - [ChatInputData](api.md#chatinputdata)
+- [ChatMLImageContentPart](api.md#chatmlimagecontentpart)
 - [ChatMLMessage](api.md#chatmlmessage)
+- [ChatMLTextContentPart](api.md#chatmltextcontentpart)
 - [ChatResponse](api.md#chatresponse)
 - [ChatSettings](api.md#chatsettings)
 - [CompletionUsage](api.md#completionusage)
@@ -32,6 +34,7 @@
 - [CreateToolRequest](api.md#createtoolrequest)
 - [CreateUserRequest](api.md#createuserrequest)
 - [Doc](api.md#doc)
+- [DocIds](api.md#docids)
 - [FunctionCallOption](api.md#functioncalloption)
 - [FunctionDef](api.md#functiondef)
 - [FunctionParameters](api.md#functionparameters)
@@ -73,7 +76,9 @@
 - [$AgentDefaultSettings](api.md#$agentdefaultsettings)
 - [$ChatInput](api.md#$chatinput)
 - [$ChatInputData](api.md#$chatinputdata)
+- [$ChatMLImageContentPart](api.md#$chatmlimagecontentpart)
 - [$ChatMLMessage](api.md#$chatmlmessage)
+- [$ChatMLTextContentPart](api.md#$chatmltextcontentpart)
 - [$ChatResponse](api.md#$chatresponse)
 - [$ChatSettings](api.md#$chatsettings)
 - [$CompletionUsage](api.md#$completionusage)
@@ -83,6 +88,7 @@
 - [$CreateToolRequest](api.md#$createtoolrequest)
 - [$CreateUserRequest](api.md#$createuserrequest)
 - [$Doc](api.md#$doc)
+- [$DocIds](api.md#$docids)
 - [$FunctionCallOption](api.md#$functioncalloption)
 - [$FunctionDef](api.md#$functiondef)
 - [$FunctionParameters](api.md#$functionparameters)
@@ -138,7 +144,7 @@ Re-exports [JulepApiClient](../classes/api_JulepApiClient.JulepApiClient.md)
 | `created_at?` | `string` | Agent created at (RFC-3339 format) |
 | `default_settings?` | [`AgentDefaultSettings`](api.md#agentdefaultsettings) | Default settings for all sessions created by this agent |
 | `id` | `string` | Agent id (UUID) |
-| `instructions?` | `string`[] | List of instructions for the agent |
+| `instructions?` | `string` \| `string`[] | Instructions for the agent |
 | `metadata?` | `any` | Optional metadata |
 | `model` | `string` | The model to use with this agent |
 | `name` | `string` | Name of the agent |
@@ -213,7 +219,7 @@ ___
 | `created_at` | `string` | Message created at (RFC-3339 format) |
 | `id` | `string` | Message ID |
 | `name?` | `string` | ChatML name |
-| `role` | ``"user"`` \| ``"assistant"`` \| ``"system"`` \| ``"function_call"`` \| ``"function"`` | ChatML role (system\|assistant\|user\|function_call) |
+| `role` | ``"user"`` \| ``"assistant"`` \| ``"system"`` \| ``"function_call"`` \| ``"function"`` | ChatML role (system\|assistant\|user\|function_call\|function) |
 
 #### Defined in
 
@@ -231,6 +237,7 @@ Represents a chat completion response returned by model, based on the provided i
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
+| `doc_ids` | [`DocIds`](api.md#docids) | - |
 | `finish_reason` | ``"stop"`` \| ``"length"`` \| ``"tool_calls"`` \| ``"content_filter"`` \| ``"function_call"`` | The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence, `length` if the maximum number of tokens specified in the request was reached, `content_filter` if content was omitted due to a flag from our content filters, `tool_calls` if the model called a tool, or `function_call` (deprecated) if the model called a function. |
 | `id` | `string` | A unique identifier for the chat completion. |
 | `jobs?` | `string`[] | IDs (if any) of jobs created as part of this request |
@@ -308,7 +315,7 @@ A valid request payload for creating an agent
 | `about?` | `string` | About the agent |
 | `default_settings?` | [`AgentDefaultSettings`](api.md#agentdefaultsettings) | Default model settings to start every session with |
 | `docs?` | [`CreateDoc`](api.md#createdoc)[] | List of docs about agent |
-| `instructions?` | `string`[] | List of instructions for the agent |
+| `instructions?` | `string` \| `string`[] | Instructions for the agent |
 | `metadata?` | `any` | (Optional) metadata |
 | `model?` | `string` | Name of the model that the agent is supposed to use |
 | `name` | `string` | Name of the agent |
@@ -328,7 +335,7 @@ ___
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `content` | `string` | Information content |
+| `content` | `string`[] \| `string` | Information content |
 | `metadata?` | `any` | Optional metadata |
 | `title` | `string` | Title describing what this bit of information contains |
 
@@ -349,9 +356,11 @@ A valid request payload for creating a session
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `agent_id` | `string` | Agent ID of agent to associate with this session |
+| `context_overflow?` | `string` | Action to start on context window overflow |
 | `metadata?` | `any` | Optional metadata |
 | `render_templates?` | `boolean` | Render system and assistant message content as jinja templates |
 | `situation?` | `string` | A specific situation that sets the background for this session |
+| `token_budget?` | `number` | Threshold value for the adaptive context functionality |
 | `user_id?` | `string` | (Optional) User ID of user to associate with this session |
 
 #### Defined in
@@ -406,7 +415,7 @@ ___
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `content` | `string` | Information content |
+| `content` | `string`[] \| `string` | Information content |
 | `created_at` | `string` | Doc created at |
 | `id` | `string` | ID of doc |
 | `metadata?` | `any` | optional metadata |
@@ -477,7 +486,7 @@ ___
 | `content` | `string` | ChatML content |
 | `continue?` | `boolean` | Whether to continue this message or return a new one |
 | `name?` | `string` | ChatML name |
-| `role` | ``"user"`` \| ``"assistant"`` \| ``"system"`` \| ``"function_call"`` \| ``"auto"`` | ChatML role (system\|assistant\|user\|function_call) |
+| `role` | ``"user"`` \| ``"assistant"`` \| ``"system"`` \| ``"function_call"`` \| ``"function"`` \| ``"auto"`` | ChatML role (system\|assistant\|user\|function_call\|function\|auto) |
 
 #### Defined in
 
@@ -624,7 +633,7 @@ A request for patching an agent
 | :------ | :------ | :------ |
 | `about?` | `string` | About the agent |
 | `default_settings?` | [`AgentDefaultSettings`](api.md#agentdefaultsettings) | Default model settings to start every session with |
-| `instructions?` | `string`[] | List of instructions for the agent |
+| `instructions?` | `string` \| `string`[] | Instructions for the agent |
 | `metadata?` | `any` | Optional metadata |
 | `model?` | `string` | Name of the model that the agent is supposed to use |
 | `name?` | `string` | Name of the agent |
@@ -645,8 +654,10 @@ A request for patching a session
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
+| `context_overflow?` | `string` | Action to start on context window overflow |
 | `metadata?` | `any` | Optional metadata |
 | `situation?` | `string` | Updated situation for this session |
+| `token_budget?` | `number` | Threshold value for the adaptive context functionality |
 
 #### Defined in
 
@@ -753,14 +764,16 @@ ___
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `agent_id` | `string` | Agent ID of agent associated with this session |
+| `context_overflow?` | `string` | Action to start on context window overflow |
 | `created_at?` | `string` | Session created at (RFC-3339 format) |
 | `id` | `string` | Session id (UUID) |
 | `metadata?` | `any` | Optional metadata |
 | `render_templates?` | `boolean` | Render system and assistant message content as jinja templates |
 | `situation?` | `string` | A specific situation that sets the background for this session |
 | `summary?` | `string` | (null at the beginning) - generated automatically after every interaction |
+| `token_budget?` | `number` | Threshold value for the adaptive context functionality |
 | `updated_at?` | `string` | Session updated at (RFC-3339 format) |
-| `user_id` | `string` | User ID of user associated with this session |
+| `user_id?` | `string` | User ID of user associated with this session |
 
 #### Defined in
 
@@ -835,7 +848,7 @@ A valid request payload for updating an agent
 | :------ | :------ | :------ |
 | `about` | `string` | About the agent |
 | `default_settings?` | [`AgentDefaultSettings`](api.md#agentdefaultsettings) | Default model settings to start every session with |
-| `instructions?` | `string`[] | List of instructions for the agent |
+| `instructions?` | `string` \| `string`[] | Instructions for the agent |
 | `metadata?` | `any` | Optional metadata |
 | `model?` | `string` | Name of the model that the agent is supposed to use |
 | `name` | `string` | Name of the agent |
@@ -856,8 +869,10 @@ A valid request payload for updating a session
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
+| `context_overflow?` | `string` | Action to start on context window overflow |
 | `metadata?` | `any` | Optional metadata |
 | `situation` | `string` | Updated situation for this session |
+| `token_budget?` | `number` | Threshold value for the adaptive context functionality |
 
 #### Defined in
 
@@ -1010,7 +1025,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } ; `created_at`: \{ `description`: ``"Agent created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default settings for all sessions created by this agent"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `id`: \{ `description`: ``"Agent id (UUID)"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `instructions`: \{ `contains`: \{ `description`: ``"Instruction for the agent"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"The model to use with this agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `updated_at`: \{ `description`: ``"Agent updated at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } ; `created_at`: \{ `description`: ``"Agent created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default settings for all sessions created by this agent"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `id`: \{ `description`: ``"Agent id (UUID)"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `instructions`: \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"The model to use with this agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `updated_at`: \{ `description`: ``"Agent updated at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" }  } |
 | `properties.about` | \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } |
 | `properties.about.description` | ``"About the agent"`` |
 | `properties.about.type` | ``"string"`` |
@@ -1026,11 +1041,10 @@ ___
 | `properties.id.format` | ``"uuid"`` |
 | `properties.id.isRequired` | ``true`` |
 | `properties.id.type` | ``"string"`` |
-| `properties.instructions` | \{ `contains`: \{ `description`: ``"Instruction for the agent"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } |
-| `properties.instructions.contains` | \{ `description`: ``"Instruction for the agent"`` ; `type`: ``"string"`` = "string" } |
-| `properties.instructions.contains.description` | ``"Instruction for the agent"`` |
-| `properties.instructions.contains.type` | ``"string"`` |
-| `properties.instructions.type` | ``"array"`` |
+| `properties.instructions` | \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } |
+| `properties.instructions.contains` | readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] |
+| `properties.instructions.description` | ``"Instructions for the agent"`` |
+| `properties.instructions.type` | ``"one-of"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -1164,11 +1178,12 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `properties` | \{ `content`: \{ `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `created_at`: \{ `description`: ``"Message created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `id`: \{ `description`: ``"Message ID"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"ChatML name"`` ; `type`: ``"string"`` = "string" } ; `role`: \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" }  } |
-| `properties.content` | \{ `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
+| `properties` | \{ `content`: \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }] ; `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } ; `created_at`: \{ `description`: ``"Message created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `id`: \{ `description`: ``"Message ID"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"ChatML name"`` ; `type`: ``"string"`` = "string" } ; `role`: \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" }  } |
+| `properties.content` | \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }] ; `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } |
+| `properties.content.contains` | readonly [\{ `type`: ``"string"`` = "string" }] |
 | `properties.content.description` | ``"ChatML content"`` |
 | `properties.content.isRequired` | ``true`` |
-| `properties.content.type` | ``"string"`` |
+| `properties.content.type` | ``"one-of"`` |
 | `properties.created_at` | \{ `description`: ``"Message created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
 | `properties.created_at.description` | ``"Message created at (RFC-3339 format)"`` |
 | `properties.created_at.format` | ``"date-time"`` |
@@ -1201,7 +1216,10 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"Represents a chat completion response returned by model, based on the provided input."`` |
-| `properties` | \{ `finish_reason`: \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" } ; `id`: \{ `description`: ``"A unique identifier for the chat completion."`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `jobs`: \{ `contains`: \{ `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } ; `response`: \{ `contains`: \{ `contains`: \{ `type`: ``"ChatMLMessage"`` = "ChatMLMessage" } ; `type`: ``"array"`` = "array" } ; `isRequired`: ``true`` = true; `type`: ``"array"`` = "array" } ; `usage`: \{ `isRequired`: ``true`` = true; `type`: ``"CompletionUsage"`` = "CompletionUsage" }  } |
+| `properties` | \{ `doc_ids`: \{ `isRequired`: ``true`` = true; `type`: ``"DocIds"`` = "DocIds" } ; `finish_reason`: \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" } ; `id`: \{ `description`: ``"A unique identifier for the chat completion."`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `jobs`: \{ `contains`: \{ `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } ; `response`: \{ `contains`: \{ `contains`: \{ `type`: ``"ChatMLMessage"`` = "ChatMLMessage" } ; `type`: ``"array"`` = "array" } ; `isRequired`: ``true`` = true; `type`: ``"array"`` = "array" } ; `usage`: \{ `isRequired`: ``true`` = true; `type`: ``"CompletionUsage"`` = "CompletionUsage" }  } |
+| `properties.doc_ids` | \{ `isRequired`: ``true`` = true; `type`: ``"DocIds"`` = "DocIds" } |
+| `properties.doc_ids.isRequired` | ``true`` |
+| `properties.doc_ids.type` | ``"DocIds"`` |
 | `properties.finish_reason` | \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" } |
 | `properties.finish_reason.isRequired` | ``true`` |
 | `properties.finish_reason.type` | ``"Enum"`` |
@@ -1362,7 +1380,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"A valid request payload for creating an agent"`` |
-| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `docs`: \{ `contains`: \{ `type`: ``"CreateDoc"`` = "CreateDoc" } ; `type`: ``"array"`` = "array" } ; `instructions`: \{ `contains`: \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } ; `metadata`: \{ `description`: ``"(Optional) metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"Name of the model that the agent is supposed to use"`` ; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `tools`: \{ `contains`: \{ `type`: ``"CreateToolRequest"`` = "CreateToolRequest" } ; `type`: ``"array"`` = "array" }  } |
+| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `docs`: \{ `contains`: \{ `type`: ``"CreateDoc"`` = "CreateDoc" } ; `type`: ``"array"`` = "array" } ; `instructions`: \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } ; `metadata`: \{ `description`: ``"(Optional) metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"Name of the model that the agent is supposed to use"`` ; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `tools`: \{ `contains`: \{ `type`: ``"CreateToolRequest"`` = "CreateToolRequest" } ; `type`: ``"array"`` = "array" }  } |
 | `properties.about` | \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } |
 | `properties.about.description` | ``"About the agent"`` |
 | `properties.about.type` | ``"string"`` |
@@ -1373,11 +1391,10 @@ ___
 | `properties.docs.contains` | \{ `type`: ``"CreateDoc"`` = "CreateDoc" } |
 | `properties.docs.contains.type` | ``"CreateDoc"`` |
 | `properties.docs.type` | ``"array"`` |
-| `properties.instructions` | \{ `contains`: \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } |
-| `properties.instructions.contains` | \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } |
-| `properties.instructions.contains.description` | ``"Instruction"`` |
-| `properties.instructions.contains.type` | ``"string"`` |
-| `properties.instructions.type` | ``"array"`` |
+| `properties.instructions` | \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } |
+| `properties.instructions.contains` | readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] |
+| `properties.instructions.description` | ``"Instructions for the agent"`` |
+| `properties.instructions.type` | ``"one-of"`` |
 | `properties.metadata` | \{ `description`: ``"(Optional) metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"(Optional) metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -1407,11 +1424,12 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `properties` | \{ `content`: \{ `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `title`: \{ `description`: ``"Title describing what this bit of information contains"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
-| `properties.content` | \{ `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
+| `properties` | \{ `content`: \{ `contains`: readonly [\{ `contains`: \{ `minItems`: ``1`` = 1; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }, \{ `description`: ``"A single document chunk"`` ; `type`: ``"string"`` = "string" }] ; `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `title`: \{ `description`: ``"Title describing what this bit of information contains"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
+| `properties.content` | \{ `contains`: readonly [\{ `contains`: \{ `minItems`: ``1`` = 1; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }, \{ `description`: ``"A single document chunk"`` ; `type`: ``"string"`` = "string" }] ; `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } |
+| `properties.content.contains` | readonly [\{ `contains`: \{ `minItems`: ``1`` = 1; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }, \{ `description`: ``"A single document chunk"`` ; `type`: ``"string"`` = "string" }] |
 | `properties.content.description` | ``"Information content"`` |
 | `properties.content.isRequired` | ``true`` |
-| `properties.content.type` | ``"string"`` |
+| `properties.content.type` | ``"one-of"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -1435,12 +1453,15 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"A valid request payload for creating a session"`` |
-| `properties` | \{ `agent_id`: \{ `description`: ``"Agent ID of agent to associate with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `render_templates`: \{ `description`: ``"Render system and assistant message content as jinja templates"`` ; `type`: ``"boolean"`` = "boolean" } ; `situation`: \{ `description`: ``"A specific situation that sets the background for this session"`` ; `type`: ``"string"`` = "string" } ; `user_id`: \{ `description`: ``"(Optional) User ID of user to associate with this session"`` ; `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `agent_id`: \{ `description`: ``"Agent ID of agent to associate with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `context_overflow`: \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `render_templates`: \{ `description`: ``"Render system and assistant message content as jinja templates"`` ; `type`: ``"boolean"`` = "boolean" } ; `situation`: \{ `description`: ``"A specific situation that sets the background for this session"`` ; `type`: ``"string"`` = "string" } ; `token_budget`: \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" } ; `user_id`: \{ `description`: ``"(Optional) User ID of user to associate with this session"`` ; `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" }  } |
 | `properties.agent_id` | \{ `description`: ``"Agent ID of agent to associate with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
 | `properties.agent_id.description` | ``"Agent ID of agent to associate with this session"`` |
 | `properties.agent_id.format` | ``"uuid"`` |
 | `properties.agent_id.isRequired` | ``true`` |
 | `properties.agent_id.type` | ``"string"`` |
+| `properties.context_overflow` | \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } |
+| `properties.context_overflow.description` | ``"Action to start on context window overflow"`` |
+| `properties.context_overflow.type` | ``"string"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -1450,6 +1471,9 @@ ___
 | `properties.situation` | \{ `description`: ``"A specific situation that sets the background for this session"`` ; `type`: ``"string"`` = "string" } |
 | `properties.situation.description` | ``"A specific situation that sets the background for this session"`` |
 | `properties.situation.type` | ``"string"`` |
+| `properties.token_budget` | \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" } |
+| `properties.token_budget.description` | ``"Threshold value for the adaptive context functionality"`` |
+| `properties.token_budget.type` | ``"number"`` |
 | `properties.user_id` | \{ `description`: ``"(Optional) User ID of user to associate with this session"`` ; `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" } |
 | `properties.user_id.description` | ``"(Optional) User ID of user to associate with this session"`` |
 | `properties.user_id.format` | ``"uuid"`` |
@@ -1523,11 +1547,12 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `properties` | \{ `content`: \{ `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `created_at`: \{ `description`: ``"Doc created at"`` ; `format`: ``"date-time"`` = "date-time"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `id`: \{ `description`: ``"ID of doc"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"optional metadata"`` ; `properties`: {} = \{} } ; `title`: \{ `description`: ``"Title describing what this bit of information contains"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
-| `properties.content` | \{ `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
+| `properties` | \{ `content`: \{ `contains`: readonly [\{ `contains`: \{ `minItems`: ``1`` = 1; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }, \{ `description`: ``"A single document chunk"`` ; `type`: ``"string"`` = "string" }] ; `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } ; `created_at`: \{ `description`: ``"Doc created at"`` ; `format`: ``"date-time"`` = "date-time"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `id`: \{ `description`: ``"ID of doc"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"optional metadata"`` ; `properties`: {} = \{} } ; `title`: \{ `description`: ``"Title describing what this bit of information contains"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
+| `properties.content` | \{ `contains`: readonly [\{ `contains`: \{ `minItems`: ``1`` = 1; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }, \{ `description`: ``"A single document chunk"`` ; `type`: ``"string"`` = "string" }] ; `description`: ``"Information content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } |
+| `properties.content.contains` | readonly [\{ `contains`: \{ `minItems`: ``1`` = 1; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }, \{ `description`: ``"A single document chunk"`` ; `type`: ``"string"`` = "string" }] |
 | `properties.content.description` | ``"Information content"`` |
 | `properties.content.isRequired` | ``true`` |
-| `properties.content.type` | ``"string"`` |
+| `properties.content.type` | ``"one-of"`` |
 | `properties.created_at` | \{ `description`: ``"Doc created at"`` ; `format`: ``"date-time"`` = "date-time"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
 | `properties.created_at.description` | ``"Doc created at"`` |
 | `properties.created_at.format` | ``"date-time"`` |
@@ -1626,11 +1651,12 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `properties` | \{ `content`: \{ `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `continue`: \{ `description`: ``"Whether to continue this message or return a new one"`` ; `type`: ``"boolean"`` = "boolean" } ; `name`: \{ `description`: ``"ChatML name"`` ; `type`: ``"string"`` = "string" } ; `role`: \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" }  } |
-| `properties.content` | \{ `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
+| `properties` | \{ `content`: \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }] ; `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } ; `continue`: \{ `description`: ``"Whether to continue this message or return a new one"`` ; `type`: ``"boolean"`` = "boolean" } ; `name`: \{ `description`: ``"ChatML name"`` ; `type`: ``"string"`` = "string" } ; `role`: \{ `isRequired`: ``true`` = true; `type`: ``"Enum"`` = "Enum" }  } |
+| `properties.content` | \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }] ; `description`: ``"ChatML content"`` ; `isRequired`: ``true`` = true; `type`: ``"one-of"`` = "one-of" } |
+| `properties.content.contains` | readonly [\{ `type`: ``"string"`` = "string" }] |
 | `properties.content.description` | ``"ChatML content"`` |
 | `properties.content.isRequired` | ``true`` |
-| `properties.content.type` | ``"string"`` |
+| `properties.content.type` | ``"one-of"`` |
 | `properties.continue` | \{ `description`: ``"Whether to continue this message or return a new one"`` ; `type`: ``"boolean"`` = "boolean" } |
 | `properties.continue.description` | ``"Whether to continue this message or return a new one"`` |
 | `properties.continue.type` | ``"boolean"`` |
@@ -1838,18 +1864,17 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"A request for patching an agent"`` |
-| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `instructions`: \{ `contains`: \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"Name of the model that the agent is supposed to use"`` ; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `instructions`: \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"Name of the model that the agent is supposed to use"`` ; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `type`: ``"string"`` = "string" }  } |
 | `properties.about` | \{ `description`: ``"About the agent"`` ; `type`: ``"string"`` = "string" } |
 | `properties.about.description` | ``"About the agent"`` |
 | `properties.about.type` | ``"string"`` |
 | `properties.default_settings` | \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } |
 | `properties.default_settings.description` | ``"Default model settings to start every session with"`` |
 | `properties.default_settings.type` | ``"AgentDefaultSettings"`` |
-| `properties.instructions` | \{ `contains`: \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } |
-| `properties.instructions.contains` | \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } |
-| `properties.instructions.contains.description` | ``"Instruction"`` |
-| `properties.instructions.contains.type` | ``"string"`` |
-| `properties.instructions.type` | ``"array"`` |
+| `properties.instructions` | \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } |
+| `properties.instructions.contains` | readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] |
+| `properties.instructions.description` | ``"Instructions for the agent"`` |
+| `properties.instructions.type` | ``"one-of"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -1875,13 +1900,19 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"A request for patching a session"`` |
-| `properties` | \{ `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `situation`: \{ `description`: ``"Updated situation for this session"`` ; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `context_overflow`: \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `situation`: \{ `description`: ``"Updated situation for this session"`` ; `type`: ``"string"`` = "string" } ; `token_budget`: \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" }  } |
+| `properties.context_overflow` | \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } |
+| `properties.context_overflow.description` | ``"Action to start on context window overflow"`` |
+| `properties.context_overflow.type` | ``"string"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
 | `properties.situation` | \{ `description`: ``"Updated situation for this session"`` ; `type`: ``"string"`` = "string" } |
 | `properties.situation.description` | ``"Updated situation for this session"`` |
 | `properties.situation.type` | ``"string"`` |
+| `properties.token_budget` | \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" } |
+| `properties.token_budget.description` | ``"Threshold value for the adaptive context functionality"`` |
+| `properties.token_budget.type` | ``"number"`` |
 
 #### Defined in
 
@@ -2030,12 +2061,15 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `properties` | \{ `agent_id`: \{ `description`: ``"Agent ID of agent associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `created_at`: \{ `description`: ``"Session created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } ; `id`: \{ `description`: ``"Session id (UUID)"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `render_templates`: \{ `description`: ``"Render system and assistant message content as jinja templates"`` ; `type`: ``"boolean"`` = "boolean" } ; `situation`: \{ `description`: ``"A specific situation that sets the background for this session"`` ; `type`: ``"string"`` = "string" } ; `summary`: \{ `description`: ``"(null at the beginning) - generated automatically after every interaction"`` ; `type`: ``"string"`` = "string" } ; `updated_at`: \{ `description`: ``"Session updated at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } ; `user_id`: \{ `description`: ``"User ID of user associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `agent_id`: \{ `description`: ``"Agent ID of agent associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `context_overflow`: \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } ; `created_at`: \{ `description`: ``"Session created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } ; `id`: \{ `description`: ``"Session id (UUID)"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `render_templates`: \{ `description`: ``"Render system and assistant message content as jinja templates"`` ; `type`: ``"boolean"`` = "boolean" } ; `situation`: \{ `description`: ``"A specific situation that sets the background for this session"`` ; `type`: ``"string"`` = "string" } ; `summary`: \{ `description`: ``"(null at the beginning) - generated automatically after every interaction"`` ; `type`: ``"string"`` = "string" } ; `token_budget`: \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" } ; `updated_at`: \{ `description`: ``"Session updated at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } ; `user_id`: \{ `description`: ``"User ID of user associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" }  } |
 | `properties.agent_id` | \{ `description`: ``"Agent ID of agent associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
 | `properties.agent_id.description` | ``"Agent ID of agent associated with this session"`` |
 | `properties.agent_id.format` | ``"uuid"`` |
 | `properties.agent_id.isRequired` | ``true`` |
 | `properties.agent_id.type` | ``"string"`` |
+| `properties.context_overflow` | \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } |
+| `properties.context_overflow.description` | ``"Action to start on context window overflow"`` |
+| `properties.context_overflow.type` | ``"string"`` |
 | `properties.created_at` | \{ `description`: ``"Session created at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } |
 | `properties.created_at.description` | ``"Session created at (RFC-3339 format)"`` |
 | `properties.created_at.format` | ``"date-time"`` |
@@ -2057,14 +2091,16 @@ ___
 | `properties.summary` | \{ `description`: ``"(null at the beginning) - generated automatically after every interaction"`` ; `type`: ``"string"`` = "string" } |
 | `properties.summary.description` | ``"(null at the beginning) - generated automatically after every interaction"`` |
 | `properties.summary.type` | ``"string"`` |
+| `properties.token_budget` | \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" } |
+| `properties.token_budget.description` | ``"Threshold value for the adaptive context functionality"`` |
+| `properties.token_budget.type` | ``"number"`` |
 | `properties.updated_at` | \{ `description`: ``"Session updated at (RFC-3339 format)"`` ; `format`: ``"date-time"`` = "date-time"; `type`: ``"string"`` = "string" } |
 | `properties.updated_at.description` | ``"Session updated at (RFC-3339 format)"`` |
 | `properties.updated_at.format` | ``"date-time"`` |
 | `properties.updated_at.type` | ``"string"`` |
-| `properties.user_id` | \{ `description`: ``"User ID of user associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
+| `properties.user_id` | \{ `description`: ``"User ID of user associated with this session"`` ; `format`: ``"uuid"`` = "uuid"; `type`: ``"string"`` = "string" } |
 | `properties.user_id.description` | ``"User ID of user associated with this session"`` |
 | `properties.user_id.format` | ``"uuid"`` |
-| `properties.user_id.isRequired` | ``true`` |
 | `properties.user_id.type` | ``"string"`` |
 
 #### Defined in
@@ -2166,7 +2202,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"A valid request payload for updating an agent"`` |
-| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `instructions`: \{ `contains`: \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"Name of the model that the agent is supposed to use"`` ; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `about`: \{ `description`: ``"About the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `default_settings`: \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } ; `instructions`: \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `model`: \{ `description`: ``"Name of the model that the agent is supposed to use"`` ; `type`: ``"string"`` = "string" } ; `name`: \{ `description`: ``"Name of the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
 | `properties.about` | \{ `description`: ``"About the agent"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } |
 | `properties.about.description` | ``"About the agent"`` |
 | `properties.about.isRequired` | ``true`` |
@@ -2174,11 +2210,10 @@ ___
 | `properties.default_settings` | \{ `description`: ``"Default model settings to start every session with"`` ; `type`: ``"AgentDefaultSettings"`` = "AgentDefaultSettings" } |
 | `properties.default_settings.description` | ``"Default model settings to start every session with"`` |
 | `properties.default_settings.type` | ``"AgentDefaultSettings"`` |
-| `properties.instructions` | \{ `contains`: \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" } |
-| `properties.instructions.contains` | \{ `description`: ``"Instruction"`` ; `type`: ``"string"`` = "string" } |
-| `properties.instructions.contains.description` | ``"Instruction"`` |
-| `properties.instructions.contains.type` | ``"string"`` |
-| `properties.instructions.type` | ``"array"`` |
+| `properties.instructions` | \{ `contains`: readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] ; `description`: ``"Instructions for the agent"`` ; `type`: ``"one-of"`` = "one-of" } |
+| `properties.instructions.contains` | readonly [\{ `type`: ``"string"`` = "string" }, \{ `contains`: \{ `type`: ``"string"`` = "string" } ; `type`: ``"array"`` = "array" }] |
+| `properties.instructions.description` | ``"Instructions for the agent"`` |
+| `properties.instructions.type` | ``"one-of"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -2205,7 +2240,10 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `description` | ``"A valid request payload for updating a session"`` |
-| `properties` | \{ `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `situation`: \{ `description`: ``"Updated situation for this session"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" }  } |
+| `properties` | \{ `context_overflow`: \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } ; `metadata`: \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } ; `situation`: \{ `description`: ``"Updated situation for this session"`` ; `isRequired`: ``true`` = true; `type`: ``"string"`` = "string" } ; `token_budget`: \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" }  } |
+| `properties.context_overflow` | \{ `description`: ``"Action to start on context window overflow"`` ; `type`: ``"string"`` = "string" } |
+| `properties.context_overflow.description` | ``"Action to start on context window overflow"`` |
+| `properties.context_overflow.type` | ``"string"`` |
 | `properties.metadata` | \{ `description`: ``"Optional metadata"`` ; `properties`: {} = \{} } |
 | `properties.metadata.description` | ``"Optional metadata"`` |
 | `properties.metadata.properties` | {} |
@@ -2213,6 +2251,9 @@ ___
 | `properties.situation.description` | ``"Updated situation for this session"`` |
 | `properties.situation.isRequired` | ``true`` |
 | `properties.situation.type` | ``"string"`` |
+| `properties.token_budget` | \{ `description`: ``"Threshold value for the adaptive context functionality"`` ; `type`: ``"number"`` = "number" } |
+| `properties.token_budget.description` | ``"Threshold value for the adaptive context functionality"`` |
+| `properties.token_budget.type` | ``"number"`` |
 
 #### Defined in
 

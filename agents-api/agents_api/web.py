@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from agents_api.common.exceptions import BaseCommonException
+from agents_api.exceptions import PromptTooBigError
 from pycozo.client import QueryException
 from temporalio.service import RPCError
 
@@ -96,7 +97,7 @@ app.include_router(jobs.router)
 @app.exception_handler(RPCError)
 async def validation_error_handler(request: Request, exc: RPCError):
     return JSONResponse(
-        status_code=400,
+        status_code=status.HTTP_400_BAD_REQUEST,
         content={
             "error": {"message": "job not found or invalid", "code": exc.status.name}
         },
@@ -111,6 +112,14 @@ async def session_not_found_error_handler(request: Request, exc: BaseCommonExcep
     )
 
 
+@app.exception_handler(PromptTooBigError)
+async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"error": {"message": str(exc)}},
+    )
+
+
 def main(
     host="127.0.0.1",
     port=8000,
@@ -120,7 +129,7 @@ def main(
     log_level="info",
 ):
     uvicorn.run(
-        "web:app",
+        app,
         host=host,
         port=port,
         log_level=log_level,

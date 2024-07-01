@@ -1,5 +1,7 @@
 """Module for generating datalog queries to update user information in the 'cozodb' database."""
 
+from beartype import beartype
+
 from uuid import UUID
 
 
@@ -9,6 +11,7 @@ from ...common.utils.datetime import utcnow
 
 
 @cozo_query
+@beartype
 def patch_user_query(
     developer_id: UUID, user_id: UUID, **update_data
 ) -> tuple[str, dict]:

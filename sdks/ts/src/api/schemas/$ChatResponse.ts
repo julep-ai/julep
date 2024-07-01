@@ -36,5 +36,9 @@ export const $ChatResponse = {
         format: "uuid",
       },
     },
+    doc_ids: {
+      type: "DocIds",
+      isRequired: true,
+    },
   },
 } as const;

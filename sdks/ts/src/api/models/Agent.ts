@@ -13,10 +13,6 @@ export type Agent = {
    */
   about?: string;
   /**
-   * List of instructions for the agent
-   */
-  instructions?: Array<string>;
-  /**
    * Agent created at (RFC-3339 format)
    */
   created_at?: string;
@@ -40,4 +36,8 @@ export type Agent = {
    * Optional metadata
    */
   metadata?: any;
+  /**
+   * Instructions for the agent
+   */
+  instructions?: string | Array<string>;
 };

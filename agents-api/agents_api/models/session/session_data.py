@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from beartype import beartype
+
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client as cozo_client
@@ -8,6 +10,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def session_data_query(
     developer_id: UUID,
     session_id: UUID,
@@ -42,9 +45,12 @@ def session_data_query(
         agent_about,
         model,
         default_settings,
-        session_metadata,
-        users_metadata,
-        agents_metadata,
+        metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
+        user_metadata,
+        agent_metadata,
     ] := input[developer_id, session_id],
         *sessions{
             developer_id,
@@ -53,7 +59,10 @@ def session_data_query(
             summary,
             created_at,
             updated_at: validity,
-            metadata: session_metadata,
+            metadata,
+            render_templates,
+            token_budget,
+            context_overflow,
             @ "NOW"
         },
         *session_lookup{
@@ -65,14 +74,14 @@ def session_data_query(
             user_id,
             name: user_name,
             about: user_about,
-            metadata: users_metadata,
+            metadata: user_metadata,
         },
         *agents{
             agent_id,
             name: agent_name,
             about: agent_about,
             model,
-            metadata: agents_metadata,
+            metadata: agent_metadata,
         },
         *agent_default_settings {
             agent_id,
@@ -95,6 +104,78 @@ def session_data_query(
             "min_p": min_p,
             "preset": preset,
         }
+    ?[
+        agent_id,
+        user_id,
+        session_id,
+        situation,
+        summary,
+        updated_at,
+        created_at,
+        user_name,
+        user_about,
+        agent_name,
+        agent_about,
+        model,
+        default_settings,
+        metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
+        user_metadata,
+        agent_metadata,
+    ] := input[developer_id, session_id],
+        *sessions{
+            developer_id,
+            session_id,
+            situation,
+            summary,
+            created_at,
+            updated_at: validity,
+            metadata,
+            render_templates,
+            token_budget,
+            context_overflow,
+            @ "NOW"
+        },
+        *session_lookup{
+            agent_id,
+            user_id,
+            session_id,
+        }, updated_at = to_int(validity),
+        not *users{
+            user_id
+        }, user_name=null, user_about=null, user_metadata=null,
+        *agents{
+            agent_id,
+            name: agent_name,
+            about: agent_about,
+            model,
+            metadata: agent_metadata,
+        },
+        *agent_default_settings {
+            agent_id,
+            frequency_penalty,
+            presence_penalty,
+            length_penalty,
+            repetition_penalty,
+            top_p,
+            temperature,
+            min_p,
+            preset,
+        },
+        default_settings = {
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "length_penalty": length_penalty,
+            "repetition_penalty": repetition_penalty,
+            "top_p": top_p,
+            "temperature": temperature,
+            "min_p": min_p,
+            "preset": preset,
+        }
+
+
     """
 
     return (query, {"developer_id": str(developer_id), "session_id": str(session_id)})

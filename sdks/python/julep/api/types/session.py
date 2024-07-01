@@ -14,7 +14,7 @@ except ImportError:
 
 class Session(pydantic.BaseModel):
     id: str = pydantic.Field(description="Session id (UUID)")
-    user_id: str = pydantic.Field(
+    user_id: typing.Optional[str] = pydantic.Field(
         description="User ID of user associated with this session"
     )
     agent_id: str = pydantic.Field(
@@ -37,6 +37,12 @@ class Session(pydantic.BaseModel):
     )
     render_templates: typing.Optional[bool] = pydantic.Field(
         description="Render system and assistant message content as jinja templates"
+    )
+    token_budget: typing.Optional[int] = pydantic.Field(
+        description="Threshold value for the adaptive context functionality"
+    )
+    context_overflow: typing.Optional[str] = pydantic.Field(
+        description="Action to start on context window overflow"
     )
 
     def json(self, **kwargs: typing.Any) -> str:

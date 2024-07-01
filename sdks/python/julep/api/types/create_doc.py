@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .create_doc_content import CreateDocContent
 from .create_doc_metadata import CreateDocMetadata
 
 try:
@@ -16,7 +17,7 @@ class CreateDoc(pydantic.BaseModel):
     title: str = pydantic.Field(
         description="Title describing what this bit of information contains"
     )
-    content: str = pydantic.Field(description="Information content")
+    content: CreateDocContent = pydantic.Field(description="Information content")
     metadata: typing.Optional[CreateDocMetadata] = pydantic.Field(
         description="Optional metadata"
     )

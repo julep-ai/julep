@@ -10,7 +10,7 @@ export type CreateDoc = {
   /**
    * Information content
    */
-  content: string;
+  content: Array<string> | string;
   /**
    * Optional metadata
    */

@@ -1,24 +1,25 @@
 from uuid import UUID
 
+from beartype import beartype
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def proc_mem_context_query(
     session_id: UUID,
     tool_query_embedding: list[float],
     doc_query_embedding: list[float],
     tools_confidence: float = 0,
-    docs_confidence: float = 0.7,
+    docs_confidence: float = 0.4,
     k_tools: int = 3,
-    k_docs: int = 2,
-) -> tuple[str, dict]:
+    k_docs: int = 3,
+):
     """Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
 
     Parameters:
         session_id (UUID),
-        tool_query_embedding (list[float]),
         doc_query_embedding (list[float]),
         tools_confidence (float),
         docs_confidence (float),
@@ -29,9 +30,8 @@ def proc_mem_context_query(
     Return type:
         A pandas DataFrame containing the query results.
     """
-    VECTOR_SIZE = 768
+    VECTOR_SIZE = 1024
     session_id = str(session_id)
-    assert len(tool_query_embedding) == len(doc_query_embedding) == VECTOR_SIZE
 
     tools_radius: float = 1.0 - tools_confidence
     docs_radius: float = 1.0 - docs_confidence
@@ -41,14 +41,14 @@ def proc_mem_context_query(
     {{
         # Input table for the query
         # (This is temporary to this query)
-        input[session_id, tool_query, doc_query] <- [[
+        input[session_id, doc_query] <- [[
             to_uuid($session_id),
-            $tool_query_embedding,
+            # $tool_query_embedding,
             $doc_query_embedding,
         ]]
 
-        ?[session_id, tool_query, doc_query, agent_id, user_id] :=
-            input[session_id, tool_query, doc_query],
+        ?[session_id, doc_query, agent_id, user_id] :=
+            input[session_id, doc_query],
             *session_lookup{{
                 session_id,
                 agent_id,
@@ -58,8 +58,8 @@ def proc_mem_context_query(
         :create _input {{
             session_id: Uuid,
             agent_id: Uuid,
-            user_id: Uuid,
-            tool_query: <F32; {VECTOR_SIZE}>,
+            user_id: Uuid?,
+            # tool_query: <F32; {VECTOR_SIZE}>,
             doc_query: <F32; {VECTOR_SIZE}>,
         }}
     }} {{
@@ -69,10 +69,11 @@ def proc_mem_context_query(
             *_input{{session_id}},
             *sessions{{
                 session_id,
-                situation: content,
+                situation: situation_text,
                 created_at,
                 @ "NOW"
             }},
+            content = [{{"type": "text", "text": situation_text}}],
             index = 0,  # Situation entry should be the first entry
             role = "system",
             name = "situation",
@@ -92,8 +93,9 @@ def proc_mem_context_query(
             index = 1,
             role = "system",
             name = "information",
-            content = concat('About me (', agent_name, ') ', about),
-            num_chars = length(content),
+            about_text = concat('About me (', agent_name, ') '),
+            content = [{{"type": "text", "text": about_text}}],
+            num_chars = length(about_text),
             token_count = to_int(num_chars / 3.5),
             num_chars > 0
 
@@ -110,8 +112,9 @@ def proc_mem_context_query(
             index = 2,
             role = "system",
             name = "information",
-            content = concat('About the user ', if(length(user_name) > 0, concat('(', user_name, ') '), ""), about),
-            num_chars = length(content),
+            about_text = concat('About the user ', if(length(user_name) > 0, concat('(', user_name, ') '), ""), about),
+            content = [{{"type": "text", "text": about_text}}],
+            num_chars = length(about_text),
             token_count = to_int(num_chars / 3.5),
             num_chars > 0
 
@@ -119,7 +122,7 @@ def proc_mem_context_query(
         :create _preamble {{
             role: String,
             name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -130,7 +133,7 @@ def proc_mem_context_query(
 
         # Search for tools
         ?[role, name, content, token_count, created_at, index] :=
-            *_input{{agent_id, tool_query}},
+            *_input{{agent_id}},
             # ~agent_functions:embedding_space {{
             #     agent_id,
             #     name: fn_name,
@@ -158,8 +161,9 @@ def proc_mem_context_query(
                 "description": description,
                 "parameters": parameters
             }},
-            content = dump_json(fn_data),
-            num_chars = length(content),
+            fn_json = dump_json(fn_data),
+            content = [{{"type": "json", "text": fn_json}}],
+            num_chars = length(fn_json),
             token_count = to_int(num_chars / 3.5),
             index = 4
 
@@ -167,25 +171,25 @@ def proc_mem_context_query(
         :create _tools {{
             role: String,
             name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
         }}
     }} {{
         # Collect document information based on agent ID and document query embedding.
-        # Collect docs
+        # Collect agent docs
 
         # Search for agent docs
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_input{{agent_id, doc_query}},
             *agent_docs {{
                 agent_id,
-                doc_id,
+                doc_id: agent_doc_id,
                 created_at,
             }},
             ~information_snippets:embedding_space {{
-                doc_id,
+                doc_id: agent_doc_id,
                 snippet_idx,
                 title,
                 snippet |
@@ -197,45 +201,66 @@ def proc_mem_context_query(
             }},
             role = "system",
             name = "information",
-            content = concat(title, ':\n...', snippet),
-            num_chars = length(content),
+            information_text = concat(title, ':\n...', snippet),
+            content = [{{"type": "text", "text": information_text}}],
+            num_chars = length(information_text),
             token_count = to_int(num_chars / 3.5),
-            index = 5 + (snippet_idx * 0.01)
-
-        # Search for user docs
-        ?[role, name, content, token_count, created_at, index] :=
-            *_input{{user_id, doc_query}},
-            *user_docs {{
-                user_id,
-                doc_id,
-                created_at,
-            }},
-            ~information_snippets:embedding_space {{
-                doc_id,
-                snippet_idx,
-                title,
-                snippet |
-                query: doc_query,
-                k: $k_docs,
-                ef: 128,
-                radius: $docs_radius,
-                bind_distance: distance,
-            }},
-            role = "system",
-            name = "information",
-            content = concat(title, ':\n...', snippet),
-            num_chars = length(content),
-            token_count = to_int(num_chars / 3.5),
-            index = 5 + (snippet_idx * 0.01)
+            index = 5 + (snippet_idx * 0.01),
+            user_doc_id = null,
 
         # Save in temp table
-        :create _docs {{
+        :create _agent_docs {{
             role: String,
-            name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
+            name: String? default null,
+            agent_doc_id: Uuid? default null,
+            user_doc_id: Uuid? default null,
+        }}
+    }} {{
+        # Collect document information based on user ID and document query embedding.
+        # Collect user docs
+
+        # Search for user docs
+        ?[role, name, content, token_count, created_at, index, user_doc_id, agent_doc_id] :=
+            *_input{{user_id, doc_query}},
+            *user_docs {{
+                user_id,
+                doc_id: user_doc_id,
+                created_at,
+            }},
+            ~information_snippets:embedding_space {{
+                doc_id: user_doc_id,
+                snippet_idx,
+                title,
+                snippet |
+                query: doc_query,
+                k: $k_docs,
+                ef: 128,
+                radius: $docs_radius,
+                bind_distance: distance,
+            }},
+            role = "system",
+            name = "information",
+            information_text = concat(title, ':\n...', snippet),
+            content = [{{"type": "text", "text": information_text}}],
+            num_chars = length(information_text),
+            token_count = to_int(num_chars / 3.5),
+            index = 5 + (snippet_idx * 0.01),
+            agent_doc_id = null,
+
+        # Save in temp table
+        :create _user_docs {{
+            role: String,
+            content: [Json],
+            token_count: Int,
+            created_at: Float,
+            index: Float,
+            name: String? default null,
+            agent_doc_id: Uuid? default null,
+            user_doc_id: Uuid? default null,
         }}
     }} {{
         # Collect all entries related to the session.
@@ -257,13 +282,13 @@ def proc_mem_context_query(
                 tail: entry_id,
             }},
             index = 6,
-            source == "api_request" || source == "api_response",
+            source == "api_request" || source == "api_response" || source == "summarizer",
 
         # Save in temp table
         :create _entries {{
             role: String,
             name: String?,
-            content: String,
+            content: [Json],
             token_count: Int,
             created_at: Float,
             index: Float,
@@ -271,13 +296,14 @@ def proc_mem_context_query(
     }} {{
         # Combine all collected data into a structured format.
         # Combine all
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_preamble{{
                 role, name, content, token_count, created_at, index,
             }},
+            agent_doc_id = null, user_doc_id = null,
 
         # Now let's get instructions
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_input{{agent_id}},
             *agents{{
                 agent_id,
@@ -287,24 +313,34 @@ def proc_mem_context_query(
             role = "system",
             name = "instruction",
             index = 3,
-            content = instruction,
+            content = [{{"type": "text", "text": instruction}}],
             token_count = round(length(instruction) / 3.5),
             instruction in instructions,
+            agent_doc_id = null, user_doc_id = null,
 
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_tools{{
                 role, name, content, token_count, created_at, index
             }},
+            agent_doc_id = null, user_doc_id = null,
 
-        ?[role, name, content, token_count, created_at, index] :=
-            *_docs {{
-                role, name, content, token_count, created_at, index
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
+            *_agent_docs {{
+                role, name, content, token_count, created_at, index, agent_doc_id
             }},
+            user_doc_id = null,
+        
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
+            *_user_docs {{
+                role, name, content, token_count, created_at, index, user_doc_id
+            }},
+            agent_doc_id = null,
 
-        ?[role, name, content, token_count, created_at, index] :=
+        ?[role, name, content, token_count, created_at, index, agent_doc_id, user_doc_id] :=
             *_entries{{
                 role, name, content, token_count, created_at, index
             }},
+            agent_doc_id = null, user_doc_id = null,
 
         :sort index, created_at
     }}

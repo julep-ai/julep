@@ -1,10 +1,13 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def get_session_query(
     developer_id: UUID,
     session_id: UUID,
@@ -40,6 +43,9 @@ def get_session_query(
         updated_at,
         created_at,
         metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
     ] := input[developer_id, id],
         *sessions{
             developer_id,
@@ -49,6 +55,9 @@ def get_session_query(
             created_at,
             updated_at: validity,
             metadata,
+            render_templates,
+            token_budget,
+            context_overflow,
             @ "NOW"
         },
         *session_lookup{

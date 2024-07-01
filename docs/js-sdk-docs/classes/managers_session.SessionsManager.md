@@ -263,8 +263,10 @@ ___
 | :------ | :------ | :------ |
 | `sessionId` | `string` | `undefined` |
 | `«destructured»` | `Object` | `undefined` |
+| › `contextOverflow?` | ``"truncate"`` \| ``"adaptive"`` | `undefined` |
 | › `metadata?` | `any` | `{}` |
 | › `situation` | `string` | `undefined` |
+| › `tokenBudget?` | `number` | `undefined` |
 | `overwrite` | `boolean` | `false` |
 
 #### Returns

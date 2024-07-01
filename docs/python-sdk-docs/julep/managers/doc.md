@@ -12,7 +12,7 @@
 
 ## AsyncDocsManager
 
-[Show source in doc.py:339](../../../../../../julep/managers/doc.py#L339)
+[Show source in doc.py:342](../../../../../../julep/managers/doc.py#L342)
 
 A class for managing asynchronous operations on documents.
 
@@ -67,7 +67,7 @@ class AsyncDocsManager(BaseDocsManager): ...
 
 ### AsyncDocsManager().create
 
-[Show source in doc.py:420](../../../../../../julep/managers/doc.py#L420)
+[Show source in doc.py:423](../../../../../../julep/managers/doc.py#L423)
 
 Create a new resource asynchronously.
 
@@ -99,7 +99,7 @@ async def create(self, **kwargs: DocsCreateArgs) -> Doc: ...
 
 ### AsyncDocsManager().delete
 
-[Show source in doc.py:440](../../../../../../julep/managers/doc.py#L440)
+[Show source in doc.py:443](../../../../../../julep/managers/doc.py#L443)
 
 Asynchronously deletes a document by its ID.
 
@@ -133,7 +133,7 @@ async def delete(
 
 ### AsyncDocsManager().list
 
-[Show source in doc.py:379](../../../../../../julep/managers/doc.py#L379)
+[Show source in doc.py:382](../../../../../../julep/managers/doc.py#L382)
 
 Asynchronously get a list of documents.
 
@@ -177,7 +177,7 @@ async def list(
 
 ## BaseDocsManager
 
-[Show source in doc.py:29](../../../../../../julep/managers/doc.py#L29)
+[Show source in doc.py:30](../../../../../../julep/managers/doc.py#L30)
 
 Manages documents for agents or users by providing internal methods to list, create, and delete documents.
 
@@ -219,7 +219,7 @@ class BaseDocsManager(BaseManager): ...
 
 ### BaseDocsManager()._create
 
-[Show source in doc.py:114](../../../../../../julep/managers/doc.py#L114)
+[Show source in doc.py:115](../../../../../../julep/managers/doc.py#L115)
 
 Create a new resource with docsrmation for either an agent or a user, but not both.
 
@@ -256,7 +256,7 @@ def _create(
 
 ### BaseDocsManager()._delete
 
-[Show source in doc.py:163](../../../../../../julep/managers/doc.py#L163)
+[Show source in doc.py:164](../../../../../../julep/managers/doc.py#L164)
 
 Delete docs based on either an agent_id or a user_id.
 
@@ -282,12 +282,12 @@ def _delete(
     agent_id: Optional[Union[str, UUID]],
     user_id: Optional[Union[str, UUID]],
     doc_id: Union[str, UUID],
-): ...
+) -> Union[ResourceDeletedResponse, Awaitable[ResourceDeletedResponse]]: ...
 ```
 
 ### BaseDocsManager()._list
 
-[Show source in doc.py:62](../../../../../../julep/managers/doc.py#L62)
+[Show source in doc.py:63](../../../../../../julep/managers/doc.py#L63)
 
 Retrieve docsrmation for an agent or user based on their ID.
 
@@ -328,7 +328,7 @@ def _list(
 
 ## DocsCreateArgs
 
-[Show source in doc.py:22](../../../../../../julep/managers/doc.py#L22)
+[Show source in doc.py:23](../../../../../../julep/managers/doc.py#L23)
 
 #### Signature
 
@@ -340,7 +340,7 @@ class DocsCreateArgs(TypedDict): ...
 
 ## DocsManager
 
-[Show source in doc.py:205](../../../../../../julep/managers/doc.py#L205)
+[Show source in doc.py:208](../../../../../../julep/managers/doc.py#L208)
 
 A class responsible for managing documents.
 
@@ -396,7 +396,7 @@ class DocsManager(BaseDocsManager): ...
 
 ### DocsManager().create
 
-[Show source in doc.py:285](../../../../../../julep/managers/doc.py#L285)
+[Show source in doc.py:288](../../../../../../julep/managers/doc.py#L288)
 
 Create a new resource with the specified document.
 
@@ -431,7 +431,7 @@ def create(self, **kwargs: DocsCreateArgs) -> Doc: ...
 
 ### DocsManager().delete
 
-[Show source in doc.py:308](../../../../../../julep/managers/doc.py#L308)
+[Show source in doc.py:311](../../../../../../julep/managers/doc.py#L311)
 
 Deletes a document by its identifier.
 
@@ -465,7 +465,7 @@ def delete(
 
 ### DocsManager().list
 
-[Show source in doc.py:250](../../../../../../julep/managers/doc.py#L250)
+[Show source in doc.py:253](../../../../../../julep/managers/doc.py#L253)
 
 Retrieve a list of documents based on specified criteria.
 

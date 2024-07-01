@@ -1,8 +1,9 @@
 import json
 from json import JSONDecodeError
 from typing import Annotated
-from uuid import uuid4
+from uuid import uuid4, UUID
 
+from agents_api.autogen.openapi_model import ContentItem
 from agents_api.model_registry import validate_configuration
 from fastapi import APIRouter, HTTPException, status, Depends
 import pandas as pd
@@ -40,11 +41,7 @@ from agents_api.models.docs.delete_docs import (
 from agents_api.models.docs.get_docs import (
     get_docs_snippets_by_id_query,
 )
-from agents_api.models.docs.embed_docs import (
-    embed_docs_snippets_query,
-)
 from agents_api.models.tools.create_tools import create_function_query
-from agents_api.models.tools.embed_tools import embed_functions_query
 from agents_api.models.tools.list_tools import list_functions_by_agent_query
 from agents_api.models.tools.get_tools import get_function_by_id_query
 from agents_api.models.tools.delete_tools import delete_function_by_id_query
@@ -66,6 +63,7 @@ from agents_api.autogen.openapi_model import (
     PatchToolRequest,
     PatchAgentRequest,
 )
+from ...clients.temporal import run_embed_docs_task
 
 
 class AgentList(BaseModel):
@@ -107,6 +105,12 @@ async def update_agent(
     request: UpdateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
+    if isinstance(request.instructions, str):
+        request.instructions = [request.instructions]
+
+    model = request.model or "julep-ai/samantha-1-turbo"
+
+    validate_configuration(model)
     try:
         resp = update_agent_query(
             agent_id=agent_id,
@@ -116,7 +120,7 @@ async def update_agent(
             ).model_dump(),
             name=request.name,
             about=request.about,
-            model=request.model or "julep-ai/samantha-1-turbo",
+            model=model,
             metadata=request.metadata,
             instructions=request.instructions or [],
         )
@@ -146,6 +150,9 @@ async def patch_agent(
     request: PatchAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
+    if isinstance(request.instructions, str):
+        request.instructions = [request.instructions]
+
     try:
         resp = patch_agent_query(
             agent_id=agent_id,
@@ -211,54 +218,67 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
+    if isinstance(request.instructions, str):
+        request.instructions = [request.instructions]
+
     validate_configuration(request.model)
     resp = create_agent_query(
         agent_id=uuid4(),
         developer_id=x_developer_id,
         name=request.name,
         about=request.about,
-        instructions=request.instructions,
+        instructions=request.instructions or [],
         model=request.model,
         default_settings=(
             request.default_settings or AgentDefaultSettings()
         ).model_dump(),
         metadata=request.metadata or {},
     )
-    new_agent_id = resp["agent_id"][0]
-    res = ResourceCreatedResponse(
-        id=new_agent_id,
-        created_at=resp["created_at"][0],
-    )
+    new_agent_id = UUID(resp["agent_id"][0], version=4)
+    docs = request.docs or []
+    job_ids = [uuid4()] * len(docs)
+    for job_id, doc in zip(job_ids, docs):
+        content = [
+            (c.model_dump() if isinstance(c, ContentItem) else c)
+            for c in ([doc.content] if isinstance(doc.content, str) else doc.content)
+        ]
+        docs_resp = create_docs_query(
+            owner_type="agent",
+            owner_id=new_agent_id,
+            id=uuid4(),
+            title=doc.title,
+            content=content,
+            metadata=doc.metadata or {},
+        )
 
-    if request.docs:
-        for info in request.docs:
-            create_docs_query(
-                owner_type="agent",
-                owner_id=new_agent_id,
-                id=uuid4(),
-                title=info.title,
-                content=info.content,
-                metadata=info.metadata or {},
-            )
+        doc_id = docs_resp["doc_id"][0]
+
+        await run_embed_docs_task(
+            doc_id=doc_id, title=doc.title, content=content, job_id=job_id
+        )
 
     if request.tools:
         functions = [t.function for t in request.tools]
-        embeddings = await embed(
-            [
-                function_embed_instruction
-                + f"{function.name}, {function.description}, "
-                + "required_params:"
-                + function.parameters.model_dump_json()
-                for function in functions
-            ]
-        )
+        # embeddings = await embed(
+        #     [
+        #         function_embed_instruction
+        #         + f"{function.name}, {function.description}, "
+        #         + "required_params:"
+        #         + function.parameters.model_dump_json()
+        #         for function in functions
+        #     ]
+        # )
         create_tools_query(
             new_agent_id,
             functions,
-            embeddings,
+            [[0.0] * 768] * len(functions),
         )
 
-    return res
+    return ResourceCreatedResponse(
+        id=new_agent_id,
+        created_at=resp["created_at"][0],
+        jobs=set(job_ids),
+    )
 
 
 @router.get("/agents", tags=["agents"])
@@ -292,33 +312,32 @@ async def list_agents(
 @router.post("/agents/{agent_id}/docs", tags=["agents"])
 async def create_docs(agent_id: UUID4, request: CreateDoc) -> ResourceCreatedResponse:
     doc_id = uuid4()
+    content = [
+        (c.model_dump() if isinstance(c, ContentItem) else c)
+        for c in (
+            [request.content] if isinstance(request.content, str) else request.content
+        )
+    ]
+
     resp: pd.DataFrame = create_docs_query(
         owner_type="agent",
         owner_id=agent_id,
         id=doc_id,
         title=request.title,
-        content=request.content,
+        content=content,
         metadata=request.metadata or {},
     )
 
+    job_id = uuid4()
     doc_id = resp["doc_id"][0]
     res = ResourceCreatedResponse(
         id=doc_id,
         created_at=resp["created_at"][0],
+        jobs={job_id},
     )
 
-    indices, snippets = list(zip(*enumerate(request.content.split("\n\n"))))
-    embeddings = await embed(
-        [
-            snippet_embed_instruction + request.title + "\n\n" + snippet
-            for snippet in snippets
-        ]
-    )
-
-    embed_docs_snippets_query(
-        doc_id=doc_id,
-        snippet_indices=indices,
-        embeddings=embeddings,
+    await run_embed_docs_task(
+        doc_id=doc_id, title=request.title, content=content, job_id=job_id
     )
 
     return res
@@ -336,19 +355,10 @@ async def list_docs(
             detail="metadata_filter is not a valid JSON",
         )
 
-    # TODO: Implement metadata filter
-    if metadata_filter:
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="metadata_filter is not implemented",
-        )
-
-    if not len(list(ensure_owner_exists_query("agent", agent_id).iterrows())):
-        raise AgentNotFoundError("", agent_id)
-
     resp = list_docs_snippets_by_owner_query(
         owner_type="agent",
         owner_id=agent_id,
+        metadata_filter=metadata_filter,
     )
 
     return DocsList(
@@ -358,6 +368,7 @@ async def list_docs(
                 id=row["doc_id"],
                 title=row["title"],
                 content=row["snippet"],
+                metadata=row.get("metadata"),
             )
             for _, row in resp.iterrows()
         ]
@@ -409,20 +420,20 @@ async def create_tool(
         created_at=resp["created_at"][0],
     )
 
-    embeddings = await embed(
-        [
-            function_embed_instruction
-            + request.function.description
-            + "\nParameters: "
-            + json.dumps(request.function.parameters.model_dump())
-        ]
-    )
+    # embeddings = await embed(
+    #     [
+    #         function_embed_instruction
+    #         + request.function.description
+    #         + "\nParameters: "
+    #         + json.dumps(request.function.parameters.model_dump())
+    #     ]
+    # )
 
-    embed_functions_query(
-        agent_id=agent_id,
-        tool_ids=[tool_id],
-        embeddings=embeddings,
-    )
+    # embed_functions_query(
+    #     agent_id=agent_id,
+    #     tool_ids=[tool_id],
+    #     embeddings=embeddings,
+    # )
 
     return res
 
@@ -527,12 +538,16 @@ async def update_tool(
 async def patch_tool(
     agent_id: UUID4, tool_id: UUID4, request: PatchToolRequest
 ) -> ResourceUpdatedResponse:
+    parameters = (
+        request.function.parameters.model_dump() if request.function.parameters else {}
+    )
+
     embeddings = await embed(
         [
             function_embed_instruction
             + (request.function.description or "")
             + "\nParameters: "
-            + json.dumps(request.function.parameters.model_dump())
+            + json.dumps(parameters)
         ],
         join_inputs=True,
     )

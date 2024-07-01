@@ -4,6 +4,7 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from .chat_ml_message_content import ChatMlMessageContent
 from .chat_ml_message_role import ChatMlMessageRole
 
 try:
@@ -14,9 +15,15 @@ except ImportError:
 
 class ChatMlMessage(pydantic.BaseModel):
     role: ChatMlMessageRole = pydantic.Field(
-        description=("ChatML role (system\n" "assistant\n" "user\n" "function_call)\n")
+        description=(
+            "ChatML role (system\n"
+            "assistant\n"
+            "user\n"
+            "function_call\n"
+            "function)\n"
+        )
     )
-    content: str = pydantic.Field(description="ChatML content")
+    content: ChatMlMessageContent = pydantic.Field(description="ChatML content")
     name: typing.Optional[str] = pydantic.Field(description="ChatML name")
     created_at: dt.datetime = pydantic.Field(
         description="Message created at (RFC-3339 format)"

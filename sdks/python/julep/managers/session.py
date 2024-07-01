@@ -39,6 +39,9 @@ class SessionCreateArgs(TypedDict):
     agent_id: Union[str, UUID]
     situation: Optional[str] = None
     metadata: Dict[str, Any] = {}
+    render_templates: bool = False
+    token_budget: Optional[int] = None
+    context_overflow: Optional[str] = None
 
 
 class SessionUpdateArgs(TypedDict):
@@ -46,6 +49,9 @@ class SessionUpdateArgs(TypedDict):
     situation: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
     overwrite: bool = False
+    render_templates: bool = False
+    token_budget: Optional[int] = None
+    context_overflow: Optional[str] = None
 
 
 class BaseSessionsManager(BaseManager):
@@ -179,6 +185,9 @@ class BaseSessionsManager(BaseManager):
         user_id: Optional[Union[str, UUID]] = None,
         situation: Optional[str] = None,
         metadata: Dict[str, Any] = {},
+        render_templates: bool = False,
+        token_budget: Optional[int] = None,
+        context_overflow: Optional[str] = None,
     ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]:
         # Cast instructions to a list of Instruction objects
         """
@@ -191,6 +200,7 @@ class BaseSessionsManager(BaseManager):
             user_id (Optional[Union[str, UUID]]): The user's identifier which could be a string or a UUID object.
             situation (Optional[str], optional): An optional description of the situation.
             metadata (Dict[str, Any])
+            render_templates (bool, optional): Whether to render templates in the metadata. Defaults to False.
 
         Returns:
             Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: The response from the API client upon successful session creation, which can be a synchronous `ResourceCreatedResponse` or an asynchronous `Awaitable` of it.
@@ -208,6 +218,9 @@ class BaseSessionsManager(BaseManager):
             agent_id=agent_id,
             situation=situation,
             metadata=metadata,
+            render_templates=render_templates,
+            token_budget=token_budget,
+            context_overflow=context_overflow,
         )
 
     def _list_items(
@@ -262,6 +275,8 @@ class BaseSessionsManager(BaseManager):
         situation: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         overwrite: bool = False,
+        token_budget: Optional[int] = None,
+        context_overflow: Optional[str] = None,
     ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]:
         """
         Update a session with a given situation.
@@ -288,6 +303,8 @@ class BaseSessionsManager(BaseManager):
             session_id=session_id,
             situation=situation,
             metadata=metadata,
+            token_budget=token_budget,
+            context_overflow=context_overflow,
         )
 
     def _chat(
@@ -346,6 +363,12 @@ class BaseSessionsManager(BaseManager):
         Raises:
             It is not specified what exceptions this function might raise. Typically, one would expect potential exceptions to be associated with the underlying API client's `chat` method failure modes, such as network issues, invalid parameters, etc.
         """
+        if recall is None:
+            recall = True
+
+        if remember is None:
+            remember = True
+
         return self.api_client.chat(
             session_id=session_id,
             messages=messages,

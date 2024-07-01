@@ -1,12 +1,15 @@
 from functools import wraps
-from typing import Callable
+from typing import Callable, ParamSpec
 
 import pandas as pd
 
 from ..clients.cozo import client as cozo_client
 
 
-def cozo_query(func: Callable[..., tuple[str, dict]]):
+P = ParamSpec("P")
+
+
+def cozo_query(func: Callable[P, tuple[str, dict]]):
     """
     Decorator that wraps a function that takes arbitrary arguments, and
     returns a (query string, variables) tuple.

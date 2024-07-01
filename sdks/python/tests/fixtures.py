@@ -18,10 +18,16 @@ mock_agent = {
     "name": "test agent",
     "about": "test agent about",
     "model": TEST_MODEL,
-    "instructions": [
-        "test agent instructions",
-    ],
+    "instructions": "test agent instructions",
     "default_settings": {"temperature": 0.5},
+    "metadata": {"test": "test"},
+}
+
+mock_gpt_4o_agent = {
+    "name": "Test GPT-4o",
+    "about": "This agent tests the ability for model to process images",
+    "model": "gpt-4o",
+    "instructions": ["Describe the images in the user messages below"],
     "metadata": {"test": "test"},
 }
 
@@ -49,6 +55,12 @@ mock_user_update = {
 mock_session = {
     "situation": "test situation",
     "metadata": {"type": "test"},
+}
+
+mock_session_with_template = {
+    "situation": "Say 'hello {{ session.metadata.arg }}'",
+    "metadata": {"type": "test", "arg": "banana"},
+    "render_templates": True,
 }
 
 mock_session_update = {
@@ -146,6 +158,17 @@ def test_agent(client=client) -> Agent:
 
 
 @fixture
+def test_gpt_4o_agent(client=client) -> Agent:
+    agent = client.agents.create(
+        **mock_gpt_4o_agent,
+    )
+
+    yield agent
+
+    client.agents.delete(agent.id)
+
+
+@fixture
 async def test_agent_async(async_client=async_client, client=client) -> Agent:
     agent = await async_client.agents.create(
         **mock_agent,
@@ -192,6 +215,21 @@ def test_session(client=client, user=test_user, agent=test_agent) -> Session:
 
 
 @fixture
+def test_session_with_template(
+    client=client, user=test_user, agent=test_agent
+) -> Session:
+    session = client.sessions.create(
+        user_id=user.id,
+        agent_id=agent.id,
+        **mock_session_with_template,
+    )
+
+    yield session
+
+    client.sessions.delete(session.id)
+
+
+@fixture
 def test_session_agent_user(client=client, user=test_user, agent=test_agent) -> Session:
     session = client.sessions.create(
         user_id=user.id,
@@ -206,6 +244,18 @@ def test_session_agent_user(client=client, user=test_user, agent=test_agent) -> 
 
 @fixture
 def test_session_no_user(client=client, agent=test_agent) -> Session:
+    session = client.sessions.create(
+        agent_id=agent.id,
+        **mock_session,
+    )
+
+    yield session
+
+    client.sessions.delete(session.id)
+
+
+@fixture
+def test_multimodal_session(client=client, agent=test_gpt_4o_agent) -> Session:
     session = client.sessions.create(
         agent_id=agent.id,
         **mock_session,

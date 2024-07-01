@@ -89,6 +89,9 @@ async def create_session(
         user_id=request.user_id,
         situation=request.situation,
         metadata=request.metadata or {},
+        render_templates=request.render_templates or False,
+        token_budget=request.token_budget,
+        context_overflow=request.context_overflow,
     )
 
     return ResourceCreatedResponse(
@@ -150,6 +153,8 @@ async def update_session(
             developer_id=x_developer_id,
             situation=request.situation,
             metadata=request.metadata,
+            token_budget=request.token_budget,
+            context_overflow=request.context_overflow,
         )
 
         return ResourceUpdatedResponse(
@@ -181,6 +186,8 @@ async def patch_session(
             developer_id=x_developer_id,
             situation=request.situation,
             metadata=request.metadata,
+            token_budget=request.token_budget,
+            context_overflow=request.context_overflow,
         )
 
         return ResourceUpdatedResponse(
@@ -291,7 +298,9 @@ async def session_chat(
         min_p=request.min_p,
         preset=request.preset,
     )
-    response, new_entry, bg_task = await session.run(request.messages, settings)
+    response, new_entry, bg_task, doc_ids = await session.run(
+        request.messages, settings
+    )
 
     jobs = None
     if bg_task:
@@ -307,4 +316,5 @@ async def session_chat(
         response=[resp],
         usage=CompletionUsage(**response.usage.model_dump()),
         jobs=jobs,
+        doc_ids=doc_ids,
     )

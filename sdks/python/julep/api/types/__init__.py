@@ -3,11 +3,24 @@
 from .agent import Agent
 from .agent_default_settings import AgentDefaultSettings
 from .agent_default_settings_preset import AgentDefaultSettingsPreset
+from .agent_instructions import AgentInstructions
 from .agent_metadata import AgentMetadata
 from .chat_input_data import ChatInputData
 from .chat_input_data_tool_choice import ChatInputDataToolChoice
+from .chat_ml_image_content_part import ChatMlImageContentPart
+from .chat_ml_image_content_part_image_url import ChatMlImageContentPartImageUrl
+from .chat_ml_image_content_part_image_url_detail import (
+    ChatMlImageContentPartImageUrlDetail,
+)
 from .chat_ml_message import ChatMlMessage
+from .chat_ml_message_content import ChatMlMessageContent
+from .chat_ml_message_content_item import (
+    ChatMlMessageContentItem,
+    ChatMlMessageContentItem_ImageUrl,
+    ChatMlMessageContentItem_Text,
+)
 from .chat_ml_message_role import ChatMlMessageRole
+from .chat_ml_text_content_part import ChatMlTextContentPart
 from .chat_response import ChatResponse
 from .chat_response_finish_reason import ChatResponseFinishReason
 from .chat_settings import ChatSettings
@@ -17,14 +30,18 @@ from .chat_settings_response_format_schema import ChatSettingsResponseFormatSche
 from .chat_settings_response_format_type import ChatSettingsResponseFormatType
 from .chat_settings_stop import ChatSettingsStop
 from .completion_usage import CompletionUsage
+from .create_agent_request_instructions import CreateAgentRequestInstructions
 from .create_agent_request_metadata import CreateAgentRequestMetadata
 from .create_doc import CreateDoc
+from .create_doc_content import CreateDocContent
 from .create_doc_metadata import CreateDocMetadata
 from .create_session_request_metadata import CreateSessionRequestMetadata
 from .create_tool_request import CreateToolRequest
 from .create_tool_request_type import CreateToolRequestType
 from .create_user_request_metadata import CreateUserRequestMetadata
 from .doc import Doc
+from .doc_content import DocContent
+from .doc_ids import DocIds
 from .doc_metadata import DocMetadata
 from .function_call_option import FunctionCallOption
 from .function_def import FunctionDef
@@ -40,6 +57,12 @@ from .get_user_docs_request_order import GetUserDocsRequestOrder
 from .get_user_docs_request_sort_by import GetUserDocsRequestSortBy
 from .get_user_docs_response import GetUserDocsResponse
 from .input_chat_ml_message import InputChatMlMessage
+from .input_chat_ml_message_content import InputChatMlMessageContent
+from .input_chat_ml_message_content_item import (
+    InputChatMlMessageContentItem,
+    InputChatMlMessageContentItem_ImageUrl,
+    InputChatMlMessageContentItem_Text,
+)
 from .input_chat_ml_message_role import InputChatMlMessageRole
 from .job_status import JobStatus
 from .job_status_state import JobStatusState
@@ -58,6 +81,7 @@ from .memory_entities_item import MemoryEntitiesItem
 from .named_tool_choice import NamedToolChoice
 from .named_tool_choice_function import NamedToolChoiceFunction
 from .partial_function_def import PartialFunctionDef
+from .patch_agent_request_instructions import PatchAgentRequestInstructions
 from .patch_agent_request_metadata import PatchAgentRequestMetadata
 from .patch_session_request_metadata import PatchSessionRequestMetadata
 from .patch_user_request_metadata import PatchUserRequestMetadata
@@ -71,6 +95,7 @@ from .suggestion_target import SuggestionTarget
 from .tool import Tool
 from .tool_choice_option import ToolChoiceOption
 from .tool_type import ToolType
+from .update_agent_request_instructions import UpdateAgentRequestInstructions
 from .update_agent_request_metadata import UpdateAgentRequestMetadata
 from .update_session_request_metadata import UpdateSessionRequestMetadata
 from .update_user_request_metadata import UpdateUserRequestMetadata
@@ -81,11 +106,20 @@ __all__ = [
     "Agent",
     "AgentDefaultSettings",
     "AgentDefaultSettingsPreset",
+    "AgentInstructions",
     "AgentMetadata",
     "ChatInputData",
     "ChatInputDataToolChoice",
+    "ChatMlImageContentPart",
+    "ChatMlImageContentPartImageUrl",
+    "ChatMlImageContentPartImageUrlDetail",
     "ChatMlMessage",
+    "ChatMlMessageContent",
+    "ChatMlMessageContentItem",
+    "ChatMlMessageContentItem_ImageUrl",
+    "ChatMlMessageContentItem_Text",
     "ChatMlMessageRole",
+    "ChatMlTextContentPart",
     "ChatResponse",
     "ChatResponseFinishReason",
     "ChatSettings",
@@ -95,14 +129,18 @@ __all__ = [
     "ChatSettingsResponseFormatType",
     "ChatSettingsStop",
     "CompletionUsage",
+    "CreateAgentRequestInstructions",
     "CreateAgentRequestMetadata",
     "CreateDoc",
+    "CreateDocContent",
     "CreateDocMetadata",
     "CreateSessionRequestMetadata",
     "CreateToolRequest",
     "CreateToolRequestType",
     "CreateUserRequestMetadata",
     "Doc",
+    "DocContent",
+    "DocIds",
     "DocMetadata",
     "FunctionCallOption",
     "FunctionDef",
@@ -118,6 +156,10 @@ __all__ = [
     "GetUserDocsRequestSortBy",
     "GetUserDocsResponse",
     "InputChatMlMessage",
+    "InputChatMlMessageContent",
+    "InputChatMlMessageContentItem",
+    "InputChatMlMessageContentItem_ImageUrl",
+    "InputChatMlMessageContentItem_Text",
     "InputChatMlMessageRole",
     "JobStatus",
     "JobStatusState",
@@ -136,6 +178,7 @@ __all__ = [
     "NamedToolChoice",
     "NamedToolChoiceFunction",
     "PartialFunctionDef",
+    "PatchAgentRequestInstructions",
     "PatchAgentRequestMetadata",
     "PatchSessionRequestMetadata",
     "PatchUserRequestMetadata",
@@ -149,6 +192,7 @@ __all__ = [
     "Tool",
     "ToolChoiceOption",
     "ToolType",
+    "UpdateAgentRequestInstructions",
     "UpdateAgentRequestMetadata",
     "UpdateSessionRequestMetadata",
     "UpdateUserRequestMetadata",

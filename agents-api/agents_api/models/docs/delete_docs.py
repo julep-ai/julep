@@ -1,11 +1,13 @@
 from typing import Literal
 from uuid import UUID
 
+from beartype import beartype
 
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def delete_docs_by_id_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,

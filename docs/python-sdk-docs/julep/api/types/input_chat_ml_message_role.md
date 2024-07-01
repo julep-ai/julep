@@ -11,7 +11,7 @@
 
 [Show source in input_chat_ml_message_role.py:9](../../../../../../../julep/api/types/input_chat_ml_message_role.py#L9)
 
-ChatML role (system|assistant|user|function_call)
+ChatML role (system|assistant|user|function_call|function|auto)
 
 #### Signature
 
@@ -21,7 +21,7 @@ class InputChatMlMessageRole(str, enum.Enum): ...
 
 ### InputChatMlMessageRole().visit
 
-[Show source in input_chat_ml_message_role.py:20](../../../../../../../julep/api/types/input_chat_ml_message_role.py#L20)
+[Show source in input_chat_ml_message_role.py:21](../../../../../../../julep/api/types/input_chat_ml_message_role.py#L21)
 
 #### Signature
 
@@ -32,6 +32,7 @@ def visit(
     assistant: typing.Callable[[], T_Result],
     system: typing.Callable[[], T_Result],
     function_call: typing.Callable[[], T_Result],
+    function: typing.Callable[[], T_Result],
     auto: typing.Callable[[], T_Result],
 ) -> T_Result: ...
 ```

@@ -10,8 +10,21 @@ export const $CreateDoc = {
       isRequired: true,
     },
     content: {
-      type: "string",
+      type: "one-of",
       description: `Information content`,
+      contains: [
+        {
+          type: "array",
+          contains: {
+            type: "string",
+            minItems: 1,
+          },
+        },
+        {
+          type: "string",
+          description: `A single document chunk`,
+        },
+      ],
       isRequired: true,
     },
     metadata: {

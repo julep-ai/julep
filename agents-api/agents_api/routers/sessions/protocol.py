@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from agents_api.autogen.openapi_model import ResponseFormat, Preset, Tool
 
 
@@ -23,11 +23,13 @@ class Settings(BaseModel):
     min_p: float | None = Field(default=0.01)
     preset: Preset | None = Field(default=None)
     tools: list[Tool] | None = Field(default=None)
+    token_budget: int | None = Field(default=None)
+    context_overflow: str | None = Field(default=None)
 
-    @validator("max_tokens")
+    @field_validator("max_tokens")
     def set_max_tokens(cls, max_tokens):
         return max_tokens if max_tokens is not None else 200
 
-    @validator("stream")
+    @field_validator("stream")
     def set_stream(cls, stream):
         return stream or False

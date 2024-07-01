@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from beartype import beartype
+
 
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import cozo_query
@@ -14,8 +16,11 @@ _fields = [
     "developer_id",
 ]
 
+# TODO: Add support for updating `render_templates` field
+
 
 @cozo_query
+@beartype
 def update_session_query(
     session_id: UUID,
     developer_id: UUID,

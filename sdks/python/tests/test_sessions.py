@@ -12,10 +12,12 @@ from .fixtures import (
     async_client,
     client,
     test_session,
+    test_session_with_template,
     test_session_agent_user,
     test_session_no_user,
     mock_session,
     mock_session_update,
+    mock_session_with_template,
     TEST_API_KEY,
     TEST_API_URL,
 )
@@ -59,6 +61,14 @@ async def _(client=async_client, session_agent_user=test_session_agent_user):
 def _(client=client, session=test_session_no_user):
     assert isinstance(session, Session)
     assert session.id
+
+
+@test("sessions: sessions.get no user")
+def _(client=client, session=test_session_no_user):
+    response = client.sessions.get(id=session.id)
+
+    assert isinstance(response, Session)
+    assert response.id == session.id
 
 
 @test("sessions: sessions.get")
@@ -138,6 +148,25 @@ def _(client=client, session=test_session):
     )
 
     assert len(history) > 0
+
+
+@test("sessions: sessions.chat with template")
+def _(client=client, session=test_session_with_template):
+    response = client.sessions.chat(
+        session_id=session.id,
+        messages=[
+            InputChatMlMessage(
+                role=InputChatMlMessageRole.USER,
+                content="say it please",
+            )
+        ],
+        max_tokens=10,
+    )
+
+    assert isinstance(response, ChatResponse)
+    assert (
+        mock_session_with_template["metadata"]["arg"] in response.response[0][0].content
+    )
 
 
 # @test("sessions: sessions.suggestions")

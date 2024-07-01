@@ -7,10 +7,10 @@ from julep.api.types import (
 
 from .fixtures import (
     client,
-    test_agent,
-    test_agent_async,
     mock_agent_update,
     mock_agent,
+    test_agent,
+    test_agent_async,
     TEST_API_KEY,
     TEST_API_URL,
 )
@@ -22,6 +22,14 @@ def _(agent=test_agent):
     assert hasattr(agent, "created_at")
     assert agent.name == mock_agent["name"]
     assert agent.about == mock_agent["about"]
+
+
+@test("agents: agents.create multiple instructions")
+def _(client=client):
+    attrs = {**mock_agent, "instructions": ["instruction1", "instruction2"]}
+    response = client.agents.create(**attrs)
+
+    assert isinstance(response, Agent)
 
 
 @test("agents: agents.get")

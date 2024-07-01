@@ -13,7 +13,6 @@ export const $Session = {
     user_id: {
       type: "string",
       description: `User ID of user associated with this session`,
-      isRequired: true,
       format: "uuid",
     },
     agent_id: {
@@ -47,6 +46,14 @@ export const $Session = {
     render_templates: {
       type: "boolean",
       description: `Render system and assistant message content as jinja templates`,
+    },
+    token_budget: {
+      type: "number",
+      description: `Threshold value for the adaptive context functionality`,
+    },
+    context_overflow: {
+      type: "string",
+      description: `Action to start on context window overflow`,
     },
   },
 } as const;

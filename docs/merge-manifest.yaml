@@ -1,0 +1,31 @@
+# For use with `merge-markdown`
+---
+input:
+  ./SUMMARY.md: ""
+  ./README.md: ""
+  ./README (1).md: ""
+  ./introduction/core-concepts.md: ""
+  ./introduction/julep-in-a-nutshell.md: ""
+  ./getting-started/agents-quickstart.md: ""
+  ./getting-started/python-setup.md: ""
+  ./agents/jessica.md: ""
+  ./agents/overview.md: ""
+  ./agents/self-hosting.md: ""
+  ./agents/tutorial.md: ""
+  ./faqs/agent-prototyping.md: ""
+  ./faqs/general-overview.md: ""
+  ./faqs/memory-and-learning.md: ""
+  ./faqs/README.md: ""
+  ./faqs/sessions-and-tasks.md: ""
+  ./faqs/technical-details.md: ""
+  ./api-reference/agents-api/agents-api-1.md: ""
+  ./api-reference/agents-api/agents-api-2.md: ""
+  ./api-reference/agents-api/agents-api-3.md: ""
+  ./api-reference/agents-api/agents-api-4.md: ""
+  ./api-reference/agents-api/agents-api-5.md: ""
+  ./api-reference/agents-api/agents-api-6.md: ""
+  ./api-reference/agents-api/agents-api.md: ""
+  ./api-reference/agents-api/README.md: ""
+output:
+  name: merged/doc.md
+---

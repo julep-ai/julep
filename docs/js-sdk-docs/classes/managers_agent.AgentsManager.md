@@ -87,7 +87,7 @@ The JulepApiClient instance used for API interactions.
 | › `about` | `string` | `undefined` |
 | › `default_settings?` | [`AgentDefaultSettings`](../modules/api.md#agentdefaultsettings) | `undefined` |
 | › `docs?` | [`Doc`](../modules/api.md#doc)[] | `[]` |
-| › `instructions` | `string`[] | `[]` |
+| › `instructions` | `string` \| `string`[] | `[]` |
 | › `model?` | `string` | `"julep-ai/samantha-1-turbo"` |
 | › `name` | `string` | `undefined` |
 | › `tools?` | [`CreateToolRequest`](../modules/api.md#createtoolrequest)[] | `undefined` |

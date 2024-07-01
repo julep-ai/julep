@@ -10,7 +10,7 @@ export type Session = {
   /**
    * User ID of user associated with this session
    */
-  user_id: string;
+  user_id?: string;
   /**
    * Agent ID of agent associated with this session
    */
@@ -39,4 +39,12 @@ export type Session = {
    * Render system and assistant message content as jinja templates
    */
   render_templates?: boolean;
+  /**
+   * Threshold value for the adaptive context functionality
+   */
+  token_budget?: number;
+  /**
+   * Action to start on context window overflow
+   */
+  context_overflow?: string;
 };

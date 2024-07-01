@@ -1,13 +1,17 @@
 """This module contains functions for querying and summarizing entry data in the 'cozodb' database."""
 
+from beartype import beartype
+
 from uuid import UUID
 
 
 from ...common.protocol.entries import Entry
+from ...common.utils.messages import content_to_json
 from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def get_toplevel_entries_query(session_id: UUID) -> tuple[str, dict]:
     """
     Retrieves top-level entries from the database for a given session.
@@ -60,6 +64,7 @@ def get_toplevel_entries_query(session_id: UUID) -> tuple[str, dict]:
 
 
 @cozo_query
+@beartype
 def entries_summarization_query(
     session_id: UUID, new_entry: Entry, old_entry_ids: list[UUID]
 ) -> tuple[str, dict]:
@@ -90,7 +95,7 @@ def entries_summarization_query(
             new_entry.source,
             new_entry.role,
             new_entry.name or "",
-            new_entry.content,
+            content_to_json(new_entry.content),
             new_entry.token_count,
             new_entry.tokenizer,
             new_entry.created_at,

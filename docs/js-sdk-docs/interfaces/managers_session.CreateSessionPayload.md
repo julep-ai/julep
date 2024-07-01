@@ -9,7 +9,11 @@
 ### Properties
 
 - [agentId](managers_session.CreateSessionPayload.md#agentid)
+- [contextOverflow](managers_session.CreateSessionPayload.md#contextoverflow)
+- [metadata](managers_session.CreateSessionPayload.md#metadata)
+- [renderTemplates](managers_session.CreateSessionPayload.md#rendertemplates)
 - [situation](managers_session.CreateSessionPayload.md#situation)
+- [tokenBudget](managers_session.CreateSessionPayload.md#tokenbudget)
 - [userId](managers_session.CreateSessionPayload.md#userid)
 
 ## Properties
@@ -36,7 +40,7 @@ ___
 
 ### userId
 
-• **userId**: `string`
+• `Optional` **userId**: `string`
 
 #### Defined in
 

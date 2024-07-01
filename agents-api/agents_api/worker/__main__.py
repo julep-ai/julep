@@ -17,6 +17,8 @@ from ..activities.mem_mgmt import mem_mgmt
 from ..activities.mem_rating import mem_rating
 from ..activities.relationship_summary import relationship_summary
 from ..activities.salient_questions import salient_questions
+from ..activities.embed_docs import embed_docs
+from ..activities.truncation import truncation
 from ..env import (
     temporal_endpoint,
     temporal_task_queue,
@@ -25,12 +27,14 @@ from ..env import (
     temporal_client_cert,
 )
 from ..workflows.summarization import SummarizationWorkflow
+from ..workflows.embed_docs import EmbedDocsWorkflow
 from ..workflows.co_density import CoDensityWorkflow
 from ..workflows.dialog_insights import DialogInsightsWorkflow
 from ..workflows.mem_mgmt import MemMgmtWorkflow
 from ..workflows.mem_rating import MemRatingWorkflow
 from ..workflows.relationship_summary import RelationshipSummaryWorkflow
 from ..workflows.salient_questions import SalientQuestionsWorkflow
+from ..workflows.truncation import TruncationWorkflow
 
 
 async def main():
@@ -69,6 +73,8 @@ async def main():
             MemRatingWorkflow,
             RelationshipSummaryWorkflow,
             SalientQuestionsWorkflow,
+            EmbedDocsWorkflow,
+            TruncationWorkflow,
         ],
         activities=[
             summarization,
@@ -78,6 +84,8 @@ async def main():
             mem_rating,
             relationship_summary,
             salient_questions,
+            embed_docs,
+            truncation,
         ],
     )
 

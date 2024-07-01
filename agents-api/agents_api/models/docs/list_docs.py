@@ -1,6 +1,9 @@
 """This module contains functions for querying document-related data from the 'cozodb' database using datalog queries."""
 
-from typing import Literal
+from beartype import beartype
+
+import json
+from typing import Literal, Any
 from uuid import UUID
 
 
@@ -8,6 +11,7 @@ from ..utils import cozo_query
 
 
 @cozo_query
+@beartype
 def ensure_owner_exists_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
@@ -32,11 +36,20 @@ def ensure_owner_exists_query(
 
 
 @cozo_query
+@beartype
 def list_docs_snippets_by_owner_query(
     owner_type: Literal["user", "agent"],
     owner_id: UUID,
+    metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, dict]:
     owner_id = str(owner_id)
+
+    metadata_filter_str = ", ".join(
+        [
+            f"metadata->{json.dumps(k)} == {json.dumps(v)}"
+            for k, v in metadata_filter.items()
+        ]
+    )
 
     # Query to retrieve document snippets by owner (user or agent)
     query = f"""
@@ -65,7 +78,8 @@ def list_docs_snippets_by_owner_query(
                 snippet_idx,
                 title,
                 snippet,
-            }}
+            }},
+            {metadata_filter_str}
     }}"""
 
     return (query, {"owner_id": owner_id})

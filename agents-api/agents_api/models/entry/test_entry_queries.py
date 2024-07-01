@@ -173,10 +173,10 @@ def _():
             client=client,
         ),
         embed_docs_snippets_query(
-            agent_doc_id, snippet_indices=[0], embeddings=[[1.0] * 768], client=client
+            agent_doc_id, snippet_indices=[0], embeddings=[[1.0] * 1024], client=client
         ),
         embed_docs_snippets_query(
-            user_doc_id, snippet_indices=[0], embeddings=[[1.0] * 768], client=client
+            user_doc_id, snippet_indices=[0], embeddings=[[1.0] * 1024], client=client
         ),
     ]
 
@@ -185,7 +185,7 @@ def _():
     result = proc_mem_context_query(
         session_id=session_id,
         tool_query_embedding=[0.9] * 768,
-        doc_query_embedding=[0.9] * 768,
+        doc_query_embedding=[0.9] * 1024,
         client=client,
     )
 
