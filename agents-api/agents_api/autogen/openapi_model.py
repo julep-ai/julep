@@ -837,7 +837,7 @@ class ImageUrl(BaseModel):
     """
     URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)
     """
-    detail: Detail | None = "auto"
+    detail: Detail | None = "auto"  # pytype: disable=annotation-type-mismatch
     """
     image detail to feed into the model can be low | high | auto
     """
