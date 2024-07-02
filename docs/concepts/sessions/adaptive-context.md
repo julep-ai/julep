@@ -49,7 +49,7 @@ Adaptive Context operates based on the `context_overflow` setting you choose for
 
 
 
-    <figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 The Adaptive mode allows for indefinite extension of conversations while preserving the most relevant information, making it ideal for long-running sessions or processing large amounts of data.
 
@@ -145,3 +145,5 @@ When choosing a `context_overflow` strategy, consider your specific use case:
 * Be aware that aggressive context management may occasionally result in loss of nuanced details.
 
 Experiment with different settings to find the optimal balance between context preservation and efficient token usage for your application.
+
+<figure><img src="../../.gitbook/assets/image.png" alt="" width="563"><figcaption></figcaption></figure>
