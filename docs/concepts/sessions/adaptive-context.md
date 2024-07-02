@@ -16,7 +16,7 @@ Adaptive Context is controlled by two main parameters within the Session object:
 
 
 
-<table><thead><tr><th width="212">Attribute</th><th width="178">Type</th><th>Description</th></tr></thead><tbody><tr><td><code>token_budget</code></td><td><code>integer | null</code></td><td>Defines the maximum number of tokens allowed in the context. When null, it defaults to the size of the context window for the model used in the session.</td></tr><tr><td><code>context_overflow</code></td><td><code>"truncate" | "adaptive" | null</code></td><td>Determines how Julep handles context when it exceeds the token budget.</td></tr></tbody></table>
+<table><thead><tr><th width="212">Attribute</th><th width="178">Type</th><th>Description</th></tr></thead><tbody><tr><td><code>token_budget</code></td><td><code>integer?</code></td><td>Defines the maximum number of tokens allowed in the context. When null, it defaults to the size of the context window for the model used in the session.</td></tr><tr><td><code>context_overflow</code></td><td><code>"truncate" | "adaptive" | null</code></td><td>Determines how Julep handles context when it exceeds the token budget.</td></tr></tbody></table>
 
 These attributes allow you to fine-tune how Julep manages context in your sessions, giving you control over token usage and context handling behavior.
 
@@ -59,6 +59,8 @@ Enabling Adaptive Context is straightforward and can be done when creating a new
 
 #### Example
 
+{% tabs %}
+{% tab title="Python" %}
 ```python
 from julep import Client
 
@@ -75,6 +77,27 @@ session = client.sessions.create(
 # Now you can use this session for your conversations
 # The context will be adaptively managed as you interact
 ```
+{% endtab %}
+
+{% tab title="Javascript" %}
+```typescript
+import { Client } from "@julep/sdk";
+
+// Initialize the Julep client
+const client = new Client({ apiKey: "your-api-key" });
+
+// Create a new session with Adaptive Context enabled
+const session = await client.sessions.create({
+    agentId: "your_agent_id",
+    tokenBudget: 2048,
+    contextOverflow: "adaptive"
+})
+
+// Now you can use this session for your conversations
+// The context will be adaptively managed as you interact
+```
+{% endtab %}
+{% endtabs %}
 
 In this example:
 
