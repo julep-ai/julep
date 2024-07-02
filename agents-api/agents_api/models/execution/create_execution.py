@@ -15,8 +15,14 @@ def create_execution_query(
     execution_id: UUID,
     session_id: UUID | None = None,
     status: Literal[
-        "queued", "starting", "running", "awaiting_input", "succeeded", "failed"
-    ] = "queued",
+        "pending",
+        "queued",
+        "starting",
+        "running",
+        "awaiting_input",
+        "succeeded",
+        "failed",
+    ] = "pending",
     arguments: Dict[str, Any] = {},
 ) -> tuple[str, dict]:
     # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task

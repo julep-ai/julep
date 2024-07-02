@@ -39,7 +39,8 @@ def get_task_query(
             @ 'NOW'
         },
         updated_at = to_int(updated_at_ms) / 1000,
-        id = to_uuid($task_id),
+        id = to_uuid($task_id)
+
         :limit 1
     """
 

@@ -1292,14 +1292,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                responses:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/ToolResponse'
-              required:
-                - responses
+              $ref: '#/components/schemas/UpdateExecutionTransitionRequest'
       responses:
         '200':
           description: ''
@@ -1374,7 +1367,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: (Optional) metadata
       required:
         - id
@@ -1411,7 +1403,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
         instructions:
           oneOf:
@@ -1507,18 +1498,11 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
           default: false
-        token_budget:
-          type: integer
-          description: Threshold value for the adaptive context functionality
-        context_overflow:
-          type: string
-          description: Action to start on context window overflow
       required:
         - id
         - agent_id
@@ -1542,7 +1526,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: (Optional) metadata
       description: A valid request payload for creating a user
     CreateSessionRequest:
@@ -1563,18 +1546,11 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
         render_templates:
           type: boolean
           description: Render system and assistant message content as jinja templates
           default: false
-        token_budget:
-          type: integer
-          description: Threshold value for the adaptive context functionality
-        context_overflow:
-          type: string
-          description: Action to start on context window overflow
       required:
         - agent_id
       description: A valid request payload for creating a session
@@ -1613,7 +1589,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: (Optional) metadata
         instructions:
           oneOf:
@@ -1636,14 +1611,7 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
-        token_budget:
-          type: integer
-          description: Threshold value for the adaptive context functionality
-        context_overflow:
-          type: string
-          description: Action to start on context window overflow
       description: A valid request payload for updating a session
       required:
         - situation
@@ -1666,7 +1634,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
         instructions:
           oneOf:
@@ -1693,7 +1660,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
       description: A valid request payload for updating a user
       required:
@@ -2331,7 +2297,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: optional metadata
       required:
         - title
@@ -2357,7 +2322,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
       required:
         - title
@@ -2523,7 +2487,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
       description: A request for patching a user
     PatchAgentRequest:
@@ -2545,7 +2508,6 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
         instructions:
           oneOf:
@@ -2566,14 +2528,7 @@ components:
         metadata:
           type: object
           properties: {}
-          additionalProperties: true
           description: Optional metadata
-        token_budget:
-          type: integer
-          description: Threshold value for the adaptive context functionality
-        context_overflow:
-          type: string
-          description: Action to start on context window overflow
       description: A request for patching a session
     PatchToolRequest:
       type: object
@@ -2698,13 +2653,9 @@ components:
         created_at:
           type: string
           format: date-time
-        updated_at:
-          type: string
-          format: date-time
         agent_id:
           type: string
           format: uuid
-      additionalProperties: true
       description: Describes a Task
       required:
         - name
@@ -2768,36 +2719,22 @@ components:
         task_id:
           type: string
           format: uuid
-        status:
-          $ref: '#/components/schemas/ExecutionStatus'
+        created_at:
+          type: string
+          format: uuid
         arguments:
           type: object
           properties: {}
           additionalProperties: true
-          description: JSON of parameters
-        user_id:
-          type: string
-          format: uuid
-          nullable: true
-          default: null
-        session_id:
-          type: string
-          format: uuid
-          nullable: true
-          default: null
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+          description: JSON Schema of parameters
+        status:
+          $ref: '#/components/schemas/ExecutionStatus'
       required:
         - id
         - task_id
-        - status
-        - arguments
         - created_at
-        - updated_at
+        - arguments
+        - status
     ExecutionTransition:
       type: object
       properties:
@@ -2807,8 +2744,13 @@ components:
         execution_id:
           type: string
           format: uuid
-        type:
-          $ref: '#/components/schemas/TransitionType'
+        created_at:
+          type: string
+          format: date-time
+        outputs:
+          type: object
+          additionalProperties: true
+          description: Outputs from an Execution Transition
         from:
           type: array
           items:
@@ -2824,25 +2766,8 @@ components:
               description: Canonical name of the workflow
             - type: integer
               description: Step index
-        task_token:
-          type: string
-          default: null
-          nullable: true
-        outputs:
-          type: object
-          additionalProperties: true
-          description: Outputs from an Execution Transition
-        metadata:
-          type: object
-          properties: {}
-          additionalProperties: true
-          description: (Optional) metadata
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+        type:
+          $ref: '#/components/schemas/TransitionType'
       required:
         - id
         - execution_id
@@ -2873,8 +2798,14 @@ components:
         - evaluate
     CELObject:
       type: object
-      properties: {}
-      additionalProperties: true
+      properties:
+        workflow:
+          type: string
+        arguments:
+          $ref: '#/components/schemas/CELObject'
+      required:
+        - workflow
+        - arguments
     YieldWorkflowStep:
       type: object
       properties:
@@ -2955,6 +2886,51 @@ components:
       required:
         - output
         - id
+    UpdateExecutionTransitionRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - finish
+            - wait
+            - error
+            - step
+          description: Transition type
+        from:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            oneOf:
+              - type: string
+              - type: integer
+          description: From state
+        to:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            oneOf:
+              - type: string
+              - type: integer
+          description: To state
+        output:
+          type: object
+          properties: {}
+          description: Execution output
+        task_token:
+          type: string
+          description: Task token
+        metadata:
+          type: object
+          properties: {}
+          description: Custom metadata
+      description: Update execution transition request schema
+      required:
+        - type
+        - from
+        - output
   securitySchemes:
     api-key:
       type: apiKey

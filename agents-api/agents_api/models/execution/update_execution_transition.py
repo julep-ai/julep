@@ -28,22 +28,21 @@ def update_execution_transition_query(
         }
     )
     query = f"""
-    {{
-        input[{transition_update_cols}] <- $transition_update_vals
+        {{
+            input[{transition_update_cols}] <- $transition_update_vals
 
-        ?[{transition_update_cols}] := input[{transition_update_cols}],
-        *transitions {{
-            execution_id: to_uuid($execution_id),
-            transition_id: to_uuid($transition_id),
+            ?[{transition_update_cols}] := input[{transition_update_cols}],
+            *transitions {{
+                execution_id: to_uuid($execution_id),
+                transition_id: to_uuid($transition_id),
+            }}
+
+            :update transitions {{
+                {transition_update_cols}
+            }}
+            :returning
         }}
-
-        :update transitions {{
-            {transition_update_cols}
-        }}
-        :returning
-    }}
-
-"""
+    """
 
     return (
         query,
