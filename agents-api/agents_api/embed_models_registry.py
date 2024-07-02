@@ -10,7 +10,7 @@ from agents_api.exceptions import (
     PromptTooBigError,
     UnknownTokenizerError,
 )
-from agents_api.env import docs_embedding_service_url
+from agents_api.env import embedding_service_url
 
 
 def normalize_l2(x):
@@ -83,7 +83,7 @@ class EmbeddingModel:
             embeddings = await embed(
                 input,
                 embedding_service_url=self.embedding_service_url
-                or docs_embedding_service_url,
+                or embedding_service_url,
                 embedding_model_name=self.embedding_model_name,
             )
         elif self.embedding_provider == "openai":
@@ -130,7 +130,7 @@ _embedding_model_registry = {
         tokenizer=tiktoken.encoding_for_model("text-embedding-3-large"),
     ),
     "Alibaba-NLP/gte-large-en-v1.5": EmbeddingModel(
-        embedding_service_url=docs_embedding_service_url,
+        embedding_service_url=embedding_service_url,
         embedding_provider="julep",
         embedding_model_name="Alibaba-NLP/gte-large-en-v1.5",
         original_embedding_dimensions=1024,
@@ -139,7 +139,7 @@ _embedding_model_registry = {
         tokenizer=Tokenizer.from_pretrained("Alibaba-NLP/gte-large-en-v1.5"),
     ),
     "BAAI/bge-m3": EmbeddingModel(
-        embedding_service_url=docs_embedding_service_url,
+        embedding_service_url=embedding_service_url,
         embedding_provider="julep",
         embedding_model_name="BAAI/bge-m3",
         original_embedding_dimensions=1024,
@@ -148,7 +148,7 @@ _embedding_model_registry = {
         tokenizer=Tokenizer.from_pretrained("BAAI/bge-m3"),
     ),
     "BAAI/llm-embedder": EmbeddingModel(
-        embedding_service_url=docs_embedding_service_url,
+        embedding_service_url=embedding_service_url,
         embedding_provider="julep",
         embedding_model_name="BAAI/llm-embedder",
         original_embedding_dimensions=1024,

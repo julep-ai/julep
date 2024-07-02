@@ -44,20 +44,12 @@ skip_check_developer_headers: bool = env.bool(
     "SKIP_CHECK_DEVELOPER_HEADERS", default=False
 )
 
-# embedding service URL
 embedding_service_url: str = env.str(
-    "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8082/embed"
+    "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8083/embed"
 )
 
-docs_embedding_service_url: str = env.str(
-    "DOCS_EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8083/embed"
-)
 
-embedding_model_id: str = env.str(
-    "EMBEDDING_MODEL_ID", default="BAAI/bge-large-en-v1.5"
-)
-
-docs_embedding_model_id: str = env.str("DOCS_EMBEDDING_MODEL_ID", default="BAAI/bge-m3")
+embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="BAAI/bge-m3")
 
 truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=False)
 
@@ -84,8 +76,7 @@ environment = dict(
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
     openai_api_key=openai_api_key,
-    docs_embedding_model_id=docs_embedding_model_id,
-    docs_embedding_service_url=docs_embedding_service_url,
+    docs_embedding_service_url=embedding_service_url,
     embedding_model_id=embedding_model_id,
 )
 

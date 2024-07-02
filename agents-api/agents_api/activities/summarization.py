@@ -11,7 +11,7 @@ from agents_api.models.entry.entries_summarization import (
     entries_summarization_query,
 )
 from agents_api.common.protocol.entries import Entry
-from ..model_registry import JULEP_MODELS
+from ..model_registry import LOCAL_MODELS
 from ..env import model_inference_url, model_api_key, summarization_model_name
 from agents_api.rec_sum.entities import get_entities
 from agents_api.rec_sum.summarize import summarize_messages
@@ -135,7 +135,7 @@ async def run_prompt(
 ) -> str:
     api_base = None
     api_key = None
-    if model in JULEP_MODELS:
+    if model in LOCAL_MODELS:
         api_base = model_inference_url
         api_key = model_api_key
         model = f"openai/{model}"
