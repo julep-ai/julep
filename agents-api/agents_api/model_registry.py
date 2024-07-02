@@ -3,10 +3,7 @@ Model Registry maintains a list of supported models and their configs.
 """
 
 import ast
-import datetime
 import json
-import os
-from typing import Dict
 from agents_api.clients.worker.types import ChatML
 from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
@@ -14,9 +11,8 @@ from agents_api.common.exceptions.agents import (
 )
 import litellm
 from litellm.utils import get_valid_models
-import yaml
 from pydantic import BaseModel
-from typing import List, Dict, Literal, Optional
+from typing import Dict, Literal, Optional
 import xml.etree.ElementTree as ET
 
 
@@ -108,7 +104,7 @@ LOCAL_MODELS = {
     "TinyLlama/TinyLlama_v1.1": 2048,
     "casperhansen/llama-3-8b-instruct-awq": 8192,
     "julep-ai/Hermes-2-Theta-Llama-3-8B": 8192,
-    "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768
+    "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768,
 }
 
 LOCAL_MODELS_WITH_TOOL_CALLS = {
@@ -120,6 +116,7 @@ CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
 
 ALL_AVAILABLE_MODELS = litellm.model_list + list(LOCAL_MODELS.keys())
 VALID_MODELS = get_valid_models() + list(LOCAL_MODELS.keys())
+
 
 class FunctionCall(BaseModel):
     arguments: dict
@@ -143,6 +140,7 @@ class FunctionDefinition(BaseModel):
 class FunctionSignature(BaseModel):
     function: FunctionDefinition
     type: Literal["function"]
+
 
 class PromptSchema(BaseModel):
     Role: str
@@ -208,10 +206,12 @@ def validate_and_extract_tool_calls(assistant_content):
                         # Fallback to ast.literal_eval if json.loads fails
                         json_data = ast.literal_eval(json_text)
                     except (SyntaxError, ValueError) as eval_err:
-                        error_message = f"JSON parsing failed with both json.loads and ast.literal_eval:\n"\
-                                        f"- JSON Decode Error: {json_err}\n"\
-                                        f"- Fallback Syntax/Value Error: {eval_err}\n"\
-                                        f"- Problematic JSON text: {json_text}"
+                        error_message = (
+                            f"JSON parsing failed with both json.loads and ast.literal_eval:\n"
+                            f"- JSON Decode Error: {json_err}\n"
+                            f"- Fallback Syntax/Value Error: {eval_err}\n"
+                            f"- Problematic JSON text: {json_text}"
+                        )
                         continue
             except Exception as e:
                 error_message = f"Cannot strip text: {e}"

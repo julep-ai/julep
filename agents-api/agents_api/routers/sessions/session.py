@@ -31,9 +31,8 @@ from ...env import (
 from ...model_registry import (
     LOCAL_MODELS,
     LOCAL_MODELS_WITH_TOOL_CALLS,
-    get_extra_settings,
     load_context,
-    validate_and_extract_tool_calls
+    validate_and_extract_tool_calls,
 )
 from ...models.entry.add_entries import add_entries_query
 from ...models.entry.proc_mem_context import proc_mem_context_query
@@ -398,7 +397,6 @@ class BaseSession:
         if session_data is not None:
             settings.model = session_data.model
 
-
         return messages, settings, doc_ids
 
     @cache
@@ -436,9 +434,13 @@ class BaseSession:
             api_key=api_key,
         )
         if model in LOCAL_MODELS_WITH_TOOL_CALLS:
-            validation, tool_call, error_msg = validate_and_extract_tool_calls(res.choices[0].message.content)
-            if (validation):
-                res.choices[0].message.role = "function_call" if tool_call else "assistant"
+            validation, tool_call, error_msg = validate_and_extract_tool_calls(
+                res.choices[0].message.content
+            )
+            if validation:
+                res.choices[0].message.role = (
+                    "function_call" if tool_call else "assistant"
+                )
                 res.choices[0].finish_reason = "tool_calls"
                 res.choices[0].message.tool_calls = tool_call
                 res.choices[0].message.content = json.dumps(tool_call)
