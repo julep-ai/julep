@@ -55,7 +55,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/base.ts#L14)
 
 ## Properties
 
@@ -71,7 +71,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/base.ts#L14)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/base.ts#L14)
 
 ## Methods
 
@@ -98,7 +98,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/agent.ts:23](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/agent.ts#L23)
+[src/managers/agent.ts:23](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/agent.ts#L23)
 
 ___
 
@@ -118,7 +118,7 @@ ___
 
 #### Defined in
 
-[src/managers/agent.ts:108](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/agent.ts#L108)
+[src/managers/agent.ts:108](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/agent.ts#L108)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[src/managers/agent.ts:17](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/agent.ts#L17)
+[src/managers/agent.ts:17](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/agent.ts#L17)
 
 ___
 
@@ -161,7 +161,7 @@ ___
 
 #### Defined in
 
-[src/managers/agent.ts:74](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/agent.ts#L74)
+[src/managers/agent.ts:74](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/agent.ts#L74)
 
 ___
 
@@ -183,7 +183,7 @@ ___
 
 #### Defined in
 
-[src/managers/agent.ts:115](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/agent.ts#L115)
+[src/managers/agent.ts:115](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/agent.ts#L115)
 
 ▸ **update**(`agentId`, `request`, `overwrite`): `Promise`\<`Partial`\<[`Agent`](../modules/api.md#agent)\> & \{ `id`: `string`  }\>
 
@@ -201,4 +201,4 @@ ___
 
 #### Defined in
 
-[src/managers/agent.ts:121](https://github.com/julep-ai/julep/blob/74e1a9218817461227847dbf45dce4f3ba148d1a/sdks/ts/src/managers/agent.ts#L121)
+[src/managers/agent.ts:121](https://github.com/julep-ai/julep/blob/227123c5f9d22b396d22945238105bcec56713cc/sdks/ts/src/managers/agent.ts#L121)
