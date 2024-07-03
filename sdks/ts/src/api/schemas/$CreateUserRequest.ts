@@ -12,6 +12,7 @@ export const $CreateUserRequest = {
     id: {
       type: "string",
       description: `(Optional) ID of the User`,
+      format: "uuid",
     },
     about: {
       type: "string",

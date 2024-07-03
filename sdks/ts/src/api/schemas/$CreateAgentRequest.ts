@@ -13,6 +13,7 @@ export const $CreateAgentRequest = {
     id: {
       type: "string",
       description: `(Optional) ID of the agent`,
+      format: "uuid",
     },
     about: {
       type: "string",

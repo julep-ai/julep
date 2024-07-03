@@ -17,7 +17,7 @@ async def create_user(
     request: CreateUserRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    user_id = uuid4()
+    user_id = request.user_id if request.user_id else uuid4()
     created_user = create_user_query(
         developer_id=x_developer_id,
         user_id=user_id,
