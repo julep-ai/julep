@@ -15,6 +15,10 @@ export type CreateSessionRequest = {
    */
   agent_id: string;
   /**
+   * (Optional) ID of the session
+   */
+  id?: string;
+  /**
    * A specific situation that sets the background for this session
    */
   situation?: string;

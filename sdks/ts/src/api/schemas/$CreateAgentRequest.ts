@@ -10,6 +10,10 @@ export const $CreateAgentRequest = {
       description: `Name of the agent`,
       isRequired: true,
     },
+    id: {
+      type: "string",
+      description: `(Optional) ID of the agent`,
+    },
     about: {
       type: "string",
       description: `About the agent`,

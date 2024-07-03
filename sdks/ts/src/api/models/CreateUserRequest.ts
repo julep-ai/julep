@@ -12,6 +12,10 @@ export type CreateUserRequest = {
    */
   name?: string;
   /**
+   * (Optional) ID of the User
+   */
+  id?: string;
+  /**
    * About the user
    */
   about?: string;

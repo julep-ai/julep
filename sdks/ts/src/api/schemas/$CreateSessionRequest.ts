@@ -16,6 +16,10 @@ export const $CreateSessionRequest = {
       isRequired: true,
       format: "uuid",
     },
+    id: {
+      type: "string",
+      description: `(Optional) ID of the session`,
+    },
     situation: {
       type: "string",
       description: `A specific situation that sets the background for this session`,

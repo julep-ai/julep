@@ -9,6 +9,7 @@ from tests.fixtures import client, async_client, user
 def _(client=client):
     response = client.users.create(
         name="test user",
+        id=uuid.uuid4(),
         about="test user about",
     )
 
@@ -21,6 +22,7 @@ def _(client=client):
 async def _(client=async_client):
     response = await client.users.create(
         name="test user",
+        id=uuid.uuid4(),
         about="test user about",
     )
 

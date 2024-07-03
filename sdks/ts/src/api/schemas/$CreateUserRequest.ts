@@ -9,6 +9,10 @@ export const $CreateUserRequest = {
       type: "string",
       description: `Name of the user`,
     },
+    id: {
+      type: "string",
+      description: `(Optional) ID of the User`,
+    },
     about: {
       type: "string",
       description: `About the user`,

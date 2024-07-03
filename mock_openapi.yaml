@@ -1315,6 +1315,9 @@ components:
           type: string
           description: Name of the user
           default: User
+        id:
+          type: string
+          description: (Optional) ID of the User
         about:
           type: string
           description: About the user
@@ -1341,6 +1344,9 @@ components:
           type: string
           description: Agent ID of agent to associate with this session
           format: uuid
+        id:
+          type: string
+          description: (Optional) ID of the session
         situation:
           type: string
           description: A specific situation that sets the background for this session
@@ -1368,6 +1374,9 @@ components:
         name:
           type: string
           description: Name of the agent
+        id:
+          type: string
+          description: (Optional) ID of the agent
         about:
           type: string
           description: About the agent
@@ -1984,6 +1993,9 @@ components:
             - deterministic
             - code
             - multilingual
+        model:
+          type: string
+          description: Model name
     AgentDefaultSettings:
       type: object
       properties:
@@ -2136,7 +2148,6 @@ components:
       required:
         - title
         - content
-        - field_0
     MemoryAccessOptions:
       type: object
       properties:

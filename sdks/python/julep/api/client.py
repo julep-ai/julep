@@ -146,6 +146,7 @@ class JulepApi:
         *,
         user_id: typing.Optional[str] = OMIT,
         agent_id: str,
+        id: typing.Optional[str] = OMIT,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
@@ -159,6 +160,8 @@ class JulepApi:
             - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
 
             - agent_id: str. Agent ID of agent to associate with this session
+
+            - id: typing.Optional[str]. (Optional) ID of the session
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
 
@@ -182,6 +185,8 @@ class JulepApi:
         _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
         if user_id is not OMIT:
             _request["user_id"] = user_id
+        if id is not OMIT:
+            _request["id"] = id
         if situation is not OMIT:
             _request["situation"] = situation
         if metadata is not OMIT:
@@ -264,6 +269,7 @@ class JulepApi:
         self,
         *,
         name: typing.Optional[str] = OMIT,
+        id: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
         metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
@@ -273,6 +279,8 @@ class JulepApi:
 
         Parameters:
             - name: typing.Optional[str]. Name of the user
+
+            - id: typing.Optional[str]. (Optional) ID of the User
 
             - about: typing.Optional[str]. About the user
 
@@ -290,6 +298,8 @@ class JulepApi:
         _request: typing.Dict[str, typing.Any] = {}
         if name is not OMIT:
             _request["name"] = name
+        if id is not OMIT:
+            _request["id"] = id
         if about is not OMIT:
             _request["about"] = about
         if docs is not OMIT:
@@ -368,6 +378,7 @@ class JulepApi:
         self,
         *,
         name: str,
+        id: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -381,6 +392,8 @@ class JulepApi:
 
         Parameters:
             - name: str. Name of the agent
+
+            - id: typing.Optional[str]. (Optional) ID of the agent
 
             - about: typing.Optional[str]. About the agent
 
@@ -406,6 +419,8 @@ class JulepApi:
         )
         """
         _request: typing.Dict[str, typing.Any] = {"name": name}
+        if id is not OMIT:
+            _request["id"] = id
         if about is not OMIT:
             _request["about"] = about
         if tools is not OMIT:
@@ -756,6 +771,7 @@ class JulepApi:
         top_p: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
         preset: typing.Optional[ChatSettingsPreset] = OMIT,
+        model: typing.Optional[str] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         record: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
@@ -805,6 +821,8 @@ class JulepApi:
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
             - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+
+            - model: typing.Optional[str]. Model name
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -859,7 +877,9 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # pytype: disable=attribute-error
+            _request["preset"] = preset.value
+        if model is not OMIT:
+            _request["model"] = model
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -1937,6 +1957,7 @@ class AsyncJulepApi:
         *,
         user_id: typing.Optional[str] = OMIT,
         agent_id: str,
+        id: typing.Optional[str] = OMIT,
         situation: typing.Optional[str] = OMIT,
         metadata: typing.Optional[CreateSessionRequestMetadata] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
@@ -1950,6 +1971,8 @@ class AsyncJulepApi:
             - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
 
             - agent_id: str. Agent ID of agent to associate with this session
+
+            - id: typing.Optional[str]. (Optional) ID of the session
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
 
@@ -1973,6 +1996,8 @@ class AsyncJulepApi:
         _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
         if user_id is not OMIT:
             _request["user_id"] = user_id
+        if id is not OMIT:
+            _request["id"] = id
         if situation is not OMIT:
             _request["situation"] = situation
         if metadata is not OMIT:
@@ -2055,6 +2080,7 @@ class AsyncJulepApi:
         self,
         *,
         name: typing.Optional[str] = OMIT,
+        id: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
         metadata: typing.Optional[CreateUserRequestMetadata] = OMIT,
@@ -2064,6 +2090,8 @@ class AsyncJulepApi:
 
         Parameters:
             - name: typing.Optional[str]. Name of the user
+
+            - id: typing.Optional[str]. (Optional) ID of the User
 
             - about: typing.Optional[str]. About the user
 
@@ -2081,6 +2109,8 @@ class AsyncJulepApi:
         _request: typing.Dict[str, typing.Any] = {}
         if name is not OMIT:
             _request["name"] = name
+        if id is not OMIT:
+            _request["id"] = id
         if about is not OMIT:
             _request["about"] = about
         if docs is not OMIT:
@@ -2159,6 +2189,7 @@ class AsyncJulepApi:
         self,
         *,
         name: str,
+        id: typing.Optional[str] = OMIT,
         about: typing.Optional[str] = OMIT,
         tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
         default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
@@ -2172,6 +2203,8 @@ class AsyncJulepApi:
 
         Parameters:
             - name: str. Name of the agent
+
+            - id: typing.Optional[str]. (Optional) ID of the agent
 
             - about: typing.Optional[str]. About the agent
 
@@ -2197,6 +2230,8 @@ class AsyncJulepApi:
         )
         """
         _request: typing.Dict[str, typing.Any] = {"name": name}
+        if id is not OMIT:
+            _request["id"] = id
         if about is not OMIT:
             _request["about"] = about
         if tools is not OMIT:
@@ -2547,6 +2582,7 @@ class AsyncJulepApi:
         top_p: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
         preset: typing.Optional[ChatSettingsPreset] = OMIT,
+        model: typing.Optional[str] = OMIT,
         recall: typing.Optional[bool] = OMIT,
         record: typing.Optional[bool] = OMIT,
         remember: typing.Optional[bool] = OMIT,
@@ -2596,6 +2632,8 @@ class AsyncJulepApi:
             - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
 
             - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
+
+            - model: typing.Optional[str]. Model name
 
             - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
 
@@ -2650,7 +2688,9 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value  # pytype: disable=attribute-error
+            _request["preset"] = preset.value
+        if model is not OMIT:
+            _request["model"] = model
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:

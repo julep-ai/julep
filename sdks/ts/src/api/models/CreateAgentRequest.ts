@@ -14,6 +14,10 @@ export type CreateAgentRequest = {
    */
   name: string;
   /**
+   * (Optional) ID of the agent
+   */
+  id?: string;
+  /**
    * About the agent
    */
   about?: string;

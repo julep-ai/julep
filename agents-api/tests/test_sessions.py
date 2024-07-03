@@ -64,6 +64,7 @@ def _(user=user, agent=agent, client=client):
         user_id=user.id,
         agent_id=agent.id,
         situation="test situation",
+        id=uuid.uuid4(),
     )
 
     assert isinstance(response, ResourceCreatedResponse)
@@ -77,6 +78,8 @@ async def _(user=user, agent=agent, client=async_client):
         user_id=user.id,
         agent_id=agent.id,
         situation="test situation",
+        id=uuid.uuid4(),
+
     )
 
     assert isinstance(response, ResourceCreatedResponse)
