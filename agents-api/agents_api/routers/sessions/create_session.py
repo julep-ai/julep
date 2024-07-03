@@ -21,7 +21,7 @@ async def create_session(
     request: CreateSessionRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    session_id = request.session_id if request.session_id else uuid4()
+    session_id = request.id if request.id else uuid4()
     resp: pd.DataFrame = create_session_query(
         session_id=session_id,
         developer_id=x_developer_id,

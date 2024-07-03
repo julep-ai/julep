@@ -18,8 +18,8 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    agent_id = request.agent_id if request.agent_id else uuid4()
-    created_agent = create_agent_query(
+    agent_id = request.id if request.id else uuid4()
+    create_agent_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         name=request.name,
