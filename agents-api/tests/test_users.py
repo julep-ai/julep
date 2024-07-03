@@ -22,7 +22,6 @@ def _(client=client):
 async def _(client=async_client):
     response = await client.users.create(
         name="test user",
-        id=uuid.uuid4(),
         about="test user about",
     )
 

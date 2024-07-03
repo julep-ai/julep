@@ -1,6 +1,6 @@
 // sessions.test.ts
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
-
+import { v4 as uuidv4 } from "uuid";
 import { setupClient } from "./fixtures"; // Adjust path if necessary
 import { Agent, User } from "../src/api";
 import { Client } from "../src";
@@ -23,6 +23,11 @@ const mockUser = {
 };
 
 const mockSession = {
+  situation: "test situation",
+};
+
+const mockSessionWithId = {
+  id: uuidv4(),
   situation: "test situation",
 };
 
@@ -58,6 +63,18 @@ describe("Sessions API", () => {
       userId: testUser.id,
       agentId: testAgent.id,
       ...mockSession,
+    });
+
+    testSessionId = response.id;
+
+    expect(response).toBeDefined();
+    expect(response).toHaveProperty("created_at");
+  });
+  it("sessions.create.with.ID", async () => {
+    const response = await client.sessions.create({
+      userId: testUser.id,
+      agentId: testAgent.id,
+      ...mockSessionWithId,
     });
 
     testSessionId = response.id;

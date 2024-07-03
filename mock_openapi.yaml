@@ -1993,9 +1993,6 @@ components:
             - deterministic
             - code
             - multilingual
-        model:
-          type: string
-          description: Model name
     AgentDefaultSettings:
       type: object
       properties:

@@ -9,7 +9,6 @@ from tests.fixtures import client, async_client, agent
 def _(client=client):
     agent = client.agents.create(
         name="Samantha",
-        id=uuid.uuid4(),
         about="about Samantha",
         instructions=[
             "non-important content",
@@ -132,7 +131,6 @@ def _(client=client):
 async def _(client=async_client):
     agent = await client.agents.create(
         name="Samantha",
-        id=uuid.uuid4(),
         about="about Samantha",
         instructions=[
             "non-important content",
@@ -172,7 +170,6 @@ def _(client=client):
     try:
         client.agents.create(
             name="Samantha",
-            id=uuid.uuid4(),
             about="about Samantha",
             instructions=[
                 "non-important content",

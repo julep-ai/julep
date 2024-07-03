@@ -2,13 +2,21 @@
 
 import { describe, expect, test } from "@jest/globals";
 import { Agent } from "../src/api";
-
+import { v4 as uuidv4 } from "uuid";
 import { setupClient } from "./fixtures";
 
 const client = setupClient();
 
 const mockAgent = {
   name: "test agent",
+  about: "test agent about",
+  instructions: ["test agent instructions"],
+  default_settings: { temperature: 0.5 },
+};
+
+const mockAgentWithId = {
+  name: "test agent",
+  id: uuidv4(),
   about: "test agent about",
   instructions: ["test agent instructions"],
   default_settings: { temperature: 0.5 },
@@ -36,7 +44,7 @@ describe("Julep Client Tests", () => {
 
   test("agents.create single instruction", async () => {
     const response = await client.agents.create({
-      ...mockAgent,
+      ...mockAgentWithId,
       instructions: "test agent instructions",
     });
 

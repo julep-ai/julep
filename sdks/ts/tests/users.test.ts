@@ -1,6 +1,7 @@
 // tests/user.test.ts
 
 import { beforeAll, describe, expect, test } from "@jest/globals";
+import { v4 as uuidv4 } from "uuid";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
@@ -16,6 +17,12 @@ const mockUserUpdate = {
   about: "updated user about",
 };
 
+const mockUserWithId = {
+  name: "test user",
+  id: uuidv4(),
+  about: "test user about",
+};
+
 describe("User API", () => {
   let client: Client;
   let testUser: User;
@@ -25,7 +32,7 @@ describe("User API", () => {
   });
 
   test("users.create", async () => {
-    const response = await client.users.create(mockUser);
+    const response = await client.users.create(mockUserWithId);
 
     testUser = response;
 

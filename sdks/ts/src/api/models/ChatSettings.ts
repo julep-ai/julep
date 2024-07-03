@@ -97,8 +97,4 @@ export type ChatSettings = {
     | "deterministic"
     | "code"
     | "multilingual";
-  /**
-   * Model name
-   */
-  model?: string;
 };
