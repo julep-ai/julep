@@ -25,13 +25,14 @@ from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
 from ...common.utils.messages import stringify_content
 from ...env import (
-    docs_embedding_service_url,
-    docs_embedding_model_id,
+    embedding_service_url,
+    embedding_model_id,
 )
 from ...model_registry import (
-    JULEP_MODELS,
-    get_extra_settings,
+    LOCAL_MODELS,
+    LOCAL_MODELS_WITH_TOOL_CALLS,
     load_context,
+    validate_and_extract_tool_calls,
 )
 from ...models.entry.add_entries import add_entries_query
 from ...models.entry.proc_mem_context import proc_mem_context_query
@@ -261,8 +262,8 @@ class BaseSession:
                 ]
             ],
             join_inputs=False,
-            embedding_service_url=docs_embedding_service_url,
-            embedding_model_name=docs_embedding_model_id,
+            embedding_service_url=embedding_service_url,
+            embedding_model_name=embedding_model_id,
         )
 
         entries: list[Entry] = []
@@ -357,7 +358,10 @@ class BaseSession:
                 and message.content[0].type == "text"
             ):
                 message.content = message.content[0].text
-
+                # Add tools to settings
+        if tools:
+            settings.tools = settings.tools or []
+            settings.tools.extend(tools)
         # If render_templates=True, render the templates
         if session_data is not None and session_data.render_templates:
 
@@ -378,6 +382,7 @@ class BaseSession:
                     "name": session_data.agent_name,
                     "about": session_data.agent_about,
                     "metadata": session_data.agent_metadata,
+                    "tools": settings.tools,
                 },
             }
 
@@ -392,11 +397,6 @@ class BaseSession:
         if session_data is not None:
             settings.model = session_data.model
 
-        # Add tools to settings
-        if tools:
-            settings.tools = settings.tools or []
-            settings.tools.extend(tools)
-
         return messages, settings, doc_ids
 
     @cache
@@ -408,7 +408,7 @@ class BaseSession:
         api_base = None
         api_key = None
         model = settings.model
-        if model in JULEP_MODELS:
+        if model in LOCAL_MODELS:
             api_base = model_inference_url
             api_key = model_api_key
             model = f"openai/{model}"
@@ -416,11 +416,8 @@ class BaseSession:
         if settings.tools:
             tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
 
-        extra_body = get_extra_settings(settings)
-
         litellm.drop_params = True
         litellm.add_function_to_prompt = True
-
         res = await acompletion(
             model=model,
             messages=init_context,
@@ -435,9 +432,18 @@ class BaseSession:
             response_format=settings.response_format,
             api_base=api_base,
             api_key=api_key,
-            **extra_body,
         )
-
+        if model in LOCAL_MODELS_WITH_TOOL_CALLS:
+            validation, tool_call, error_msg = validate_and_extract_tool_calls(
+                res.choices[0].message.content
+            )
+            if validation:
+                res.choices[0].message.role = (
+                    "function_call" if tool_call else "assistant"
+                )
+                res.choices[0].finish_reason = "tool_calls"
+                res.choices[0].message.tool_calls = tool_call
+                res.choices[0].message.content = json.dumps(tool_call)
         return res
 
     async def backward(
