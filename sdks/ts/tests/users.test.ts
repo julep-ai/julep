@@ -31,8 +31,19 @@ describe("User API", () => {
     client = setupClient();
   });
 
-  test("users.create", async () => {
+  test("users.create with ID", async () => {
     const response = await client.users.create(mockUserWithId);
+
+    testUser = response;
+
+    expect(response).toHaveProperty("created_at");
+    expect(testUser.about).toBe(mockUser.about);
+    expect(testUser.name).toBe(mockUser.name);
+    expect(testUser.id).toBe(mockUserWithId.id);
+  });
+
+  test("users.create", async () => {
+    const response = await client.users.create(mockUser);
 
     testUser = response;
 

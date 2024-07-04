@@ -5,11 +5,25 @@ from ward import test
 from tests.fixtures import client, async_client, user
 
 
+@test("create user with ID")
+def _(client=client):
+    user_id = uuid.uuid4()
+    response = client.users.create(
+        id=user_id,
+        name="test user",
+        about="test user about",
+    )
+
+    assert isinstance(response, ResourceCreatedResponse)
+    assert response.created_at
+    assert response.id
+    assert response.id == str(user_id)
+    assert bool(uuid.UUID(str(response.id), version=4))
+
 @test("create user")
 def _(client=client):
     response = client.users.create(
         name="test user",
-        id=uuid.uuid4(),
         about="test user about",
     )
 

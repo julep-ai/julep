@@ -81,6 +81,7 @@ describe("Sessions API", () => {
 
     expect(response).toBeDefined();
     expect(response).toHaveProperty("created_at");
+    expect(testSessionId).toBe(mockSessionWithId.id);
   });
 
   it("sessions.get", async () => {

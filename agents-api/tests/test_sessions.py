@@ -58,6 +58,22 @@ async def _(existing_session=session, client=async_client):
         assert False
 
 
+@test("create session with ID")
+def _(user=user, agent=agent, client=client):
+    session_id = uuid.uuid4()
+    response = client.sessions.create(
+        user_id=user.id,
+        agent_id=agent.id,
+        id=session_id,
+        situation="test situation",
+    )
+
+    assert isinstance(response, ResourceCreatedResponse)
+    assert response.created_at
+    assert response.id == str(session_id)
+    assert bool(uuid.UUID(str(response.id), version=4))
+
+
 @test("create sessions")
 def _(user=user, agent=agent, client=client):
     response = client.sessions.create(
@@ -68,7 +84,7 @@ def _(user=user, agent=agent, client=client):
 
     assert isinstance(response, ResourceCreatedResponse)
     assert response.created_at
-    bool(uuid.UUID(str(response.id), version=4))
+    assert bool(uuid.UUID(str(response.id), version=4))
 
 
 @test("async create sessions")
@@ -77,12 +93,11 @@ async def _(user=user, agent=agent, client=async_client):
         user_id=user.id,
         agent_id=agent.id,
         situation="test situation",
-        id=uuid.uuid4(),
     )
 
     assert isinstance(response, ResourceCreatedResponse)
     assert response.created_at
-    bool(uuid.UUID(str(response.id), version=4))
+    assert bool(uuid.UUID(str(response.id), version=4))
 
 
 @test("list sessions")

@@ -4,6 +4,19 @@ from julep.api.core import ApiError
 from ward import test
 from tests.fixtures import client, async_client, agent
 
+@test("create an agent with ID")
+def _(client=client):
+    agent_id = uuid.uuid4()
+    agent = client.agents.create(
+        name="Samantha",
+        id=agent_id,
+        about="about Samantha",
+        model="julep-ai/samantha-1-turbo"
+    )
+    assert isinstance(agent, ResourceCreatedResponse)
+    assert agent.created_at
+    assert agent.id == str(agent_id)
+    assert bool(uuid.UUID(str(agent.id), version=4))
 
 @test("create new agent with tools")
 def _(client=client):
@@ -50,7 +63,6 @@ def _(client=client):
 async def _(client=async_client):
     agent = await client.agents.create(
         name="Samantha",
-        id=uuid.uuid4(),
         about="about Samantha",
         instructions=[
             "non-important content",
@@ -92,7 +104,6 @@ async def _(client=async_client):
 def _(client=client):
     agent = client.agents.create(
         name="Samantha",
-        id=uuid.uuid4(),
         about="about Samantha",
         instructions=[
             "non-important content",
@@ -219,7 +230,6 @@ async def _(client=async_client):
     try:
         await client.agents.create(
             name="Samantha",
-            id=uuid.uuid4(),
             about="about Samantha",
             instructions=[
                 "non-important content",

@@ -41,10 +41,19 @@ describe("Julep Client Tests", () => {
     expect(response.about).toBe(mockAgent.about);
     expect(response.name).toBe(mockAgent.name);
   });
+  test("agents.create.with.ID", async () => {
+    const response = await client.agents.create(mockAgentWithId);
 
+    testAgent = response;
+
+    expect(response).toHaveProperty("created_at");
+    expect(response.about).toBe(mockAgent.about);
+    expect(response.name).toBe(mockAgent.name);
+    expect(response.id).toBe(mockAgentWithId.id);
+  });
   test("agents.create single instruction", async () => {
     const response = await client.agents.create({
-      ...mockAgentWithId,
+      ...mockAgent,
       instructions: "test agent instructions",
     });
 
