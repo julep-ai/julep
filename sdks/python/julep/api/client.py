@@ -874,7 +874,7 @@ class JulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # pytype: disable=attribute-error
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:
@@ -2680,7 +2680,7 @@ class AsyncJulepApi:
         if min_p is not OMIT:
             _request["min_p"] = min_p
         if preset is not OMIT:
-            _request["preset"] = preset.value
+            _request["preset"] = preset.value  # pytype: disable=attribute-error
         if recall is not OMIT:
             _request["recall"] = recall
         if record is not OMIT:

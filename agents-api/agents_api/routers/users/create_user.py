@@ -18,7 +18,7 @@ async def create_user(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     user_id = request.id if request.id else uuid4()
-    print(f"Creating user with id: {type(user_id)}")
+
     created_user = create_user_query(
         developer_id=x_developer_id,
         user_id=user_id,
@@ -26,6 +26,7 @@ async def create_user(
         about=request.about,
         metadata=request.metadata,
     )
+
     return ResourceCreatedResponse(
         id=str(user_id), created_at=created_user["created_at"]
     )
