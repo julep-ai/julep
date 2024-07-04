@@ -20,6 +20,7 @@ def _(client=client):
     assert response.id == str(user_id)
     assert bool(uuid.UUID(str(response.id), version=4))
 
+
 @test("create user")
 def _(client=client):
     response = client.users.create(

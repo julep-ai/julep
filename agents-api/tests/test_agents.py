@@ -4,6 +4,7 @@ from julep.api.core import ApiError
 from ward import test
 from tests.fixtures import client, async_client, agent
 
+
 @test("create an agent with ID")
 def _(client=client):
     agent_id = uuid.uuid4()
@@ -11,12 +12,13 @@ def _(client=client):
         name="Samantha",
         id=agent_id,
         about="about Samantha",
-        model="julep-ai/samantha-1-turbo"
+        model="julep-ai/samantha-1-turbo",
     )
     assert isinstance(agent, ResourceCreatedResponse)
     assert agent.created_at
     assert agent.id == str(agent_id)
     assert bool(uuid.UUID(str(agent.id), version=4))
+
 
 @test("create new agent with tools")
 def _(client=client):
