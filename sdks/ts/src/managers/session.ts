@@ -1,3 +1,5 @@
+import typia, { tags } from "typia";
+
 import { isUndefined, omitBy } from "lodash";
 import {
   ChatInput,
@@ -8,8 +10,6 @@ import {
   Session,
   Suggestion,
 } from "../api";
-import { invariant } from "../utils/invariant";
-import { isValidUuid4 } from "../utils/isValidUuid4";
 import { BaseManager } from "./base";
 
 export interface CreateSessionPayload {
@@ -18,6 +18,10 @@ export interface CreateSessionPayload {
   situation?: string;
   metadata?: Record<string, any>;
   renderTemplates?: boolean;
+  tokenBudget?: number;
+
+  // Can only be one of the following values: "truncate", "adaptive"
+  contextOverflow?: "truncate" | "adaptive";
 }
 
 export class SessionsManager extends BaseManager {
@@ -26,27 +30,24 @@ export class SessionsManager extends BaseManager {
    * @param sessionId The unique identifier of the session.
    * @returns A promise that resolves with the session object.
    */
-  async get(sessionId: string): Promise<Session> {
+  async get(sessionId: string & tags.Format<"uuid">): Promise<Session> {
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
+
     return this.apiClient.default.getSession({ sessionId });
   }
 
-  async create({
-    userId,
-    agentId,
-    situation,
-    metadata = {},
-    renderTemplates = false,
-  }: CreateSessionPayload): Promise<ResourceCreatedResponse> {
-    userId &&
-      invariant(
-        isValidUuid4(userId),
-        `userId must be a valid UUID v4. Got "${userId}"`,
-      );
-
-    invariant(
-      isValidUuid4(agentId),
-      `agentId must be a valid UUID v4. Got "${agentId}"`,
-    );
+  async create(
+    payload: CreateSessionPayload,
+  ): Promise<ResourceCreatedResponse> {
+    const {
+      userId,
+      agentId,
+      situation,
+      tokenBudget,
+      contextOverflow,
+      metadata = {},
+      renderTemplates = false,
+    }: CreateSessionPayload = typia.assert<CreateSessionPayload>(payload);
 
     const requestBody = {
       user_id: userId,
@@ -54,22 +55,46 @@ export class SessionsManager extends BaseManager {
       situation,
       metadata,
       render_templates: renderTemplates,
+      token_budget: tokenBudget,
+      context_overflow: contextOverflow,
     };
+
+    type rkey = keyof typeof requestBody;
+
+    for (const key of Object.keys(requestBody)) {
+      if (requestBody[key as rkey] === undefined) {
+        delete requestBody[key as rkey];
+      }
+    }
 
     return this.apiClient.default
       .createSession({ requestBody })
       .catch((error) => Promise.reject(error));
   }
 
-  async list({
-    limit = 100,
-    offset = 0,
-    metadataFilter = {},
-  }: {
-    limit?: number;
-    offset?: number;
-    metadataFilter?: { [key: string]: any };
-  } = {}): Promise<Array<Session>> {
+  async list(
+    options: {
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Minimum<1> & tags.Maximum<1000>;
+      metadataFilter?: { [key: string]: any };
+    } = {},
+  ): Promise<Array<Session>> {
+    const {
+      limit = 100,
+      offset = 0,
+      metadataFilter = {},
+    } = typia.assert<{
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Minimum<1> & tags.Maximum<1000>;
+      metadataFilter?: { [key: string]: any };
+    }>(options);
+
     const metadataFilterString: string = JSON.stringify(metadataFilter);
 
     const result = await this.apiClient.default.listSessions({
@@ -81,19 +106,50 @@ export class SessionsManager extends BaseManager {
     return result.items || [];
   }
 
-  async delete(sessionId: string): Promise<void> {
-    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
+  async delete(sessionId: string & tags.Format<"uuid">): Promise<void> {
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
 
     await this.apiClient.default.deleteSession({ sessionId });
   }
 
   async update(
-    sessionId: string,
-    { situation, metadata = {} }: { situation: string; metadata?: any },
+    sessionId: string & tags.Format<"uuid">,
+    options: {
+      situation: string;
+      tokenBudget?: number & tags.Minimum<1>;
+      contextOverflow?: "truncate" | "adaptive";
+      metadata?: Record<string, any>;
+    },
     overwrite = false,
   ): Promise<ResourceUpdatedResponse> {
-    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
-    const requestBody = { situation, metadata };
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
+
+    const {
+      situation,
+      tokenBudget,
+      contextOverflow,
+      metadata = {},
+    } = typia.assert<{
+      situation: string;
+      tokenBudget?: number & tags.Minimum<1>;
+      contextOverflow?: "truncate" | "adaptive";
+      metadata?: Record<string, any>;
+    }>(options);
+
+    const requestBody = {
+      situation,
+      metadata,
+      token_budget: tokenBudget,
+      context_overflow: contextOverflow,
+    };
+
+    type rkey = keyof typeof requestBody;
+
+    for (const key of Object.keys(requestBody)) {
+      if (requestBody[key as rkey] === undefined) {
+        delete requestBody[key as rkey];
+      }
+    }
 
     if (overwrite) {
       return this.apiClient.default.updateSession({ sessionId, requestBody });
@@ -103,8 +159,12 @@ export class SessionsManager extends BaseManager {
   }
 
   async chat(
-    sessionId: string,
-    {
+    sessionId: string & tags.Format<"uuid">,
+    input: ChatInput,
+  ): Promise<ChatResponse> {
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
+
+    const {
       messages,
       frequency_penalty,
       length_penalty,
@@ -122,9 +182,7 @@ export class SessionsManager extends BaseManager {
       tool_choice,
       tools,
       top_p,
-    }: ChatInput,
-  ): Promise<ChatResponse> {
-    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
+    } = typia.assert<ChatInput>(input);
 
     const options = omitBy(
       {
@@ -157,10 +215,18 @@ export class SessionsManager extends BaseManager {
   }
 
   async suggestions(
-    sessionId: string,
-    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
+    sessionId: string & tags.Format<"uuid">,
+    options: {
+      limit?: number & tags.Minimum<1> & tags.Maximum<1000>;
+      offset?: number & tags.Minimum<0>;
+    } = {},
   ): Promise<Array<Suggestion>> {
-    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
+
+    const { limit = 100, offset = 0 } = typia.assert<{
+      limit?: number & tags.Minimum<1> & tags.Maximum<1000>;
+      offset?: number & tags.Minimum<0>;
+    }>(options);
 
     const result = await this.apiClient.default.getSuggestions({
       sessionId,
@@ -172,10 +238,18 @@ export class SessionsManager extends BaseManager {
   }
 
   async history(
-    sessionId: string,
-    { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
+    sessionId: string & tags.Format<"uuid">,
+    options: {
+      limit?: number & tags.Minimum<1> & tags.Maximum<1000>;
+      offset?: number & tags.Minimum<0>;
+    } = {},
   ): Promise<Array<ChatMLMessage>> {
-    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
+
+    const { limit = 100, offset = 0 } = typia.assert<{
+      limit?: number & tags.Minimum<1> & tags.Maximum<1000>;
+      offset?: number & tags.Minimum<0>;
+    }>(options);
 
     const result = await this.apiClient.default.getHistory({
       sessionId,
@@ -186,8 +260,8 @@ export class SessionsManager extends BaseManager {
     return result.items || [];
   }
 
-  async deleteHistory(sessionId: string): Promise<void> {
-    invariant(isValidUuid4(sessionId), "sessionId must be a valid UUID v4");
+  async deleteHistory(sessionId: string & tags.Format<"uuid">): Promise<void> {
+    typia.assertGuard<string & tags.Format<"uuid">>(sessionId);
 
     await this.apiClient.default.deleteSessionHistory({ sessionId });
   }
