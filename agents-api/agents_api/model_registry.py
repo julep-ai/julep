@@ -196,6 +196,9 @@ def validate_and_extract_tool_calls(assistant_content):
         for element in root.findall(".//tool_call"):
             json_data = None
             try:
+                if element.text is None:
+                    continue
+
                 json_text = element.text.strip()
 
                 try:
@@ -213,7 +216,7 @@ def validate_and_extract_tool_calls(assistant_content):
                             f"- Problematic JSON text: {json_text}"
                         )
                         continue
-            except Exception as e:
+            except BaseException as e:
                 error_message = f"Cannot strip text: {e}"
 
             if json_data is not None:
