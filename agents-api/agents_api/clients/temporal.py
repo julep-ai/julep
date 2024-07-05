@@ -6,6 +6,7 @@ from agents_api.env import (
     temporal_client_cert,
     temporal_private_key,
 )
+from ..common.protocol.tasks import ExecutionInput
 
 
 async def get_client():
@@ -56,6 +57,22 @@ async def run_truncation_task(
     await client.execute_workflow(
         "TruncationWorkflow",
         args=[str(session_id), token_count_threshold],
+        task_queue="memory-task-queue",
+        id=str(job_id),
+    )
+
+
+async def run_task_execution_workflow(
+    execution_input: ExecutionInput,
+    job_id: UUID,
+    start: tuple[str, int] = ("main", 0),
+    previous_inputs: list[dict] = [],
+):
+    client = await get_client()
+
+    await client.execute_workflow(
+        "TaskExecutionWorkflow",
+        args=[execution_input, start, previous_inputs],
         task_queue="memory-task-queue",
         id=str(job_id),
     )

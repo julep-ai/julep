@@ -1,5 +1,6 @@
 from typing import Annotated
 from uuid import uuid4
+from fastapi import BackgroundTasks
 from agents_api.models.execution.create_execution import create_execution_query
 from agents_api.models.execution.get_execution import get_execution_query
 from agents_api.models.execution.get_execution_transition import (
@@ -24,7 +25,6 @@ from starlette.status import HTTP_201_CREATED
 from pycozo.client import QueryException
 from agents_api.autogen.openapi_model import (
     CreateTask,
-    CreateExecution,
     Task,
     Execution,
     ExecutionTransition,
@@ -33,6 +33,8 @@ from agents_api.autogen.openapi_model import (
     UpdateExecutionTransitionRequest,
 )
 from agents_api.dependencies.developer_id import get_developer_id
+from agents_api.clients.temporal import run_task_execution_workflow
+from agents_api.common.protocol.tasks import ExecutionInput
 
 
 class TaskList(BaseModel):
@@ -48,9 +50,6 @@ class ExecutionTransitionList(BaseModel):
 
 
 router = APIRouter()
-
-# TODO: Fix arguments (named or positional)
-# TODO: Add :limit 1 to all _get_ queries from cozo
 
 
 @router.get("/agents/{agent_id}/tasks", tags=["tasks"])
@@ -150,8 +149,9 @@ async def get_task(
 async def create_task_execution(
     agent_id: UUID4,
     task_id: UUID4,
-    request: CreateExecution,
+    request: ExecutionInput,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    background_task: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the input against task input schema
     resp = create_execution_query(
@@ -160,6 +160,16 @@ async def create_task_execution(
         execution_id=uuid4(),
         developer_id=x_developer_id,
         arguments=request.arguments,
+    )
+
+    # TODO: how to get previous_inputs?
+    # TODO: how to get `start` tuple
+    background_task.add_task(
+        run_task_execution_workflow,
+        execution_input=request,
+        job_id=uuid4(),
+        start=start,
+        previous_inputs=previous_inputs,
     )
 
     return ResourceCreatedResponse(
