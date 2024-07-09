@@ -1,7 +1,11 @@
 from typing import Annotated
 from uuid import uuid4
-from fastapi import BackgroundTasks
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 from agents_api.models.execution.create_execution import create_execution_query
+from agents_api.models.execution.update_execution_status import (
+    update_execution_status_query,
+)
 from agents_api.models.execution.get_execution import get_execution_query
 from agents_api.models.execution.get_execution_transition import (
     get_execution_transition_query,
@@ -31,10 +35,12 @@ from agents_api.autogen.openapi_model import (
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
     UpdateExecutionTransitionRequest,
+    CreateExecution,
 )
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.clients.temporal import run_task_execution_workflow
 from agents_api.common.protocol.tasks import ExecutionInput
+from agents_api.clients.cozo import client as cozo_client
 
 
 class TaskList(BaseModel):
@@ -149,31 +155,71 @@ async def get_task(
 async def create_task_execution(
     agent_id: UUID4,
     task_id: UUID4,
-    request: ExecutionInput,
+    request: CreateExecution,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    background_task: BackgroundTasks,
 ) -> ResourceCreatedResponse:
-    # TODO: Do thorough validation of the input against task input schema
-    resp = create_execution_query(
+    try:
+        task = [
+            row.to_dict()
+            for _, row in get_task_query(
+                agent_id=agent_id, task_id=task_id, developer_id=x_developer_id
+            ).iterrows()
+        ][0]
+
+        validate(request.arguments, task["input_schema"])
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid request arguments schema",
+        )
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found",
+        )
+    except QueryException as e:
+        if e.code == "transact::assertion_failure":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+            )
+
+        raise
+
+    execution_id = uuid4()
+    execution = create_execution_query(
         agent_id=agent_id,
         task_id=task_id,
-        execution_id=uuid4(),
+        execution_id=execution_id,
         developer_id=x_developer_id,
         arguments=request.arguments,
     )
 
-    # TODO: how to get previous_inputs?
-    # TODO: how to get `start` tuple
-    background_task.add_task(
-        run_task_execution_workflow,
-        execution_input=request,
-        job_id=uuid4(),
-        start=start,
-        previous_inputs=previous_inputs,
+    execution_input = ExecutionInput.fetch(
+        developer_id=x_developer_id,
+        task_id=task_id,
+        execution_id=execution_id,
+        client=cozo_client,
     )
 
+    try:
+        await run_task_execution_workflow(
+            execution_input=execution_input,
+            job_id=uuid4(),
+        )
+    except Exception:
+        update_execution_status_query(
+            task_id=task_id,
+            execution_id=execution_id,
+            status="failed",
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Task creation failed",
+        )
+
     return ResourceCreatedResponse(
-        id=resp["execution_id"][0], created_at=resp["created_at"][0]
+        id=execution["execution_id"][0], created_at=execution["created_at"][0]
     )
 
 
