@@ -85,7 +85,13 @@ async def create_task(
 ) -> ResourceCreatedResponse:
     task_id = uuid4()
 
-    # TODO: Do thorough validation of the task spec
+    # TODO: Do thorough validation of the task spec (low priority for now)
+    ### COMMENT: @creatorrr: these are extensive validations like:
+    ###     - check if `main` workflow is present
+    ###     - make sure that none of the steps mention any workflow that's not defined in the spec
+    ###     - make sure that none of the steps use any `inputs[idx]` or `outputs[idx]` that is non-integer and overflows
+    ###     - make sure that `inputs[idx].field` is valid for where that step is called from
+    ###     - ... other forms of static analysis that we can do (but is easy to implement)
 
     workflows = [
         {"name": "main", "steps": [w.model_dump() for w in request.main]},
@@ -149,11 +155,16 @@ async def get_task(
 async def create_task_execution(
     agent_id: UUID4,
     task_id: UUID4,
+
+    ### COMMENT: @creatorrr: This should be `CreateExecution` instead which accepts ({task_id: UUID, arguments: dict[str, Any]})
     request: ExecutionInput,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     background_task: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the input against task input schema
+    ### COMMENT: @creatorrr: we basically need to fetch the `Task` object and then validate `request.arguments` against `task.input_schema` json schema
+    
+    ### COMMENT: @creatorrr: do `execution_id = uuid4()` here and then use that below since we will be referring to it
     resp = create_execution_query(
         agent_id=agent_id,
         task_id=task_id,
@@ -162,16 +173,31 @@ async def create_task_execution(
         arguments=request.arguments,
     )
 
+    ### COMMENT: @creatorrr: Fetch data for the execution input
+    ### execution_input = ExecutionInput.fetch(
+    ###     developer_id=x_developer_id,
+    ###     execution_id=execution_id,
+    ###     task_id=task_id,
+    ###     client=cozo_client,
+    ### )
+    
     # TODO: how to get previous_inputs?
     # TODO: how to get `start` tuple
+    ### COMMENT: @creatorrr: then you dont have to do any of this
+
+    ### COMMENT: @creatorrr: this should be done directly instead of a background task because we def want it to succeed
     background_task.add_task(
         run_task_execution_workflow,
         execution_input=request,
+
+        ### COMMENT: @creatorrr: you dont need these, default values work fine to start an execution
         job_id=uuid4(),
         start=start,
         previous_inputs=previous_inputs,
     )
 
+    ### COMMENT: @creatorrr: put this inside a try-catch and if it fails, change the status of execution we created as "failed"
+    
     return ResourceCreatedResponse(
         id=resp["execution_id"][0], created_at=resp["created_at"][0]
     )
@@ -224,6 +250,7 @@ async def get_execution_transition(
         )
 
 
+### COMMENT: @creatorrr: this is applicable for when we implement stuff that requires pausing the execution
 # TODO: Later; for resuming waiting transitions
 # TODO: Ask for a task token to resume a waiting transition
 @router.put("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
