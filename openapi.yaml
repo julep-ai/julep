@@ -2865,13 +2865,9 @@ components:
           properties: {}
           additionalProperties: true
           description: JSON Schema of parameters
-        status:
-          $ref: '#/components/schemas/ExecutionStatus'
       required:
-        - id
         - task_id
         - arguments
-        - status
     ToolResponse:
       type: object
       properties:
