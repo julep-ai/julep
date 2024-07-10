@@ -14,6 +14,7 @@ from agents_api.common.exceptions import BaseCommonException
 from agents_api.exceptions import PromptTooBigError
 from pycozo.client import QueryException
 from temporalio.service import RPCError
+from litellm.exceptions import APIError
 
 from agents_api.dependencies.auth import get_api_key
 from agents_api.env import sentry_dsn
@@ -116,6 +117,14 @@ async def session_not_found_error_handler(request: Request, exc: BaseCommonExcep
 async def prompt_too_big_error(request: Request, exc: PromptTooBigError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
+        content={"error": {"message": str(exc)}},
+    )
+
+
+@app.exception_handler(APIError)
+async def litellm_api_error(request: Request, exc: APIError):
+    return JSONResponse(
+        status_code=status.HTTP_502_BAD_GATEWAY,
         content={"error": {"message": str(exc)}},
     )
 
