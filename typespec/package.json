@@ -1,0 +1,15 @@
+{
+  "name": "julep-typespec",
+  "version": "0.3.0",
+  "type": "module",
+  "dependencies": {
+    "@typespec/compiler": "latest",
+    "@typespec/http": "latest",
+    "@typespec/openapi": "^0.57.0",
+    "@typespec/openapi3": "latest",
+    "@typespec/rest": "latest",
+    "@typespec/versioning": "^0.57.0",
+    "autorest": "^3.7.1"
+  },
+  "private": true
+}
