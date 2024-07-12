@@ -1196,7 +1196,7 @@ paths:
     delete:
       summary: Delete a Task by ID
       description: ''
-      operationId: GetTask
+      operationId: DeleteTask
       responses:
         '202':
           description: ''
