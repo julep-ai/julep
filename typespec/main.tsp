@@ -6,6 +6,7 @@ import "./agents";
 import "./chat";
 import "./docs";
 import "./entries";
+import "./executions";
 import "./jobs";
 import "./sessions";
 import "./tasks";
@@ -69,7 +70,7 @@ namespace Api {
     model JobStatus is Jobs.JobStatus;
 
     @route("/agents")
-    interface AgentRoute extends Agents.Endpoints {}
+    interface AgentsRoute extends Agents.Endpoints {}
 
     @route("/agents/{id}/docs")
     interface AgentDocsRoute extends Docs.AgentEndpoints {}
@@ -78,22 +79,31 @@ namespace Api {
     interface AgentToolsRoute extends Tools.AgentEndpoints {}
 
     @route("/users")
-    interface UserRoute extends Users.Endpoints {}
+    interface UsersRoute extends Users.Endpoints {}
 
     @route("/users/{id}/docs")
     interface UserDocsRoute extends Docs.UserEndpoints {}
 
     @route("/sessions")
-    interface SessionRoute extends Sessions.Endpoints {}
+    interface SessionsRoute extends Sessions.Endpoints {}
 
     @route("/sessions/{id}/history")
     interface HistoryRoute extends Entries.Endpoints {}
 
     @route("/docs/{id}")
-    interface AgentIndividualDocRoute extends Docs.IndividualDocEndpoints {}
+    interface AgentIndividualDocsRoute extends Docs.IndividualDocEndpoints {}
 
     @route("/tasks")
-    interface TaskRoute extends Tasks.Endpoints {}
+    interface TasksRoute extends Tasks.Endpoints {}
+
+    @route("/tasks/{id}/executions")
+    interface TaskExecutionsRoute extends Tasks.ExecutionEndpoints {}
+
+    @route("/executions")
+    interface ExecutionsRoute extends Executions.Endpoints {}
+
+    @route("/executions/{id}/transitions")
+    interface ExecutionTransitionsRoute extends Executions.TransitionEndpoints {}
 
     @route("/tools")
     interface ToolRoute extends Tools.Endpoints {}
