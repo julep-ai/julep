@@ -1344,7 +1344,7 @@ paths:
       - in: path
         name: task_id
         description: ''
-        schema: &ref_3
+        schema:
           type: string
           format: uuid
         required: true 
@@ -1364,7 +1364,9 @@ paths:
       - in: path
         name: execution_id
         description: ''
-        schema: *ref_3
+        schema:
+          type: string
+          format: uuid
         required: true
     put:
       summary: Stop an Execution by ID
@@ -1392,17 +1394,24 @@ paths:
       responses:
         '200':
           description: ''
-          headers: *ref_4
+          headers: {}
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ExecutionTransition'
-      security: *ref_5
+      security:
+        - api-key: []
       summary: List Transitions of an Execution
     parameters:
-      - *ref_6
+      - in: path
+        name: execution_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
   /executions/{execution_id}/transitions/{transition_id}:
     get:
       description: ''
@@ -1410,17 +1419,16 @@ paths:
       responses:
         '200':
           description: ''
-          headers: &ref_4 {}
+          headers: {}
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExecutionTransition'
-      security: &ref_5
+      security: 
         - api-key: []
       summary: Get an Execution Transition
     parameters:
-      - &ref_6
-        in: path
+      - in: path
         name: execution_id
         description: ''
         schema:
