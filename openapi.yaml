@@ -1134,6 +1134,7 @@ paths:
           type: string
           format: uuid
         required: true
+
   /agents/{agent_id}/tasks:
     get:
       summary: Get a list of tasks
@@ -1177,9 +1178,87 @@ paths:
         schema: &ref_0
           type: string
         required: true
+  /agents/{agent_id}/tasks/{task_id}:
+    get:
+      summary: Get a Task by ID
+      description: ''
+      operationId: GetTask
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      security:
+        - api-key: []
+    delete:
+      summary: Delete a Task by ID
+      description: ''
+      operationId: DeleteTask
+      responses:
+        '202':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceDeletedResponse'
+      security:
+        - api-key: []
+    put:
+      summary: Update a Task by ID (overwrite)
+      description: ''
+      operationId: UpdateTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTask'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+    patch:
+      summary: Update a Task by ID (merge)
+      description: ''
+      operationId: PatchTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTask'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
+    parameters:
+      - in: path
+        name: agent_id
+        description: ''
+        schema: *ref_0
+        required: true
+      - in: path
+        name: task_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
   /agents/{agent_id}/tasks/{task_id}/executions:
     post:
-      summary: Create (or start) an execution of a Task
+      summary: Start an execution of a Task
       description: ''
       operationId: StartTaskExecution
       requestBody:
@@ -1200,7 +1279,50 @@ paths:
     get:
       summary: List Executions of a Task
       description: ''
-      operationId: GetTaskExecution
+      operationId: ListTaskExecutions
+      parameters:
+        - in: query
+          name: limit
+          description: Number of sessions to return
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - in: query
+          name: offset
+          description: Number of sessions to skip (sorted created_at descending order)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: metadata_filter
+          description: JSON object that should be used to filter objects by metadata
+          required: false
+          schema:
+            type: string
+            default: '{}'
+        - in: query
+          name: sort_by
+          description: 'Which field to sort by: `created_at` or `updated_at`'
+          schema:
+            type: string
+            enum:
+              - created_at
+              - updated_at
+            default: created_at
+        - in: query
+          name: order
+          description: >-
+            Which order should the sort be: `asc` (ascending) or `desc`
+            (descending)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses: &ref_1
         '200':
           description: ''
@@ -1222,87 +1344,10 @@ paths:
       - in: path
         name: task_id
         description: ''
-        schema: &ref_3
-          type: string
-          format: uuid
-        required: true
-  /agents/{agent_id}/tasks/{task_id}:
-    get:
-      summary: Get a Task by ID
-      description: ''
-      operationId: GetTask
-      responses:
-        '200':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Task'
-      security:
-        - api-key: []
-    parameters:
-      - in: path
-        name: agent_id
-        description: ''
-        schema: *ref_0
-        required: true
-      - in: path
-        name: task_id
-        description: ''
         schema:
           type: string
           format: uuid
-        required: true
-  /executions/{execution_id}/transitions/{transition_id}:
-    get:
-      description: ''
-      operationId: GetExecutionTransition
-      responses:
-        '200':
-          description: ''
-          headers: &ref_4 {}
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExecutionTransition'
-      security: &ref_5
-        - api-key: []
-      summary: Get an Execution Transition
-    parameters:
-      - &ref_6
-        in: path
-        name: execution_id
-        description: ''
-        schema:
-          type: string
-          format: uuid
-        required: true
-      - in: path
-        name: transition_id
-        description: ''
-        schema:
-          type: string
-        required: true
-    put:
-      summary: ''
-      description: ''
-      operationId: ResumeToolExecution
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateExecutionTransitionRequest'
-      responses:
-        '200':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResourceUpdatedResponse'
-      security:
-        - api-key: []
+        required: true 
   /tasks/{task_id}/executions/{execution_id}:
     get:
       summary: Get Task Execution By ID
@@ -1319,26 +1364,104 @@ paths:
       - in: path
         name: execution_id
         description: ''
-        schema: *ref_3
+        schema:
+          type: string
+          format: uuid
         required: true
-  /executions/{execution_id}/transitions/:
-    get:
+    put:
+      summary: Stop an Execution by ID
       description: ''
-      operationId: GetExecutionTransition
+      operationId: StopExecution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopExecution'
       responses:
         '200':
           description: ''
-          headers: *ref_4
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
+  /executions/{execution_id}/transitions:
+    get:
+      description: ''
+      operationId: ListExecutionTransitions
+      responses:
+        '200':
+          description: ''
+          headers: {}
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ExecutionTransition'
-      security: *ref_5
+      security:
+        - api-key: []
       summary: List Transitions of an Execution
     parameters:
-      - *ref_6
+      - in: path
+        name: execution_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
+  /executions/{execution_id}/transitions/{transition_id}:
+    get:
+      description: ''
+      operationId: GetExecutionTransition
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionTransition'
+      security: 
+        - api-key: []
+      summary: Get an Execution Transition
+    parameters:
+      - in: path
+        name: execution_id
+        description: ''
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: transition_id
+        description: ''
+        schema:
+          type: string
+        required: true
+    put:
+      summary: 'Resume an Execution which is waiting for input'
+      description: ''
+      operationId: ResumeTaskExecution
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeExecutionTransitionRequest'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceUpdatedResponse'
+      security:
+        - api-key: []
+
+
 components:
   schemas:
     User:
@@ -2617,8 +2740,23 @@ components:
       required:
         - type
         - image_url
+    ToolResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Optional Tool ID
+          format: uuid
+        output:
+          type: object
+          properties: {}
+          additionalProperties: true
+      required:
+        - output
+        - id
     Task:
       type: object
+      additionalProperties: true
       properties:
         name:
           type: string
@@ -2747,18 +2885,21 @@ components:
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
         outputs:
           type: object
           additionalProperties: true
           description: Outputs from an Execution Transition
-        from:
+        current:
           type: array
           items:
             - type: string
               description: Canonical name of the workflow
             - type: integer
               description: Step index
-        to:
+        next:
           type: array
           nullable: true
           items:
@@ -2773,9 +2914,10 @@ components:
         - execution_id
         - type
         - created_at
+        - updated_at
         - outputs
-        - from
-        - to
+        - current
+        - next
     PromptWorkflowStep:
       type: object
       properties:
@@ -2803,6 +2945,8 @@ components:
           type: string
         arguments:
           $ref: '#/components/schemas/CELObject'
+
+      additionalProperties: true
       required:
         - workflow
         - arguments
@@ -2848,11 +2992,23 @@ components:
         - else
     TransitionType:
       type: string
-      pattern: ^(finish|wait|error|step)$
+      enum: 
+        - finish
+        - wait
+        - error
+        - step
+        - cancelled
       description: Execution Status
     ExecutionStatus:
       type: string
-      pattern: ^(queued|starting|running|awaiting_input|succeeded|failed)$
+      enum: 
+        - queued
+        - starting
+        - running
+        - awaiting_input
+        - succeeded
+        - failed
+        - cancelled
       description: Execution Status
     CreateExecution:
       type: object
@@ -2868,64 +3024,29 @@ components:
       required:
         - task_id
         - arguments
-    ToolResponse:
+    StopExecution:
       type: object
       properties:
-        id:
+        status:
           type: string
-          description: Optional Tool ID
-          format: uuid
-        output:
-          type: object
-          properties: {}
-          additionalProperties: true
+          enum: 
+            - cancelled
+          description: Stop Execution Status
       required:
-        - output
-        - id
-    UpdateExecutionTransitionRequest:
+        - status
+    ResumeExecutionTransitionRequest:
       type: object
       properties:
-        type:
-          type: string
-          enum:
-            - finish
-            - wait
-            - error
-            - step
-          description: Transition type
-        from:
-          type: array
-          minItems: 2
-          maxItems: 2
-          items:
-            oneOf:
-              - type: string
-              - type: integer
-          description: From state
-        to:
-          type: array
-          minItems: 2
-          maxItems: 2
-          items:
-            oneOf:
-              - type: string
-              - type: integer
-          description: To state
-        output:
-          type: object
-          properties: {}
-          description: Execution output
         task_token:
           type: string
           description: Task token
-        metadata:
+        output:
           type: object
-          properties: {}
-          description: Custom metadata
+          additionalProperties: true
+          description: Output of the execution
       description: Update execution transition request schema
       required:
-        - type
-        - from
+        - task_token
         - output
   securitySchemes:
     api-key:
