@@ -1,12 +1,6 @@
-import "@typespec/http";
-import "@typespec/openapi";
-
 import "../common";
 import "../sessions";
 import "./models.tsp";
-
-using TypeSpec.Http;
-using TypeSpec.OpenAPI;
 
 using Common;
 using Sessions;

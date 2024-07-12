@@ -8,6 +8,7 @@ import "./docs";
 import "./entries";
 import "./jobs";
 import "./sessions";
+import "./tasks";
 import "./tools";
 import "./users";
 import "./versions.tsp";
@@ -51,39 +52,52 @@ using Versions;
     }
 )
 @useAuth(
-    ApiKeyAuth<ApiKeyLocation.header, "Authorization">
-    | ApiKeyAuth<ApiKeyLocation.header, "X-Auth-Key">
+    ApiKeyAuth<ApiKeyLocation.header, "Authorization"> | ApiKeyAuth<
+        ApiKeyLocation.header,
+        "X-Auth-Key"
+    >
 )
 namespace Api {
-    // model Agent_ is Agents.Agent {}
+    model Agent is Agents.Agent;
+    model Doc is Docs.Doc;
+    model Tool is Tools.Tool;
+    model User is Users.User;
+    model Session is Sessions.Session;
+    model History is Entries.History;
+    model Entry is Entries.Entry;
+    model Task is Tasks.Task;
+    model JobStatus is Jobs.JobStatus;
 
     @route("/agents")
-    interface Agent extends Agents.Endpoints {}
+    interface AgentRoute extends Agents.Endpoints {}
 
     @route("/agents/{id}/docs")
-    interface AgentDocs extends Docs.AgentEndpoints {}
+    interface AgentDocsRoute extends Docs.AgentEndpoints {}
 
     @route("/agents/{id}/tools")
-    interface AgentTools extends Tools.AgentEndpoints {}
+    interface AgentToolsRoute extends Tools.AgentEndpoints {}
 
     @route("/users")
-    interface User extends Users.Endpoints {}
+    interface UserRoute extends Users.Endpoints {}
 
     @route("/users/{id}/docs")
-    interface UserDocs extends Docs.UserEndpoints {}
+    interface UserDocsRoute extends Docs.UserEndpoints {}
 
     @route("/sessions")
-    interface Session extends Sessions.Endpoints {}
+    interface SessionRoute extends Sessions.Endpoints {}
 
     @route("/sessions/{id}/history")
-    interface History extends Entries.Endpoints {}
+    interface HistoryRoute extends Entries.Endpoints {}
 
     @route("/docs/{id}")
-    interface AgentIndividualDoc extends Docs.IndividualDocEndpoints {}
+    interface AgentIndividualDocRoute extends Docs.IndividualDocEndpoints {}
+
+    @route("/tasks")
+    interface TaskRoute extends Tasks.Endpoints {}
 
     @route("/tools")
-    interface Tool extends Tools.Endpoints {}
+    interface ToolRoute extends Tools.Endpoints {}
 
     @route("/jobs")
-    interface Job extends Jobs.Endpoints {}
+    interface JobRoute extends Jobs.Endpoints {}
 }

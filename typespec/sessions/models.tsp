@@ -1,6 +1,10 @@
+import "../agents";
 import "../common";
+import "../users";
 
+using Agents;
 using Common;
+using Users;
 
 namespace Sessions;
 
@@ -15,11 +19,11 @@ model Session {
 
     /** User ID of user associated with this session */
     @visibility("create")
-    user_id: uuid;
+    user_id: User.id;
 
     /** Agent ID of agent associated with this session */
     @visibility("create")
-    agent_id: uuid;
+    agent_id: Agent.id;
 
     /** A specific situation that sets the background for this session */
     situation: string = "";

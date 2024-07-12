@@ -1,7 +1,9 @@
 import "../common";
+import "../sessions";
 import "../tools";
 
 using Common;
+using Sessions;
 using Tools;
 
 namespace Entries;
@@ -92,7 +94,6 @@ model InputChatMLMessage {
 alias EntryContent = ChatMLContentPart[] | Tool | ChosenToolCall | string | ToolResponse;
 
 model Entry {
-    @key entry_id: uuid;
     role: ChatMLRole;
     name: string | null = null;
     content: EntryContent | EntryContent[];
@@ -103,6 +104,7 @@ model Entry {
     
     /** This is the time it was added to the database */
     ...HasCreatedAt;
+    ...HasId;
 }
 
 model Relation {
@@ -114,7 +116,7 @@ model Relation {
 model History {
     entries: Entry[];
     relations: Relation[];
-    session_id: uuid;
+    session_id: Session.id;
 
     ...HasCreatedAt;
 }

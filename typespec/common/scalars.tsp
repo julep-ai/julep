@@ -42,3 +42,6 @@ alias eventStream = "text/event-stream";
 
 /** Different possible sources that can produce new entries */
 alias entrySource = "api_request" | "api_response" | "tool_response" | "internal" | "summarizer" | "meta";
+
+@pattern("^(function|integration|system|api_call)/(\\w+)$")
+scalar toolType extends string;

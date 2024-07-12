@@ -1,13 +1,7 @@
-import "@typespec/http";
-import "@typespec/openapi";
-
 import "../agents";
 import "../common";
 import "../users";
 import "./models.tsp";
-
-using TypeSpec.Http;
-using TypeSpec.OpenAPI;
 
 using Agents;
 using Common;
