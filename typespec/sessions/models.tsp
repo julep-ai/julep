@@ -34,6 +34,12 @@ model Session {
 
     /** Render system and assistant message content as jinja templates */
     render_templates: boolean = false;
+
+    /** Threshold value for the adaptive context functionality */
+    token_budget: int | null = null
+    
+    /** Action to start on context window overflow */
+    context_overflow: string | null = null
 }
 
 /** Payload for updating a session */
