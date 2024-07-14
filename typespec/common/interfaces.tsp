@@ -1,11 +1,9 @@
 import "@typespec/http";
-import "@typespec/openapi";
 
 import "./scalars.tsp";
 import "./types.tsp";
 
 using TypeSpec.Http;
-using TypeSpec.OpenAPI;
 
 namespace Common;
 
@@ -17,26 +15,8 @@ interface LimitOffsetPagination<T, TName extends string> {
     @get
     @doc("List {TName} items", {TName: TName})
     list(
-        @query
-        @doc("Limit the number of {TName} items returned", {TName: TName})
-        limit: limit = 100,
-
-        @query
-        @doc("Offset the {TName} items returned", {TName: TName})
-        offset: offset = 0,
-
-        /** Sort by a field */
-        @query sort_by: sortBy = "created_at",
-
-        /** Sort direction */
-        @query direction: sortDirection = "asc",
-
-        /** JSON string of object that should be used to filter objects by metadata */
-        @query metadata_filter: string = "{}",
-
-        @query before?: unixTimestamp32,
-        @query after?: unixTimestamp32,
-    ): T[];
+        ...PaginationOptions<TName>
+    ): {results: T[]};
 }
 
 interface CreateEndpoint<T, TName extends string, CreateT = T> {
@@ -153,24 +133,9 @@ interface ChildLimitOffsetPagination<
         @path
         @doc("ID of parent {PName}", {PName: PName})
         id: uuid,
-
-        @query
-        @doc("Limit the number of {TName} items returned", {TName: TName})
-        limit: limit = 100,
-
-        @query
-        @doc("Offset the {TName} items returned", {TName: TName})
-        offset: offset = 0,
-
-        /** Sort by a field */
-        @query sort_by: sortBy = "created_at",
-
-        /** Sort direction */
-        @query direction: sortDirection = "asc",
-
-        /** JSON string of object that should be used to filter objects by metadata */
-        @query metadata_filter: string = "{}",
-    ): T[];
+        
+        ...PaginationOptions<TName>
+    ): {results: T[]};
 }
 
 interface ChildCreateEndpoint<
