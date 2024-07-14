@@ -31,8 +31,8 @@ alias ToolChoiceOption = "auto" | "none" | NamedToolChoice;
 
 /** Function definition */
 model FunctionDef {
-    /** The name of the function */
-    name: string;
+    /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
+    name?: validPythonIdentifier = "overriden";
 
     /** The parameters the function accepts */
     parameters: FunctionParameters;
@@ -80,6 +80,9 @@ model NamedToolChoice {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
     type: ToolType;
 
+    /** The name of the tool/function */
+    name: validPythonIdentifier;
+    
     function?: FunctionCallOption;
     integration?: unknown;
     system?: unknown;

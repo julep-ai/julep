@@ -15,6 +15,10 @@ scalar uuid extends string;
 @pattern("^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$")
 scalar identifierSafeUnicode extends string;
 
+/** Valid python identifier names */
+@pattern("^[^\\W0-9]\\w*$")
+scalar validPythonIdentifier extends string;
+
 /** Limit the number of results */
 @minValue(1)
 @maxValueExclusive(1000)
