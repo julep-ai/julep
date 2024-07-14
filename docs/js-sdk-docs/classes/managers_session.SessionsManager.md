@@ -59,7 +59,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/base.ts#L14)
 
 ## Properties
 
@@ -75,20 +75,20 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/base.ts#L14)
 
 ## Methods
 
 ### chat
 
-▸ **chat**(`sessionId`, `«destructured»`): `Promise`\<[`ChatResponse`](../modules/api.md#chatresponse)\>
+▸ **chat**(`sessionId`, `input`): `Promise`\<[`ChatResponse`](../modules/api.md#chatresponse)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `sessionId` | `string` |
-| `«destructured»` | [`ChatInput`](../modules/api.md#chatinput) |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> |
+| `input` | [`ChatInput`](../modules/api.md#chatinput) |
 
 #### Returns
 
@@ -96,19 +96,19 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/session.ts:105](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L105)
+[src/managers/session.ts:161](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L161)
 
 ___
 
 ### create
 
-▸ **create**(`«destructured»`): `Promise`\<[`ResourceCreatedResponse`](../modules/api.md#resourcecreatedresponse)\>
+▸ **create**(`payload`): `Promise`\<[`ResourceCreatedResponse`](../modules/api.md#resourcecreatedresponse)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `«destructured»` | [`CreateSessionPayload`](../interfaces/managers_session.CreateSessionPayload.md) |
+| `payload` | [`CreateSessionPayload`](../interfaces/managers_session.CreateSessionPayload.md) |
 
 #### Returns
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:33](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L33)
+[src/managers/session.ts:39](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L39)
 
 ___
 
@@ -128,7 +128,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `sessionId` | `string` |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:84](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L84)
+[src/managers/session.ts:109](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L109)
 
 ___
 
@@ -148,7 +148,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `sessionId` | `string` |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -156,7 +156,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:189](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L189)
+[src/managers/session.ts:263](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L263)
 
 ___
 
@@ -170,7 +170,7 @@ Retrieves a session by its ID.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `sessionId` | `string` | The unique identifier of the session. |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> | The unique identifier of the session. |
 
 #### Returns
 
@@ -180,22 +180,22 @@ A promise that resolves with the session object.
 
 #### Defined in
 
-[src/managers/session.ts:29](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L29)
+[src/managers/session.ts:33](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L33)
 
 ___
 
 ### history
 
-▸ **history**(`sessionId`, `«destructured»?`): `Promise`\<[`ChatMLMessage`](../modules/api.md#chatmlmessage)[]\>
+▸ **history**(`sessionId`, `options?`): `Promise`\<[`ChatMLMessage`](../modules/api.md#chatmlmessage)[]\>
 
 #### Parameters
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `sessionId` | `string` | `undefined` |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `100` |
-| › `offset?` | `number` | `0` |
+| Name | Type |
+| :------ | :------ |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> |
+| `options` | `Object` |
+| `options.limit?` | `number` & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.offset?` | `number` & `Minimum`\<``0``\> |
 
 #### Returns
 
@@ -203,22 +203,22 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:174](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L174)
+[src/managers/session.ts:240](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L240)
 
 ___
 
 ### list
 
-▸ **list**(`«destructured»?`): `Promise`\<[`Session`](../modules/api.md#session)[]\>
+▸ **list**(`options?`): `Promise`\<[`Session`](../modules/api.md#session)[]\>
 
 #### Parameters
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `100` |
-| › `metadataFilter?` | `Object` | `{}` |
-| › `offset?` | `number` | `0` |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.limit?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.metadataFilter?` | `Object` |
+| `options.offset?` | `number` & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
 
 #### Returns
 
@@ -226,22 +226,22 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:64](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L64)
+[src/managers/session.ts:75](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L75)
 
 ___
 
 ### suggestions
 
-▸ **suggestions**(`sessionId`, `«destructured»?`): `Promise`\<[`Suggestion`](../modules/api.md#suggestion)[]\>
+▸ **suggestions**(`sessionId`, `options?`): `Promise`\<[`Suggestion`](../modules/api.md#suggestion)[]\>
 
 #### Parameters
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `sessionId` | `string` | `undefined` |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `100` |
-| › `offset?` | `number` | `0` |
+| Name | Type |
+| :------ | :------ |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> |
+| `options` | `Object` |
+| `options.limit?` | `number` & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.offset?` | `number` & `Minimum`\<``0``\> |
 
 #### Returns
 
@@ -249,22 +249,24 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:159](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L159)
+[src/managers/session.ts:217](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L217)
 
 ___
 
 ### update
 
-▸ **update**(`sessionId`, `«destructured»`, `overwrite?`): `Promise`\<[`ResourceUpdatedResponse`](../modules/api.md#resourceupdatedresponse)\>
+▸ **update**(`sessionId`, `options`, `overwrite?`): `Promise`\<[`ResourceUpdatedResponse`](../modules/api.md#resourceupdatedresponse)\>
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `sessionId` | `string` | `undefined` |
-| `«destructured»` | `Object` | `undefined` |
-| › `metadata?` | `any` | `{}` |
-| › `situation` | `string` | `undefined` |
+| `sessionId` | `string` & `Format`\<``"uuid"``\> | `undefined` |
+| `options` | `Object` | `undefined` |
+| `options.contextOverflow?` | ``"truncate"`` \| ``"adaptive"`` | `undefined` |
+| `options.metadata?` | `Record`\<`string`, `any`\> | `undefined` |
+| `options.situation` | `string` | `undefined` |
+| `options.tokenBudget?` | `number` & `Minimum`\<``1``\> | `undefined` |
 | `overwrite` | `boolean` | `false` |
 
 #### Returns
@@ -273,4 +275,4 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:90](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/session.ts#L90)
+[src/managers/session.ts:115](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L115)

@@ -5,7 +5,8 @@
 * [Introduction](README.md)
 * [🤖 Agents](concepts/agents.md)
 * [🙎 Users](concepts/users.md)
-* [🔁 Sessions](concepts/sessions.md)
+* [🔁 Sessions](concepts/sessions/README.md)
+  * [Adaptive Context ᴺᴱᵂ](concepts/sessions/adaptive-context.md)
 * [📖 Documents](concepts/documents.md)
 
 ## 📖 Guides

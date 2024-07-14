@@ -1,3 +1,5 @@
+import typia from "typia";
+
 import { JulepApiClient } from "../api/JulepApiClient";
 
 /**
@@ -9,5 +11,7 @@ export class BaseManager {
    * Constructs a new instance of BaseManager.
    * @param apiClient The JulepApiClient instance used for API interactions.
    */
-  constructor(public apiClient: JulepApiClient) {}
+  constructor(public apiClient: JulepApiClient) {
+    typia.assertGuard<JulepApiClient>(apiClient);
+  }
 }

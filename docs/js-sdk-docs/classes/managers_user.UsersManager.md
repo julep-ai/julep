@@ -55,7 +55,7 @@ Constructs a new instance of BaseManager.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/base.ts#L14)
 
 ## Properties
 
@@ -71,19 +71,19 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/base.ts:12](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/base.ts#L12)
+[src/managers/base.ts:14](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/base.ts#L14)
 
 ## Methods
 
 ### create
 
-▸ **create**(`«destructured»?`): `Promise`\<[`User`](../modules/api.md#user)\>
+▸ **create**(`options?`): `Promise`\<[`User`](../modules/api.md#user)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `«destructured»` | [`CreateUserRequest`](../modules/api.md#createuserrequest) |
+| `options` | [`CreateUserRequest`](../modules/api.md#createuserrequest) |
 
 #### Returns
 
@@ -91,7 +91,7 @@ The JulepApiClient instance used for API interactions.
 
 #### Defined in
 
-[src/managers/user.ts:27](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/user.ts#L27)
+[src/managers/user.ts:22](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/user.ts#L22)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `userId` | `string` |
+| `userId` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:63](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/user.ts#L63)
+[src/managers/user.ts:70](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/user.ts#L70)
 
 ___
 
@@ -123,7 +123,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `userId` | `string` |
+| `userId` | `string` & `Format`\<``"uuid"``\> |
 
 #### Returns
 
@@ -131,22 +131,22 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:15](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/user.ts#L15)
+[src/managers/user.ts:14](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/user.ts#L14)
 
 ___
 
 ### list
 
-▸ **list**(`«destructured»?`): `Promise`\<[`User`](../modules/api.md#user)[]\>
+▸ **list**(`options?`): `Promise`\<[`User`](../modules/api.md#user)[]\>
 
 #### Parameters
 
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `«destructured»` | `Object` | `{}` |
-| › `limit?` | `number` | `10` |
-| › `metadataFilter?` | `Object` | `{}` |
-| › `offset?` | `number` | `0` |
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.limit?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``1``\> & `Maximum`\<``1000``\> |
+| `options.metadataFilter?` | `Object` |
+| `options.offset?` | `number` & `Type`\<``"uint32"``\> & `Minimum`\<``0``\> |
 
 #### Returns
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:44](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/user.ts#L44)
+[src/managers/user.ts:37](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/user.ts#L37)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:73](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/user.ts#L73)
+[src/managers/user.ts:76](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/user.ts#L76)
 
 ▸ **update**(`userId`, `request`, `overwrite?`): `Promise`\<[`User`](../modules/api.md#user)\>
 
@@ -194,4 +194,4 @@ ___
 
 #### Defined in
 
-[src/managers/user.ts:79](https://github.com/julep-ai/julep/blob/ee76924041e12f63bec7f59eb51d8ae34097d22f/sdks/ts/src/managers/user.ts#L79)
+[src/managers/user.ts:82](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/user.ts#L82)
