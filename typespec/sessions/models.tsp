@@ -36,7 +36,7 @@ model Session {
     render_templates: boolean = false;
 
     /** Threshold value for the adaptive context functionality */
-    token_budget: int | null = null
+    token_budget: uint16 | null = null;
     
     /** Action to start on context window overflow */
     context_overflow: string | null = null

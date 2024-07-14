@@ -39,9 +39,9 @@ alias yaml = "application/yaml" | "text/x-yaml" | "text/yaml";
 alias json = "application/json";
 alias eventStream = "text/event-stream";
 
-
 /** Different possible sources that can produce new entries */
 alias entrySource = "api_request" | "api_response" | "tool_response" | "internal" | "summarizer" | "meta";
 
-@pattern("^(function|integration|system|api_call)/(\\w+)$")
-scalar toolType extends string;
+/** Naming convention for tool references. Tools are resolved in order: `step-settings` -> `task` -> `agent` */
+@pattern("^(function|integration|system|api_call)\\.(\\w+)$")
+scalar toolRef extends string;

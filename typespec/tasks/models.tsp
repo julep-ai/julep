@@ -2,11 +2,13 @@ import "../agents";
 import "../common";
 import "../chat";
 import "../entries";
+import "../tools";
 
 using Agents;
 using Chat;
 using Common;
 using Entries;
+using Tools;
 
 namespace Tasks;
 
@@ -49,7 +51,7 @@ model ToolCallStep extends WorkflowStep {
     __kind: "tool_call" = "tool_call";
 
     /** The tool to run */
-    tool: toolType;
+    tool: toolRef;
 
     /** The input parameters for the tool */
     arguments: Record<unknown>;
@@ -129,9 +131,18 @@ model Task {
     name: string;
 
     description: string = "";
+    
+    /** The entrypoint of the task. */
     main: WorkflowStep[];
+    
+    /** The schema for the input to the task. `null` means all inputs are valid. */
     input_schema: Record<unknown> | null = null;
-    tools: toolType[];
+    
+    /** Tools defined specifically for this task not included in the Agent itself. */
+    tools: CreateToolRequest[] = #[];
+
+    /** Whether to inherit tools from the parent agent or not. Defaults to true. */
+    inherit_tools: boolean = true;
     
     @visibility("read")
     agent_id: Agent.id;
