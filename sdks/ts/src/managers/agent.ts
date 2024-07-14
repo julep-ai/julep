@@ -1,3 +1,5 @@
+import typia, { tags } from "typia";
+
 import type {
   Agent,
   CreateToolRequest,
@@ -9,27 +11,16 @@ import type {
   PatchAgentRequest,
 } from "../api";
 
-import { invariant } from "../utils/invariant";
-import { isValidUuid4 } from "../utils/isValidUuid4";
-
 import { BaseManager } from "./base";
 
 export class AgentsManager extends BaseManager {
-  async get(agentId: string): Promise<Agent> {
-    invariant(isValidUuid4(agentId), "id must be a valid UUID v4");
+  async get(agentId: string & tags.Format<"uuid">): Promise<Agent> {
+    typia.assertGuard<string & tags.Format<"uuid">>(agentId);
 
     return await this.apiClient.default.getAgent({ agentId });
   }
 
-  async create({
-    name,
-    about,
-    instructions = [],
-    tools,
-    default_settings,
-    model = "julep-ai/samantha-1-turbo",
-    docs = [],
-  }: {
+  async create(options: {
     name: string;
     about: string;
     instructions: string[] | string;
@@ -38,6 +29,24 @@ export class AgentsManager extends BaseManager {
     model?: string;
     docs?: Doc[];
   }): Promise<Partial<Agent> & { id: string }> {
+    const {
+      name,
+      about,
+      instructions = [],
+      tools,
+      default_settings,
+      model = "julep-ai/samantha-1-turbo",
+      docs = [],
+    } = typia.assert<{
+      name: string;
+      about: string;
+      instructions: string[] | string;
+      tools?: CreateToolRequest[];
+      default_settings?: AgentDefaultSettings;
+      model?: string;
+      docs?: Doc[];
+    }>(options);
+
     // Ensure the returned object includes an `id` property of type string, which is guaranteed not to be `undefined`
 
     const requestBody: CreateAgentRequest = {
@@ -62,15 +71,29 @@ export class AgentsManager extends BaseManager {
     return agent;
   }
 
-  async list({
-    limit = 100,
-    offset = 0,
-    metadataFilter = {},
-  }: {
-    limit?: number;
-    offset?: number;
-    metadataFilter?: { [key: string]: any };
-  } = {}): Promise<Array<Agent>> {
+  async list(
+    options: {
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+      metadataFilter?: { [key: string]: any };
+    } = {},
+  ): Promise<Array<Agent>> {
+    const {
+      limit = 100,
+      offset = 0,
+      metadataFilter = {},
+    } = typia.assert<{
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+      metadataFilter?: { [key: string]: any };
+    }>(options);
+
     const metadataFilterString: string = JSON.stringify(metadataFilter);
 
     const result = await this.apiClient.default.listAgents({
@@ -82,8 +105,8 @@ export class AgentsManager extends BaseManager {
     return result.items;
   }
 
-  async delete(agentId: string): Promise<void> {
-    invariant(isValidUuid4(agentId), "id must be a valid UUID v4");
+  async delete(agentId: string & tags.Format<"uuid">): Promise<void> {
+    typia.assertGuard<string & tags.Format<"uuid">>(agentId);
 
     await this.apiClient.default.deleteAgent({ agentId });
   }
@@ -102,17 +125,15 @@ export class AgentsManager extends BaseManager {
   ): Promise<Partial<Agent> & { id: string }>;
 
   async update(
-    agentId: string,
-    {
-      about,
-      instructions,
-      name,
-      model,
-      default_settings,
-    }: PatchAgentRequest | UpdateAgentRequest,
+    agentId: string & tags.Format<"uuid">,
+    options: PatchAgentRequest | UpdateAgentRequest,
     overwrite = false,
   ): Promise<Partial<Agent> & { id: string }> {
-    invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
+    typia.assertGuard<string & tags.Format<"uuid">>(agentId);
+
+    const { about, instructions, name, model, default_settings } = typia.assert<
+      PatchAgentRequest | UpdateAgentRequest
+    >(options);
 
     // Fails tests
     // const updateFn = overwrite ? this.apiClient.default.updateAgent : this.apiClient.default.patchAgent;

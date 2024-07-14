@@ -1,7 +1,8 @@
-import type { Doc, ResourceCreatedResponse, CreateDoc } from "../api";
+import typia, { tags } from "typia";
+
+import { type Doc, type ResourceCreatedResponse, type CreateDoc } from "../api";
 
 import { invariant } from "../utils/invariant";
-import { isValidUuid4 } from "../utils/isValidUuid4";
 import { xor } from "../utils/xor";
 
 import { BaseManager } from "./base";
@@ -19,24 +20,39 @@ export class DocsManager extends BaseManager {
    * @returns {Promise<Object>} The retrieved documents.
    * @throws {Error} If neither agentId nor userId is provided.
    */
-  async get({
-    agentId,
-    userId,
-    limit = 100,
-    offset = 0,
-  }: {
-    userId?: string;
-    agentId?: string;
-    limit?: number;
-    offset?: number;
-  }) {
+  async get(
+    options: {
+      agentId?: string & tags.Format<"uuid">;
+      userId?: string & tags.Format<"uuid">;
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+    } = {},
+  ): Promise<
+    | ReturnType<typeof this.apiClient.default.getAgentDocs>
+    | ReturnType<typeof this.apiClient.default.getUserDocs>
+  > {
+    const {
+      agentId,
+      userId,
+      limit = 100,
+      offset = 0,
+    } = typia.assert<{
+      agentId?: string & tags.Format<"uuid">;
+      userId?: string & tags.Format<"uuid">;
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+    }>(options);
+
     invariant(
       xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    agentId &&
-      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
-    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       return await this.apiClient.default.getAgentDocs({
@@ -71,28 +87,41 @@ export class DocsManager extends BaseManager {
    * @returns {Promise<Array<Doc>>} The list of filtered documents.
    * @throws {Error} If neither agentId nor userId is provided.
    */
-  async list({
-    agentId,
-    userId,
-    limit = 100,
-    offset = 0,
-    metadataFilter = {},
-  }: {
-    agentId?: string;
-    userId?: string;
-    limit?: number;
-    offset?: number;
-    metadataFilter?: { [key: string]: any };
-  } = {}): Promise<Array<Doc>> {
+  async list(
+    options: {
+      agentId?: string & tags.Format<"uuid">;
+      userId?: string & tags.Format<"uuid">;
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+      metadataFilter?: { [key: string]: any };
+    } = {},
+  ): Promise<Array<Doc>> {
+    const {
+      agentId,
+      userId,
+      limit = 100,
+      offset = 0,
+      metadataFilter = {},
+    } = typia.assert<{
+      agentId?: string & tags.Format<"uuid">;
+      userId?: string & tags.Format<"uuid">;
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+      metadataFilter?: { [key: string]: any };
+    }>(options);
+
     const metadataFilterString: string = JSON.stringify(metadataFilter);
 
     invariant(
       xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    agentId &&
-      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
-    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       const result = await this.apiClient.default.getAgentDocs({
@@ -130,22 +159,21 @@ export class DocsManager extends BaseManager {
    * @returns {Promise<Doc>} The created document.
    * @throws {Error} If neither agentId nor userId is provided.
    */
-  async create({
-    agentId,
-    userId,
-    doc,
-  }: {
-    agentId?: string;
-    userId?: string;
+  async create(options: {
+    agentId?: string & tags.Format<"uuid">;
+    userId?: string & tags.Format<"uuid">;
     doc: CreateDoc;
   }): Promise<Doc> {
+    const { agentId, userId, doc } = typia.assert<{
+      agentId?: string & tags.Format<"uuid">;
+      userId?: string & tags.Format<"uuid">;
+      doc: CreateDoc;
+    }>(options);
+
     invariant(
       xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    agentId &&
-      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
-    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       const result: ResourceCreatedResponse =
@@ -183,22 +211,21 @@ export class DocsManager extends BaseManager {
    * @returns {Promise<void>} A promise that resolves when the document is successfully deleted.
    * @throws {Error} If neither agentId nor userId is provided.
    */
-  async delete({
-    agentId,
-    userId,
-    docId,
-  }: {
-    agentId?: string;
-    userId?: string;
+  async delete(options: {
+    agentId?: string & tags.Format<"uuid">;
+    userId?: string & tags.Format<"uuid">;
     docId: string;
   }): Promise<void> {
+    const { agentId, userId, docId } = typia.assert<{
+      agentId?: string & tags.Format<"uuid">;
+      userId?: string & tags.Format<"uuid">;
+      docId: string;
+    }>(options);
+
     invariant(
       xor(agentId, userId),
       "Only one of agentId or userId must be given",
     );
-    agentId &&
-      invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
-    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
 
     if (agentId) {
       await this.apiClient.default.deleteAgentDoc({ agentId, docId });

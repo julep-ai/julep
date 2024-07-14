@@ -1,8 +1,8 @@
+import typia, { tags } from "typia";
+
 import { Memory } from "../api";
 
 import { BaseManager } from "./base";
-import { invariant } from "../utils/invariant";
-import { isValidUuid4 } from "../utils/isValidUuid4";
 
 export class MemoriesManager extends BaseManager {
   /**
@@ -18,23 +18,29 @@ export class MemoriesManager extends BaseManager {
    * @param {number} [offset=0] - The offset for pagination. Optional.
    * @returns {Promise<Memory[]>} A promise that resolves to an array of Memory objects.
    */
-  async list({
-    agentId,
-    query,
-    userId,
-    limit = 100,
-    offset = 0,
-  }: {
-    agentId: string;
+  async list(options: {
+    agentId: string & tags.Format<"uuid">;
     query: string;
-    userId?: string;
-    limit?: number;
-    offset?: number;
+    userId?: string & tags.Format<"uuid">;
+    limit?: number & tags.Type<"uint32"> & tags.Minimum<1> & tags.Maximum<1000>;
+    offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
   }): Promise<Memory[]> {
-    // Validates that the agentId is a valid UUID v4 format.
-    invariant(isValidUuid4(agentId), "agentId must be a valid UUID v4");
-    // Validates that the userId, if provided, is a valid UUID v4 format.
-    userId && invariant(isValidUuid4(userId), "userId must be a valid UUID v4");
+    const {
+      agentId,
+      query,
+      userId,
+      limit = 100,
+      offset = 0,
+    } = typia.assert<{
+      agentId: string & tags.Format<"uuid">;
+      query: string;
+      userId?: string & tags.Format<"uuid">;
+      limit?: number &
+        tags.Type<"uint32"> &
+        tags.Minimum<1> &
+        tags.Maximum<1000>;
+      offset?: number & tags.Type<"uint32"> & tags.Minimum<0>;
+    }>(options);
 
     const response = await this.apiClient.default.getAgentMemories({
       agentId,

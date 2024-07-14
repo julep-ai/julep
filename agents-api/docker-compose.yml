@@ -59,9 +59,9 @@ services:
     container_name: text-embeddings-inference
     environment:
       - DTYPE=float16
-      - MODEL_ID=BAAI/llm-embedder
+      - MODEL_ID=BAAI/bge-m3
 
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
+    image: ghcr.io/huggingface/text-embeddings-inference:1.3
     ports:
       - "8082:80"
     volumes:
@@ -75,25 +75,6 @@ services:
               count: all
               capabilities: [gpu]
 
-  docs-text-embeddings-inference:
-    container_name: docs-text-embeddings-inference
-    environment:
-      - DTYPE=float16
-      - MODEL_ID=BAAI/bge-m3
-
-    image: ghcr.io/huggingface/text-embeddings-inference:1.0
-    ports:
-      - "8083:80"
-    volumes:
-      - ~/.cache/huggingface/hub:/data
-    shm_size: "2gb"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   temporal:
     image: julepai/temporal:dev

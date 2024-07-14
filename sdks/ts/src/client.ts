@@ -1,5 +1,7 @@
 import { OpenAI } from "openai";
 import { Chat, Completions } from "openai/resources/index";
+import typia, { tags } from "typia";
+
 import { AgentsManager } from "./managers/agent";
 import { UsersManager } from "./managers/user";
 import { DocsManager } from "./managers/doc";
@@ -12,7 +14,7 @@ import { patchCreate } from "./utils/openaiPatch";
 
 interface ClientOptions {
   apiKey?: string;
-  baseUrl?: string;
+  baseUrl?: string & tags.Format<"uri">;
 }
 
 /**
@@ -30,10 +32,12 @@ export class Client {
    * @param {string} [options.baseUrl=JULEP_API_URL] - Base URL for the Julep API. Defaults to the JULEP_API_URL environment variable or "https://api-alpha.julep.ai/api" if not provided.
    * @throws {Error} Throws an error if both apiKey and baseUrl are not provided and not set as environment variables.
    */
-  constructor({
-    apiKey = JULEP_API_KEY,
-    baseUrl = JULEP_API_URL || "https://api-alpha.julep.ai/api",
-  }: ClientOptions = {}) {
+  constructor(options: ClientOptions = {}) {
+    const {
+      apiKey = JULEP_API_KEY,
+      baseUrl = JULEP_API_URL || "https://api-alpha.julep.ai/api",
+    } = typia.assert<ClientOptions>(options);
+
     if (!apiKey || !baseUrl) {
       throw new Error(
         "apiKey and baseUrl must be provided or set as environment variables",
