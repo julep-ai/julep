@@ -1,7 +1,11 @@
+import "@typespec/http";
+
 import "../agents";
 import "../common";
 import "../users";
 import "./models.tsp";
+
+using TypeSpec.Http;
 
 using Agents;
 using Common;
@@ -22,3 +26,18 @@ interface AgentEndpoints
 interface IndividualDocEndpoints
     extends GetEndpoint<Doc, "Doc">,
         DeleteEndpoint<Doc, "Doc"> {}
+
+interface SearchEndpoints<TName extends string> {
+    @doc("Search for documents owned by {TName}", {TName: TName})
+    @post
+    search(
+        @path
+        @doc("ID of the {TName}", {TName: TName})
+        id: User.id | Agent.id,
+
+        ...PaginationOptions<"Doc">,
+        body: DocSearchRequest,
+    ): {
+        results: DocReference[];
+    };
+}
