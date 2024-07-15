@@ -9,6 +9,8 @@ with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         prompt_step,
         transition_step,
+        tool_call_step,
+        if_else_step,
     )
 
     from ..common.protocol.tasks import (
@@ -16,9 +18,9 @@ with workflow.unsafe.imports_passed_through():
         PromptWorkflowStep,
         # EvaluateWorkflowStep,
         # YieldWorkflowStep,
-        # ToolCallWorkflowStep,
+        ToolCallWorkflowStep,
         # ErrorWorkflowStep,
-        # IfElseWorkflowStep,
+        IfElseWorkflowStep,
         StepContext,
         TransitionInfo,
     )
@@ -81,24 +83,24 @@ class TaskExecutionWorkflow:
             #         context,
             #         schedule_to_close_timeout=timedelta(seconds=600),
             #     )
-            # case ToolCallWorkflowStep():
-            #     result = await workflow.execute_activity(
-            #         tool_call_step,
-            #         context,
-            #         schedule_to_close_timeout=timedelta(seconds=600),
-            #     )
+            case ToolCallWorkflowStep():
+                outputs = await workflow.execute_activity(
+                    tool_call_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
             # case ErrorWorkflowStep():
             #     result = await workflow.execute_activity(
             #         error_step,
             #         context,
             #         schedule_to_close_timeout=timedelta(seconds=600),
             #     )
-            # case IfElseWorkflowStep():
-            #     result = await workflow.execute_activity(
-            #         if_else_step,
-            #         context,
-            #         schedule_to_close_timeout=timedelta(seconds=600),
-            #     )
+            case IfElseWorkflowStep():
+                outputs = await workflow.execute_activity(
+                    if_else_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
 
         # Transition type
         transition_type = (

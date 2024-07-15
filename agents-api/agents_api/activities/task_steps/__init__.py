@@ -9,9 +9,9 @@ from ...autogen.openapi_model import (
     PromptWorkflowStep,
     # EvaluateWorkflowStep,
     # YieldWorkflowStep,
-    # ToolCallWorkflowStep,
+    ToolCallWorkflowStep,
     # ErrorWorkflowStep,
-    # IfElseWorkflowStep,
+    IfElseWorkflowStep,
     InputChatMLMessage,
 )
 
@@ -89,14 +89,14 @@ async def prompt_step(context: StepContext) -> dict:
 #     return {"test": "result"}
 
 
-# @activity.defn
-# async def tool_call_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, ToolCallWorkflowStep):
-#         return {}
+@activity.defn
+async def tool_call_step(context: StepContext) -> dict:
+    if not isinstance(context.definition, ToolCallWorkflowStep):
+        return {}
 
-#     # TODO: implement
+    # TODO: implement
 
-#     return {"test": "result"}
+    return {"test": "result"}
 
 
 # @activity.defn
@@ -107,12 +107,12 @@ async def prompt_step(context: StepContext) -> dict:
 #     return {"error": context.definition.error}
 
 
-# @activity.defn
-# async def if_else_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, IfElseWorkflowStep):
-#         return {}
+@activity.defn
+async def if_else_step(context: StepContext) -> dict:
+    if not isinstance(context.definition, IfElseWorkflowStep):
+        return {}
 
-#     return {"test": "result"}
+    return {"test": "result"}
 
 
 @activity.defn
