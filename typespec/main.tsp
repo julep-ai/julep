@@ -93,11 +93,11 @@ namespace Api {
     @route("/sessions")
     interface SessionsRoute extends Sessions.Endpoints {}
 
-    @route("/sessions/{id}/history")
+    @route("/sessions/history")
     interface HistoryRoute extends Entries.Endpoints {}
 
-    @route("/docs/{id}")
-    interface AgentIndividualDocsRoute extends Docs.IndividualDocEndpoints {}
+    @route("/docs")
+    interface IndividualDocsRoute extends Docs.IndividualDocEndpoints {}
 
     @route("/tasks")
     interface TasksRoute extends Tasks.Endpoints {}

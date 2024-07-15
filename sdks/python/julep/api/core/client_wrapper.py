@@ -6,12 +6,14 @@ import httpx
 
 
 class BaseClientWrapper:
-    def __init__(self, *, api_key: str, base_url: str):
+    def __init__(self, *, auth_key: str, api_key: str, base_url: str):
+        self._auth_key = auth_key
         self.api_key = api_key
         self._base_url = base_url
 
     def get_headers(self) -> typing.Dict[str, str]:
         headers: typing.Dict[str, str] = {"X-Fern-Language": "Python"}
+        headers["X-Auth-Key"] = self._auth_key
         headers["Authorization"] = self.api_key
         return headers
 
@@ -20,12 +22,21 @@ class BaseClientWrapper:
 
 
 class SyncClientWrapper(BaseClientWrapper):
-    def __init__(self, *, api_key: str, base_url: str, httpx_client: httpx.Client):
-        super().__init__(api_key=api_key, base_url=base_url)
+    def __init__(
+        self, *, auth_key: str, api_key: str, base_url: str, httpx_client: httpx.Client
+    ):
+        super().__init__(auth_key=auth_key, api_key=api_key, base_url=base_url)
         self.httpx_client = httpx_client
 
 
 class AsyncClientWrapper(BaseClientWrapper):
-    def __init__(self, *, api_key: str, base_url: str, httpx_client: httpx.AsyncClient):
-        super().__init__(api_key=api_key, base_url=base_url)
+    def __init__(
+        self,
+        *,
+        auth_key: str,
+        api_key: str,
+        base_url: str,
+        httpx_client: httpx.AsyncClient
+    ):
+        super().__init__(auth_key=auth_key, api_key=api_key, base_url=base_url)
         self.httpx_client = httpx_client

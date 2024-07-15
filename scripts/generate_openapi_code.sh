@@ -4,22 +4,22 @@
 set -x
 
 cd typespec/ && \
-    tsp . && \
-    cd -
+    tsp compile .
+cd -
 
 fern generate --local
 
 cd sdks/python && \
     poetry update && \
-    poetry run poe format && \
-    cd -
+    poetry run poe format
+cd -
 
 cd agents-api && \
     poetry update && \
     poetry run poe codegen && \
-    poetry run poe format && \
-    cd -
+    poetry run poe format
+cd -
 
 cd sdks/ts && \
-    npm i && npm run codegen && \
-    cd -
+    npm i && npm run codegen
+cd -

@@ -11,52 +11,153 @@ from .core.client_wrapper import AsyncClientWrapper, SyncClientWrapper
 from .core.jsonable_encoder import jsonable_encoder
 from .core.remove_none_from_dict import remove_none_from_dict
 from .environment import JulepApiEnvironment
-from .types.agent import Agent
-from .types.agent_default_settings import AgentDefaultSettings
-from .types.chat_input_data_tool_choice import ChatInputDataToolChoice
-from .types.chat_response import ChatResponse
-from .types.chat_settings_preset import ChatSettingsPreset
-from .types.chat_settings_response_format import ChatSettingsResponseFormat
-from .types.chat_settings_stop import ChatSettingsStop
-from .types.create_agent_request_instructions import CreateAgentRequestInstructions
-from .types.create_doc import CreateDoc
-from .types.create_tool_request import CreateToolRequest
-from .types.execution import Execution
-from .types.execution_status import ExecutionStatus
-from .types.execution_transition import ExecutionTransition
-from .types.function_def import FunctionDef
-from .types.get_agent_docs_request_order import GetAgentDocsRequestOrder
-from .types.get_agent_docs_request_sort_by import GetAgentDocsRequestSortBy
-from .types.get_agent_docs_response import GetAgentDocsResponse
-from .types.get_agent_memories_response import GetAgentMemoriesResponse
-from .types.get_agent_tools_response import GetAgentToolsResponse
-from .types.get_history_response import GetHistoryResponse
-from .types.get_suggestions_response import GetSuggestionsResponse
-from .types.get_user_docs_request_order import GetUserDocsRequestOrder
-from .types.get_user_docs_request_sort_by import GetUserDocsRequestSortBy
-from .types.get_user_docs_response import GetUserDocsResponse
-from .types.input_chat_ml_message import InputChatMlMessage
-from .types.job_status import JobStatus
-from .types.list_agents_request_order import ListAgentsRequestOrder
-from .types.list_agents_request_sort_by import ListAgentsRequestSortBy
-from .types.list_agents_response import ListAgentsResponse
-from .types.list_sessions_request_order import ListSessionsRequestOrder
-from .types.list_sessions_request_sort_by import ListSessionsRequestSortBy
-from .types.list_sessions_response import ListSessionsResponse
-from .types.list_users_request_order import ListUsersRequestOrder
-from .types.list_users_request_sort_by import ListUsersRequestSortBy
-from .types.list_users_response import ListUsersResponse
-from .types.partial_function_def import PartialFunctionDef
-from .types.patch_agent_request_instructions import PatchAgentRequestInstructions
-from .types.resource_created_response import ResourceCreatedResponse
-from .types.resource_updated_response import ResourceUpdatedResponse
-from .types.session import Session
-from .types.task import Task
-from .types.tool import Tool
-from .types.tool_response import ToolResponse
-from .types.update_agent_request_instructions import UpdateAgentRequestInstructions
-from .types.user import User
-from .types.workflow_step import WorkflowStep
+from .types.agent_docs_route_list_request_direction import (
+    AgentDocsRouteListRequestDirection,
+)
+from .types.agent_docs_route_list_request_sort_by import AgentDocsRouteListRequestSortBy
+from .types.agent_docs_route_list_response import AgentDocsRouteListResponse
+from .types.agent_tools_route_create_response import AgentToolsRouteCreateResponse
+from .types.agent_tools_route_list_request_direction import (
+    AgentToolsRouteListRequestDirection,
+)
+from .types.agent_tools_route_list_request_sort_by import (
+    AgentToolsRouteListRequestSortBy,
+)
+from .types.agent_tools_route_list_response import AgentToolsRouteListResponse
+from .types.agents_agent import AgentsAgent
+from .types.agents_create_agent_request import AgentsCreateAgentRequest
+from .types.agents_create_or_update_agent_request_default_settings import (
+    AgentsCreateOrUpdateAgentRequestDefaultSettings,
+)
+from .types.agents_create_or_update_agent_request_instructions import (
+    AgentsCreateOrUpdateAgentRequestInstructions,
+)
+from .types.agents_docs_search_route_search_request_direction import (
+    AgentsDocsSearchRouteSearchRequestDirection,
+)
+from .types.agents_docs_search_route_search_request_sort_by import (
+    AgentsDocsSearchRouteSearchRequestSortBy,
+)
+from .types.agents_docs_search_route_search_response import (
+    AgentsDocsSearchRouteSearchResponse,
+)
+from .types.agents_patch_agent_request_default_settings import (
+    AgentsPatchAgentRequestDefaultSettings,
+)
+from .types.agents_patch_agent_request_instructions import (
+    AgentsPatchAgentRequestInstructions,
+)
+from .types.agents_route_create_or_update_response import (
+    AgentsRouteCreateOrUpdateResponse,
+)
+from .types.agents_route_create_response import AgentsRouteCreateResponse
+from .types.agents_route_delete_response import AgentsRouteDeleteResponse
+from .types.agents_route_list_request_direction import AgentsRouteListRequestDirection
+from .types.agents_route_list_request_sort_by import AgentsRouteListRequestSortBy
+from .types.agents_route_list_response import AgentsRouteListResponse
+from .types.agents_route_patch_response import AgentsRoutePatchResponse
+from .types.agents_route_update_response import AgentsRouteUpdateResponse
+from .types.agents_update_agent_request_default_settings import (
+    AgentsUpdateAgentRequestDefaultSettings,
+)
+from .types.agents_update_agent_request_instructions import (
+    AgentsUpdateAgentRequestInstructions,
+)
+from .types.common_identifier_safe_unicode import CommonIdentifierSafeUnicode
+from .types.common_limit import CommonLimit
+from .types.common_offset import CommonOffset
+from .types.common_uuid import CommonUuid
+from .types.docs_doc import DocsDoc
+from .types.docs_doc_search_request import DocsDocSearchRequest
+from .types.execution_transitions_route_list_request_direction import (
+    ExecutionTransitionsRouteListRequestDirection,
+)
+from .types.execution_transitions_route_list_request_sort_by import (
+    ExecutionTransitionsRouteListRequestSortBy,
+)
+from .types.execution_transitions_route_list_response import (
+    ExecutionTransitionsRouteListResponse,
+)
+from .types.executions_execution import ExecutionsExecution
+from .types.executions_route_update_response import ExecutionsRouteUpdateResponse
+from .types.executions_update_execution_request import ExecutionsUpdateExecutionRequest
+from .types.history_route_delete_response import HistoryRouteDeleteResponse
+from .types.history_route_list_request_direction import HistoryRouteListRequestDirection
+from .types.history_route_list_request_sort_by import HistoryRouteListRequestSortBy
+from .types.history_route_list_response import HistoryRouteListResponse
+from .types.individual_docs_route_delete_response import (
+    IndividualDocsRouteDeleteResponse,
+)
+from .types.jobs_job_status import JobsJobStatus
+from .types.sessions_route_create_or_update_response import (
+    SessionsRouteCreateOrUpdateResponse,
+)
+from .types.sessions_route_create_response import SessionsRouteCreateResponse
+from .types.sessions_route_delete_response import SessionsRouteDeleteResponse
+from .types.sessions_route_list_request_direction import (
+    SessionsRouteListRequestDirection,
+)
+from .types.sessions_route_list_request_sort_by import SessionsRouteListRequestSortBy
+from .types.sessions_route_list_response import SessionsRouteListResponse
+from .types.sessions_route_patch_response import SessionsRoutePatchResponse
+from .types.sessions_route_update_response import SessionsRouteUpdateResponse
+from .types.sessions_session import SessionsSession
+from .types.task_executions_route_create_response import (
+    TaskExecutionsRouteCreateResponse,
+)
+from .types.task_executions_route_list_request_direction import (
+    TaskExecutionsRouteListRequestDirection,
+)
+from .types.task_executions_route_list_request_sort_by import (
+    TaskExecutionsRouteListRequestSortBy,
+)
+from .types.task_executions_route_list_response import TaskExecutionsRouteListResponse
+from .types.task_executions_route_resume_with_task_token_response import (
+    TaskExecutionsRouteResumeWithTaskTokenResponse,
+)
+from .types.tasks_route_create_or_update_response import (
+    TasksRouteCreateOrUpdateResponse,
+)
+from .types.tasks_route_create_response import TasksRouteCreateResponse
+from .types.tasks_route_delete_response import TasksRouteDeleteResponse
+from .types.tasks_route_list_request_direction import TasksRouteListRequestDirection
+from .types.tasks_route_list_request_sort_by import TasksRouteListRequestSortBy
+from .types.tasks_route_list_response import TasksRouteListResponse
+from .types.tasks_route_patch_response import TasksRoutePatchResponse
+from .types.tasks_route_update_response import TasksRouteUpdateResponse
+from .types.tasks_workflow_step import TasksWorkflowStep
+from .types.tool_route_delete_response import ToolRouteDeleteResponse
+from .types.tool_route_patch_response import ToolRoutePatchResponse
+from .types.tool_route_update_response import ToolRouteUpdateResponse
+from .types.tools_create_tool_request import ToolsCreateToolRequest
+from .types.tools_function_def import ToolsFunctionDef
+from .types.tools_function_def_update import ToolsFunctionDefUpdate
+from .types.tools_tool_type import ToolsToolType
+from .types.user_docs_route_list_request_direction import (
+    UserDocsRouteListRequestDirection,
+)
+from .types.user_docs_route_list_request_sort_by import UserDocsRouteListRequestSortBy
+from .types.user_docs_route_list_response import UserDocsRouteListResponse
+from .types.user_docs_search_route_search_request_direction import (
+    UserDocsSearchRouteSearchRequestDirection,
+)
+from .types.user_docs_search_route_search_request_sort_by import (
+    UserDocsSearchRouteSearchRequestSortBy,
+)
+from .types.user_docs_search_route_search_response import (
+    UserDocsSearchRouteSearchResponse,
+)
+from .types.users_route_create_or_update_response import (
+    UsersRouteCreateOrUpdateResponse,
+)
+from .types.users_route_create_response import UsersRouteCreateResponse
+from .types.users_route_delete_response import UsersRouteDeleteResponse
+from .types.users_route_list_request_direction import UsersRouteListRequestDirection
+from .types.users_route_list_request_sort_by import UsersRouteListRequestSortBy
+from .types.users_route_list_response import UsersRouteListResponse
+from .types.users_route_patch_response import UsersRoutePatchResponse
+from .types.users_route_update_response import UsersRouteUpdateResponse
+from .types.users_user import UsersUser
 
 try:
     import pydantic.v1 as pydantic  # type: ignore
@@ -73,47 +174,912 @@ class JulepApi:
         *,
         base_url: typing.Optional[str] = None,
         environment: JulepApiEnvironment = JulepApiEnvironment.DEFAULT,
+        auth_key: str,
         api_key: str,
         timeout: typing.Optional[float] = 300,
         httpx_client: typing.Optional[httpx.Client] = None,
     ):
         self._client_wrapper = SyncClientWrapper(
             base_url=_get_base_url(base_url=base_url, environment=environment),
+            auth_key=auth_key,
             api_key=api_key,
             httpx_client=(
                 httpx.Client(timeout=timeout) if httpx_client is None else httpx_client
             ),
         )
 
-    def list_sessions(
+    def agents_route_list(
         self,
         *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
-        order: typing.Optional[ListSessionsRequestOrder] = None,
-    ) -> ListSessionsResponse:
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentsRouteListRequestSortBy,
+        direction: AgentsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> AgentsRouteListResponse:
         """
-        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
+        List undefined items
 
         Parameters:
-            - limit: typing.Optional[int]. Number of sessions to return
+            - limit: CommonLimit. Limit the number of undefined items returned
 
-            - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+            - offset: CommonOffset. Offset the undefined items returned
 
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
+            - sort_by: AgentsRouteListRequestSortBy. Sort by a field
 
-            - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+            - direction: AgentsRouteListRequestDirection. Sort direction
 
-            - order: typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import AgentsRouteListRequestDirection, AgentsRouteListRequestSortBy
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_list(
+            limit=1,
+            offset=1,
+            sort_by=AgentsRouteListRequestSortBy.CREATED_AT,
+            direction=AgentsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_create(
+        self, *, request: AgentsCreateAgentRequest
+    ) -> AgentsRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - request: AgentsCreateAgentRequest.
+        ---
+        from julep import AgentsCreateAgentRequest
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_create(
+            request=AgentsCreateAgentRequest(
+                name="name",
+                about="about",
+                model="model",
+                docs=[],
+            ),
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
+            json=jsonable_encoder(request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        model: str,
+        instructions: AgentsCreateOrUpdateAgentRequestInstructions,
+        default_settings: typing.Optional[
+            AgentsCreateOrUpdateAgentRequestDefaultSettings
+        ] = OMIT,
+    ) -> AgentsRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the agent
+
+            - about: str. About the agent
+
+            - model: str. Model name to use (gpt-4-turbo, gemini-nano etc)
+
+            - instructions: AgentsCreateOrUpdateAgentRequestInstructions. Instructions for the agent
+
+            - default_settings: typing.Optional[AgentsCreateOrUpdateAgentRequestDefaultSettings]. Default settings for all sessions created by this agent
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.list_sessions()
+        client.agents_route_create_or_update(
+            id="id",
+            name="name",
+            about="about",
+            model="model",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "name": name,
+            "about": about,
+            "model": model,
+            "instructions": instructions,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_get(self, id: CommonUuid) -> AgentsAgent:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_get(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsAgent, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        model: str,
+        instructions: AgentsUpdateAgentRequestInstructions,
+        default_settings: typing.Optional[
+            AgentsUpdateAgentRequestDefaultSettings
+        ] = OMIT,
+    ) -> AgentsRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the agent
+
+            - about: str. About the agent
+
+            - model: str. Model name to use (gpt-4-turbo, gemini-nano etc)
+
+            - instructions: AgentsUpdateAgentRequestInstructions. Instructions for the agent
+
+            - default_settings: typing.Optional[AgentsUpdateAgentRequestDefaultSettings]. Default settings for all sessions created by this agent
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_update(
+            id="id",
+            name="name",
+            about="about",
+            model="model",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "name": name,
+            "about": about,
+            "model": model,
+            "instructions": instructions,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_delete(self, id: CommonUuid) -> AgentsRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
+        about: typing.Optional[str] = OMIT,
+        model: typing.Optional[str] = OMIT,
+        instructions: typing.Optional[AgentsPatchAgentRequestInstructions] = OMIT,
+        default_settings: typing.Optional[
+            AgentsPatchAgentRequestDefaultSettings
+        ] = OMIT,
+    ) -> AgentsRoutePatchResponse:
+        """
+        Patch undefined by id (merge changes)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: typing.Optional[CommonIdentifierSafeUnicode]. Name of the agent
+
+            - about: typing.Optional[str]. About the agent
+
+            - model: typing.Optional[str]. Model name to use (gpt-4-turbo, gemini-nano etc)
+
+            - instructions: typing.Optional[AgentsPatchAgentRequestInstructions]. Instructions for the agent
+
+            - default_settings: typing.Optional[AgentsPatchAgentRequestDefaultSettings]. Default settings for all sessions created by this agent
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if name is not OMIT:
+            _request["name"] = name
+        if about is not OMIT:
+            _request["about"] = about
+        if model is not OMIT:
+            _request["model"] = model
+        if instructions is not OMIT:
+            _request["instructions"] = instructions
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_docs_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentDocsRouteListRequestSortBy,
+        direction: AgentDocsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> AgentDocsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: AgentDocsRouteListRequestSortBy. Sort by a field
+
+            - direction: AgentDocsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            AgentDocsRouteListRequestDirection,
+            AgentDocsRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_docs_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=AgentDocsRouteListRequestSortBy.CREATED_AT,
+            direction=AgentDocsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/docs"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentDocsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_docs_search_route_search(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentsDocsSearchRouteSearchRequestSortBy,
+        direction: AgentsDocsSearchRouteSearchRequestDirection,
+        metadata_filter: str,
+        body: DocsDocSearchRequest,
+    ) -> AgentsDocsSearchRouteSearchResponse:
+        """
+        Search for documents owned by undefined
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: AgentsDocsSearchRouteSearchRequestSortBy. Sort by a field
+
+            - direction: AgentsDocsSearchRouteSearchRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+
+            - body: DocsDocSearchRequest.
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/search"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            json=jsonable_encoder({"body": body}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsDocsSearchRouteSearchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_tools_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentToolsRouteListRequestSortBy,
+        direction: AgentToolsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> AgentToolsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: AgentToolsRouteListRequestSortBy. Sort by a field
+
+            - direction: AgentToolsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            AgentToolsRouteListRequestDirection,
+            AgentToolsRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_tools_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=AgentToolsRouteListRequestSortBy.CREATED_AT,
+            direction=AgentToolsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/tools"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentToolsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_tools_route_create(
+        self, id: CommonUuid, *, request: AgentsCreateAgentRequest
+    ) -> AgentToolsRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - request: AgentsCreateAgentRequest.
+        ---
+        from julep import AgentsCreateAgentRequest
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_tools_route_create(
+            id="id",
+            request=AgentsCreateAgentRequest(
+                name="name",
+                about="about",
+                model="model",
+                docs=[],
+            ),
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/tools"
+            ),
+            json=jsonable_encoder(request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentToolsRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def individual_docs_route_get(self, id: CommonUuid) -> DocsDoc:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.individual_docs_route_get(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"docs/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(DocsDoc, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def individual_docs_route_delete(
+        self, id: CommonUuid
+    ) -> IndividualDocsRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.individual_docs_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"docs/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(IndividualDocsRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def executions_route_get(self, id: CommonUuid) -> ExecutionsExecution:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.executions_route_get(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"executions/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ExecutionsExecution, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def executions_route_update(
+        self, id: CommonUuid, *, request: ExecutionsUpdateExecutionRequest
+    ) -> ExecutionsRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - request: ExecutionsUpdateExecutionRequest.
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"executions/{id}"
+            ),
+            json=jsonable_encoder(request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ExecutionsRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def execution_transitions_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: ExecutionTransitionsRouteListRequestSortBy,
+        direction: ExecutionTransitionsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> ExecutionTransitionsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: ExecutionTransitionsRouteListRequestSortBy. Sort by a field
+
+            - direction: ExecutionTransitionsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            ExecutionTransitionsRouteListRequestDirection,
+            ExecutionTransitionsRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.execution_transitions_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=ExecutionTransitionsRouteListRequestSortBy.CREATED_AT,
+            direction=ExecutionTransitionsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"executions/{id}/transitions",
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ExecutionTransitionsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def job_route_get(self, id: CommonUuid) -> JobsJobStatus:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.job_route_get(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"jobs/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(JobsJobStatus, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def sessions_route_list(
+        self,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: SessionsRouteListRequestSortBy,
+        direction: SessionsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> SessionsRouteListResponse:
+        """
+        List undefined items
+
+        Parameters:
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: SessionsRouteListRequestSortBy. Sort by a field
+
+            - direction: SessionsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            SessionsRouteListRequestDirection,
+            SessionsRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.sessions_route_list(
+            limit=1,
+            offset=1,
+            sort_by=SessionsRouteListRequestSortBy.CREATED_AT,
+            direction=SessionsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
@@ -122,2052 +1088,1654 @@ class JulepApi:
                 {
                     "limit": limit,
                     "offset": offset,
-                    "metadata_filter": metadata_filter,
                     "sort_by": sort_by,
-                    "order": order,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
                 }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ListSessionsResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(SessionsRouteListResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def create_session(
+    def sessions_route_create(
         self,
         *,
-        user_id: typing.Optional[str] = OMIT,
-        agent_id: str,
-        situation: typing.Optional[str] = OMIT,
+        user: typing.Optional[CommonUuid] = OMIT,
+        users: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        agent: typing.Optional[CommonUuid] = OMIT,
+        agents: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        situation: str,
+        render_templates: bool,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - user: typing.Optional[CommonUuid]. User ID of user associated with this session
+
+            - users: typing.Optional[typing.List[CommonUuid]].
+
+            - agent: typing.Optional[CommonUuid]. Agent ID of agent associated with this session
+
+            - agents: typing.Optional[typing.List[CommonUuid]].
+
+            - situation: str. A specific situation that sets the background for this session
+
+            - render_templates: bool. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.sessions_route_create(
+            situation="situation",
+            render_templates=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "situation": situation,
+            "render_templates": render_templates,
+        }
+        if user is not OMIT:
+            _request["user"] = user
+        if users is not OMIT:
+            _request["users"] = users
+        if agent is not OMIT:
+            _request["agent"] = agent
+        if agents is not OMIT:
+            _request["agents"] = agents
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def sessions_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        user: typing.Optional[CommonUuid] = OMIT,
+        users: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        agent: typing.Optional[CommonUuid] = OMIT,
+        agents: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        situation: str,
+        render_templates: bool,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - user: typing.Optional[CommonUuid]. User ID of user associated with this session
+
+            - users: typing.Optional[typing.List[CommonUuid]].
+
+            - agent: typing.Optional[CommonUuid]. Agent ID of agent associated with this session
+
+            - agents: typing.Optional[typing.List[CommonUuid]].
+
+            - situation: str. A specific situation that sets the background for this session
+
+            - render_templates: bool. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.sessions_route_create_or_update(
+            id="id",
+            situation="situation",
+            render_templates=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "situation": situation,
+            "render_templates": render_templates,
+        }
+        if user is not OMIT:
+            _request["user"] = user
+        if users is not OMIT:
+            _request["users"] = users
+        if agent is not OMIT:
+            _request["agent"] = agent
+        if agents is not OMIT:
+            _request["agents"] = agents
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def history_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: HistoryRouteListRequestSortBy,
+        direction: HistoryRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> HistoryRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: HistoryRouteListRequestSortBy. Sort by a field
+
+            - direction: HistoryRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            HistoryRouteListRequestDirection,
+            HistoryRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.history_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=HistoryRouteListRequestSortBy.CREATED_AT,
+            direction=HistoryRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/history/{id}"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def history_route_delete(self, id: CommonUuid) -> HistoryRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.history_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/history/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(HistoryRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def sessions_route_get(self, id: CommonUuid) -> SessionsSession:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsSession, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def sessions_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        situation: str,
+        render_templates: bool,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - situation: str. A specific situation that sets the background for this session
+
+            - render_templates: bool. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.sessions_route_update(
+            id="id",
+            situation="situation",
+            render_templates=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "situation": situation,
+            "render_templates": render_templates,
+        }
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def sessions_route_delete(self, id: CommonUuid) -> SessionsRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.sessions_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def sessions_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        situation: typing.Optional[str] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
-    ) -> ResourceCreatedResponse:
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRoutePatchResponse:
         """
-        Create a session between an agent and a user
+        Patch undefined by id (merge changes)
 
         Parameters:
-            - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
-
-            - agent_id: str. Agent ID of agent to associate with this session
+            - id: CommonUuid. ID of the undefined
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
 
             - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
 
             - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.create_session(
-            agent_id="agent_id",
+        client.sessions_route_patch(
+            id="id",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
-        if user_id is not OMIT:
-            _request["user_id"] = user_id
+        _request: typing.Dict[str, typing.Any] = {}
         if situation is not OMIT:
             _request["situation"] = situation
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
         if render_templates is not OMIT:
             _request["render_templates"] = render_templates
         if token_budget is not OMIT:
             _request["token_budget"] = token_budget
         if context_overflow is not OMIT:
             _request["context_overflow"] = context_overflow
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def list_users(
-        self,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[ListUsersRequestSortBy] = None,
-        order: typing.Optional[ListUsersRequestOrder] = None,
-    ) -> ListUsersResponse:
-        """
-        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
-
-        Parameters:
-            - limit: typing.Optional[int]. Number of items to return
-
-            - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.list_users()
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ListUsersResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def create_user(
-        self,
-        *,
-        name: typing.Optional[str] = OMIT,
-        about: typing.Optional[str] = OMIT,
-        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-    ) -> ResourceCreatedResponse:
-        """
-        Create a new user
-
-        Parameters:
-            - name: typing.Optional[str]. Name of the user
-
-            - about: typing.Optional[str]. About the user
-
-            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.create_user()
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if name is not OMIT:
-            _request["name"] = name
-        if about is not OMIT:
-            _request["about"] = about
-        if docs is not OMIT:
-            _request["docs"] = docs
         if metadata is not OMIT:
             _request["metadata"] = metadata
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def list_agents(
-        self,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
-        order: typing.Optional[ListAgentsRequestOrder] = None,
-    ) -> ListAgentsResponse:
-        """
-        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
-
-        Parameters:
-            - limit: typing.Optional[int]. Number of items to return
-
-            - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.list_agents()
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ListAgentsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def create_agent(
-        self,
-        *,
-        name: str,
-        about: typing.Optional[str] = OMIT,
-        tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
-        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        instructions: typing.Optional[CreateAgentRequestInstructions] = OMIT,
-    ) -> ResourceCreatedResponse:
-        """
-        Create a new agent
-
-        Parameters:
-            - name: str. Name of the agent
-
-            - about: typing.Optional[str]. About the agent
-
-            - tools: typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
-
-            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
-
-            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
-
-            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
-
-            - instructions: typing.Optional[CreateAgentRequestInstructions]. Instructions for the agent
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.create_agent(
-            name="name",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"name": name}
-        if about is not OMIT:
-            _request["about"] = about
-        if tools is not OMIT:
-            _request["tools"] = tools
-        if default_settings is not OMIT:
-            _request["default_settings"] = default_settings
-        if model is not OMIT:
-            _request["model"] = model
-        if docs is not OMIT:
-            _request["docs"] = docs
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if instructions is not OMIT:
-            _request["instructions"] = instructions
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_session(self, session_id: str) -> Session:
-        """
-
-
-        Parameters:
-            - session_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_session(
-            session_id="session_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Session, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def update_session(
-        self,
-        session_id: str,
-        *,
-        situation: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - session_id: str.
-
-            - situation: str. Updated situation for this session
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
-
-            - context_overflow: typing.Optional[str]. Action to start on context window overflow
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.update_session(
-            session_id="session_id",
-            situation="situation",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"situation": situation}
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if token_budget is not OMIT:
-            _request["token_budget"] = token_budget
-        if context_overflow is not OMIT:
-            _request["context_overflow"] = context_overflow
-        _response = self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_session(self, session_id: str) -> None:
-        """
-
-
-        Parameters:
-            - session_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_session(
-            session_id="session_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def patch_session(
-        self,
-        session_id: str,
-        *,
-        situation: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - session_id: str.
-
-            - situation: typing.Optional[str]. Updated situation for this session
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
-
-            - context_overflow: typing.Optional[str]. Action to start on context window overflow
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.patch_session(
-            session_id="session_id",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if situation is not OMIT:
-            _request["situation"] = situation
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if token_budget is not OMIT:
-            _request["token_budget"] = token_budget
-        if context_overflow is not OMIT:
-            _request["context_overflow"] = context_overflow
         _response = self._client_wrapper.httpx_client.request(
             "PATCH",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(SessionsRoutePatchResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_suggestions(
+    def tasks_route_list(
         self,
-        session_id: str,
         *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetSuggestionsResponse:
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: TasksRouteListRequestSortBy,
+        direction: TasksRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> TasksRouteListResponse:
         """
-        Sorted (created_at descending)
+        List undefined items
 
         Parameters:
-            - session_id: str.
+            - limit: CommonLimit. Limit the number of undefined items returned
 
-            - limit: typing.Optional[int].
+            - offset: CommonOffset. Offset the undefined items returned
 
-            - offset: typing.Optional[int].
+            - sort_by: TasksRouteListRequestSortBy. Sort by a field
+
+            - direction: TasksRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
         ---
+        from julep import TasksRouteListRequestDirection, TasksRouteListRequestSortBy
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.get_suggestions(
-            session_id="session_id",
+        client.tasks_route_list(
+            limit=1,
+            offset=1,
+            sort_by=TasksRouteListRequestSortBy.CREATED_AT,
+            direction=TasksRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"sessions/{session_id}/suggestions",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetSuggestionsResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TasksRouteListResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_history(
+    def tasks_route_create(
         self,
-        session_id: str,
         *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetHistoryResponse:
+        name: str,
+        description: str,
+        main: typing.List[TasksWorkflowStep],
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.List[ToolsCreateToolRequest],
+        inherit_tools: bool,
+    ) -> TasksRouteCreateResponse:
         """
-        Sorted (created_at ascending)
+        Create new undefined
 
         Parameters:
-            - session_id: str.
+            - name: str.
 
-            - limit: typing.Optional[int].
+            - description: str.
 
-            - offset: typing.Optional[int].
+            - main: typing.List[TasksWorkflowStep]. The entrypoint of the task.
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
+
+            - tools: typing.List[ToolsCreateToolRequest]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: bool. Whether to inherit tools from the parent agent or not. Defaults to true.
         ---
+        from julep import ToolsCreateToolRequest, ToolsToolType
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.get_history(
-            session_id="session_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"sessions/{session_id}/history",
-            ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetHistoryResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_session_history(self, session_id: str) -> None:
-        """
-
-
-        Parameters:
-            - session_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_session_history(
-            session_id="session_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"sessions/{session_id}/history",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def chat(
-        self,
-        session_id: str,
-        *,
-        messages: typing.List[InputChatMlMessage],
-        tools: typing.Optional[typing.List[Tool]] = OMIT,
-        tool_choice: typing.Optional[ChatInputDataToolChoice] = OMIT,
-        frequency_penalty: typing.Optional[float] = OMIT,
-        length_penalty: typing.Optional[float] = OMIT,
-        logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]] = OMIT,
-        max_tokens: typing.Optional[int] = OMIT,
-        presence_penalty: typing.Optional[float] = OMIT,
-        repetition_penalty: typing.Optional[float] = OMIT,
-        response_format: typing.Optional[ChatSettingsResponseFormat] = OMIT,
-        seed: typing.Optional[int] = OMIT,
-        stop: typing.Optional[ChatSettingsStop] = OMIT,
-        stream: typing.Optional[bool] = OMIT,
-        temperature: typing.Optional[float] = OMIT,
-        top_p: typing.Optional[float] = OMIT,
-        min_p: typing.Optional[float] = OMIT,
-        preset: typing.Optional[ChatSettingsPreset] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        recall: typing.Optional[bool] = OMIT,
-        record: typing.Optional[bool] = OMIT,
-        remember: typing.Optional[bool] = OMIT,
-    ) -> ChatResponse:
-        """
-
-
-        Parameters:
-            - session_id: str.
-
-            - messages: typing.List[InputChatMlMessage]. A list of new input messages comprising the conversation so far.
-
-            - tools: typing.Optional[typing.List[Tool]]. (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
-
-            - tool_choice: typing.Optional[ChatInputDataToolChoice]. Can be one of existing tools given to the agent earlier or the ones included in the request
-
-            - frequency_penalty: typing.Optional[float]. (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-
-            - length_penalty: typing.Optional[float]. (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-
-            - logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]]. Modify the likelihood of specified tokens appearing in the completion.
-
-                                                                                   Accepts a JSON object that maps tokens (specified by their token ID in the tokenizer) to an associated bias value from -100 to 100. Mathematically, the bias is added to the logits generated by the model prior to sampling. The exact effect will vary per model, but values between -1 and 1 should decrease or increase likelihood of selection; values like -100 or 100 should result in a ban or exclusive selection of the relevant token.
-            - max_tokens: typing.Optional[int]. The maximum number of tokens to generate in the chat completion.
-
-                                                The total length of input tokens and generated tokens is limited by the model's context length.
-            - presence_penalty: typing.Optional[float]. (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-
-            - repetition_penalty: typing.Optional[float]. (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-
-            - response_format: typing.Optional[ChatSettingsResponseFormat]. An object specifying the format that the model must output.
-
-                                                                            Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
-
-                                                                            **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.
-            - seed: typing.Optional[int]. This feature is in Beta.
-                                          If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result.
-                                          Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend.
-            - stop: typing.Optional[ChatSettingsStop]. Up to 4 sequences where the API will stop generating further tokens.
-
-            - stream: typing.Optional[bool]. If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sent as data-only [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format) as they become available, with the stream terminated by a `data: [DONE]` message. [Example Python code](https://cookbook.openai.com/examples/how_to_stream_completions).
-
-            - temperature: typing.Optional[float]. What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-
-            - top_p: typing.Optional[float]. Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
-
-            - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
-
-            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
-
-            - model: typing.Optional[str]. Model name
-
-            - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
-
-            - record: typing.Optional[bool]. Whether this interaction should be recorded in history or not
-
-            - remember: typing.Optional[bool]. Whether this interaction should form memories or not
-        ---
-        from julep import InputChatMlMessage, InputChatMlMessageRole
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.chat(
-            session_id="session_id",
-            messages=[
-                InputChatMlMessage(
-                    role=InputChatMlMessageRole.USER,
+        client.tasks_route_create(
+            name="name",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type=ToolsToolType.FUNCTION,
+                    background=True,
+                    interactive=True,
                 )
             ],
+            inherit_tools=True,
         )
         """
-        _request: typing.Dict[str, typing.Any] = {"messages": messages}
-        if tools is not OMIT:
-            _request["tools"] = tools
-        if tool_choice is not OMIT:
-            _request["tool_choice"] = tool_choice
-        if frequency_penalty is not OMIT:
-            _request["frequency_penalty"] = frequency_penalty
-        if length_penalty is not OMIT:
-            _request["length_penalty"] = length_penalty
-        if logit_bias is not OMIT:
-            _request["logit_bias"] = logit_bias
-        if max_tokens is not OMIT:
-            _request["max_tokens"] = max_tokens
-        if presence_penalty is not OMIT:
-            _request["presence_penalty"] = presence_penalty
-        if repetition_penalty is not OMIT:
-            _request["repetition_penalty"] = repetition_penalty
-        if response_format is not OMIT:
-            _request["response_format"] = response_format
-        if seed is not OMIT:
-            _request["seed"] = seed
-        if stop is not OMIT:
-            _request["stop"] = stop
-        if stream is not OMIT:
-            _request["stream"] = stream
-        if temperature is not OMIT:
-            _request["temperature"] = temperature
-        if top_p is not OMIT:
-            _request["top_p"] = top_p
-        if min_p is not OMIT:
-            _request["min_p"] = min_p
-        if preset is not OMIT:
-            _request["preset"] = preset.value
-        if model is not OMIT:
-            _request["model"] = model
-        if recall is not OMIT:
-            _request["recall"] = recall
-        if record is not OMIT:
-            _request["record"] = record
-        if remember is not OMIT:
-            _request["remember"] = remember
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}/chat"
-            ),
-            json=jsonable_encoder(_request),
-            headers=remove_none_from_dict(
-                {**self._client_wrapper.get_headers(), "Accept": "application/json"}
-            ),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ChatResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_agent_memories(
-        self,
-        agent_id: str,
-        *,
-        query: str,
-        user_id: typing.Optional[str] = None,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetAgentMemoriesResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - agent_id: str.
-
-            - query: str.
-
-            - user_id: typing.Optional[str].
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_agent_memories(
-            agent_id="agent_id",
-            query="query",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
-            ),
-            params=remove_none_from_dict(
-                {"query": query, "user_id": user_id, "limit": limit, "offset": offset}
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentMemoriesResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_user(self, user_id: str) -> User:
-        """
-
-
-        Parameters:
-            - user_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_user(
-            user_id="user_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(User, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def update_user(
-        self,
-        user_id: str,
-        *,
-        about: str,
-        name: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - about: str. About the user
-
-            - name: str. Name of the user
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.update_user(
-            user_id="user_id",
-            about="about",
-            name="name",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        _response = self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_user(self, user_id: str) -> None:
-        """
-
-
-        Parameters:
-            - user_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_user(
-            user_id="user_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def patch_user(
-        self,
-        user_id: str,
-        *,
-        about: typing.Optional[str] = OMIT,
-        name: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - about: typing.Optional[str]. About the user
-
-            - name: typing.Optional[str]. Name of the user
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.patch_user(
-            user_id="user_id",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
-        if name is not OMIT:
-            _request["name"] = name
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        _response = self._client_wrapper.httpx_client.request(
-            "PATCH",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_agent(self, agent_id: str) -> Agent:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_agent(
-            agent_id="agent_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Agent, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def update_agent(
-        self,
-        agent_id: str,
-        *,
-        about: str,
-        name: str,
-        model: typing.Optional[str] = OMIT,
-        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        instructions: typing.Optional[UpdateAgentRequestInstructions] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - about: str. About the agent
-
-            - name: str. Name of the agent
-
-            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
-
-            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - instructions: typing.Optional[UpdateAgentRequestInstructions]. Instructions for the agent
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.update_agent(
-            agent_id="agent_id",
-            about="about",
-            name="name",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
-        if model is not OMIT:
-            _request["model"] = model
-        if default_settings is not OMIT:
-            _request["default_settings"] = default_settings
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if instructions is not OMIT:
-            _request["instructions"] = instructions
-        _response = self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_agent(self, agent_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_agent(
-            agent_id="agent_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def patch_agent(
-        self,
-        agent_id: str,
-        *,
-        about: typing.Optional[str] = OMIT,
-        name: typing.Optional[str] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        instructions: typing.Optional[PatchAgentRequestInstructions] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - about: typing.Optional[str]. About the agent
-
-            - name: typing.Optional[str]. Name of the agent
-
-            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
-
-            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - instructions: typing.Optional[PatchAgentRequestInstructions]. Instructions for the agent
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.patch_agent(
-            agent_id="agent_id",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
-        if name is not OMIT:
-            _request["name"] = name
-        if model is not OMIT:
-            _request["model"] = model
-        if default_settings is not OMIT:
-            _request["default_settings"] = default_settings
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if instructions is not OMIT:
-            _request["instructions"] = instructions
-        _response = self._client_wrapper.httpx_client.request(
-            "PATCH",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_agent_docs(
-        self,
-        agent_id: str,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
-        order: typing.Optional[GetAgentDocsRequestOrder] = None,
-    ) -> GetAgentDocsResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - agent_id: str.
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_agent_docs(
-            agent_id="agent_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
-            ),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentDocsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def create_agent_doc(
-        self, agent_id: str, *, request: CreateDoc
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - request: CreateDoc.
-        ---
-        from julep import CreateDoc
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.create_agent_doc(
-            agent_id="agent_id",
-            request=CreateDoc(
-                title="title",
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
-            ),
-            json=jsonable_encoder(request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_user_docs(
-        self,
-        user_id: str,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
-        order: typing.Optional[GetUserDocsRequestOrder] = None,
-    ) -> GetUserDocsResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - user_id: str.
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_user_docs(
-            user_id="user_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
-            ),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetUserDocsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def create_user_doc(
-        self, user_id: str, *, request: CreateDoc
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - request: CreateDoc.
-        ---
-        from julep import CreateDoc
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.create_user_doc(
-            user_id="user_id",
-            request=CreateDoc(
-                title="title",
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
-            ),
-            json=jsonable_encoder(request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_user_doc(self, user_id: str, doc_id: str) -> None:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - doc_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_user_doc(
-            user_id="user_id",
-            doc_id="doc_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"users/{user_id}/docs/{doc_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_agent_doc(self, agent_id: str, doc_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - doc_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_agent_doc(
-            agent_id="agent_id",
-            doc_id="doc_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/docs/{doc_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_agent_memory(self, agent_id: str, memory_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - memory_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_agent_memory(
-            agent_id="agent_id",
-            memory_id="memory_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/memories/{memory_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_agent_tools(
-        self,
-        agent_id: str,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetAgentToolsResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - agent_id: str.
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_agent_tools(
-            agent_id="agent_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
-            ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentToolsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def create_agent_tool(
-        self, agent_id: str, *, request: CreateToolRequest
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - request: CreateToolRequest.
-        ---
-        from julep import CreateToolRequest, CreateToolRequestType, FunctionDef
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.create_agent_tool(
-            agent_id="agent_id",
-            request=CreateToolRequest(
-                type=CreateToolRequestType.FUNCTION,
-                function=FunctionDef(
-                    name="name",
-                    parameters={},
-                ),
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
-            ),
-            json=jsonable_encoder(request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def update_agent_tool(
-        self, agent_id: str, tool_id: str, *, function: FunctionDef
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - tool_id: str.
-
-            - function: FunctionDef. Function definition and parameters
-        ---
-        from julep import FunctionDef
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.update_agent_tool(
-            agent_id="agent_id",
-            tool_id="tool_id",
-            function=FunctionDef(
-                name="name",
-                parameters={},
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tools/{tool_id}",
-            ),
-            json=jsonable_encoder({"function": function}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def delete_agent_tool(self, agent_id: str, tool_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - tool_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.delete_agent_tool(
-            agent_id="agent_id",
-            tool_id="tool_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tools/{tool_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def patch_agent_tool(
-        self, agent_id: str, tool_id: str, *, function: PartialFunctionDef
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - tool_id: str.
-
-            - function: PartialFunctionDef. Function definition and parameters
-        ---
-        from julep import PartialFunctionDef
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.patch_agent_tool(
-            agent_id="agent_id",
-            tool_id="tool_id",
-            function=PartialFunctionDef(),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "PATCH",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tools/{tool_id}",
-            ),
-            json=jsonable_encoder({"function": function}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def get_job_status(self, job_id: str) -> JobStatus:
-        """
-
-
-        Parameters:
-            - job_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_job_status(
-            job_id="job_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"jobs/{job_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def list_tasks(self, agent_id: str) -> typing.List[Task]:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.list_tasks(
-            agent_id="agent_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(typing.List[Task], _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def create_task(
-        self,
-        agent_id: str,
-        *,
-        name: str,
-        description: typing.Optional[str] = OMIT,
-        tools_available: typing.Optional[typing.List[str]] = OMIT,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        main: typing.List[WorkflowStep],
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - name: str. Name of the Task
-
-            - description: typing.Optional[str]. Optional Description of the Task
-
-            - tools_available: typing.Optional[typing.List[str]]. Available Tools for the Task
-
-            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. JSON Schema of parameters
-
-            - main: typing.List[WorkflowStep]. Entrypoint Workflow for the Task
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.create_task(
-            agent_id="agent_id",
-            name="name",
-            main=[],
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"name": name, "main": main}
-        if description is not OMIT:
-            _request["description"] = description
-        if tools_available is not OMIT:
-            _request["tools_available"] = tools_available
+        _request: typing.Dict[str, typing.Any] = {
+            "name": name,
+            "description": description,
+            "main": main,
+            "tools": tools,
+            "inherit_tools": inherit_tools,
+        }
         if input_schema is not OMIT:
             _request["input_schema"] = input_schema
         _response = self._client_wrapper.httpx_client.request(
             "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(TasksRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        name: str,
+        description: str,
+        main: typing.List[TasksWorkflowStep],
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.List[ToolsCreateToolRequest],
+        inherit_tools: bool,
+    ) -> TasksRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - name: str.
+
+            - description: str.
+
+            - main: typing.List[TasksWorkflowStep]. The entrypoint of the task.
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
+
+            - tools: typing.List[ToolsCreateToolRequest]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: bool. Whether to inherit tools from the parent agent or not. Defaults to true.
+        ---
+        from julep import ToolsCreateToolRequest, ToolsToolType
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_create_or_update(
+            id="id",
+            name="name",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type=ToolsToolType.FUNCTION,
+                    background=True,
+                    interactive=True,
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "name": name,
+            "description": description,
+            "main": main,
+            "tools": tools,
+            "inherit_tools": inherit_tools,
+        }
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(TasksRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        description: str,
+        main: typing.List[TasksWorkflowStep],
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.List[ToolsCreateToolRequest],
+        inherit_tools: bool,
+    ) -> TasksRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - description: str.
+
+            - main: typing.List[TasksWorkflowStep]. The entrypoint of the task.
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
+
+            - tools: typing.List[ToolsCreateToolRequest]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: bool. Whether to inherit tools from the parent agent or not. Defaults to true.
+        ---
+        from julep import ToolsCreateToolRequest, ToolsToolType
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_update(
+            id="id",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type=ToolsToolType.FUNCTION,
+                    background=True,
+                    interactive=True,
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "description": description,
+            "main": main,
+            "tools": tools,
+            "inherit_tools": inherit_tools,
+        }
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TasksRouteUpdateResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_task_execution(
-        self, task_id: str, execution_id: str
-    ) -> typing.List[Execution]:
+    def tasks_route_delete(self, id: CommonUuid) -> TasksRouteDeleteResponse:
         """
-
+        Delete undefined by id
 
         Parameters:
-            - task_id: str.
-
-            - execution_id: str.
+            - id: CommonUuid. ID of the undefined
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.get_task_execution(
-            task_id="task_id",
-            execution_id="execution_id",
+        client.tasks_route_delete(
+            id="id",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
-            "GET",
+            "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"tasks/{task_id}/executions/{execution_id}",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(typing.List[Execution], _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TasksRouteDeleteResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def start_task_execution(
+    def tasks_route_patch(
         self,
-        agent_id: str,
-        task_id: str,
+        id: CommonUuid,
         *,
-        create_execution_task_id: str,
-        arguments: typing.Dict[str, typing.Any],
-        status: ExecutionStatus,
-    ) -> ResourceCreatedResponse:
+        description: typing.Optional[str] = OMIT,
+        main: typing.Optional[typing.List[TasksWorkflowStep]] = OMIT,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.Optional[typing.List[ToolsCreateToolRequest]] = OMIT,
+        inherit_tools: typing.Optional[bool] = OMIT,
+    ) -> TasksRoutePatchResponse:
         """
-
+        Patch undefined by id (merge changes)
 
         Parameters:
-            - agent_id: str.
+            - id: CommonUuid. ID of the undefined
 
-            - task_id: str.
+            - description: typing.Optional[str].
 
-            - create_execution_task_id: str.
+            - main: typing.Optional[typing.List[TasksWorkflowStep]]. The entrypoint of the task.
 
-            - arguments: typing.Dict[str, typing.Any]. JSON Schema of parameters
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
 
-            - status: ExecutionStatus.
+            - tools: typing.Optional[typing.List[ToolsCreateToolRequest]]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: typing.Optional[bool]. Whether to inherit tools from the parent agent or not. Defaults to true.
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.start_task_execution(
-            agent_id="agent_id",
-            task_id="task_id",
-            create_execution_task_id="task_id",
-            arguments={},
-            status="status",
+        client.tasks_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if description is not OMIT:
+            _request["description"] = description
+        if main is not OMIT:
+            _request["main"] = main
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        if tools is not OMIT:
+            _request["tools"] = tools
+        if inherit_tools is not OMIT:
+            _request["inherit_tools"] = inherit_tools
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(TasksRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def task_executions_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: TaskExecutionsRouteListRequestSortBy,
+        direction: TaskExecutionsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> TaskExecutionsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: TaskExecutionsRouteListRequestSortBy. Sort by a field
+
+            - direction: TaskExecutionsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            TaskExecutionsRouteListRequestDirection,
+            TaskExecutionsRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.task_executions_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=TaskExecutionsRouteListRequestSortBy.CREATED_AT,
+            direction=TaskExecutionsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
-            "POST",
+            "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tasks/{task_id}/executions",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}/executions"
             ),
-            json=jsonable_encoder(
+            params=remove_none_from_dict(
                 {
-                    "task_id": create_execution_task_id,
-                    "arguments": arguments,
-                    "status": status,
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
                 }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TaskExecutionsRouteListResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_task(self, agent_id: str, task_id: str) -> Task:
+    def task_executions_route_create(
+        self, id: CommonUuid, *, input: typing.Dict[str, typing.Any]
+    ) -> TaskExecutionsRouteCreateResponse:
         """
-
+        Create new undefined
 
         Parameters:
-            - agent_id: str.
+            - id: CommonUuid. ID of parent undefined
 
-            - task_id: str.
+            - input: typing.Dict[str, typing.Any]. The input to the execution
         ---
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.get_task(
-            agent_id="agent_id",
-            task_id="task_id",
+        client.task_executions_route_create(
+            id="id",
+            input={},
         )
         """
         _response = self._client_wrapper.httpx_client.request(
-            "GET",
+            "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tasks/{task_id}",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}/executions"
             ),
+            json=jsonable_encoder({"input": input}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Task, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TaskExecutionsRouteCreateResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def get_execution_transition(
-        self, execution_id: str
-    ) -> typing.List[ExecutionTransition]:
-        """
-
-
-        Parameters:
-            - execution_id: str.
-        ---
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        client.get_execution_transition(
-            execution_id="execution_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"executions/{execution_id}/transitions/",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(typing.List[ExecutionTransition], _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def resume_tool_execution(
+    def task_executions_route_resume_with_task_token(
         self,
-        execution_id: str,
-        transition_id: str,
+        id: CommonUuid,
         *,
-        responses: typing.List[ToolResponse],
-    ) -> ResourceUpdatedResponse:
+        task_token: str,
+        input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> TaskExecutionsRouteResumeWithTaskTokenResponse:
         """
-
+        Resume an execution with a task token
 
         Parameters:
-            - execution_id: str.
+            - id: CommonUuid. ID of parent Task
 
-            - transition_id: str.
+            - task_token: str. A Task Token is a unique identifier for a specific Task Execution.
 
-            - responses: typing.List[ToolResponse].
+            - input: typing.Optional[typing.Dict[str, typing.Any]]. The input to resume the execution with
         ---
-        from julep import ToolResponse
         from julep.client import JulepApi
 
         client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.resume_tool_execution(
-            execution_id="execution_id",
-            transition_id="transition_id",
-            responses=[
-                ToolResponse(
-                    id="id",
-                    output={},
-                )
-            ],
+        client.task_executions_route_resume_with_task_token(
+            id="id",
+            status="running",
+            task_token="task_token",
         )
         """
+        _request: typing.Dict[str, typing.Any] = {
+            "status": status,
+            "task_token": task_token,
+        }
+        if input is not OMIT:
+            _request["input"] = input
         _response = self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"executions/{execution_id}/transitions/{transition_id}",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}/executions"
             ),
-            json=jsonable_encoder({"responses": responses}),
+            json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TaskExecutionsRouteResumeWithTaskTokenResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tool_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        type: ToolsToolType,
+        background: bool,
+        interactive: bool,
+        function: typing.Optional[ToolsFunctionDef] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+    ) -> ToolRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - type: ToolsToolType. Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+            - background: bool. The tool should be run in the background (not supported at the moment)
+
+            - interactive: bool. Whether the tool that can be run interactively (response should contain "stop" boolean field)
+
+            - function: typing.Optional[ToolsFunctionDef].
+
+            - integration: typing.Optional[typing.Any].
+
+            - system: typing.Optional[typing.Any].
+
+            - api_call: typing.Optional[typing.Any].
+        ---
+        from julep import ToolsToolType
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tool_route_update(
+            id="id",
+            type=ToolsToolType.FUNCTION,
+            background=True,
+            interactive=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "type": type.value,
+            "background": background,
+            "interactive": interactive,
+        }
+        if function is not OMIT:
+            _request["function"] = function
+        if integration is not OMIT:
+            _request["integration"] = integration
+        if system is not OMIT:
+            _request["system"] = system
+        if api_call is not OMIT:
+            _request["api_call"] = api_call
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tools/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ToolRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tool_route_delete(self, id: CommonUuid) -> ToolRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tool_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tools/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ToolRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tool_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        type: typing.Optional[ToolsToolType] = OMIT,
+        background: typing.Optional[bool] = OMIT,
+        interactive: typing.Optional[bool] = OMIT,
+        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+    ) -> ToolRoutePatchResponse:
+        """
+        Patch undefined by id (merge changes)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - type: typing.Optional[ToolsToolType]. Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+            - background: typing.Optional[bool]. The tool should be run in the background (not supported at the moment)
+
+            - interactive: typing.Optional[bool]. Whether the tool that can be run interactively (response should contain "stop" boolean field)
+
+            - function: typing.Optional[ToolsFunctionDefUpdate].
+
+            - integration: typing.Optional[typing.Any].
+
+            - system: typing.Optional[typing.Any].
+
+            - api_call: typing.Optional[typing.Any].
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tool_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if type is not OMIT:
+            _request["type"] = type.value
+        if background is not OMIT:
+            _request["background"] = background
+        if interactive is not OMIT:
+            _request["interactive"] = interactive
+        if function is not OMIT:
+            _request["function"] = function
+        if integration is not OMIT:
+            _request["integration"] = integration
+        if system is not OMIT:
+            _request["system"] = system
+        if api_call is not OMIT:
+            _request["api_call"] = api_call
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tools/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ToolRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_list(
+        self,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: UsersRouteListRequestSortBy,
+        direction: UsersRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> UsersRouteListResponse:
+        """
+        List undefined items
+
+        Parameters:
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: UsersRouteListRequestSortBy. Sort by a field
+
+            - direction: UsersRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import UsersRouteListRequestDirection, UsersRouteListRequestSortBy
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_list(
+            limit=1,
+            offset=1,
+            sort_by=UsersRouteListRequestSortBy.CREATED_AT,
+            direction=UsersRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_create(
+        self,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        docs: typing.List[typing.Any],
+    ) -> UsersRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the user
+
+            - about: str. About the user
+
+            - docs: typing.List[typing.Any]. Documents to index for this user. (Max: 100 items)
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_create(
+            name="name",
+            about="about",
+            docs=[],
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "name": name,
+            "about": about,
+            "docs": docs,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+    ) -> UsersRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the user
+
+            - about: str. About the user
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_create_or_update(
+            id="id",
+            name="name",
+            about="about",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "name": name,
+            "about": about,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_get(self, id: CommonUuid) -> UsersUser:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_get(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersUser, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+    ) -> UsersRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the user
+
+            - about: str. About the user
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_update(
+            id="id",
+            name="name",
+            about="about",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {"name": name, "about": about}
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_delete(self, id: CommonUuid) -> UsersRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def users_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
+        about: typing.Optional[str] = OMIT,
+    ) -> UsersRoutePatchResponse:
+        """
+        Patch undefined by id (merge changes)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: typing.Optional[CommonIdentifierSafeUnicode]. Name of the user
+
+            - about: typing.Optional[str]. About the user
+        ---
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if name is not OMIT:
+            _request["name"] = name
+        if about is not OMIT:
+            _request["about"] = about
+        _response = self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def user_docs_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: UserDocsRouteListRequestSortBy,
+        direction: UserDocsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> UserDocsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: UserDocsRouteListRequestSortBy. Sort by a field
+
+            - direction: UserDocsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            UserDocsRouteListRequestDirection,
+            UserDocsRouteListRequestSortBy,
+        )
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.user_docs_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=UserDocsRouteListRequestSortBy.CREATED_AT,
+            direction=UserDocsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}/docs"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UserDocsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def user_docs_search_route_search(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: UserDocsSearchRouteSearchRequestSortBy,
+        direction: UserDocsSearchRouteSearchRequestDirection,
+        metadata_filter: str,
+        body: DocsDocSearchRequest,
+    ) -> UserDocsSearchRouteSearchResponse:
+        """
+        Search for documents owned by undefined
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: UserDocsSearchRouteSearchRequestSortBy. Sort by a field
+
+            - direction: UserDocsSearchRouteSearchRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+
+            - body: DocsDocSearchRequest.
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}/search"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            json=jsonable_encoder({"body": body}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UserDocsSearchRouteSearchResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
@@ -2181,12 +2749,14 @@ class AsyncJulepApi:
         *,
         base_url: typing.Optional[str] = None,
         environment: JulepApiEnvironment = JulepApiEnvironment.DEFAULT,
+        auth_key: str,
         api_key: str,
         timeout: typing.Optional[float] = 300,
         httpx_client: typing.Optional[httpx.AsyncClient] = None,
     ):
         self._client_wrapper = AsyncClientWrapper(
             base_url=_get_base_url(base_url=base_url, environment=environment),
+            auth_key=auth_key,
             api_key=api_key,
             httpx_client=(
                 httpx.AsyncClient(timeout=timeout)
@@ -2195,35 +2765,898 @@ class AsyncJulepApi:
             ),
         )
 
-    async def list_sessions(
+    async def agents_route_list(
         self,
         *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[ListSessionsRequestSortBy] = None,
-        order: typing.Optional[ListSessionsRequestOrder] = None,
-    ) -> ListSessionsResponse:
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentsRouteListRequestSortBy,
+        direction: AgentsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> AgentsRouteListResponse:
         """
-        List sessions created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
+        List undefined items
 
         Parameters:
-            - limit: typing.Optional[int]. Number of sessions to return
+            - limit: CommonLimit. Limit the number of undefined items returned
 
-            - offset: typing.Optional[int]. Number of sessions to skip (sorted created_at descending order)
+            - offset: CommonOffset. Offset the undefined items returned
 
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
+            - sort_by: AgentsRouteListRequestSortBy. Sort by a field
 
-            - sort_by: typing.Optional[ListSessionsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
+            - direction: AgentsRouteListRequestDirection. Sort direction
 
-            - order: typing.Optional[ListSessionsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import AgentsRouteListRequestDirection, AgentsRouteListRequestSortBy
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agents_route_list(
+            limit=1,
+            offset=1,
+            sort_by=AgentsRouteListRequestSortBy.CREATED_AT,
+            direction=AgentsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_create(
+        self, *, request: AgentsCreateAgentRequest
+    ) -> AgentsRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - request: AgentsCreateAgentRequest.
+        ---
+        from julep import AgentsCreateAgentRequest
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agents_route_create(
+            request=AgentsCreateAgentRequest(
+                name="name",
+                about="about",
+                model="model",
+                docs=[],
+            ),
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
+            json=jsonable_encoder(request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        model: str,
+        instructions: AgentsCreateOrUpdateAgentRequestInstructions,
+        default_settings: typing.Optional[
+            AgentsCreateOrUpdateAgentRequestDefaultSettings
+        ] = OMIT,
+    ) -> AgentsRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the agent
+
+            - about: str. About the agent
+
+            - model: str. Model name to use (gpt-4-turbo, gemini-nano etc)
+
+            - instructions: AgentsCreateOrUpdateAgentRequestInstructions. Instructions for the agent
+
+            - default_settings: typing.Optional[AgentsCreateOrUpdateAgentRequestDefaultSettings]. Default settings for all sessions created by this agent
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.list_sessions()
+        await client.agents_route_create_or_update(
+            id="id",
+            name="name",
+            about="about",
+            model="model",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "name": name,
+            "about": about,
+            "model": model,
+            "instructions": instructions,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_get(self, id: CommonUuid) -> AgentsAgent:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agents_route_get(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsAgent, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        model: str,
+        instructions: AgentsUpdateAgentRequestInstructions,
+        default_settings: typing.Optional[
+            AgentsUpdateAgentRequestDefaultSettings
+        ] = OMIT,
+    ) -> AgentsRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the agent
+
+            - about: str. About the agent
+
+            - model: str. Model name to use (gpt-4-turbo, gemini-nano etc)
+
+            - instructions: AgentsUpdateAgentRequestInstructions. Instructions for the agent
+
+            - default_settings: typing.Optional[AgentsUpdateAgentRequestDefaultSettings]. Default settings for all sessions created by this agent
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agents_route_update(
+            id="id",
+            name="name",
+            about="about",
+            model="model",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "name": name,
+            "about": about,
+            "model": model,
+            "instructions": instructions,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_delete(self, id: CommonUuid) -> AgentsRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agents_route_delete(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
+        about: typing.Optional[str] = OMIT,
+        model: typing.Optional[str] = OMIT,
+        instructions: typing.Optional[AgentsPatchAgentRequestInstructions] = OMIT,
+        default_settings: typing.Optional[
+            AgentsPatchAgentRequestDefaultSettings
+        ] = OMIT,
+    ) -> AgentsRoutePatchResponse:
+        """
+        Patch undefined by id (merge changes)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: typing.Optional[CommonIdentifierSafeUnicode]. Name of the agent
+
+            - about: typing.Optional[str]. About the agent
+
+            - model: typing.Optional[str]. Model name to use (gpt-4-turbo, gemini-nano etc)
+
+            - instructions: typing.Optional[AgentsPatchAgentRequestInstructions]. Instructions for the agent
+
+            - default_settings: typing.Optional[AgentsPatchAgentRequestDefaultSettings]. Default settings for all sessions created by this agent
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agents_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if name is not OMIT:
+            _request["name"] = name
+        if about is not OMIT:
+            _request["about"] = about
+        if model is not OMIT:
+            _request["model"] = model
+        if instructions is not OMIT:
+            _request["instructions"] = instructions
+        if default_settings is not OMIT:
+            _request["default_settings"] = default_settings
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_docs_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentDocsRouteListRequestSortBy,
+        direction: AgentDocsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> AgentDocsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: AgentDocsRouteListRequestSortBy. Sort by a field
+
+            - direction: AgentDocsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            AgentDocsRouteListRequestDirection,
+            AgentDocsRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agent_docs_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=AgentDocsRouteListRequestSortBy.CREATED_AT,
+            direction=AgentDocsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/docs"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentDocsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_docs_search_route_search(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentsDocsSearchRouteSearchRequestSortBy,
+        direction: AgentsDocsSearchRouteSearchRequestDirection,
+        metadata_filter: str,
+        body: DocsDocSearchRequest,
+    ) -> AgentsDocsSearchRouteSearchResponse:
+        """
+        Search for documents owned by undefined
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: AgentsDocsSearchRouteSearchRequestSortBy. Sort by a field
+
+            - direction: AgentsDocsSearchRouteSearchRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+
+            - body: DocsDocSearchRequest.
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/search"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            json=jsonable_encoder({"body": body}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentsDocsSearchRouteSearchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_tools_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: AgentToolsRouteListRequestSortBy,
+        direction: AgentToolsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> AgentToolsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: AgentToolsRouteListRequestSortBy. Sort by a field
+
+            - direction: AgentToolsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            AgentToolsRouteListRequestDirection,
+            AgentToolsRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agent_tools_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=AgentToolsRouteListRequestSortBy.CREATED_AT,
+            direction=AgentToolsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/tools"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentToolsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_tools_route_create(
+        self, id: CommonUuid, *, request: AgentsCreateAgentRequest
+    ) -> AgentToolsRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - request: AgentsCreateAgentRequest.
+        ---
+        from julep import AgentsCreateAgentRequest
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.agent_tools_route_create(
+            id="id",
+            request=AgentsCreateAgentRequest(
+                name="name",
+                about="about",
+                model="model",
+                docs=[],
+            ),
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"agents/{id}/tools"
+            ),
+            json=jsonable_encoder(request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(AgentToolsRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def individual_docs_route_get(self, id: CommonUuid) -> DocsDoc:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.individual_docs_route_get(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"docs/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(DocsDoc, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def individual_docs_route_delete(
+        self, id: CommonUuid
+    ) -> IndividualDocsRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.individual_docs_route_delete(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"docs/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(IndividualDocsRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def executions_route_get(self, id: CommonUuid) -> ExecutionsExecution:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.executions_route_get(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"executions/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ExecutionsExecution, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def executions_route_update(
+        self, id: CommonUuid, *, request: ExecutionsUpdateExecutionRequest
+    ) -> ExecutionsRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - request: ExecutionsUpdateExecutionRequest.
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"executions/{id}"
+            ),
+            json=jsonable_encoder(request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ExecutionsRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def execution_transitions_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: ExecutionTransitionsRouteListRequestSortBy,
+        direction: ExecutionTransitionsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> ExecutionTransitionsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: ExecutionTransitionsRouteListRequestSortBy. Sort by a field
+
+            - direction: ExecutionTransitionsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            ExecutionTransitionsRouteListRequestDirection,
+            ExecutionTransitionsRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.execution_transitions_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=ExecutionTransitionsRouteListRequestSortBy.CREATED_AT,
+            direction=ExecutionTransitionsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/",
+                f"executions/{id}/transitions",
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ExecutionTransitionsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def job_route_get(self, id: CommonUuid) -> JobsJobStatus:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.job_route_get(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"jobs/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(JobsJobStatus, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def sessions_route_list(
+        self,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: SessionsRouteListRequestSortBy,
+        direction: SessionsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> SessionsRouteListResponse:
+        """
+        List undefined items
+
+        Parameters:
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: SessionsRouteListRequestSortBy. Sort by a field
+
+            - direction: SessionsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            SessionsRouteListRequestDirection,
+            SessionsRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.sessions_route_list(
+            limit=1,
+            offset=1,
+            sort_by=SessionsRouteListRequestSortBy.CREATED_AT,
+            direction=SessionsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
@@ -2232,2052 +3665,1656 @@ class AsyncJulepApi:
                 {
                     "limit": limit,
                     "offset": offset,
-                    "metadata_filter": metadata_filter,
                     "sort_by": sort_by,
-                    "order": order,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
                 }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ListSessionsResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(SessionsRouteListResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def create_session(
+    async def sessions_route_create(
         self,
         *,
-        user_id: typing.Optional[str] = OMIT,
-        agent_id: str,
-        situation: typing.Optional[str] = OMIT,
+        user: typing.Optional[CommonUuid] = OMIT,
+        users: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        agent: typing.Optional[CommonUuid] = OMIT,
+        agents: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        situation: str,
+        render_templates: bool,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - user: typing.Optional[CommonUuid]. User ID of user associated with this session
+
+            - users: typing.Optional[typing.List[CommonUuid]].
+
+            - agent: typing.Optional[CommonUuid]. Agent ID of agent associated with this session
+
+            - agents: typing.Optional[typing.List[CommonUuid]].
+
+            - situation: str. A specific situation that sets the background for this session
+
+            - render_templates: bool. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.sessions_route_create(
+            situation="situation",
+            render_templates=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "situation": situation,
+            "render_templates": render_templates,
+        }
+        if user is not OMIT:
+            _request["user"] = user
+        if users is not OMIT:
+            _request["users"] = users
+        if agent is not OMIT:
+            _request["agent"] = agent
+        if agents is not OMIT:
+            _request["agents"] = agents
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def sessions_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        user: typing.Optional[CommonUuid] = OMIT,
+        users: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        agent: typing.Optional[CommonUuid] = OMIT,
+        agents: typing.Optional[typing.List[CommonUuid]] = OMIT,
+        situation: str,
+        render_templates: bool,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - user: typing.Optional[CommonUuid]. User ID of user associated with this session
+
+            - users: typing.Optional[typing.List[CommonUuid]].
+
+            - agent: typing.Optional[CommonUuid]. Agent ID of agent associated with this session
+
+            - agents: typing.Optional[typing.List[CommonUuid]].
+
+            - situation: str. A specific situation that sets the background for this session
+
+            - render_templates: bool. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.sessions_route_create_or_update(
+            id="id",
+            situation="situation",
+            render_templates=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "situation": situation,
+            "render_templates": render_templates,
+        }
+        if user is not OMIT:
+            _request["user"] = user
+        if users is not OMIT:
+            _request["users"] = users
+        if agent is not OMIT:
+            _request["agent"] = agent
+        if agents is not OMIT:
+            _request["agents"] = agents
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def history_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: HistoryRouteListRequestSortBy,
+        direction: HistoryRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> HistoryRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: HistoryRouteListRequestSortBy. Sort by a field
+
+            - direction: HistoryRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            HistoryRouteListRequestDirection,
+            HistoryRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.history_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=HistoryRouteListRequestSortBy.CREATED_AT,
+            direction=HistoryRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/history/{id}"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def history_route_delete(self, id: CommonUuid) -> HistoryRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.history_route_delete(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/history/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(HistoryRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def sessions_route_get(self, id: CommonUuid) -> SessionsSession:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsSession, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def sessions_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        situation: str,
+        render_templates: bool,
+        token_budget: typing.Optional[int] = OMIT,
+        context_overflow: typing.Optional[str] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - situation: str. A specific situation that sets the background for this session
+
+            - render_templates: bool. Render system and assistant message content as jinja templates
+
+            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
+
+            - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.sessions_route_update(
+            id="id",
+            situation="situation",
+            render_templates=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "situation": situation,
+            "render_templates": render_templates,
+        }
+        if token_budget is not OMIT:
+            _request["token_budget"] = token_budget
+        if context_overflow is not OMIT:
+            _request["context_overflow"] = context_overflow
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def sessions_route_delete(
+        self, id: CommonUuid
+    ) -> SessionsRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.sessions_route_delete(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(SessionsRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def sessions_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        situation: typing.Optional[str] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
         context_overflow: typing.Optional[str] = OMIT,
-    ) -> ResourceCreatedResponse:
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> SessionsRoutePatchResponse:
         """
-        Create a session between an agent and a user
+        Patch undefined by id (merge changes)
 
         Parameters:
-            - user_id: typing.Optional[str]. (Optional) User ID of user to associate with this session
-
-            - agent_id: str. Agent ID of agent to associate with this session
+            - id: CommonUuid. ID of the undefined
 
             - situation: typing.Optional[str]. A specific situation that sets the background for this session
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
 
             - render_templates: typing.Optional[bool]. Render system and assistant message content as jinja templates
 
             - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
 
             - context_overflow: typing.Optional[str]. Action to start on context window overflow
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.create_session(
-            agent_id="agent_id",
+        await client.sessions_route_patch(
+            id="id",
         )
         """
-        _request: typing.Dict[str, typing.Any] = {"agent_id": agent_id}
-        if user_id is not OMIT:
-            _request["user_id"] = user_id
+        _request: typing.Dict[str, typing.Any] = {}
         if situation is not OMIT:
             _request["situation"] = situation
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
         if render_templates is not OMIT:
             _request["render_templates"] = render_templates
         if token_budget is not OMIT:
             _request["token_budget"] = token_budget
         if context_overflow is not OMIT:
             _request["context_overflow"] = context_overflow
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "sessions"),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def list_users(
-        self,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[ListUsersRequestSortBy] = None,
-        order: typing.Optional[ListUsersRequestOrder] = None,
-    ) -> ListUsersResponse:
-        """
-        List users created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
-
-        Parameters:
-            - limit: typing.Optional[int]. Number of items to return
-
-            - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[ListUsersRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[ListUsersRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.list_users()
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ListUsersResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def create_user(
-        self,
-        *,
-        name: typing.Optional[str] = OMIT,
-        about: typing.Optional[str] = OMIT,
-        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-    ) -> ResourceCreatedResponse:
-        """
-        Create a new user
-
-        Parameters:
-            - name: typing.Optional[str]. Name of the user
-
-            - about: typing.Optional[str]. About the user
-
-            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about user
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.create_user()
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if name is not OMIT:
-            _request["name"] = name
-        if about is not OMIT:
-            _request["about"] = about
-        if docs is not OMIT:
-            _request["docs"] = docs
         if metadata is not OMIT:
             _request["metadata"] = metadata
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def list_agents(
-        self,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[ListAgentsRequestSortBy] = None,
-        order: typing.Optional[ListAgentsRequestOrder] = None,
-    ) -> ListAgentsResponse:
-        """
-        List agents created (use limit/offset pagination to get large number of sessions; sorted by descending order of `created_at` by default)
-
-        Parameters:
-            - limit: typing.Optional[int]. Number of items to return
-
-            - offset: typing.Optional[int]. Number of items to skip (sorted created_at descending order)
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[ListAgentsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[ListAgentsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.list_agents()
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ListAgentsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def create_agent(
-        self,
-        *,
-        name: str,
-        about: typing.Optional[str] = OMIT,
-        tools: typing.Optional[typing.List[CreateToolRequest]] = OMIT,
-        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        docs: typing.Optional[typing.List[CreateDoc]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        instructions: typing.Optional[CreateAgentRequestInstructions] = OMIT,
-    ) -> ResourceCreatedResponse:
-        """
-        Create a new agent
-
-        Parameters:
-            - name: str. Name of the agent
-
-            - about: typing.Optional[str]. About the agent
-
-            - tools: typing.Optional[typing.List[CreateToolRequest]]. A list of tools the model may call. Currently, only `function`s are supported as a tool. Use this to provide a list of functions the model may generate JSON inputs for.
-
-            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
-
-            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
-
-            - docs: typing.Optional[typing.List[CreateDoc]]. List of docs about agent
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. (Optional) metadata
-
-            - instructions: typing.Optional[CreateAgentRequestInstructions]. Instructions for the agent
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.create_agent(
-            name="name",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"name": name}
-        if about is not OMIT:
-            _request["about"] = about
-        if tools is not OMIT:
-            _request["tools"] = tools
-        if default_settings is not OMIT:
-            _request["default_settings"] = default_settings
-        if model is not OMIT:
-            _request["model"] = model
-        if docs is not OMIT:
-            _request["docs"] = docs
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if instructions is not OMIT:
-            _request["instructions"] = instructions
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "agents"),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_session(self, session_id: str) -> Session:
-        """
-
-
-        Parameters:
-            - session_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_session(
-            session_id="session_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Session, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def update_session(
-        self,
-        session_id: str,
-        *,
-        situation: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - session_id: str.
-
-            - situation: str. Updated situation for this session
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
-
-            - context_overflow: typing.Optional[str]. Action to start on context window overflow
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.update_session(
-            session_id="session_id",
-            situation="situation",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"situation": situation}
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if token_budget is not OMIT:
-            _request["token_budget"] = token_budget
-        if context_overflow is not OMIT:
-            _request["context_overflow"] = context_overflow
-        _response = await self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_session(self, session_id: str) -> None:
-        """
-
-
-        Parameters:
-            - session_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_session(
-            session_id="session_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def patch_session(
-        self,
-        session_id: str,
-        *,
-        situation: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - session_id: str.
-
-            - situation: typing.Optional[str]. Updated situation for this session
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - token_budget: typing.Optional[int]. Threshold value for the adaptive context functionality
-
-            - context_overflow: typing.Optional[str]. Action to start on context window overflow
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.patch_session(
-            session_id="session_id",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if situation is not OMIT:
-            _request["situation"] = situation
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if token_budget is not OMIT:
-            _request["token_budget"] = token_budget
-        if context_overflow is not OMIT:
-            _request["context_overflow"] = context_overflow
         _response = await self._client_wrapper.httpx_client.request(
             "PATCH",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}"
+                f"{self._client_wrapper.get_base_url()}/", f"sessions/{id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(SessionsRoutePatchResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_suggestions(
+    async def tasks_route_list(
         self,
-        session_id: str,
         *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetSuggestionsResponse:
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: TasksRouteListRequestSortBy,
+        direction: TasksRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> TasksRouteListResponse:
         """
-        Sorted (created_at descending)
+        List undefined items
 
         Parameters:
-            - session_id: str.
+            - limit: CommonLimit. Limit the number of undefined items returned
 
-            - limit: typing.Optional[int].
+            - offset: CommonOffset. Offset the undefined items returned
 
-            - offset: typing.Optional[int].
+            - sort_by: TasksRouteListRequestSortBy. Sort by a field
+
+            - direction: TasksRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
         ---
+        from julep import TasksRouteListRequestDirection, TasksRouteListRequestSortBy
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.get_suggestions(
-            session_id="session_id",
+        await client.tasks_route_list(
+            limit=1,
+            offset=1,
+            sort_by=TasksRouteListRequestSortBy.CREATED_AT,
+            direction=TasksRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
             "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"sessions/{session_id}/suggestions",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
             ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetSuggestionsResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TasksRouteListResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_history(
+    async def tasks_route_create(
         self,
-        session_id: str,
         *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetHistoryResponse:
+        name: str,
+        description: str,
+        main: typing.List[TasksWorkflowStep],
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.List[ToolsCreateToolRequest],
+        inherit_tools: bool,
+    ) -> TasksRouteCreateResponse:
         """
-        Sorted (created_at ascending)
+        Create new undefined
 
         Parameters:
-            - session_id: str.
+            - name: str.
 
-            - limit: typing.Optional[int].
+            - description: str.
 
-            - offset: typing.Optional[int].
+            - main: typing.List[TasksWorkflowStep]. The entrypoint of the task.
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
+
+            - tools: typing.List[ToolsCreateToolRequest]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: bool. Whether to inherit tools from the parent agent or not. Defaults to true.
         ---
+        from julep import ToolsCreateToolRequest, ToolsToolType
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.get_history(
-            session_id="session_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"sessions/{session_id}/history",
-            ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetHistoryResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_session_history(self, session_id: str) -> None:
-        """
-
-
-        Parameters:
-            - session_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_session_history(
-            session_id="session_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"sessions/{session_id}/history",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def chat(
-        self,
-        session_id: str,
-        *,
-        messages: typing.List[InputChatMlMessage],
-        tools: typing.Optional[typing.List[Tool]] = OMIT,
-        tool_choice: typing.Optional[ChatInputDataToolChoice] = OMIT,
-        frequency_penalty: typing.Optional[float] = OMIT,
-        length_penalty: typing.Optional[float] = OMIT,
-        logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]] = OMIT,
-        max_tokens: typing.Optional[int] = OMIT,
-        presence_penalty: typing.Optional[float] = OMIT,
-        repetition_penalty: typing.Optional[float] = OMIT,
-        response_format: typing.Optional[ChatSettingsResponseFormat] = OMIT,
-        seed: typing.Optional[int] = OMIT,
-        stop: typing.Optional[ChatSettingsStop] = OMIT,
-        stream: typing.Optional[bool] = OMIT,
-        temperature: typing.Optional[float] = OMIT,
-        top_p: typing.Optional[float] = OMIT,
-        min_p: typing.Optional[float] = OMIT,
-        preset: typing.Optional[ChatSettingsPreset] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        recall: typing.Optional[bool] = OMIT,
-        record: typing.Optional[bool] = OMIT,
-        remember: typing.Optional[bool] = OMIT,
-    ) -> ChatResponse:
-        """
-
-
-        Parameters:
-            - session_id: str.
-
-            - messages: typing.List[InputChatMlMessage]. A list of new input messages comprising the conversation so far.
-
-            - tools: typing.Optional[typing.List[Tool]]. (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden
-
-            - tool_choice: typing.Optional[ChatInputDataToolChoice]. Can be one of existing tools given to the agent earlier or the ones included in the request
-
-            - frequency_penalty: typing.Optional[float]. (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-
-            - length_penalty: typing.Optional[float]. (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-
-            - logit_bias: typing.Optional[typing.Dict[str, typing.Optional[int]]]. Modify the likelihood of specified tokens appearing in the completion.
-
-                                                                                   Accepts a JSON object that maps tokens (specified by their token ID in the tokenizer) to an associated bias value from -100 to 100. Mathematically, the bias is added to the logits generated by the model prior to sampling. The exact effect will vary per model, but values between -1 and 1 should decrease or increase likelihood of selection; values like -100 or 100 should result in a ban or exclusive selection of the relevant token.
-            - max_tokens: typing.Optional[int]. The maximum number of tokens to generate in the chat completion.
-
-                                                The total length of input tokens and generated tokens is limited by the model's context length.
-            - presence_penalty: typing.Optional[float]. (OpenAI-like) Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-
-            - repetition_penalty: typing.Optional[float]. (Huggingface-like) Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-
-            - response_format: typing.Optional[ChatSettingsResponseFormat]. An object specifying the format that the model must output.
-
-                                                                            Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
-
-                                                                            **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.
-            - seed: typing.Optional[int]. This feature is in Beta.
-                                          If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result.
-                                          Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend.
-            - stop: typing.Optional[ChatSettingsStop]. Up to 4 sequences where the API will stop generating further tokens.
-
-            - stream: typing.Optional[bool]. If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sent as data-only [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format) as they become available, with the stream terminated by a `data: [DONE]` message. [Example Python code](https://cookbook.openai.com/examples/how_to_stream_completions).
-
-            - temperature: typing.Optional[float]. What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-
-            - top_p: typing.Optional[float]. Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
-
-            - min_p: typing.Optional[float]. Minimum probability compared to leading token to be considered
-
-            - preset: typing.Optional[ChatSettingsPreset]. Generation preset name (problem_solving|conversational|fun|prose|creative|business|deterministic|code|multilingual)
-
-            - model: typing.Optional[str]. Model name
-
-            - recall: typing.Optional[bool]. Whether previous memories should be recalled or not
-
-            - record: typing.Optional[bool]. Whether this interaction should be recorded in history or not
-
-            - remember: typing.Optional[bool]. Whether this interaction should form memories or not
-        ---
-        from julep import InputChatMlMessage, InputChatMlMessageRole
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.chat(
-            session_id="session_id",
-            messages=[
-                InputChatMlMessage(
-                    role=InputChatMlMessageRole.USER,
+        await client.tasks_route_create(
+            name="name",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type=ToolsToolType.FUNCTION,
+                    background=True,
+                    interactive=True,
                 )
             ],
+            inherit_tools=True,
         )
         """
-        _request: typing.Dict[str, typing.Any] = {"messages": messages}
-        if tools is not OMIT:
-            _request["tools"] = tools
-        if tool_choice is not OMIT:
-            _request["tool_choice"] = tool_choice
-        if frequency_penalty is not OMIT:
-            _request["frequency_penalty"] = frequency_penalty
-        if length_penalty is not OMIT:
-            _request["length_penalty"] = length_penalty
-        if logit_bias is not OMIT:
-            _request["logit_bias"] = logit_bias
-        if max_tokens is not OMIT:
-            _request["max_tokens"] = max_tokens
-        if presence_penalty is not OMIT:
-            _request["presence_penalty"] = presence_penalty
-        if repetition_penalty is not OMIT:
-            _request["repetition_penalty"] = repetition_penalty
-        if response_format is not OMIT:
-            _request["response_format"] = response_format
-        if seed is not OMIT:
-            _request["seed"] = seed
-        if stop is not OMIT:
-            _request["stop"] = stop
-        if stream is not OMIT:
-            _request["stream"] = stream
-        if temperature is not OMIT:
-            _request["temperature"] = temperature
-        if top_p is not OMIT:
-            _request["top_p"] = top_p
-        if min_p is not OMIT:
-            _request["min_p"] = min_p
-        if preset is not OMIT:
-            _request["preset"] = preset.value
-        if model is not OMIT:
-            _request["model"] = model
-        if recall is not OMIT:
-            _request["recall"] = recall
-        if record is not OMIT:
-            _request["record"] = record
-        if remember is not OMIT:
-            _request["remember"] = remember
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"sessions/{session_id}/chat"
-            ),
-            json=jsonable_encoder(_request),
-            headers=remove_none_from_dict(
-                {**self._client_wrapper.get_headers(), "Accept": "application/json"}
-            ),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ChatResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_agent_memories(
-        self,
-        agent_id: str,
-        *,
-        query: str,
-        user_id: typing.Optional[str] = None,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetAgentMemoriesResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - agent_id: str.
-
-            - query: str.
-
-            - user_id: typing.Optional[str].
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_agent_memories(
-            agent_id="agent_id",
-            query="query",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/memories"
-            ),
-            params=remove_none_from_dict(
-                {"query": query, "user_id": user_id, "limit": limit, "offset": offset}
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentMemoriesResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_user(self, user_id: str) -> User:
-        """
-
-
-        Parameters:
-            - user_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_user(
-            user_id="user_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(User, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def update_user(
-        self,
-        user_id: str,
-        *,
-        about: str,
-        name: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - about: str. About the user
-
-            - name: str. Name of the user
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.update_user(
-            user_id="user_id",
-            about="about",
-            name="name",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        _response = await self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_user(self, user_id: str) -> None:
-        """
-
-
-        Parameters:
-            - user_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_user(
-            user_id="user_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def patch_user(
-        self,
-        user_id: str,
-        *,
-        about: typing.Optional[str] = OMIT,
-        name: typing.Optional[str] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - about: typing.Optional[str]. About the user
-
-            - name: typing.Optional[str]. Name of the user
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.patch_user(
-            user_id="user_id",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
-        if name is not OMIT:
-            _request["name"] = name
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        _response = await self._client_wrapper.httpx_client.request(
-            "PATCH",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_agent(self, agent_id: str) -> Agent:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_agent(
-            agent_id="agent_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Agent, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def update_agent(
-        self,
-        agent_id: str,
-        *,
-        about: str,
-        name: str,
-        model: typing.Optional[str] = OMIT,
-        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        instructions: typing.Optional[UpdateAgentRequestInstructions] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - about: str. About the agent
-
-            - name: str. Name of the agent
-
-            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
-
-            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - instructions: typing.Optional[UpdateAgentRequestInstructions]. Instructions for the agent
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.update_agent(
-            agent_id="agent_id",
-            about="about",
-            name="name",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"about": about, "name": name}
-        if model is not OMIT:
-            _request["model"] = model
-        if default_settings is not OMIT:
-            _request["default_settings"] = default_settings
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if instructions is not OMIT:
-            _request["instructions"] = instructions
-        _response = await self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_agent(self, agent_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_agent(
-            agent_id="agent_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def patch_agent(
-        self,
-        agent_id: str,
-        *,
-        about: typing.Optional[str] = OMIT,
-        name: typing.Optional[str] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        default_settings: typing.Optional[AgentDefaultSettings] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        instructions: typing.Optional[PatchAgentRequestInstructions] = OMIT,
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - about: typing.Optional[str]. About the agent
-
-            - name: typing.Optional[str]. Name of the agent
-
-            - model: typing.Optional[str]. Name of the model that the agent is supposed to use
-
-            - default_settings: typing.Optional[AgentDefaultSettings]. Default model settings to start every session with
-
-            - metadata: typing.Optional[typing.Dict[str, typing.Any]]. Optional metadata
-
-            - instructions: typing.Optional[PatchAgentRequestInstructions]. Instructions for the agent
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.patch_agent(
-            agent_id="agent_id",
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {}
-        if about is not OMIT:
-            _request["about"] = about
-        if name is not OMIT:
-            _request["name"] = name
-        if model is not OMIT:
-            _request["model"] = model
-        if default_settings is not OMIT:
-            _request["default_settings"] = default_settings
-        if metadata is not OMIT:
-            _request["metadata"] = metadata
-        if instructions is not OMIT:
-            _request["instructions"] = instructions
-        _response = await self._client_wrapper.httpx_client.request(
-            "PATCH",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}"
-            ),
-            json=jsonable_encoder(_request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_agent_docs(
-        self,
-        agent_id: str,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[GetAgentDocsRequestSortBy] = None,
-        order: typing.Optional[GetAgentDocsRequestOrder] = None,
-    ) -> GetAgentDocsResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - agent_id: str.
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[GetAgentDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[GetAgentDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_agent_docs(
-            agent_id="agent_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
-            ),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentDocsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def create_agent_doc(
-        self, agent_id: str, *, request: CreateDoc
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - request: CreateDoc.
-        ---
-        from julep import CreateDoc
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.create_agent_doc(
-            agent_id="agent_id",
-            request=CreateDoc(
-                title="title",
-            ),
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/docs"
-            ),
-            json=jsonable_encoder(request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_user_docs(
-        self,
-        user_id: str,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-        metadata_filter: typing.Optional[str] = None,
-        sort_by: typing.Optional[GetUserDocsRequestSortBy] = None,
-        order: typing.Optional[GetUserDocsRequestOrder] = None,
-    ) -> GetUserDocsResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - user_id: str.
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-
-            - metadata_filter: typing.Optional[str]. JSON object that should be used to filter objects by metadata
-
-            - sort_by: typing.Optional[GetUserDocsRequestSortBy]. Which field to sort by: `created_at` or `updated_at`
-
-            - order: typing.Optional[GetUserDocsRequestOrder]. Which order should the sort be: `asc` (ascending) or `desc` (descending)
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_user_docs(
-            user_id="user_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
-            ),
-            params=remove_none_from_dict(
-                {
-                    "limit": limit,
-                    "offset": offset,
-                    "metadata_filter": metadata_filter,
-                    "sort_by": sort_by,
-                    "order": order,
-                }
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetUserDocsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def create_user_doc(
-        self, user_id: str, *, request: CreateDoc
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - request: CreateDoc.
-        ---
-        from julep import CreateDoc
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.create_user_doc(
-            user_id="user_id",
-            request=CreateDoc(
-                title="title",
-            ),
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"users/{user_id}/docs"
-            ),
-            json=jsonable_encoder(request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_user_doc(self, user_id: str, doc_id: str) -> None:
-        """
-
-
-        Parameters:
-            - user_id: str.
-
-            - doc_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_user_doc(
-            user_id="user_id",
-            doc_id="doc_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"users/{user_id}/docs/{doc_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_agent_doc(self, agent_id: str, doc_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - doc_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_agent_doc(
-            agent_id="agent_id",
-            doc_id="doc_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/docs/{doc_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_agent_memory(self, agent_id: str, memory_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - memory_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_agent_memory(
-            agent_id="agent_id",
-            memory_id="memory_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/memories/{memory_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_agent_tools(
-        self,
-        agent_id: str,
-        *,
-        limit: typing.Optional[int] = None,
-        offset: typing.Optional[int] = None,
-    ) -> GetAgentToolsResponse:
-        """
-        Sorted (created_at descending)
-
-        Parameters:
-            - agent_id: str.
-
-            - limit: typing.Optional[int].
-
-            - offset: typing.Optional[int].
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_agent_tools(
-            agent_id="agent_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
-            ),
-            params=remove_none_from_dict({"limit": limit, "offset": offset}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(GetAgentToolsResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def create_agent_tool(
-        self, agent_id: str, *, request: CreateToolRequest
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - request: CreateToolRequest.
-        ---
-        from julep import CreateToolRequest, CreateToolRequestType, FunctionDef
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.create_agent_tool(
-            agent_id="agent_id",
-            request=CreateToolRequest(
-                type=CreateToolRequestType.FUNCTION,
-                function=FunctionDef(
-                    name="name",
-                    parameters={},
-                ),
-            ),
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "POST",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tools"
-            ),
-            json=jsonable_encoder(request),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def update_agent_tool(
-        self, agent_id: str, tool_id: str, *, function: FunctionDef
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - tool_id: str.
-
-            - function: FunctionDef. Function definition and parameters
-        ---
-        from julep import FunctionDef
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.update_agent_tool(
-            agent_id="agent_id",
-            tool_id="tool_id",
-            function=FunctionDef(
-                name="name",
-                parameters={},
-            ),
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "PUT",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tools/{tool_id}",
-            ),
-            json=jsonable_encoder({"function": function}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def delete_agent_tool(self, agent_id: str, tool_id: str) -> None:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - tool_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.delete_agent_tool(
-            agent_id="agent_id",
-            tool_id="tool_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "DELETE",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tools/{tool_id}",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def patch_agent_tool(
-        self, agent_id: str, tool_id: str, *, function: PartialFunctionDef
-    ) -> ResourceUpdatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - tool_id: str.
-
-            - function: PartialFunctionDef. Function definition and parameters
-        ---
-        from julep import PartialFunctionDef
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.patch_agent_tool(
-            agent_id="agent_id",
-            tool_id="tool_id",
-            function=PartialFunctionDef(),
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "PATCH",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tools/{tool_id}",
-            ),
-            json=jsonable_encoder({"function": function}),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def get_job_status(self, job_id: str) -> JobStatus:
-        """
-
-
-        Parameters:
-            - job_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_job_status(
-            job_id="job_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"jobs/{job_id}"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(JobStatus, _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def list_tasks(self, agent_id: str) -> typing.List[Task]:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.list_tasks(
-            agent_id="agent_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(typing.List[Task], _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def create_task(
-        self,
-        agent_id: str,
-        *,
-        name: str,
-        description: typing.Optional[str] = OMIT,
-        tools_available: typing.Optional[typing.List[str]] = OMIT,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        main: typing.List[WorkflowStep],
-    ) -> ResourceCreatedResponse:
-        """
-
-
-        Parameters:
-            - agent_id: str.
-
-            - name: str. Name of the Task
-
-            - description: typing.Optional[str]. Optional Description of the Task
-
-            - tools_available: typing.Optional[typing.List[str]]. Available Tools for the Task
-
-            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. JSON Schema of parameters
-
-            - main: typing.List[WorkflowStep]. Entrypoint Workflow for the Task
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.create_task(
-            agent_id="agent_id",
-            name="name",
-            main=[],
-        )
-        """
-        _request: typing.Dict[str, typing.Any] = {"name": name, "main": main}
-        if description is not OMIT:
-            _request["description"] = description
-        if tools_available is not OMIT:
-            _request["tools_available"] = tools_available
+        _request: typing.Dict[str, typing.Any] = {
+            "name": name,
+            "description": description,
+            "main": main,
+            "tools": tools,
+            "inherit_tools": inherit_tools,
+        }
         if input_schema is not OMIT:
             _request["input_schema"] = input_schema
         _response = await self._client_wrapper.httpx_client.request(
             "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(TasksRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        name: str,
+        description: str,
+        main: typing.List[TasksWorkflowStep],
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.List[ToolsCreateToolRequest],
+        inherit_tools: bool,
+    ) -> TasksRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - name: str.
+
+            - description: str.
+
+            - main: typing.List[TasksWorkflowStep]. The entrypoint of the task.
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
+
+            - tools: typing.List[ToolsCreateToolRequest]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: bool. Whether to inherit tools from the parent agent or not. Defaults to true.
+        ---
+        from julep import ToolsCreateToolRequest, ToolsToolType
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.tasks_route_create_or_update(
+            id="id",
+            name="name",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type=ToolsToolType.FUNCTION,
+                    background=True,
+                    interactive=True,
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "name": name,
+            "description": description,
+            "main": main,
+            "tools": tools,
+            "inherit_tools": inherit_tools,
+        }
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "tasks"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(TasksRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        description: str,
+        main: typing.List[TasksWorkflowStep],
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.List[ToolsCreateToolRequest],
+        inherit_tools: bool,
+    ) -> TasksRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - description: str.
+
+            - main: typing.List[TasksWorkflowStep]. The entrypoint of the task.
+
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
+
+            - tools: typing.List[ToolsCreateToolRequest]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: bool. Whether to inherit tools from the parent agent or not. Defaults to true.
+        ---
+        from julep import ToolsCreateToolRequest, ToolsToolType
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.tasks_route_update(
+            id="id",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type=ToolsToolType.FUNCTION,
+                    background=True,
+                    interactive=True,
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "description": description,
+            "main": main,
+            "tools": tools,
+            "inherit_tools": inherit_tools,
+        }
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/", f"agents/{agent_id}/tasks"
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}"
             ),
             json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TasksRouteUpdateResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_task_execution(
-        self, task_id: str, execution_id: str
-    ) -> typing.List[Execution]:
+    async def tasks_route_delete(self, id: CommonUuid) -> TasksRouteDeleteResponse:
         """
-
+        Delete undefined by id
 
         Parameters:
-            - task_id: str.
-
-            - execution_id: str.
+            - id: CommonUuid. ID of the undefined
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.get_task_execution(
-            task_id="task_id",
-            execution_id="execution_id",
+        await client.tasks_route_delete(
+            id="id",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
-            "GET",
+            "DELETE",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"tasks/{task_id}/executions/{execution_id}",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}"
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(typing.List[Execution], _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TasksRouteDeleteResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def start_task_execution(
+    async def tasks_route_patch(
         self,
-        agent_id: str,
-        task_id: str,
+        id: CommonUuid,
         *,
-        create_execution_task_id: str,
-        arguments: typing.Dict[str, typing.Any],
-        status: ExecutionStatus,
-    ) -> ResourceCreatedResponse:
+        description: typing.Optional[str] = OMIT,
+        main: typing.Optional[typing.List[TasksWorkflowStep]] = OMIT,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.Optional[typing.List[ToolsCreateToolRequest]] = OMIT,
+        inherit_tools: typing.Optional[bool] = OMIT,
+    ) -> TasksRoutePatchResponse:
         """
-
+        Patch undefined by id (merge changes)
 
         Parameters:
-            - agent_id: str.
+            - id: CommonUuid. ID of the undefined
 
-            - task_id: str.
+            - description: typing.Optional[str].
 
-            - create_execution_task_id: str.
+            - main: typing.Optional[typing.List[TasksWorkflowStep]]. The entrypoint of the task.
 
-            - arguments: typing.Dict[str, typing.Any]. JSON Schema of parameters
+            - input_schema: typing.Optional[typing.Dict[str, typing.Any]]. The schema for the input to the task. `null` means all inputs are valid.
 
-            - status: ExecutionStatus.
+            - tools: typing.Optional[typing.List[ToolsCreateToolRequest]]. Tools defined specifically for this task not included in the Agent itself.
+
+            - inherit_tools: typing.Optional[bool]. Whether to inherit tools from the parent agent or not. Defaults to true.
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.start_task_execution(
-            agent_id="agent_id",
-            task_id="task_id",
-            create_execution_task_id="task_id",
-            arguments={},
-            status="status",
+        await client.tasks_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if description is not OMIT:
+            _request["description"] = description
+        if main is not OMIT:
+            _request["main"] = main
+        if input_schema is not OMIT:
+            _request["input_schema"] = input_schema
+        if tools is not OMIT:
+            _request["tools"] = tools
+        if inherit_tools is not OMIT:
+            _request["inherit_tools"] = inherit_tools
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(TasksRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def task_executions_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: TaskExecutionsRouteListRequestSortBy,
+        direction: TaskExecutionsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> TaskExecutionsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: TaskExecutionsRouteListRequestSortBy. Sort by a field
+
+            - direction: TaskExecutionsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            TaskExecutionsRouteListRequestDirection,
+            TaskExecutionsRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.task_executions_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=TaskExecutionsRouteListRequestSortBy.CREATED_AT,
+            direction=TaskExecutionsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
-            "POST",
+            "GET",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tasks/{task_id}/executions",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}/executions"
             ),
-            json=jsonable_encoder(
+            params=remove_none_from_dict(
                 {
-                    "task_id": create_execution_task_id,
-                    "arguments": arguments,
-                    "status": status,
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
                 }
             ),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceCreatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TaskExecutionsRouteListResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_task(self, agent_id: str, task_id: str) -> Task:
+    async def task_executions_route_create(
+        self, id: CommonUuid, *, input: typing.Dict[str, typing.Any]
+    ) -> TaskExecutionsRouteCreateResponse:
         """
-
+        Create new undefined
 
         Parameters:
-            - agent_id: str.
+            - id: CommonUuid. ID of parent undefined
 
-            - task_id: str.
+            - input: typing.Dict[str, typing.Any]. The input to the execution
         ---
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.get_task(
-            agent_id="agent_id",
-            task_id="task_id",
+        await client.task_executions_route_create(
+            id="id",
+            input={},
         )
         """
         _response = await self._client_wrapper.httpx_client.request(
-            "GET",
+            "POST",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"agents/{agent_id}/tasks/{task_id}",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}/executions"
             ),
+            json=jsonable_encoder({"input": input}),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(Task, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TaskExecutionsRouteCreateResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def get_execution_transition(
-        self, execution_id: str
-    ) -> typing.List[ExecutionTransition]:
-        """
-
-
-        Parameters:
-            - execution_id: str.
-        ---
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            api_key="YOUR_API_KEY",
-        )
-        await client.get_execution_transition(
-            execution_id="execution_id",
-        )
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "GET",
-            urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"executions/{execution_id}/transitions/",
-            ),
-            headers=self._client_wrapper.get_headers(),
-            timeout=300,
-        )
-        if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(typing.List[ExecutionTransition], _response.json())  # type: ignore
-        try:
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def resume_tool_execution(
+    async def task_executions_route_resume_with_task_token(
         self,
-        execution_id: str,
-        transition_id: str,
+        id: CommonUuid,
         *,
-        responses: typing.List[ToolResponse],
-    ) -> ResourceUpdatedResponse:
+        task_token: str,
+        input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+    ) -> TaskExecutionsRouteResumeWithTaskTokenResponse:
         """
-
+        Resume an execution with a task token
 
         Parameters:
-            - execution_id: str.
+            - id: CommonUuid. ID of parent Task
 
-            - transition_id: str.
+            - task_token: str. A Task Token is a unique identifier for a specific Task Execution.
 
-            - responses: typing.List[ToolResponse].
+            - input: typing.Optional[typing.Dict[str, typing.Any]]. The input to resume the execution with
         ---
-        from julep import ToolResponse
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        await client.resume_tool_execution(
-            execution_id="execution_id",
-            transition_id="transition_id",
-            responses=[
-                ToolResponse(
-                    id="id",
-                    output={},
-                )
-            ],
+        await client.task_executions_route_resume_with_task_token(
+            id="id",
+            status="running",
+            task_token="task_token",
         )
         """
+        _request: typing.Dict[str, typing.Any] = {
+            "status": status,
+            "task_token": task_token,
+        }
+        if input is not OMIT:
+            _request["input"] = input
         _response = await self._client_wrapper.httpx_client.request(
             "PUT",
             urllib.parse.urljoin(
-                f"{self._client_wrapper.get_base_url()}/",
-                f"executions/{execution_id}/transitions/{transition_id}",
+                f"{self._client_wrapper.get_base_url()}/", f"tasks/{id}/executions"
             ),
-            json=jsonable_encoder({"responses": responses}),
+            json=jsonable_encoder(_request),
             headers=self._client_wrapper.get_headers(),
             timeout=300,
         )
         if 200 <= _response.status_code < 300:
-            return pydantic.parse_obj_as(ResourceUpdatedResponse, _response.json())  # type: ignore
+            return pydantic.parse_obj_as(TaskExecutionsRouteResumeWithTaskTokenResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tool_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        type: ToolsToolType,
+        background: bool,
+        interactive: bool,
+        function: typing.Optional[ToolsFunctionDef] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+    ) -> ToolRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - type: ToolsToolType. Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+            - background: bool. The tool should be run in the background (not supported at the moment)
+
+            - interactive: bool. Whether the tool that can be run interactively (response should contain "stop" boolean field)
+
+            - function: typing.Optional[ToolsFunctionDef].
+
+            - integration: typing.Optional[typing.Any].
+
+            - system: typing.Optional[typing.Any].
+
+            - api_call: typing.Optional[typing.Any].
+        ---
+        from julep import ToolsToolType
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.tool_route_update(
+            id="id",
+            type=ToolsToolType.FUNCTION,
+            background=True,
+            interactive=True,
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "type": type.value,
+            "background": background,
+            "interactive": interactive,
+        }
+        if function is not OMIT:
+            _request["function"] = function
+        if integration is not OMIT:
+            _request["integration"] = integration
+        if system is not OMIT:
+            _request["system"] = system
+        if api_call is not OMIT:
+            _request["api_call"] = api_call
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tools/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ToolRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tool_route_delete(self, id: CommonUuid) -> ToolRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.tool_route_delete(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tools/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ToolRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tool_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        type: typing.Optional[ToolsToolType] = OMIT,
+        background: typing.Optional[bool] = OMIT,
+        interactive: typing.Optional[bool] = OMIT,
+        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+    ) -> ToolRoutePatchResponse:
+        """
+        Patch undefined by id (merge changes)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - type: typing.Optional[ToolsToolType]. Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+            - background: typing.Optional[bool]. The tool should be run in the background (not supported at the moment)
+
+            - interactive: typing.Optional[bool]. Whether the tool that can be run interactively (response should contain "stop" boolean field)
+
+            - function: typing.Optional[ToolsFunctionDefUpdate].
+
+            - integration: typing.Optional[typing.Any].
+
+            - system: typing.Optional[typing.Any].
+
+            - api_call: typing.Optional[typing.Any].
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.tool_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if type is not OMIT:
+            _request["type"] = type.value
+        if background is not OMIT:
+            _request["background"] = background
+        if interactive is not OMIT:
+            _request["interactive"] = interactive
+        if function is not OMIT:
+            _request["function"] = function
+        if integration is not OMIT:
+            _request["integration"] = integration
+        if system is not OMIT:
+            _request["system"] = system
+        if api_call is not OMIT:
+            _request["api_call"] = api_call
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"tools/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(ToolRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_list(
+        self,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: UsersRouteListRequestSortBy,
+        direction: UsersRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> UsersRouteListResponse:
+        """
+        List undefined items
+
+        Parameters:
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: UsersRouteListRequestSortBy. Sort by a field
+
+            - direction: UsersRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import UsersRouteListRequestDirection, UsersRouteListRequestSortBy
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_list(
+            limit=1,
+            offset=1,
+            sort_by=UsersRouteListRequestSortBy.CREATED_AT,
+            direction=UsersRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_create(
+        self,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        docs: typing.List[typing.Any],
+    ) -> UsersRouteCreateResponse:
+        """
+        Create new undefined
+
+        Parameters:
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the user
+
+            - about: str. About the user
+
+            - docs: typing.List[typing.Any]. Documents to index for this user. (Max: 100 items)
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_create(
+            name="name",
+            about="about",
+            docs=[],
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "name": name,
+            "about": about,
+            "docs": docs,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteCreateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_create_or_update(
+        self,
+        *,
+        id: CommonUuid,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+    ) -> UsersRouteCreateOrUpdateResponse:
+        """
+        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+
+        Parameters:
+            - id: CommonUuid.
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the user
+
+            - about: str. About the user
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_create_or_update(
+            id="id",
+            name="name",
+            about="about",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {
+            "id": id,
+            "name": name,
+            "about": about,
+        }
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(f"{self._client_wrapper.get_base_url()}/", "users"),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_get(self, id: CommonUuid) -> UsersUser:
+        """
+        Get undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_get(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersUser, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+    ) -> UsersRouteUpdateResponse:
+        """
+        Update undefined by id (overwrite)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: CommonIdentifierSafeUnicode. Name of the user
+
+            - about: str. About the user
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_update(
+            id="id",
+            name="name",
+            about="about",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {"name": name, "about": about}
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        _response = await self._client_wrapper.httpx_client.request(
+            "PUT",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteUpdateResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_delete(self, id: CommonUuid) -> UsersRouteDeleteResponse:
+        """
+        Delete undefined by id
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_delete(
+            id="id",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "DELETE",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRouteDeleteResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def users_route_patch(
+        self,
+        id: CommonUuid,
+        *,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
+        about: typing.Optional[str] = OMIT,
+    ) -> UsersRoutePatchResponse:
+        """
+        Patch undefined by id (merge changes)
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - metadata: typing.Optional[typing.Dict[str, typing.Any]].
+
+            - name: typing.Optional[CommonIdentifierSafeUnicode]. Name of the user
+
+            - about: typing.Optional[str]. About the user
+        ---
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.users_route_patch(
+            id="id",
+        )
+        """
+        _request: typing.Dict[str, typing.Any] = {}
+        if metadata is not OMIT:
+            _request["metadata"] = metadata
+        if name is not OMIT:
+            _request["name"] = name
+        if about is not OMIT:
+            _request["about"] = about
+        _response = await self._client_wrapper.httpx_client.request(
+            "PATCH",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}"
+            ),
+            json=jsonable_encoder(_request),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UsersRoutePatchResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def user_docs_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: UserDocsRouteListRequestSortBy,
+        direction: UserDocsRouteListRequestDirection,
+        metadata_filter: str,
+    ) -> UserDocsRouteListResponse:
+        """
+        List undefined items of parent undefined
+
+        Parameters:
+            - id: CommonUuid. ID of parent undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: UserDocsRouteListRequestSortBy. Sort by a field
+
+            - direction: UserDocsRouteListRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+        ---
+        from julep import (
+            UserDocsRouteListRequestDirection,
+            UserDocsRouteListRequestSortBy,
+        )
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        await client.user_docs_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by=UserDocsRouteListRequestSortBy.CREATED_AT,
+            direction=UserDocsRouteListRequestDirection.ASC,
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "GET",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}/docs"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UserDocsRouteListResponse, _response.json())  # type: ignore
+        try:
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def user_docs_search_route_search(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: UserDocsSearchRouteSearchRequestSortBy,
+        direction: UserDocsSearchRouteSearchRequestDirection,
+        metadata_filter: str,
+        body: DocsDocSearchRequest,
+    ) -> UserDocsSearchRouteSearchResponse:
+        """
+        Search for documents owned by undefined
+
+        Parameters:
+            - id: CommonUuid. ID of the undefined
+
+            - limit: CommonLimit. Limit the number of undefined items returned
+
+            - offset: CommonOffset. Offset the undefined items returned
+
+            - sort_by: UserDocsSearchRouteSearchRequestSortBy. Sort by a field
+
+            - direction: UserDocsSearchRouteSearchRequestDirection. Sort direction
+
+            - metadata_filter: str. JSON string of object that should be used to filter objects by metadata
+
+            - body: DocsDocSearchRequest.
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "POST",
+            urllib.parse.urljoin(
+                f"{self._client_wrapper.get_base_url()}/", f"users/{id}/search"
+            ),
+            params=remove_none_from_dict(
+                {
+                    "limit": limit,
+                    "offset": offset,
+                    "sort_by": sort_by,
+                    "direction": direction,
+                    "metadata_filter": metadata_filter,
+                }
+            ),
+            json=jsonable_encoder({"body": body}),
+            headers=self._client_wrapper.get_headers(),
+            timeout=300,
+        )
+        if 200 <= _response.status_code < 300:
+            return pydantic.parse_obj_as(UserDocsSearchRouteSearchResponse, _response.json())  # type: ignore
         try:
             _response_json = _response.json()
         except JSONDecodeError:

@@ -40,15 +40,15 @@ alias WorkflowStepKind = (
     | "error"
 );
 
-@discriminator("__kind")
+@discriminator("kind")
 model WorkflowStep {
     @visibility("none")
-    __kind?: WorkflowStepKind;
+    kind?: WorkflowStepKind;
 }
 
 model ToolCallStep extends WorkflowStep {
     @visibility("none")
-    __kind: "tool_call" = "tool_call";
+    kind: "tool_call" = "tool_call";
 
     /** The tool to run */
     tool: toolRef;
@@ -63,7 +63,7 @@ alias CELObject = Record<CEL>;
 
 model YieldStep extends WorkflowStep {
     @visibility("none")
-    __kind: "yield" = "yield";
+    kind: "yield" = "yield";
 
     /** The subworkflow to run */
     workflow: string;
@@ -74,7 +74,7 @@ model YieldStep extends WorkflowStep {
 
 model PromptStep extends WorkflowStep {
     @visibility("none")
-    __kind: "prompt" = "prompt";
+    kind: "prompt" = "prompt";
 
     /** The prompt to run */
     prompt: string | InputChatMLMessage[];
@@ -85,7 +85,7 @@ model PromptStep extends WorkflowStep {
 
 model EvaluateStep extends WorkflowStep {
     @visibility("none")
-    __kind: "evaluate" = "evaluate";
+    kind: "evaluate" = "evaluate";
 
     /** The expression to evaluate */
     evaluate: CELObject;
@@ -93,7 +93,7 @@ model EvaluateStep extends WorkflowStep {
 
 model IfElseWorkflowStep extends WorkflowStep {
     @visibility("none")
-    __kind: "if_else" = "if_else";
+    kind: "if_else" = "if_else";
 
     /** The condition to evaluate */
     `if`: CEL;
@@ -107,7 +107,7 @@ model IfElseWorkflowStep extends WorkflowStep {
 
 model ErrorWorkflowStep extends WorkflowStep {
     @visibility("none")
-    __kind: "error" = "error";
+    kind: "error" = "error";
 
     /** The error message */
     error: string;

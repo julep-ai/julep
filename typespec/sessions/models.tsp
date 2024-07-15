@@ -8,10 +8,10 @@ namespace Sessions;
 // SESSION MODELS
 //
 
-@discriminator("__kind")
+@discriminator("kind")
 model Session {
     @visibility("none")
-    __kind:  (
+    kind:  (
         | "single_agent_no_user"
         | "single_agent_single_user"
         | "single_agent_multi_user"
@@ -57,7 +57,7 @@ model Session {
 
 model SingleAgentNoUserSession extends Session {
     @visibility("none")
-    __kind: "single_agent_no_user" = "single_agent_no_user";
+    kind: "single_agent_no_user" = "single_agent_no_user";
 
     user?: never;
     users?: never;
@@ -68,7 +68,7 @@ model SingleAgentNoUserSession extends Session {
 
 model SingleAgentSingleUserSession extends Session {
     @visibility("none")
-    __kind: "single_agent_single_user" = "single_agent_single_user";
+    kind: "single_agent_single_user" = "single_agent_single_user";
 
     users?: never;
     agents?: never;
@@ -79,7 +79,7 @@ model SingleAgentSingleUserSession extends Session {
 
 model SingleAgentMultiUserSession extends Session {
     @visibility("none")
-    __kind: "single_agent_multi_user" = "single_agent_multi_user";
+    kind: "single_agent_multi_user" = "single_agent_multi_user";
 
     user?: never;
     agents?: never;
@@ -90,7 +90,7 @@ model SingleAgentMultiUserSession extends Session {
 
 model MultiAgentNoUserSession extends Session {
     @visibility("none")
-    __kind: "multi_agent_no_user" = "multi_agent_no_user";
+    kind: "multi_agent_no_user" = "multi_agent_no_user";
 
     user?: never;
     users?: never;
@@ -101,7 +101,7 @@ model MultiAgentNoUserSession extends Session {
 
 model MultiAgentSingleUserSession extends Session {
     @visibility("none")
-    __kind: "multi_agent_single_user" = "multi_agent_single_user";
+    kind: "multi_agent_single_user" = "multi_agent_single_user";
 
     users?: never;
     agent?: never;
@@ -112,7 +112,7 @@ model MultiAgentSingleUserSession extends Session {
 
 model MultiAgentMultiUserSession extends Session {
     @visibility("none")
-    __kind: "multi_agent_multi_user" = "multi_agent_multi_user";
+    kind: "multi_agent_multi_user" = "multi_agent_multi_user";
 
     user?: never;
     agent?: never;
