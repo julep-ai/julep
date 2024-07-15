@@ -42,12 +42,12 @@ alias WorkflowStepKind = (
 
 @discriminator("__kind")
 model WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind?: WorkflowStepKind;
 }
 
 model ToolCallStep extends WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind: "tool_call" = "tool_call";
 
     /** The tool to run */
@@ -62,7 +62,7 @@ scalar CEL extends string;
 alias CELObject = Record<CEL>;
 
 model YieldStep extends WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind: "yield" = "yield";
 
     /** The subworkflow to run */
@@ -73,7 +73,7 @@ model YieldStep extends WorkflowStep {
 }
 
 model PromptStep extends WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind: "prompt" = "prompt";
 
     /** The prompt to run */
@@ -84,7 +84,7 @@ model PromptStep extends WorkflowStep {
 }
 
 model EvaluateStep extends WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind: "evaluate" = "evaluate";
 
     /** The expression to evaluate */
@@ -92,21 +92,21 @@ model EvaluateStep extends WorkflowStep {
 }
 
 model IfElseWorkflowStep extends WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind: "if_else" = "if_else";
 
     /** The condition to evaluate */
     `if`: CEL;
 
     /** The steps to run if the condition is true */
-    then: YieldStep;
+    then: WorkflowStep;
 
     /** The steps to run if the condition is false */
-    `else`: YieldStep;
+    `else`: WorkflowStep;
 }
 
 model ErrorWorkflowStep extends WorkflowStep {
-    @visibility("read")
+    @visibility("none")
     __kind: "error" = "error";
 
     /** The error message */
@@ -119,7 +119,7 @@ model CreateWorkflowStep {
 }
 
 model Workflow {
-    @key name: identifierSafeUnicode;
+    @key name: validPythonIdentifier;
 
     /** The steps in the workflow */
     steps: WorkflowStep[];

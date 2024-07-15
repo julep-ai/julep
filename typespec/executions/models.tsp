@@ -101,7 +101,7 @@ alias TransitionType = (
     | "cancelled"
 );
 
-alias TransitionTarget = [identifierSafeUnicode, uint16];
+alias TransitionTarget = [validPythonIdentifier, uint16];
 
 model Transition {
     @visibility("read")

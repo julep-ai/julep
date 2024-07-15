@@ -45,6 +45,8 @@ model DocReference {
 
     /** Snippets referred to of the document */
     snippet_index: uint16[];
+
+    title?: string;
     snippet?: string;
 }
 

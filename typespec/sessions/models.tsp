@@ -1,10 +1,6 @@
-import "../agents";
 import "../common";
-import "../users";
 
-using Agents;
 using Common;
-using Users;
 
 namespace Sessions;
 
@@ -12,21 +8,34 @@ namespace Sessions;
 // SESSION MODELS
 //
 
+@discriminator("__kind")
 model Session {
-    ...HasId;
-    ...HasMetadata;
-    ...HasTimestamps;
+    @visibility("none")
+    __kind:  (
+        | "single_agent_no_user"
+        | "single_agent_single_user"
+        | "single_agent_multi_user"
+        | "multi_agent_no_user"
+        | "multi_agent_single_user"
+        | "multi_agent_multi_user"
+    );
 
     /** User ID of user associated with this session */
     @visibility("create")
-    user_id: User.id;
+    user?: uuid;
+
+    @visibility("create")
+    users?: uuid[];
 
     /** Agent ID of agent associated with this session */
     @visibility("create")
-    agent_id: Agent.id;
+    agent?: uuid;
+
+    @visibility("create")
+    agents?: uuid[];
 
     /** A specific situation that sets the background for this session */
-    situation: string = "";
+    situation: string = defaultSessionSystemMessage;
 
     /** Summary (null at the beginning) - generated automatically after every interaction */
     @visibility("read")
@@ -39,8 +48,79 @@ model Session {
     token_budget: uint16 | null = null;
     
     /** Action to start on context window overflow */
-    context_overflow: string | null = null
+    context_overflow: string | null = null;
+
+    ...HasId;
+    ...HasMetadata;
+    ...HasTimestamps;
 }
+
+model SingleAgentNoUserSession extends Session {
+    @visibility("none")
+    __kind: "single_agent_no_user" = "single_agent_no_user";
+
+    user?: never;
+    users?: never;
+    agents?: never;
+
+    agent: uuid;
+}
+
+model SingleAgentSingleUserSession extends Session {
+    @visibility("none")
+    __kind: "single_agent_single_user" = "single_agent_single_user";
+
+    users?: never;
+    agents?: never;
+
+    agent: uuid;
+    user: uuid;
+}
+
+model SingleAgentMultiUserSession extends Session {
+    @visibility("none")
+    __kind: "single_agent_multi_user" = "single_agent_multi_user";
+
+    user?: never;
+    agents?: never;
+
+    agent: uuid;
+    users: uuid[];
+}
+
+model MultiAgentNoUserSession extends Session {
+    @visibility("none")
+    __kind: "multi_agent_no_user" = "multi_agent_no_user";
+
+    user?: never;
+    users?: never;
+    agent?: never;
+
+    agents: uuid[];
+}
+
+model MultiAgentSingleUserSession extends Session {
+    @visibility("none")
+    __kind: "multi_agent_single_user" = "multi_agent_single_user";
+
+    users?: never;
+    agent?: never;
+
+    agents: uuid[];
+    user: uuid;
+}
+
+model MultiAgentMultiUserSession extends Session {
+    @visibility("none")
+    __kind: "multi_agent_multi_user" = "multi_agent_multi_user";
+
+    user?: never;
+    agent?: never;
+
+    agents: uuid[];
+    users: uuid[];
+}
+
 
 /** Payload for updating a session */
 @withVisibility("update")

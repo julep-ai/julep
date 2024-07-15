@@ -1,3 +1,4 @@
+import "./constants.tsp";
 import "./interfaces.tsp";
 import "./mixins.tsp";
 import "./scalars.tsp";
