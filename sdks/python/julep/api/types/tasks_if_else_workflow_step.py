@@ -6,22 +6,25 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .tasks_cel import TasksCel
 
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
 
+class TasksIfElseWorkflowStep(pydantic_v1.BaseModel):
+    if_: TasksCel = pydantic_v1.Field(alias="if")
+    """
+    The condition to evaluate
+    """
 
-class TasksIfElseWorkflowStep(pydantic.BaseModel):
-    if_: TasksCel = pydantic.Field(alias="if", description="The condition to evaluate")
-    then: "TasksWorkflowStep" = pydantic.Field(
-        description="The steps to run if the condition is true"
-    )
-    else_: "TasksWorkflowStep" = pydantic.Field(
-        alias="else", description="The steps to run if the condition is false"
-    )
+    then: TasksWorkflowStep = pydantic_v1.Field()
+    """
+    The steps to run if the condition is true
+    """
+
+    else_: TasksWorkflowStep = pydantic_v1.Field(alias="else")
+    """
+    The steps to run if the condition is false
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -32,20 +35,31 @@ class TasksIfElseWorkflowStep(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {
+        kwargs_with_defaults_exclude_unset: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
         allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}
 
 
 from .tasks_workflow_step import TasksWorkflowStep  # noqa: E402
 
-TasksIfElseWorkflowStep.update_forward_refs(TasksWorkflowStep=TasksWorkflowStep)
+TasksIfElseWorkflowStep.update_forward_refs()

@@ -2,69 +2,238 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import typing
 
-import typing_extensions
+from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .common_tool_ref import CommonToolRef
+from .tasks_cel import TasksCel
+from .tasks_prompt_step_prompt import TasksPromptStepPrompt
+from .tasks_prompt_step_settings import TasksPromptStepSettings
 
-from .tasks_error_workflow_step import TasksErrorWorkflowStep
-from .tasks_evaluate_step import TasksEvaluateStep
-from .tasks_prompt_step import TasksPromptStep
-from .tasks_tool_call_step import TasksToolCallStep
-from .tasks_yield_step import TasksYieldStep
+
+class TasksWorkflowStep_ToolCall(pydantic_v1.BaseModel):
+    tool: CommonToolRef
+    arguments: typing.Dict[str, typing.Any]
+    kind: typing.Literal["tool_call"] = "tool_call"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
-class TasksWorkflowStep_ToolCall(TasksToolCallStep):
-    kind: typing_extensions.Literal["tool_call"]
+class TasksWorkflowStep_Yield(pydantic_v1.BaseModel):
+    workflow: str
+    arguments: typing.Dict[str, TasksCel]
+    kind: typing.Literal["yield"] = "yield"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class TasksWorkflowStep_Prompt(pydantic_v1.BaseModel):
+    prompt: TasksPromptStepPrompt
+    settings: TasksPromptStepSettings
+    kind: typing.Literal["prompt"] = "prompt"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class TasksWorkflowStep_Evaluate(pydantic_v1.BaseModel):
+    evaluate: typing.Dict[str, TasksCel]
+    kind: typing.Literal["evaluate"] = "evaluate"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class TasksWorkflowStep_IfElse(pydantic_v1.BaseModel):
+    if_: TasksCel = pydantic_v1.Field(alias="if")
+    then: TasksWorkflowStep
+    else_: TasksWorkflowStep = pydantic_v1.Field(alias="else")
+    kind: typing.Literal["if_else"] = "if_else"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
         allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
-class TasksWorkflowStep_Yield(TasksYieldStep):
-    kind: typing_extensions.Literal["yield"]
+class TasksWorkflowStep_Error(pydantic_v1.BaseModel):
+    error: str
+    kind: typing.Literal["error"] = "error"
 
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
 
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
 
-class TasksWorkflowStep_Prompt(TasksPromptStep):
-    kind: typing_extensions.Literal["prompt"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
-
-
-class TasksWorkflowStep_Evaluate(TasksEvaluateStep):
-    kind: typing_extensions.Literal["evaluate"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
-
-
-class TasksWorkflowStep_IfElse(TasksIfElseWorkflowStep):
-    kind: typing_extensions.Literal["if_else"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
-
-
-class TasksWorkflowStep_Error(TasksErrorWorkflowStep):
-    kind: typing_extensions.Literal["error"]
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
 TasksWorkflowStep = typing.Union[
@@ -75,8 +244,3 @@ TasksWorkflowStep = typing.Union[
     TasksWorkflowStep_IfElse,
     TasksWorkflowStep_Error,
 ]
-from .tasks_if_else_workflow_step import TasksIfElseWorkflowStep  # noqa: E402
-
-TasksWorkflowStep_IfElse.update_forward_refs(
-    TasksIfElseWorkflowStep=TasksIfElseWorkflowStep, TasksWorkflowStep=TasksWorkflowStep
-)

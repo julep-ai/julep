@@ -5,53 +5,48 @@ from __future__ import annotations
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
-from .sessions_multi_agent_multi_user_session import SessionsMultiAgentMultiUserSession
-from .sessions_multi_agent_no_user_session import SessionsMultiAgentNoUserSession
-from .sessions_multi_agent_single_user_session import (
-    SessionsMultiAgentSingleUserSession,
-)
-from .sessions_single_agent_multi_user_session import (
-    SessionsSingleAgentMultiUserSession,
-)
-from .sessions_single_agent_no_user_session import SessionsSingleAgentNoUserSession
-from .sessions_single_agent_single_user_session import (
-    SessionsSingleAgentSingleUserSession,
-)
-
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
 
 
-class Base(pydantic.BaseModel):
-    situation: str = pydantic.Field(
-        description="A specific situation that sets the background for this session"
-    )
-    summary: typing.Optional[str] = pydantic.Field(
-        description="Summary (null at the beginning) - generated automatically after every interaction"
-    )
-    render_templates: bool = pydantic.Field(
-        description="Render system and assistant message content as jinja templates"
-    )
-    token_budget: typing.Optional[int] = pydantic.Field(
-        description="Threshold value for the adaptive context functionality"
-    )
-    context_overflow: typing.Optional[str] = pydantic.Field(
-        description="Action to start on context window overflow"
-    )
+class Base(pydantic_v1.BaseModel):
+    situation: str = pydantic_v1.Field()
+    """
+    A specific situation that sets the background for this session
+    """
+
+    summary: typing.Optional[str] = pydantic_v1.Field(default=None)
+    """
+    Summary (null at the beginning) - generated automatically after every interaction
+    """
+
+    render_templates: bool = pydantic_v1.Field()
+    """
+    Render system and assistant message content as jinja templates
+    """
+
+    token_budget: typing.Optional[int] = pydantic_v1.Field(default=None)
+    """
+    Threshold value for the adaptive context functionality
+    """
+
+    context_overflow: typing.Optional[str] = pydantic_v1.Field(default=None)
+    """
+    Action to start on context window overflow
+    """
+
     id: CommonUuid
-    metadata: typing.Optional[typing.Dict[str, typing.Any]]
-    created_at: dt.datetime = pydantic.Field(
-        description="When this resource was created as UTC date-time"
-    )
-    updated_at: dt.datetime = pydantic.Field(
-        description="When this resource was updated as UTC date-time"
-    )
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    created_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was created as UTC date-time
+    """
+
+    updated_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was updated as UTC date-time
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -62,71 +57,259 @@ class Base(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class SessionsSession_SingleAgentNoUser(Base):
+    agent: CommonUuid
+    kind: typing.Literal["single_agent_no_user"] = "single_agent_no_user"
+
+    def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}
 
 
-class SessionsSession_SingleAgentNoUser(SessionsSingleAgentNoUserSession, Base):
-    kind: typing_extensions.Literal["single_agent_no_user"]
+class SessionsSession_SingleAgentSingleUser(Base):
+    agent: CommonUuid
+    user: CommonUuid
+    kind: typing.Literal["single_agent_single_user"] = "single_agent_single_user"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
         allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
-class SessionsSession_SingleAgentSingleUser(SessionsSingleAgentSingleUserSession, Base):
-    kind: typing_extensions.Literal["single_agent_single_user"]
+class SessionsSession_SingleAgentMultiUser(Base):
+    agent: CommonUuid
+    users: typing.List[CommonUuid]
+    kind: typing.Literal["single_agent_multi_user"] = "single_agent_multi_user"
 
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
 
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
 
-class SessionsSession_SingleAgentMultiUser(SessionsSingleAgentMultiUserSession, Base):
-    kind: typing_extensions.Literal["single_agent_multi_user"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
-
-
-class SessionsSession_MultiAgentNoUser(SessionsMultiAgentNoUserSession, Base):
-    kind: typing_extensions.Literal["multi_agent_no_user"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
-
-
-class SessionsSession_MultiAgentSingleUser(SessionsMultiAgentSingleUserSession, Base):
-    kind: typing_extensions.Literal["multi_agent_single_user"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
-
-
-class SessionsSession_MultiAgentMultiUser(SessionsMultiAgentMultiUserSession, Base):
-    kind: typing_extensions.Literal["multi_agent_multi_user"]
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
         allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class SessionsSession_MultiAgentNoUser(Base):
+    agents: typing.List[CommonUuid]
+    kind: typing.Literal["multi_agent_no_user"] = "multi_agent_no_user"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class SessionsSession_MultiAgentSingleUser(Base):
+    agents: typing.List[CommonUuid]
+    user: CommonUuid
+    kind: typing.Literal["multi_agent_single_user"] = "multi_agent_single_user"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class SessionsSession_MultiAgentMultiUser(Base):
+    agents: typing.List[CommonUuid]
+    users: typing.List[CommonUuid]
+    kind: typing.Literal["multi_agent_multi_user"] = "multi_agent_multi_user"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
 SessionsSession = typing.Union[

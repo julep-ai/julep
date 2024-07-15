@@ -4,22 +4,25 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .docs_hybrid_doc_search_request_text import DocsHybridDocSearchRequestText
 from .docs_hybrid_doc_search_request_vector import DocsHybridDocSearchRequestVector
 
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
 
+class DocsHybridDocSearchRequest(pydantic_v1.BaseModel):
+    text: typing.Optional[DocsHybridDocSearchRequestText] = pydantic_v1.Field(
+        default=None
+    )
+    """
+    Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    """
 
-class DocsHybridDocSearchRequest(pydantic.BaseModel):
-    text: typing.Optional[DocsHybridDocSearchRequestText] = pydantic.Field(
-        description="Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required."
+    vector: typing.Optional[DocsHybridDocSearchRequestVector] = pydantic_v1.Field(
+        default=None
     )
-    vector: typing.Optional[DocsHybridDocSearchRequestVector] = pydantic.Field(
-        description="Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown."
-    )
+    """
+    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -30,14 +33,24 @@ class DocsHybridDocSearchRequest(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {
+        kwargs_with_defaults_exclude_unset: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

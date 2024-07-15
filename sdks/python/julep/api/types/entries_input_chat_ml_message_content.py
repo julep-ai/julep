@@ -2,10 +2,6 @@
 
 import typing
 
-from .entries_chat_ml_image_content_part import EntriesChatMlImageContentPart
-from .entries_chat_ml_text_content_part import EntriesChatMlTextContentPart
-from .entries_image_detail import EntriesImageDetail
-from .entries_image_url import EntriesImageUrl
 from .entries_input_chat_ml_message_content_item import (
     EntriesInputChatMlMessageContentItem,
 )

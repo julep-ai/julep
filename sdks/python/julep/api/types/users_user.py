@@ -4,26 +4,33 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_uuid import CommonUuid
 
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
 
-
-class UsersUser(pydantic.BaseModel):
+class UsersUser(pydantic_v1.BaseModel):
     id: CommonUuid
-    metadata: typing.Optional[typing.Dict[str, typing.Any]]
-    created_at: dt.datetime = pydantic.Field(
-        description="When this resource was created as UTC date-time"
-    )
-    updated_at: dt.datetime = pydantic.Field(
-        description="When this resource was updated as UTC date-time"
-    )
-    name: CommonIdentifierSafeUnicode = pydantic.Field(description="Name of the user")
-    about: str = pydantic.Field(description="About the user")
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    created_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was created as UTC date-time
+    """
+
+    updated_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was updated as UTC date-time
+    """
+
+    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
+    """
+    Name of the user
+    """
+
+    about: str = pydantic_v1.Field()
+    """
+    About the user
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -34,14 +41,24 @@ class UsersUser(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {
+        kwargs_with_defaults_exclude_unset: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

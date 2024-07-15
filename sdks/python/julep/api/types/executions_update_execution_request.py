@@ -2,30 +2,83 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import typing
 
-import typing_extensions
-
-from .executions_resume_execution_request import ExecutionsResumeExecutionRequest
-from .executions_stop_execution_request import ExecutionsStopExecutionRequest
+from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 
 
-class ExecutionsUpdateExecutionRequest_Cancelled(ExecutionsStopExecutionRequest):
-    status: typing_extensions.Literal["cancelled"]
+class ExecutionsUpdateExecutionRequest_Cancelled(pydantic_v1.BaseModel):
+    reason: typing.Optional[str] = None
+    status: typing.Literal["cancelled"] = "cancelled"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
-class ExecutionsUpdateExecutionRequest_Running(ExecutionsResumeExecutionRequest):
-    status: typing_extensions.Literal["running"]
+class ExecutionsUpdateExecutionRequest_Running(pydantic_v1.BaseModel):
+    input: typing.Optional[typing.Dict[str, typing.Any]] = None
+    status: typing.Literal["running"] = "running"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
 ExecutionsUpdateExecutionRequest = typing.Union[

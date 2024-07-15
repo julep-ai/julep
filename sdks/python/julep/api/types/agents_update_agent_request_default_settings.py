@@ -2,7 +2,6 @@
 
 import typing
 
-from .chat_generation_preset import ChatGenerationPreset
 from .chat_generation_preset_settings import ChatGenerationPresetSettings
 from .chat_open_ai_settings import ChatOpenAiSettings
 from .chat_v_llm_settings import ChatVLlmSettings

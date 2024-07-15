@@ -5,34 +5,38 @@ from __future__ import annotations
 import datetime as dt
 import typing
 
-import typing_extensions
-
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .docs_doc_search_request_text import DocsDocSearchRequestText
 from .docs_doc_search_request_vector import DocsDocSearchRequestVector
-from .docs_hybrid_doc_search_request import DocsHybridDocSearchRequest
-from .docs_text_only_doc_search_request import DocsTextOnlyDocSearchRequest
-from .docs_vector_doc_search_request import DocsVectorDocSearchRequest
-
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
+from .docs_hybrid_doc_search_request_text import DocsHybridDocSearchRequestText
+from .docs_hybrid_doc_search_request_vector import DocsHybridDocSearchRequestVector
+from .docs_text_only_doc_search_request_text import DocsTextOnlyDocSearchRequestText
+from .docs_vector_doc_search_request_vector import DocsVectorDocSearchRequestVector
 
 
-class Base(pydantic.BaseModel):
-    text: typing.Optional[DocsDocSearchRequestText]
-    vector: typing.Optional[DocsDocSearchRequestVector]
-    confidence: float = pydantic.Field(description="The confidence cutoff level")
-    alpha: float = pydantic.Field(
-        description="The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;"
-    )
-    mmr: bool = pydantic.Field(
-        description="Whether to include the MMR algorithm in the search. Optimizes for diversity in search results."
-    )
-    lang: typing_extensions.Literal["en-US"] = pydantic.Field(
-        description="The language to be used for text-only search. Support for other languages coming soon."
-    )
+class Base(pydantic_v1.BaseModel):
+    text: typing.Optional[DocsDocSearchRequestText] = None
+    vector: typing.Optional[DocsDocSearchRequestVector] = None
+    confidence: float = pydantic_v1.Field()
+    """
+    The confidence cutoff level
+    """
+
+    alpha: float = pydantic_v1.Field()
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+
+    mmr: bool = pydantic_v1.Field()
+    """
+    Whether to include the MMR algorithm in the search. Optimizes for diversity in search results.
+    """
+
+    lang: typing.Literal["en-US"] = pydantic_v1.Field(default="en-US")
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -43,44 +47,142 @@ class Base(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
+
+    class Config:
+        frozen = True
+        smart_union = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
+
+
+class DocsDocSearchRequest_Vector(Base):
+    vector: DocsVectorDocSearchRequestVector
+    mode: typing.Literal["vector"] = "vector"
+
+    def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}
 
 
-class DocsDocSearchRequest_Vector(DocsVectorDocSearchRequest, Base):
-    mode: typing_extensions.Literal["vector"]
+class DocsDocSearchRequest_Text(Base):
+    text: DocsTextOnlyDocSearchRequestText
+    mode: typing.Literal["text"] = "text"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
         allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
-class DocsDocSearchRequest_Text(DocsTextOnlyDocSearchRequest, Base):
-    mode: typing_extensions.Literal["text"]
+class DocsDocSearchRequest_Hybrid(Base):
+    text: typing.Optional[DocsHybridDocSearchRequestText] = None
+    vector: typing.Optional[DocsHybridDocSearchRequestVector] = None
+    mode: typing.Literal["hybrid"] = "hybrid"
+
+    def json(self, **kwargs: typing.Any) -> str:
+        kwargs_with_defaults: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        return super().json(**kwargs_with_defaults)
+
+    def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
+        kwargs_with_defaults_exclude_unset: typing.Any = {
+            "by_alias": True,
+            "exclude_unset": True,
+            **kwargs,
+        }
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
         allow_population_by_field_name = True
-
-
-class DocsDocSearchRequest_Hybrid(DocsHybridDocSearchRequest, Base):
-    mode: typing_extensions.Literal["hybrid"]
-
-    class Config:
-        frozen = True
-        smart_union = True
-        allow_population_by_field_name = True
+        populate_by_name = True
+        extra = pydantic_v1.Extra.allow
+        json_encoders = {dt.datetime: serialize_datetime}
 
 
 DocsDocSearchRequest = typing.Union[

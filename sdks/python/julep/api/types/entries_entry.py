@@ -4,28 +4,28 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
 from .entries_chat_ml_role import EntriesChatMlRole
 from .entries_entry_content import EntriesEntryContent
 from .entries_entry_source import EntriesEntrySource
 
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
 
-
-class EntriesEntry(pydantic.BaseModel):
+class EntriesEntry(pydantic_v1.BaseModel):
     role: EntriesChatMlRole
-    name: typing.Optional[str]
+    name: typing.Optional[str] = None
     content: EntriesEntryContent
     source: EntriesEntrySource
-    timestamp: int = pydantic.Field(
-        description="This is the time that this event refers to."
-    )
-    created_at: dt.datetime = pydantic.Field(
-        description="When this resource was created as UTC date-time"
-    )
+    timestamp: int = pydantic_v1.Field()
+    """
+    This is the time that this event refers to.
+    """
+
+    created_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was created as UTC date-time
+    """
+
     id: CommonUuid
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -37,14 +37,24 @@ class EntriesEntry(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {
+        kwargs_with_defaults_exclude_unset: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

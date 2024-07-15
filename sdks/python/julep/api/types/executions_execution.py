@@ -4,31 +4,37 @@ import datetime as dt
 import typing
 
 from ..core.datetime_utils import serialize_datetime
+from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
 from .executions_execution_status import ExecutionsExecutionStatus
 
-try:
-    import pydantic.v1 as pydantic  # type: ignore
-except ImportError:
-    import pydantic  # type: ignore
 
+class ExecutionsExecution(pydantic_v1.BaseModel):
+    task_id: CommonUuid = pydantic_v1.Field()
+    """
+    The ID of the task that the execution is running
+    """
 
-class ExecutionsExecution(pydantic.BaseModel):
-    task_id: CommonUuid = pydantic.Field(
-        description="The ID of the task that the execution is running"
-    )
-    status: ExecutionsExecutionStatus = pydantic.Field(
-        description="The status of the execution"
-    )
-    input: typing.Dict[str, typing.Any] = pydantic.Field(
-        description="The input to the execution"
-    )
-    created_at: dt.datetime = pydantic.Field(
-        description="When this resource was created as UTC date-time"
-    )
-    updated_at: dt.datetime = pydantic.Field(
-        description="When this resource was updated as UTC date-time"
-    )
+    status: ExecutionsExecutionStatus = pydantic_v1.Field()
+    """
+    The status of the execution
+    """
+
+    input: typing.Dict[str, typing.Any] = pydantic_v1.Field()
+    """
+    The input to the execution
+    """
+
+    created_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was created as UTC date-time
+    """
+
+    updated_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was updated as UTC date-time
+    """
+
     id: CommonUuid
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -40,14 +46,24 @@ class ExecutionsExecution(pydantic.BaseModel):
         return super().json(**kwargs_with_defaults)
 
     def dict(self, **kwargs: typing.Any) -> typing.Dict[str, typing.Any]:
-        kwargs_with_defaults: typing.Any = {
+        kwargs_with_defaults_exclude_unset: typing.Any = {
             "by_alias": True,
             "exclude_unset": True,
             **kwargs,
         }
-        return super().dict(**kwargs_with_defaults)
+        kwargs_with_defaults_exclude_none: typing.Any = {
+            "by_alias": True,
+            "exclude_none": True,
+            **kwargs,
+        }
+
+        return deep_union_pydantic_dicts(
+            super().dict(**kwargs_with_defaults_exclude_unset),
+            super().dict(**kwargs_with_defaults_exclude_none),
+        )
 
     class Config:
         frozen = True
         smart_union = True
+        extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

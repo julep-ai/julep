@@ -3,7 +3,7 @@ groups:
   local:
     generators:
       - name: fernapi/fern-python-sdk
-        version: 0.9.1
+        version: 2.15.3
         config:
           timeout_in_seconds: 300 # 5 minutes
           client_class_name: JulepApi
