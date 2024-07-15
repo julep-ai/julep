@@ -73,16 +73,13 @@
     "build:bundle": "npx rollup --config rollup.bundle.config.ts --configPlugin typescript --bundleConfigAsCjs",
     "build:browser": "npx rollup --config rollup.browser.config.ts --configPlugin typescript --bundleConfigAsCjs",
     "build": "npm run build:node && npm run build:browser && npm run build:bundle",
-    "mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080",
-    "start_mock_api": "prism mock ./tests/mock_openapi.yaml -p 8080 -v fatal 1> /dev/null &",
-    "kill_mock_api": "kill $(pgrep -f 'prism .*') || echo bye",
     "format": "prettier -w .",
     "openapi-codegen": "bash -c 'openapi -c axios --name JulepApiClient --useOptions --indent 2 -i <(yq -o=json \".\" ../../openapi.yaml) -o src/api --exportSchemas true --useUnionTypes true'",
     "codegen": "npm run openapi-codegen && npm run format",
     "generate-docs": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/js-sdk-docs src/**/*.ts",
     "test-inspect": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "prepublishOnly": "npm run build",
-    "test": "npm run format && npm run start_mock_api && sleep 1 && jest && npm run kill_mock_api",
+    "test": "npm run format && jest",
     "prepare": "ts-patch install && typia patch"
   },
   "files": [

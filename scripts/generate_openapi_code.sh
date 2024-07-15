@@ -3,9 +3,11 @@
 # Turn on echo command
 set -x
 
-fern generate --local
+cd typespec/ && \
+    tsp . && \
+    cd -
 
-sed 's/  \//  \/api\//' openapi.yaml > mock_openapi.yaml
+fern generate --local
 
 cd sdks/python && \
     poetry update && \
