@@ -8,6 +8,14 @@ namespace Sessions;
 // SESSION MODELS
 //
 
+enum ContextOverflowType {
+    /** Truncate the context from the top except the system prompt. */
+    truncate,
+
+    /** Automatically summarizes, clips and merges messages in the background to compress the context. */
+    adaptive,
+}
+
 @discriminator("kind")
 model Session {
     @visibility("none")
@@ -48,7 +56,7 @@ model Session {
     token_budget: uint16 | null = null;
     
     /** Action to start on context window overflow */
-    context_overflow: string | null = null;
+    context_overflow: ContextOverflowType | null = null;
 
     ...HasId;
     ...HasMetadata;

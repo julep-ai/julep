@@ -61,13 +61,15 @@ using Versions;
 namespace Api {
     model Agent is Agents.Agent;
     model Doc is Docs.Doc;
-    model Tool is Tools.Tool;
-    model User is Users.User;
-    model Session is Sessions.Session;
-    model History is Entries.History;
     model Entry is Entries.Entry;
-    model Task is Tasks.Task;
+    model Execution is Executions.Execution;
+    model History is Entries.History;
     model JobStatus is Jobs.JobStatus;
+    model Session is Sessions.Session;
+    model Task is Tasks.Task;
+    model Tool is Tools.Tool;
+    model Transition is Executions.Transition;
+    model User is Users.User;
 
     @route("/agents")
     interface AgentsRoute extends Agents.Endpoints {}
@@ -95,6 +97,9 @@ namespace Api {
 
     @route("/sessions/history")
     interface HistoryRoute extends Entries.Endpoints {}
+
+    @route("/embed")
+    interface EmbedRoute extends Docs.EmbedEndpoints {}
 
     @route("/docs")
     interface IndividualDocsRoute extends Docs.IndividualDocEndpoints {}

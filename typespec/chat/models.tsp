@@ -90,6 +90,9 @@ model CommonChatSettings {
 
     /** Response format (set to `json_object` to restrict output to JSON) */
     response_format?: CompletionResponseFormat;
+
+    /** Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions) */
+    agent?: uuid;
 }
 
 model GenerationPresetSettings {

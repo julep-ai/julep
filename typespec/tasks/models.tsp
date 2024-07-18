@@ -58,8 +58,7 @@ model ToolCallStep extends WorkflowStep {
 }
 
 /** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
-scalar CEL extends string;
-alias CELObject = Record<CEL>;
+alias ExpressionObject = Record<PyExpression>;
 
 model YieldStep extends WorkflowStep {
     @visibility("none")
@@ -69,7 +68,7 @@ model YieldStep extends WorkflowStep {
     workflow: string;
 
     /** The input parameters for the subworkflow */
-    arguments: CELObject;
+    arguments: ExpressionObject;
 }
 
 model PromptStep extends WorkflowStep {
@@ -88,7 +87,7 @@ model EvaluateStep extends WorkflowStep {
     kind: "evaluate" = "evaluate";
 
     /** The expression to evaluate */
-    evaluate: CELObject;
+    evaluate: ExpressionObject;
 }
 
 model IfElseWorkflowStep extends WorkflowStep {
@@ -96,7 +95,7 @@ model IfElseWorkflowStep extends WorkflowStep {
     kind: "if_else" = "if_else";
 
     /** The condition to evaluate */
-    `if`: CEL;
+    `if`: PyExpression;
 
     /** The steps to run if the condition is true */
     then: WorkflowStep;
@@ -149,6 +148,7 @@ model Task {
 
     ...HasId;
     ...HasTimestamps;
+    ...HasMetadata;
     ...Record<WorkflowStep[]>;
 }
 

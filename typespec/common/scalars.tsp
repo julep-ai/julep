@@ -49,3 +49,6 @@ alias entrySource = "api_request" | "api_response" | "tool_response" | "internal
 /** Naming convention for tool references. Tools are resolved in order: `step-settings` -> `task` -> `agent` */
 @pattern("^(function|integration|system|api_call)\\.(\\w+)$")
 scalar toolRef extends string;
+
+/** A simple python expression compatible with SimpleEval. */
+scalar PyExpression extends string;

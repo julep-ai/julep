@@ -47,6 +47,7 @@ model Execution {
     input: Record<unknown>;
 
     ...HasTimestamps;
+    ...HasMetadata;
     ...HasId;
 }
 

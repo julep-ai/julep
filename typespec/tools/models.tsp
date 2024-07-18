@@ -49,9 +49,6 @@ model Tool {
     /** The tool should be run in the background (not supported at the moment) */
     background: boolean = false;
 
-    /** Whether the tool that can be run interactively (response should contain "stop" boolean field) */
-    interactive: boolean = false;
-
     function?: FunctionDef;
     integration?: unknown;
     system?: unknown;
@@ -64,7 +61,6 @@ model Tool {
 model FunctionTool extends Tool {
     type: ToolType.function;
     background: false = false;
-    interactive: false = false;
 
     /** The function to call */
     function: FunctionDef;

@@ -41,3 +41,11 @@ interface SearchEndpoints<TName extends string> {
         results: DocReference[];
     };
 }
+
+interface EmbedEndpoints {
+    @doc("Embed a query for search")
+    @post
+    embed(
+        body: EmbedQueryRequest,
+    ): EmbedQueryResponse;
+}
