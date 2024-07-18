@@ -50,6 +50,16 @@ model DocReference {
     snippet?: string;
 }
 
+model EmbedQueryRequest {
+    /** Text or texts to embed */
+    text: string | string[];
+}
+
+model EmbedQueryResponse {
+    /** The embedded vectors */
+    vectors: float[][];
+}
+
 @discriminator("mode")
 model DocSearchRequest {
     text?: string | string[];
