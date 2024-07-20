@@ -7,33 +7,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
-from .common_uuid import CommonUuid
-from .common_valid_python_identifier import CommonValidPythonIdentifier
-from .tools_function_def import ToolsFunctionDef
+from .entries_image_url import EntriesImageUrl
 
 
-class Base(pydantic_v1.BaseModel):
-    background: bool = pydantic_v1.Field()
-    """
-    The tool should be run in the background (not supported at the moment)
-    """
-
-    function: typing.Optional[ToolsFunctionDef] = None
-    integration: typing.Any
-    system: typing.Any
-    api_call: typing.Any
-    created_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was created as UTC date-time
-    """
-
-    updated_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was updated as UTC date-time
-    """
-
-    id: CommonUuid
+class EntryContentItemItem_Text(pydantic_v1.BaseModel):
+    text: str
+    type: typing.Literal["text"] = "text"
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -67,10 +46,9 @@ class Base(pydantic_v1.BaseModel):
         json_encoders = {dt.datetime: serialize_datetime}
 
 
-class ToolsTool_Function(Base):
-    background: bool
-    function: ToolsFunctionDef
-    type: typing.Literal["function"] = "function"
+class EntryContentItemItem_ImageUrl(pydantic_v1.BaseModel):
+    image_url: EntriesImageUrl
+    type: typing.Literal["image_url"] = "image_url"
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
@@ -100,10 +78,10 @@ class ToolsTool_Function(Base):
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
-        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}
 
 
-ToolsTool = ToolsTool_Function
+EntryContentItemItem = typing.Union[
+    EntryContentItemItem_Text, EntryContentItemItem_ImageUrl
+]

@@ -51,6 +51,8 @@ class TasksTask(pydantic_v1.BaseModel):
     When this resource was updated as UTC date-time
     """
 
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
             "by_alias": True,

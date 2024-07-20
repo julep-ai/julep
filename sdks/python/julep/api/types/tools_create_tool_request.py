@@ -24,11 +24,6 @@ class ToolsCreateToolRequest(pydantic_v1.BaseModel):
     The tool should be run in the background (not supported at the moment)
     """
 
-    interactive: bool = pydantic_v1.Field()
-    """
-    Whether the tool that can be run interactively (response should contain "stop" boolean field)
-    """
-
     function: typing.Optional[ToolsFunctionDef] = None
     integration: typing.Optional[typing.Any] = None
     system: typing.Optional[typing.Any] = None

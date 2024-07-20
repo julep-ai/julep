@@ -16,7 +16,6 @@ from .types.agent_docs_route_list_request_direction import (
 )
 from .types.agent_docs_route_list_request_sort_by import AgentDocsRouteListRequestSortBy
 from .types.agent_docs_route_list_response import AgentDocsRouteListResponse
-from .types.agent_tools_route_create_response import AgentToolsRouteCreateResponse
 from .types.agent_tools_route_list_request_direction import (
     AgentToolsRouteListRequestDirection,
 )
@@ -52,16 +51,9 @@ from .types.agents_patch_agent_request_default_settings import (
 from .types.agents_patch_agent_request_instructions import (
     AgentsPatchAgentRequestInstructions,
 )
-from .types.agents_route_create_or_update_response import (
-    AgentsRouteCreateOrUpdateResponse,
-)
-from .types.agents_route_create_response import AgentsRouteCreateResponse
-from .types.agents_route_delete_response import AgentsRouteDeleteResponse
 from .types.agents_route_list_request_direction import AgentsRouteListRequestDirection
 from .types.agents_route_list_request_sort_by import AgentsRouteListRequestSortBy
 from .types.agents_route_list_response import AgentsRouteListResponse
-from .types.agents_route_patch_response import AgentsRoutePatchResponse
-from .types.agents_route_update_response import AgentsRouteUpdateResponse
 from .types.agents_update_agent_request_default_settings import (
     AgentsUpdateAgentRequestDefaultSettings,
 )
@@ -71,9 +63,14 @@ from .types.agents_update_agent_request_instructions import (
 from .types.common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .types.common_limit import CommonLimit
 from .types.common_offset import CommonOffset
+from .types.common_resource_created_response import CommonResourceCreatedResponse
+from .types.common_resource_deleted_response import CommonResourceDeletedResponse
+from .types.common_resource_updated_response import CommonResourceUpdatedResponse
 from .types.common_uuid import CommonUuid
 from .types.docs_doc import DocsDoc
 from .types.docs_doc_search_request import DocsDocSearchRequest
+from .types.docs_embed_query_request import DocsEmbedQueryRequest
+from .types.docs_embed_query_response import DocsEmbedQueryResponse
 from .types.execution_transitions_route_list_request_direction import (
     ExecutionTransitionsRouteListRequestDirection,
 )
@@ -84,32 +81,18 @@ from .types.execution_transitions_route_list_response import (
     ExecutionTransitionsRouteListResponse,
 )
 from .types.executions_execution import ExecutionsExecution
-from .types.executions_route_update_response import ExecutionsRouteUpdateResponse
 from .types.executions_update_execution_request import ExecutionsUpdateExecutionRequest
-from .types.history_route_delete_response import HistoryRouteDeleteResponse
 from .types.history_route_list_request_direction import HistoryRouteListRequestDirection
 from .types.history_route_list_request_sort_by import HistoryRouteListRequestSortBy
 from .types.history_route_list_response import HistoryRouteListResponse
-from .types.individual_docs_route_delete_response import (
-    IndividualDocsRouteDeleteResponse,
-)
 from .types.jobs_job_status import JobsJobStatus
-from .types.sessions_route_create_or_update_response import (
-    SessionsRouteCreateOrUpdateResponse,
-)
-from .types.sessions_route_create_response import SessionsRouteCreateResponse
-from .types.sessions_route_delete_response import SessionsRouteDeleteResponse
+from .types.sessions_context_overflow_type import SessionsContextOverflowType
 from .types.sessions_route_list_request_direction import (
     SessionsRouteListRequestDirection,
 )
 from .types.sessions_route_list_request_sort_by import SessionsRouteListRequestSortBy
 from .types.sessions_route_list_response import SessionsRouteListResponse
-from .types.sessions_route_patch_response import SessionsRoutePatchResponse
-from .types.sessions_route_update_response import SessionsRouteUpdateResponse
 from .types.sessions_session import SessionsSession
-from .types.task_executions_route_create_response import (
-    TaskExecutionsRouteCreateResponse,
-)
 from .types.task_executions_route_list_request_direction import (
     TaskExecutionsRouteListRequestDirection,
 )
@@ -117,23 +100,10 @@ from .types.task_executions_route_list_request_sort_by import (
     TaskExecutionsRouteListRequestSortBy,
 )
 from .types.task_executions_route_list_response import TaskExecutionsRouteListResponse
-from .types.task_executions_route_resume_with_task_token_response import (
-    TaskExecutionsRouteResumeWithTaskTokenResponse,
-)
-from .types.tasks_route_create_or_update_response import (
-    TasksRouteCreateOrUpdateResponse,
-)
-from .types.tasks_route_create_response import TasksRouteCreateResponse
-from .types.tasks_route_delete_response import TasksRouteDeleteResponse
 from .types.tasks_route_list_request_direction import TasksRouteListRequestDirection
 from .types.tasks_route_list_request_sort_by import TasksRouteListRequestSortBy
 from .types.tasks_route_list_response import TasksRouteListResponse
-from .types.tasks_route_patch_response import TasksRoutePatchResponse
-from .types.tasks_route_update_response import TasksRouteUpdateResponse
 from .types.tasks_workflow_step import TasksWorkflowStep
-from .types.tool_route_delete_response import ToolRouteDeleteResponse
-from .types.tool_route_patch_response import ToolRoutePatchResponse
-from .types.tool_route_update_response import ToolRouteUpdateResponse
 from .types.tools_create_tool_request import ToolsCreateToolRequest
 from .types.tools_function_def import ToolsFunctionDef
 from .types.tools_function_def_update import ToolsFunctionDefUpdate
@@ -152,16 +122,9 @@ from .types.user_docs_search_route_search_request_sort_by import (
 from .types.user_docs_search_route_search_response import (
     UserDocsSearchRouteSearchResponse,
 )
-from .types.users_route_create_or_update_response import (
-    UsersRouteCreateOrUpdateResponse,
-)
-from .types.users_route_create_response import UsersRouteCreateResponse
-from .types.users_route_delete_response import UsersRouteDeleteResponse
 from .types.users_route_list_request_direction import UsersRouteListRequestDirection
 from .types.users_route_list_request_sort_by import UsersRouteListRequestSortBy
 from .types.users_route_list_response import UsersRouteListResponse
-from .types.users_route_patch_response import UsersRoutePatchResponse
-from .types.users_route_update_response import UsersRouteUpdateResponse
 from .types.users_user import UsersUser
 
 # this is used as the default value for optional parameters
@@ -250,15 +213,15 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentsRouteListResponse:
         """
-        List undefined items
+        List Agents (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentsRouteListRequestSortBy
             Sort by a field
@@ -326,9 +289,9 @@ class JulepApi:
             AgentsCreateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new Agent
 
         Parameters
         ----------
@@ -357,7 +320,7 @@ class JulepApi:
 
         Returns
         -------
-        AgentsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -393,7 +356,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -412,9 +375,9 @@ class JulepApi:
             AgentsCreateOrUpdateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update an Agent
 
         Parameters
         ----------
@@ -442,7 +405,7 @@ class JulepApi:
 
         Returns
         -------
-        AgentsRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -478,7 +441,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -488,12 +451,12 @@ class JulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> AgentsAgent:
         """
-        Get undefined by id
+        Get an Agent by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -541,14 +504,14 @@ class JulepApi:
             AgentsUpdateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         name : CommonIdentifierSafeUnicode
             Name of the agent
@@ -572,7 +535,7 @@ class JulepApi:
 
         Returns
         -------
-        AgentsRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -607,7 +570,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -615,21 +578,21 @@ class JulepApi:
 
     def agents_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AgentsRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete Agent by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        AgentsRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -651,7 +614,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -670,14 +633,14 @@ class JulepApi:
             AgentsPatchAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing Agent by id (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -701,7 +664,7 @@ class JulepApi:
 
         Returns
         -------
-        AgentsRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -732,7 +695,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -750,18 +713,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentDocsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List Docs owned by an Agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentDocsRouteListRequestSortBy
             Sort by a field
@@ -830,18 +793,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentsDocsSearchRouteSearchResponse:
         """
-        Search for documents owned by undefined
+        Search Docs owned by an Agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentsDocsSearchRouteSearchRequestSortBy
             Sort by a field
@@ -922,18 +885,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentToolsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List tools of the given agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentToolsRouteListRequestSortBy
             Sort by a field
@@ -1003,14 +966,14 @@ class JulepApi:
             AgentsCreateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentToolsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new tool for this agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent resource
 
         name : CommonIdentifierSafeUnicode
             Name of the agent
@@ -1037,7 +1000,7 @@ class JulepApi:
 
         Returns
         -------
-        AgentToolsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -1074,7 +1037,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentToolsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1084,12 +1047,12 @@ class JulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> DocsDoc:
         """
-        Get undefined by id
+        Get Doc by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1126,21 +1089,21 @@ class JulepApi:
 
     def individual_docs_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> IndividualDocsRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete an existing Doc by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        IndividualDocsRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -1162,7 +1125,58 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(IndividualDocsRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def embed_route_embed(
+        self,
+        *,
+        body: DocsEmbedQueryRequest,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> DocsEmbedQueryResponse:
+        """
+        Embed a query for search
+
+        Parameters
+        ----------
+        body : DocsEmbedQueryRequest
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        DocsEmbedQueryResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep import DocsEmbedQueryRequest
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.embed_route_embed(
+            body=DocsEmbedQueryRequest(
+                text="text",
+            ),
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "embed",
+            method="POST",
+            json={"body": body},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(DocsEmbedQueryResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1172,12 +1186,12 @@ class JulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> ExecutionsExecution:
         """
-        Get undefined by id
+        Get an Execution by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1218,14 +1232,14 @@ class JulepApi:
         *,
         request: ExecutionsUpdateExecutionRequest,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ExecutionsRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing Execution
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request : ExecutionsUpdateExecutionRequest
 
@@ -1234,7 +1248,7 @@ class JulepApi:
 
         Returns
         -------
-        ExecutionsRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -1262,7 +1276,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ExecutionsRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1280,18 +1294,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ExecutionTransitionsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List the Transitions of an Execution by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : ExecutionTransitionsRouteListRequestSortBy
             Sort by a field
@@ -1351,12 +1365,12 @@ class JulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> JobsJobStatus:
         """
-        Get undefined by id
+        Get the status of an existing Job by its id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1402,15 +1416,15 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> SessionsRouteListResponse:
         """
-        List undefined items
+        List sessions (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : SessionsRouteListRequestSortBy
             Sort by a field
@@ -1475,12 +1489,12 @@ class JulepApi:
         agent: typing.Optional[CommonUuid] = OMIT,
         agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new session
 
         Parameters
         ----------
@@ -1503,7 +1517,7 @@ class JulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -1513,7 +1527,7 @@ class JulepApi:
 
         Returns
         -------
-        SessionsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -1548,7 +1562,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1565,12 +1579,12 @@ class JulepApi:
         agent: typing.Optional[CommonUuid] = OMIT,
         agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update a session
 
         Parameters
         ----------
@@ -1595,7 +1609,7 @@ class JulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -1605,7 +1619,7 @@ class JulepApi:
 
         Returns
         -------
-        SessionsRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -1642,130 +1656,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def history_route_list(
-        self,
-        id: CommonUuid,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: HistoryRouteListRequestSortBy,
-        direction: HistoryRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> HistoryRouteListResponse:
-        """
-        List undefined items of parent undefined
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent undefined
-
-        limit : CommonLimit
-            Limit the number of undefined items returned
-
-        offset : CommonOffset
-            Offset the undefined items returned
-
-        sort_by : HistoryRouteListRequestSortBy
-            Sort by a field
-
-        direction : HistoryRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        HistoryRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.history_route_list(
-            id="id",
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/history/{jsonable_encoder(id)}",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def history_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> HistoryRouteDeleteResponse:
-        """
-        Delete undefined by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the undefined
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        HistoryRouteDeleteResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.history_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/history/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(HistoryRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1775,12 +1666,12 @@ class JulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> SessionsSession:
         """
-        Get undefined by id
+        Get a session by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -1822,17 +1713,17 @@ class JulepApi:
         situation: str,
         render_templates: bool,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing session by its id (overwrites all existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         situation : str
             A specific situation that sets the background for this session
@@ -1843,7 +1734,7 @@ class JulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -1853,7 +1744,7 @@ class JulepApi:
 
         Returns
         -------
-        SessionsRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -1885,7 +1776,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1893,21 +1784,21 @@ class JulepApi:
 
     def sessions_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> SessionsRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete a session by its id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        SessionsRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -1929,7 +1820,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1942,17 +1833,17 @@ class JulepApi:
         situation: typing.Optional[str] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing session by its id (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         situation : typing.Optional[str]
             A specific situation that sets the background for this session
@@ -1963,7 +1854,7 @@ class JulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -1973,7 +1864,7 @@ class JulepApi:
 
         Returns
         -------
-        SessionsRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2003,7 +1894,130 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def history_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: HistoryRouteListRequestSortBy,
+        direction: HistoryRouteListRequestDirection,
+        metadata_filter: str,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> HistoryRouteListResponse:
+        """
+        Get history of a Session (paginated)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent
+
+        limit : CommonLimit
+            Limit the number of items returned
+
+        offset : CommonOffset
+            Offset the items returned
+
+        sort_by : HistoryRouteListRequestSortBy
+            Sort by a field
+
+        direction : HistoryRouteListRequestDirection
+            Sort direction
+
+        metadata_filter : str
+            JSON string of object that should be used to filter objects by metadata
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        HistoryRouteListResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.history_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by="created_at",
+            direction="asc",
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}/history",
+            method="GET",
+            params={
+                "limit": limit,
+                "offset": offset,
+                "sort_by": sort_by,
+                "direction": direction,
+                "metadata_filter": metadata_filter,
+            },
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def history_route_delete(
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> CommonResourceDeletedResponse:
+        """
+        Clear the history of a Session (resets the Session)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.history_route_delete(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}/history",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2020,15 +2034,15 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> TasksRouteListResponse:
         """
-        List undefined items
+        List tasks (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : TasksRouteListRequestSortBy
             Sort by a field
@@ -2092,10 +2106,11 @@ class JulepApi:
         tools: typing.Sequence[ToolsCreateToolRequest],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new task
 
         Parameters
         ----------
@@ -2115,12 +2130,14 @@ class JulepApi:
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -2140,7 +2157,6 @@ class JulepApi:
                 ToolsCreateToolRequest(
                     type="function",
                     background=True,
-                    interactive=True,
                 )
             ],
             inherit_tools=True,
@@ -2156,13 +2172,14 @@ class JulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2178,10 +2195,11 @@ class JulepApi:
         tools: typing.Sequence[ToolsCreateToolRequest],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update a task
 
         Parameters
         ----------
@@ -2203,12 +2221,14 @@ class JulepApi:
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2229,7 +2249,6 @@ class JulepApi:
                 ToolsCreateToolRequest(
                     type="function",
                     background=True,
-                    interactive=True,
                 )
             ],
             inherit_tools=True,
@@ -2246,13 +2265,14 @@ class JulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2267,15 +2287,16 @@ class JulepApi:
         tools: typing.Sequence[ToolsCreateToolRequest],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing task (overwrite existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         description : str
 
@@ -2291,12 +2312,14 @@ class JulepApi:
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2316,7 +2339,6 @@ class JulepApi:
                 ToolsCreateToolRequest(
                     type="function",
                     background=True,
-                    interactive=True,
                 )
             ],
             inherit_tools=True,
@@ -2331,13 +2353,14 @@ class JulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2345,21 +2368,21 @@ class JulepApi:
 
     def tasks_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> TasksRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete a task by its id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -2381,7 +2404,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2396,15 +2419,16 @@ class JulepApi:
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
         inherit_tools: typing.Optional[bool] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing task (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         description : typing.Optional[str]
 
@@ -2420,12 +2444,14 @@ class JulepApi:
         inherit_tools : typing.Optional[bool]
             Whether to inherit tools from the parent agent or not. Defaults to true.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2449,13 +2475,14 @@ class JulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2473,18 +2500,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> TaskExecutionsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List executions of the given task
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : TaskExecutionsRouteListRequestSortBy
             Sort by a field
@@ -2545,25 +2572,28 @@ class JulepApi:
         id: CommonUuid,
         *,
         input: typing.Dict[str, typing.Any],
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TaskExecutionsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create an execution for the given task
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent resource
 
         input : typing.Dict[str, typing.Any]
             The input to the execution
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TaskExecutionsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -2582,13 +2612,13 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             f"tasks/{jsonable_encoder(id)}/executions",
             method="POST",
-            json={"input": input},
+            json={"input": input, "metadata": metadata},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TaskExecutionsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2601,7 +2631,7 @@ class JulepApi:
         task_token: str,
         input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TaskExecutionsRouteResumeWithTaskTokenResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
         Resume an execution with a task token
 
@@ -2621,7 +2651,7 @@ class JulepApi:
 
         Returns
         -------
-        TaskExecutionsRouteResumeWithTaskTokenResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2646,7 +2676,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TaskExecutionsRouteResumeWithTaskTokenResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2658,29 +2688,25 @@ class JulepApi:
         *,
         type: ToolsToolType,
         background: bool,
-        interactive: bool,
         function: typing.Optional[ToolsFunctionDef] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
         api_call: typing.Optional[typing.Any] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ToolRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing tool (overwrite existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         type : ToolsToolType
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
         background : bool
             The tool should be run in the background (not supported at the moment)
-
-        interactive : bool
-            Whether the tool that can be run interactively (response should contain "stop" boolean field)
 
         function : typing.Optional[ToolsFunctionDef]
 
@@ -2695,7 +2721,7 @@ class JulepApi:
 
         Returns
         -------
-        ToolRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2710,7 +2736,6 @@ class JulepApi:
             id="id",
             type="function",
             background=True,
-            interactive=True,
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -2719,7 +2744,6 @@ class JulepApi:
             json={
                 "type": type,
                 "background": background,
-                "interactive": interactive,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -2730,7 +2754,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ToolRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2738,21 +2762,21 @@ class JulepApi:
 
     def tool_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> ToolRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete an existing tool by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ToolRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -2774,7 +2798,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ToolRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2786,29 +2810,25 @@ class JulepApi:
         *,
         type: typing.Optional[ToolsToolType] = OMIT,
         background: typing.Optional[bool] = OMIT,
-        interactive: typing.Optional[bool] = OMIT,
         function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
         api_call: typing.Optional[typing.Any] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ToolRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing tool (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         type : typing.Optional[ToolsToolType]
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
         background : typing.Optional[bool]
             The tool should be run in the background (not supported at the moment)
-
-        interactive : typing.Optional[bool]
-            Whether the tool that can be run interactively (response should contain "stop" boolean field)
 
         function : typing.Optional[ToolsFunctionDefUpdate]
 
@@ -2823,7 +2843,7 @@ class JulepApi:
 
         Returns
         -------
-        ToolRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -2844,7 +2864,6 @@ class JulepApi:
             json={
                 "type": type,
                 "background": background,
-                "interactive": interactive,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -2855,7 +2874,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ToolRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2872,15 +2891,15 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UsersRouteListResponse:
         """
-        List undefined items
+        List users (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : UsersRouteListRequestSortBy
             Sort by a field
@@ -2943,9 +2962,9 @@ class JulepApi:
         docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new user
 
         Parameters
         ----------
@@ -2965,7 +2984,7 @@ class JulepApi:
 
         Returns
         -------
-        UsersRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -2991,7 +3010,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3005,9 +3024,9 @@ class JulepApi:
         about: str,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update a user
 
         Parameters
         ----------
@@ -3026,7 +3045,7 @@ class JulepApi:
 
         Returns
         -------
-        UsersRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -3052,7 +3071,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3062,12 +3081,12 @@ class JulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> UsersUser:
         """
-        Get undefined by id
+        Get a user by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -3110,14 +3129,14 @@ class JulepApi:
         about: str,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing user by id (overwrite existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         name : CommonIdentifierSafeUnicode
             Name of the user
@@ -3132,7 +3151,7 @@ class JulepApi:
 
         Returns
         -------
-        UsersRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -3158,7 +3177,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3166,21 +3185,21 @@ class JulepApi:
 
     def users_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> UsersRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete a user by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        UsersRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -3202,7 +3221,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3216,14 +3235,14 @@ class JulepApi:
         name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
         about: typing.Optional[str] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing user by id (merge with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -3238,7 +3257,7 @@ class JulepApi:
 
         Returns
         -------
-        UsersRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -3262,7 +3281,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3280,18 +3299,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UserDocsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List Docs owned by a User
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : UserDocsRouteListRequestSortBy
             Sort by a field
@@ -3360,18 +3379,18 @@ class JulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UserDocsSearchRouteSearchResponse:
         """
-        Search for documents owned by undefined
+        Search Docs owned by a User
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : UserDocsSearchRouteSearchRequestSortBy
             Sort by a field
@@ -3523,15 +3542,15 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentsRouteListResponse:
         """
-        List undefined items
+        List Agents (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentsRouteListRequestSortBy
             Sort by a field
@@ -3607,9 +3626,9 @@ class AsyncJulepApi:
             AgentsCreateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new Agent
 
         Parameters
         ----------
@@ -3638,7 +3657,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        AgentsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -3682,7 +3701,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3701,9 +3720,9 @@ class AsyncJulepApi:
             AgentsCreateOrUpdateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update an Agent
 
         Parameters
         ----------
@@ -3731,7 +3750,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        AgentsRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -3775,7 +3794,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3785,12 +3804,12 @@ class AsyncJulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> AgentsAgent:
         """
-        Get undefined by id
+        Get an Agent by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -3846,14 +3865,14 @@ class AsyncJulepApi:
             AgentsUpdateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         name : CommonIdentifierSafeUnicode
             Name of the agent
@@ -3877,7 +3896,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        AgentsRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -3920,7 +3939,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3928,21 +3947,21 @@ class AsyncJulepApi:
 
     async def agents_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AgentsRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete Agent by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        AgentsRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -3972,7 +3991,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3991,14 +4010,14 @@ class AsyncJulepApi:
             AgentsPatchAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing Agent by id (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -4022,7 +4041,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        AgentsRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -4061,7 +4080,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4079,18 +4098,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentDocsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List Docs owned by an Agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentDocsRouteListRequestSortBy
             Sort by a field
@@ -4167,18 +4186,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentsDocsSearchRouteSearchResponse:
         """
-        Search for documents owned by undefined
+        Search Docs owned by an Agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentsDocsSearchRouteSearchRequestSortBy
             Sort by a field
@@ -4267,18 +4286,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentToolsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List tools of the given agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : AgentToolsRouteListRequestSortBy
             Sort by a field
@@ -4356,14 +4375,14 @@ class AsyncJulepApi:
             AgentsCreateAgentRequestDefaultSettings
         ] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentToolsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new tool for this agent
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent resource
 
         name : CommonIdentifierSafeUnicode
             Name of the agent
@@ -4390,7 +4409,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        AgentToolsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -4435,7 +4454,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentToolsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4445,12 +4464,12 @@ class AsyncJulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> DocsDoc:
         """
-        Get undefined by id
+        Get Doc by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -4495,21 +4514,21 @@ class AsyncJulepApi:
 
     async def individual_docs_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> IndividualDocsRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete an existing Doc by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        IndividualDocsRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -4539,7 +4558,66 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(IndividualDocsRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def embed_route_embed(
+        self,
+        *,
+        body: DocsEmbedQueryRequest,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> DocsEmbedQueryResponse:
+        """
+        Embed a query for search
+
+        Parameters
+        ----------
+        body : DocsEmbedQueryRequest
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        DocsEmbedQueryResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep import DocsEmbedQueryRequest
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.embed_route_embed(
+                body=DocsEmbedQueryRequest(
+                    text="text",
+                ),
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "embed",
+            method="POST",
+            json={"body": body},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(DocsEmbedQueryResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4549,12 +4627,12 @@ class AsyncJulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> ExecutionsExecution:
         """
-        Get undefined by id
+        Get an Execution by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -4603,14 +4681,14 @@ class AsyncJulepApi:
         *,
         request: ExecutionsUpdateExecutionRequest,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ExecutionsRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing Execution
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request : ExecutionsUpdateExecutionRequest
 
@@ -4619,7 +4697,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        ExecutionsRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -4655,7 +4733,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ExecutionsRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4673,18 +4751,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ExecutionTransitionsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List the Transitions of an Execution by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : ExecutionTransitionsRouteListRequestSortBy
             Sort by a field
@@ -4752,12 +4830,12 @@ class AsyncJulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> JobsJobStatus:
         """
-        Get undefined by id
+        Get the status of an existing Job by its id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -4811,15 +4889,15 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> SessionsRouteListResponse:
         """
-        List undefined items
+        List sessions (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : SessionsRouteListRequestSortBy
             Sort by a field
@@ -4892,12 +4970,12 @@ class AsyncJulepApi:
         agent: typing.Optional[CommonUuid] = OMIT,
         agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new session
 
         Parameters
         ----------
@@ -4920,7 +4998,7 @@ class AsyncJulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -4930,7 +5008,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        SessionsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -4973,7 +5051,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4990,12 +5068,12 @@ class AsyncJulepApi:
         agent: typing.Optional[CommonUuid] = OMIT,
         agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update a session
 
         Parameters
         ----------
@@ -5020,7 +5098,7 @@ class AsyncJulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -5030,7 +5108,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        SessionsRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -5075,146 +5153,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteCreateOrUpdateResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def history_route_list(
-        self,
-        id: CommonUuid,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: HistoryRouteListRequestSortBy,
-        direction: HistoryRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> HistoryRouteListResponse:
-        """
-        List undefined items of parent undefined
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent undefined
-
-        limit : CommonLimit
-            Limit the number of undefined items returned
-
-        offset : CommonOffset
-            Offset the undefined items returned
-
-        sort_by : HistoryRouteListRequestSortBy
-            Sort by a field
-
-        direction : HistoryRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        HistoryRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.history_route_list(
-                id="id",
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/history/{jsonable_encoder(id)}",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def history_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> HistoryRouteDeleteResponse:
-        """
-        Delete undefined by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the undefined
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        HistoryRouteDeleteResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.history_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/history/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(HistoryRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5224,12 +5163,12 @@ class AsyncJulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> SessionsSession:
         """
-        Get undefined by id
+        Get a session by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -5279,17 +5218,17 @@ class AsyncJulepApi:
         situation: str,
         render_templates: bool,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing session by its id (overwrites all existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         situation : str
             A specific situation that sets the background for this session
@@ -5300,7 +5239,7 @@ class AsyncJulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -5310,7 +5249,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        SessionsRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -5350,7 +5289,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5358,21 +5297,21 @@ class AsyncJulepApi:
 
     async def sessions_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> SessionsRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete a session by its id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        SessionsRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -5402,7 +5341,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5415,17 +5354,17 @@ class AsyncJulepApi:
         situation: typing.Optional[str] = OMIT,
         render_templates: typing.Optional[bool] = OMIT,
         token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[str] = OMIT,
+        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing session by its id (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         situation : typing.Optional[str]
             A specific situation that sets the background for this session
@@ -5436,7 +5375,7 @@ class AsyncJulepApi:
         token_budget : typing.Optional[int]
             Threshold value for the adaptive context functionality
 
-        context_overflow : typing.Optional[str]
+        context_overflow : typing.Optional[SessionsContextOverflowType]
             Action to start on context window overflow
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
@@ -5446,7 +5385,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        SessionsRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -5484,7 +5423,146 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def history_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: HistoryRouteListRequestSortBy,
+        direction: HistoryRouteListRequestDirection,
+        metadata_filter: str,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> HistoryRouteListResponse:
+        """
+        Get history of a Session (paginated)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent
+
+        limit : CommonLimit
+            Limit the number of items returned
+
+        offset : CommonOffset
+            Offset the items returned
+
+        sort_by : HistoryRouteListRequestSortBy
+            Sort by a field
+
+        direction : HistoryRouteListRequestDirection
+            Sort direction
+
+        metadata_filter : str
+            JSON string of object that should be used to filter objects by metadata
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        HistoryRouteListResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.history_route_list(
+                id="id",
+                limit=1,
+                offset=1,
+                sort_by="created_at",
+                direction="asc",
+                metadata_filter="metadata_filter",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}/history",
+            method="GET",
+            params={
+                "limit": limit,
+                "offset": offset,
+                "sort_by": sort_by,
+                "direction": direction,
+                "metadata_filter": metadata_filter,
+            },
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def history_route_delete(
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> CommonResourceDeletedResponse:
+        """
+        Clear the history of a Session (resets the Session)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.history_route_delete(
+                id="id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}/history",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5501,15 +5579,15 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> TasksRouteListResponse:
         """
-        List undefined items
+        List tasks (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : TasksRouteListRequestSortBy
             Sort by a field
@@ -5581,10 +5659,11 @@ class AsyncJulepApi:
         tools: typing.Sequence[ToolsCreateToolRequest],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new task
 
         Parameters
         ----------
@@ -5604,12 +5683,14 @@ class AsyncJulepApi:
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -5634,7 +5715,6 @@ class AsyncJulepApi:
                     ToolsCreateToolRequest(
                         type="function",
                         background=True,
-                        interactive=True,
                     )
                 ],
                 inherit_tools=True,
@@ -5653,13 +5733,14 @@ class AsyncJulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5675,10 +5756,11 @@ class AsyncJulepApi:
         tools: typing.Sequence[ToolsCreateToolRequest],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update a task
 
         Parameters
         ----------
@@ -5700,12 +5782,14 @@ class AsyncJulepApi:
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -5731,7 +5815,6 @@ class AsyncJulepApi:
                     ToolsCreateToolRequest(
                         type="function",
                         background=True,
-                        interactive=True,
                     )
                 ],
                 inherit_tools=True,
@@ -5751,13 +5834,14 @@ class AsyncJulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5772,15 +5856,16 @@ class AsyncJulepApi:
         tools: typing.Sequence[ToolsCreateToolRequest],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing task (overwrite existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         description : str
 
@@ -5796,12 +5881,14 @@ class AsyncJulepApi:
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -5826,7 +5913,6 @@ class AsyncJulepApi:
                     ToolsCreateToolRequest(
                         type="function",
                         background=True,
-                        interactive=True,
                     )
                 ],
                 inherit_tools=True,
@@ -5844,13 +5930,14 @@ class AsyncJulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5858,21 +5945,21 @@ class AsyncJulepApi:
 
     async def tasks_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> TasksRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete a task by its id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -5902,7 +5989,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5917,15 +6004,16 @@ class AsyncJulepApi:
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
         inherit_tools: typing.Optional[bool] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing task (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         description : typing.Optional[str]
 
@@ -5941,12 +6029,14 @@ class AsyncJulepApi:
         inherit_tools : typing.Optional[bool]
             Whether to inherit tools from the parent agent or not. Defaults to true.
 
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TasksRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -5978,13 +6068,14 @@ class AsyncJulepApi:
                 "input_schema": input_schema,
                 "tools": tools,
                 "inherit_tools": inherit_tools,
+                "metadata": metadata,
             },
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6002,18 +6093,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> TaskExecutionsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List executions of the given task
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : TaskExecutionsRouteListRequestSortBy
             Sort by a field
@@ -6082,25 +6173,28 @@ class AsyncJulepApi:
         id: CommonUuid,
         *,
         input: typing.Dict[str, typing.Any],
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TaskExecutionsRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create an execution for the given task
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent resource
 
         input : typing.Dict[str, typing.Any]
             The input to the execution
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        TaskExecutionsRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -6127,13 +6221,13 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             f"tasks/{jsonable_encoder(id)}/executions",
             method="POST",
-            json={"input": input},
+            json={"input": input, "metadata": metadata},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TaskExecutionsRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6146,7 +6240,7 @@ class AsyncJulepApi:
         task_token: str,
         input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> TaskExecutionsRouteResumeWithTaskTokenResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
         Resume an execution with a task token
 
@@ -6166,7 +6260,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        TaskExecutionsRouteResumeWithTaskTokenResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -6199,7 +6293,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TaskExecutionsRouteResumeWithTaskTokenResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6211,29 +6305,25 @@ class AsyncJulepApi:
         *,
         type: ToolsToolType,
         background: bool,
-        interactive: bool,
         function: typing.Optional[ToolsFunctionDef] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
         api_call: typing.Optional[typing.Any] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ToolRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing tool (overwrite existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         type : ToolsToolType
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
         background : bool
             The tool should be run in the background (not supported at the moment)
-
-        interactive : bool
-            Whether the tool that can be run interactively (response should contain "stop" boolean field)
 
         function : typing.Optional[ToolsFunctionDef]
 
@@ -6248,7 +6338,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        ToolRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -6268,7 +6358,6 @@ class AsyncJulepApi:
                 id="id",
                 type="function",
                 background=True,
-                interactive=True,
             )
 
 
@@ -6280,7 +6369,6 @@ class AsyncJulepApi:
             json={
                 "type": type,
                 "background": background,
-                "interactive": interactive,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -6291,7 +6379,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ToolRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6299,21 +6387,21 @@ class AsyncJulepApi:
 
     async def tool_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> ToolRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete an existing tool by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        ToolRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -6343,7 +6431,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ToolRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6355,29 +6443,25 @@ class AsyncJulepApi:
         *,
         type: typing.Optional[ToolsToolType] = OMIT,
         background: typing.Optional[bool] = OMIT,
-        interactive: typing.Optional[bool] = OMIT,
         function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
         api_call: typing.Optional[typing.Any] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> ToolRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing tool (merges with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         type : typing.Optional[ToolsToolType]
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
         background : typing.Optional[bool]
             The tool should be run in the background (not supported at the moment)
-
-        interactive : typing.Optional[bool]
-            Whether the tool that can be run interactively (response should contain "stop" boolean field)
 
         function : typing.Optional[ToolsFunctionDefUpdate]
 
@@ -6392,7 +6476,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        ToolRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -6421,7 +6505,6 @@ class AsyncJulepApi:
             json={
                 "type": type,
                 "background": background,
-                "interactive": interactive,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -6432,7 +6515,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(ToolRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6449,15 +6532,15 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UsersRouteListResponse:
         """
-        List undefined items
+        List users (paginated)
 
         Parameters
         ----------
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : UsersRouteListRequestSortBy
             Sort by a field
@@ -6528,9 +6611,9 @@ class AsyncJulepApi:
         docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteCreateResponse:
+    ) -> CommonResourceCreatedResponse:
         """
-        Create new undefined
+        Create a new user
 
         Parameters
         ----------
@@ -6550,7 +6633,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        UsersRouteCreateResponse
+        CommonResourceCreatedResponse
             The request has succeeded and a new resource has been created as a result.
 
         Examples
@@ -6584,7 +6667,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteCreateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6598,9 +6681,9 @@ class AsyncJulepApi:
         about: str,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteCreateOrUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Create or update undefined (ID is required in payload; existing resource will be overwritten)
+        Create or update a user
 
         Parameters
         ----------
@@ -6619,7 +6702,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        UsersRouteCreateOrUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -6653,7 +6736,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteCreateOrUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6663,12 +6746,12 @@ class AsyncJulepApi:
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> UsersUser:
         """
-        Get undefined by id
+        Get a user by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -6719,14 +6802,14 @@ class AsyncJulepApi:
         about: str,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteUpdateResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Update undefined by id (overwrite)
+        Update an existing user by id (overwrite existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         name : CommonIdentifierSafeUnicode
             Name of the user
@@ -6741,7 +6824,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        UsersRouteUpdateResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -6775,7 +6858,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteUpdateResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6783,21 +6866,21 @@ class AsyncJulepApi:
 
     async def users_route_delete(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> UsersRouteDeleteResponse:
+    ) -> CommonResourceDeletedResponse:
         """
-        Delete undefined by id
+        Delete a user by id
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        UsersRouteDeleteResponse
+        CommonResourceDeletedResponse
             The request has been accepted for processing, but processing has not yet completed.
 
         Examples
@@ -6827,7 +6910,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteDeleteResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6841,14 +6924,14 @@ class AsyncJulepApi:
         name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
         about: typing.Optional[str] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRoutePatchResponse:
+    ) -> CommonResourceUpdatedResponse:
         """
-        Patch undefined by id (merge changes)
+        Update an existing user by id (merge with existing values)
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the resource
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -6863,7 +6946,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        UsersRoutePatchResponse
+        CommonResourceUpdatedResponse
             The request has succeeded.
 
         Examples
@@ -6895,7 +6978,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRoutePatchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6913,18 +6996,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UserDocsRouteListResponse:
         """
-        List undefined items of parent undefined
+        List Docs owned by a User
 
         Parameters
         ----------
         id : CommonUuid
-            ID of parent undefined
+            ID of parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : UserDocsRouteListRequestSortBy
             Sort by a field
@@ -7001,18 +7084,18 @@ class AsyncJulepApi:
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UserDocsSearchRouteSearchResponse:
         """
-        Search for documents owned by undefined
+        Search Docs owned by a User
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the undefined
+            ID of the parent
 
         limit : CommonLimit
-            Limit the number of undefined items returned
+            Limit the number of items returned
 
         offset : CommonOffset
-            Offset the undefined items returned
+            Offset the items returned
 
         sort_by : UserDocsSearchRouteSearchRequestSortBy
             Sort by a field

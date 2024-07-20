@@ -5,11 +5,11 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .tasks_cel import TasksCel
+from .common_py_expression import CommonPyExpression
 
 
 class TasksEvaluateStep(pydantic_v1.BaseModel):
-    evaluate: typing.Dict[str, TasksCel] = pydantic_v1.Field()
+    evaluate: typing.Dict[str, CommonPyExpression] = pydantic_v1.Field()
     """
     The expression to evaluate
     """

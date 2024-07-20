@@ -5,13 +5,18 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .agent_default_settings import AgentDefaultSettings
+from .agent_instructions import AgentInstructions
+from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_uuid import CommonUuid
 
 
-class UsersRouteUpdateResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class Agent(pydantic_v1.BaseModel):
+    id: CommonUuid
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    created_at: dt.datetime = pydantic_v1.Field()
     """
-    ID of updated undefined
+    When this resource was created as UTC date-time
     """
 
     updated_at: dt.datetime = pydantic_v1.Field()
@@ -19,9 +24,31 @@ class UsersRouteUpdateResponse(pydantic_v1.BaseModel):
     When this resource was updated as UTC date-time
     """
 
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
+    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
     """
-    IDs (if any) of jobs created as part of this request
+    Name of the agent
+    """
+
+    about: str = pydantic_v1.Field()
+    """
+    About the agent
+    """
+
+    model: str = pydantic_v1.Field()
+    """
+    Model name to use (gpt-4-turbo, gemini-nano etc)
+    """
+
+    instructions: AgentInstructions = pydantic_v1.Field()
+    """
+    Instructions for the agent
+    """
+
+    default_settings: typing.Optional[AgentDefaultSettings] = pydantic_v1.Field(
+        default=None
+    )
+    """
+    Default settings for all sessions created by this agent
     """
 
     def json(self, **kwargs: typing.Any) -> str:

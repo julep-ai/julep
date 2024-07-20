@@ -6,23 +6,37 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .execution_status import ExecutionStatus
 
 
-class TasksRouteDeleteResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class Execution(pydantic_v1.BaseModel):
+    task_id: CommonUuid = pydantic_v1.Field()
     """
-    ID of deleted undefined
-    """
-
-    deleted_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was deleted as UTC date-time
+    The ID of the task that the execution is running
     """
 
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
+    status: ExecutionStatus = pydantic_v1.Field()
     """
-    IDs (if any) of jobs created as part of this request
+    The status of the execution
     """
+
+    input: typing.Dict[str, typing.Any] = pydantic_v1.Field()
+    """
+    The input to the execution
+    """
+
+    created_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was created as UTC date-time
+    """
+
+    updated_at: dt.datetime = pydantic_v1.Field()
+    """
+    When this resource was updated as UTC date-time
+    """
+
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    id: CommonUuid
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

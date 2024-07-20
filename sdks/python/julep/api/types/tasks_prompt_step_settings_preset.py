@@ -9,6 +9,7 @@ from .chat_completion_response_format import ChatCompletionResponseFormat
 from .chat_generation_preset import ChatGenerationPreset
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_logit_bias import CommonLogitBias
+from .common_uuid import CommonUuid
 
 
 class TasksPromptStepSettingsPreset(pydantic_v1.BaseModel):
@@ -51,6 +52,11 @@ class TasksPromptStepSettingsPreset(pydantic_v1.BaseModel):
     )
     """
     Response format (set to `json_object` to restrict output to JSON)
+    """
+
+    agent: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
+    """
+    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
     """
 
     preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)

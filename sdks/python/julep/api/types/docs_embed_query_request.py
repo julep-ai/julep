@@ -5,23 +5,13 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_uuid import CommonUuid
+from .docs_embed_query_request_text import DocsEmbedQueryRequestText
 
 
-class AgentsRouteDeleteResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class DocsEmbedQueryRequest(pydantic_v1.BaseModel):
+    text: DocsEmbedQueryRequestText = pydantic_v1.Field()
     """
-    ID of deleted undefined
-    """
-
-    deleted_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was deleted as UTC date-time
-    """
-
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
-    """
-    IDs (if any) of jobs created as part of this request
+    Text or texts to embed
     """
 
     def json(self, **kwargs: typing.Any) -> str:

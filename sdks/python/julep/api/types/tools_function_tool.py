@@ -10,7 +10,6 @@ from .tools_function_def import ToolsFunctionDef
 
 class ToolsFunctionTool(pydantic_v1.BaseModel):
     background: bool
-    interactive: bool
     function: ToolsFunctionDef = pydantic_v1.Field()
     """
     The function to call

@@ -8,15 +8,15 @@ from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
 
 
-class AgentsRouteUpdateResponse(pydantic_v1.BaseModel):
+class CommonResourceDeletedResponse(pydantic_v1.BaseModel):
     id: CommonUuid = pydantic_v1.Field()
     """
-    ID of updated undefined
+    ID of deleted resource
     """
 
-    updated_at: dt.datetime = pydantic_v1.Field()
+    deleted_at: dt.datetime = pydantic_v1.Field()
     """
-    When this resource was updated as UTC date-time
+    When this resource was deleted as UTC date-time
     """
 
     jobs: typing.List[CommonUuid] = pydantic_v1.Field()

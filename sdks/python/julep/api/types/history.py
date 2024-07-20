@@ -6,22 +6,17 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .entries_entry import EntriesEntry
+from .entries_relation import EntriesRelation
 
 
-class HistoryRouteDeleteResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class History(pydantic_v1.BaseModel):
+    entries: typing.List[EntriesEntry]
+    relations: typing.List[EntriesRelation]
+    session_id: CommonUuid
+    created_at: dt.datetime = pydantic_v1.Field()
     """
-    ID of deleted undefined
-    """
-
-    deleted_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was deleted as UTC date-time
-    """
-
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
-    """
-    IDs (if any) of jobs created as part of this request
+    When this resource was created as UTC date-time
     """
 
     def json(self, **kwargs: typing.Any) -> str:

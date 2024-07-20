@@ -8,6 +8,7 @@ from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .chat_completion_response_format import ChatCompletionResponseFormat
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_logit_bias import CommonLogitBias
+from .common_uuid import CommonUuid
 
 
 class TasksPromptStepSettingsFrequencyPenalty(pydantic_v1.BaseModel):
@@ -50,6 +51,11 @@ class TasksPromptStepSettingsFrequencyPenalty(pydantic_v1.BaseModel):
     )
     """
     Response format (set to `json_object` to restrict output to JSON)
+    """
+
+    agent: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
+    """
+    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
     """
 
     frequency_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)

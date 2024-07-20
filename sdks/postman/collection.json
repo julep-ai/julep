@@ -41,7 +41,7 @@
       "_type": "endpoint",
       "name": "Agents Route List",
       "request": {
-        "description": "List undefined items",
+        "description": "List Agents (paginated)",
         "url": {
           "raw": "{{baseUrl}}/agents?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -53,12 +53,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -102,7 +102,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items",
+            "description": "List Agents (paginated)",
             "url": {
               "raw": "{{baseUrl}}/agents?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -114,12 +114,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -167,7 +167,7 @@
       "_type": "endpoint",
       "name": "Agents Route Create",
       "request": {
-        "description": "Create new undefined",
+        "description": "Create a new Agent",
         "url": {
           "raw": "{{baseUrl}}/agents",
           "host": [
@@ -210,7 +210,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create new undefined",
+            "description": "Create a new Agent",
             "url": {
               "raw": "{{baseUrl}}/agents",
               "host": [
@@ -257,7 +257,7 @@
       "_type": "endpoint",
       "name": "Agents Route Create Or Update",
       "request": {
-        "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+        "description": "Create or update an Agent",
         "url": {
           "raw": "{{baseUrl}}/agents",
           "host": [
@@ -300,7 +300,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+            "description": "Create or update an Agent",
             "url": {
               "raw": "{{baseUrl}}/agents",
               "host": [
@@ -347,7 +347,7 @@
       "_type": "endpoint",
       "name": "Agents Route Get",
       "request": {
-        "description": "Get undefined by id",
+        "description": "Get an Agent by id",
         "url": {
           "raw": "{{baseUrl}}/agents/:id",
           "host": [
@@ -361,7 +361,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -389,7 +389,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Get undefined by id",
+            "description": "Get an Agent by id",
             "url": {
               "raw": "{{baseUrl}}/agents/:id",
               "host": [
@@ -403,7 +403,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -435,7 +435,7 @@
       "_type": "endpoint",
       "name": "Agents Route Update",
       "request": {
-        "description": "Update undefined by id (overwrite)",
+        "description": "Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)",
         "url": {
           "raw": "{{baseUrl}}/agents/:id",
           "host": [
@@ -449,7 +449,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -485,7 +485,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Update undefined by id (overwrite)",
+            "description": "Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)",
             "url": {
               "raw": "{{baseUrl}}/agents/:id",
               "host": [
@@ -499,7 +499,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -539,7 +539,7 @@
       "_type": "endpoint",
       "name": "Agents Route Delete",
       "request": {
-        "description": "Delete undefined by id",
+        "description": "Delete Agent by id",
         "url": {
           "raw": "{{baseUrl}}/agents/:id",
           "host": [
@@ -553,7 +553,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -581,7 +581,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Delete undefined by id",
+            "description": "Delete Agent by id",
             "url": {
               "raw": "{{baseUrl}}/agents/:id",
               "host": [
@@ -595,7 +595,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -627,7 +627,7 @@
       "_type": "endpoint",
       "name": "Agents Route Patch",
       "request": {
-        "description": "Patch undefined by id (merge changes)",
+        "description": "Update an existing Agent by id (merges with existing values)",
         "url": {
           "raw": "{{baseUrl}}/agents/:id",
           "host": [
@@ -641,7 +641,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -677,7 +677,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Patch undefined by id (merge changes)",
+            "description": "Update an existing Agent by id (merges with existing values)",
             "url": {
               "raw": "{{baseUrl}}/agents/:id",
               "host": [
@@ -691,7 +691,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -731,7 +731,7 @@
       "_type": "endpoint",
       "name": "Agent Docs Route List",
       "request": {
-        "description": "List undefined items of parent undefined",
+        "description": "List Docs owned by an Agent",
         "url": {
           "raw": "{{baseUrl}}/agents/:id/docs?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -745,12 +745,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -772,7 +772,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent",
               "value": "id"
             }
           ]
@@ -800,7 +800,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items of parent undefined",
+            "description": "List Docs owned by an Agent",
             "url": {
               "raw": "{{baseUrl}}/agents/:id/docs?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -814,12 +814,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -841,7 +841,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent",
                   "value": "id"
                 }
               ]
@@ -873,7 +873,7 @@
       "_type": "endpoint",
       "name": "Agents Docs Search Route Search",
       "request": {
-        "description": "Search for documents owned by undefined",
+        "description": "Search Docs owned by an Agent",
         "url": {
           "raw": "{{baseUrl}}/agents/:id/search?limit=&offset=&sort_by=&direction=&metadata_filter=",
           "host": [
@@ -888,12 +888,12 @@
             {
               "key": "limit",
               "value": "",
-              "description": "Limit the number of undefined items returned"
+              "description": "Limit the number of items returned"
             },
             {
               "key": "offset",
               "value": "",
-              "description": "Offset the undefined items returned"
+              "description": "Offset the items returned"
             },
             {
               "key": "sort_by",
@@ -915,7 +915,7 @@
             {
               "key": "id",
               "value": "",
-              "description": "ID of the undefined"
+              "description": "ID of the parent"
             }
           ]
         },
@@ -945,7 +945,7 @@
       "_type": "endpoint",
       "name": "Agent Tools Route List",
       "request": {
-        "description": "List undefined items of parent undefined",
+        "description": "List tools of the given agent",
         "url": {
           "raw": "{{baseUrl}}/agents/:id/tools?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -959,12 +959,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -986,7 +986,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent",
               "value": "id"
             }
           ]
@@ -1014,7 +1014,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items of parent undefined",
+            "description": "List tools of the given agent",
             "url": {
               "raw": "{{baseUrl}}/agents/:id/tools?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -1028,12 +1028,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -1055,7 +1055,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent",
                   "value": "id"
                 }
               ]
@@ -1087,7 +1087,7 @@
       "_type": "endpoint",
       "name": "Agent Tools Route Create",
       "request": {
-        "description": "Create new undefined",
+        "description": "Create a new tool for this agent",
         "url": {
           "raw": "{{baseUrl}}/agents/:id/tools",
           "host": [
@@ -1102,7 +1102,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent resource",
               "value": "id"
             }
           ]
@@ -1138,7 +1138,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create new undefined",
+            "description": "Create a new tool for this agent",
             "url": {
               "raw": "{{baseUrl}}/agents/:id/tools",
               "host": [
@@ -1153,7 +1153,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent resource",
                   "value": "id"
                 }
               ]
@@ -1193,7 +1193,7 @@
       "_type": "endpoint",
       "name": "Individual Docs Route Get",
       "request": {
-        "description": "Get undefined by id",
+        "description": "Get Doc by id",
         "url": {
           "raw": "{{baseUrl}}/docs/:id",
           "host": [
@@ -1207,7 +1207,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -1235,7 +1235,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Get undefined by id",
+            "description": "Get Doc by id",
             "url": {
               "raw": "{{baseUrl}}/docs/:id",
               "host": [
@@ -1249,7 +1249,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -1281,7 +1281,7 @@
       "_type": "endpoint",
       "name": "Individual Docs Route Delete",
       "request": {
-        "description": "Delete undefined by id",
+        "description": "Delete an existing Doc by id",
         "url": {
           "raw": "{{baseUrl}}/docs/:id",
           "host": [
@@ -1295,7 +1295,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -1323,7 +1323,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Delete undefined by id",
+            "description": "Delete an existing Doc by id",
             "url": {
               "raw": "{{baseUrl}}/docs/:id",
               "host": [
@@ -1337,7 +1337,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -1367,9 +1367,99 @@
     },
     {
       "_type": "endpoint",
+      "name": "Embed Route Embed",
+      "request": {
+        "description": "Embed a query for search",
+        "url": {
+          "raw": "{{baseUrl}}/embed",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "embed"
+          ],
+          "query": [],
+          "variable": []
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"body\": {\n        \"text\": \"text\"\n    }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Embed a query for search",
+            "url": {
+              "raw": "{{baseUrl}}/embed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "embed"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"body\": {\n        \"text\": \"text\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"vectors\": [\n        [\n            1.1\n        ]\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
       "name": "Executions Route Get",
       "request": {
-        "description": "Get undefined by id",
+        "description": "Get an Execution by id",
         "url": {
           "raw": "{{baseUrl}}/executions/:id",
           "host": [
@@ -1383,7 +1473,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -1411,7 +1501,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Get undefined by id",
+            "description": "Get an Execution by id",
             "url": {
               "raw": "{{baseUrl}}/executions/:id",
               "host": [
@@ -1425,7 +1515,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -1448,7 +1538,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"task_id\": \"task_id\",\n    \"status\": \"queued\",\n    \"input\": {\n        \"input\": {\n            \"key\": \"value\"\n        }\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"id\": \"id\"\n}",
+          "body": "{\n    \"task_id\": \"task_id\",\n    \"status\": \"queued\",\n    \"input\": {\n        \"input\": {\n            \"key\": \"value\"\n        }\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"id\": \"id\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1457,7 +1547,7 @@
       "_type": "endpoint",
       "name": "Executions Route Update",
       "request": {
-        "description": "Update undefined by id (overwrite)",
+        "description": "Update an existing Execution",
         "url": {
           "raw": "{{baseUrl}}/executions/:id",
           "host": [
@@ -1472,7 +1562,7 @@
             {
               "key": "id",
               "value": "",
-              "description": "ID of the undefined"
+              "description": "ID of the resource"
             }
           ]
         },
@@ -1502,7 +1592,7 @@
       "_type": "endpoint",
       "name": "Execution Transitions Route List",
       "request": {
-        "description": "List undefined items of parent undefined",
+        "description": "List the Transitions of an Execution by id",
         "url": {
           "raw": "{{baseUrl}}/executions/:id/transitions?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -1516,12 +1606,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -1543,7 +1633,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent",
               "value": "id"
             }
           ]
@@ -1571,7 +1661,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items of parent undefined",
+            "description": "List the Transitions of an Execution by id",
             "url": {
               "raw": "{{baseUrl}}/executions/:id/transitions?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -1585,12 +1675,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -1612,7 +1702,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent",
                   "value": "id"
                 }
               ]
@@ -1644,7 +1734,7 @@
       "_type": "endpoint",
       "name": "Job Route Get",
       "request": {
-        "description": "Get undefined by id",
+        "description": "Get the status of an existing Job by its id",
         "url": {
           "raw": "{{baseUrl}}/jobs/:id",
           "host": [
@@ -1658,7 +1748,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -1686,7 +1776,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Get undefined by id",
+            "description": "Get the status of an existing Job by its id",
             "url": {
               "raw": "{{baseUrl}}/jobs/:id",
               "host": [
@@ -1700,7 +1790,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -1732,7 +1822,7 @@
       "_type": "endpoint",
       "name": "Sessions Route List",
       "request": {
-        "description": "List undefined items",
+        "description": "List sessions (paginated)",
         "url": {
           "raw": "{{baseUrl}}/sessions?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -1744,12 +1834,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -1793,7 +1883,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items",
+            "description": "List sessions (paginated)",
             "url": {
               "raw": "{{baseUrl}}/sessions?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -1805,12 +1895,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -1858,7 +1948,7 @@
       "_type": "endpoint",
       "name": "Sessions Route Create",
       "request": {
-        "description": "Create new undefined",
+        "description": "Create a new session",
         "url": {
           "raw": "{{baseUrl}}/sessions",
           "host": [
@@ -1901,7 +1991,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create new undefined",
+            "description": "Create a new session",
             "url": {
               "raw": "{{baseUrl}}/sessions",
               "host": [
@@ -1948,7 +2038,7 @@
       "_type": "endpoint",
       "name": "Sessions Route Create Or Update",
       "request": {
-        "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+        "description": "Create or update a session",
         "url": {
           "raw": "{{baseUrl}}/sessions",
           "host": [
@@ -1991,7 +2081,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+            "description": "Create or update a session",
             "url": {
               "raw": "{{baseUrl}}/sessions",
               "host": [
@@ -2036,241 +2126,9 @@
     },
     {
       "_type": "endpoint",
-      "name": "History Route List",
-      "request": {
-        "description": "List undefined items of parent undefined",
-        "url": {
-          "raw": "{{baseUrl}}/sessions/history/:id?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "sessions",
-            "history",
-            ":id"
-          ],
-          "query": [
-            {
-              "key": "limit",
-              "description": "Limit the number of undefined items returned",
-              "value": "1"
-            },
-            {
-              "key": "offset",
-              "description": "Offset the undefined items returned",
-              "value": "1"
-            },
-            {
-              "key": "sort_by",
-              "description": "Sort by a field",
-              "value": "created_at"
-            },
-            {
-              "key": "direction",
-              "description": "Sort direction",
-              "value": "asc"
-            },
-            {
-              "key": "metadata_filter",
-              "description": "JSON string of object that should be used to filter objects by metadata",
-              "value": "metadata_filter"
-            }
-          ],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of parent undefined",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "GET",
-        "auth": null,
-        "body": null
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "List undefined items of parent undefined",
-            "url": {
-              "raw": "{{baseUrl}}/sessions/history/:id?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "sessions",
-                "history",
-                ":id"
-              ],
-              "query": [
-                {
-                  "key": "limit",
-                  "description": "Limit the number of undefined items returned",
-                  "value": "1"
-                },
-                {
-                  "key": "offset",
-                  "description": "Offset the undefined items returned",
-                  "value": "1"
-                },
-                {
-                  "key": "sort_by",
-                  "description": "Sort by a field",
-                  "value": "created_at"
-                },
-                {
-                  "key": "direction",
-                  "description": "Sort direction",
-                  "value": "asc"
-                },
-                {
-                  "key": "metadata_filter",
-                  "description": "JSON string of object that should be used to filter objects by metadata",
-                  "value": "metadata_filter"
-                }
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of parent undefined",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "GET",
-            "auth": null,
-            "body": null
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"entries\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": [],\n                    \"source\": \"api_request\",\n                    \"timestamp\": 1,\n                    \"created_at\": \"2024-01-15T09:30:00Z\",\n                    \"id\": \"id\"\n                }\n            ],\n            \"relations\": [\n                {\n                    \"head\": \"head\",\n                    \"relation\": \"relation\",\n                    \"tail\": \"tail\"\n                }\n            ],\n            \"session_id\": \"session_id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "History Route Delete",
-      "request": {
-        "description": "Delete undefined by id",
-        "url": {
-          "raw": "{{baseUrl}}/sessions/history/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "sessions",
-            "history",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of the undefined",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "DELETE",
-        "auth": null,
-        "body": null
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Delete undefined by id",
-            "url": {
-              "raw": "{{baseUrl}}/sessions/history/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "sessions",
-                "history",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the undefined",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "DELETE",
-            "auth": null,
-            "body": null
-          },
-          "description": "The request has been accepted for processing, but processing has not yet completed.",
-          "body": "{\n    \"id\": \"id\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
       "name": "Sessions Route Get",
       "request": {
-        "description": "Get undefined by id",
+        "description": "Get a session by id",
         "url": {
           "raw": "{{baseUrl}}/sessions/:id",
           "host": [
@@ -2285,7 +2143,7 @@
             {
               "key": "id",
               "value": "",
-              "description": "ID of the undefined"
+              "description": "ID of the resource"
             }
           ]
         },
@@ -2307,7 +2165,7 @@
       "_type": "endpoint",
       "name": "Sessions Route Update",
       "request": {
-        "description": "Update undefined by id (overwrite)",
+        "description": "Update an existing session by its id (overwrites all existing values)",
         "url": {
           "raw": "{{baseUrl}}/sessions/:id",
           "host": [
@@ -2321,7 +2179,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -2357,7 +2215,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Update undefined by id (overwrite)",
+            "description": "Update an existing session by its id (overwrites all existing values)",
             "url": {
               "raw": "{{baseUrl}}/sessions/:id",
               "host": [
@@ -2371,7 +2229,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -2411,7 +2269,7 @@
       "_type": "endpoint",
       "name": "Sessions Route Delete",
       "request": {
-        "description": "Delete undefined by id",
+        "description": "Delete a session by its id",
         "url": {
           "raw": "{{baseUrl}}/sessions/:id",
           "host": [
@@ -2425,7 +2283,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -2453,7 +2311,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Delete undefined by id",
+            "description": "Delete a session by its id",
             "url": {
               "raw": "{{baseUrl}}/sessions/:id",
               "host": [
@@ -2467,7 +2325,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -2499,7 +2357,7 @@
       "_type": "endpoint",
       "name": "Sessions Route Patch",
       "request": {
-        "description": "Patch undefined by id (merge changes)",
+        "description": "Update an existing session by its id (merges with existing values)",
         "url": {
           "raw": "{{baseUrl}}/sessions/:id",
           "host": [
@@ -2513,7 +2371,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -2549,7 +2407,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Patch undefined by id (merge changes)",
+            "description": "Update an existing session by its id (merges with existing values)",
             "url": {
               "raw": "{{baseUrl}}/sessions/:id",
               "host": [
@@ -2563,7 +2421,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -2601,9 +2459,241 @@
     },
     {
       "_type": "endpoint",
+      "name": "History Route List",
+      "request": {
+        "description": "Get history of a Session (paginated)",
+        "url": {
+          "raw": "{{baseUrl}}/sessions/:id/history?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "sessions",
+            ":id",
+            "history"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "description": "Limit the number of items returned",
+              "value": "1"
+            },
+            {
+              "key": "offset",
+              "description": "Offset the items returned",
+              "value": "1"
+            },
+            {
+              "key": "sort_by",
+              "description": "Sort by a field",
+              "value": "created_at"
+            },
+            {
+              "key": "direction",
+              "description": "Sort direction",
+              "value": "asc"
+            },
+            {
+              "key": "metadata_filter",
+              "description": "JSON string of object that should be used to filter objects by metadata",
+              "value": "metadata_filter"
+            }
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent",
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Get history of a Session (paginated)",
+            "url": {
+              "raw": "{{baseUrl}}/sessions/:id/history?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                ":id",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "description": "Limit the number of items returned",
+                  "value": "1"
+                },
+                {
+                  "key": "offset",
+                  "description": "Offset the items returned",
+                  "value": "1"
+                },
+                {
+                  "key": "sort_by",
+                  "description": "Sort by a field",
+                  "value": "created_at"
+                },
+                {
+                  "key": "direction",
+                  "description": "Sort direction",
+                  "value": "asc"
+                },
+                {
+                  "key": "metadata_filter",
+                  "description": "JSON string of object that should be used to filter objects by metadata",
+                  "value": "metadata_filter"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent",
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null,
+            "body": null
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"results\": [\n        {\n            \"entries\": [\n                {\n                    \"role\": \"user\",\n                    \"content\": [],\n                    \"source\": \"api_request\",\n                    \"timestamp\": 1,\n                    \"created_at\": \"2024-01-15T09:30:00Z\",\n                    \"id\": \"id\"\n                }\n            ],\n            \"relations\": [\n                {\n                    \"head\": \"head\",\n                    \"relation\": \"relation\",\n                    \"tail\": \"tail\"\n                }\n            ],\n            \"session_id\": \"session_id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "History Route Delete",
+      "request": {
+        "description": "Clear the history of a Session (resets the Session)",
+        "url": {
+          "raw": "{{baseUrl}}/sessions/:id/history",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "sessions",
+            ":id",
+            "history"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of the resource",
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "DELETE",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Clear the history of a Session (resets the Session)",
+            "url": {
+              "raw": "{{baseUrl}}/sessions/:id/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                ":id",
+                "history"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of the resource",
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null,
+            "body": null
+          },
+          "description": "The request has been accepted for processing, but processing has not yet completed.",
+          "body": "{\n    \"id\": \"id\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
       "name": "Tasks Route List",
       "request": {
-        "description": "List undefined items",
+        "description": "List tasks (paginated)",
         "url": {
           "raw": "{{baseUrl}}/tasks?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -2615,12 +2705,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -2664,7 +2754,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items",
+            "description": "List tasks (paginated)",
             "url": {
               "raw": "{{baseUrl}}/tasks?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -2676,12 +2766,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -2720,7 +2810,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"name\": \"name\",\n            \"description\": \"description\",\n            \"main\": [],\n            \"tools\": [\n                {\n                    \"type\": \"function\",\n                    \"background\": true,\n                    \"interactive\": true\n                }\n            ],\n            \"inherit_tools\": true,\n            \"agent_id\": \"agent_id\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"name\": \"name\",\n            \"description\": \"description\",\n            \"main\": [],\n            \"tools\": [\n                {\n                    \"type\": \"function\",\n                    \"background\": true\n                }\n            ],\n            \"inherit_tools\": true,\n            \"agent_id\": \"agent_id\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2729,7 +2819,7 @@
       "_type": "endpoint",
       "name": "Tasks Route Create",
       "request": {
-        "description": "Create new undefined",
+        "description": "Create a new task",
         "url": {
           "raw": "{{baseUrl}}/tasks",
           "host": [
@@ -2758,7 +2848,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true,\n            \"interactive\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2772,7 +2862,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create new undefined",
+            "description": "Create a new task",
             "url": {
               "raw": "{{baseUrl}}/tasks",
               "host": [
@@ -2801,7 +2891,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true,\n            \"interactive\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2819,7 +2909,7 @@
       "_type": "endpoint",
       "name": "Tasks Route Create Or Update",
       "request": {
-        "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+        "description": "Create or update a task",
         "url": {
           "raw": "{{baseUrl}}/tasks",
           "host": [
@@ -2848,7 +2938,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true,\n            \"interactive\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2862,7 +2952,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+            "description": "Create or update a task",
             "url": {
               "raw": "{{baseUrl}}/tasks",
               "host": [
@@ -2891,7 +2981,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true,\n            \"interactive\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2909,7 +2999,7 @@
       "_type": "endpoint",
       "name": "Tasks Route Update",
       "request": {
-        "description": "Update undefined by id (overwrite)",
+        "description": "Update an existing task (overwrite existing values)",
         "url": {
           "raw": "{{baseUrl}}/tasks/:id",
           "host": [
@@ -2923,7 +3013,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -2945,7 +3035,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true,\n            \"interactive\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2959,7 +3049,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Update undefined by id (overwrite)",
+            "description": "Update an existing task (overwrite existing values)",
             "url": {
               "raw": "{{baseUrl}}/tasks/:id",
               "host": [
@@ -2973,7 +3063,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -2995,7 +3085,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true,\n            \"interactive\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3013,7 +3103,7 @@
       "_type": "endpoint",
       "name": "Tasks Route Delete",
       "request": {
-        "description": "Delete undefined by id",
+        "description": "Delete a task by its id",
         "url": {
           "raw": "{{baseUrl}}/tasks/:id",
           "host": [
@@ -3027,7 +3117,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -3055,7 +3145,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Delete undefined by id",
+            "description": "Delete a task by its id",
             "url": {
               "raw": "{{baseUrl}}/tasks/:id",
               "host": [
@@ -3069,7 +3159,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -3101,7 +3191,7 @@
       "_type": "endpoint",
       "name": "Tasks Route Patch",
       "request": {
-        "description": "Patch undefined by id (merge changes)",
+        "description": "Update an existing task (merges with existing values)",
         "url": {
           "raw": "{{baseUrl}}/tasks/:id",
           "host": [
@@ -3115,7 +3205,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -3151,7 +3241,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Patch undefined by id (merge changes)",
+            "description": "Update an existing task (merges with existing values)",
             "url": {
               "raw": "{{baseUrl}}/tasks/:id",
               "host": [
@@ -3165,7 +3255,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -3205,7 +3295,7 @@
       "_type": "endpoint",
       "name": "Task Executions Route List",
       "request": {
-        "description": "List undefined items of parent undefined",
+        "description": "List executions of the given task",
         "url": {
           "raw": "{{baseUrl}}/tasks/:id/executions?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -3219,12 +3309,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -3246,7 +3336,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent",
               "value": "id"
             }
           ]
@@ -3274,7 +3364,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items of parent undefined",
+            "description": "List executions of the given task",
             "url": {
               "raw": "{{baseUrl}}/tasks/:id/executions?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -3288,12 +3378,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -3315,7 +3405,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent",
                   "value": "id"
                 }
               ]
@@ -3347,7 +3437,7 @@
       "_type": "endpoint",
       "name": "Task Executions Route Create",
       "request": {
-        "description": "Create new undefined",
+        "description": "Create an execution for the given task",
         "url": {
           "raw": "{{baseUrl}}/tasks/:id/executions",
           "host": [
@@ -3362,7 +3452,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent resource",
               "value": "id"
             }
           ]
@@ -3398,7 +3488,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create new undefined",
+            "description": "Create an execution for the given task",
             "url": {
               "raw": "{{baseUrl}}/tasks/:id/executions",
               "host": [
@@ -3413,7 +3503,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent resource",
                   "value": "id"
                 }
               ]
@@ -3559,7 +3649,7 @@
       "_type": "endpoint",
       "name": "Tool Route Update",
       "request": {
-        "description": "Update undefined by id (overwrite)",
+        "description": "Update an existing tool (overwrite existing values)",
         "url": {
           "raw": "{{baseUrl}}/tools/:id",
           "host": [
@@ -3573,7 +3663,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -3595,7 +3685,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"type\": \"function\",\n    \"background\": true,\n    \"interactive\": true\n}",
+          "raw": "{\n    \"type\": \"function\",\n    \"background\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3609,7 +3699,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Update undefined by id (overwrite)",
+            "description": "Update an existing tool (overwrite existing values)",
             "url": {
               "raw": "{{baseUrl}}/tools/:id",
               "host": [
@@ -3623,7 +3713,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -3645,7 +3735,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"type\": \"function\",\n    \"background\": true,\n    \"interactive\": true\n}",
+              "raw": "{\n    \"type\": \"function\",\n    \"background\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3663,7 +3753,7 @@
       "_type": "endpoint",
       "name": "Tool Route Delete",
       "request": {
-        "description": "Delete undefined by id",
+        "description": "Delete an existing tool by id",
         "url": {
           "raw": "{{baseUrl}}/tools/:id",
           "host": [
@@ -3677,7 +3767,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -3705,7 +3795,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Delete undefined by id",
+            "description": "Delete an existing tool by id",
             "url": {
               "raw": "{{baseUrl}}/tools/:id",
               "host": [
@@ -3719,7 +3809,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -3751,7 +3841,7 @@
       "_type": "endpoint",
       "name": "Tool Route Patch",
       "request": {
-        "description": "Patch undefined by id (merge changes)",
+        "description": "Update an existing tool (merges with existing values)",
         "url": {
           "raw": "{{baseUrl}}/tools/:id",
           "host": [
@@ -3765,7 +3855,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -3801,7 +3891,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Patch undefined by id (merge changes)",
+            "description": "Update an existing tool (merges with existing values)",
             "url": {
               "raw": "{{baseUrl}}/tools/:id",
               "host": [
@@ -3815,7 +3905,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -3855,7 +3945,7 @@
       "_type": "endpoint",
       "name": "Users Route List",
       "request": {
-        "description": "List undefined items",
+        "description": "List users (paginated)",
         "url": {
           "raw": "{{baseUrl}}/users?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -3867,12 +3957,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -3916,7 +4006,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items",
+            "description": "List users (paginated)",
             "url": {
               "raw": "{{baseUrl}}/users?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -3928,12 +4018,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -3981,7 +4071,7 @@
       "_type": "endpoint",
       "name": "Users Route Create",
       "request": {
-        "description": "Create new undefined",
+        "description": "Create a new user",
         "url": {
           "raw": "{{baseUrl}}/users",
           "host": [
@@ -4024,7 +4114,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create new undefined",
+            "description": "Create a new user",
             "url": {
               "raw": "{{baseUrl}}/users",
               "host": [
@@ -4071,7 +4161,7 @@
       "_type": "endpoint",
       "name": "Users Route Create Or Update",
       "request": {
-        "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+        "description": "Create or update a user",
         "url": {
           "raw": "{{baseUrl}}/users",
           "host": [
@@ -4114,7 +4204,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Create or update undefined (ID is required in payload; existing resource will be overwritten)",
+            "description": "Create or update a user",
             "url": {
               "raw": "{{baseUrl}}/users",
               "host": [
@@ -4161,7 +4251,7 @@
       "_type": "endpoint",
       "name": "Users Route Get",
       "request": {
-        "description": "Get undefined by id",
+        "description": "Get a user by id",
         "url": {
           "raw": "{{baseUrl}}/users/:id",
           "host": [
@@ -4175,7 +4265,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -4203,7 +4293,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Get undefined by id",
+            "description": "Get a user by id",
             "url": {
               "raw": "{{baseUrl}}/users/:id",
               "host": [
@@ -4217,7 +4307,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -4249,7 +4339,7 @@
       "_type": "endpoint",
       "name": "Users Route Update",
       "request": {
-        "description": "Update undefined by id (overwrite)",
+        "description": "Update an existing user by id (overwrite existing values)",
         "url": {
           "raw": "{{baseUrl}}/users/:id",
           "host": [
@@ -4263,7 +4353,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -4299,7 +4389,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Update undefined by id (overwrite)",
+            "description": "Update an existing user by id (overwrite existing values)",
             "url": {
               "raw": "{{baseUrl}}/users/:id",
               "host": [
@@ -4313,7 +4403,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -4353,7 +4443,7 @@
       "_type": "endpoint",
       "name": "Users Route Delete",
       "request": {
-        "description": "Delete undefined by id",
+        "description": "Delete a user by id",
         "url": {
           "raw": "{{baseUrl}}/users/:id",
           "host": [
@@ -4367,7 +4457,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -4395,7 +4485,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Delete undefined by id",
+            "description": "Delete a user by id",
             "url": {
               "raw": "{{baseUrl}}/users/:id",
               "host": [
@@ -4409,7 +4499,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -4441,7 +4531,7 @@
       "_type": "endpoint",
       "name": "Users Route Patch",
       "request": {
-        "description": "Patch undefined by id (merge changes)",
+        "description": "Update an existing user by id (merge with existing values)",
         "url": {
           "raw": "{{baseUrl}}/users/:id",
           "host": [
@@ -4455,7 +4545,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of the undefined",
+              "description": "ID of the resource",
               "value": "id"
             }
           ]
@@ -4491,7 +4581,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "Patch undefined by id (merge changes)",
+            "description": "Update an existing user by id (merge with existing values)",
             "url": {
               "raw": "{{baseUrl}}/users/:id",
               "host": [
@@ -4505,7 +4595,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of the undefined",
+                  "description": "ID of the resource",
                   "value": "id"
                 }
               ]
@@ -4545,7 +4635,7 @@
       "_type": "endpoint",
       "name": "User Docs Route List",
       "request": {
-        "description": "List undefined items of parent undefined",
+        "description": "List Docs owned by a User",
         "url": {
           "raw": "{{baseUrl}}/users/:id/docs?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
           "host": [
@@ -4559,12 +4649,12 @@
           "query": [
             {
               "key": "limit",
-              "description": "Limit the number of undefined items returned",
+              "description": "Limit the number of items returned",
               "value": "1"
             },
             {
               "key": "offset",
-              "description": "Offset the undefined items returned",
+              "description": "Offset the items returned",
               "value": "1"
             },
             {
@@ -4586,7 +4676,7 @@
           "variable": [
             {
               "key": "id",
-              "description": "ID of parent undefined",
+              "description": "ID of parent",
               "value": "id"
             }
           ]
@@ -4614,7 +4704,7 @@
           "status": "OK",
           "code": 200,
           "originalRequest": {
-            "description": "List undefined items of parent undefined",
+            "description": "List Docs owned by a User",
             "url": {
               "raw": "{{baseUrl}}/users/:id/docs?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
               "host": [
@@ -4628,12 +4718,12 @@
               "query": [
                 {
                   "key": "limit",
-                  "description": "Limit the number of undefined items returned",
+                  "description": "Limit the number of items returned",
                   "value": "1"
                 },
                 {
                   "key": "offset",
-                  "description": "Offset the undefined items returned",
+                  "description": "Offset the items returned",
                   "value": "1"
                 },
                 {
@@ -4655,7 +4745,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "description": "ID of parent undefined",
+                  "description": "ID of parent",
                   "value": "id"
                 }
               ]
@@ -4687,7 +4777,7 @@
       "_type": "endpoint",
       "name": "User Docs Search Route Search",
       "request": {
-        "description": "Search for documents owned by undefined",
+        "description": "Search Docs owned by a User",
         "url": {
           "raw": "{{baseUrl}}/users/:id/search?limit=&offset=&sort_by=&direction=&metadata_filter=",
           "host": [
@@ -4702,12 +4792,12 @@
             {
               "key": "limit",
               "value": "",
-              "description": "Limit the number of undefined items returned"
+              "description": "Limit the number of items returned"
             },
             {
               "key": "offset",
               "value": "",
-              "description": "Offset the undefined items returned"
+              "description": "Offset the items returned"
             },
             {
               "key": "sort_by",
@@ -4729,7 +4819,7 @@
             {
               "key": "id",
               "value": "",
-              "description": "ID of the undefined"
+              "description": "ID of the parent"
             }
           ]
         },

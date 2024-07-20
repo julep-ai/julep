@@ -6,23 +6,27 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .entries_chat_ml_role import EntriesChatMlRole
+from .entry_content import EntryContent
+from .entry_source import EntrySource
 
 
-class AgentsRouteCreateOrUpdateResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class Entry(pydantic_v1.BaseModel):
+    role: EntriesChatMlRole
+    name: typing.Optional[str] = None
+    content: EntryContent
+    source: EntrySource
+    timestamp: int = pydantic_v1.Field()
     """
-    ID of updated undefined
+    This is the time that this event refers to.
     """
 
-    updated_at: dt.datetime = pydantic_v1.Field()
+    created_at: dt.datetime = pydantic_v1.Field()
     """
-    When this resource was updated as UTC date-time
+    When this resource was created as UTC date-time
     """
 
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
-    """
-    IDs (if any) of jobs created as part of this request
-    """
+    id: CommonUuid
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

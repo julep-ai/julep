@@ -6,23 +6,36 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .tools_function_def import ToolsFunctionDef
+from .tools_tool_type import ToolsToolType
 
 
-class TasksRouteCreateResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class Tool(pydantic_v1.BaseModel):
+    type: ToolsToolType = pydantic_v1.Field()
     """
-    ID of created undefined
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
 
+    background: bool = pydantic_v1.Field()
+    """
+    The tool should be run in the background (not supported at the moment)
+    """
+
+    function: typing.Optional[ToolsFunctionDef] = None
+    integration: typing.Optional[typing.Any] = None
+    system: typing.Optional[typing.Any] = None
+    api_call: typing.Optional[typing.Any] = None
     created_at: dt.datetime = pydantic_v1.Field()
     """
     When this resource was created as UTC date-time
     """
 
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
+    updated_at: dt.datetime = pydantic_v1.Field()
     """
-    IDs (if any) of jobs created as part of this request
+    When this resource was updated as UTC date-time
     """
+
+    id: CommonUuid
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

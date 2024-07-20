@@ -6,25 +6,51 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
-from .executions_execution_status import ExecutionsExecutionStatus
+from .sessions_context_overflow_type import SessionsContextOverflowType
 
 
-class ExecutionsExecution(pydantic_v1.BaseModel):
-    task_id: CommonUuid = pydantic_v1.Field()
+class Session(pydantic_v1.BaseModel):
+    user: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
     """
-    The ID of the task that the execution is running
-    """
-
-    status: ExecutionsExecutionStatus = pydantic_v1.Field()
-    """
-    The status of the execution
+    User ID of user associated with this session
     """
 
-    input: typing.Dict[str, typing.Any] = pydantic_v1.Field()
+    users: typing.Optional[typing.List[CommonUuid]] = None
+    agent: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
     """
-    The input to the execution
+    Agent ID of agent associated with this session
     """
 
+    agents: typing.Optional[typing.List[CommonUuid]] = None
+    situation: str = pydantic_v1.Field()
+    """
+    A specific situation that sets the background for this session
+    """
+
+    summary: typing.Optional[str] = pydantic_v1.Field(default=None)
+    """
+    Summary (null at the beginning) - generated automatically after every interaction
+    """
+
+    render_templates: bool = pydantic_v1.Field()
+    """
+    Render system and assistant message content as jinja templates
+    """
+
+    token_budget: typing.Optional[int] = pydantic_v1.Field(default=None)
+    """
+    Threshold value for the adaptive context functionality
+    """
+
+    context_overflow: typing.Optional[SessionsContextOverflowType] = pydantic_v1.Field(
+        default=None
+    )
+    """
+    Action to start on context window overflow
+    """
+
+    id: CommonUuid
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
     created_at: dt.datetime = pydantic_v1.Field()
     """
     When this resource was created as UTC date-time
@@ -35,8 +61,10 @@ class ExecutionsExecution(pydantic_v1.BaseModel):
     When this resource was updated as UTC date-time
     """
 
-    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
-    id: CommonUuid
+    kind: typing.Optional[str] = pydantic_v1.Field(default=None)
+    """
+    Discriminator property for Session.
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

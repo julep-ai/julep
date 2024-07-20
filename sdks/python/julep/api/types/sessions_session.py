@@ -8,6 +8,7 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .sessions_context_overflow_type import SessionsContextOverflowType
 
 
 class Base(pydantic_v1.BaseModel):
@@ -31,7 +32,9 @@ class Base(pydantic_v1.BaseModel):
     Threshold value for the adaptive context functionality
     """
 
-    context_overflow: typing.Optional[str] = pydantic_v1.Field(default=None)
+    context_overflow: typing.Optional[SessionsContextOverflowType] = pydantic_v1.Field(
+        default=None
+    )
     """
     Action to start on context window overflow
     """

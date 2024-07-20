@@ -5,23 +5,27 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_uuid import CommonUuid
+from .doc_content import DocContent
 
 
-class AgentsRoutePatchResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class Doc(pydantic_v1.BaseModel):
+    id: CommonUuid
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    created_at: dt.datetime = pydantic_v1.Field()
     """
-    ID of updated undefined
-    """
-
-    updated_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was updated as UTC date-time
+    When this resource was created as UTC date-time
     """
 
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
+    title: CommonIdentifierSafeUnicode = pydantic_v1.Field()
     """
-    IDs (if any) of jobs created as part of this request
+    Title describing what this document contains
+    """
+
+    content: DocContent = pydantic_v1.Field()
+    """
+    Contents of the document
     """
 
     def json(self, **kwargs: typing.Any) -> str:

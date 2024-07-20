@@ -11,7 +11,7 @@
 <dl>
 <dd>
 
-List undefined items
+List Agents (paginated)
 </dd>
 </dl>
 </dd>
@@ -54,7 +54,7 @@ client.agents_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -62,7 +62,7 @@ client.agents_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -118,7 +118,7 @@ client.agents_route_list(
 <dl>
 <dd>
 
-Create new undefined
+Create a new Agent
 </dd>
 </dl>
 </dd>
@@ -241,7 +241,7 @@ client.agents_route_create(
 <dl>
 <dd>
 
-Create or update undefined (ID is required in payload; existing resource will be overwritten)
+Create or update an Agent
 </dd>
 </dl>
 </dd>
@@ -364,7 +364,7 @@ client.agents_route_create_or_update(
 <dl>
 <dd>
 
-Get undefined by id
+Get an Agent by id
 </dd>
 </dl>
 </dd>
@@ -403,7 +403,7 @@ client.agents_route_get(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -435,7 +435,7 @@ client.agents_route_get(
 <dl>
 <dd>
 
-Update undefined by id (overwrite)
+Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)
 </dd>
 </dl>
 </dd>
@@ -478,7 +478,7 @@ client.agents_route_update(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -558,7 +558,7 @@ client.agents_route_update(
 <dl>
 <dd>
 
-Delete undefined by id
+Delete Agent by id
 </dd>
 </dl>
 </dd>
@@ -597,7 +597,7 @@ client.agents_route_delete(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -629,7 +629,7 @@ client.agents_route_delete(
 <dl>
 <dd>
 
-Patch undefined by id (merge changes)
+Update an existing Agent by id (merges with existing values)
 </dd>
 </dl>
 </dd>
@@ -668,7 +668,7 @@ client.agents_route_patch(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -748,7 +748,7 @@ client.agents_route_patch(
 <dl>
 <dd>
 
-List undefined items of parent undefined
+List Docs owned by an Agent
 </dd>
 </dl>
 </dd>
@@ -792,7 +792,7 @@ client.agent_docs_route_list(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent
     
 </dd>
 </dl>
@@ -800,7 +800,7 @@ client.agent_docs_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -808,7 +808,7 @@ client.agent_docs_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -864,7 +864,7 @@ client.agent_docs_route_list(
 <dl>
 <dd>
 
-Search for documents owned by undefined
+Search Docs owned by an Agent
 </dd>
 </dl>
 </dd>
@@ -917,7 +917,7 @@ client.agents_docs_search_route_search(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the parent
     
 </dd>
 </dl>
@@ -925,7 +925,7 @@ client.agents_docs_search_route_search(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -933,7 +933,7 @@ client.agents_docs_search_route_search(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -997,7 +997,7 @@ client.agents_docs_search_route_search(
 <dl>
 <dd>
 
-List undefined items of parent undefined
+List tools of the given agent
 </dd>
 </dl>
 </dd>
@@ -1041,7 +1041,7 @@ client.agent_tools_route_list(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent
     
 </dd>
 </dl>
@@ -1049,7 +1049,7 @@ client.agent_tools_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -1057,7 +1057,7 @@ client.agent_tools_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -1113,7 +1113,7 @@ client.agent_tools_route_list(
 <dl>
 <dd>
 
-Create new undefined
+Create a new tool for this agent
 </dd>
 </dl>
 </dd>
@@ -1157,7 +1157,7 @@ client.agent_tools_route_create(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent resource
     
 </dd>
 </dl>
@@ -1245,7 +1245,7 @@ client.agent_tools_route_create(
 <dl>
 <dd>
 
-Get undefined by id
+Get Doc by id
 </dd>
 </dl>
 </dd>
@@ -1284,7 +1284,7 @@ client.individual_docs_route_get(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -1316,7 +1316,7 @@ client.individual_docs_route_get(
 <dl>
 <dd>
 
-Delete undefined by id
+Delete an existing Doc by id
 </dd>
 </dl>
 </dd>
@@ -1355,7 +1355,81 @@ client.individual_docs_route_delete(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">embed_route_embed</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Embed a query for search
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import DocsEmbedQueryRequest
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.embed_route_embed(
+    body=DocsEmbedQueryRequest(
+        text="text",
+    ),
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**body:** `DocsEmbedQueryRequest` 
     
 </dd>
 </dl>
@@ -1387,7 +1461,7 @@ client.individual_docs_route_delete(
 <dl>
 <dd>
 
-Get undefined by id
+Get an Execution by id
 </dd>
 </dl>
 </dd>
@@ -1426,7 +1500,7 @@ client.executions_route_get(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -1458,7 +1532,7 @@ client.executions_route_get(
 <dl>
 <dd>
 
-Update undefined by id (overwrite)
+Update an existing Execution
 </dd>
 </dl>
 </dd>
@@ -1501,7 +1575,7 @@ client.executions_route_update(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -1541,7 +1615,7 @@ client.executions_route_update(
 <dl>
 <dd>
 
-List undefined items of parent undefined
+List the Transitions of an Execution by id
 </dd>
 </dl>
 </dd>
@@ -1585,7 +1659,7 @@ client.execution_transitions_route_list(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent
     
 </dd>
 </dl>
@@ -1593,7 +1667,7 @@ client.execution_transitions_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -1601,7 +1675,7 @@ client.execution_transitions_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -1657,7 +1731,7 @@ client.execution_transitions_route_list(
 <dl>
 <dd>
 
-Get undefined by id
+Get the status of an existing Job by its id
 </dd>
 </dl>
 </dd>
@@ -1696,7 +1770,7 @@ client.job_route_get(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -1728,7 +1802,7 @@ client.job_route_get(
 <dl>
 <dd>
 
-List undefined items
+List sessions (paginated)
 </dd>
 </dl>
 </dd>
@@ -1771,7 +1845,7 @@ client.sessions_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -1779,7 +1853,7 @@ client.sessions_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -1835,7 +1909,7 @@ client.sessions_route_list(
 <dl>
 <dd>
 
-Create new undefined
+Create a new session
 </dd>
 </dl>
 </dd>
@@ -1931,7 +2005,7 @@ client.sessions_route_create(
 <dl>
 <dd>
 
-**context_overflow:** `typing.Optional[str]` — Action to start on context window overflow
+**context_overflow:** `typing.Optional[SessionsContextOverflowType]` — Action to start on context window overflow
     
 </dd>
 </dl>
@@ -1971,7 +2045,7 @@ client.sessions_route_create(
 <dl>
 <dd>
 
-Create or update undefined (ID is required in payload; existing resource will be overwritten)
+Create or update a session
 </dd>
 </dl>
 </dd>
@@ -2076,7 +2150,373 @@ client.sessions_route_create_or_update(
 <dl>
 <dd>
 
-**context_overflow:** `typing.Optional[str]` — Action to start on context window overflow
+**context_overflow:** `typing.Optional[SessionsContextOverflowType]` — Action to start on context window overflow
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">sessions_route_get</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Get a session by id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.sessions_route_get(
+    id="string",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">sessions_route_update</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing session by its id (overwrites all existing values)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.sessions_route_update(
+    id="id",
+    situation="situation",
+    render_templates=True,
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**situation:** `str` — A specific situation that sets the background for this session
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**render_templates:** `bool` — Render system and assistant message content as jinja templates
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**token_budget:** `typing.Optional[int]` — Threshold value for the adaptive context functionality
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**context_overflow:** `typing.Optional[SessionsContextOverflowType]` — Action to start on context window overflow
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">sessions_route_delete</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Delete a session by its id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.sessions_route_delete(
+    id="id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">sessions_route_patch</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing session by its id (merges with existing values)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.sessions_route_patch(
+    id="id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**situation:** `typing.Optional[str]` — A specific situation that sets the background for this session
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**render_templates:** `typing.Optional[bool]` — Render system and assistant message content as jinja templates
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**token_budget:** `typing.Optional[int]` — Threshold value for the adaptive context functionality
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**context_overflow:** `typing.Optional[SessionsContextOverflowType]` — Action to start on context window overflow
     
 </dd>
 </dl>
@@ -2116,7 +2556,7 @@ client.sessions_route_create_or_update(
 <dl>
 <dd>
 
-List undefined items of parent undefined
+Get history of a Session (paginated)
 </dd>
 </dl>
 </dd>
@@ -2160,7 +2600,7 @@ client.history_route_list(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent
     
 </dd>
 </dl>
@@ -2168,7 +2608,7 @@ client.history_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -2176,7 +2616,7 @@ client.history_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -2232,7 +2672,7 @@ client.history_route_list(
 <dl>
 <dd>
 
-Delete undefined by id
+Clear the history of a Session (resets the Session)
 </dd>
 </dl>
 </dd>
@@ -2271,373 +2711,7 @@ client.history_route_delete(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">sessions_route_get</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Get undefined by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.sessions_route_get(
-    id="string",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the undefined
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">sessions_route_update</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update undefined by id (overwrite)
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.sessions_route_update(
-    id="id",
-    situation="situation",
-    render_templates=True,
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the undefined
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**situation:** `str` — A specific situation that sets the background for this session
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**render_templates:** `bool` — Render system and assistant message content as jinja templates
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**token_budget:** `typing.Optional[int]` — Threshold value for the adaptive context functionality
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**context_overflow:** `typing.Optional[str]` — Action to start on context window overflow
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">sessions_route_delete</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Delete undefined by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.sessions_route_delete(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the undefined
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">sessions_route_patch</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Patch undefined by id (merge changes)
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.sessions_route_patch(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the undefined
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**situation:** `typing.Optional[str]` — A specific situation that sets the background for this session
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**render_templates:** `typing.Optional[bool]` — Render system and assistant message content as jinja templates
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**token_budget:** `typing.Optional[int]` — Threshold value for the adaptive context functionality
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**context_overflow:** `typing.Optional[str]` — Action to start on context window overflow
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -2669,7 +2743,7 @@ client.sessions_route_patch(
 <dl>
 <dd>
 
-List undefined items
+List tasks (paginated)
 </dd>
 </dl>
 </dd>
@@ -2712,7 +2786,7 @@ client.tasks_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -2720,7 +2794,7 @@ client.tasks_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -2776,7 +2850,7 @@ client.tasks_route_list(
 <dl>
 <dd>
 
-Create new undefined
+Create a new task
 </dd>
 </dl>
 </dd>
@@ -2806,7 +2880,6 @@ client.tasks_route_create(
         ToolsCreateToolRequest(
             type="function",
             background=True,
-            interactive=True,
         )
     ],
     inherit_tools=True,
@@ -2874,6 +2947,14 @@ client.tasks_route_create(
 <dl>
 <dd>
 
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
     
 </dd>
@@ -2898,7 +2979,7 @@ client.tasks_route_create(
 <dl>
 <dd>
 
-Create or update undefined (ID is required in payload; existing resource will be overwritten)
+Create or update a task
 </dd>
 </dl>
 </dd>
@@ -2929,7 +3010,6 @@ client.tasks_route_create_or_update(
         ToolsCreateToolRequest(
             type="function",
             background=True,
-            interactive=True,
         )
     ],
     inherit_tools=True,
@@ -3005,6 +3085,14 @@ client.tasks_route_create_or_update(
 <dl>
 <dd>
 
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
     
 </dd>
@@ -3029,7 +3117,7 @@ client.tasks_route_create_or_update(
 <dl>
 <dd>
 
-Update undefined by id (overwrite)
+Update an existing task (overwrite existing values)
 </dd>
 </dl>
 </dd>
@@ -3059,7 +3147,6 @@ client.tasks_route_update(
         ToolsCreateToolRequest(
             type="function",
             background=True,
-            interactive=True,
         )
     ],
     inherit_tools=True,
@@ -3079,7 +3166,7 @@ client.tasks_route_update(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -3127,6 +3214,14 @@ client.tasks_route_update(
 <dl>
 <dd>
 
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
     
 </dd>
@@ -3151,7 +3246,7 @@ client.tasks_route_update(
 <dl>
 <dd>
 
-Delete undefined by id
+Delete a task by its id
 </dd>
 </dl>
 </dd>
@@ -3190,7 +3285,7 @@ client.tasks_route_delete(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -3222,7 +3317,7 @@ client.tasks_route_delete(
 <dl>
 <dd>
 
-Patch undefined by id (merge changes)
+Update an existing task (merges with existing values)
 </dd>
 </dl>
 </dd>
@@ -3261,7 +3356,7 @@ client.tasks_route_patch(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -3309,6 +3404,14 @@ client.tasks_route_patch(
 <dl>
 <dd>
 
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
     
 </dd>
@@ -3333,7 +3436,7 @@ client.tasks_route_patch(
 <dl>
 <dd>
 
-List undefined items of parent undefined
+List executions of the given task
 </dd>
 </dl>
 </dd>
@@ -3377,7 +3480,7 @@ client.task_executions_route_list(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent
     
 </dd>
 </dl>
@@ -3385,7 +3488,7 @@ client.task_executions_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -3393,7 +3496,7 @@ client.task_executions_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -3449,7 +3552,7 @@ client.task_executions_route_list(
 <dl>
 <dd>
 
-Create new undefined
+Create an execution for the given task
 </dd>
 </dl>
 </dd>
@@ -3489,7 +3592,7 @@ client.task_executions_route_create(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent resource
     
 </dd>
 </dl>
@@ -3498,6 +3601,14 @@ client.task_executions_route_create(
 <dd>
 
 **input:** `typing.Dict[str, typing.Any]` — The input to the execution
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
     
 </dd>
 </dl>
@@ -3617,7 +3728,7 @@ client.task_executions_route_resume_with_task_token(
 <dl>
 <dd>
 
-Update undefined by id (overwrite)
+Update an existing tool (overwrite existing values)
 </dd>
 </dl>
 </dd>
@@ -3642,7 +3753,6 @@ client.tool_route_update(
     id="id",
     type="function",
     background=True,
-    interactive=True,
 )
 
 ```
@@ -3659,7 +3769,7 @@ client.tool_route_update(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -3676,14 +3786,6 @@ client.tool_route_update(
 <dd>
 
 **background:** `bool` — The tool should be run in the background (not supported at the moment)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**interactive:** `bool` — Whether the tool that can be run interactively (response should contain "stop" boolean field)
     
 </dd>
 </dl>
@@ -3747,7 +3849,7 @@ client.tool_route_update(
 <dl>
 <dd>
 
-Delete undefined by id
+Delete an existing tool by id
 </dd>
 </dl>
 </dd>
@@ -3786,7 +3888,7 @@ client.tool_route_delete(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -3818,7 +3920,7 @@ client.tool_route_delete(
 <dl>
 <dd>
 
-Patch undefined by id (merge changes)
+Update an existing tool (merges with existing values)
 </dd>
 </dl>
 </dd>
@@ -3857,7 +3959,7 @@ client.tool_route_patch(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -3874,14 +3976,6 @@ client.tool_route_patch(
 <dd>
 
 **background:** `typing.Optional[bool]` — The tool should be run in the background (not supported at the moment)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**interactive:** `typing.Optional[bool]` — Whether the tool that can be run interactively (response should contain "stop" boolean field)
     
 </dd>
 </dl>
@@ -3945,7 +4039,7 @@ client.tool_route_patch(
 <dl>
 <dd>
 
-List undefined items
+List users (paginated)
 </dd>
 </dl>
 </dd>
@@ -3988,7 +4082,7 @@ client.users_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -3996,7 +4090,7 @@ client.users_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -4052,7 +4146,7 @@ client.users_route_list(
 <dl>
 <dd>
 
-Create new undefined
+Create a new user
 </dd>
 </dl>
 </dd>
@@ -4149,7 +4243,7 @@ client.users_route_create(
 <dl>
 <dd>
 
-Create or update undefined (ID is required in payload; existing resource will be overwritten)
+Create or update a user
 </dd>
 </dl>
 </dd>
@@ -4246,7 +4340,7 @@ client.users_route_create_or_update(
 <dl>
 <dd>
 
-Get undefined by id
+Get a user by id
 </dd>
 </dl>
 </dd>
@@ -4285,7 +4379,7 @@ client.users_route_get(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -4317,7 +4411,7 @@ client.users_route_get(
 <dl>
 <dd>
 
-Update undefined by id (overwrite)
+Update an existing user by id (overwrite existing values)
 </dd>
 </dl>
 </dd>
@@ -4358,7 +4452,7 @@ client.users_route_update(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -4414,7 +4508,7 @@ client.users_route_update(
 <dl>
 <dd>
 
-Delete undefined by id
+Delete a user by id
 </dd>
 </dl>
 </dd>
@@ -4453,7 +4547,7 @@ client.users_route_delete(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -4485,7 +4579,7 @@ client.users_route_delete(
 <dl>
 <dd>
 
-Patch undefined by id (merge changes)
+Update an existing user by id (merge with existing values)
 </dd>
 </dl>
 </dd>
@@ -4524,7 +4618,7 @@ client.users_route_patch(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -4580,7 +4674,7 @@ client.users_route_patch(
 <dl>
 <dd>
 
-List undefined items of parent undefined
+List Docs owned by a User
 </dd>
 </dl>
 </dd>
@@ -4624,7 +4718,7 @@ client.user_docs_route_list(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of parent undefined
+**id:** `CommonUuid` — ID of parent
     
 </dd>
 </dl>
@@ -4632,7 +4726,7 @@ client.user_docs_route_list(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -4640,7 +4734,7 @@ client.user_docs_route_list(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>
@@ -4696,7 +4790,7 @@ client.user_docs_route_list(
 <dl>
 <dd>
 
-Search for documents owned by undefined
+Search Docs owned by a User
 </dd>
 </dl>
 </dd>
@@ -4749,7 +4843,7 @@ client.user_docs_search_route_search(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the undefined
+**id:** `CommonUuid` — ID of the parent
     
 </dd>
 </dl>
@@ -4757,7 +4851,7 @@ client.user_docs_search_route_search(
 <dl>
 <dd>
 
-**limit:** `CommonLimit` — Limit the number of undefined items returned
+**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -4765,7 +4859,7 @@ client.user_docs_search_route_search(
 <dl>
 <dd>
 
-**offset:** `CommonOffset` — Offset the undefined items returned
+**offset:** `CommonOffset` — Offset the items returned
     
 </dd>
 </dl>

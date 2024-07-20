@@ -7,8 +7,8 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .common_py_expression import CommonPyExpression
 from .common_tool_ref import CommonToolRef
-from .tasks_cel import TasksCel
 from .tasks_prompt_step_prompt import TasksPromptStepPrompt
 from .tasks_prompt_step_settings import TasksPromptStepSettings
 
@@ -52,7 +52,7 @@ class TasksWorkflowStep_ToolCall(pydantic_v1.BaseModel):
 
 class TasksWorkflowStep_Yield(pydantic_v1.BaseModel):
     workflow: str
-    arguments: typing.Dict[str, TasksCel]
+    arguments: typing.Dict[str, CommonPyExpression]
     kind: typing.Literal["yield"] = "yield"
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -125,7 +125,7 @@ class TasksWorkflowStep_Prompt(pydantic_v1.BaseModel):
 
 
 class TasksWorkflowStep_Evaluate(pydantic_v1.BaseModel):
-    evaluate: typing.Dict[str, TasksCel]
+    evaluate: typing.Dict[str, CommonPyExpression]
     kind: typing.Literal["evaluate"] = "evaluate"
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -161,7 +161,7 @@ class TasksWorkflowStep_Evaluate(pydantic_v1.BaseModel):
 
 
 class TasksWorkflowStep_IfElse(pydantic_v1.BaseModel):
-    if_: TasksCel = pydantic_v1.Field(alias="if")
+    if_: CommonPyExpression = pydantic_v1.Field(alias="if")
     then: TasksWorkflowStep
     else_: TasksWorkflowStep = pydantic_v1.Field(alias="else")
     kind: typing.Literal["if_else"] = "if_else"

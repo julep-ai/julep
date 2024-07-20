@@ -6,22 +6,24 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .transition_type import TransitionType
 
 
-class SessionsRouteCreateOrUpdateResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
+class Transition(pydantic_v1.BaseModel):
+    type: TransitionType
+    execution_id: CommonUuid
+    outputs: typing.Dict[str, typing.Any]
+    current: typing.List[typing.Any]
+    next: typing.Optional[typing.List[typing.Any]] = None
+    id: CommonUuid
+    created_at: dt.datetime = pydantic_v1.Field()
     """
-    ID of updated undefined
+    When this resource was created as UTC date-time
     """
 
     updated_at: dt.datetime = pydantic_v1.Field()
     """
     When this resource was updated as UTC date-time
-    """
-
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
-    """
-    IDs (if any) of jobs created as part of this request
     """
 
     def json(self, **kwargs: typing.Any) -> str:

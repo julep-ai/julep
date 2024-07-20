@@ -2,16 +2,14 @@
 
 import typing
 
+from .tasks_prompt_step_settings_agent import TasksPromptStepSettingsAgent
 from .tasks_prompt_step_settings_frequency_penalty import (
     TasksPromptStepSettingsFrequencyPenalty,
-)
-from .tasks_prompt_step_settings_length_penalty import (
-    TasksPromptStepSettingsLengthPenalty,
 )
 from .tasks_prompt_step_settings_preset import TasksPromptStepSettingsPreset
 
 TasksPromptStepSettings = typing.Union[
     TasksPromptStepSettingsPreset,
     TasksPromptStepSettingsFrequencyPenalty,
-    TasksPromptStepSettingsLengthPenalty,
+    TasksPromptStepSettingsAgent,
 ]

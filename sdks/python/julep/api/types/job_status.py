@@ -5,23 +5,46 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_uuid import CommonUuid
+from .jobs_job_state import JobsJobState
 
 
-class SessionsRouteCreateResponse(pydantic_v1.BaseModel):
-    id: CommonUuid = pydantic_v1.Field()
-    """
-    ID of created undefined
-    """
-
+class JobStatus(pydantic_v1.BaseModel):
+    id: CommonUuid
     created_at: dt.datetime = pydantic_v1.Field()
     """
     When this resource was created as UTC date-time
     """
 
-    jobs: typing.List[CommonUuid] = pydantic_v1.Field()
+    updated_at: dt.datetime = pydantic_v1.Field()
     """
-    IDs (if any) of jobs created as part of this request
+    When this resource was updated as UTC date-time
+    """
+
+    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
+    """
+    Name of the job
+    """
+
+    reason: str = pydantic_v1.Field()
+    """
+    Reason for the current state of the job
+    """
+
+    has_progress: bool = pydantic_v1.Field()
+    """
+    Whether this Job supports progress updates
+    """
+
+    progress: float = pydantic_v1.Field()
+    """
+    Progress percentage
+    """
+
+    state: JobsJobState = pydantic_v1.Field()
+    """
+    Current state of the job
     """
 
     def json(self, **kwargs: typing.Any) -> str:
