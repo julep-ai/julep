@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_CEL } from "./Tasks_CEL";
+import type { Common_PyExpression } from "./Common_PyExpression";
 import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
 export type Tasks_IfElseWorkflowStep = Tasks_WorkflowStep & {
   /**
    * The condition to evaluate
    */
-  if: Tasks_CEL;
+  if: Common_PyExpression;
   /**
    * The steps to run if the condition is true
    */

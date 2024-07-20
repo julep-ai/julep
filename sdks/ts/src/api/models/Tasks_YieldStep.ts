@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_CEL } from "./Tasks_CEL";
+import type { Common_PyExpression } from "./Common_PyExpression";
 import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
 export type Tasks_YieldStep = Tasks_WorkflowStep & {
   /**
@@ -12,5 +12,5 @@ export type Tasks_YieldStep = Tasks_WorkflowStep & {
   /**
    * The input parameters for the subworkflow
    */
-  arguments: Record<string, Tasks_CEL>;
+  arguments: Record<string, Common_PyExpression>;
 };

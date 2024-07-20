@@ -16,10 +16,6 @@ export type Tools_PatchToolRequest = {
    * The tool should be run in the background (not supported at the moment)
    */
   background?: boolean;
-  /**
-   * Whether the tool that can be run interactively (response should contain "stop" boolean field)
-   */
-  interactive?: boolean;
   function?: Tools_FunctionDefUpdate;
   integration?: any;
   system?: any;

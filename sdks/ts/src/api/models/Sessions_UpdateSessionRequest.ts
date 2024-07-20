@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Sessions_ContextOverflowType } from "./Sessions_ContextOverflowType";
 /**
  * Payload for updating a session
  */
@@ -21,6 +22,6 @@ export type Sessions_UpdateSessionRequest = {
   /**
    * Action to start on context window overflow
    */
-  context_overflow: string | null;
+  context_overflow: Sessions_ContextOverflowType | null;
   metadata?: Record<string, any>;
 };

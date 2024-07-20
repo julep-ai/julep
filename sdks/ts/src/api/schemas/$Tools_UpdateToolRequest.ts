@@ -20,11 +20,6 @@ export const $Tools_UpdateToolRequest = {
       description: `The tool should be run in the background (not supported at the moment)`,
       isRequired: true,
     },
-    interactive: {
-      type: "boolean",
-      description: `Whether the tool that can be run interactively (response should contain "stop" boolean field)`,
-      isRequired: true,
-    },
     function: {
       type: "Tools_FunctionDef",
     },

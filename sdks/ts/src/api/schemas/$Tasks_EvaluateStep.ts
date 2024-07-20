@@ -13,7 +13,7 @@ export const $Tasks_EvaluateStep = {
         evaluate: {
           type: "dictionary",
           contains: {
-            type: "Tasks_CEL",
+            type: "Common_PyExpression",
           },
           isRequired: true,
         },

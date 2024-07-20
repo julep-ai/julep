@@ -18,10 +18,6 @@ export const $Tools_PatchToolRequest = {
       type: "boolean",
       description: `The tool should be run in the background (not supported at the moment)`,
     },
-    interactive: {
-      type: "boolean",
-      description: `Whether the tool that can be run interactively (response should contain "stop" boolean field)`,
-    },
     function: {
       type: "Tools_FunctionDefUpdate",
     },

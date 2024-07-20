@@ -7,7 +7,7 @@ from agents_api.autogen.openapi_model import (
     Role,
     ChatMLImageContentPart,
     ChatMLTextContentPart,
-    Detail,
+    ImageDetail,
 )
 from agents_api.common.utils.datetime import utcnow
 
@@ -55,7 +55,7 @@ class Entry(BaseModel):
                     elif isinstance(part, ChatMLImageContentPart):
                         content_length += (
                             LOW_IMAGE_TOKEN_COUNT
-                            if part.image_url.detail == Detail.low
+                            if part.image_url.detail == ImageDetail.low
                             else HIGH_IMAGE_TOKEN_COUNT
                         )
 

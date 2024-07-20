@@ -12,5 +12,11 @@ export const $Executions_CreateExecutionRequest = {
       },
       isRequired: true,
     },
+    metadata: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+    },
   },
 } as const;

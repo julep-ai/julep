@@ -9,10 +9,15 @@ import type { Agents_PatchAgentRequest } from "../models/Agents_PatchAgentReques
 import type { Agents_UpdateAgentRequest } from "../models/Agents_UpdateAgentRequest";
 import type { Common_limit } from "../models/Common_limit";
 import type { Common_offset } from "../models/Common_offset";
+import type { Common_ResourceCreatedResponse } from "../models/Common_ResourceCreatedResponse";
+import type { Common_ResourceDeletedResponse } from "../models/Common_ResourceDeletedResponse";
+import type { Common_ResourceUpdatedResponse } from "../models/Common_ResourceUpdatedResponse";
 import type { Common_uuid } from "../models/Common_uuid";
 import type { Docs_Doc } from "../models/Docs_Doc";
 import type { Docs_DocReference } from "../models/Docs_DocReference";
 import type { Docs_DocSearchRequest } from "../models/Docs_DocSearchRequest";
+import type { Docs_EmbedQueryRequest } from "../models/Docs_EmbedQueryRequest";
+import type { Docs_EmbedQueryResponse } from "../models/Docs_EmbedQueryResponse";
 import type { Entries_History } from "../models/Entries_History";
 import type { Executions_CreateExecutionRequest } from "../models/Executions_CreateExecutionRequest";
 import type { Executions_Execution } from "../models/Executions_Execution";
@@ -43,7 +48,7 @@ import type { BaseHttpRequest } from "../core/BaseHttpRequest";
 export class DefaultService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
   /**
-   * List undefined items
+   * List Agents (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -55,11 +60,11 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -90,28 +95,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create new undefined
-   * @returns any The request has succeeded and a new resource has been created as a result.
+   * Create a new Agent
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public agentsRouteCreate({
     requestBody,
   }: {
     requestBody: Agents_CreateAgentRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of created undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was created as UTC date-time
-     */
-    readonly created_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents",
@@ -120,28 +112,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create or update undefined (ID is required in payload; existing resource will be overwritten)
-   * @returns any The request has succeeded.
+   * Create or update an Agent
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public agentsRouteCreateOrUpdate({
     requestBody,
   }: {
     requestBody: Agents_CreateOrUpdateAgentRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/agents",
@@ -150,8 +129,8 @@ export class DefaultService {
     });
   }
   /**
-   * Update undefined by id (overwrite)
-   * @returns any The request has succeeded.
+   * Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public agentsRouteUpdate({
@@ -159,24 +138,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Agents_UpdateAgentRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/agents/{id}",
@@ -188,8 +154,8 @@ export class DefaultService {
     });
   }
   /**
-   * Patch undefined by id (merge changes)
-   * @returns any The request has succeeded.
+   * Update an existing Agent by id (merges with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public agentsRoutePatch({
@@ -197,24 +163,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Agents_PatchAgentRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PATCH",
       url: "/agents/{id}",
@@ -226,31 +179,18 @@ export class DefaultService {
     });
   }
   /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
+   * Delete Agent by id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
    */
   public agentsRouteDelete({
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/agents/{id}",
@@ -260,7 +200,7 @@ export class DefaultService {
     });
   }
   /**
-   * Get undefined by id
+   * Get an Agent by id
    * @returns Agents_Agent The request has succeeded.
    * @throws ApiError
    */
@@ -268,7 +208,7 @@ export class DefaultService {
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
   }): CancelablePromise<Agents_Agent> {
@@ -281,7 +221,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items of parent undefined
+   * List Docs owned by an Agent
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -294,15 +234,15 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent
      */
     id: Common_uuid;
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -336,7 +276,7 @@ export class DefaultService {
     });
   }
   /**
-   * Search for documents owned by undefined
+   * Search Docs owned by an Agent
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -350,18 +290,18 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of the undefined
+     * ID of the parent
      */
     id: Common_uuid;
     requestBody: {
       body: Docs_DocSearchRequest;
     };
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -397,7 +337,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items of parent undefined
+   * List tools of the given agent
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -410,15 +350,15 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent
      */
     id: Common_uuid;
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -452,8 +392,8 @@ export class DefaultService {
     });
   }
   /**
-   * Create new undefined
-   * @returns any The request has succeeded and a new resource has been created as a result.
+   * Create a new tool for this agent
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public agentToolsRouteCreate({
@@ -461,24 +401,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent resource
      */
     id: Common_uuid;
     requestBody: Agents_CreateAgentRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of created undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was created as UTC date-time
-     */
-    readonly created_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents/{id}/tools",
@@ -490,7 +417,7 @@ export class DefaultService {
     });
   }
   /**
-   * Get undefined by id
+   * Get Doc by id
    * @returns Docs_Doc The request has succeeded.
    * @throws ApiError
    */
@@ -498,7 +425,7 @@ export class DefaultService {
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
   }): CancelablePromise<Docs_Doc> {
@@ -511,31 +438,18 @@ export class DefaultService {
     });
   }
   /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
+   * Delete an existing Doc by id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
    */
   public individualDocsRouteDelete({
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/docs/{id}",
@@ -545,8 +459,27 @@ export class DefaultService {
     });
   }
   /**
-   * Update undefined by id (overwrite)
-   * @returns any The request has succeeded.
+   * Embed a query for search
+   * @returns Docs_EmbedQueryResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public embedRouteEmbed({
+    requestBody,
+  }: {
+    requestBody: {
+      body: Docs_EmbedQueryRequest;
+    };
+  }): CancelablePromise<Docs_EmbedQueryResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/embed",
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Update an existing Execution
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public executionsRouteUpdate({
@@ -554,24 +487,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Executions_UpdateExecutionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/executions/{id}",
@@ -583,7 +503,7 @@ export class DefaultService {
     });
   }
   /**
-   * Get undefined by id
+   * Get an Execution by id
    * @returns Executions_Execution The request has succeeded.
    * @throws ApiError
    */
@@ -591,7 +511,7 @@ export class DefaultService {
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
   }): CancelablePromise<Executions_Execution> {
@@ -604,7 +524,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items of parent undefined
+   * List the Transitions of an Execution by id
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -617,15 +537,15 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent
      */
     id: Common_uuid;
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -661,7 +581,7 @@ export class DefaultService {
     });
   }
   /**
-   * Get undefined by id
+   * Get the status of an existing Job by its id
    * @returns Jobs_JobStatus The request has succeeded.
    * @throws ApiError
    */
@@ -669,7 +589,7 @@ export class DefaultService {
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
   }): CancelablePromise<Jobs_JobStatus> {
@@ -682,7 +602,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items
+   * List sessions (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -694,11 +614,11 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -729,28 +649,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create new undefined
-   * @returns any The request has succeeded and a new resource has been created as a result.
+   * Create a new session
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public sessionsRouteCreate({
     requestBody,
   }: {
     requestBody: Sessions_CreateSessionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of created undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was created as UTC date-time
-     */
-    readonly created_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/sessions",
@@ -759,28 +666,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create or update undefined (ID is required in payload; existing resource will be overwritten)
-   * @returns any The request has succeeded.
+   * Create or update a session
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public sessionsRouteCreateOrUpdate({
     requestBody,
   }: {
     requestBody: Sessions_CreateOrUpdateSessionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/sessions",
@@ -789,7 +683,99 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items of parent undefined
+   * Update an existing session by its id (overwrites all existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public sessionsRouteUpdate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+    requestBody: Sessions_UpdateSessionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/sessions/{id}",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Update an existing session by its id (merges with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public sessionsRoutePatch({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+    requestBody: Sessions_PatchSessionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PATCH",
+      url: "/sessions/{id}",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Delete a session by its id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public sessionsRouteDelete({
+    id,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/sessions/{id}",
+      path: {
+        id: id,
+      },
+    });
+  }
+  /**
+   * Get a session by id
+   * @returns Sessions_Session The request has succeeded.
+   * @throws ApiError
+   */
+  public sessionsRouteGet({
+    id,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+  }): CancelablePromise<Sessions_Session> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/sessions/{id}",
+      path: {
+        id: id,
+      },
+    });
+  }
+  /**
+   * Get history of a Session (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -802,15 +788,15 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent
      */
     id: Common_uuid;
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -830,7 +816,7 @@ export class DefaultService {
   }> {
     return this.httpRequest.request({
       method: "GET",
-      url: "/sessions/history/{id}",
+      url: "/sessions/{id}/history",
       path: {
         id: id,
       },
@@ -844,172 +830,28 @@ export class DefaultService {
     });
   }
   /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
+   * Clear the history of a Session (resets the Session)
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
    */
   public historyRouteDelete({
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
-      url: "/sessions/history/{id}",
+      url: "/sessions/{id}/history",
       path: {
         id: id,
       },
     });
   }
   /**
-   * Update undefined by id (overwrite)
-   * @returns any The request has succeeded.
-   * @throws ApiError
-   */
-  public sessionsRouteUpdate({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of the undefined
-     */
-    id: Common_uuid;
-    requestBody: Sessions_UpdateSessionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/sessions/{id}",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Patch undefined by id (merge changes)
-   * @returns any The request has succeeded.
-   * @throws ApiError
-   */
-  public sessionsRoutePatch({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of the undefined
-     */
-    id: Common_uuid;
-    requestBody: Sessions_PatchSessionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
-    return this.httpRequest.request({
-      method: "PATCH",
-      url: "/sessions/{id}",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
-   * @throws ApiError
-   */
-  public sessionsRouteDelete({
-    id,
-  }: {
-    /**
-     * ID of the undefined
-     */
-    id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
-    return this.httpRequest.request({
-      method: "DELETE",
-      url: "/sessions/{id}",
-      path: {
-        id: id,
-      },
-    });
-  }
-  /**
-   * Get undefined by id
-   * @returns Sessions_Session The request has succeeded.
-   * @throws ApiError
-   */
-  public sessionsRouteGet({
-    id,
-  }: {
-    /**
-     * ID of the undefined
-     */
-    id: Common_uuid;
-  }): CancelablePromise<Sessions_Session> {
-    return this.httpRequest.request({
-      method: "GET",
-      url: "/sessions/{id}",
-      path: {
-        id: id,
-      },
-    });
-  }
-  /**
-   * List undefined items
+   * List tasks (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -1021,11 +863,11 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -1056,28 +898,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create or update undefined (ID is required in payload; existing resource will be overwritten)
-   * @returns any The request has succeeded.
+   * Create or update a task
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public tasksRouteCreateOrUpdate({
     requestBody,
   }: {
     requestBody: Tasks_CreateOrUpdateTaskRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/tasks",
@@ -1086,28 +915,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create new undefined
-   * @returns any The request has succeeded and a new resource has been created as a result.
+   * Create a new task
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public tasksRouteCreate({
     requestBody,
   }: {
     requestBody: Tasks_CreateTaskRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of created undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was created as UTC date-time
-     */
-    readonly created_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/tasks",
@@ -1116,8 +932,8 @@ export class DefaultService {
     });
   }
   /**
-   * Update undefined by id (overwrite)
-   * @returns any The request has succeeded.
+   * Update an existing task (overwrite existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public tasksRouteUpdate({
@@ -1125,24 +941,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Tasks_UpdateTaskRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/tasks/{id}",
@@ -1154,8 +957,8 @@ export class DefaultService {
     });
   }
   /**
-   * Patch undefined by id (merge changes)
-   * @returns any The request has succeeded.
+   * Update an existing task (merges with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public tasksRoutePatch({
@@ -1163,24 +966,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Tasks_PatchTaskRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PATCH",
       url: "/tasks/{id}",
@@ -1192,31 +982,18 @@ export class DefaultService {
     });
   }
   /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
+   * Delete a task by its id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
    */
   public tasksRouteDelete({
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/tasks/{id}",
@@ -1226,8 +1003,8 @@ export class DefaultService {
     });
   }
   /**
-   * Create new undefined
-   * @returns any The request has succeeded and a new resource has been created as a result.
+   * Create an execution for the given task
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public taskExecutionsRouteCreate({
@@ -1235,24 +1012,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent resource
      */
     id: Common_uuid;
     requestBody: Executions_CreateExecutionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of created undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was created as UTC date-time
-     */
-    readonly created_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/tasks/{id}/executions",
@@ -1264,7 +1028,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items of parent undefined
+   * List executions of the given task
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -1277,15 +1041,15 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent
      */
     id: Common_uuid;
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -1320,7 +1084,7 @@ export class DefaultService {
   }
   /**
    * Resume an execution with a task token
-   * @returns any The request has succeeded.
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public taskExecutionsRouteResumeWithTaskToken({
@@ -1335,20 +1099,7 @@ export class DefaultService {
      * Request to resume an execution with a task token
      */
     requestBody: Executions_TaskTokenResumeExecutionRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/tasks/{id}/executions",
@@ -1360,8 +1111,8 @@ export class DefaultService {
     });
   }
   /**
-   * Update undefined by id (overwrite)
-   * @returns any The request has succeeded.
+   * Update an existing tool (overwrite existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public toolRouteUpdate({
@@ -1369,24 +1120,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Tools_UpdateToolRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/tools/{id}",
@@ -1398,8 +1136,8 @@ export class DefaultService {
     });
   }
   /**
-   * Patch undefined by id (merge changes)
-   * @returns any The request has succeeded.
+   * Update an existing tool (merges with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public toolRoutePatch({
@@ -1407,24 +1145,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Tools_PatchToolRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PATCH",
       url: "/tools/{id}",
@@ -1436,31 +1161,18 @@ export class DefaultService {
     });
   }
   /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
+   * Delete an existing tool by id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
    */
   public toolRouteDelete({
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/tools/{id}",
@@ -1470,7 +1182,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items
+   * List users (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -1482,11 +1194,11 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -1517,28 +1229,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create new undefined
-   * @returns any The request has succeeded and a new resource has been created as a result.
+   * Create a new user
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public usersRouteCreate({
     requestBody,
   }: {
     requestBody: Users_CreateUserRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of created undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was created as UTC date-time
-     */
-    readonly created_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/users",
@@ -1547,28 +1246,15 @@ export class DefaultService {
     });
   }
   /**
-   * Create or update undefined (ID is required in payload; existing resource will be overwritten)
-   * @returns any The request has succeeded.
+   * Create or update a user
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public usersRouteCreateOrUpdate({
     requestBody,
   }: {
     requestBody: Users_CreateOrUpdateUserRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/users",
@@ -1577,8 +1263,8 @@ export class DefaultService {
     });
   }
   /**
-   * Update undefined by id (overwrite)
-   * @returns any The request has succeeded.
+   * Update an existing user by id (overwrite existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public usersRouteUpdate({
@@ -1586,24 +1272,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Users_UpdateUserRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
       url: "/users/{id}",
@@ -1615,8 +1288,8 @@ export class DefaultService {
     });
   }
   /**
-   * Patch undefined by id (merge changes)
-   * @returns any The request has succeeded.
+   * Update an existing user by id (merge with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
   public usersRoutePatch({
@@ -1624,24 +1297,11 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
     requestBody: Users_PatchUserRequest;
-  }): CancelablePromise<{
-    /**
-     * ID of updated undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was updated as UTC date-time
-     */
-    readonly updated_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PATCH",
       url: "/users/{id}",
@@ -1653,31 +1313,18 @@ export class DefaultService {
     });
   }
   /**
-   * Delete undefined by id
-   * @returns any The request has been accepted for processing, but processing has not yet completed.
+   * Delete a user by id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
    */
   public usersRouteDelete({
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
-  }): CancelablePromise<{
-    /**
-     * ID of deleted undefined
-     */
-    id: Common_uuid;
-    /**
-     * When this resource was deleted as UTC date-time
-     */
-    readonly deleted_at: string;
-    /**
-     * IDs (if any) of jobs created as part of this request
-     */
-    jobs: Array<Common_uuid>;
-  }> {
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
     return this.httpRequest.request({
       method: "DELETE",
       url: "/users/{id}",
@@ -1687,7 +1334,7 @@ export class DefaultService {
     });
   }
   /**
-   * Get undefined by id
+   * Get a user by id
    * @returns Users_User The request has succeeded.
    * @throws ApiError
    */
@@ -1695,7 +1342,7 @@ export class DefaultService {
     id,
   }: {
     /**
-     * ID of the undefined
+     * ID of the resource
      */
     id: Common_uuid;
   }): CancelablePromise<Users_User> {
@@ -1708,7 +1355,7 @@ export class DefaultService {
     });
   }
   /**
-   * List undefined items of parent undefined
+   * List Docs owned by a User
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -1721,15 +1368,15 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of parent undefined
+     * ID of parent
      */
     id: Common_uuid;
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**
@@ -1763,7 +1410,7 @@ export class DefaultService {
     });
   }
   /**
-   * Search for documents owned by undefined
+   * Search Docs owned by a User
    * @returns any The request has succeeded.
    * @throws ApiError
    */
@@ -1777,18 +1424,18 @@ export class DefaultService {
     metadataFilter = "{}",
   }: {
     /**
-     * ID of the undefined
+     * ID of the parent
      */
     id: Common_uuid;
     requestBody: {
       body: Docs_DocSearchRequest;
     };
     /**
-     * Limit the number of undefined items returned
+     * Limit the number of items returned
      */
     limit?: Common_limit;
     /**
-     * Offset the undefined items returned
+     * Offset the items returned
      */
     offset: Common_offset;
     /**

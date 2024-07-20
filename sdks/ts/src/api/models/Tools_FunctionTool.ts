@@ -8,7 +8,6 @@ export type Tools_FunctionTool = Tools_Tool & {
   function: Tools_FunctionDef;
   type: "function";
   background: boolean;
-  interactive: boolean;
   /**
    * The function to call
    */

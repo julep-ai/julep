@@ -18,7 +18,7 @@ export const $Tasks_YieldStep = {
         arguments: {
           type: "dictionary",
           contains: {
-            type: "Tasks_CEL",
+            type: "Common_PyExpression",
           },
           isRequired: true,
         },

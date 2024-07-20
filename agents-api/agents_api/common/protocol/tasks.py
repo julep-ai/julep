@@ -9,10 +9,10 @@ from ...autogen.openapi_model import (
     Session,
     Tool,
     FunctionDef,
-    PromptWorkflowStep,
-    EvaluateWorkflowStep,
-    YieldWorkflowStep,
-    ToolCallWorkflowStep,
+    PromptStep,
+    EvaluateStep,
+    YieldStep,
+    ToolCallStep,
     ErrorWorkflowStep,
     IfElseWorkflowStep,
     Task,
@@ -23,10 +23,10 @@ from ...models.execution.get_execution_input import get_execution_input_query
 from ..utils.cozo import uuid_int_list_to_uuid4
 
 WorkflowStep = (
-    PromptWorkflowStep
-    | EvaluateWorkflowStep
-    | YieldWorkflowStep
-    | ToolCallWorkflowStep
+    PromptStep
+    | EvaluateStep
+    | YieldStep
+    | ToolCallStep
     | ErrorWorkflowStep
     | IfElseWorkflowStep
 )

@@ -41,6 +41,12 @@ export const $Executions_Execution = {
       isRequired: true,
       format: "date-time",
     },
+    metadata: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+    },
     id: {
       type: "all-of",
       contains: [

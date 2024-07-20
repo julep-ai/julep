@@ -80,6 +80,15 @@ export const $Tasks_PromptStep = {
                     },
                   ],
                 },
+                agent: {
+                  type: "all-of",
+                  description: `Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)`,
+                  contains: [
+                    {
+                      type: "Common_uuid",
+                    },
+                  ],
+                },
                 preset: {
                   type: "all-of",
                   description: `Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)`,
@@ -138,6 +147,15 @@ export const $Tasks_PromptStep = {
                   contains: [
                     {
                       type: "Chat_CompletionResponseFormat",
+                    },
+                  ],
+                },
+                agent: {
+                  type: "all-of",
+                  description: `Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)`,
+                  contains: [
+                    {
+                      type: "Common_uuid",
                     },
                   ],
                 },
@@ -216,6 +234,15 @@ export const $Tasks_PromptStep = {
                   contains: [
                     {
                       type: "Chat_CompletionResponseFormat",
+                    },
+                  ],
+                },
+                agent: {
+                  type: "all-of",
+                  description: `Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)`,
+                  contains: [
+                    {
+                      type: "Common_uuid",
                     },
                   ],
                 },

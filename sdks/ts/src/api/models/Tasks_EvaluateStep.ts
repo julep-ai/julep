@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_CEL } from "./Tasks_CEL";
+import type { Common_PyExpression } from "./Common_PyExpression";
 import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
 export type Tasks_EvaluateStep = Tasks_WorkflowStep & {
   /**
    * The expression to evaluate
    */
-  evaluate: Record<string, Tasks_CEL>;
+  evaluate: Record<string, Common_PyExpression>;
 };

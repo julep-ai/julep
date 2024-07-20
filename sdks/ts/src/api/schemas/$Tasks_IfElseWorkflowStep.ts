@@ -15,7 +15,7 @@ export const $Tasks_IfElseWorkflowStep = {
           description: `The condition to evaluate`,
           contains: [
             {
-              type: "Tasks_CEL",
+              type: "Common_PyExpression",
             },
           ],
           isRequired: true,

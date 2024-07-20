@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_uuid } from "./Common_uuid";
+import type { Sessions_ContextOverflowType } from "./Sessions_ContextOverflowType";
 /**
  * Payload for creating a session
  */
@@ -32,6 +33,6 @@ export type Sessions_CreateSessionRequest = {
   /**
    * Action to start on context window overflow
    */
-  context_overflow: string | null;
+  context_overflow: Sessions_ContextOverflowType | null;
   metadata?: Record<string, any>;
 };

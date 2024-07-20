@@ -20,8 +20,13 @@ export const $Sessions_PatchSessionRequest = {
       format: "uint16",
     },
     context_overflow: {
-      type: "string",
+      type: "one-of",
       description: `Action to start on context window overflow`,
+      contains: [
+        {
+          type: "Sessions_ContextOverflowType",
+        },
+      ],
       isNullable: true,
     },
     metadata: {

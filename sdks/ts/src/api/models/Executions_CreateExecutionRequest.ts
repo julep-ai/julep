@@ -10,4 +10,5 @@ export type Executions_CreateExecutionRequest = {
    * The input to the execution
    */
   input: Record<string, any>;
+  metadata?: Record<string, any>;
 };

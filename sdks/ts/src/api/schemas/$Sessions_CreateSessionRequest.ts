@@ -53,8 +53,13 @@ export const $Sessions_CreateSessionRequest = {
       format: "uint16",
     },
     context_overflow: {
-      type: "string",
+      type: "one-of",
       description: `Action to start on context window overflow`,
+      contains: [
+        {
+          type: "Sessions_ContextOverflowType",
+        },
+      ],
       isRequired: true,
       isNullable: true,
     },

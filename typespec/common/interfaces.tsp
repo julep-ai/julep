@@ -57,7 +57,6 @@ interface UpdateEndpoint<
     DocString extends valueof string = "Update resource by id (overwrite existing values)"
 > {
     @put
-    @route("{id}")
     @doc(DocString)
     update(
         @header contentType: yaml | json,
@@ -81,7 +80,6 @@ interface PatchEndpoint<
     DocString extends valueof string = "Patch resource by its id (merge changes with existing values)"
 > {
     @patch
-    @route("{id}")
     @doc(DocString)
     patch(
         @header contentType: yaml | json,
@@ -105,7 +103,6 @@ interface GetEndpoint<
     DocString extends valueof string = "Get resource by id"
 > {
     @get
-    @route("{id}")
     @doc(DocString)
     get(
         @path
@@ -116,7 +113,6 @@ interface GetEndpoint<
 
 interface DeleteEndpoint<DocString extends valueof string = "Delete resource by id"> {
     @delete
-    @route("{id}")
     @doc(DocString)
     delete(
         @path

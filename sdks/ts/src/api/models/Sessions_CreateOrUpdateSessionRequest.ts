@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_uuid } from "./Common_uuid";
+import type { Sessions_ContextOverflowType } from "./Sessions_ContextOverflowType";
 export type Sessions_CreateOrUpdateSessionRequest = {
   id: Common_uuid;
   /**
@@ -30,6 +31,6 @@ export type Sessions_CreateOrUpdateSessionRequest = {
   /**
    * Action to start on context window overflow
    */
-  context_overflow: string | null;
+  context_overflow: Sessions_ContextOverflowType | null;
   metadata?: Record<string, any>;
 };

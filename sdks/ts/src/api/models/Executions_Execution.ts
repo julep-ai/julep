@@ -31,5 +31,6 @@ export type Executions_Execution = {
    * When this resource was updated as UTC date-time
    */
   readonly updated_at: string;
+  metadata?: Record<string, any>;
   readonly id: Common_uuid;
 };
