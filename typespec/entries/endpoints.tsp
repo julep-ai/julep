@@ -14,8 +14,6 @@ namespace Entries;
 interface Endpoints
     extends ChildLimitOffsetPagination<
             History,
-            "History",
-            Session,
-            "Session"
+            "Get history of a Session (paginated)"
         >,
-        DeleteEndpoint<History, "History"> {}
+        DeleteEndpoint<"Clear the history of a Session (resets the Session)"> {}

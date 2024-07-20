@@ -12,34 +12,34 @@ namespace Common;
 
 alias Metadata = Record<unknown>;
 
-model ResourceCreatedResponse<T, TName extends string> {
-    @doc("ID of created {TName}", {TName: TName})
+model ResourceCreatedResponse {
+    @doc("ID of created resource")
     id: uuid;
     ...HasCreatedAt;
     ...HasJobs;
 }
 
-model ResourceUpdatedResponse<T, TName extends string> {
-    @doc("ID of updated {TName}", {TName: TName})
+model ResourceUpdatedResponse {
+    @doc("ID of updated resource")
     id: uuid;
     ...HasUpdatedAt;
     ...HasJobs;
 }
 
-model ResourceDeletedResponse<T, TName extends string> {
-    @doc("ID of deleted {TName}", {TName: TName})
+model ResourceDeletedResponse {
+    @doc("ID of deleted resource")
     id: uuid;
     ...HasDeletedAt;
     ...HasJobs;
 }
 
-model PaginationOptions<TName extends string> {
+model PaginationOptions {
     @query
-    @doc("Limit the number of {TName} items returned", {TName: TName})
+    @doc("Limit the number of items returned")
     limit: limit = 100,
 
     @query
-    @doc("Offset the {TName} items returned", {TName: TName})
+    @doc("Offset the items returned")
     offset: offset = 0,
 
     /** Sort by a field */

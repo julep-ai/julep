@@ -10,10 +10,10 @@ namespace Agents;
 //
 
 interface Endpoints
-    extends LimitOffsetPagination<Agent, "Agent">,
-        CreateEndpoint<Agent, "Agent", CreateAgentRequest>,
-        CreateOrUpdateEndpoint<Agent, "Agent", CreateOrUpdateAgentRequest>,
-        UpdateEndpoint<Agent, "Agent", UpdateAgentRequest>,
-        PatchEndpoint<Agent, "Agent", PatchAgentRequest>,
-        DeleteEndpoint<Agent, "Agent">,
-        GetEndpoint<Agent, "Agent"> {}
+    extends LimitOffsetPagination<Agent, "List Agents (paginated)">,
+        CreateEndpoint<CreateAgentRequest, "Create a new Agent">,
+        CreateOrUpdateEndpoint<CreateOrUpdateAgentRequest, "Create or update an Agent">,
+        UpdateEndpoint<UpdateAgentRequest, "Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)">,
+        PatchEndpoint<PatchAgentRequest, "Update an existing Agent by id (merges with existing values)">,
+        DeleteEndpoint<"Delete Agent by id">,
+        GetEndpoint<Agent, "Get an Agent by id"> {}

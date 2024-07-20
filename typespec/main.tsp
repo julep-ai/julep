@@ -78,7 +78,7 @@ namespace Api {
     interface AgentDocsRoute extends Docs.AgentEndpoints {}
 
     @route("/agents/{id}/search")
-    interface AgentsDocsSearchRoute extends Docs.SearchEndpoints<"Agent"> {}
+    interface AgentsDocsSearchRoute extends Docs.SearchEndpoints<"Search Docs owned by an Agent"> {}
 
     @route("/agents/{id}/tools")
     interface AgentToolsRoute extends Tools.AgentEndpoints {}
@@ -90,12 +90,12 @@ namespace Api {
     interface UserDocsRoute extends Docs.UserEndpoints {}
 
     @route("/users/{id}/search")
-    interface UserDocsSearchRoute extends Docs.SearchEndpoints<"User"> {}
+    interface UserDocsSearchRoute extends Docs.SearchEndpoints<"Search Docs owned by a User"> {}
 
     @route("/sessions")
     interface SessionsRoute extends Sessions.Endpoints {}
 
-    @route("/sessions/history")
+    @route("/sessions/{id}/history")
     interface HistoryRoute extends Entries.Endpoints {}
 
     @route("/embed")

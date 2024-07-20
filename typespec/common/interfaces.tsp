@@ -11,180 +11,192 @@ namespace Common;
 // COMMON INTERFACES
 //
 
-interface LimitOffsetPagination<T, TName extends string> {
+interface LimitOffsetPagination<
+    Type,
+    DocString extends valueof string = "List resources (paginated)"
+> {
     @get
-    @doc("List {TName} items", {TName: TName})
-    list(
-        ...PaginationOptions<TName>
-    ): {results: T[]};
+    @doc(DocString)
+    list(...PaginationOptions): {
+        results: Type[];
+    };
 }
 
-interface CreateEndpoint<T, TName extends string, CreateT = T> {
+interface CreateEndpoint<
+    CreateType,
+    DocString extends valueof string = "Create a new resource"
+> {
     @post
-    @doc("Create new {TName}", {TName: TName})
-    create(
-        @header contentType: yaml | json;
-
-        ...CreateT
-    ): {
+    @doc(DocString)
+    create(@header contentType: yaml | json, ...CreateType): {
         @statusCode _: "201";
 
         @body
-        @doc("Details of {TName} resource created along with ID", {TName: TName})
-        body: ResourceCreatedResponse<T, TName>;
+        @doc("Details of the resource created along with ID")
+        body: ResourceCreatedResponse;
     };
 }
 
-interface CreateOrUpdateEndpoint<T, TName extends string, CreateOrUpdateT = T> {
+interface CreateOrUpdateEndpoint<
+    CreateOrUpdateType,
+    DocString extends valueof string = "Create or update a resource (ID is required in payload; existing resource will be overwritten)"
+> {
     @put
-    @doc("Create or update {TName} (ID is required in payload; existing resource will be overwritten)", {TName: TName})
-    createOrUpdate(
-        @header contentType: yaml | json;
-
-        ...CreateOrUpdateT
-    ): {
+    @doc(DocString)
+    createOrUpdate(@header contentType: yaml | json, ...CreateOrUpdateType): {
         @statusCode _: "200";
 
         @body
-        @doc("Details of {TName} resource updated along with ID", {TName: TName})
-        body: ResourceUpdatedResponse<T, TName>;
+        @doc("Details of the resource updated along with ID")
+        body: ResourceUpdatedResponse;
     };
 }
 
-interface UpdateEndpoint<T, TName extends string, UpdateT = T> {
+interface UpdateEndpoint<
+    UpdateType,
+    DocString extends valueof string = "Update resource by id (overwrite existing values)"
+> {
     @put
     @route("{id}")
-    @doc("Update {TName} by id (overwrite)", {TName: TName})
+    @doc(DocString)
     update(
-        @header contentType: yaml | json;
+        @header contentType: yaml | json,
 
         @path
-        @doc("ID of the {TName}", {TName: TName})
+        @doc("ID of the resource")
         id: uuid,
 
-        ...UpdateT,
+        ...UpdateType,
     ): {
         @statusCode _: "200";
 
         @body
-        @doc("Details of {TName} resource updated along with ID", {TName: TName})
-        body: ResourceUpdatedResponse<T, TName>;
+        @doc("Details of the resource updated along with ID")
+        body: ResourceUpdatedResponse;
     };
 }
 
-interface PatchEndpoint<T, TName extends string, PatchT = T> {
+interface PatchEndpoint<
+    PatchType,
+    DocString extends valueof string = "Patch resource by its id (merge changes with existing values)"
+> {
     @patch
     @route("{id}")
-    @doc("Patch {TName} by id (merge changes)", {TName: TName})
+    @doc(DocString)
     patch(
-        @header contentType: yaml | json;
+        @header contentType: yaml | json,
 
         @path
-        @doc("ID of the {TName}", {TName: TName})
+        @doc("ID of the resource")
         id: uuid,
 
-        ...PatchT,
+        ...PatchType,
     ): {
         @statusCode _: "200";
 
         @body
-        @doc("Details of {TName} resource patched along with ID", {TName: TName})
-        body: ResourceUpdatedResponse<T, TName>;
+        @doc("Details of the resource patched along with ID")
+        body: ResourceUpdatedResponse;
     };
 }
 
-interface GetEndpoint<T, TName extends string> {
+interface GetEndpoint<
+    Type,
+    DocString extends valueof string = "Get resource by id"
+> {
     @get
     @route("{id}")
-    @doc("Get {TName} by id", {TName: TName})
+    @doc(DocString)
     get(
         @path
-        @doc("ID of the {TName}", {TName: TName})
+        @doc("ID of the resource")
         id: uuid,
-    ): T;
+    ): Type;
 }
 
-interface DeleteEndpoint<T, TName extends string> {
+interface DeleteEndpoint<DocString extends valueof string = "Delete resource by id"> {
     @delete
     @route("{id}")
-    @doc("Delete {TName} by id", {TName: TName})
+    @doc(DocString)
     delete(
         @path
-        @doc("ID of the {TName}", {TName: TName})
+        @doc("ID of the resource")
         id: uuid,
     ): {
         @statusCode _: "202";
 
         @body
-        @doc("Details of {TName} resource deleted along with ID", {TName: TName})
-        body: ResourceDeletedResponse<T, TName>;
+        @doc("Details of the resource deleted along with ID")
+        body: ResourceDeletedResponse;
     };
 }
 
 interface ChildLimitOffsetPagination<
     T,
-    TName extends string,
-    P,
-    PName extends string
+    DocString extends valueof string = "List items owned by the given parent"
 > {
     @get
-    @doc("List {TName} items of parent {PName}", {TName: TName, PName: PName})
+    @doc(DocString)
     list(
         @path
-        @doc("ID of parent {PName}", {PName: PName})
+        @doc("ID of parent")
         id: uuid,
-        
-        ...PaginationOptions<TName>
-    ): {results: T[]};
+
+        ...PaginationOptions,
+    ): {
+        results: T[];
+    };
 }
 
 interface ChildCreateEndpoint<
-    T,
-    TName extends string,
-    P,
-    PName extends string,
-    CreateT = T
+    CreateType,
+    DocString extends valueof string = "Create a new resource owned by the given parent"
 > {
     @post
-    @doc("Create new {TName}", {TName: TName})
+    @doc(DocString)
     create(
-        @header contentType: yaml | json;
+        @header contentType: yaml | json,
 
         @path
-        @doc("ID of parent {PName}", {PName: PName})
+        @doc("ID of parent resource")
         id: uuid,
 
-        ...CreateT,
+        ...CreateType,
     ): {
         @statusCode _: "201";
 
         @body
-        @doc("Details of {TName} resource created along with ID", {TName: TName})
-        body: ResourceCreatedResponse<T, TName>;
+        @doc("Details of the resource created along with ID")
+        body: ResourceCreatedResponse;
     };
 }
 
 interface ChildDeleteEndpoint<
-    T,
-    TName extends string,
-    P,
-    PName extends string
+    DocString extends valueof string = "Delete a resource owned by the given parent using its id"
 > {
     @post
-    @doc("Delete {TName} of a {PName} by id", {TName: TName, PName: PName})
+    @doc(
+        DocString
+    )
     delete(
         @path
-        @doc("ID of parent {PName}", {PName: PName})
+        @doc(
+            "ID of parent resource",
+        )
         parent_id: uuid,
 
         @path
-        @doc("ID of the {TName}", {TName: TName})
+        @doc(
+            "ID of the resource to be deleted",
+        )
         id: uuid,
     ): {
         @statusCode _: "202";
 
         @body
-        @doc("Details of {TName} resource deleted along with ID", {TName: TName})
-        body: ResourceDeletedResponse<T, TName>;
+        @doc(
+            "Details of the resource deleted along with ID",
+        )
+        body: ResourceDeletedResponse;
     };
 }

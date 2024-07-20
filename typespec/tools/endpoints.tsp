@@ -12,10 +12,10 @@ namespace Tools;
 //
 
 interface Endpoints
-    extends UpdateEndpoint<Tool, "Tool", UpdateToolRequest>,
-        PatchEndpoint<Tool, "Tool", PatchToolRequest>,
-        DeleteEndpoint<Tool, "Tool"> {}
+    extends UpdateEndpoint<UpdateToolRequest, "Update an existing tool (overwrite existing values)">,
+        PatchEndpoint<PatchToolRequest, "Update an existing tool (merges with existing values)">,
+        DeleteEndpoint<"Delete an existing tool by id"> {}
 
 interface AgentEndpoints
-    extends ChildLimitOffsetPagination<Tool, "Tool", Agent, "Agent">,
-        ChildCreateEndpoint<Tool, "Tool", Agent, "Agent", CreateAgentRequest> {}
+    extends ChildLimitOffsetPagination<Tool, "List tools of the given agent">,
+        ChildCreateEndpoint<CreateAgentRequest, "Create a new tool for this agent"> {}

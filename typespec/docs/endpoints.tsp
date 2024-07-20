@@ -18,24 +18,24 @@ namespace Docs;
 //
 
 interface UserEndpoints
-    extends ChildLimitOffsetPagination<Doc, "Doc", User, "User"> {}
+    extends ChildLimitOffsetPagination<Doc, "List Docs owned by a User"> {}
 
 interface AgentEndpoints
-    extends ChildLimitOffsetPagination<Doc, "Doc", Agent, "Agent"> {}
+    extends ChildLimitOffsetPagination<Doc, "List Docs owned by an Agent"> {}
 
 interface IndividualDocEndpoints
-    extends GetEndpoint<Doc, "Doc">,
-        DeleteEndpoint<Doc, "Doc"> {}
+    extends GetEndpoint<Doc, "Get Doc by id">,
+        DeleteEndpoint<"Delete an existing Doc by id"> {}
 
-interface SearchEndpoints<TName extends string> {
-    @doc("Search for documents owned by {TName}", {TName: TName})
+interface SearchEndpoints<DocString extends valueof string = "Search for documents"> {
+    @doc(DocString)
     @post
     search(
         @path
-        @doc("ID of the {TName}", {TName: TName})
-        id: User.id | Agent.id,
+        @doc("ID of the parent")
+        id: uuid,
 
-        ...PaginationOptions<"Doc">,
+        ...PaginationOptions,
         body: DocSearchRequest,
     ): {
         results: DocReference[];
