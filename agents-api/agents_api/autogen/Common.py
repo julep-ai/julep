@@ -6,38 +6,85 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
-class IdentifierSafeUnicode(RootModel[str]):
+class Limit(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: Annotated[
-        str,
-        Field(
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
-        ),
-    ]
+    root: Annotated[int, Field(ge=1, lt=1000)]
     """
-    For Unicode character safety
-    See: https://unicode.org/reports/tr31/
-    See: https://www.unicode.org/reports/tr39/#Identifier_Characters
+    Limit the number of results
     """
 
 
-class Uuid(RootModel[UUID]):
+class LogitBias(RootModel[float]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: UUID
+    root: Annotated[float, Field(ge=-100.0, le=100.0)]
 
 
-class ValidPythonIdentifier(RootModel[str]):
+class Offset(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
+    root: Annotated[int, Field(ge=0)]
     """
-    Valid python identifier names
+    Offset to apply to the results
+    """
+
+
+class ResourceCreatedResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    """
+    ID of created resource
+    """
+    created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
+    """
+    When this resource was created as UTC date-time
+    """
+    jobs: list[UUID]
+    """
+    IDs (if any) of jobs created as part of this request
+    """
+
+
+class ResourceDeletedResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    """
+    ID of deleted resource
+    """
+    deleted_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
+    """
+    When this resource was deleted as UTC date-time
+    """
+    jobs: list[UUID]
+    """
+    IDs (if any) of jobs created as part of this request
+    """
+
+
+class ResourceUpdatedResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    """
+    ID of updated resource
+    """
+    updated_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
+    """
+    When this resource was updated as UTC date-time
+    """
+    jobs: list[UUID]
+    """
+    IDs (if any) of jobs created as part of this request
     """

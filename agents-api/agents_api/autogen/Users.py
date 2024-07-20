@@ -4,17 +4,117 @@
 from __future__ import annotations
 
 from typing import Annotated, Any
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Common import IdentifierSafeUnicode, Uuid
+
+class CreateOrUpdateUserRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    metadata: dict[str, Any] | None = None
+    name: Annotated[
+        str,
+        Field(
+            "",
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Name of the user
+    """
+    about: str = ""
+    """
+    About the user
+    """
+
+
+class CreateUserRequest(BaseModel):
+    """
+    Payload for creating a user (and associated documents)
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata: dict[str, Any] | None = None
+    name: Annotated[
+        str,
+        Field(
+            "",
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Name of the user
+    """
+    about: str = ""
+    """
+    About the user
+    """
+    docs: Annotated[list, Field([], max_length=100)]
+    """
+    Documents to index for this user. (Max: 100 items)
+    """
+
+
+class PatchUserRequest(BaseModel):
+    """
+    Payload for patching a user
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata: dict[str, Any] | None = None
+    name: Annotated[
+        str,
+        Field(
+            "",
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Name of the user
+    """
+    about: str = ""
+    """
+    About the user
+    """
+
+
+class UpdateUserRequest(BaseModel):
+    """
+    Payload for updating a user
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata: dict[str, Any] | None = None
+    name: Annotated[
+        str,
+        Field(
+            "",
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Name of the user
+    """
+    about: str = ""
+    """
+    About the user
+    """
 
 
 class User(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
@@ -24,7 +124,13 @@ class User(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    name: IdentifierSafeUnicode = ""
+    name: Annotated[
+        str,
+        Field(
+            "",
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
     """
     Name of the user
     """

@@ -3,12 +3,295 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Common import Uuid
+from .Chat import CompletionResponseFormat
+from .Common import LogitBias
+from .Entries import InputChatMLMessage
 from .Tools import CreateToolRequest
+
+
+class CreateOrUpdateTaskRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    name: str
+    description: str = ""
+    main: list[WorkflowStep]
+    """
+    The entrypoint of the task.
+    """
+    input_schema: dict[str, Any] | None = None
+    """
+    The schema for the input to the task. `null` means all inputs are valid.
+    """
+    tools: list[CreateToolRequest] = []
+    """
+    Tools defined specifically for this task not included in the Agent itself.
+    """
+    inherit_tools: bool = True
+    """
+    Whether to inherit tools from the parent agent or not. Defaults to true.
+    """
+    metadata: dict[str, Any] | None = None
+
+
+class CreateTaskRequest(BaseModel):
+    """
+    Payload for creating a task
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: str
+    description: str = ""
+    main: list[WorkflowStep]
+    """
+    The entrypoint of the task.
+    """
+    input_schema: dict[str, Any] | None = None
+    """
+    The schema for the input to the task. `null` means all inputs are valid.
+    """
+    tools: list[CreateToolRequest] = []
+    """
+    Tools defined specifically for this task not included in the Agent itself.
+    """
+    inherit_tools: bool = True
+    """
+    Whether to inherit tools from the parent agent or not. Defaults to true.
+    """
+    metadata: dict[str, Any] | None = None
+
+
+class PatchTaskRequest(BaseModel):
+    """
+    Payload for patching a task
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    description: str = ""
+    main: list[WorkflowStep] | None = None
+    """
+    The entrypoint of the task.
+    """
+    input_schema: dict[str, Any] | None = None
+    """
+    The schema for the input to the task. `null` means all inputs are valid.
+    """
+    tools: list[CreateToolRequest] = []
+    """
+    Tools defined specifically for this task not included in the Agent itself.
+    """
+    inherit_tools: bool = True
+    """
+    Whether to inherit tools from the parent agent or not. Defaults to true.
+    """
+    metadata: dict[str, Any] | None = None
+
+
+class Settings(BaseModel):
+    """
+    Settings for the prompt
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    model: Annotated[
+        str | None,
+        Field(
+            None,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Identifier of the model to be used
+    """
+    stream: bool = False
+    """
+    Indicates if the server should stream the response as it's generated
+    """
+    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
+    """
+    Up to 4 sequences where the API will stop generating further tokens.
+    """
+    seed: Annotated[int | None, Field(None, ge=-1, le=1000)]
+    """
+    If specified, the system will make a best effort to sample deterministically for that particular seed value
+    """
+    max_tokens: Annotated[int | None, Field(None, ge=1)]
+    """
+    The maximum number of tokens to generate in the chat completion
+    """
+    logit_bias: dict[str, LogitBias] | None = None
+    """
+    Modify the likelihood of specified tokens appearing in the completion
+    """
+    response_format: CompletionResponseFormat | None = None
+    """
+    Response format (set to `json_object` to restrict output to JSON)
+    """
+    agent: UUID | None = None
+    """
+    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+    """
+    preset: (
+        Literal[
+            "problem_solving",
+            "conversational",
+            "fun",
+            "prose",
+            "creative",
+            "business",
+            "deterministic",
+            "code",
+            "multilingual",
+        ]
+        | None
+    ) = None
+    """
+    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    """
+
+
+class SettingsModel(BaseModel):
+    """
+    Settings for the prompt
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    model: Annotated[
+        str | None,
+        Field(
+            None,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Identifier of the model to be used
+    """
+    stream: bool = False
+    """
+    Indicates if the server should stream the response as it's generated
+    """
+    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
+    """
+    Up to 4 sequences where the API will stop generating further tokens.
+    """
+    seed: Annotated[int | None, Field(None, ge=-1, le=1000)]
+    """
+    If specified, the system will make a best effort to sample deterministically for that particular seed value
+    """
+    max_tokens: Annotated[int | None, Field(None, ge=1)]
+    """
+    The maximum number of tokens to generate in the chat completion
+    """
+    logit_bias: dict[str, LogitBias] | None = None
+    """
+    Modify the likelihood of specified tokens appearing in the completion
+    """
+    response_format: CompletionResponseFormat | None = None
+    """
+    Response format (set to `json_object` to restrict output to JSON)
+    """
+    agent: UUID | None = None
+    """
+    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+    """
+    frequency_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
+    """
+    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+    presence_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
+    """
+    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+    temperature: Annotated[float | None, Field(None, ge=0.0, le=5.0)]
+    """
+    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+    """
+    top_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
+    """
+    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+    """
+
+
+class SettingsModel1(BaseModel):
+    """
+    Settings for the prompt
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    model: Annotated[
+        str | None,
+        Field(
+            None,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Identifier of the model to be used
+    """
+    stream: bool = False
+    """
+    Indicates if the server should stream the response as it's generated
+    """
+    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
+    """
+    Up to 4 sequences where the API will stop generating further tokens.
+    """
+    seed: Annotated[int | None, Field(None, ge=-1, le=1000)]
+    """
+    If specified, the system will make a best effort to sample deterministically for that particular seed value
+    """
+    max_tokens: Annotated[int | None, Field(None, ge=1)]
+    """
+    The maximum number of tokens to generate in the chat completion
+    """
+    logit_bias: dict[str, LogitBias] | None = None
+    """
+    Modify the likelihood of specified tokens appearing in the completion
+    """
+    response_format: CompletionResponseFormat | None = None
+    """
+    Response format (set to `json_object` to restrict output to JSON)
+    """
+    agent: UUID | None = None
+    """
+    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+    """
+    repetition_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
+    """
+    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+    length_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
+    """
+    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    """
+    temperature: Annotated[float | None, Field(None, ge=0.0, le=5.0)]
+    """
+    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+    """
+    top_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
+    """
+    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+    """
+    min_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
+    """
+    Minimum probability compared to leading token to be considered
+    """
 
 
 class Task(BaseModel):
@@ -37,8 +320,8 @@ class Task(BaseModel):
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
-    agent_id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    agent_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -50,6 +333,34 @@ class Task(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
+class UpdateTaskRequest(BaseModel):
+    """
+    Payload for updating a task
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    description: str = ""
+    main: list[WorkflowStep]
+    """
+    The entrypoint of the task.
+    """
+    input_schema: dict[str, Any] | None = None
+    """
+    The schema for the input to the task. `null` means all inputs are valid.
+    """
+    tools: list[CreateToolRequest] = []
+    """
+    Tools defined specifically for this task not included in the Agent itself.
+    """
+    inherit_tools: bool = True
+    """
+    Whether to inherit tools from the parent agent or not. Defaults to true.
+    """
+    metadata: dict[str, Any] | None = None
+
+
 class WorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -57,4 +368,86 @@ class WorkflowStep(BaseModel):
     kind: str | None = None
     """
     Discriminator property for WorkflowStep.
+    """
+
+
+class YieldStep(WorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    workflow: str
+    """
+    The subworkflow to run
+    """
+    arguments: dict[str, str]
+    """
+    The input parameters for the subworkflow
+    """
+
+
+class ErrorWorkflowStep(WorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    error: str
+    """
+    The error message
+    """
+
+
+class EvaluateStep(WorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    evaluate: dict[str, str]
+    """
+    The expression to evaluate
+    """
+
+
+class IfElseWorkflowStep(WorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    if_: Annotated[str, Field(alias="if")]
+    """
+    The condition to evaluate
+    """
+    then: WorkflowStep
+    """
+    The steps to run if the condition is true
+    """
+    else_: Annotated[WorkflowStep, Field(alias="else")]
+    """
+    The steps to run if the condition is false
+    """
+
+
+class PromptStep(WorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    prompt: str | list[InputChatMLMessage]
+    """
+    The prompt to run
+    """
+    settings: Settings | SettingsModel | SettingsModel1
+    """
+    Settings for the prompt
+    """
+
+
+class ToolCallStep(WorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    tool: Annotated[
+        str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
+    ]
+    """
+    The tool to run
+    """
+    arguments: dict[str, Any]
+    """
+    The input parameters for the tool
     """

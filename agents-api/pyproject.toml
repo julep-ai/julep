@@ -31,15 +31,14 @@ transformers = "^4.40.1"
 tiktoken = "^0.6.0"
 xxhash = "^3.4.1"
 tenacity = "^8.3.0"
-
-
 beartype = "^0.18.5"
 cel-python = "^0.1.5"
+
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.18.1"
 black = "^24.4.0"
 ruff = "^0.1.9"
-datamodel-code-generator = "^0.25.3"
+datamodel-code-generator = "^0.25.8"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.25.1"
 pytype = ">=2024.4.11"
@@ -68,4 +67,4 @@ check = [
     "typecheck",
 ]
 test = "ward"
-codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/ --use-operation-id-as-name --use-double-quotes --use-schema-description --target-python-version 3.10 --reuse-model --strict-nullable --openapi-scopes schemas --openapi-scopes paths --use-exact-imports --keep-model-order --disable-timestamp --allow-population-by-field-name --use-field-description --field-include-all-keys --use-unique-items-as-set --use-subclass-enum --use-union-operator --use-one-literal-as-default --use-default --use-annotated --enum-field-as-literal one --output-model-type pydantic_v2.BaseModel --field-constraints --use-standard-collections --use-non-positive-negative-number-constrained-types"
+codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/ --use-operation-id-as-name --use-double-quotes --use-schema-description --target-python-version 3.10 --reuse-model --strict-nullable --openapi-scopes schemas --use-exact-imports --keep-model-order --disable-timestamp --allow-population-by-field-name --use-field-description --field-include-all-keys --use-unique-items-as-set --use-subclass-enum --use-union-operator --use-one-literal-as-default --use-default --use-annotated --enum-field-as-literal all --output-model-type pydantic_v2.BaseModel --field-constraints --use-standard-collections --use-non-positive-negative-number-constrained-types --use-pendulum --collapse-root-models"

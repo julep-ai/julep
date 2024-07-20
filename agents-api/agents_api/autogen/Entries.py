@@ -3,12 +3,11 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Common import Uuid
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
 
@@ -38,20 +37,6 @@ class ChatMLImageContentPart(BaseChatMLContentPart):
     """
 
 
-class ChatMLRole(str, Enum):
-    """
-    ChatML role (system|assistant|user|function_call|function|function_response|auto)
-    """
-
-    user = "user"
-    agent = "agent"
-    system = "system"
-    function = "function"
-    function_response = "function_response"
-    function_call = "function_call"
-    auto = "auto"
-
-
 class ChatMLTextContentPart(BaseChatMLContentPart):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -67,7 +52,18 @@ class Entry(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    role: ChatMLRole
+    role: Literal[
+        "user",
+        "agent",
+        "system",
+        "function",
+        "function_response",
+        "function_call",
+        "auto",
+    ]
+    """
+    ChatML role (system|assistant|user|function_call|function|function_response|auto)
+    """
     name: str | None = None
     content: (
         list[ChatMLTextContentPart | ChatMLImageContentPart]
@@ -83,7 +79,9 @@ class Entry(BaseModel):
             | ToolResponse
         ]
     )
-    source: Source
+    source: Literal[
+        "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
+    ]
     timestamp: int
     """
     This is the time that this event refers to.
@@ -92,7 +90,7 @@ class Entry(BaseModel):
     """
     When this resource was created as UTC date-time
     """
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
 class History(BaseModel):
@@ -101,21 +99,11 @@ class History(BaseModel):
     )
     entries: list[Entry]
     relations: list[Relation]
-    session_id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    session_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
     """
-
-
-class ImageDetail(str, Enum):
-    """
-    Image detail level
-    """
-
-    low = "low"
-    high = "high"
-    auto = "auto"
 
 
 class ImageURL(BaseModel):
@@ -126,9 +114,39 @@ class ImageURL(BaseModel):
     """
     Image URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)
     """
-    detail: ImageDetail = "auto"
+    detail: Literal["low", "high", "auto"] = "auto"
     """
     The detail level of the image
+    """
+
+
+class InputChatMLMessage(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    role: Literal[
+        "user",
+        "agent",
+        "system",
+        "function",
+        "function_response",
+        "function_call",
+        "auto",
+    ]
+    """
+    The role of the message
+    """
+    content: str | list[str] | list[ChatMLTextContentPart | ChatMLImageContentPart]
+    """
+    The content parts of the message
+    """
+    name: str | None = None
+    """
+    Name
+    """
+    continue_: Annotated[bool | None, Field(None, alias="continue")]
+    """
+    Whether to continue this message or return a new one
     """
 
 
@@ -136,15 +154,6 @@ class Relation(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    head: Uuid
+    head: UUID
     relation: str
-    tail: Uuid
-
-
-class Source(str, Enum):
-    api_request = "api_request"
-    api_response = "api_response"
-    tool_response = "tool_response"
-    internal = "internal"
-    summarizer = "summarizer"
-    meta = "meta"
+    tail: UUID

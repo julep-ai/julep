@@ -3,25 +3,28 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
-
-from .Common import IdentifierSafeUnicode, Uuid
 
 
 class Doc(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
     """
-    title: IdentifierSafeUnicode
+    title: Annotated[
+        str,
+        Field(
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
+        ),
+    ]
     """
     Title describing what this document contains
     """
@@ -35,8 +38,8 @@ class DocOwner(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: Uuid
-    role: Role
+    id: UUID
+    role: Literal["user", "agent"]
 
 
 class DocReference(BaseModel):
@@ -47,7 +50,7 @@ class DocReference(BaseModel):
     """
     The owner of this document.
     """
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     """
     ID of the document
     """
@@ -65,7 +68,7 @@ class DocSearchRequest(BaseModel):
     )
     text: str | list[str] | None = None
     vector: list[float] | list[list[float]] | None = None
-    mode: Mode
+    mode: Literal["vector", "text", "hybrid"]
     """
     The search mode
     """
@@ -97,16 +100,48 @@ class EmbedQueryRequest(BaseModel):
     """
 
 
-class Mode(str, Enum):
+class EmbedQueryResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    vectors: list[list[float]]
     """
-    The search mode
+    The embedded vectors
     """
 
-    vector = "vector"
-    text = "text"
-    hybrid = "hybrid"
+
+class HybridDocSearchRequest(DocSearchRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: str | list[str] | None = None
+    """
+    Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    """
+    vector: list[float] | list[list[float]] | None = None
+    """
+    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+    mode: Literal["hybrid"] = "hybrid"
 
 
-class Role(str, Enum):
-    user = "user"
-    agent = "agent"
+class TextOnlyDocSearchRequest(DocSearchRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: str | list[str]
+    """
+    Text or texts to use in the search. In `text` search mode, only BM25 is used.
+    """
+    mode: Literal["text"] = "text"
+
+
+class VectorDocSearchRequest(DocSearchRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    vector: list[float] | list[list[float]]
+    """
+    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+    mode: Literal["vector"] = "vector"

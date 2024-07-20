@@ -3,33 +3,39 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class GenerationPreset(str, Enum):
+class CompletionResponseFormat(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["text", "json_object"] = "text"
     """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    The format of the response
     """
-
-    problem_solving = "problem_solving"
-    conversational = "conversational"
-    fun = "fun"
-    prose = "prose"
-    creative = "creative"
-    business = "business"
-    deterministic = "deterministic"
-    code = "code"
-    multilingual = "multilingual"
 
 
 class GenerationPresetSettings(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    preset: GenerationPreset | None = None
+    preset: (
+        Literal[
+            "problem_solving",
+            "conversational",
+            "fun",
+            "prose",
+            "creative",
+            "business",
+            "deterministic",
+            "code",
+            "multilingual",
+        ]
+        | None
+    ) = None
     """
     Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
     """

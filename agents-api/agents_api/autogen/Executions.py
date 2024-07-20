@@ -3,23 +3,47 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Common import Uuid
+
+class CreateExecutionRequest(BaseModel):
+    """
+    Payload for creating an execution
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    input: dict[str, Any]
+    """
+    The input to the execution
+    """
+    metadata: dict[str, Any] | None = None
 
 
 class Execution(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    task_id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    task_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     """
     The ID of the task that the execution is running
     """
-    status: Annotated[Status, Field(json_schema_extra={"readOnly": True})]
+    status: Annotated[
+        Literal[
+            "queued",
+            "starting",
+            "running",
+            "awaiting_input",
+            "succeeded",
+            "failed",
+            "cancelled",
+        ],
+        Field(json_schema_extra={"readOnly": True}),
+    ]
     """
     The status of the execution
     """
@@ -36,33 +60,37 @@ class Execution(BaseModel):
     When this resource was updated as UTC date-time
     """
     metadata: dict[str, Any] | None = None
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
-class Status(str, Enum):
+class TaskTokenResumeExecutionRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    status: Literal["running"] = "running"
+    task_token: str
     """
-    The status of the execution
+    A Task Token is a unique identifier for a specific Task Execution.
     """
-
-    queued = "queued"
-    starting = "starting"
-    running = "running"
-    awaiting_input = "awaiting_input"
-    succeeded = "succeeded"
-    failed = "failed"
-    cancelled = "cancelled"
+    input: dict[str, Any] | None = None
+    """
+    The input to resume the execution with
+    """
 
 
 class Transition(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Annotated[Type, Field(json_schema_extra={"readOnly": True})]
-    execution_id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    type: Annotated[
+        Literal["finish", "wait", "error", "step", "cancelled"],
+        Field(json_schema_extra={"readOnly": True}),
+    ]
+    execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     outputs: Annotated[dict[str, Any], Field(json_schema_extra={"readOnly": True})]
     current: Annotated[list, Field(json_schema_extra={"readOnly": True})]
     next: Annotated[list | None, Field(json_schema_extra={"readOnly": True})]
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -73,9 +101,38 @@ class Transition(BaseModel):
     """
 
 
-class Type(str, Enum):
-    finish = "finish"
-    wait = "wait"
-    error = "error"
-    step = "step"
-    cancelled = "cancelled"
+class UpdateExecutionRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    status: Literal[
+        "queued",
+        "starting",
+        "running",
+        "awaiting_input",
+        "succeeded",
+        "failed",
+        "cancelled",
+    ]
+
+
+class ResumeExecutionRequest(UpdateExecutionRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    status: Literal["running"] = "running"
+    input: dict[str, Any] | None = None
+    """
+    The input to resume the execution with
+    """
+
+
+class StopExecutionRequest(UpdateExecutionRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    status: Literal["cancelled"] = "cancelled"
+    reason: str | None = None
+    """
+    The reason for stopping the execution
+    """

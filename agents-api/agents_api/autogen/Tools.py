@@ -3,12 +3,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
-
-from .Common import IdentifierSafeUnicode, Uuid, ValidPythonIdentifier
 
 
 class ChosenToolCall(BaseModel):
@@ -19,7 +17,7 @@ class ChosenToolCall(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: ToolType
+    type: Literal["function", "integration", "system", "api_call"]
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -27,7 +25,7 @@ class ChosenToolCall(BaseModel):
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
 class CreateToolRequest(BaseModel):
@@ -38,7 +36,7 @@ class CreateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: ToolType
+    type: Literal["function", "integration", "system", "api_call"]
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -70,7 +68,7 @@ class FunctionDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: Annotated[ValidPythonIdentifier, Field("overriden")]
+    name: Annotated[str, Field("overriden", pattern="^[^\\W0-9]\\w*$")]
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
@@ -78,17 +76,73 @@ class FunctionDef(BaseModel):
     """
     The parameters the function accepts
     """
-    description: IdentifierSafeUnicode | None = None
+    description: Annotated[
+        str | None,
+        Field(
+            None,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
     """
     Description of the function
     """
+
+
+class FunctionDefUpdate(BaseModel):
+    """
+    Function definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: Annotated[str, Field("overriden", pattern="^[^\\W0-9]\\w*$")]
+    """
+    DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
+    """
+    parameters: dict[str, Any] | None = None
+    """
+    The parameters the function accepts
+    """
+    description: Annotated[
+        str | None,
+        Field(
+            None,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Description of the function
+    """
+
+
+class PatchToolRequest(BaseModel):
+    """
+    Payload for patching a tool
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function", "integration", "system", "api_call"] | None = None
+    """
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    """
+    background: bool = False
+    """
+    The tool should be run in the background (not supported at the moment)
+    """
+    function: FunctionDefUpdate | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
 
 
 class Tool(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: ToolType
+    type: Literal["function", "integration", "system", "api_call"]
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -108,22 +162,60 @@ class Tool(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    id: Annotated[Uuid, Field(json_schema_extra={"readOnly": True})]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
 class ToolResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: Uuid
+    id: UUID
     output: dict[str, Any]
     """
     The output of the tool
     """
 
 
-class ToolType(str, Enum):
-    function = "function"
-    integration = "integration"
-    system = "system"
-    api_call = "api_call"
+class UpdateToolRequest(BaseModel):
+    """
+    Payload for updating a tool
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function", "integration", "system", "api_call"]
+    """
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    """
+    background: bool = False
+    """
+    The tool should be run in the background (not supported at the moment)
+    """
+    function: FunctionDef | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
+
+
+class ChosenFunctionCall(ChosenToolCall):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function"] = "function"
+    function: FunctionCallOption
+    """
+    The function to call
+    """
+
+
+class FunctionTool(Tool):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function"] = "function"
+    background: Literal[False] = False
+    function: FunctionDef
+    """
+    The function to call
+    """
