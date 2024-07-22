@@ -1,4 +1,8 @@
+import "@typespec/http";
+
 import "../common";
+
+using TypeSpec.Http;
 
 using Common;
 
@@ -40,6 +44,7 @@ model CreateUserRequest {
 }
 
 model CreateOrUpdateUserRequest {
+    @path
     id: uuid;
     ...UpdateUserRequest;
 }

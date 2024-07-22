@@ -1,5 +1,9 @@
+import "@typespec/http";
+
 import "../common";
 import "../chat";
+
+using TypeSpec.Http;
 
 using Common;
 using Chat;
@@ -44,13 +48,10 @@ model PatchAgentRequest is UpdateAgentRequest {}
 /** Payload for creating a agent (and associated documents) */
 model CreateAgentRequest {
     ...UpdateAgentRequest;
-
-    /** Documents to index for this agent. (Max: 100 items) */
-    @maxItems(100)
-    docs: unknown[] = #[];
 }
 
 model CreateOrUpdateAgentRequest {
+    @path
     id: uuid;
     ...UpdateAgentRequest;
 }

@@ -92,20 +92,20 @@ namespace Api {
     @route("/docs")
     interface IndividualDocsRoute extends Docs.IndividualDocEndpoints {}
 
-    @route("/tasks")
+    @route("/agents/{id}/tasks")
     interface TasksRoute extends Tasks.Endpoints {}
 
+    @route("/agents/{parent_id}/tasks")
+    interface TasksCreateOrUpdateRoute extends Tasks.CreateOrUpdateEndpoints {}
+
     @route("/tasks/{id}/executions")
-    interface TaskExecutionsRoute extends Tasks.ExecutionEndpoints {}
+    interface TaskExecutionsRoute extends Tasks.ExecutionEndpoints, Executions.TaskEndpoints {}
 
     @route("/executions")
     interface ExecutionsRoute extends Executions.Endpoints {}
 
     @route("/executions/{id}/transitions")
     interface ExecutionTransitionsRoute extends Executions.TransitionEndpoints {}
-
-    @route("/tools")
-    interface ToolRoute extends Tools.Endpoints {}
 
     @route("/jobs")
     interface JobRoute extends Jobs.Endpoints {}

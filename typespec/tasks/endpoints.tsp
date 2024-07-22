@@ -15,22 +15,24 @@ namespace Tasks;
 // TASK ENDPOINTS
 //
 
+interface CreateOrUpdateEndpoints
+    extends ChildCreateOrUpdateEndpoint<
+            CreateOrUpdateTaskRequest,
+            "Create or update a task"
+        > {}
+
 interface Endpoints
-    extends UpdateEndpoint<
+    extends ChildUpdateEndpoint<
             UpdateTaskRequest,
             "Update an existing task (overwrite existing values)"
         >,
-        PatchEndpoint<
+        ChildPatchEndpoint<
             PatchTaskRequest,
             "Update an existing task (merges with existing values)"
         >,
-        DeleteEndpoint<"Delete a task by its id">,
-        LimitOffsetPagination<Task, "List tasks (paginated)">,
-        CreateOrUpdateEndpoint<
-            CreateOrUpdateTaskRequest,
-            "Create or update a task"
-        >,
-        CreateEndpoint<CreateTaskRequest, "Create a new task"> {}
+        ChildDeleteEndpoint<"Delete a task by its id">,
+        ChildLimitOffsetPagination<Task, "List tasks (paginated)">,
+        ChildCreateEndpoint<CreateTaskRequest, "Create a new task"> {}
 
 interface ExecutionEndpoints
     extends ChildCreateEndpoint<

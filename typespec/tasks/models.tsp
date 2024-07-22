@@ -1,8 +1,12 @@
+import "@typespec/http";
+
 import "../agents";
 import "../common";
 import "../chat";
 import "../entries";
 import "../tools";
+
+using TypeSpec.Http;
 
 using Agents;
 using Chat;
@@ -168,6 +172,7 @@ model CreateTaskRequest {
 }
 
 model CreateOrUpdateTaskRequest {
+    @path
     id: uuid;
     ...CreateTaskRequest;
 }

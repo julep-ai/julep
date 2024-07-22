@@ -2,65 +2,68 @@
 
 from uuid import UUID, uuid4
 
+from beartype import beartype
 
-from ...autogen.openapi_model import FunctionDef
+from ...autogen.openapi_model import CreateToolRequest, Tool
 
-from ..utils import cozo_query
+from ..utils import cozo_query, verify_developer_id_query, verify_developer_owns_resource_query, wrap_in_class
 
 
+@wrap_in_class(
+    Tool,
+    transform=lambda d: {"id": UUID(d.pop("tool_id")), d["tool_type"]: d.pop("spec"), "type": d.pop("tool_type"), **d},
+)
 @cozo_query
+@beartype
 def create_tools_query(
+    *,
+    developer_id: UUID,
     agent_id: UUID,
-    functions: list[FunctionDef],
-    embeddings: list[list[float]],
+    create_tools: list[CreateToolRequest],
 ) -> tuple[str, dict]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
     Parameters:
     - agent_id (UUID): The unique identifier for the agent.
-    - functions (list[FunctionDef]): A list of function definitions to be inserted.
-    - embeddings (list[list[float]]): A list of embeddings corresponding to each function.
+    - create_tools (list[CreateToolRequest]): A list of function definitions to be inserted.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the results of the query execution.
+    list[Tool]
     """
-    # Ensure the number of functions matches the number of embeddings
-    assert len(functions) == len(embeddings)
 
-    # Construct the input records for the datalog query
-    functions_input: list[list] = []
-
-    for function, embedding in zip(functions, embeddings):
-        parameters = function.parameters.model_dump()
-        functions_input.append(
-            [
-                str(agent_id),
-                str(uuid4()),
-                function.name,
-                function.description or "",
-                parameters,
-                embedding,
-            ]
-        )
+    tools_data = [
+        [
+            str(agent_id),
+            str(uuid4()),
+            tool.type,
+            tool.name,
+            getattr(tool, tool.type).dict(),
+        ]
+        for tool in create_tools
+    ]
 
     # Datalog query for inserting new tool records into the 'agent_functions' relation
-    query = """
-        input[agent_id, tool_id, name, description, parameters, embedding] <- $records
-        ?[agent_id, tool_id, name, description, parameters, embedding, updated_at] :=
-            input[agent_id, tool_id, name, description, parameters, embedding],
-            updated_at = now(),
+    create_tools_query = """
+        ?[agent_id, tool_id, tool_type, name, spec] <- $records
 
-        :insert agent_functions {
+        :insert tools {
             agent_id,
             tool_id,
+            tool_type,
             name,
-            description,
-            parameters,
-            embedding,
-            updated_at,
+            spec,
         }
         :returning
     """
 
-    return (query, {"records": functions_input})
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        create_tools_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
+
+    return (query, {"records": tools_data})

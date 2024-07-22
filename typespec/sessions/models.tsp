@@ -1,4 +1,8 @@
+import "@typespec/http";
+
 import "../common";
+
+using TypeSpec.Http;
 
 using Common;
 
@@ -147,6 +151,7 @@ model CreateSessionRequest {
 
 @withVisibility("create", "update")
 model CreateOrUpdateSessionRequest {
+    @path
     id: uuid;
 
     ...CreateSessionRequest;

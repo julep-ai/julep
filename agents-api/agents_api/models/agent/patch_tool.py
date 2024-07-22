@@ -1,27 +1,34 @@
 from uuid import UUID
 
 
-from ...autogen.openapi_model import FunctionDef
+from beartype import beartype
 
-from ..utils import cozo_query
+from ...autogen.openapi_model import PatchToolRequest, ResourceUpdatedResponse
+
+from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
 
 
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {"id": d["agent_id"], "jobs": [], **d},
+)
 @cozo_query
+@beartype
 def patch_tool_by_id_query(
-    agent_id: UUID, tool_id: UUID, function: FunctionDef, embedding: list[float]
+    *, developer_id: UUID, tool_id: UUID, update_tool: PatchToolRequest
 ) -> tuple[str, dict]:
     """
     # Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.
 
     Parameters:
-    - agent_id (UUID): The unique identifier of the agent.
+    - developer_id (UUID): The unique identifier of the developer.
     - tool_id (UUID): The unique identifier of the tool to be updated.
-    - function (FunctionDef): The function definition containing the new tool information.
-    - embedding (list[float]): The embedding vector associated with the tool.
+    - update_tool (PatchToolRequest): The request payload containing the updated tool information.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the result of the update operation.
+    - ResourceUpdatedResponse: The updated tool data.
     """
     # Agent update query
     # Convert the function definition to a dictionary for easier manipulation

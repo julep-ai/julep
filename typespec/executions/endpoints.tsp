@@ -10,11 +10,13 @@ namespace Executions;
 //
 
 interface Endpoints
-    extends UpdateEndpoint<
+    extends GetEndpoint<Execution, "Get an Execution by id"> {}
+
+interface TaskEndpoints
+    extends ChildUpdateEndpoint<
             UpdateExecutionRequest,
             "Update an existing Execution"
-        >,
-        GetEndpoint<Execution, "Get an Execution by id"> {}
+        > {}
 
 interface TransitionEndpoints
     extends ChildLimitOffsetPagination<

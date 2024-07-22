@@ -41,7 +41,7 @@ interface CreateOrUpdateEndpoint<
     CreateOrUpdateType,
     DocString extends valueof string = "Create or update a resource (ID is required in payload; existing resource will be overwritten)"
 > {
-    @put
+    @post
     @doc(DocString)
     createOrUpdate(@header contentType: yaml | json, ...CreateOrUpdateType): {
         @statusCode _: "200";
@@ -167,10 +167,33 @@ interface ChildCreateEndpoint<
     };
 }
 
+interface ChildCreateOrUpdateEndpoint<
+    CreateOrUpdateType,
+    DocString extends valueof string = "Create or update a resource owned by the given parent"
+> {
+    @post
+    @doc(DocString)
+    createOrUpdate(
+        @header contentType: yaml | json,
+
+        @path
+        @doc("ID of parent resource")
+        parent_id: uuid,
+
+        ...CreateOrUpdateType,
+    ): {
+        @statusCode _: "200";
+
+        @body
+        @doc("Details of the resource updated along with ID")
+        body: ResourceUpdatedResponse;
+    };
+}
+
 interface ChildDeleteEndpoint<
     DocString extends valueof string = "Delete a resource owned by the given parent using its id"
 > {
-    @post
+    @delete
     @doc(
         DocString
     )
@@ -179,13 +202,13 @@ interface ChildDeleteEndpoint<
         @doc(
             "ID of parent resource",
         )
-        parent_id: uuid,
+        id: uuid,
 
         @path
         @doc(
             "ID of the resource to be deleted",
         )
-        id: uuid,
+        child_id: uuid,
     ): {
         @statusCode _: "202";
 
@@ -194,5 +217,70 @@ interface ChildDeleteEndpoint<
             "Details of the resource deleted along with ID",
         )
         body: ResourceDeletedResponse;
+    };
+}
+
+interface ChildUpdateEndpoint<
+    UpdateType,
+    DocString extends valueof string = "Update a resource owned by the given parent using its id"
+> {
+    @put
+    @doc(
+        DocString
+    )
+    update(
+        @path
+        @doc(
+            "ID of parent resource",
+        )
+        id: uuid,
+
+        @path
+        @doc(
+            "ID of the resource to be updated",
+        )
+        child_id: uuid,
+
+        ...UpdateType,
+    ): {
+        @statusCode _: "200";
+
+        @body
+        @doc(
+            "Details of the resource updated along with ID",
+        )
+        body: ResourceUpdatedResponse;
+    };
+}
+
+interface ChildPatchEndpoint<
+    PatchType,
+    DocString extends valueof string = "Patch a resource owned by the given parent using its id"
+> {
+    @patch
+    @doc(
+        DocString
+    )
+    patch(
+        @path
+        @doc(
+            "ID of parent resource",
+        )
+        id: uuid,
+
+        @path
+        @doc(
+            "ID of the resource to be patched",
+        )
+        child_id: uuid,
+        ...PatchType,
+    ): {
+        @statusCode _: "200";
+
+        @body
+        @doc(
+            "Details of the resource patched along with ID",
+        )
+        body: ResourceUpdatedResponse;
     };
 }

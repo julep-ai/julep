@@ -4,33 +4,79 @@ This module contains the implementation of the delete_agent_query function, whic
 
 from uuid import UUID
 
+from beartype import beartype
 
-from ..utils import cozo_query
-
-"""
-Constructs and returns a datalog query for deleting an agent and its default settings from the database.
-
-Parameters:
-- developer_id (UUID): The UUID of the developer owning the agent.
-- agent_id (UUID): The UUID of the agent to be deleted.
-- client (CozoClient, optional): An instance of the CozoClient to execute the query.
-
-Returns:
-- tuple[str, dict]: A DataFrame containing the results of the deletion query.
-"""
+from ...autogen.openapi_model import ResourceDeletedResponse
+from ...common.utils.datetime import utcnow
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
+@wrap_in_class(
+    ResourceDeletedResponse,
+    one=True,
+    transform=lambda d: {"id": UUID(d.pop("agent_id")), "deleted_at": utcnow(), "jobs": []},
+)
 @cozo_query
-def delete_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
-    query = """
-    {
+@beartype
+def delete_agent_query(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
+    """
+    Constructs and returns a datalog query for deleting an agent and its default settings from the database.
+
+    Parameters:
+    - developer_id (UUID): The UUID of the developer owning the agent.
+    - agent_id (UUID): The UUID of the agent to be deleted.
+    - client (CozoClient, optional): An instance of the CozoClient to execute the query.
+
+    Returns:
+    - ResourceDeletedResponse: The response indicating the deletion of the agent.
+    """
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        """
+        # Delete docs
+        ?[agent_id, doc_id] :=
+            *agent_docs{
+                agent_id,
+                doc_id,
+            }, agent_id = to_uuid($agent_id)
+
+        :delete agent_docs {
+            agent_id,
+            doc_id
+        }
+        :returning
+        """,
+        """
+        # Delete tools
+        ?[agent_id, tool_id] :=
+            *tools{
+                agent_id,
+                tool_id,
+            }, agent_id = to_uuid($agent_id)
+
+        :delete tools {
+            agent_id,
+            tool_id
+        }
+        :returning
+        """,
+        """
         # Delete default agent settings
         ?[agent_id] <- [[$agent_id]]
 
         :delete agent_default_settings {
             agent_id
         }
-    } {
+        :returning
+        """,
+        """
         # Delete the agent
         ?[agent_id, developer_id] <- [[$agent_id, $developer_id]]
 
@@ -38,6 +84,11 @@ def delete_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
             developer_id,
             agent_id
         }
-    }"""
+        :returning
+        """,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})

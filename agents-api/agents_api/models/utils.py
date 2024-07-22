@@ -1,6 +1,9 @@
 from functools import wraps
-from typing import Callable, ParamSpec
+from typing import Callable, ParamSpec, Type
+from uuid import UUID
 
+from beartype import beartype
+from pydantic import BaseModel
 import pandas as pd
 
 from ..clients.cozo import client as cozo_client
@@ -9,18 +12,84 @@ from ..clients.cozo import client as cozo_client
 P = ParamSpec("P")
 
 
-def cozo_query(func: Callable[P, tuple[str, dict]]):
+def verify_developer_id_query(developer_id: UUID | str) -> str:
+    return f"""
+    ?[developer_id] :=
+        *developers{{
+            developer_id,
+        }}, developer_id = to_uuid("{str(developer_id)}")
+        
+    :assert some
     """
-    Decorator that wraps a function that takes arbitrary arguments, and
-    returns a (query string, variables) tuple.
 
-    The wrapped function should additionally take a client keyword argument
-    and then run the query using the client, returning a DataFrame.
+
+def verify_developer_owns_resource_query(developer_id: UUID | str, resource: str, **resource_id: dict) -> str:
+
+    resource_id_key, resource_id_value = next(iter(resource_id.items()))
+
+    return f"""
+    ?[{resource_id_key}] :=
+        *{resource}{{
+            developer_id,
+            {resource_id_key},
+        }}, developer_id = to_uuid("{str(developer_id)}"),
+        {resource_id_key} = to_uuid("{str(resource_id_value)}")
+        
+    :assert some
     """
 
-    @wraps(func)
-    def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
-        query, variables = func(*args, **kwargs)
-        return client.run(query, variables)
 
-    return wrapper
+def cozo_query(func: Callable[P, tuple[str, dict]] | None = None, debug: bool | None = None):
+    def cozo_query_dec(func: Callable[P, tuple[str, dict]]):
+        """
+        Decorator that wraps a function that takes arbitrary arguments, and
+        returns a (query string, variables) tuple.
+
+        The wrapped function should additionally take a client keyword argument
+        and then run the query using the client, returning a DataFrame.
+        """
+
+        @wraps(func)
+        def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
+            query, variables = func(*args, **kwargs)
+
+            if debug:
+                from pprint import pprint
+                pprint(dict(query=query, variables=variables))
+
+            return client.run(query, variables)
+
+        return wrapper
+
+    if func is not None and callable(func):
+        return cozo_query_dec(func)
+    
+    return cozo_query_dec
+
+def wrap_in_class(
+    cls: Type[BaseModel],
+    one: bool = False,
+    transform: Callable[[dict], dict] | None = None,
+):
+
+    @beartype
+    def decorator(func: Callable[..., pd.DataFrame]):
+        @wraps(func)
+        @beartype
+        def wrapper(*args, **kwargs) -> list[cls] | cls:
+            df = func(*args, **kwargs)
+
+            # Convert df to list of dicts
+            data = df.to_dict(orient="records")
+
+            nonlocal transform
+            transform = transform or (lambda x: x)
+            if one:
+                return cls(**transform(data[0]))
+
+            return [cls(**item) for item in map(transform, data)]
+
+        setattr(cls, func.__name__, wrapper)
+        return wrapper
+
+    return decorator

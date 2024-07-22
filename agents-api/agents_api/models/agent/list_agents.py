@@ -1,13 +1,23 @@
 from typing import Any
 from uuid import UUID
 
+from beartype import beartype
 
+
+from ...autogen.openapi_model import Agent
 from ...common.utils import json
-from ..utils import cozo_query
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    wrap_in_class,
+)
 
 
+@wrap_in_class(Agent)
 @cozo_query
+@beartype
 def list_agents_query(
+    *,
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
@@ -35,8 +45,9 @@ def list_agents_query(
     )
 
     # Datalog query to retrieve agent information based on filters, sorted by creation date in descending order.
-    query = f"""
-    {{
+    queries = [
+        verify_developer_id_query(developer_id),
+        f"""
         input[developer_id] <- [[to_uuid($developer_id)]]
 
         ?[
@@ -65,7 +76,11 @@ def list_agents_query(
         :limit $limit
         :offset $offset
         :sort -created_at
-    }}"""
+        """,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (
         query,
