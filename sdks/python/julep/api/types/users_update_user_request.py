@@ -5,46 +5,23 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
-)
-from .agents_create_agent_request_instructions import (
-    AgentsCreateAgentRequestInstructions,
-)
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 
 
-class AgentsCreateAgentRequest(pydantic_v1.BaseModel):
+class UsersUpdateUserRequest(pydantic_v1.BaseModel):
     """
-    Payload for creating a agent (and associated documents)
+    Payload for updating a user
     """
 
     metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
     name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
     """
-    Name of the agent
+    Name of the user
     """
 
     about: str = pydantic_v1.Field()
     """
-    About the agent
-    """
-
-    model: str = pydantic_v1.Field()
-    """
-    Model name to use (gpt-4-turbo, gemini-nano etc)
-    """
-
-    instructions: AgentsCreateAgentRequestInstructions = pydantic_v1.Field()
-    """
-    Instructions for the agent
-    """
-
-    default_settings: typing.Optional[AgentsCreateAgentRequestDefaultSettings] = (
-        pydantic_v1.Field(default=None)
-    )
-    """
-    Default settings for all sessions created by this agent
+    About the user
     """
 
     def json(self, **kwargs: typing.Any) -> str:

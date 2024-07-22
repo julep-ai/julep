@@ -27,7 +27,6 @@ client.agents_route_create(
     about="about",
     model="model",
     instructions="instructions",
-    docs=[],
 )
 ```
 
@@ -52,7 +51,6 @@ async def main() -> None:
         about="about",
         model="model",
         instructions="instructions",
-        docs=[],
     )
 
 

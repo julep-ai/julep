@@ -2216,13 +2216,13 @@ typing-extensions = ">=4.0.0,<5.0.0"
 
 [[package]]
 name = "jupyter-ai"
-version = "2.19.0"
+version = "2.19.1"
 description = "A generative AI extension for JupyterLab"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyter_ai-2.19.0-py3-none-any.whl", hash = "sha256:d03540ea42b181946ccad7287b4306bd8f37af09d9f7b3e45b0adc0eb0449b34"},
-    {file = "jupyter_ai-2.19.0.tar.gz", hash = "sha256:746220ac7205f57047cb8c7bb1c94c7a02cdbad9af0c534762cd06168cd66b8e"},
+    {file = "jupyter_ai-2.19.1-py3-none-any.whl", hash = "sha256:9521cdfaada7c2e9c660cdbd7084235ebfaa7dfbf4f734f639f88fa892661e74"},
+    {file = "jupyter_ai-2.19.1.tar.gz", hash = "sha256:4a4f61411d41ac16bc5838970ed4c54c2dd64c9b56d9277430c6a83ebd792f3d"},
 ]
 
 [package.dependencies]
@@ -3288,13 +3288,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.36.1"
+version = "1.37.0"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.36.1-py3-none-any.whl", hash = "sha256:d399b9d476dbbc167aceaac6bc6ed0b2e2bb6c9e189c7f7047f822743ae62e64"},
-    {file = "openai-1.36.1.tar.gz", hash = "sha256:41be9e0302e95dba8a9374b885c5cb1cec2202816a70b98736fee25a2cadd1f2"},
+    {file = "openai-1.37.0-py3-none-any.whl", hash = "sha256:a903245c0ecf622f2830024acdaa78683c70abb8e9d37a497b851670864c9f73"},
+    {file = "openai-1.37.0.tar.gz", hash = "sha256:dc8197fc40ab9d431777b6620d962cc49f4544ffc3011f03ce0a805e6eb54adb"},
 ]
 
 [package.dependencies]

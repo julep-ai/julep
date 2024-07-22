@@ -196,7 +196,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"docs\": []\n}",
+          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -239,7 +239,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"docs\": []\n}",
+              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -249,96 +249,6 @@
           },
           "description": "The request has succeeded and a new resource has been created as a result.",
           "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Agents Route Create Or Update",
-      "request": {
-        "description": "Create or update an Agent",
-        "url": {
-          "raw": "{{baseUrl}}/agents",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "agents"
-          ],
-          "query": [],
-          "variable": []
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PUT",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Create or update an Agent",
-            "url": {
-              "raw": "{{baseUrl}}/agents",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "agents"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PUT",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -427,6 +337,110 @@
           },
           "description": "The request has succeeded.",
           "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"key\": \"value\"\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"default_settings\": {\n        \"preset\": \"problem_solving\"\n    }\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Agents Route Create Or Update",
+      "request": {
+        "description": "Create or update an Agent",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": null,
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Create or update an Agent",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": null,
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -943,6 +957,592 @@
     },
     {
       "_type": "endpoint",
+      "name": "Tasks Route List",
+      "request": {
+        "description": "List tasks (paginated)",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tasks?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tasks"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "description": "Limit the number of items returned",
+              "value": "1"
+            },
+            {
+              "key": "offset",
+              "description": "Offset the items returned",
+              "value": "1"
+            },
+            {
+              "key": "sort_by",
+              "description": "Sort by a field",
+              "value": "created_at"
+            },
+            {
+              "key": "direction",
+              "description": "Sort direction",
+              "value": "asc"
+            },
+            {
+              "key": "metadata_filter",
+              "description": "JSON string of object that should be used to filter objects by metadata",
+              "value": "metadata_filter"
+            }
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent",
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "List tasks (paginated)",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tasks?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "description": "Limit the number of items returned",
+                  "value": "1"
+                },
+                {
+                  "key": "offset",
+                  "description": "Offset the items returned",
+                  "value": "1"
+                },
+                {
+                  "key": "sort_by",
+                  "description": "Sort by a field",
+                  "value": "created_at"
+                },
+                {
+                  "key": "direction",
+                  "description": "Sort direction",
+                  "value": "asc"
+                },
+                {
+                  "key": "metadata_filter",
+                  "description": "JSON string of object that should be used to filter objects by metadata",
+                  "value": "metadata_filter"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent",
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null,
+            "body": null
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"results\": [\n        {\n            \"name\": \"name\",\n            \"description\": \"description\",\n            \"main\": [],\n            \"input_schema\": {\n                \"key\": \"value\"\n            },\n            \"tools\": [\n                {\n                    \"type\": \"function\",\n                    \"name\": \"name\"\n                }\n            ],\n            \"inherit_tools\": true,\n            \"agent_id\": \"agent_id\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"metadata\": {\n                \"key\": \"value\"\n            }\n        }\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Tasks Route Create",
+      "request": {
+        "description": "Create a new task",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tasks"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Create a new task",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tasks"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded and a new resource has been created as a result.",
+          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Tasks Route Update",
+      "request": {
+        "description": "Update an existing task (overwrite existing values)",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tasks/:child_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tasks",
+            ":child_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            },
+            {
+              "key": "child_id",
+              "description": "ID of the resource to be updated",
+              "value": "child_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "PUT",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Update an existing task (overwrite existing values)",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tasks/:child_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tasks",
+                ":child_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                },
+                {
+                  "key": "child_id",
+                  "description": "ID of the resource to be updated",
+                  "value": "child_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Tasks Route Delete",
+      "request": {
+        "description": "Delete a task by its id",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tasks/:child_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tasks",
+            ":child_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            },
+            {
+              "key": "child_id",
+              "description": "ID of the resource to be deleted",
+              "value": "child_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "DELETE",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Delete a task by its id",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tasks/:child_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tasks",
+                ":child_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                },
+                {
+                  "key": "child_id",
+                  "description": "ID of the resource to be deleted",
+                  "value": "child_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null,
+            "body": null
+          },
+          "description": "The request has been accepted for processing, but processing has not yet completed.",
+          "body": "{\n    \"id\": \"id\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Tasks Route Patch",
+      "request": {
+        "description": "Update an existing task (merges with existing values)",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tasks/:child_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tasks",
+            ":child_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            },
+            {
+              "key": "child_id",
+              "description": "ID of the resource to be patched",
+              "value": "child_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "PATCH",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Update an existing task (merges with existing values)",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tasks/:child_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tasks",
+                ":child_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                },
+                {
+                  "key": "child_id",
+                  "description": "ID of the resource to be patched",
+                  "value": "child_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
       "name": "Agent Tools Route List",
       "request": {
         "description": "List tools of the given agent",
@@ -1124,7 +1724,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"docs\": []\n}",
+          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1175,7 +1775,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"docs\": []\n}",
+              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1185,6 +1785,462 @@
           },
           "description": "The request has succeeded and a new resource has been created as a result.",
           "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Agent Tools Route Update",
+      "request": {
+        "description": "Update an existing tool (overwrite existing values)",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tools/:child_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tools",
+            ":child_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            },
+            {
+              "key": "child_id",
+              "description": "ID of the resource to be updated",
+              "value": "child_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "PUT",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"type\": \"function\",\n    \"name\": \"name\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Update an existing tool (overwrite existing values)",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tools/:child_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tools",
+                ":child_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                },
+                {
+                  "key": "child_id",
+                  "description": "ID of the resource to be updated",
+                  "value": "child_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"type\": \"function\",\n    \"name\": \"name\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Agent Tools Route Delete",
+      "request": {
+        "description": "Delete an existing tool by id",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tools/:child_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tools",
+            ":child_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            },
+            {
+              "key": "child_id",
+              "description": "ID of the resource to be deleted",
+              "value": "child_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "DELETE",
+        "auth": null,
+        "body": null
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Delete an existing tool by id",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tools/:child_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tools",
+                ":child_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                },
+                {
+                  "key": "child_id",
+                  "description": "ID of the resource to be deleted",
+                  "value": "child_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null,
+            "body": null
+          },
+          "description": "The request has been accepted for processing, but processing has not yet completed.",
+          "body": "{\n    \"id\": \"id\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Agent Tools Route Patch",
+      "request": {
+        "description": "Update an existing tool (merges with existing values)",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:id/tools/:child_id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":id",
+            "tools",
+            ":child_id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": "ID of parent resource",
+              "value": "id"
+            },
+            {
+              "key": "child_id",
+              "description": "ID of the resource to be patched",
+              "value": "child_id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "PATCH",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Update an existing tool (merges with existing values)",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:id/tools/:child_id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":id",
+                "tools",
+                ":child_id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": "ID of parent resource",
+                  "value": "id"
+                },
+                {
+                  "key": "child_id",
+                  "description": "ID of the resource to be patched",
+                  "value": "child_id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Tasks Create Or Update Route Create Or Update",
+      "request": {
+        "description": "Create or update a task",
+        "url": {
+          "raw": "{{baseUrl}}/agents/:parent_id/tasks/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "agents",
+            ":parent_id",
+            "tasks",
+            ":id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "parent_id",
+              "description": "ID of parent resource",
+              "value": "parent_id"
+            },
+            {
+              "key": "id",
+              "description": null,
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Create or update a task",
+            "url": {
+              "raw": "{{baseUrl}}/agents/:parent_id/tasks/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agents",
+                ":parent_id",
+                "tasks",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "parent_id",
+                  "description": "ID of parent resource",
+                  "value": "parent_id"
+                },
+                {
+                  "key": "id",
+                  "description": null,
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1542,51 +2598,6 @@
           "_postman_previewlanguage": "json"
         }
       ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Executions Route Update",
-      "request": {
-        "description": "Update an existing Execution",
-        "url": {
-          "raw": "{{baseUrl}}/executions/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "executions",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "value": "",
-              "description": "ID of the resource"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          }
-        ],
-        "method": "PUT",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"status\": \"cancelled\",\n    \"reason\": \"example\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": []
     },
     {
       "_type": "endpoint",
@@ -2036,96 +3047,6 @@
     },
     {
       "_type": "endpoint",
-      "name": "Sessions Route Create Or Update",
-      "request": {
-        "description": "Create or update a session",
-        "url": {
-          "raw": "{{baseUrl}}/sessions",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "sessions"
-          ],
-          "query": [],
-          "variable": []
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PUT",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"id\": \"id\",\n    \"situation\": \"situation\",\n    \"render_templates\": true\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Create or update a session",
-            "url": {
-              "raw": "{{baseUrl}}/sessions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "sessions"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PUT",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"id\": \"id\",\n    \"situation\": \"situation\",\n    \"render_templates\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
       "name": "Sessions Route Get",
       "request": {
         "description": "Get a session by id",
@@ -2160,6 +3081,110 @@
         "body": null
       },
       "response": []
+    },
+    {
+      "_type": "endpoint",
+      "name": "Sessions Route Create Or Update",
+      "request": {
+        "description": "Create or update a session",
+        "url": {
+          "raw": "{{baseUrl}}/sessions/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "sessions",
+            ":id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": null,
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"situation\": \"situation\",\n    \"render_templates\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Create or update a session",
+            "url": {
+              "raw": "{{baseUrl}}/sessions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sessions",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": null,
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"situation\": \"situation\",\n    \"render_templates\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
     },
     {
       "_type": "endpoint",
@@ -2691,608 +3716,6 @@
     },
     {
       "_type": "endpoint",
-      "name": "Tasks Route List",
-      "request": {
-        "description": "List tasks (paginated)",
-        "url": {
-          "raw": "{{baseUrl}}/tasks?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tasks"
-          ],
-          "query": [
-            {
-              "key": "limit",
-              "description": "Limit the number of items returned",
-              "value": "1"
-            },
-            {
-              "key": "offset",
-              "description": "Offset the items returned",
-              "value": "1"
-            },
-            {
-              "key": "sort_by",
-              "description": "Sort by a field",
-              "value": "created_at"
-            },
-            {
-              "key": "direction",
-              "description": "Sort direction",
-              "value": "asc"
-            },
-            {
-              "key": "metadata_filter",
-              "description": "JSON string of object that should be used to filter objects by metadata",
-              "value": "metadata_filter"
-            }
-          ],
-          "variable": []
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "GET",
-        "auth": null,
-        "body": null
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "List tasks (paginated)",
-            "url": {
-              "raw": "{{baseUrl}}/tasks?limit=1&offset=1&sort_by=created_at&direction=asc&metadata_filter=metadata_filter",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks"
-              ],
-              "query": [
-                {
-                  "key": "limit",
-                  "description": "Limit the number of items returned",
-                  "value": "1"
-                },
-                {
-                  "key": "offset",
-                  "description": "Offset the items returned",
-                  "value": "1"
-                },
-                {
-                  "key": "sort_by",
-                  "description": "Sort by a field",
-                  "value": "created_at"
-                },
-                {
-                  "key": "direction",
-                  "description": "Sort direction",
-                  "value": "asc"
-                },
-                {
-                  "key": "metadata_filter",
-                  "description": "JSON string of object that should be used to filter objects by metadata",
-                  "value": "metadata_filter"
-                }
-              ],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "GET",
-            "auth": null,
-            "body": null
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"name\": \"name\",\n            \"description\": \"description\",\n            \"main\": [],\n            \"input_schema\": {\n                \"key\": \"value\"\n            },\n            \"tools\": [\n                {\n                    \"type\": \"function\",\n                    \"name\": \"name\"\n                }\n            ],\n            \"inherit_tools\": true,\n            \"agent_id\": \"agent_id\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"metadata\": {\n                \"key\": \"value\"\n            }\n        }\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tasks Route Create",
-      "request": {
-        "description": "Create a new task",
-        "url": {
-          "raw": "{{baseUrl}}/tasks",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tasks"
-          ],
-          "query": [],
-          "variable": []
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "POST",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Create a new task",
-            "url": {
-              "raw": "{{baseUrl}}/tasks",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "POST",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded and a new resource has been created as a result.",
-          "body": "{\n    \"id\": \"id\",\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tasks Route Create Or Update",
-      "request": {
-        "description": "Create or update a task",
-        "url": {
-          "raw": "{{baseUrl}}/tasks",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tasks"
-          ],
-          "query": [],
-          "variable": []
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PUT",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Create or update a task",
-            "url": {
-              "raw": "{{baseUrl}}/tasks",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PUT",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tasks Route Update",
-      "request": {
-        "description": "Update an existing task (overwrite existing values)",
-        "url": {
-          "raw": "{{baseUrl}}/tasks/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tasks",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of the resource",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PUT",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Update an existing task (overwrite existing values)",
-            "url": {
-              "raw": "{{baseUrl}}/tasks/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the resource",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PUT",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tasks Route Delete",
-      "request": {
-        "description": "Delete a task by its id",
-        "url": {
-          "raw": "{{baseUrl}}/tasks/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tasks",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of the resource",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "DELETE",
-        "auth": null,
-        "body": null
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Delete a task by its id",
-            "url": {
-              "raw": "{{baseUrl}}/tasks/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the resource",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "DELETE",
-            "auth": null,
-            "body": null
-          },
-          "description": "The request has been accepted for processing, but processing has not yet completed.",
-          "body": "{\n    \"id\": \"id\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tasks Route Patch",
-      "request": {
-        "description": "Update an existing task (merges with existing values)",
-        "url": {
-          "raw": "{{baseUrl}}/tasks/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tasks",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of the resource",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PATCH",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Update an existing task (merges with existing values)",
-            "url": {
-              "raw": "{{baseUrl}}/tasks/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the resource",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PATCH",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
       "name": "Task Executions Route List",
       "request": {
         "description": "List executions of the given task",
@@ -3647,24 +4070,31 @@
     },
     {
       "_type": "endpoint",
-      "name": "Tool Route Update",
+      "name": "Task Executions Route Update",
       "request": {
-        "description": "Update an existing tool (overwrite existing values)",
+        "description": "Update an existing Execution",
         "url": {
-          "raw": "{{baseUrl}}/tools/:id",
+          "raw": "{{baseUrl}}/tasks/:id/executions/:child_id",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
-            "tools",
-            ":id"
+            "tasks",
+            ":id",
+            "executions",
+            ":child_id"
           ],
           "query": [],
           "variable": [
             {
               "key": "id",
-              "description": "ID of the resource",
-              "value": "id"
+              "value": "",
+              "description": "ID of parent resource"
+            },
+            {
+              "key": "child_id",
+              "value": "",
+              "description": "ID of the resource to be updated"
             }
           ]
         },
@@ -3674,18 +4104,13 @@
             "value": "{{apiKey}}",
             "type": "string",
             "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
           }
         ],
         "method": "PUT",
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"type\": \"function\",\n    \"name\": \"name\"\n}",
+          "raw": "{\n    \"status\": \"cancelled\",\n    \"reason\": \"example\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3693,253 +4118,7 @@
           }
         }
       },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Update an existing tool (overwrite existing values)",
-            "url": {
-              "raw": "{{baseUrl}}/tools/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tools",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the resource",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PUT",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"type\": \"function\",\n    \"name\": \"name\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tool Route Delete",
-      "request": {
-        "description": "Delete an existing tool by id",
-        "url": {
-          "raw": "{{baseUrl}}/tools/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tools",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of the resource",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "DELETE",
-        "auth": null,
-        "body": null
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Delete an existing tool by id",
-            "url": {
-              "raw": "{{baseUrl}}/tools/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tools",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the resource",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "DELETE",
-            "auth": null,
-            "body": null
-          },
-          "description": "The request has been accepted for processing, but processing has not yet completed.",
-          "body": "{\n    \"id\": \"id\",\n    \"deleted_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
-      "name": "Tool Route Patch",
-      "request": {
-        "description": "Update an existing tool (merges with existing values)",
-        "url": {
-          "raw": "{{baseUrl}}/tools/:id",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "tools",
-            ":id"
-          ],
-          "query": [],
-          "variable": [
-            {
-              "key": "id",
-              "description": "ID of the resource",
-              "value": "id"
-            }
-          ]
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PATCH",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Update an existing tool (merges with existing values)",
-            "url": {
-              "raw": "{{baseUrl}}/tools/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tools",
-                ":id"
-              ],
-              "query": [],
-              "variable": [
-                {
-                  "key": "id",
-                  "description": "ID of the resource",
-                  "value": "id"
-                }
-              ]
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PATCH",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
+      "response": []
     },
     {
       "_type": "endpoint",
@@ -4159,96 +4338,6 @@
     },
     {
       "_type": "endpoint",
-      "name": "Users Route Create Or Update",
-      "request": {
-        "description": "Create or update a user",
-        "url": {
-          "raw": "{{baseUrl}}/users",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "users"
-          ],
-          "query": [],
-          "variable": []
-        },
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "{{apiKey}}",
-            "type": "string",
-            "description": null
-          },
-          {
-            "type": "text",
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "method": "PUT",
-        "auth": null,
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "originalRequest": {
-            "description": "Create or update a user",
-            "url": {
-              "raw": "{{baseUrl}}/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users"
-              ],
-              "query": [],
-              "variable": []
-            },
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{apiKey}}",
-                "type": "string",
-                "description": null
-              },
-              {
-                "type": "text",
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "method": "PUT",
-            "auth": null,
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
-          "_postman_previewlanguage": "json"
-        }
-      ]
-    },
-    {
-      "_type": "endpoint",
       "name": "Users Route Get",
       "request": {
         "description": "Get a user by id",
@@ -4331,6 +4420,110 @@
           },
           "description": "The request has succeeded.",
           "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"key\": \"value\"\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
+          "_postman_previewlanguage": "json"
+        }
+      ]
+    },
+    {
+      "_type": "endpoint",
+      "name": "Users Route Create Or Update",
+      "request": {
+        "description": "Create or update a user",
+        "url": {
+          "raw": "{{baseUrl}}/users/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users",
+            ":id"
+          ],
+          "query": [],
+          "variable": [
+            {
+              "key": "id",
+              "description": null,
+              "value": "id"
+            }
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "{{apiKey}}",
+            "type": "string",
+            "description": null
+          },
+          {
+            "type": "text",
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "auth": null,
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "originalRequest": {
+            "description": "Create or update a user",
+            "url": {
+              "raw": "{{baseUrl}}/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":id"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "description": null,
+                  "value": "id"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{apiKey}}",
+                "type": "string",
+                "description": null
+              },
+              {
+                "type": "text",
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "The request has succeeded.",
+          "body": "{\n    \"id\": \"id\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"jobs\": [\n        \"jobs\"\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]

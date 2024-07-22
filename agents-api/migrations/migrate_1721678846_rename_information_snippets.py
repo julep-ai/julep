@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "rename_information_snippets"
 CREATED_AT = 1721678846.468865

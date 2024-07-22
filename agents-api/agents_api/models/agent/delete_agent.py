@@ -19,7 +19,11 @@ from ..utils import (
 @wrap_in_class(
     ResourceDeletedResponse,
     one=True,
-    transform=lambda d: {"id": UUID(d.pop("agent_id")), "deleted_at": utcnow(), "jobs": []},
+    transform=lambda d: {
+        "id": UUID(d.pop("agent_id")),
+        "deleted_at": utcnow(),
+        "jobs": [],
+    },
 )
 @cozo_query
 @beartype

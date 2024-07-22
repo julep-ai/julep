@@ -144,7 +144,6 @@ client.agents_route_create(
     about="about",
     model="model",
     instructions="instructions",
-    docs=[],
 )
 
 ```
@@ -193,14 +192,6 @@ client.agents_route_create(
 <dl>
 <dd>
 
-**docs:** `typing.Sequence[typing.Any]` — Documents to index for this agent. (Max: 100 items)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
 **metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
     
 </dd>
@@ -210,6 +201,77 @@ client.agents_route_create(
 <dd>
 
 **default_settings:** `typing.Optional[AgentsCreateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">agents_route_get</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Get an Agent by id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agents_route_get(
+    id="id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -316,7 +378,7 @@ client.agents_route_create_or_update(
 <dl>
 <dd>
 
-**instructions:** `AgentsCreateOrUpdateAgentRequestInstructions` — Instructions for the agent
+**instructions:** `AgentsUpdateAgentRequestInstructions` — Instructions for the agent
     
 </dd>
 </dl>
@@ -332,78 +394,7 @@ client.agents_route_create_or_update(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsCreateOrUpdateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">agents_route_get</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Get an Agent by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.agents_route_get(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
+**default_settings:** `typing.Optional[AgentsUpdateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -985,6 +976,606 @@ client.agents_docs_search_route_search(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">tasks_route_list</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+List tasks (paginated)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.tasks_route_list(
+    id="id",
+    limit=1,
+    offset=1,
+    sort_by="created_at",
+    direction="asc",
+    metadata_filter="metadata_filter",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**limit:** `CommonLimit` — Limit the number of items returned
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**offset:** `CommonOffset` — Offset the items returned
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sort_by:** `TasksRouteListRequestSortBy` — Sort by a field
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**direction:** `TasksRouteListRequestDirection` — Sort direction
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">tasks_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a new task
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import ToolsCreateToolRequest
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.tasks_route_create(
+    id="id",
+    name="name",
+    description="description",
+    main=[],
+    tools=[
+        ToolsCreateToolRequest(
+            type="function",
+            name="name",
+        )
+    ],
+    inherit_tools=True,
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `str` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**description:** `str` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**main:** `typing.Sequence[TasksWorkflowStep]` — The entrypoint of the task.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tools:** `typing.Sequence[ToolsCreateToolRequest]` — Tools defined specifically for this task not included in the Agent itself.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**inherit_tools:** `bool` — Whether to inherit tools from the parent agent or not. Defaults to true.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">tasks_route_update</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing task (overwrite existing values)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import ToolsCreateToolRequest
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.tasks_route_update(
+    id="id",
+    child_id="child_id",
+    description="description",
+    main=[],
+    tools=[
+        ToolsCreateToolRequest(
+            type="function",
+            name="name",
+        )
+    ],
+    inherit_tools=True,
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be updated
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**description:** `str` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**main:** `typing.Sequence[TasksWorkflowStep]` — The entrypoint of the task.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tools:** `typing.Sequence[ToolsCreateToolRequest]` — Tools defined specifically for this task not included in the Agent itself.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**inherit_tools:** `bool` — Whether to inherit tools from the parent agent or not. Defaults to true.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">tasks_route_delete</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Delete a task by its id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.tasks_route_delete(
+    id="id",
+    child_id="child_id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be deleted
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">tasks_route_patch</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing task (merges with existing values)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.tasks_route_patch(
+    id="id",
+    child_id="child_id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be patched
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**description:** `typing.Optional[str]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**main:** `typing.Optional[typing.Sequence[TasksWorkflowStep]]` — The entrypoint of the task.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tools:** `typing.Optional[typing.Sequence[ToolsCreateToolRequest]]` — Tools defined specifically for this task not included in the Agent itself.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**inherit_tools:** `typing.Optional[bool]` — Whether to inherit tools from the parent agent or not. Defaults to true.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">agent_tools_route_list</a>(...)</code></summary>
 <dl>
 <dd>
@@ -1140,7 +1731,6 @@ client.agent_tools_route_create(
     about="about",
     model="model",
     instructions="instructions",
-    docs=[],
 )
 
 ```
@@ -1197,14 +1787,6 @@ client.agent_tools_route_create(
 <dl>
 <dd>
 
-**docs:** `typing.Sequence[typing.Any]` — Documents to index for this agent. (Max: 100 items)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
 **metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
     
 </dd>
@@ -1214,6 +1796,491 @@ client.agent_tools_route_create(
 <dd>
 
 **default_settings:** `typing.Optional[AgentsCreateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">agent_tools_route_update</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing tool (overwrite existing values)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_tools_route_update(
+    id="id",
+    child_id="child_id",
+    type="function",
+    name="name",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be updated
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**type:** `ToolsToolType` — Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `CommonValidPythonIdentifier` — Name of the tool (must be unique for this agent and a valid python identifier string )
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**function:** `typing.Optional[ToolsFunctionDef]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**integration:** `typing.Optional[typing.Any]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**system:** `typing.Optional[typing.Any]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**api_call:** `typing.Optional[typing.Any]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">agent_tools_route_delete</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Delete an existing tool by id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_tools_route_delete(
+    id="id",
+    child_id="child_id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be deleted
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">agent_tools_route_patch</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing tool (merges with existing values)
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_tools_route_patch(
+    id="id",
+    child_id="child_id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be patched
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**type:** `typing.Optional[ToolsToolType]` — Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `typing.Optional[CommonValidPythonIdentifier]` — Name of the tool (must be unique for this agent and a valid python identifier string )
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**function:** `typing.Optional[ToolsFunctionDefUpdate]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**integration:** `typing.Optional[typing.Any]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**system:** `typing.Optional[typing.Any]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**api_call:** `typing.Optional[typing.Any]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">tasks_create_or_update_route_create_or_update</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create or update a task
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import ToolsCreateToolRequest
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.tasks_create_or_update_route_create_or_update(
+    parent_id="parent_id",
+    id="id",
+    name="name",
+    description="description",
+    main=[],
+    tools=[
+        ToolsCreateToolRequest(
+            type="function",
+            name="name",
+        )
+    ],
+    inherit_tools=True,
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**parent_id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `str` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**description:** `str` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**main:** `typing.Sequence[TasksWorkflowStep]` — The entrypoint of the task.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tools:** `typing.Sequence[ToolsCreateToolRequest]` — Tools defined specifically for this task not included in the Agent itself.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**inherit_tools:** `bool` — Whether to inherit tools from the parent agent or not. Defaults to true.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
     
 </dd>
 </dl>
@@ -1501,89 +2568,6 @@ client.executions_route_get(
 <dd>
 
 **id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">executions_route_update</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update an existing Execution
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep import ExecutionsUpdateExecutionRequest_Cancelled
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.executions_route_update(
-    id="string",
-    request=ExecutionsUpdateExecutionRequest_Cancelled(
-        reason="string",
-    ),
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request:** `ExecutionsUpdateExecutionRequest` 
     
 </dd>
 </dl>
@@ -2033,6 +3017,77 @@ client.sessions_route_create(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">sessions_route_get</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Get a session by id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.sessions_route_get(
+    id="string",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">sessions_route_create_or_update</a>(...)</code></summary>
 <dl>
 <dd>
@@ -2159,77 +3214,6 @@ client.sessions_route_create_or_update(
 <dd>
 
 **metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">sessions_route_get</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Get a session by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.sessions_route_get(
-    id="string",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>
@@ -2731,699 +3715,6 @@ client.history_route_delete(
 </dl>
 </details>
 
-<details><summary><code>client.<a href="src/julep/client.py">tasks_route_list</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-List tasks (paginated)
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tasks_route_list(
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `TasksRouteListRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `TasksRouteListRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tasks_route_create</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Create a new task
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep import ToolsCreateToolRequest
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tasks_route_create(
-    name="name",
-    description="description",
-    main=[],
-    tools=[
-        ToolsCreateToolRequest(
-            type="function",
-            name="name",
-        )
-    ],
-    inherit_tools=True,
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**name:** `str` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**description:** `str` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**main:** `typing.Sequence[TasksWorkflowStep]` — The entrypoint of the task.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**tools:** `typing.Sequence[ToolsCreateToolRequest]` — Tools defined specifically for this task not included in the Agent itself.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**inherit_tools:** `bool` — Whether to inherit tools from the parent agent or not. Defaults to true.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tasks_route_create_or_update</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Create or update a task
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep import ToolsCreateToolRequest
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tasks_route_create_or_update(
-    id="id",
-    name="name",
-    description="description",
-    main=[],
-    tools=[
-        ToolsCreateToolRequest(
-            type="function",
-            name="name",
-        )
-    ],
-    inherit_tools=True,
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**name:** `str` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**description:** `str` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**main:** `typing.Sequence[TasksWorkflowStep]` — The entrypoint of the task.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**tools:** `typing.Sequence[ToolsCreateToolRequest]` — Tools defined specifically for this task not included in the Agent itself.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**inherit_tools:** `bool` — Whether to inherit tools from the parent agent or not. Defaults to true.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tasks_route_update</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update an existing task (overwrite existing values)
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep import ToolsCreateToolRequest
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tasks_route_update(
-    id="id",
-    description="description",
-    main=[],
-    tools=[
-        ToolsCreateToolRequest(
-            type="function",
-            name="name",
-        )
-    ],
-    inherit_tools=True,
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**description:** `str` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**main:** `typing.Sequence[TasksWorkflowStep]` — The entrypoint of the task.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**tools:** `typing.Sequence[ToolsCreateToolRequest]` — Tools defined specifically for this task not included in the Agent itself.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**inherit_tools:** `bool` — Whether to inherit tools from the parent agent or not. Defaults to true.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tasks_route_delete</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Delete a task by its id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tasks_route_delete(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tasks_route_patch</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update an existing task (merges with existing values)
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tasks_route_patch(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**description:** `typing.Optional[str]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**main:** `typing.Optional[typing.Sequence[TasksWorkflowStep]]` — The entrypoint of the task.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**input_schema:** `typing.Optional[typing.Dict[str, typing.Any]]` — The schema for the input to the task. `null` means all inputs are valid.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**tools:** `typing.Optional[typing.Sequence[ToolsCreateToolRequest]]` — Tools defined specifically for this task not included in the Agent itself.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**inherit_tools:** `typing.Optional[bool]` — Whether to inherit tools from the parent agent or not. Defaults to true.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
 <details><summary><code>client.<a href="src/julep/client.py">task_executions_route_list</a>(...)</code></summary>
 <dl>
 <dd>
@@ -3716,7 +4007,7 @@ client.task_executions_route_resume_with_task_token(
 </dl>
 </details>
 
-<details><summary><code>client.<a href="src/julep/client.py">tool_route_update</a>(...)</code></summary>
+<details><summary><code>client.<a href="src/julep/client.py">task_executions_route_update</a>(...)</code></summary>
 <dl>
 <dd>
 
@@ -3728,7 +4019,7 @@ client.task_executions_route_resume_with_task_token(
 <dl>
 <dd>
 
-Update an existing tool (overwrite existing values)
+Update an existing Execution
 </dd>
 </dl>
 </dd>
@@ -3743,16 +4034,19 @@ Update an existing tool (overwrite existing values)
 <dd>
 
 ```python
+from julep import ExecutionsUpdateExecutionRequest_Cancelled
 from julep.client import JulepApi
 
 client = JulepApi(
     auth_key="YOUR_AUTH_KEY",
     api_key="YOUR_API_KEY",
 )
-client.tool_route_update(
-    id="id",
-    type="function",
-    name="name",
+client.task_executions_route_update(
+    id="string",
+    child_id="string",
+    request=ExecutionsUpdateExecutionRequest_Cancelled(
+        reason="string",
+    ),
 )
 
 ```
@@ -3769,7 +4063,7 @@ client.tool_route_update(
 <dl>
 <dd>
 
-**id:** `CommonUuid` — ID of the resource
+**id:** `CommonUuid` — ID of parent resource
     
 </dd>
 </dl>
@@ -3777,7 +4071,7 @@ client.tool_route_update(
 <dl>
 <dd>
 
-**type:** `ToolsToolType` — Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+**child_id:** `CommonUuid` — ID of the resource to be updated
     
 </dd>
 </dl>
@@ -3785,229 +4079,7 @@ client.tool_route_update(
 <dl>
 <dd>
 
-**name:** `CommonValidPythonIdentifier` — Name of the tool (must be unique for this agent and a valid python identifier string )
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**function:** `typing.Optional[ToolsFunctionDef]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**integration:** `typing.Optional[typing.Any]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**system:** `typing.Optional[typing.Any]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**api_call:** `typing.Optional[typing.Any]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tool_route_delete</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Delete an existing tool by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tool_route_delete(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">tool_route_patch</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update an existing tool (merges with existing values)
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.tool_route_patch(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**type:** `typing.Optional[ToolsToolType]` — Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**name:** `typing.Optional[CommonValidPythonIdentifier]` — Name of the tool (must be unique for this agent and a valid python identifier string )
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**function:** `typing.Optional[ToolsFunctionDefUpdate]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**integration:** `typing.Optional[typing.Any]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**system:** `typing.Optional[typing.Any]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**api_call:** `typing.Optional[typing.Any]` 
+**request:** `ExecutionsUpdateExecutionRequest` 
     
 </dd>
 </dl>
@@ -4231,6 +4303,77 @@ client.users_route_create(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">users_route_get</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Get a user by id
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.users_route_get(
+    id="id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">users_route_create_or_update</a>(...)</code></summary>
 <dl>
 <dd>
@@ -4309,77 +4452,6 @@ client.users_route_create_or_update(
 <dd>
 
 **metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">users_route_get</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Get a user by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.users_route_get(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
     
 </dd>
 </dl>

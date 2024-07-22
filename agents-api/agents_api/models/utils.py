@@ -23,7 +23,9 @@ def verify_developer_id_query(developer_id: UUID | str) -> str:
     """
 
 
-def verify_developer_owns_resource_query(developer_id: UUID | str, resource: str, **resource_id: dict) -> str:
+def verify_developer_owns_resource_query(
+    developer_id: UUID | str, resource: str, **resource_id: dict
+) -> str:
 
     resource_id_key, resource_id_value = next(iter(resource_id.items()))
 
@@ -39,7 +41,9 @@ def verify_developer_owns_resource_query(developer_id: UUID | str, resource: str
     """
 
 
-def cozo_query(func: Callable[P, tuple[str, dict]] | None = None, debug: bool | None = None):
+def cozo_query(
+    func: Callable[P, tuple[str, dict]] | None = None, debug: bool | None = None
+):
     def cozo_query_dec(func: Callable[P, tuple[str, dict]]):
         """
         Decorator that wraps a function that takes arbitrary arguments, and
@@ -55,6 +59,7 @@ def cozo_query(func: Callable[P, tuple[str, dict]] | None = None, debug: bool | 
 
             if debug:
                 from pprint import pprint
+
                 pprint(dict(query=query, variables=variables))
 
             return client.run(query, variables)
@@ -63,8 +68,9 @@ def cozo_query(func: Callable[P, tuple[str, dict]] | None = None, debug: bool | 
 
     if func is not None and callable(func):
         return cozo_query_dec(func)
-    
+
     return cozo_query_dec
+
 
 def wrap_in_class(
     cls: Type[BaseModel],

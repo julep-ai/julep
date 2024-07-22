@@ -1,10 +1,12 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "developers_relation"
 CREATED_AT = 1721666295.486804
 
+
 def up(client):
-    client.run("""
+    client.run(
+        """
     # Create developers table and insert default developer
     ?[developer_id, email] <- [
         ["00000000-0000-0000-0000-000000000000", "developers@example.com"]
@@ -18,9 +20,13 @@ def up(client):
         created_at: Float default now(),
         updated_at: Float default now(),
     }
-    """)
+    """
+    )
+
 
 def down(client):
-    client.run("""
+    client.run(
+        """
     ::remove developers
-    """)
+    """
+    )

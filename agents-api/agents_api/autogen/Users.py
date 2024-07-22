@@ -9,28 +9,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
-class CreateOrUpdateUserRequest(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: UUID
-    metadata: dict[str, Any] | None = None
-    name: Annotated[
-        str,
-        Field(
-            "",
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ]
-    """
-    Name of the user
-    """
-    about: str = ""
-    """
-    About the user
-    """
-
-
 class CreateUserRequest(BaseModel):
     """
     Payload for creating a user (and associated documents)

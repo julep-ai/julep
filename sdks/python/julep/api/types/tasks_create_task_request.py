@@ -5,47 +5,40 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
-)
-from .agents_create_agent_request_instructions import (
-    AgentsCreateAgentRequestInstructions,
-)
-from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
+from .tasks_workflow_step import TasksWorkflowStep
+from .tools_create_tool_request import ToolsCreateToolRequest
 
 
-class AgentsCreateAgentRequest(pydantic_v1.BaseModel):
+class TasksCreateTaskRequest(pydantic_v1.BaseModel):
     """
-    Payload for creating a agent (and associated documents)
+    Payload for creating a task
+    """
+
+    name: str
+    description: str
+    main: typing.List[TasksWorkflowStep] = pydantic_v1.Field()
+    """
+    The entrypoint of the task.
+    """
+
+    input_schema: typing.Optional[typing.Dict[str, typing.Any]] = pydantic_v1.Field(
+        default=None
+    )
+    """
+    The schema for the input to the task. `null` means all inputs are valid.
+    """
+
+    tools: typing.List[ToolsCreateToolRequest] = pydantic_v1.Field()
+    """
+    Tools defined specifically for this task not included in the Agent itself.
+    """
+
+    inherit_tools: bool = pydantic_v1.Field()
+    """
+    Whether to inherit tools from the parent agent or not. Defaults to true.
     """
 
     metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
-    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
-    """
-    Name of the agent
-    """
-
-    about: str = pydantic_v1.Field()
-    """
-    About the agent
-    """
-
-    model: str = pydantic_v1.Field()
-    """
-    Model name to use (gpt-4-turbo, gemini-nano etc)
-    """
-
-    instructions: AgentsCreateAgentRequestInstructions = pydantic_v1.Field()
-    """
-    Instructions for the agent
-    """
-
-    default_settings: typing.Optional[AgentsCreateAgentRequestDefaultSettings] = (
-        pydantic_v1.Field(default=None)
-    )
-    """
-    Default settings for all sessions created by this agent
-    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

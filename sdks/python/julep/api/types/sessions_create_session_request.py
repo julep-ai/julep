@@ -5,47 +5,50 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
-)
-from .agents_create_agent_request_instructions import (
-    AgentsCreateAgentRequestInstructions,
-)
-from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
+from .common_uuid import CommonUuid
+from .sessions_context_overflow_type import SessionsContextOverflowType
 
 
-class AgentsCreateAgentRequest(pydantic_v1.BaseModel):
+class SessionsCreateSessionRequest(pydantic_v1.BaseModel):
     """
-    Payload for creating a agent (and associated documents)
+    Payload for creating a session
+    """
+
+    user: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
+    """
+    User ID of user associated with this session
+    """
+
+    users: typing.Optional[typing.List[CommonUuid]] = None
+    agent: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
+    """
+    Agent ID of agent associated with this session
+    """
+
+    agents: typing.Optional[typing.List[CommonUuid]] = None
+    situation: str = pydantic_v1.Field()
+    """
+    A specific situation that sets the background for this session
+    """
+
+    render_templates: bool = pydantic_v1.Field()
+    """
+    Render system and assistant message content as jinja templates
+    """
+
+    token_budget: typing.Optional[int] = pydantic_v1.Field(default=None)
+    """
+    Threshold value for the adaptive context functionality
+    """
+
+    context_overflow: typing.Optional[SessionsContextOverflowType] = pydantic_v1.Field(
+        default=None
+    )
+    """
+    Action to start on context window overflow
     """
 
     metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
-    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
-    """
-    Name of the agent
-    """
-
-    about: str = pydantic_v1.Field()
-    """
-    About the agent
-    """
-
-    model: str = pydantic_v1.Field()
-    """
-    Model name to use (gpt-4-turbo, gemini-nano etc)
-    """
-
-    instructions: AgentsCreateAgentRequestInstructions = pydantic_v1.Field()
-    """
-    Instructions for the agent
-    """
-
-    default_settings: typing.Optional[AgentsCreateAgentRequestDefaultSettings] = (
-        pydantic_v1.Field(default=None)
-    )
-    """
-    Default settings for all sessions created by this agent
-    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

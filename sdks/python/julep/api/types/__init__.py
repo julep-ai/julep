@@ -18,12 +18,6 @@ from .agents_create_agent_request_default_settings import (
 from .agents_create_agent_request_instructions import (
     AgentsCreateAgentRequestInstructions,
 )
-from .agents_create_or_update_agent_request_default_settings import (
-    AgentsCreateOrUpdateAgentRequestDefaultSettings,
-)
-from .agents_create_or_update_agent_request_instructions import (
-    AgentsCreateOrUpdateAgentRequestInstructions,
-)
 from .agents_docs_search_route_search_request_direction import (
     AgentsDocsSearchRouteSearchRequestDirection,
 )
@@ -40,6 +34,7 @@ from .agents_patch_agent_request_instructions import AgentsPatchAgentRequestInst
 from .agents_route_list_request_direction import AgentsRouteListRequestDirection
 from .agents_route_list_request_sort_by import AgentsRouteListRequestSortBy
 from .agents_route_list_response import AgentsRouteListResponse
+from .agents_update_agent_request import AgentsUpdateAgentRequest
 from .agents_update_agent_request_default_settings import (
     AgentsUpdateAgentRequestDefaultSettings,
 )
@@ -142,6 +137,7 @@ from .history_route_list_response import HistoryRouteListResponse
 from .jobs_job_state import JobsJobState
 from .jobs_job_status import JobsJobStatus
 from .sessions_context_overflow_type import SessionsContextOverflowType
+from .sessions_create_session_request import SessionsCreateSessionRequest
 from .sessions_multi_agent_multi_user_session import SessionsMultiAgentMultiUserSession
 from .sessions_multi_agent_no_user_session import SessionsMultiAgentNoUserSession
 from .sessions_multi_agent_single_user_session import (
@@ -173,6 +169,7 @@ from .task_executions_route_list_request_sort_by import (
     TaskExecutionsRouteListRequestSortBy,
 )
 from .task_executions_route_list_response import TaskExecutionsRouteListResponse
+from .tasks_create_task_request import TasksCreateTaskRequest
 from .tasks_error_workflow_step import TasksErrorWorkflowStep
 from .tasks_evaluate_step import TasksEvaluateStep
 from .tasks_if_else_workflow_step import TasksIfElseWorkflowStep
@@ -222,6 +219,7 @@ from .user_docs_search_route_search_response import UserDocsSearchRouteSearchRes
 from .users_route_list_request_direction import UsersRouteListRequestDirection
 from .users_route_list_request_sort_by import UsersRouteListRequestSortBy
 from .users_route_list_response import UsersRouteListResponse
+from .users_update_user_request import UsersUpdateUserRequest
 from .users_user import UsersUser
 
 __all__ = [
@@ -237,8 +235,6 @@ __all__ = [
     "AgentsCreateAgentRequest",
     "AgentsCreateAgentRequestDefaultSettings",
     "AgentsCreateAgentRequestInstructions",
-    "AgentsCreateOrUpdateAgentRequestDefaultSettings",
-    "AgentsCreateOrUpdateAgentRequestInstructions",
     "AgentsDocsSearchRouteSearchRequestDirection",
     "AgentsDocsSearchRouteSearchRequestSortBy",
     "AgentsDocsSearchRouteSearchResponse",
@@ -247,6 +243,7 @@ __all__ = [
     "AgentsRouteListRequestDirection",
     "AgentsRouteListRequestSortBy",
     "AgentsRouteListResponse",
+    "AgentsUpdateAgentRequest",
     "AgentsUpdateAgentRequestDefaultSettings",
     "AgentsUpdateAgentRequestInstructions",
     "ChatCompletionResponseFormat",
@@ -327,6 +324,7 @@ __all__ = [
     "JobsJobState",
     "JobsJobStatus",
     "SessionsContextOverflowType",
+    "SessionsCreateSessionRequest",
     "SessionsMultiAgentMultiUserSession",
     "SessionsMultiAgentNoUserSession",
     "SessionsMultiAgentSingleUserSession",
@@ -346,6 +344,7 @@ __all__ = [
     "TaskExecutionsRouteListRequestDirection",
     "TaskExecutionsRouteListRequestSortBy",
     "TaskExecutionsRouteListResponse",
+    "TasksCreateTaskRequest",
     "TasksErrorWorkflowStep",
     "TasksEvaluateStep",
     "TasksIfElseWorkflowStep",
@@ -389,5 +388,6 @@ __all__ = [
     "UsersRouteListRequestDirection",
     "UsersRouteListRequestSortBy",
     "UsersRouteListResponse",
+    "UsersUpdateUserRequest",
     "UsersUser",
 ]

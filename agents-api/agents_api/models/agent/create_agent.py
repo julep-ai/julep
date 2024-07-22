@@ -12,7 +12,9 @@ from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
 
 
-@wrap_in_class(Agent, one=True, transform=lambda d: {"id": UUID(d.pop("agent_id")), **d})
+@wrap_in_class(
+    Agent, one=True, transform=lambda d: {"id": UUID(d.pop("agent_id")), **d}
+)
 @cozo_query
 @beartype
 def create_agent_query(
@@ -43,7 +45,11 @@ def create_agent_query(
 
     # Extract the agent data from the payload
     create_agent.metadata = create_agent.metadata or {}
-    create_agent.instructions = create_agent.instructions if isinstance(create_agent.instructions, list) else [create_agent.instructions]
+    create_agent.instructions = (
+        create_agent.instructions
+        if isinstance(create_agent.instructions, list)
+        else [create_agent.instructions]
+    )
     create_agent.default_settings = create_agent.default_settings or {}
 
     agent_data = create_agent.model_dump()

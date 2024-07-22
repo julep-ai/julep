@@ -5,18 +5,18 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
+from .agents_update_agent_request_default_settings import (
+    AgentsUpdateAgentRequestDefaultSettings,
 )
-from .agents_create_agent_request_instructions import (
-    AgentsCreateAgentRequestInstructions,
+from .agents_update_agent_request_instructions import (
+    AgentsUpdateAgentRequestInstructions,
 )
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 
 
-class AgentsCreateAgentRequest(pydantic_v1.BaseModel):
+class AgentsUpdateAgentRequest(pydantic_v1.BaseModel):
     """
-    Payload for creating a agent (and associated documents)
+    Payload for updating a agent
     """
 
     metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
@@ -35,12 +35,12 @@ class AgentsCreateAgentRequest(pydantic_v1.BaseModel):
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
 
-    instructions: AgentsCreateAgentRequestInstructions = pydantic_v1.Field()
+    instructions: AgentsUpdateAgentRequestInstructions = pydantic_v1.Field()
     """
     Instructions for the agent
     """
 
-    default_settings: typing.Optional[AgentsCreateAgentRequestDefaultSettings] = (
+    default_settings: typing.Optional[AgentsUpdateAgentRequestDefaultSettings] = (
         pydantic_v1.Field(default=None)
     )
     """

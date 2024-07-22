@@ -30,12 +30,6 @@ from .types.agents_create_agent_request_default_settings import (
 from .types.agents_create_agent_request_instructions import (
     AgentsCreateAgentRequestInstructions,
 )
-from .types.agents_create_or_update_agent_request_default_settings import (
-    AgentsCreateOrUpdateAgentRequestDefaultSettings,
-)
-from .types.agents_create_or_update_agent_request_instructions import (
-    AgentsCreateOrUpdateAgentRequestInstructions,
-)
 from .types.agents_docs_search_route_search_request_direction import (
     AgentsDocsSearchRouteSearchRequestDirection,
 )
@@ -284,7 +278,6 @@ class JulepApi:
         about: str,
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
-        docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         default_settings: typing.Optional[
             AgentsCreateAgentRequestDefaultSettings
@@ -307,9 +300,6 @@ class JulepApi:
 
         instructions : AgentsCreateAgentRequestInstructions
             Instructions for the agent
-
-        docs : typing.Sequence[typing.Any]
-            Documents to index for this agent. (Max: 100 items)
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -337,7 +327,6 @@ class JulepApi:
             about="about",
             model="model",
             instructions="instructions",
-            docs=[],
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -350,7 +339,6 @@ class JulepApi:
                 "model": model,
                 "instructions": instructions,
                 "default_settings": default_settings,
-                "docs": docs,
             },
             request_options=request_options,
             omit=OMIT,
@@ -358,91 +346,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_create_or_update(
-        self,
-        *,
-        id: CommonUuid,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsCreateOrUpdateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateOrUpdateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update an Agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsCreateOrUpdateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsCreateOrUpdateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_create_or_update(
-            id="id",
-            name="name",
-            about="about",
-            model="model",
-            instructions="instructions",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "agents",
-            method="PUT",
-            json={
-                "id": id,
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -487,6 +390,90 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(AgentsAgent, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agents_route_create_or_update(
+        self,
+        id: CommonUuid,
+        *,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        model: str,
+        instructions: AgentsUpdateAgentRequestInstructions,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        default_settings: typing.Optional[
+            AgentsUpdateAgentRequestDefaultSettings
+        ] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Create or update an Agent
+
+        Parameters
+        ----------
+        id : CommonUuid
+
+        name : CommonIdentifierSafeUnicode
+            Name of the agent
+
+        about : str
+            About the agent
+
+        model : str
+            Model name to use (gpt-4-turbo, gemini-nano etc)
+
+        instructions : AgentsUpdateAgentRequestInstructions
+            Instructions for the agent
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
+            Default settings for all sessions created by this agent
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agents_route_create_or_update(
+            id="id",
+            name="name",
+            about="about",
+            model="model",
+            instructions="instructions",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}",
+            method="POST",
+            json={
+                "metadata": metadata,
+                "name": name,
+                "about": about,
+                "model": model,
+                "instructions": instructions,
+                "default_settings": default_settings,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -874,6 +861,406 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def tasks_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: TasksRouteListRequestSortBy,
+        direction: TasksRouteListRequestDirection,
+        metadata_filter: str,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> TasksRouteListResponse:
+        """
+        List tasks (paginated)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent
+
+        limit : CommonLimit
+            Limit the number of items returned
+
+        offset : CommonOffset
+            Offset the items returned
+
+        sort_by : TasksRouteListRequestSortBy
+            Sort by a field
+
+        direction : TasksRouteListRequestDirection
+            Sort direction
+
+        metadata_filter : str
+            JSON string of object that should be used to filter objects by metadata
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        TasksRouteListResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_list(
+            id="id",
+            limit=1,
+            offset=1,
+            sort_by="created_at",
+            direction="asc",
+            metadata_filter="metadata_filter",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks",
+            method="GET",
+            params={
+                "limit": limit,
+                "offset": offset,
+                "sort_by": sort_by,
+                "direction": direction,
+                "metadata_filter": metadata_filter,
+            },
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(TasksRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_route_create(
+        self,
+        id: CommonUuid,
+        *,
+        name: str,
+        description: str,
+        main: typing.Sequence[TasksWorkflowStep],
+        tools: typing.Sequence[ToolsCreateToolRequest],
+        inherit_tools: bool,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceCreatedResponse:
+        """
+        Create a new task
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        name : str
+
+        description : str
+
+        main : typing.Sequence[TasksWorkflowStep]
+            The entrypoint of the task.
+
+        tools : typing.Sequence[ToolsCreateToolRequest]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : bool
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
+
+        Examples
+        --------
+        from julep import ToolsCreateToolRequest
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_create(
+            id="id",
+            name="name",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type="function",
+                    name="name",
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks",
+            method="POST",
+            json={
+                "name": name,
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_route_update(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        description: str,
+        main: typing.Sequence[TasksWorkflowStep],
+        tools: typing.Sequence[ToolsCreateToolRequest],
+        inherit_tools: bool,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing task (overwrite existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be updated
+
+        description : str
+
+        main : typing.Sequence[TasksWorkflowStep]
+            The entrypoint of the task.
+
+        tools : typing.Sequence[ToolsCreateToolRequest]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : bool
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep import ToolsCreateToolRequest
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_update(
+            id="id",
+            child_id="child_id",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type="function",
+                    name="name",
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
+            method="PUT",
+            json={
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete a task by its id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_delete(
+            id="id",
+            child_id="child_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_route_patch(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        description: typing.Optional[str] = OMIT,
+        main: typing.Optional[typing.Sequence[TasksWorkflowStep]] = OMIT,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
+        inherit_tools: typing.Optional[bool] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing task (merges with existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be patched
+
+        description : typing.Optional[str]
+
+        main : typing.Optional[typing.Sequence[TasksWorkflowStep]]
+            The entrypoint of the task.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        tools : typing.Optional[typing.Sequence[ToolsCreateToolRequest]]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : typing.Optional[bool]
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_route_patch(
+            id="id",
+            child_id="child_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
+            method="PATCH",
+            json={
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def agent_tools_route_list(
         self,
         id: CommonUuid,
@@ -961,7 +1348,6 @@ class JulepApi:
         about: str,
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
-        docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         default_settings: typing.Optional[
             AgentsCreateAgentRequestDefaultSettings
@@ -987,9 +1373,6 @@ class JulepApi:
 
         instructions : AgentsCreateAgentRequestInstructions
             Instructions for the agent
-
-        docs : typing.Sequence[typing.Any]
-            Documents to index for this agent. (Max: 100 items)
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -1018,7 +1401,6 @@ class JulepApi:
             about="about",
             model="model",
             instructions="instructions",
-            docs=[],
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -1031,7 +1413,6 @@ class JulepApi:
                 "model": model,
                 "instructions": instructions,
                 "default_settings": default_settings,
-                "docs": docs,
             },
             request_options=request_options,
             omit=OMIT,
@@ -1039,6 +1420,319 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_tools_route_update(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        type: ToolsToolType,
+        name: CommonValidPythonIdentifier,
+        function: typing.Optional[ToolsFunctionDef] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing tool (overwrite existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be updated
+
+        type : ToolsToolType
+            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+        name : CommonValidPythonIdentifier
+            Name of the tool (must be unique for this agent and a valid python identifier string )
+
+        function : typing.Optional[ToolsFunctionDef]
+
+        integration : typing.Optional[typing.Any]
+
+        system : typing.Optional[typing.Any]
+
+        api_call : typing.Optional[typing.Any]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_tools_route_update(
+            id="id",
+            child_id="child_id",
+            type="function",
+            name="name",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
+            method="PUT",
+            json={
+                "type": type,
+                "name": name,
+                "function": function,
+                "integration": integration,
+                "system": system,
+                "api_call": api_call,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_tools_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete an existing tool by id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_tools_route_delete(
+            id="id",
+            child_id="child_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_tools_route_patch(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        type: typing.Optional[ToolsToolType] = OMIT,
+        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
+        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing tool (merges with existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be patched
+
+        type : typing.Optional[ToolsToolType]
+            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+        name : typing.Optional[CommonValidPythonIdentifier]
+            Name of the tool (must be unique for this agent and a valid python identifier string )
+
+        function : typing.Optional[ToolsFunctionDefUpdate]
+
+        integration : typing.Optional[typing.Any]
+
+        system : typing.Optional[typing.Any]
+
+        api_call : typing.Optional[typing.Any]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_tools_route_patch(
+            id="id",
+            child_id="child_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
+            method="PATCH",
+            json={
+                "type": type,
+                "name": name,
+                "function": function,
+                "integration": integration,
+                "system": system,
+                "api_call": api_call,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def tasks_create_or_update_route_create_or_update(
+        self,
+        parent_id: CommonUuid,
+        id: CommonUuid,
+        *,
+        name: str,
+        description: str,
+        main: typing.Sequence[TasksWorkflowStep],
+        tools: typing.Sequence[ToolsCreateToolRequest],
+        inherit_tools: bool,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Create or update a task
+
+        Parameters
+        ----------
+        parent_id : CommonUuid
+            ID of parent resource
+
+        id : CommonUuid
+
+        name : str
+
+        description : str
+
+        main : typing.Sequence[TasksWorkflowStep]
+            The entrypoint of the task.
+
+        tools : typing.Sequence[ToolsCreateToolRequest]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : bool
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep import ToolsCreateToolRequest
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.tasks_create_or_update_route_create_or_update(
+            parent_id="parent_id",
+            id="id",
+            name="name",
+            description="description",
+            main=[],
+            tools=[
+                ToolsCreateToolRequest(
+                    type="function",
+                    name="name",
+                )
+            ],
+            inherit_tools=True,
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(parent_id)}/tasks/{jsonable_encoder(id)}",
+            method="POST",
+            json={
+                "name": name,
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1222,62 +1916,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(ExecutionsExecution, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def executions_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        request: ExecutionsUpdateExecutionRequest,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Execution
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request : ExecutionsUpdateExecutionRequest
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep import ExecutionsUpdateExecutionRequest_Cancelled
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.executions_route_update(
-            id="string",
-            request=ExecutionsUpdateExecutionRequest_Cancelled(
-                reason="string",
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"executions/{jsonable_encoder(id)}",
-            method="PUT",
-            json=request,
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1569,10 +2207,54 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def sessions_route_get(
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> SessionsSession:
+        """
+        Get a session by id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        SessionsSession
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.sessions_route_get(
+            id="string",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}",
+            method="GET",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(SessionsSession, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def sessions_route_create_or_update(
         self,
-        *,
         id: CommonUuid,
+        *,
         situation: str,
         render_templates: bool,
         user: typing.Optional[CommonUuid] = OMIT,
@@ -1638,10 +2320,9 @@ class JulepApi:
         )
         """
         _response = self._client_wrapper.httpx_client.request(
-            "sessions",
-            method="PUT",
+            f"sessions/{jsonable_encoder(id)}",
+            method="POST",
             json={
-                "id": id,
                 "user": user,
                 "users": users,
                 "agent": agent,
@@ -1658,50 +2339,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> SessionsSession:
-        """
-        Get a session by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        SessionsSession
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_get(
-            id="string",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsSession, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2024,471 +2661,6 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def tasks_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: TasksRouteListRequestSortBy,
-        direction: TasksRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteListResponse:
-        """
-        List tasks (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : TasksRouteListRequestSortBy
-            Sort by a field
-
-        direction : TasksRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        TasksRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_route_list(
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "tasks",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tasks_route_create(
-        self,
-        *,
-        name: str,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new task
-
-        Parameters
-        ----------
-        name : str
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        from julep import ToolsCreateToolRequest
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_route_create(
-            name="name",
-            description="description",
-            main=[],
-            tools=[
-                ToolsCreateToolRequest(
-                    type="function",
-                    name="name",
-                )
-            ],
-            inherit_tools=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "tasks",
-            method="POST",
-            json={
-                "name": name,
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tasks_route_create_or_update(
-        self,
-        *,
-        id: CommonUuid,
-        name: str,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a task
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : str
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep import ToolsCreateToolRequest
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_route_create_or_update(
-            id="id",
-            name="name",
-            description="description",
-            main=[],
-            tools=[
-                ToolsCreateToolRequest(
-                    type="function",
-                    name="name",
-                )
-            ],
-            inherit_tools=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "tasks",
-            method="PUT",
-            json={
-                "id": id,
-                "name": name,
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tasks_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing task (overwrite existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep import ToolsCreateToolRequest
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_route_update(
-            id="id",
-            description="description",
-            main=[],
-            tools=[
-                ToolsCreateToolRequest(
-                    type="function",
-                    name="name",
-                )
-            ],
-            inherit_tools=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}",
-            method="PUT",
-            json={
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tasks_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete a task by its id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tasks_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        description: typing.Optional[str] = OMIT,
-        main: typing.Optional[typing.Sequence[TasksWorkflowStep]] = OMIT,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
-        inherit_tools: typing.Optional[bool] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing task (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        description : typing.Optional[str]
-
-        main : typing.Optional[typing.Sequence[TasksWorkflowStep]]
-            The entrypoint of the task.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        tools : typing.Optional[typing.Sequence[ToolsCreateToolRequest]]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : typing.Optional[bool]
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_route_patch(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
     def task_executions_route_list(
         self,
         id: CommonUuid,
@@ -2683,39 +2855,26 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def tool_route_update(
+    def task_executions_route_update(
         self,
         id: CommonUuid,
+        child_id: CommonUuid,
         *,
-        type: ToolsToolType,
-        name: CommonValidPythonIdentifier,
-        function: typing.Optional[ToolsFunctionDef] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
+        request: ExecutionsUpdateExecutionRequest,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
-        Update an existing tool (overwrite existing values)
+        Update an existing Execution
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the resource
+            ID of parent resource
 
-        type : ToolsToolType
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+        child_id : CommonUuid
+            ID of the resource to be updated
 
-        name : CommonValidPythonIdentifier
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDef]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
+        request : ExecutionsUpdateExecutionRequest
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -2727,149 +2886,25 @@ class JulepApi:
 
         Examples
         --------
+        from julep import ExecutionsUpdateExecutionRequest_Cancelled
         from julep.client import JulepApi
 
         client = JulepApi(
             auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.tool_route_update(
-            id="id",
-            type="function",
-            name="name",
+        client.task_executions_route_update(
+            id="string",
+            child_id="string",
+            request=ExecutionsUpdateExecutionRequest_Cancelled(
+                reason="string",
+            ),
         )
         """
         _response = self._client_wrapper.httpx_client.request(
-            f"tools/{jsonable_encoder(id)}",
+            f"tasks/{jsonable_encoder(id)}/executions/{jsonable_encoder(child_id)}",
             method="PUT",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tool_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete an existing tool by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tool_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tools/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tool_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        type: typing.Optional[ToolsToolType] = OMIT,
-        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
-        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing tool (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        type : typing.Optional[ToolsToolType]
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-
-        name : typing.Optional[CommonValidPythonIdentifier]
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDefUpdate]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tool_route_patch(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tools/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
+            json=request,
             request_options=request_options,
             omit=OMIT,
         )
@@ -3017,10 +3052,54 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def users_route_get(
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> UsersUser:
+        """
+        Get a user by id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        UsersUser
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.users_route_get(
+            id="id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"users/{jsonable_encoder(id)}",
+            method="GET",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(UsersUser, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def users_route_create_or_update(
         self,
-        *,
         id: CommonUuid,
+        *,
         name: CommonIdentifierSafeUnicode,
         about: str,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
@@ -3064,59 +3143,15 @@ class JulepApi:
         )
         """
         _response = self._client_wrapper.httpx_client.request(
-            "users",
-            method="PUT",
-            json={"id": id, "metadata": metadata, "name": name, "about": about},
+            f"users/{jsonable_encoder(id)}",
+            method="POST",
+            json={"metadata": metadata, "name": name, "about": about},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> UsersUser:
-        """
-        Get a user by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        UsersUser
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_get(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersUser, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3621,7 +3656,6 @@ class AsyncJulepApi:
         about: str,
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
-        docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         default_settings: typing.Optional[
             AgentsCreateAgentRequestDefaultSettings
@@ -3644,9 +3678,6 @@ class AsyncJulepApi:
 
         instructions : AgentsCreateAgentRequestInstructions
             Instructions for the agent
-
-        docs : typing.Sequence[typing.Any]
-            Documents to index for this agent. (Max: 100 items)
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -3679,7 +3710,6 @@ class AsyncJulepApi:
                 about="about",
                 model="model",
                 instructions="instructions",
-                docs=[],
             )
 
 
@@ -3695,7 +3725,6 @@ class AsyncJulepApi:
                 "model": model,
                 "instructions": instructions,
                 "default_settings": default_settings,
-                "docs": docs,
             },
             request_options=request_options,
             omit=OMIT,
@@ -3703,99 +3732,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_create_or_update(
-        self,
-        *,
-        id: CommonUuid,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsCreateOrUpdateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateOrUpdateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update an Agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsCreateOrUpdateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsCreateOrUpdateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_create_or_update(
-                id="id",
-                name="name",
-                about="about",
-                model="model",
-                instructions="instructions",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "agents",
-            method="PUT",
-            json={
-                "id": id,
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3848,6 +3784,98 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(AgentsAgent, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agents_route_create_or_update(
+        self,
+        id: CommonUuid,
+        *,
+        name: CommonIdentifierSafeUnicode,
+        about: str,
+        model: str,
+        instructions: AgentsUpdateAgentRequestInstructions,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        default_settings: typing.Optional[
+            AgentsUpdateAgentRequestDefaultSettings
+        ] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Create or update an Agent
+
+        Parameters
+        ----------
+        id : CommonUuid
+
+        name : CommonIdentifierSafeUnicode
+            Name of the agent
+
+        about : str
+            About the agent
+
+        model : str
+            Model name to use (gpt-4-turbo, gemini-nano etc)
+
+        instructions : AgentsUpdateAgentRequestInstructions
+            Instructions for the agent
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
+            Default settings for all sessions created by this agent
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.agents_route_create_or_update(
+                id="id",
+                name="name",
+                about="about",
+                model="model",
+                instructions="instructions",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}",
+            method="POST",
+            json={
+                "metadata": metadata,
+                "name": name,
+                "about": about,
+                "model": model,
+                "instructions": instructions,
+                "default_settings": default_settings,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4275,6 +4303,446 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def tasks_route_list(
+        self,
+        id: CommonUuid,
+        *,
+        limit: CommonLimit,
+        offset: CommonOffset,
+        sort_by: TasksRouteListRequestSortBy,
+        direction: TasksRouteListRequestDirection,
+        metadata_filter: str,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> TasksRouteListResponse:
+        """
+        List tasks (paginated)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent
+
+        limit : CommonLimit
+            Limit the number of items returned
+
+        offset : CommonOffset
+            Offset the items returned
+
+        sort_by : TasksRouteListRequestSortBy
+            Sort by a field
+
+        direction : TasksRouteListRequestDirection
+            Sort direction
+
+        metadata_filter : str
+            JSON string of object that should be used to filter objects by metadata
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        TasksRouteListResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.tasks_route_list(
+                id="id",
+                limit=1,
+                offset=1,
+                sort_by="created_at",
+                direction="asc",
+                metadata_filter="metadata_filter",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks",
+            method="GET",
+            params={
+                "limit": limit,
+                "offset": offset,
+                "sort_by": sort_by,
+                "direction": direction,
+                "metadata_filter": metadata_filter,
+            },
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(TasksRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_route_create(
+        self,
+        id: CommonUuid,
+        *,
+        name: str,
+        description: str,
+        main: typing.Sequence[TasksWorkflowStep],
+        tools: typing.Sequence[ToolsCreateToolRequest],
+        inherit_tools: bool,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceCreatedResponse:
+        """
+        Create a new task
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        name : str
+
+        description : str
+
+        main : typing.Sequence[TasksWorkflowStep]
+            The entrypoint of the task.
+
+        tools : typing.Sequence[ToolsCreateToolRequest]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : bool
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep import ToolsCreateToolRequest
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.tasks_route_create(
+                id="id",
+                name="name",
+                description="description",
+                main=[],
+                tools=[
+                    ToolsCreateToolRequest(
+                        type="function",
+                        name="name",
+                    )
+                ],
+                inherit_tools=True,
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks",
+            method="POST",
+            json={
+                "name": name,
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_route_update(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        description: str,
+        main: typing.Sequence[TasksWorkflowStep],
+        tools: typing.Sequence[ToolsCreateToolRequest],
+        inherit_tools: bool,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing task (overwrite existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be updated
+
+        description : str
+
+        main : typing.Sequence[TasksWorkflowStep]
+            The entrypoint of the task.
+
+        tools : typing.Sequence[ToolsCreateToolRequest]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : bool
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep import ToolsCreateToolRequest
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.tasks_route_update(
+                id="id",
+                child_id="child_id",
+                description="description",
+                main=[],
+                tools=[
+                    ToolsCreateToolRequest(
+                        type="function",
+                        name="name",
+                    )
+                ],
+                inherit_tools=True,
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
+            method="PUT",
+            json={
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete a task by its id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.tasks_route_delete(
+                id="id",
+                child_id="child_id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_route_patch(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        description: typing.Optional[str] = OMIT,
+        main: typing.Optional[typing.Sequence[TasksWorkflowStep]] = OMIT,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
+        inherit_tools: typing.Optional[bool] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing task (merges with existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be patched
+
+        description : typing.Optional[str]
+
+        main : typing.Optional[typing.Sequence[TasksWorkflowStep]]
+            The entrypoint of the task.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        tools : typing.Optional[typing.Sequence[ToolsCreateToolRequest]]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : typing.Optional[bool]
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.tasks_route_patch(
+                id="id",
+                child_id="child_id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
+            method="PATCH",
+            json={
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def agent_tools_route_list(
         self,
         id: CommonUuid,
@@ -4370,7 +4838,6 @@ class AsyncJulepApi:
         about: str,
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
-        docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         default_settings: typing.Optional[
             AgentsCreateAgentRequestDefaultSettings
@@ -4396,9 +4863,6 @@ class AsyncJulepApi:
 
         instructions : AgentsCreateAgentRequestInstructions
             Instructions for the agent
-
-        docs : typing.Sequence[typing.Any]
-            Documents to index for this agent. (Max: 100 items)
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -4432,7 +4896,6 @@ class AsyncJulepApi:
                 about="about",
                 model="model",
                 instructions="instructions",
-                docs=[],
             )
 
 
@@ -4448,7 +4911,6 @@ class AsyncJulepApi:
                 "model": model,
                 "instructions": instructions,
                 "default_settings": default_settings,
-                "docs": docs,
             },
             request_options=request_options,
             omit=OMIT,
@@ -4456,6 +4918,351 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_tools_route_update(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        type: ToolsToolType,
+        name: CommonValidPythonIdentifier,
+        function: typing.Optional[ToolsFunctionDef] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing tool (overwrite existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be updated
+
+        type : ToolsToolType
+            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+        name : CommonValidPythonIdentifier
+            Name of the tool (must be unique for this agent and a valid python identifier string )
+
+        function : typing.Optional[ToolsFunctionDef]
+
+        integration : typing.Optional[typing.Any]
+
+        system : typing.Optional[typing.Any]
+
+        api_call : typing.Optional[typing.Any]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.agent_tools_route_update(
+                id="id",
+                child_id="child_id",
+                type="function",
+                name="name",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
+            method="PUT",
+            json={
+                "type": type,
+                "name": name,
+                "function": function,
+                "integration": integration,
+                "system": system,
+                "api_call": api_call,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_tools_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete an existing tool by id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.agent_tools_route_delete(
+                id="id",
+                child_id="child_id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_tools_route_patch(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        type: typing.Optional[ToolsToolType] = OMIT,
+        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
+        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
+        integration: typing.Optional[typing.Any] = OMIT,
+        system: typing.Optional[typing.Any] = OMIT,
+        api_call: typing.Optional[typing.Any] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing tool (merges with existing values)
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be patched
+
+        type : typing.Optional[ToolsToolType]
+            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+
+        name : typing.Optional[CommonValidPythonIdentifier]
+            Name of the tool (must be unique for this agent and a valid python identifier string )
+
+        function : typing.Optional[ToolsFunctionDefUpdate]
+
+        integration : typing.Optional[typing.Any]
+
+        system : typing.Optional[typing.Any]
+
+        api_call : typing.Optional[typing.Any]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.agent_tools_route_patch(
+                id="id",
+                child_id="child_id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
+            method="PATCH",
+            json={
+                "type": type,
+                "name": name,
+                "function": function,
+                "integration": integration,
+                "system": system,
+                "api_call": api_call,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def tasks_create_or_update_route_create_or_update(
+        self,
+        parent_id: CommonUuid,
+        id: CommonUuid,
+        *,
+        name: str,
+        description: str,
+        main: typing.Sequence[TasksWorkflowStep],
+        tools: typing.Sequence[ToolsCreateToolRequest],
+        inherit_tools: bool,
+        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Create or update a task
+
+        Parameters
+        ----------
+        parent_id : CommonUuid
+            ID of parent resource
+
+        id : CommonUuid
+
+        name : str
+
+        description : str
+
+        main : typing.Sequence[TasksWorkflowStep]
+            The entrypoint of the task.
+
+        tools : typing.Sequence[ToolsCreateToolRequest]
+            Tools defined specifically for this task not included in the Agent itself.
+
+        inherit_tools : bool
+            Whether to inherit tools from the parent agent or not. Defaults to true.
+
+        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
+            The schema for the input to the task. `null` means all inputs are valid.
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep import ToolsCreateToolRequest
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.tasks_create_or_update_route_create_or_update(
+                parent_id="parent_id",
+                id="id",
+                name="name",
+                description="description",
+                main=[],
+                tools=[
+                    ToolsCreateToolRequest(
+                        type="function",
+                        name="name",
+                    )
+                ],
+                inherit_tools=True,
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(parent_id)}/tasks/{jsonable_encoder(id)}",
+            method="POST",
+            json={
+                "name": name,
+                "description": description,
+                "main": main,
+                "input_schema": input_schema,
+                "tools": tools,
+                "inherit_tools": inherit_tools,
+                "metadata": metadata,
+            },
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4671,70 +5478,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(ExecutionsExecution, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def executions_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        request: ExecutionsUpdateExecutionRequest,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Execution
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request : ExecutionsUpdateExecutionRequest
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import ExecutionsUpdateExecutionRequest_Cancelled
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.executions_route_update(
-                id="string",
-                request=ExecutionsUpdateExecutionRequest_Cancelled(
-                    reason="string",
-                ),
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"executions/{jsonable_encoder(id)}",
-            method="PUT",
-            json=request,
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5058,10 +5801,62 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def sessions_route_get(
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> SessionsSession:
+        """
+        Get a session by id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        SessionsSession
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.sessions_route_get(
+                id="string",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}",
+            method="GET",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(SessionsSession, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def sessions_route_create_or_update(
         self,
-        *,
         id: CommonUuid,
+        *,
         situation: str,
         render_templates: bool,
         user: typing.Optional[CommonUuid] = OMIT,
@@ -5135,10 +5930,9 @@ class AsyncJulepApi:
         asyncio.run(main())
         """
         _response = await self._client_wrapper.httpx_client.request(
-            "sessions",
-            method="PUT",
+            f"sessions/{jsonable_encoder(id)}",
+            method="POST",
             json={
-                "id": id,
                 "user": user,
                 "users": users,
                 "agent": agent,
@@ -5155,58 +5949,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> SessionsSession:
-        """
-        Get a session by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        SessionsSession
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_get(
-                id="string",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsSession, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5569,519 +6311,6 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def tasks_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: TasksRouteListRequestSortBy,
-        direction: TasksRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> TasksRouteListResponse:
-        """
-        List tasks (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : TasksRouteListRequestSortBy
-            Sort by a field
-
-        direction : TasksRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        TasksRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_route_list(
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "tasks",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(TasksRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tasks_route_create(
-        self,
-        *,
-        name: str,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new task
-
-        Parameters
-        ----------
-        name : str
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import ToolsCreateToolRequest
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_route_create(
-                name="name",
-                description="description",
-                main=[],
-                tools=[
-                    ToolsCreateToolRequest(
-                        type="function",
-                        name="name",
-                    )
-                ],
-                inherit_tools=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "tasks",
-            method="POST",
-            json={
-                "name": name,
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tasks_route_create_or_update(
-        self,
-        *,
-        id: CommonUuid,
-        name: str,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a task
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : str
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import ToolsCreateToolRequest
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_route_create_or_update(
-                id="id",
-                name="name",
-                description="description",
-                main=[],
-                tools=[
-                    ToolsCreateToolRequest(
-                        type="function",
-                        name="name",
-                    )
-                ],
-                inherit_tools=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "tasks",
-            method="PUT",
-            json={
-                "id": id,
-                "name": name,
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tasks_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing task (overwrite existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import ToolsCreateToolRequest
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_route_update(
-                id="id",
-                description="description",
-                main=[],
-                tools=[
-                    ToolsCreateToolRequest(
-                        type="function",
-                        name="name",
-                    )
-                ],
-                inherit_tools=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}",
-            method="PUT",
-            json={
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tasks_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete a task by its id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tasks_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        description: typing.Optional[str] = OMIT,
-        main: typing.Optional[typing.Sequence[TasksWorkflowStep]] = OMIT,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
-        inherit_tools: typing.Optional[bool] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing task (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        description : typing.Optional[str]
-
-        main : typing.Optional[typing.Sequence[TasksWorkflowStep]]
-            The entrypoint of the task.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        tools : typing.Optional[typing.Sequence[ToolsCreateToolRequest]]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : typing.Optional[bool]
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_route_patch(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
     async def task_executions_route_list(
         self,
         id: CommonUuid,
@@ -6300,39 +6529,26 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def tool_route_update(
+    async def task_executions_route_update(
         self,
         id: CommonUuid,
+        child_id: CommonUuid,
         *,
-        type: ToolsToolType,
-        name: CommonValidPythonIdentifier,
-        function: typing.Optional[ToolsFunctionDef] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
+        request: ExecutionsUpdateExecutionRequest,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
-        Update an existing tool (overwrite existing values)
+        Update an existing Execution
 
         Parameters
         ----------
         id : CommonUuid
-            ID of the resource
+            ID of parent resource
 
-        type : ToolsToolType
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+        child_id : CommonUuid
+            ID of the resource to be updated
 
-        name : CommonValidPythonIdentifier
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDef]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
+        request : ExecutionsUpdateExecutionRequest
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -6346,6 +6562,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
+        from julep import ExecutionsUpdateExecutionRequest_Cancelled
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -6355,162 +6572,21 @@ class AsyncJulepApi:
 
 
         async def main() -> None:
-            await client.tool_route_update(
-                id="id",
-                type="function",
-                name="name",
+            await client.task_executions_route_update(
+                id="string",
+                child_id="string",
+                request=ExecutionsUpdateExecutionRequest_Cancelled(
+                    reason="string",
+                ),
             )
 
 
         asyncio.run(main())
         """
         _response = await self._client_wrapper.httpx_client.request(
-            f"tools/{jsonable_encoder(id)}",
+            f"tasks/{jsonable_encoder(id)}/executions/{jsonable_encoder(child_id)}",
             method="PUT",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tool_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete an existing tool by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tool_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tools/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tool_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        type: typing.Optional[ToolsToolType] = OMIT,
-        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
-        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing tool (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        type : typing.Optional[ToolsToolType]
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-
-        name : typing.Optional[CommonValidPythonIdentifier]
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDefUpdate]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tool_route_patch(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tools/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
+            json=request,
             request_options=request_options,
             omit=OMIT,
         )
@@ -6674,10 +6750,62 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def users_route_get(
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
+    ) -> UsersUser:
+        """
+        Get a user by id
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        UsersUser
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.users_route_get(
+                id="id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"users/{jsonable_encoder(id)}",
+            method="GET",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(UsersUser, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def users_route_create_or_update(
         self,
-        *,
         id: CommonUuid,
+        *,
         name: CommonIdentifierSafeUnicode,
         about: str,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
@@ -6729,67 +6857,15 @@ class AsyncJulepApi:
         asyncio.run(main())
         """
         _response = await self._client_wrapper.httpx_client.request(
-            "users",
-            method="PUT",
-            json={"id": id, "metadata": metadata, "name": name, "about": about},
+            f"users/{jsonable_encoder(id)}",
+            method="POST",
+            json={"metadata": metadata, "name": name, "about": about},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> UsersUser:
-        """
-        Get a user by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        UsersUser
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_get(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersUser, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)

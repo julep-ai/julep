@@ -6,12 +6,22 @@ from beartype import beartype
 
 from ...autogen.openapi_model import CreateToolRequest, Tool
 
-from ..utils import cozo_query, verify_developer_id_query, verify_developer_owns_resource_query, wrap_in_class
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
 @wrap_in_class(
     Tool,
-    transform=lambda d: {"id": UUID(d.pop("tool_id")), d["tool_type"]: d.pop("spec"), "type": d.pop("tool_type"), **d},
+    transform=lambda d: {
+        "id": UUID(d.pop("tool_id")),
+        d["tool_type"]: d.pop("spec"),
+        "type": d.pop("tool_type"),
+        **d,
+    },
 )
 @cozo_query
 @beartype

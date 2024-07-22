@@ -14,32 +14,6 @@ from .Entries import InputChatMLMessage
 from .Tools import CreateToolRequest
 
 
-class CreateOrUpdateTaskRequest(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: UUID
-    name: str
-    description: str = ""
-    main: list[WorkflowStep]
-    """
-    The entrypoint of the task.
-    """
-    input_schema: dict[str, Any] | None = None
-    """
-    The schema for the input to the task. `null` means all inputs are valid.
-    """
-    tools: list[CreateToolRequest] = []
-    """
-    Tools defined specifically for this task not included in the Agent itself.
-    """
-    inherit_tools: bool = True
-    """
-    Whether to inherit tools from the parent agent or not. Defaults to true.
-    """
-    metadata: dict[str, Any] | None = None
-
-
 class CreateTaskRequest(BaseModel):
     """
     Payload for creating a task
