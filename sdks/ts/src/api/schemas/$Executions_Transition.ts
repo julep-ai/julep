@@ -19,7 +19,7 @@ export const $Executions_Transition = {
       isReadOnly: true,
       isRequired: true,
     },
-    outputs: {
+    output: {
       type: "dictionary",
       contains: {
         properties: {},

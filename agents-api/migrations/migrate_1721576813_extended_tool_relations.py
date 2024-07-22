@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "extended_tool_relations"
 CREATED_AT = 1721576813.383905

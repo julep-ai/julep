@@ -40,9 +40,9 @@ class CreateToolRequest(BaseModel):
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    background: bool = False
+    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
     """
-    The tool should be run in the background (not supported at the moment)
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDef | None = None
     integration: Any | None = None
@@ -72,10 +72,6 @@ class FunctionDef(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    parameters: dict[str, Any]
-    """
-    The parameters the function accepts
-    """
     description: Annotated[
         str | None,
         Field(
@@ -85,6 +81,10 @@ class FunctionDef(BaseModel):
     ]
     """
     Description of the function
+    """
+    parameters: dict[str, Any]
+    """
+    The parameters the function accepts
     """
 
 
@@ -100,10 +100,6 @@ class FunctionDefUpdate(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    parameters: dict[str, Any] | None = None
-    """
-    The parameters the function accepts
-    """
     description: Annotated[
         str | None,
         Field(
@@ -113,6 +109,10 @@ class FunctionDefUpdate(BaseModel):
     ]
     """
     Description of the function
+    """
+    parameters: dict[str, Any] | None = None
+    """
+    The parameters the function accepts
     """
 
 
@@ -128,9 +128,9 @@ class PatchToolRequest(BaseModel):
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    background: bool = False
+    name: Annotated[str | None, Field(None, pattern="^[^\\W0-9]\\w*$")]
     """
-    The tool should be run in the background (not supported at the moment)
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDefUpdate | None = None
     integration: Any | None = None
@@ -146,9 +146,9 @@ class Tool(BaseModel):
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    background: bool = False
+    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
     """
-    The tool should be run in the background (not supported at the moment)
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDef | None = None
     integration: Any | None = None
@@ -188,9 +188,9 @@ class UpdateToolRequest(BaseModel):
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    background: bool = False
+    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
     """
-    The tool should be run in the background (not supported at the moment)
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDef | None = None
     integration: Any | None = None

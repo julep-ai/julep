@@ -14,12 +14,6 @@ export const $Tools_FunctionDefUpdate = {
         },
       ],
     },
-    parameters: {
-      type: "dictionary",
-      contains: {
-        properties: {},
-      },
-    },
     description: {
       type: "all-of",
       description: `Description of the function`,
@@ -28,6 +22,12 @@ export const $Tools_FunctionDefUpdate = {
           type: "Common_identifierSafeUnicode",
         },
       ],
+    },
+    parameters: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
     },
   },
 } as const;

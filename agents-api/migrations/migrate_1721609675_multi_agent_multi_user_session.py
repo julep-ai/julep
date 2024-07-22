@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "multi_agent_multi_user_session"
 CREATED_AT = 1721609675.213755

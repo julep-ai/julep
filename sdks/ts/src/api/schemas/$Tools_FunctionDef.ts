@@ -14,13 +14,6 @@ export const $Tools_FunctionDef = {
         },
       ],
     },
-    parameters: {
-      type: "dictionary",
-      contains: {
-        properties: {},
-      },
-      isRequired: true,
-    },
     description: {
       type: "all-of",
       description: `Description of the function`,
@@ -29,6 +22,13 @@ export const $Tools_FunctionDef = {
           type: "Common_identifierSafeUnicode",
         },
       ],
+    },
+    parameters: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+      isRequired: true,
     },
   },
 } as const;

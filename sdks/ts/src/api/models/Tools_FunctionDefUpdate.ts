@@ -13,11 +13,11 @@ export type Tools_FunctionDefUpdate = {
    */
   name?: Common_validPythonIdentifier;
   /**
-   * The parameters the function accepts
-   */
-  parameters?: Record<string, any>;
-  /**
    * Description of the function
    */
   description?: Common_identifierSafeUnicode;
+  /**
+   * The parameters the function accepts
+   */
+  parameters?: Record<string, any>;
 };

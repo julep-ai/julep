@@ -1,8 +1,7 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "task_tool_ref_by_name"
 CREATED_AT = 1721609661.768934
-
 
 
 # - add metadata

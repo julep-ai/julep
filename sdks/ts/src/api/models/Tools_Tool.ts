@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_uuid } from "./Common_uuid";
+import type { Common_validPythonIdentifier } from "./Common_validPythonIdentifier";
 import type { Tools_FunctionDef } from "./Tools_FunctionDef";
 import type { Tools_ToolType } from "./Tools_ToolType";
 export type Tools_Tool = {
@@ -11,9 +12,9 @@ export type Tools_Tool = {
    */
   type: Tools_ToolType;
   /**
-   * The tool should be run in the background (not supported at the moment)
+   * Name of the tool (must be unique for this agent and a valid python identifier string )
    */
-  background: boolean;
+  name: Common_validPythonIdentifier;
   function?: Tools_FunctionDef;
   integration?: any;
   system?: any;

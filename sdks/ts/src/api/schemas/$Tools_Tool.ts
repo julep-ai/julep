@@ -14,9 +14,14 @@ export const $Tools_Tool = {
       ],
       isRequired: true,
     },
-    background: {
-      type: "boolean",
-      description: `The tool should be run in the background (not supported at the moment)`,
+    name: {
+      type: "all-of",
+      description: `Name of the tool (must be unique for this agent and a valid python identifier string )`,
+      contains: [
+        {
+          type: "Common_validPythonIdentifier",
+        },
+      ],
       isRequired: true,
     },
     function: {

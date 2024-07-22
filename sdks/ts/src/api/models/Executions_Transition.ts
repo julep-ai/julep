@@ -6,7 +6,7 @@ import type { Common_uuid } from "./Common_uuid";
 export type Executions_Transition = {
   readonly type: "finish" | "wait" | "error" | "step" | "cancelled";
   readonly execution_id: Common_uuid;
-  readonly outputs: Record<string, any>;
+  readonly output: Record<string, any>;
   readonly current: Array<any>;
   readonly next: Array<any> | null;
   readonly id: Common_uuid;

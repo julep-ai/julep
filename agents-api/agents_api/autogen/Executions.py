@@ -87,7 +87,7 @@ class Transition(BaseModel):
         Field(json_schema_extra={"readOnly": True}),
     ]
     execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
-    outputs: Annotated[dict[str, Any], Field(json_schema_extra={"readOnly": True})]
+    output: Annotated[dict[str, Any], Field(json_schema_extra={"readOnly": True})]
     current: Annotated[list, Field(json_schema_extra={"readOnly": True})]
     next: Annotated[list | None, Field(json_schema_extra={"readOnly": True})]
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
