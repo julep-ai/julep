@@ -34,11 +34,12 @@ model FunctionDef {
     /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
     name?: validPythonIdentifier = "overriden";
 
+    /** Description of the function  */
+    description?: identifierSafeUnicode;
+
     /** The parameters the function accepts */
     parameters: FunctionParameters;
 
-    /** Description of the function */
-    description?: identifierSafeUnicode;
 }
 
 @discriminator("type")
@@ -46,8 +47,8 @@ model Tool {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
     type: ToolType;
 
-    /** The tool should be run in the background (not supported at the moment) */
-    background: boolean = false;
+    /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
+    name: validPythonIdentifier;
 
     function?: FunctionDef;
     integration?: unknown;
@@ -76,9 +77,6 @@ model NamedToolChoice {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
     type: ToolType;
 
-    /** The name of the tool/function */
-    name: validPythonIdentifier;
-    
     function?: FunctionCallOption;
     integration?: unknown;
     system?: unknown;

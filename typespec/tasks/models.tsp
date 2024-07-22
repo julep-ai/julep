@@ -130,19 +130,19 @@ model Task {
     name: string;
 
     description: string = "";
-    
+
     /** The entrypoint of the task. */
     main: WorkflowStep[];
-    
+
     /** The schema for the input to the task. `null` means all inputs are valid. */
     input_schema: Record<unknown> | null = null;
-    
+
     /** Tools defined specifically for this task not included in the Agent itself. */
     tools: CreateToolRequest[] = #[];
 
     /** Whether to inherit tools from the parent agent or not. Defaults to true. */
     inherit_tools: boolean = true;
-    
+
     @visibility("read")
     agent_id: Agent.id;
 

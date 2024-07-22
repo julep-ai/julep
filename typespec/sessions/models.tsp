@@ -54,7 +54,7 @@ model Session {
 
     /** Threshold value for the adaptive context functionality */
     token_budget: uint16 | null = null;
-    
+
     /** Action to start on context window overflow */
     context_overflow: ContextOverflowType | null = null;
 

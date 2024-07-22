@@ -112,7 +112,7 @@ model Transition {
     execution_id: Execution.id;
 
     @visibility("read")
-    outputs: Record<unknown>;
+    output: Record<unknown>;
 
     @visibility("read")
     current: TransitionTarget;
