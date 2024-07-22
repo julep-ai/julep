@@ -62,12 +62,5 @@ export const $Agents_CreateAgentRequest = {
         },
       ],
     },
-    docs: {
-      type: "array",
-      contains: {
-        properties: {},
-      },
-      isRequired: true,
-    },
   },
 } as const;

@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { Agents_Agent } from "../models/Agents_Agent";
 import type { Agents_CreateAgentRequest } from "../models/Agents_CreateAgentRequest";
-import type { Agents_CreateOrUpdateAgentRequest } from "../models/Agents_CreateOrUpdateAgentRequest";
 import type { Agents_PatchAgentRequest } from "../models/Agents_PatchAgentRequest";
 import type { Agents_UpdateAgentRequest } from "../models/Agents_UpdateAgentRequest";
 import type { Common_limit } from "../models/Common_limit";
@@ -25,12 +24,10 @@ import type { Executions_TaskTokenResumeExecutionRequest } from "../models/Execu
 import type { Executions_Transition } from "../models/Executions_Transition";
 import type { Executions_UpdateExecutionRequest } from "../models/Executions_UpdateExecutionRequest";
 import type { Jobs_JobStatus } from "../models/Jobs_JobStatus";
-import type { Sessions_CreateOrUpdateSessionRequest } from "../models/Sessions_CreateOrUpdateSessionRequest";
 import type { Sessions_CreateSessionRequest } from "../models/Sessions_CreateSessionRequest";
 import type { Sessions_PatchSessionRequest } from "../models/Sessions_PatchSessionRequest";
 import type { Sessions_Session } from "../models/Sessions_Session";
 import type { Sessions_UpdateSessionRequest } from "../models/Sessions_UpdateSessionRequest";
-import type { Tasks_CreateOrUpdateTaskRequest } from "../models/Tasks_CreateOrUpdateTaskRequest";
 import type { Tasks_CreateTaskRequest } from "../models/Tasks_CreateTaskRequest";
 import type { Tasks_PatchTaskRequest } from "../models/Tasks_PatchTaskRequest";
 import type { Tasks_Task } from "../models/Tasks_Task";
@@ -38,7 +35,6 @@ import type { Tasks_UpdateTaskRequest } from "../models/Tasks_UpdateTaskRequest"
 import type { Tools_PatchToolRequest } from "../models/Tools_PatchToolRequest";
 import type { Tools_Tool } from "../models/Tools_Tool";
 import type { Tools_UpdateToolRequest } from "../models/Tools_UpdateToolRequest";
-import type { Users_CreateOrUpdateUserRequest } from "../models/Users_CreateOrUpdateUserRequest";
 import type { Users_CreateUserRequest } from "../models/Users_CreateUserRequest";
 import type { Users_PatchUserRequest } from "../models/Users_PatchUserRequest";
 import type { Users_UpdateUserRequest } from "../models/Users_UpdateUserRequest";
@@ -117,13 +113,18 @@ export class DefaultService {
    * @throws ApiError
    */
   public agentsRouteCreateOrUpdate({
+    id,
     requestBody,
   }: {
-    requestBody: Agents_CreateOrUpdateAgentRequest;
+    id: Common_uuid;
+    requestBody: Agents_UpdateAgentRequest;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: "PUT",
-      url: "/agents",
+      method: "POST",
+      url: "/agents/{id}",
+      path: {
+        id: id,
+      },
       body: requestBody,
       mediaType: "application/json",
     });
@@ -337,6 +338,175 @@ export class DefaultService {
     });
   }
   /**
+   * List tasks (paginated)
+   * @returns any The request has succeeded.
+   * @throws ApiError
+   */
+  public tasksRouteList({
+    id,
+    limit = 100,
+    offset,
+    sortBy = "created_at",
+    direction = "asc",
+    metadataFilter = "{}",
+  }: {
+    /**
+     * ID of parent
+     */
+    id: Common_uuid;
+    /**
+     * Limit the number of items returned
+     */
+    limit?: Common_limit;
+    /**
+     * Offset the items returned
+     */
+    offset: Common_offset;
+    /**
+     * Sort by a field
+     */
+    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    /**
+     * Sort direction
+     */
+    direction?: "asc" | "desc";
+    /**
+     * JSON string of object that should be used to filter objects by metadata
+     */
+    metadataFilter?: string;
+  }): CancelablePromise<{
+    results: Array<Tasks_Task>;
+  }> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/agents/{id}/tasks",
+      path: {
+        id: id,
+      },
+      query: {
+        limit: limit,
+        offset: offset,
+        sort_by: sortBy,
+        direction: direction,
+        metadata_filter: metadataFilter,
+      },
+    });
+  }
+  /**
+   * Create a new task
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public tasksRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Tasks_CreateTaskRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/agents/{id}/tasks",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Update an existing task (overwrite existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public tasksRouteUpdate({
+    id,
+    childId,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be updated
+     */
+    childId: Common_uuid;
+    requestBody: Tasks_UpdateTaskRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/agents/{id}/tasks/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Update an existing task (merges with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public tasksRoutePatch({
+    id,
+    childId,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be patched
+     */
+    childId: Common_uuid;
+    requestBody: Tasks_PatchTaskRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PATCH",
+      url: "/agents/{id}/tasks/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Delete a task by its id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public tasksRouteDelete({
+    id,
+    childId,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be deleted
+     */
+    childId: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/agents/{id}/tasks/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+    });
+  }
+  /**
    * List tools of the given agent
    * @returns any The request has succeeded.
    * @throws ApiError
@@ -417,6 +587,123 @@ export class DefaultService {
     });
   }
   /**
+   * Update an existing tool (overwrite existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public agentToolsRouteUpdate({
+    id,
+    childId,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be updated
+     */
+    childId: Common_uuid;
+    requestBody: Tools_UpdateToolRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/agents/{id}/tools/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Update an existing tool (merges with existing values)
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public agentToolsRoutePatch({
+    id,
+    childId,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be patched
+     */
+    childId: Common_uuid;
+    requestBody: Tools_PatchToolRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PATCH",
+      url: "/agents/{id}/tools/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Delete an existing tool by id
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public agentToolsRouteDelete({
+    id,
+    childId,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be deleted
+     */
+    childId: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/agents/{id}/tools/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+    });
+  }
+  /**
+   * Create or update a task
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public tasksCreateOrUpdateRouteCreateOrUpdate({
+    parentId,
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    parentId: Common_uuid;
+    id: Common_uuid;
+    requestBody: Tasks_CreateTaskRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/agents/{parent_id}/tasks/{id}",
+      path: {
+        parent_id: parentId,
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
    * Get Doc by id
    * @returns Docs_Doc The request has succeeded.
    * @throws ApiError
@@ -473,31 +760,6 @@ export class DefaultService {
     return this.httpRequest.request({
       method: "POST",
       url: "/embed",
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing Execution
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public executionsRouteUpdate({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-    requestBody: Executions_UpdateExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/executions/{id}",
-      path: {
-        id: id,
-      },
       body: requestBody,
       mediaType: "application/json",
     });
@@ -671,13 +933,18 @@ export class DefaultService {
    * @throws ApiError
    */
   public sessionsRouteCreateOrUpdate({
+    id,
     requestBody,
   }: {
-    requestBody: Sessions_CreateOrUpdateSessionRequest;
+    id: Common_uuid;
+    requestBody: Sessions_CreateSessionRequest;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: "PUT",
-      url: "/sessions",
+      method: "POST",
+      url: "/sessions/{id}",
+      path: {
+        id: id,
+      },
       body: requestBody,
       mediaType: "application/json",
     });
@@ -851,158 +1118,6 @@ export class DefaultService {
     });
   }
   /**
-   * List tasks (paginated)
-   * @returns any The request has succeeded.
-   * @throws ApiError
-   */
-  public tasksRouteList({
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
-  }: {
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Tasks_Task>;
-  }> {
-    return this.httpRequest.request({
-      method: "GET",
-      url: "/tasks",
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
-      },
-    });
-  }
-  /**
-   * Create or update a task
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public tasksRouteCreateOrUpdate({
-    requestBody,
-  }: {
-    requestBody: Tasks_CreateOrUpdateTaskRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks",
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Create a new task
-   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
-   * @throws ApiError
-   */
-  public tasksRouteCreate({
-    requestBody,
-  }: {
-    requestBody: Tasks_CreateTaskRequest;
-  }): CancelablePromise<Common_ResourceCreatedResponse> {
-    return this.httpRequest.request({
-      method: "POST",
-      url: "/tasks",
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing task (overwrite existing values)
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public tasksRouteUpdate({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-    requestBody: Tasks_UpdateTaskRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing task (merges with existing values)
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public tasksRoutePatch({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-    requestBody: Tasks_PatchTaskRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PATCH",
-      url: "/tasks/{id}",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Delete a task by its id
-   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
-   * @throws ApiError
-   */
-  public tasksRouteDelete({
-    id,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-  }): CancelablePromise<Common_ResourceDeletedResponse> {
-    return this.httpRequest.request({
-      method: "DELETE",
-      url: "/tasks/{id}",
-      path: {
-        id: id,
-      },
-    });
-  }
-  /**
    * Create an execution for the given task
    * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
@@ -1111,74 +1226,34 @@ export class DefaultService {
     });
   }
   /**
-   * Update an existing tool (overwrite existing values)
+   * Update an existing Execution
    * @returns Common_ResourceUpdatedResponse The request has succeeded.
    * @throws ApiError
    */
-  public toolRouteUpdate({
+  public taskExecutionsRouteUpdate({
     id,
+    childId,
     requestBody,
   }: {
     /**
-     * ID of the resource
+     * ID of parent resource
      */
     id: Common_uuid;
-    requestBody: Tools_UpdateToolRequest;
+    /**
+     * ID of the resource to be updated
+     */
+    childId: Common_uuid;
+    requestBody: Executions_UpdateExecutionRequest;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "PUT",
-      url: "/tools/{id}",
+      url: "/tasks/{id}/executions/{child_id}",
       path: {
         id: id,
+        child_id: childId,
       },
       body: requestBody,
       mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing tool (merges with existing values)
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public toolRoutePatch({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-    requestBody: Tools_PatchToolRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PATCH",
-      url: "/tools/{id}",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Delete an existing tool by id
-   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
-   * @throws ApiError
-   */
-  public toolRouteDelete({
-    id,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-  }): CancelablePromise<Common_ResourceDeletedResponse> {
-    return this.httpRequest.request({
-      method: "DELETE",
-      url: "/tools/{id}",
-      path: {
-        id: id,
-      },
     });
   }
   /**
@@ -1251,13 +1326,18 @@ export class DefaultService {
    * @throws ApiError
    */
   public usersRouteCreateOrUpdate({
+    id,
     requestBody,
   }: {
-    requestBody: Users_CreateOrUpdateUserRequest;
+    id: Common_uuid;
+    requestBody: Users_UpdateUserRequest;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
-      method: "PUT",
-      url: "/users",
+      method: "POST",
+      url: "/users/{id}",
+      path: {
+        id: id,
+      },
       body: requestBody,
       mediaType: "application/json",
     });

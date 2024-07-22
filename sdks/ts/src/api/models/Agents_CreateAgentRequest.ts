@@ -34,8 +34,4 @@ export type Agents_CreateAgentRequest = {
     | Chat_GenerationPresetSettings
     | Chat_OpenAISettings
     | Chat_vLLMSettings;
-  /**
-   * Documents to index for this agent. (Max: 100 items)
-   */
-  docs: Array<any>;
 };
