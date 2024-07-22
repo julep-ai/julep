@@ -19,16 +19,16 @@ class ToolsFunctionDef(pydantic_v1.BaseModel):
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
 
-    parameters: typing.Dict[str, typing.Any] = pydantic_v1.Field()
-    """
-    The parameters the function accepts
-    """
-
     description: typing.Optional[CommonIdentifierSafeUnicode] = pydantic_v1.Field(
         default=None
     )
     """
     Description of the function
+    """
+
+    parameters: typing.Dict[str, typing.Any] = pydantic_v1.Field()
+    """
+    The parameters the function accepts
     """
 
     def json(self, **kwargs: typing.Any) -> str:

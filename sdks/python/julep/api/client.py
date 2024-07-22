@@ -67,6 +67,7 @@ from .types.common_resource_created_response import CommonResourceCreatedRespons
 from .types.common_resource_deleted_response import CommonResourceDeletedResponse
 from .types.common_resource_updated_response import CommonResourceUpdatedResponse
 from .types.common_uuid import CommonUuid
+from .types.common_valid_python_identifier import CommonValidPythonIdentifier
 from .types.docs_doc import DocsDoc
 from .types.docs_doc_search_request import DocsDocSearchRequest
 from .types.docs_embed_query_request import DocsEmbedQueryRequest
@@ -2156,7 +2157,7 @@ class JulepApi:
             tools=[
                 ToolsCreateToolRequest(
                     type="function",
-                    background=True,
+                    name="name",
                 )
             ],
             inherit_tools=True,
@@ -2248,7 +2249,7 @@ class JulepApi:
             tools=[
                 ToolsCreateToolRequest(
                     type="function",
-                    background=True,
+                    name="name",
                 )
             ],
             inherit_tools=True,
@@ -2338,7 +2339,7 @@ class JulepApi:
             tools=[
                 ToolsCreateToolRequest(
                     type="function",
-                    background=True,
+                    name="name",
                 )
             ],
             inherit_tools=True,
@@ -2606,7 +2607,7 @@ class JulepApi:
         )
         client.task_executions_route_create(
             id="id",
-            input={},
+            input={"key": "value"},
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -2687,7 +2688,7 @@ class JulepApi:
         id: CommonUuid,
         *,
         type: ToolsToolType,
-        background: bool,
+        name: CommonValidPythonIdentifier,
         function: typing.Optional[ToolsFunctionDef] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
@@ -2705,8 +2706,8 @@ class JulepApi:
         type : ToolsToolType
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
-        background : bool
-            The tool should be run in the background (not supported at the moment)
+        name : CommonValidPythonIdentifier
+            Name of the tool (must be unique for this agent and a valid python identifier string )
 
         function : typing.Optional[ToolsFunctionDef]
 
@@ -2735,7 +2736,7 @@ class JulepApi:
         client.tool_route_update(
             id="id",
             type="function",
-            background=True,
+            name="name",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
@@ -2743,7 +2744,7 @@ class JulepApi:
             method="PUT",
             json={
                 "type": type,
-                "background": background,
+                "name": name,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -2809,7 +2810,7 @@ class JulepApi:
         id: CommonUuid,
         *,
         type: typing.Optional[ToolsToolType] = OMIT,
-        background: typing.Optional[bool] = OMIT,
+        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
         function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
@@ -2827,8 +2828,8 @@ class JulepApi:
         type : typing.Optional[ToolsToolType]
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
-        background : typing.Optional[bool]
-            The tool should be run in the background (not supported at the moment)
+        name : typing.Optional[CommonValidPythonIdentifier]
+            Name of the tool (must be unique for this agent and a valid python identifier string )
 
         function : typing.Optional[ToolsFunctionDefUpdate]
 
@@ -2863,7 +2864,7 @@ class JulepApi:
             method="PATCH",
             json={
                 "type": type,
-                "background": background,
+                "name": name,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -5714,7 +5715,7 @@ class AsyncJulepApi:
                 tools=[
                     ToolsCreateToolRequest(
                         type="function",
-                        background=True,
+                        name="name",
                     )
                 ],
                 inherit_tools=True,
@@ -5814,7 +5815,7 @@ class AsyncJulepApi:
                 tools=[
                     ToolsCreateToolRequest(
                         type="function",
-                        background=True,
+                        name="name",
                     )
                 ],
                 inherit_tools=True,
@@ -5912,7 +5913,7 @@ class AsyncJulepApi:
                 tools=[
                     ToolsCreateToolRequest(
                         type="function",
-                        background=True,
+                        name="name",
                     )
                 ],
                 inherit_tools=True,
@@ -6212,7 +6213,7 @@ class AsyncJulepApi:
         async def main() -> None:
             await client.task_executions_route_create(
                 id="id",
-                input={},
+                input={"key": "value"},
             )
 
 
@@ -6304,7 +6305,7 @@ class AsyncJulepApi:
         id: CommonUuid,
         *,
         type: ToolsToolType,
-        background: bool,
+        name: CommonValidPythonIdentifier,
         function: typing.Optional[ToolsFunctionDef] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
@@ -6322,8 +6323,8 @@ class AsyncJulepApi:
         type : ToolsToolType
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
-        background : bool
-            The tool should be run in the background (not supported at the moment)
+        name : CommonValidPythonIdentifier
+            Name of the tool (must be unique for this agent and a valid python identifier string )
 
         function : typing.Optional[ToolsFunctionDef]
 
@@ -6357,7 +6358,7 @@ class AsyncJulepApi:
             await client.tool_route_update(
                 id="id",
                 type="function",
-                background=True,
+                name="name",
             )
 
 
@@ -6368,7 +6369,7 @@ class AsyncJulepApi:
             method="PUT",
             json={
                 "type": type,
-                "background": background,
+                "name": name,
                 "function": function,
                 "integration": integration,
                 "system": system,
@@ -6442,7 +6443,7 @@ class AsyncJulepApi:
         id: CommonUuid,
         *,
         type: typing.Optional[ToolsToolType] = OMIT,
-        background: typing.Optional[bool] = OMIT,
+        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
         function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
@@ -6460,8 +6461,8 @@ class AsyncJulepApi:
         type : typing.Optional[ToolsToolType]
             Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
 
-        background : typing.Optional[bool]
-            The tool should be run in the background (not supported at the moment)
+        name : typing.Optional[CommonValidPythonIdentifier]
+            Name of the tool (must be unique for this agent and a valid python identifier string )
 
         function : typing.Optional[ToolsFunctionDefUpdate]
 
@@ -6504,7 +6505,7 @@ class AsyncJulepApi:
             method="PATCH",
             json={
                 "type": type,
-                "background": background,
+                "name": name,
                 "function": function,
                 "integration": integration,
                 "system": system,

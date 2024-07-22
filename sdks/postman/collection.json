@@ -158,7 +158,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"name\": \"name\",\n            \"about\": \"about\",\n            \"model\": \"model\",\n            \"instructions\": \"instructions\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"metadata\": {\n                \"key\": \"value\"\n            },\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"name\": \"name\",\n            \"about\": \"about\",\n            \"model\": \"model\",\n            \"instructions\": \"instructions\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -426,7 +426,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"default_settings\": {\n        \"preset\": \"problem_solving\"\n    }\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"key\": \"value\"\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"about\": \"about\",\n    \"model\": \"model\",\n    \"instructions\": \"instructions\",\n    \"default_settings\": {\n        \"preset\": \"problem_solving\"\n    }\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -864,7 +864,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"title\": \"title\",\n            \"content\": \"content\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"metadata\": {\n                \"key\": \"value\"\n            },\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"title\": \"title\",\n            \"content\": \"content\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1272,7 +1272,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"title\": \"title\",\n    \"content\": \"content\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"key\": \"value\"\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"title\": \"title\",\n    \"content\": \"content\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1538,7 +1538,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"task_id\": \"task_id\",\n    \"status\": \"queued\",\n    \"input\": {\n        \"input\": {\n            \"key\": \"value\"\n        }\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"id\": \"id\"\n}",
+          "body": "{\n    \"task_id\": \"task_id\",\n    \"status\": \"queued\",\n    \"input\": {\n        \"key\": \"value\"\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"metadata\": {\n        \"key\": \"value\"\n    },\n    \"id\": \"id\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -1725,7 +1725,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"transitions\": [\n                {\n                    \"type\": \"finish\",\n                    \"execution_id\": \"execution_id\",\n                    \"outputs\": {},\n                    \"current\": [],\n                    \"id\": \"id\",\n                    \"created_at\": \"2024-01-15T09:30:00Z\",\n                    \"updated_at\": \"2024-01-15T09:30:00Z\"\n                }\n            ]\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"transitions\": [\n                {\n                    \"type\": \"finish\",\n                    \"execution_id\": \"execution_id\",\n                    \"output\": {\n                        \"key\": \"value\"\n                    },\n                    \"current\": [],\n                    \"id\": \"id\",\n                    \"created_at\": \"2024-01-15T09:30:00Z\",\n                    \"updated_at\": \"2024-01-15T09:30:00Z\"\n                }\n            ]\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2810,7 +2810,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"name\": \"name\",\n            \"description\": \"description\",\n            \"main\": [],\n            \"tools\": [\n                {\n                    \"type\": \"function\",\n                    \"background\": true\n                }\n            ],\n            \"inherit_tools\": true,\n            \"agent_id\": \"agent_id\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"name\": \"name\",\n            \"description\": \"description\",\n            \"main\": [],\n            \"input_schema\": {\n                \"key\": \"value\"\n            },\n            \"tools\": [\n                {\n                    \"type\": \"function\",\n                    \"name\": \"name\"\n                }\n            ],\n            \"inherit_tools\": true,\n            \"agent_id\": \"agent_id\",\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"metadata\": {\n                \"key\": \"value\"\n            }\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -2848,7 +2848,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2891,7 +2891,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "raw": "{\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2938,7 +2938,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -2981,7 +2981,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "raw": "{\n    \"id\": \"id\",\n    \"name\": \"name\",\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3035,7 +3035,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+          "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3085,7 +3085,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"background\": true\n        }\n    ],\n    \"inherit_tools\": true\n}",
+              "raw": "{\n    \"description\": \"description\",\n    \"main\": [],\n    \"tools\": [\n        {\n            \"type\": \"function\",\n            \"name\": \"name\"\n        }\n    ],\n    \"inherit_tools\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3428,7 +3428,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"task_id\": \"task_id\",\n            \"status\": \"queued\",\n            \"input\": {},\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"id\": \"id\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"task_id\": \"task_id\",\n            \"status\": \"queued\",\n            \"input\": {\n                \"key\": \"value\"\n            },\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"metadata\": {\n                \"key\": \"value\"\n            },\n            \"id\": \"id\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -3474,7 +3474,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"input\": {}\n}",
+          "raw": "{\n    \"input\": {\n        \"key\": \"value\"\n    }\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3525,7 +3525,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"input\": {}\n}",
+              "raw": "{\n    \"input\": {\n        \"key\": \"value\"\n    }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3685,7 +3685,7 @@
         "auth": null,
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"type\": \"function\",\n    \"background\": true\n}",
+          "raw": "{\n    \"type\": \"function\",\n    \"name\": \"name\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -3735,7 +3735,7 @@
             "auth": null,
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"type\": \"function\",\n    \"background\": true\n}",
+              "raw": "{\n    \"type\": \"function\",\n    \"name\": \"name\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4062,7 +4062,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"name\": \"name\",\n            \"about\": \"about\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"metadata\": {\n                \"key\": \"value\"\n            },\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"updated_at\": \"2024-01-15T09:30:00Z\",\n            \"name\": \"name\",\n            \"about\": \"about\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -4330,7 +4330,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"metadata\": {\n            \"key\": \"value\"\n        }\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
+          "body": "{\n    \"id\": \"id\",\n    \"metadata\": {\n        \"key\": \"value\"\n    },\n    \"created_at\": \"2024-01-15T09:30:00Z\",\n    \"updated_at\": \"2024-01-15T09:30:00Z\",\n    \"name\": \"name\",\n    \"about\": \"about\"\n}",
           "_postman_previewlanguage": "json"
         }
       ]
@@ -4768,7 +4768,7 @@
             "body": null
           },
           "description": "The request has succeeded.",
-          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"title\": \"title\",\n            \"content\": \"content\"\n        }\n    ]\n}",
+          "body": "{\n    \"results\": [\n        {\n            \"id\": \"id\",\n            \"metadata\": {\n                \"key\": \"value\"\n            },\n            \"created_at\": \"2024-01-15T09:30:00Z\",\n            \"title\": \"title\",\n            \"content\": \"content\"\n        }\n    ]\n}",
           "_postman_previewlanguage": "json"
         }
       ]

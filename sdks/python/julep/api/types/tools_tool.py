@@ -14,9 +14,9 @@ from .tools_function_def import ToolsFunctionDef
 
 
 class Base(pydantic_v1.BaseModel):
-    background: bool = pydantic_v1.Field()
+    name: CommonValidPythonIdentifier = pydantic_v1.Field()
     """
-    The tool should be run in the background (not supported at the moment)
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
 
     function: typing.Optional[ToolsFunctionDef] = None

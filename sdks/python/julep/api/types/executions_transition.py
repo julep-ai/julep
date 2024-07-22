@@ -12,7 +12,7 @@ from .executions_transition_type import ExecutionsTransitionType
 class ExecutionsTransition(pydantic_v1.BaseModel):
     type: ExecutionsTransitionType
     execution_id: CommonUuid
-    outputs: typing.Dict[str, typing.Any]
+    output: typing.Dict[str, typing.Any]
     current: typing.List[typing.Any]
     next: typing.Optional[typing.List[typing.Any]] = None
     id: CommonUuid

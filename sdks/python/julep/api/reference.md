@@ -2879,7 +2879,7 @@ client.tasks_route_create(
     tools=[
         ToolsCreateToolRequest(
             type="function",
-            background=True,
+            name="name",
         )
     ],
     inherit_tools=True,
@@ -3009,7 +3009,7 @@ client.tasks_route_create_or_update(
     tools=[
         ToolsCreateToolRequest(
             type="function",
-            background=True,
+            name="name",
         )
     ],
     inherit_tools=True,
@@ -3146,7 +3146,7 @@ client.tasks_route_update(
     tools=[
         ToolsCreateToolRequest(
             type="function",
-            background=True,
+            name="name",
         )
     ],
     inherit_tools=True,
@@ -3575,7 +3575,7 @@ client = JulepApi(
 )
 client.task_executions_route_create(
     id="id",
-    input={},
+    input={"key": "value"},
 )
 
 ```
@@ -3752,7 +3752,7 @@ client = JulepApi(
 client.tool_route_update(
     id="id",
     type="function",
-    background=True,
+    name="name",
 )
 
 ```
@@ -3785,7 +3785,7 @@ client.tool_route_update(
 <dl>
 <dd>
 
-**background:** `bool` — The tool should be run in the background (not supported at the moment)
+**name:** `CommonValidPythonIdentifier` — Name of the tool (must be unique for this agent and a valid python identifier string )
     
 </dd>
 </dl>
@@ -3975,7 +3975,7 @@ client.tool_route_patch(
 <dl>
 <dd>
 
-**background:** `typing.Optional[bool]` — The tool should be run in the background (not supported at the moment)
+**name:** `typing.Optional[CommonValidPythonIdentifier]` — Name of the tool (must be unique for this agent and a valid python identifier string )
     
 </dd>
 </dl>
