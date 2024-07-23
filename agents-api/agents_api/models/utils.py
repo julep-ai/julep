@@ -57,12 +57,14 @@ def cozo_query(
         def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
             query, variables = func(*args, **kwargs)
 
+            result = client.run(query, variables)
+
             if debug:
                 from pprint import pprint
 
-                pprint(dict(query=query, variables=variables))
+                pprint(dict(query=query, variables=variables, result=result.to_dict(orient="records")))
 
-            return client.run(query, variables)
+            return result
 
         return wrapper
 

@@ -18,8 +18,7 @@ from ..utils import (
     Tool,
     transform=lambda d: {
         "id": UUID(d.pop("tool_id")),
-        d["tool_type"]: d.pop("spec"),
-        "type": d.pop("tool_type"),
+        d["type"]: d.pop("spec"),
         **d,
     },
 )
@@ -55,12 +54,12 @@ def create_tools_query(
 
     # Datalog query for inserting new tool records into the 'agent_functions' relation
     create_tools_query = """
-        ?[agent_id, tool_id, tool_type, name, spec] <- $records
+        ?[agent_id, tool_id, type, name, spec] <- $records
 
         :insert tools {
             agent_id,
             tool_id,
-            tool_type,
+            type,
             name,
             spec,
         }

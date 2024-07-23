@@ -24,16 +24,16 @@ drop_agent_functions_hnsw_index = dict(
 
 create_tools_relation = dict(
     up="""
-    ?[agent_id, tool_id, tool_type, name, spec, updated_at, created_at] := *agent_functions{
+    ?[agent_id, tool_id, type, name, spec, updated_at, created_at] := *agent_functions{
         agent_id, tool_id, name, description, parameters, updated_at, created_at
-    }, tool_type = "function",
+    }, type = "function",
     spec = {"description": description, "parameters": parameters}
 
     :create tools {
         agent_id: Uuid,
         tool_id: Uuid,
         =>
-        tool_type: String,
+        type: String,
         name: String,
         spec: Json,
 
