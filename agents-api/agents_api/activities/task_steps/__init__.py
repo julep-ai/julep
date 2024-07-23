@@ -99,10 +99,6 @@ async def yield_step(context: StepContext) -> dict:
 #     # get tool by id
 #     # call tool
 
-#     # TODO: implement
-
-#     return {"test": "result"}
-
 
 # @activity.defn
 # async def error_step(context: StepContext) -> dict:
