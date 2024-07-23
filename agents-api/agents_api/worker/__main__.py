@@ -21,7 +21,7 @@ from ..activities.embed_docs import embed_docs
 from ..activities.task_steps import (
     prompt_step,
     # evaluate_step,
-    # yield_step,
+    yield_step,
     # tool_call_step,
     # error_step,
     # if_else_step,
@@ -77,7 +77,7 @@ async def main():
     task_activities = [
         prompt_step,
         # evaluate_step,
-        # yield_step,
+        yield_step,
         # tool_call_step,
         # error_step,
         # if_else_step,

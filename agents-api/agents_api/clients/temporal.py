@@ -7,6 +7,7 @@ from agents_api.env import (
     temporal_private_key,
 )
 from ..common.protocol.tasks import ExecutionInput
+from ..worker.codec import pydantic_data_converter
 
 
 async def get_client():
@@ -22,6 +23,7 @@ async def get_client():
         temporal_worker_url,
         namespace=temporal_namespace,
         tls=tls_config,
+        data_converter=pydantic_data_converter,
     )
 
 

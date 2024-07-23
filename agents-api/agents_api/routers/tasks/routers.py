@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from uuid import uuid4
 from jsonschema import validate
@@ -34,13 +35,16 @@ from agents_api.autogen.openapi_model import (
     ExecutionTransition,
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
-    UpdateExecutionTransitionRequest,
     CreateExecution,
 )
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.clients.temporal import run_task_execution_workflow
 from agents_api.common.protocol.tasks import ExecutionInput
 from agents_api.clients.cozo import client as cozo_client
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class TaskList(BaseModel):
@@ -206,7 +210,9 @@ async def create_task_execution(
             execution_input=execution_input,
             job_id=uuid4(),
         )
-    except Exception:
+    except Exception as e:
+        logger.exception(e)
+
         update_execution_status_query(
             task_id=task_id,
             execution_id=execution_id,
@@ -276,7 +282,7 @@ async def get_execution_transition(
 async def update_execution_transition(
     execution_id: UUID4,
     transition_id: UUID4,
-    request: UpdateExecutionTransitionRequest,
+    request: ExecutionTransition,
 ) -> ResourceUpdatedResponse:
     try:
         resp = update_execution_transition_query(
