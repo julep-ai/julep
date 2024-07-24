@@ -119,7 +119,7 @@ async def if_else_step(context: StepContext) -> dict:
         else context.definition.else_
     )
 
-    return {"workflow": next_workflow}
+    return {"goto_workflow": next_workflow}
 
 
 @activity.defn

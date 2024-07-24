@@ -24,7 +24,7 @@ from ..activities.task_steps import (
     yield_step,
     # tool_call_step,
     # error_step,
-    # if_else_step,
+    if_else_step,
     transition_step,
 )
 
@@ -80,7 +80,7 @@ async def main():
         yield_step,
         # tool_call_step,
         # error_step,
-        # if_else_step,
+        if_else_step,
         transition_step,
     ]
 

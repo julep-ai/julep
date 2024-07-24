@@ -97,7 +97,7 @@ class TaskExecutionWorkflow:
                     context,
                     schedule_to_close_timeout=timedelta(seconds=600),
                 )
-                workflow_step: YieldWorkflowStep = outputs["workflow"]
+                workflow_step = YieldWorkflowStep(**outputs["goto_workflow"])
 
                 outputs = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
