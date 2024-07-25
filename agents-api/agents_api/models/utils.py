@@ -53,18 +53,33 @@ def cozo_query(
         and then run the query using the client, returning a DataFrame.
         """
 
+        if debug:
+            from pprint import pprint
+
         @wraps(func)
         def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
             query, variables = func(*args, **kwargs)
 
+            debug and pprint(
+                dict(
+                    query=query,
+                    variables=variables,
+                )
+            )
+
             result = client.run(query, variables)
 
-            if debug:
-                from pprint import pprint
-
-                pprint(dict(query=query, variables=variables, result=result.to_dict(orient="records")))
+            debug and pprint(
+                dict(
+                    result=result.to_dict(orient="records"),
+                )
+            )
 
             return result
+
+        # Set the wrapped function as an attribute of the wrapper,
+        # forwards the __wrapped__ attribute if it exists.
+        setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
 
         return wrapper
 
@@ -75,16 +90,13 @@ def cozo_query(
 
 
 def wrap_in_class(
-    cls: Type[BaseModel],
+    cls: Type[BaseModel] | Callable[..., BaseModel],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
 ):
-
-    @beartype
     def decorator(func: Callable[..., pd.DataFrame]):
         @wraps(func)
-        @beartype
-        def wrapper(*args, **kwargs) -> list[cls] | cls:
+        def wrapper(*args, **kwargs):
             df = func(*args, **kwargs)
 
             # Convert df to list of dicts
@@ -97,7 +109,10 @@ def wrap_in_class(
 
             return [cls(**item) for item in map(transform, data)]
 
-        setattr(cls, func.__name__, wrapper)
+        # Set the wrapped function as an attribute of the wrapper,
+        # forwards the __wrapped__ attribute if it exists.
+        setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
+
         return wrapper
 
     return decorator

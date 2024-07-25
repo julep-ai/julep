@@ -1,4 +1,3 @@
-from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -13,59 +12,56 @@ from ..utils import (
 )
 
 
-@wrap_in_class(Tool)
+@wrap_in_class(
+    Tool,
+    transform=lambda d: {
+        "id": UUID(d.pop("tool_id")),
+        d["type"]: d.pop("spec"),
+        **d,
+    },
+    one=True,
+)
 @cozo_query
 @beartype
-def list_tools_query(
+def get_tool_query(
     *,
     developer_id: UUID,
     agent_id: UUID,
-    limit: int = 100,
-    offset: int = 0,
-    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
-    direction: Literal["asc", "desc"] = "desc",
+    tool_id: UUID,
 ) -> tuple[str, dict]:
     agent_id = str(agent_id)
+    tool_id = str(tool_id)
 
-    sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
-
-    list_query = f"""
-        input[agent_id] <- [[to_uuid($agent_id)]]
+    get_query = """
+        input[agent_id, tool_id] <- [[to_uuid($agent_id), to_uuid($tool_id)]]
 
         ?[
             agent_id,
-            id,
-            name,
+            tool_id,
             type,
+            name,
             spec,
             updated_at,
             created_at,
-        ] := input[agent_id],
-            *tools {{
+        ] := input[agent_id, tool_id],
+            *tools {
                 agent_id,
-                tool_id: id,
+                tool_id,
                 name,
                 type,
                 spec,
                 updated_at,
                 created_at,
-            }}
-
-        :limit $limit
-        :offset $offset
-        :sort {sort}
+            }
     """
 
     queries = [
         verify_developer_id_query(developer_id),
         verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
-        list_query,
+        get_query,
     ]
 
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
 
-    return (
-        query,
-        {"agent_id": agent_id, "limit": limit, "offset": offset},
-    )
+    return (query, {"agent_id": agent_id, "tool_id": tool_id})

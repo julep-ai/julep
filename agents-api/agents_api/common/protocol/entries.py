@@ -4,10 +4,9 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, computed_field
 from agents_api.autogen.openapi_model import (
-    Role,
+    ChatMLRole,
     ChatMLImageContentPart,
     ChatMLTextContentPart,
-    ImageDetail,
 )
 from agents_api.common.utils.datetime import utcnow
 
@@ -27,7 +26,7 @@ class Entry(BaseModel):
     )  # Uses a default factory to generate a unique UUID
     session_id: UUID
     source: EntrySource = Field(default="api_request")
-    role: Role
+    role: ChatMLRole
     name: str | None = None
     content: str | list[ChatMLTextContentPart] | list[ChatMLImageContentPart] | dict
     tokenizer: str = Field(default="character_count")
@@ -55,7 +54,7 @@ class Entry(BaseModel):
                     elif isinstance(part, ChatMLImageContentPart):
                         content_length += (
                             LOW_IMAGE_TOKEN_COUNT
-                            if part.image_url.detail == ImageDetail.low
+                            if part.image_url.detail == "low"
                             else HIGH_IMAGE_TOKEN_COUNT
                         )
 

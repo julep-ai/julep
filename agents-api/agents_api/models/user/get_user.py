@@ -3,12 +3,20 @@ from uuid import UUID
 from beartype import beartype
 
 
-from ..utils import cozo_query
+from ...autogen.openapi_model import User
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
+@wrap_in_class(User, one=True)
 @cozo_query
 @beartype
 def get_user_query(
+    *,
     developer_id: UUID,
     user_id: UUID,
 ) -> tuple[str, dict]:
@@ -16,7 +24,7 @@ def get_user_query(
     user_id = str(user_id)
     developer_id = str(developer_id)
 
-    query = """
+    get_query = """
     input[developer_id, user_id] <- [[to_uuid($developer_id), to_uuid($user_id)]]
 
     ?[
@@ -36,5 +44,14 @@ def get_user_query(
             updated_at,
             metadata,
         }"""
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "users", user_id=user_id),
+        get_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (query, {"developer_id": developer_id, "user_id": user_id})

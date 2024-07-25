@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -21,6 +21,8 @@ def list_agents_query(
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, dict]:
     """
@@ -43,6 +45,8 @@ def list_agents_query(
             for k, v in metadata_filter.items()
         ]
     )
+
+    sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
 
     # Datalog query to retrieve agent information based on filters, sorted by creation date in descending order.
     queries = [
@@ -75,7 +79,7 @@ def list_agents_query(
         
         :limit $limit
         :offset $offset
-        :sort -created_at
+        :sort {sort}
         """,
     ]
 

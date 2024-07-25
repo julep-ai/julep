@@ -37,10 +37,6 @@ model PatchUserRequest is UpdateUserRequest {}
 /** Payload for creating a user (and associated documents) */
 model CreateUserRequest {
     ...UpdateUserRequest;
-
-    /** Documents to index for this user. (Max: 100 items) */
-    @maxItems(100)
-    docs: unknown[] = #[];
 }
 
 model CreateOrUpdateUserRequest {

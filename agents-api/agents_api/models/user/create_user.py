@@ -5,20 +5,21 @@ It defines a query for inserting user data into the 'users' relation.
 
 from beartype import beartype
 
-from uuid import UUID
+from uuid import uuid4, UUID
 
 
-from ..utils import cozo_query
+from ...autogen.openapi_model import User, CreateUserRequest
+from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
 
 
+@wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
 @cozo_query
 @beartype
 def create_user_query(
-    user_id: UUID,
+    *,
     developer_id: UUID,
-    name: str,
-    about: str,
-    metadata: dict = {},
+    user_id: UUID | None = None,
+    create_user: CreateUserRequest,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new user in the CozoDB database.
@@ -35,8 +36,11 @@ def create_user_query(
         pd.DataFrame: A DataFrame containing the result of the query execution.
     """
 
-    query = """
-    {
+    user_id = user_id or uuid4()
+    create_user.metadata = create_user.metadata or {}
+    user_data = create_user.model_dump()
+
+    create_query = """
         # Then create the user
         ?[user_id, developer_id, name, about, metadata] <- [
             [to_uuid($user_id), to_uuid($developer_id), $name, $about, $metadata]
@@ -50,15 +54,21 @@ def create_user_query(
             metadata,
         }
         :returning
-    }"""
+    """
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        create_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (
         query,
         {
             "user_id": str(user_id),
             "developer_id": str(developer_id),
-            "name": name,
-            "about": about,
-            "metadata": metadata,
+            **user_data,
         },
     )

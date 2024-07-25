@@ -3,7 +3,7 @@ This module contains the functionality for creating agents in the CozoDB databas
 It includes functions to construct and execute datalog queries for inserting new agent records.
 """
 
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from beartype import beartype
 
@@ -48,7 +48,9 @@ def create_or_update_agent_query(
         if isinstance(create_or_update_agent.instructions, list)
         else [create_or_update_agent.instructions]
     )
-    create_or_update_agent.default_settings = create_or_update_agent.default_settings or {}
+    create_or_update_agent.default_settings = (
+        create_or_update_agent.default_settings or {}
+    )
 
     agent_data = create_or_update_agent.model_dump()
     default_settings = agent_data.pop("default_settings")

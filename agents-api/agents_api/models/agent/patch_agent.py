@@ -52,7 +52,7 @@ def patch_agent_query(
         }
     )
 
-    agent_update_query = f"""
+    update_query = f"""
         # update the agent
         input[{agent_update_cols}] <- $agent_update_vals
 
@@ -62,7 +62,6 @@ def patch_agent_query(
                 agent_id: to_uuid($agent_id),
                 metadata: md,
             }},
-            # agent_id = to_uuid($agent_id),
             metadata = concat(md, $metadata)
 
         :update agents {{
@@ -92,7 +91,7 @@ def patch_agent_query(
 
     # Combine agent and settings update queries if default settings are provided.
     # Combine the queries
-    queries = [agent_update_query]
+    queries = [update_query]
 
     if len(default_settings) != 0:
         queries.insert(0, settings_update_query)

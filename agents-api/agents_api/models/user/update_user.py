@@ -3,14 +3,25 @@ from uuid import UUID
 from beartype import beartype
 
 
-from ..utils import cozo_query
+from ...autogen.openapi_model import UpdateUserRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {"id": d["user_id"], "jobs": [], **d},
+)
 @cozo_query
 @beartype
 def update_user_query(
-    developer_id: UUID, user_id: UUID, **update_data
+    *, developer_id: UUID, user_id: UUID, update_user: UpdateUserRequest
 ) -> tuple[str, dict]:
     """Updates user information in the 'cozodb' database.
 
@@ -25,6 +36,8 @@ def update_user_query(
     """
     user_id = str(user_id)
     developer_id = str(developer_id)
+    update_data = update_user.model_dump()
+
     # Prepares the update data by filtering out None values and adding user_id and developer_id.
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
@@ -48,7 +61,7 @@ def update_user_query(
     """
 
     # Constructs the update operation for the user, setting new values and updating 'updated_at'.
-    query = f"""
+    update_query = f"""
         # update the user
         # This line updates the user's information based on the provided columns and values.
         input[{user_update_cols}] <- $user_update_vals
@@ -71,8 +84,16 @@ def update_user_query(
         :returning
     """
 
-    query = "{" + assertion_query + "} {" + query + "}"
-    # Combines the assertion and update queries.
+    # Combine the assertion query with the update queries
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "users", user_id=user_id),
+        assertion_query,
+        update_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (
         query,

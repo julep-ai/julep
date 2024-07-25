@@ -8,10 +8,8 @@ from ward import test
 from ...autogen.openapi_model import FunctionDef
 from .create_tools import create_function_query, create_multiple_functions_query
 from .delete_tools import delete_function_by_id_query
-from .embed_tools import embed_functions_query
-from .get_tools import get_function_by_id_query
+from .get_tool import get_function_by_id_query
 from .list_tools import list_functions_by_agent_query
-from .search_tools import search_functions_by_embedding_query
 
 
 def cozo_client(migrations_dir: str = "./migrations"):
@@ -127,54 +125,3 @@ def _():
     result = list_functions_by_agent_query(agent_id, client=client)
 
     assert len(result["tool_id"]) == num_functions
-
-
-@test("model: embed functions")
-def _():
-    client = cozo_client()
-
-    agent_id = uuid4()
-    tool_id = uuid4()
-    function = FunctionDef(
-        name="hello_world",
-        description="A function that prints hello world",
-        parameters={"type": "object", "properties": {}},
-    )
-
-    # Create function
-    create_function_query(agent_id, tool_id, function, client=client)
-
-    # embed functions
-    embedding = [1.0] * 768
-    embed_functions_query(agent_id, [tool_id], [embedding], client=client)
-
-
-@test("model: search functions")
-def _():
-    client = cozo_client()
-
-    agent_id = uuid4()
-    tool_id = uuid4()
-    function = FunctionDef(
-        name="hello_world",
-        description="A function that prints hello world",
-        parameters={"type": "object", "properties": {}},
-    )
-
-    # Create function
-    create_function_query(agent_id, tool_id, function, client=client)
-
-    # embed functions
-    embedding = [1.0] * 768
-    embed_functions_query(agent_id, [tool_id], [embedding], client=client)
-
-    ### Search
-    query_embedding = [0.99] * 768
-
-    result = search_functions_by_embedding_query(
-        agent_id,
-        query_embedding,
-        client=client,
-    )
-
-    assert len(result) == 1, "Only 1 should have been found"

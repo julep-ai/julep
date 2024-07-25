@@ -5,7 +5,12 @@ from beartype import beartype
 
 from ...autogen.openapi_model import PatchToolRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
-from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
 @wrap_in_class(
@@ -15,8 +20,8 @@ from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
 )
 @cozo_query
 @beartype
-def patch_tool_by_id_query(
-    *, agent_id: UUID, tool_id: UUID, patch_tool: PatchToolRequest
+def patch_tool_query(
+    *, developer_id: UUID, agent_id: UUID, tool_id: UUID, patch_tool: PatchToolRequest
 ) -> tuple[str, dict]:
     """
     # Execute the datalog query and return the results as a DataFrame
@@ -31,25 +36,27 @@ def patch_tool_by_id_query(
     - ResourceUpdatedResponse: The updated tool data.
     """
 
-
     # Extract the tool data from the payload
-    patch_data = patch_tool.model_dump()
+    patch_data = patch_tool.model_dump(exclude_none=True)
 
     # Assert that only one of the tool type fields is present
-    if tool_type := patch_data.get("type"):
-        assert patch_data[tool_type] is not None, f"Missing {tool_type} field"
-    else:
-        assert len([
-            patch_data.get(tool_type) is not None for tool_type in ["function", "integration", "system", "api_call"]
-        ]) == 1, "Invalid tool update"
+    tool_specs = [
+        (tool_type, patch_data.get(tool_type))
+        for tool_type in ["function", "integration", "system", "api_call"]
+        if patch_data.get(tool_type) is not None
+    ]
 
-        patch_data["type"] = next(
-            tool_type for tool_type in ["function", "integration", "system", "api_call"]
-            if patch_data.get(tool_type) is not None
-        )
+    assert len(tool_specs) <= 1, "Invalid tool update"
+    tool_type, tool_spec = tool_specs[0] if tool_specs else (None, None)
 
-    # Rename the tool definition to 'spec'
-    patch_data["spec"] = patch_data.pop(patch_data["type"])
+    if tool_type is not None:
+        patch_data["type"] = patch_data.get("type", tool_type)
+        assert patch_data["type"] == tool_type, "Invalid tool update"
+
+    if tool_spec is not None:
+        # Rename the tool definition to 'spec'
+        patch_data["spec"] = tool_spec
+        del patch_data[tool_type]
 
     tool_cols, tool_vals = cozo_process_mutate_data(
         {
@@ -60,7 +67,7 @@ def patch_tool_by_id_query(
     )
 
     # Construct the datalog query for updating the tool information
-    query = f"""
+    patch_query = f"""
         input[{tool_cols}] <- $input
 
         ?[{tool_cols}, updated_at] := 
@@ -71,4 +78,13 @@ def patch_tool_by_id_query(
         :returning
     """
 
-    return (query, tool_vals)
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        patch_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
+
+    return (query, dict(input=tool_vals))
