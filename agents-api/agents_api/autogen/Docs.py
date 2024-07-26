@@ -9,6 +9,28 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
+class BaseDocSearchRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
+    """
+    The confidence cutoff level
+    """
+    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+    mmr: bool = False
+    """
+    Whether to include the MMR algorithm in the search. Optimizes for diversity in search results.
+    """
+    lang: Literal["en-US"] = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
+
+
 class Doc(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -62,81 +84,31 @@ class DocReference(BaseModel):
     snippet: str | None = None
 
 
-class DocSearchRequest(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    text: str | list[str] | None = None
-    vector: list[float] | list[list[float]] | None = None
-    mode: Literal["vector", "text", "hybrid"]
-    """
-    The search mode
-    """
-    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
-    """
-    The confidence cutoff level
-    """
-    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
-    """
-    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-    """
-    mmr: bool = False
-    """
-    Whether to include the MMR algorithm in the search. Optimizes for diversity in search results.
-    """
-    lang: Literal["en-US"] = "en-US"
-    """
-    The language to be used for text-only search. Support for other languages coming soon.
-    """
-
-
-class EmbedQueryRequest(BaseModel):
+class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     text: str | list[str]
-    """
-    Text or texts to embed
-    """
-
-
-class EmbedQueryResponse(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    vectors: list[list[float]]
-    """
-    The embedded vectors
-    """
-
-
-class HybridDocSearchRequest(DocSearchRequest):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    text: str | list[str] | None = None
     """
     Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
     """
-    vector: list[float] | list[list[float]] | None = None
+    vector: list[float] | list[list[float]]
     """
     Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
-    mode: Literal["hybrid"] = "hybrid"
 
 
-class TextOnlyDocSearchRequest(DocSearchRequest):
+class TextOnlyDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     text: str | list[str]
     """
-    Text or texts to use in the search. In `text` search mode, only BM25 is used.
+    Text or texts to use in the search.
     """
-    mode: Literal["text"] = "text"
 
 
-class VectorDocSearchRequest(DocSearchRequest):
+class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -144,4 +116,3 @@ class VectorDocSearchRequest(DocSearchRequest):
     """
     Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
-    mode: Literal["vector"] = "vector"

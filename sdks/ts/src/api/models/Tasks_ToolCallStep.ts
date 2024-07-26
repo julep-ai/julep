@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_toolRef } from "./Common_toolRef";
-import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
-export type Tasks_ToolCallStep = Tasks_WorkflowStep & {
+export type Tasks_ToolCallStep = {
   /**
    * The tool to run
    */

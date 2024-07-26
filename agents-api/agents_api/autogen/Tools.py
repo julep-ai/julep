@@ -28,28 +28,6 @@ class ChosenToolCall(BaseModel):
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
-class CreateToolRequest(BaseModel):
-    """
-    Payload for creating a tool
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
-    """
-    Name of the tool (must be unique for this agent and a valid python identifier string )
-    """
-    function: FunctionDef | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
-
-
 class FunctionCallOption(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -88,34 +66,6 @@ class FunctionDef(BaseModel):
     """
 
 
-class FunctionDefUpdate(BaseModel):
-    """
-    Function definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: Annotated[str, Field("overriden", pattern="^[^\\W0-9]\\w*$")]
-    """
-    DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
-    """
-    description: Annotated[
-        str | None,
-        Field(
-            None,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ]
-    """
-    Description of the function
-    """
-    parameters: dict[str, Any] | None = None
-    """
-    The parameters the function accepts
-    """
-
-
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -125,28 +75,6 @@ class NamedToolChoice(BaseModel):
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
-
-
-class PatchToolRequest(BaseModel):
-    """
-    Payload for patching a tool
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function", "integration", "system", "api_call"] | None = None
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
-    name: Annotated[str | None, Field(None, pattern="^[^\\W0-9]\\w*$")]
-    """
-    Name of the tool (must be unique for this agent and a valid python identifier string )
-    """
-    function: FunctionDefUpdate | None = None
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None
@@ -188,28 +116,6 @@ class ToolResponse(BaseModel):
     """
     The output of the tool
     """
-
-
-class UpdateToolRequest(BaseModel):
-    """
-    Payload for updating a tool
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
-    """
-    Name of the tool (must be unique for this agent and a valid python identifier string )
-    """
-    function: FunctionDef | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
 
 
 class ChosenFunctionCall(ChosenToolCall):

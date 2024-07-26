@@ -60,14 +60,7 @@ model EmbedQueryResponse {
     vectors: float[][];
 }
 
-@discriminator("mode")
-model DocSearchRequest {
-    text?: string | string[];
-    vector?: float[] | float[][];
-
-    /** The search mode */
-    mode: "vector" | "text" | "hybrid";
-    
+model BaseDocSearchRequest {
     /** The confidence cutoff level */
     @minValue(0)
     @maxValue(1)
@@ -85,27 +78,26 @@ model DocSearchRequest {
     lang: "en-US" = "en-US";
 }
 
-model VectorDocSearchRequest extends DocSearchRequest {
+model VectorDocSearchRequest extends BaseDocSearchRequest {
     /** Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
     vector: float[] | float[][];
 
     text?: never;
-    mode: "vector" = "vector";
 }
 
-model TextOnlyDocSearchRequest extends DocSearchRequest {
-    /** Text or texts to use in the search. In `text` search mode, only BM25 is used. */
+model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
+    /** Text or texts to use in the search. */
     text: string | string[];
 
     vector?: never;
-    mode: "text" = "text";
 }
 
-model HybridDocSearchRequest extends DocSearchRequest {
+model HybridDocSearchRequest extends BaseDocSearchRequest {
     /** Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
-    text?: string | string[];
+    text: string | string[];
 
     /** Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector?: float[] | float[][];
-    mode: "hybrid" = "hybrid";
+    vector: float[] | float[][];
 }
+
+alias DocSearchRequest = VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest;

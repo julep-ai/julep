@@ -2,8 +2,23 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
+import type { Tasks_ErrorWorkflowStep } from "./Tasks_ErrorWorkflowStep";
+import type { Tasks_EvaluateStep } from "./Tasks_EvaluateStep";
+import type { Tasks_IfElseWorkflowStep } from "./Tasks_IfElseWorkflowStep";
+import type { Tasks_PromptStep } from "./Tasks_PromptStep";
+import type { Tasks_ToolCallStep } from "./Tasks_ToolCallStep";
+import type { Tasks_YieldStep } from "./Tasks_YieldStep";
 /**
  * Payload for updating a task
  */
-export type Tasks_UpdateTaskRequest = Record<string, Array<Tasks_WorkflowStep>>;
+export type Tasks_UpdateTaskRequest = Record<
+  string,
+  Array<
+    | Tasks_EvaluateStep
+    | Tasks_ToolCallStep
+    | Tasks_YieldStep
+    | Tasks_PromptStep
+    | Tasks_ErrorWorkflowStep
+    | Tasks_IfElseWorkflowStep
+  >
+>;

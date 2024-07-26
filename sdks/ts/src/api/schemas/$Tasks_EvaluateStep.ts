@@ -3,21 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Tasks_EvaluateStep = {
-  type: "all-of",
-  contains: [
-    {
-      type: "Tasks_WorkflowStep",
-    },
-    {
-      properties: {
-        evaluate: {
-          type: "dictionary",
-          contains: {
-            type: "Common_PyExpression",
-          },
-          isRequired: true,
-        },
+  properties: {
+    evaluate: {
+      type: "dictionary",
+      contains: {
+        type: "Common_PyExpression",
       },
+      isRequired: true,
     },
-  ],
+  },
 } as const;

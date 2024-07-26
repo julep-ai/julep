@@ -48,9 +48,7 @@ def create_or_update_agent(
         if isinstance(data.instructions, list)
         else [data.instructions]
     )
-    data.default_settings = (
-        data.default_settings or {}
-    )
+    data.default_settings = data.default_settings or {}
 
     agent_data = data.model_dump()
     default_settings = agent_data.pop("default_settings")

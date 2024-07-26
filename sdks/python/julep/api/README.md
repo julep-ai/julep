@@ -16,17 +16,26 @@ pip install julep
 Instantiate and use the client with the following:
 
 ```python
+from julep import DocsVectorDocSearchRequest
 from julep.client import JulepApi
 
 client = JulepApi(
     auth_key="YOUR_AUTH_KEY",
     api_key="YOUR_API_KEY",
 )
-client.agents_route_create(
-    name="name",
-    about="about",
-    model="model",
-    instructions="instructions",
+client.agents_docs_search_route_search(
+    id="id",
+    limit=1,
+    offset=1,
+    sort_by="created_at",
+    direction="asc",
+    metadata_filter="metadata_filter",
+    body=DocsVectorDocSearchRequest(
+        confidence=1.1,
+        alpha=1.1,
+        mmr=True,
+        vector=[1.1],
+    ),
 )
 ```
 
@@ -37,6 +46,7 @@ The SDK also exports an `async` client so that you can make non-blocking calls t
 ```python
 import asyncio
 
+from julep import DocsVectorDocSearchRequest
 from julep.client import AsyncJulepApi
 
 client = AsyncJulepApi(
@@ -46,11 +56,19 @@ client = AsyncJulepApi(
 
 
 async def main() -> None:
-    await client.agents_route_create(
-        name="name",
-        about="about",
-        model="model",
-        instructions="instructions",
+    await client.agents_docs_search_route_search(
+        id="id",
+        limit=1,
+        offset=1,
+        sort_by="created_at",
+        direction="asc",
+        metadata_filter="metadata_filter",
+        body=DocsVectorDocSearchRequest(
+            confidence=1.1,
+            alpha=1.1,
+            mmr=True,
+            vector=[1.1],
+        ),
     )
 
 
@@ -66,7 +84,7 @@ will be thrown.
 from .api_error import ApiError
 
 try:
-    client.agents_route_create(...)
+    client.agents_docs_search_route_search(...)
 except ApiError as e:
     print(e.status_code)
     print(e.body)
@@ -89,7 +107,7 @@ A request is deemed retriable when any of the following HTTP status codes is ret
 Use the `max_retries` request option to configure this behavior.
 
 ```python
-client.agents_route_create(...,{
+client.agents_docs_search_route_search(...,{
     max_retries=1
 })
 ```
@@ -106,7 +124,7 @@ client = JulepApi(..., { timeout=20.0 }, )
 
 
 # Override timeout for a specific method
-client.agents_route_create(...,{
+client.agents_docs_search_route_search(...,{
     timeout_in_seconds=1
 })
 ```

@@ -118,29 +118,6 @@ class CompletionResponseFormat(BaseModel):
     """
 
 
-class GenerationPresetSettings(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    preset: (
-        Literal[
-            "problem_solving",
-            "conversational",
-            "fun",
-            "prose",
-            "creative",
-            "business",
-            "deterministic",
-            "code",
-            "multilingual",
-        ]
-        | None
-    ) = None
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-    """
-
-
 class LogProbResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -166,28 +143,6 @@ class MultipleChatOutput(BaseChatOutput):
     messages: list[ChatMLMessage]
 
 
-class OpenAISettings(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    frequency_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
-    """
-    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    presence_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
-    """
-    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    temperature: Annotated[float | None, Field(None, ge=0.0, le=5.0)]
-    """
-    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-    """
-    top_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
-    """
-    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-    """
-
-
 class SingleChatOutput(BaseChatOutput):
     """
     The output returned by the model. Note that, depending on the model provider, they might return more than one message.
@@ -204,29 +159,3 @@ class TokenLogProb(BaseTokenLogProb):
         populate_by_name=True,
     )
     top_logprobs: list[BaseTokenLogProb]
-
-
-class VLLMSettings(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    repetition_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    length_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-    """
-    temperature: Annotated[float | None, Field(None, ge=0.0, le=5.0)]
-    """
-    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-    """
-    top_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
-    """
-    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-    """
-    min_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
-    """
-    Minimum probability compared to leading token to be considered
-    """

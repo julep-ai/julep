@@ -11,7 +11,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 from .Chat import CompletionResponseFormat
 from .Common import LogitBias
 from .Entries import InputChatMLMessage
-from .Tools import CreateToolRequest
+from .Tools import FunctionDef
 
 
 class CreateTaskRequest(BaseModel):
@@ -24,7 +24,14 @@ class CreateTaskRequest(BaseModel):
     )
     name: str
     description: str = ""
-    main: list[WorkflowStep]
+    main: list[
+        EvaluateStep
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | IfElseWorkflowStep
+    ]
     """
     The entrypoint of the task.
     """
@@ -32,7 +39,7 @@ class CreateTaskRequest(BaseModel):
     """
     The schema for the input to the task. `null` means all inputs are valid.
     """
-    tools: list[CreateToolRequest] = []
+    tools: list[TaskTool] = []
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
@@ -41,6 +48,47 @@ class CreateTaskRequest(BaseModel):
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
+
+
+class ErrorWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    error: str
+    """
+    The error message
+    """
+
+
+class EvaluateStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    evaluate: dict[str, str]
+    """
+    The expression to evaluate
+    """
+
+
+class IfElseWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    if_: Annotated[str, Field(alias="if")]
+    """
+    The condition to evaluate
+    """
+    then: EvaluateStep | ToolCallStep | YieldStep | PromptStep | ErrorWorkflowStep
+    """
+    The steps to run if the condition is true
+    """
+    else_: Annotated[
+        EvaluateStep | ToolCallStep | YieldStep | PromptStep | ErrorWorkflowStep,
+        Field(alias="else"),
+    ]
+    """
+    The steps to run if the condition is false
+    """
 
 
 class PatchTaskRequest(BaseModel):
@@ -52,7 +100,17 @@ class PatchTaskRequest(BaseModel):
         populate_by_name=True,
     )
     description: str = ""
-    main: list[WorkflowStep] | None = None
+    main: (
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | YieldStep
+            | PromptStep
+            | ErrorWorkflowStep
+            | IfElseWorkflowStep
+        ]
+        | None
+    ) = None
     """
     The entrypoint of the task.
     """
@@ -60,7 +118,7 @@ class PatchTaskRequest(BaseModel):
     """
     The schema for the input to the task. `null` means all inputs are valid.
     """
-    tools: list[CreateToolRequest] = []
+    tools: list[TaskTool] = []
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
@@ -69,6 +127,20 @@ class PatchTaskRequest(BaseModel):
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
+
+
+class PromptStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    prompt: str | list[InputChatMLMessage]
+    """
+    The prompt to run
+    """
+    settings: Settings | SettingsModel | SettingsModel1
+    """
+    Settings for the prompt
+    """
 
 
 class Settings(BaseModel):
@@ -278,7 +350,14 @@ class Task(BaseModel):
     )
     name: str
     description: str = ""
-    main: list[WorkflowStep]
+    main: list[
+        EvaluateStep
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | IfElseWorkflowStep
+    ]
     """
     The entrypoint of the task.
     """
@@ -286,7 +365,7 @@ class Task(BaseModel):
     """
     The schema for the input to the task. `null` means all inputs are valid.
     """
-    tools: list[CreateToolRequest] = []
+    tools: list[TaskTool] = []
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
@@ -294,7 +373,6 @@ class Task(BaseModel):
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
-    agent_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
@@ -307,111 +385,29 @@ class Task(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class UpdateTaskRequest(BaseModel):
-    """
-    Payload for updating a task
-    """
-
+class TaskTool(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    description: str = ""
-    main: list[WorkflowStep]
+    inherited: Annotated[bool, Field(False, json_schema_extra={"readOnly": True})]
     """
-    The entrypoint of the task.
+    Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
-    input_schema: dict[str, Any] | None = None
+    type: Literal["function", "integration", "system", "api_call"]
     """
-    The schema for the input to the task. `null` means all inputs are valid.
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    tools: list[CreateToolRequest] = []
+    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
     """
-    Tools defined specifically for this task not included in the Agent itself.
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    inherit_tools: bool = True
-    """
-    Whether to inherit tools from the parent agent or not. Defaults to true.
-    """
-    metadata: dict[str, Any] | None = None
+    function: FunctionDef | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
 
 
-class WorkflowStep(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    kind: str | None = None
-    """
-    Discriminator property for WorkflowStep.
-    """
-
-
-class YieldStep(WorkflowStep):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    workflow: str
-    """
-    The subworkflow to run
-    """
-    arguments: dict[str, str]
-    """
-    The input parameters for the subworkflow
-    """
-
-
-class ErrorWorkflowStep(WorkflowStep):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    error: str
-    """
-    The error message
-    """
-
-
-class EvaluateStep(WorkflowStep):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    evaluate: dict[str, str]
-    """
-    The expression to evaluate
-    """
-
-
-class IfElseWorkflowStep(WorkflowStep):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    if_: Annotated[str, Field(alias="if")]
-    """
-    The condition to evaluate
-    """
-    then: WorkflowStep
-    """
-    The steps to run if the condition is true
-    """
-    else_: Annotated[WorkflowStep, Field(alias="else")]
-    """
-    The steps to run if the condition is false
-    """
-
-
-class PromptStep(WorkflowStep):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    prompt: str | list[InputChatMLMessage]
-    """
-    The prompt to run
-    """
-    settings: Settings | SettingsModel | SettingsModel1
-    """
-    Settings for the prompt
-    """
-
-
-class ToolCallStep(WorkflowStep):
+class ToolCallStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -424,4 +420,53 @@ class ToolCallStep(WorkflowStep):
     arguments: dict[str, Any]
     """
     The input parameters for the tool
+    """
+
+
+class UpdateTaskRequest(BaseModel):
+    """
+    Payload for updating a task
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    description: str = ""
+    main: list[
+        EvaluateStep
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | IfElseWorkflowStep
+    ]
+    """
+    The entrypoint of the task.
+    """
+    input_schema: dict[str, Any] | None = None
+    """
+    The schema for the input to the task. `null` means all inputs are valid.
+    """
+    tools: list[TaskTool] = []
+    """
+    Tools defined specifically for this task not included in the Agent itself.
+    """
+    inherit_tools: bool = True
+    """
+    Whether to inherit tools from the parent agent or not. Defaults to true.
+    """
+    metadata: dict[str, Any] | None = None
+
+
+class YieldStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    workflow: str
+    """
+    The subworkflow to run
+    """
+    arguments: dict[str, str]
+    """
+    The input parameters for the subworkflow
     """

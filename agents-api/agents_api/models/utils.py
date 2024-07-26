@@ -23,7 +23,7 @@ def verify_developer_id_query(developer_id: UUID | str) -> str:
 
 
 def verify_developer_owns_resource_query(
-    developer_id: UUID | str, resource: str, **resource_id: dict
+    developer_id: UUID | str, resource: str, **resource_id
 ) -> str:
 
     resource_id_key, resource_id_value = next(iter(resource_id.items()))

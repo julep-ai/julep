@@ -29,6 +29,7 @@ def create_tools(
     developer_id: UUID,
     agent_id: UUID,
     data: list[CreateToolRequest],
+    ignore_existing: bool = False,
 ) -> tuple[str, dict]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
@@ -52,9 +53,32 @@ def create_tools(
         for tool in data
     ]
 
+    ensure_tool_name_unique_query = """
+        input[agent_id, tool_id, type, name, spec] <- $records
+        ?[tool_id] :=
+            input[agent_id, _, type, name, _],
+            *tools{
+                agent_id: to_uuid(agent_id),
+                tool_id,
+                type,
+                name,
+            }
+
+        :assert none
+    """
+
     # Datalog query for inserting new tool records into the 'agent_functions' relation
     create_query = """
-        ?[agent_id, tool_id, type, name, spec] <- $records
+        input[agent_id, tool_id, type, name, spec] <- $records
+        
+        # Do not add duplicate
+        ?[agent_id, tool_id, type, name, spec] :=
+            input[agent_id, tool_id, type, name, spec],
+            not *tools{
+                agent_id: to_uuid(agent_id),
+                type,
+                name,
+            }
 
         :insert tools {
             agent_id,
@@ -71,6 +95,12 @@ def create_tools(
         verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
         create_query,
     ]
+
+    if not ignore_existing:
+        queries.insert(
+            -1,
+            ensure_tool_name_unique_query,
+        )
 
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"

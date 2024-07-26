@@ -11,19 +11,7 @@ from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootMo
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
 
-class BaseChatMLContentPart(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: str
-    """
-    The type of content part
-    """
-    text: str | None = None
-    image_url: ImageURL | None = None
-
-
-class ChatMLImageContentPart(BaseChatMLContentPart):
+class ChatMLImageContentPart(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -74,7 +62,7 @@ class ChatMLMessage(BaseModel):
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
-class ChatMLTextContentPart(BaseChatMLContentPart):
+class ChatMLTextContentPart(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )

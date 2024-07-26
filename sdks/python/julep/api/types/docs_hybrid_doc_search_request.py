@@ -5,21 +5,18 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .docs_base_doc_search_request import DocsBaseDocSearchRequest
 from .docs_hybrid_doc_search_request_text import DocsHybridDocSearchRequestText
 from .docs_hybrid_doc_search_request_vector import DocsHybridDocSearchRequestVector
 
 
-class DocsHybridDocSearchRequest(pydantic_v1.BaseModel):
-    text: typing.Optional[DocsHybridDocSearchRequestText] = pydantic_v1.Field(
-        default=None
-    )
+class DocsHybridDocSearchRequest(DocsBaseDocSearchRequest):
+    text: DocsHybridDocSearchRequestText = pydantic_v1.Field()
     """
     Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
     """
 
-    vector: typing.Optional[DocsHybridDocSearchRequestVector] = pydantic_v1.Field(
-        default=None
-    )
+    vector: DocsHybridDocSearchRequestVector = pydantic_v1.Field()
     """
     Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
@@ -52,5 +49,7 @@ class DocsHybridDocSearchRequest(pydantic_v1.BaseModel):
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

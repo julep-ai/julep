@@ -44,16 +44,7 @@ alias WorkflowStepKind = (
     | "error"
 );
 
-@discriminator("kind")
-model WorkflowStep {
-    @visibility("none")
-    kind?: WorkflowStepKind;
-}
-
-model ToolCallStep extends WorkflowStep {
-    @visibility("none")
-    kind: "tool_call" = "tool_call";
-
+model ToolCallStep {
     /** The tool to run */
     tool: toolRef;
 
@@ -64,10 +55,7 @@ model ToolCallStep extends WorkflowStep {
 /** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
 alias ExpressionObject = Record<PyExpression>;
 
-model YieldStep extends WorkflowStep {
-    @visibility("none")
-    kind: "yield" = "yield";
-
+model YieldStep {
     /** The subworkflow to run */
     workflow: string;
 
@@ -75,10 +63,7 @@ model YieldStep extends WorkflowStep {
     arguments: ExpressionObject;
 }
 
-model PromptStep extends WorkflowStep {
-    @visibility("none")
-    kind: "prompt" = "prompt";
-
+model PromptStep {
     /** The prompt to run */
     prompt: string | InputChatMLMessage[];
 
@@ -86,46 +71,45 @@ model PromptStep extends WorkflowStep {
     settings: ChatSettings;
 }
 
-model EvaluateStep extends WorkflowStep {
-    @visibility("none")
-    kind: "evaluate" = "evaluate";
-
+model EvaluateStep {
     /** The expression to evaluate */
     evaluate: ExpressionObject;
 }
 
-model IfElseWorkflowStep extends WorkflowStep {
-    @visibility("none")
-    kind: "if_else" = "if_else";
-
-    /** The condition to evaluate */
-    `if`: PyExpression;
-
-    /** The steps to run if the condition is true */
-    then: WorkflowStep;
-
-    /** The steps to run if the condition is false */
-    `else`: WorkflowStep;
-}
-
-model ErrorWorkflowStep extends WorkflowStep {
-    @visibility("none")
-    kind: "error" = "error";
-
+model ErrorWorkflowStep {
     /** The error message */
     error: string;
 }
 
-@withVisibility("create")
-model CreateWorkflowStep {
-    ...WorkflowStep;
+alias NonConditionalWorkflowStep = EvaluateStep | ToolCallStep | YieldStep | PromptStep | ErrorWorkflowStep;
+
+model IfElseWorkflowStep {
+    /** The condition to evaluate */
+    `if`: PyExpression;
+
+    /** The steps to run if the condition is true */
+    then: NonConditionalWorkflowStep;
+
+    /** The steps to run if the condition is false */
+    `else`: NonConditionalWorkflowStep;
 }
+
+alias WorkflowStep = NonConditionalWorkflowStep | IfElseWorkflowStep;
+alias CreateWorkflowStep = WorkflowStep;
 
 model Workflow {
     @key name: validPythonIdentifier;
 
     /** The steps in the workflow */
     steps: WorkflowStep[];
+}
+
+model TaskTool {
+    /** Read-only: Whether the tool was inherited or not. Only applies within tasks. */
+    @visibility("read")
+    inherited?: boolean = false;
+
+    ...CreateToolRequest;
 }
 
 /** Object describing a Task */
@@ -142,13 +126,10 @@ model Task {
     input_schema: Record<unknown> | null = null;
 
     /** Tools defined specifically for this task not included in the Agent itself. */
-    tools: CreateToolRequest[] = #[];
+    tools: TaskTool[] = #[];
 
     /** Whether to inherit tools from the parent agent or not. Defaults to true. */
     inherit_tools: boolean = true;
-
-    @visibility("read")
-    agent_id: Agent.id;
 
     ...HasId;
     ...HasTimestamps;

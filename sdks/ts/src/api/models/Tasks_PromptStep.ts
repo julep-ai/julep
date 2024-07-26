@@ -8,8 +8,7 @@ import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicod
 import type { Common_logit_bias } from "./Common_logit_bias";
 import type { Common_uuid } from "./Common_uuid";
 import type { Entries_InputChatMLMessage } from "./Entries_InputChatMLMessage";
-import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
-export type Tasks_PromptStep = Tasks_WorkflowStep & {
+export type Tasks_PromptStep = {
   /**
    * The prompt to run
    */

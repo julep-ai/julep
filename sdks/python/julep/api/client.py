@@ -16,19 +16,8 @@ from .types.agent_docs_route_list_request_direction import (
 )
 from .types.agent_docs_route_list_request_sort_by import AgentDocsRouteListRequestSortBy
 from .types.agent_docs_route_list_response import AgentDocsRouteListResponse
-from .types.agent_tools_route_list_request_direction import (
-    AgentToolsRouteListRequestDirection,
-)
-from .types.agent_tools_route_list_request_sort_by import (
-    AgentToolsRouteListRequestSortBy,
-)
-from .types.agent_tools_route_list_response import AgentToolsRouteListResponse
-from .types.agents_agent import AgentsAgent
-from .types.agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
-)
-from .types.agents_create_agent_request_instructions import (
-    AgentsCreateAgentRequestInstructions,
+from .types.agents_docs_search_route_search_request_body import (
+    AgentsDocsSearchRouteSearchRequestBody,
 )
 from .types.agents_docs_search_route_search_request_direction import (
     AgentsDocsSearchRouteSearchRequestDirection,
@@ -39,35 +28,15 @@ from .types.agents_docs_search_route_search_request_sort_by import (
 from .types.agents_docs_search_route_search_response import (
     AgentsDocsSearchRouteSearchResponse,
 )
-from .types.agents_patch_agent_request_default_settings import (
-    AgentsPatchAgentRequestDefaultSettings,
-)
-from .types.agents_patch_agent_request_instructions import (
-    AgentsPatchAgentRequestInstructions,
-)
-from .types.agents_route_list_request_direction import AgentsRouteListRequestDirection
-from .types.agents_route_list_request_sort_by import AgentsRouteListRequestSortBy
-from .types.agents_route_list_response import AgentsRouteListResponse
-from .types.agents_update_agent_request_default_settings import (
-    AgentsUpdateAgentRequestDefaultSettings,
-)
-from .types.agents_update_agent_request_instructions import (
-    AgentsUpdateAgentRequestInstructions,
-)
 from .types.chat_route_generate_request import ChatRouteGenerateRequest
 from .types.chat_route_generate_response import ChatRouteGenerateResponse
-from .types.common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .types.common_limit import CommonLimit
 from .types.common_offset import CommonOffset
 from .types.common_resource_created_response import CommonResourceCreatedResponse
 from .types.common_resource_deleted_response import CommonResourceDeletedResponse
 from .types.common_resource_updated_response import CommonResourceUpdatedResponse
 from .types.common_uuid import CommonUuid
-from .types.common_valid_python_identifier import CommonValidPythonIdentifier
 from .types.docs_doc import DocsDoc
-from .types.docs_doc_search_request import DocsDocSearchRequest
-from .types.docs_embed_query_request import DocsEmbedQueryRequest
-from .types.docs_embed_query_response import DocsEmbedQueryResponse
 from .types.execution_transitions_route_list_request_direction import (
     ExecutionTransitionsRouteListRequestDirection,
 )
@@ -82,14 +51,6 @@ from .types.executions_update_execution_request import ExecutionsUpdateExecution
 from .types.history_route_list_request_direction import HistoryRouteListRequestDirection
 from .types.history_route_list_request_sort_by import HistoryRouteListRequestSortBy
 from .types.history_route_list_response import HistoryRouteListResponse
-from .types.jobs_job_status import JobsJobStatus
-from .types.sessions_context_overflow_type import SessionsContextOverflowType
-from .types.sessions_route_list_request_direction import (
-    SessionsRouteListRequestDirection,
-)
-from .types.sessions_route_list_request_sort_by import SessionsRouteListRequestSortBy
-from .types.sessions_route_list_response import SessionsRouteListResponse
-from .types.sessions_session import SessionsSession
 from .types.task_executions_route_list_request_direction import (
     TaskExecutionsRouteListRequestDirection,
 )
@@ -97,19 +58,21 @@ from .types.task_executions_route_list_request_sort_by import (
     TaskExecutionsRouteListRequestSortBy,
 )
 from .types.task_executions_route_list_response import TaskExecutionsRouteListResponse
+from .types.tasks_create_task_request_main_item import TasksCreateTaskRequestMainItem
+from .types.tasks_patch_task_request_main_item import TasksPatchTaskRequestMainItem
 from .types.tasks_route_list_request_direction import TasksRouteListRequestDirection
 from .types.tasks_route_list_request_sort_by import TasksRouteListRequestSortBy
 from .types.tasks_route_list_response import TasksRouteListResponse
-from .types.tasks_workflow_step import TasksWorkflowStep
-from .types.tools_create_tool_request import ToolsCreateToolRequest
-from .types.tools_function_def import ToolsFunctionDef
-from .types.tools_function_def_update import ToolsFunctionDefUpdate
-from .types.tools_tool_type import ToolsToolType
+from .types.tasks_task_tool import TasksTaskTool
+from .types.tasks_update_task_request_main_item import TasksUpdateTaskRequestMainItem
 from .types.user_docs_route_list_request_direction import (
     UserDocsRouteListRequestDirection,
 )
 from .types.user_docs_route_list_request_sort_by import UserDocsRouteListRequestSortBy
 from .types.user_docs_route_list_response import UserDocsRouteListResponse
+from .types.user_docs_search_route_search_request_body import (
+    UserDocsSearchRouteSearchRequestBody,
+)
 from .types.user_docs_search_route_search_request_direction import (
     UserDocsSearchRouteSearchRequestDirection,
 )
@@ -119,10 +82,6 @@ from .types.user_docs_search_route_search_request_sort_by import (
 from .types.user_docs_search_route_search_response import (
     UserDocsSearchRouteSearchResponse,
 )
-from .types.users_route_list_request_direction import UsersRouteListRequestDirection
-from .types.users_route_list_request_sort_by import UsersRouteListRequestSortBy
-from .types.users_route_list_response import UsersRouteListResponse
-from .types.users_user import UsersUser
 
 # this is used as the default value for optional parameters
 OMIT = typing.cast(typing.Any, ...)
@@ -198,498 +157,6 @@ class JulepApi:
             ),
             timeout=_defaulted_timeout,
         )
-
-    def agents_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: AgentsRouteListRequestSortBy,
-        direction: AgentsRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteListResponse:
-        """
-        List Agents (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : AgentsRouteListRequestSortBy
-            Sort by a field
-
-        direction : AgentsRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AgentsRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_list(
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "agents",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_create(
-        self,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsCreateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new Agent
-
-        Parameters
-        ----------
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsCreateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_create(
-            name="name",
-            about="about",
-            model="model",
-            instructions="instructions",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "agents",
-            method="POST",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AgentsAgent:
-        """
-        Get an Agent by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AgentsAgent
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_get(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsAgent, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_create_or_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsUpdateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update an Agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsUpdateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_create_or_update(
-            id="id",
-            name="name",
-            about="about",
-            model="model",
-            instructions="instructions",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="POST",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsUpdateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsUpdateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_update(
-            id="id",
-            name="name",
-            about="about",
-            model="model",
-            instructions="instructions",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="PUT",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete Agent by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agents_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
-        about: typing.Optional[str] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[AgentsPatchAgentRequestInstructions] = OMIT,
-        default_settings: typing.Optional[
-            AgentsPatchAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Agent by id (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        name : typing.Optional[CommonIdentifierSafeUnicode]
-            Name of the agent
-
-        about : typing.Optional[str]
-            About the agent
-
-        model : typing.Optional[str]
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : typing.Optional[AgentsPatchAgentRequestInstructions]
-            Instructions for the agent
-
-        default_settings : typing.Optional[AgentsPatchAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agents_route_patch(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def agent_docs_route_list(
         self,
@@ -779,7 +246,7 @@ class JulepApi:
         sort_by: AgentsDocsSearchRouteSearchRequestSortBy,
         direction: AgentsDocsSearchRouteSearchRequestDirection,
         metadata_filter: str,
-        body: DocsDocSearchRequest,
+        body: AgentsDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentsDocsSearchRouteSearchResponse:
         """
@@ -805,7 +272,7 @@ class JulepApi:
         metadata_filter : str
             JSON string of object that should be used to filter objects by metadata
 
-        body : DocsDocSearchRequest
+        body : AgentsDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -817,7 +284,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import DocsDocSearchRequest_Vector
+        from julep import DocsVectorDocSearchRequest
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -825,15 +292,13 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.agents_docs_search_route_search(
-            id="string",
+            id="id",
             limit=1,
             offset=1,
             sort_by="created_at",
             direction="asc",
-            metadata_filter="string",
-            body=DocsDocSearchRequest_Vector(
-                text="string",
-                vector=[1.1],
+            metadata_filter="metadata_filter",
+            body=DocsVectorDocSearchRequest(
                 confidence=1.1,
                 alpha=1.1,
                 mmr=True,
@@ -948,8 +413,8 @@ class JulepApi:
         *,
         name: str,
         description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
+        main: typing.Sequence[TasksCreateTaskRequestMainItem],
+        tools: typing.Sequence[TasksTaskTool],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
@@ -967,10 +432,10 @@ class JulepApi:
 
         description : str
 
-        main : typing.Sequence[TasksWorkflowStep]
+        main : typing.Sequence[TasksCreateTaskRequestMainItem]
             The entrypoint of the task.
 
-        tools : typing.Sequence[ToolsCreateToolRequest]
+        tools : typing.Sequence[TasksTaskTool]
             Tools defined specifically for this task not included in the Agent itself.
 
         inherit_tools : bool
@@ -991,7 +456,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import ToolsCreateToolRequest
+        from julep import TasksEvaluateStep, TasksTaskTool
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -1002,9 +467,13 @@ class JulepApi:
             id="id",
             name="name",
             description="description",
-            main=[],
+            main=[
+                TasksEvaluateStep(
+                    evaluate={"key": "value"},
+                )
+            ],
             tools=[
-                ToolsCreateToolRequest(
+                TasksTaskTool(
                     type="function",
                     name="name",
                 )
@@ -1041,8 +510,8 @@ class JulepApi:
         child_id: CommonUuid,
         *,
         description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
+        main: typing.Sequence[TasksUpdateTaskRequestMainItem],
+        tools: typing.Sequence[TasksTaskTool],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
@@ -1061,10 +530,10 @@ class JulepApi:
 
         description : str
 
-        main : typing.Sequence[TasksWorkflowStep]
+        main : typing.Sequence[TasksUpdateTaskRequestMainItem]
             The entrypoint of the task.
 
-        tools : typing.Sequence[ToolsCreateToolRequest]
+        tools : typing.Sequence[TasksTaskTool]
             Tools defined specifically for this task not included in the Agent itself.
 
         inherit_tools : bool
@@ -1085,7 +554,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import ToolsCreateToolRequest
+        from julep import TasksEvaluateStep, TasksTaskTool
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -1096,9 +565,13 @@ class JulepApi:
             id="id",
             child_id="child_id",
             description="description",
-            main=[],
+            main=[
+                TasksEvaluateStep(
+                    evaluate={"key": "value"},
+                )
+            ],
             tools=[
-                ToolsCreateToolRequest(
+                TasksTaskTool(
                     type="function",
                     name="name",
                 )
@@ -1186,9 +659,9 @@ class JulepApi:
         child_id: CommonUuid,
         *,
         description: typing.Optional[str] = OMIT,
-        main: typing.Optional[typing.Sequence[TasksWorkflowStep]] = OMIT,
+        main: typing.Optional[typing.Sequence[TasksPatchTaskRequestMainItem]] = OMIT,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
+        tools: typing.Optional[typing.Sequence[TasksTaskTool]] = OMIT,
         inherit_tools: typing.Optional[bool] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
@@ -1206,13 +679,13 @@ class JulepApi:
 
         description : typing.Optional[str]
 
-        main : typing.Optional[typing.Sequence[TasksWorkflowStep]]
+        main : typing.Optional[typing.Sequence[TasksPatchTaskRequestMainItem]]
             The entrypoint of the task.
 
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
-        tools : typing.Optional[typing.Sequence[ToolsCreateToolRequest]]
+        tools : typing.Optional[typing.Sequence[TasksTaskTool]]
             Tools defined specifically for this task not included in the Agent itself.
 
         inherit_tools : typing.Optional[bool]
@@ -1245,483 +718,6 @@ class JulepApi:
             f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
             method="PATCH",
             json={
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agent_tools_route_list(
-        self,
-        id: CommonUuid,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: AgentToolsRouteListRequestSortBy,
-        direction: AgentToolsRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentToolsRouteListResponse:
-        """
-        List tools of the given agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent
-
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : AgentToolsRouteListRequestSortBy
-            Sort by a field
-
-        direction : AgentToolsRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AgentToolsRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agent_tools_route_list(
-            id="id",
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentToolsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agent_tools_route_create(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsCreateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new tool for this agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsCreateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agent_tools_route_create(
-            id="id",
-            name="name",
-            about="about",
-            model="model",
-            instructions="instructions",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools",
-            method="POST",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agent_tools_route_update(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        type: ToolsToolType,
-        name: CommonValidPythonIdentifier,
-        function: typing.Optional[ToolsFunctionDef] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing tool (overwrite existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be updated
-
-        type : ToolsToolType
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-
-        name : CommonValidPythonIdentifier
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDef]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agent_tools_route_update(
-            id="id",
-            child_id="child_id",
-            type="function",
-            name="name",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
-            method="PUT",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agent_tools_route_delete(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete an existing tool by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be deleted
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agent_tools_route_delete(
-            id="id",
-            child_id="child_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def agent_tools_route_patch(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        type: typing.Optional[ToolsToolType] = OMIT,
-        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
-        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing tool (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be patched
-
-        type : typing.Optional[ToolsToolType]
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-
-        name : typing.Optional[CommonValidPythonIdentifier]
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDefUpdate]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.agent_tools_route_patch(
-            id="id",
-            child_id="child_id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
-            method="PATCH",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def tasks_create_or_update_route_create_or_update(
-        self,
-        parent_id: CommonUuid,
-        id: CommonUuid,
-        *,
-        name: str,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a task
-
-        Parameters
-        ----------
-        parent_id : CommonUuid
-            ID of parent resource
-
-        id : CommonUuid
-
-        name : str
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep import ToolsCreateToolRequest
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.tasks_create_or_update_route_create_or_update(
-            parent_id="parent_id",
-            id="id",
-            name="name",
-            description="description",
-            main=[],
-            tools=[
-                ToolsCreateToolRequest(
-                    type="function",
-                    name="name",
-                )
-            ],
-            inherit_tools=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(parent_id)}/tasks/{jsonable_encoder(id)}",
-            method="POST",
-            json={
-                "name": name,
                 "description": description,
                 "main": main,
                 "input_schema": input_schema,
@@ -1823,57 +819,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def embed_route_embed(
-        self,
-        *,
-        body: DocsEmbedQueryRequest,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> DocsEmbedQueryResponse:
-        """
-        Embed a query for search
-
-        Parameters
-        ----------
-        body : DocsEmbedQueryRequest
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        DocsEmbedQueryResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep import DocsEmbedQueryRequest
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.embed_route_embed(
-            body=DocsEmbedQueryRequest(
-                text="text",
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "embed",
-            method="POST",
-            json={"body": body},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(DocsEmbedQueryResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -1997,544 +942,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(ExecutionTransitionsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def job_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> JobsJobStatus:
-        """
-        Get the status of an existing Job by its id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        JobsJobStatus
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.job_route_get(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"jobs/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(JobsJobStatus, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: SessionsRouteListRequestSortBy,
-        direction: SessionsRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteListResponse:
-        """
-        List sessions (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : SessionsRouteListRequestSortBy
-            Sort by a field
-
-        direction : SessionsRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        SessionsRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_list(
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "sessions",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_create(
-        self,
-        *,
-        situation: str,
-        render_templates: bool,
-        user: typing.Optional[CommonUuid] = OMIT,
-        users: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        agent: typing.Optional[CommonUuid] = OMIT,
-        agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new session
-
-        Parameters
-        ----------
-        situation : str
-            A specific situation that sets the background for this session
-
-        render_templates : bool
-            Render system and assistant message content as jinja templates
-
-        user : typing.Optional[CommonUuid]
-            User ID of user associated with this session
-
-        users : typing.Optional[typing.Sequence[CommonUuid]]
-
-        agent : typing.Optional[CommonUuid]
-            Agent ID of agent associated with this session
-
-        agents : typing.Optional[typing.Sequence[CommonUuid]]
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_create(
-            situation="situation",
-            render_templates=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "sessions",
-            method="POST",
-            json={
-                "user": user,
-                "users": users,
-                "agent": agent,
-                "agents": agents,
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> SessionsSession:
-        """
-        Get a session by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        SessionsSession
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_get(
-            id="string",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsSession, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_create_or_update(
-        self,
-        id: CommonUuid,
-        *,
-        situation: str,
-        render_templates: bool,
-        user: typing.Optional[CommonUuid] = OMIT,
-        users: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        agent: typing.Optional[CommonUuid] = OMIT,
-        agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a session
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        situation : str
-            A specific situation that sets the background for this session
-
-        render_templates : bool
-            Render system and assistant message content as jinja templates
-
-        user : typing.Optional[CommonUuid]
-            User ID of user associated with this session
-
-        users : typing.Optional[typing.Sequence[CommonUuid]]
-
-        agent : typing.Optional[CommonUuid]
-            Agent ID of agent associated with this session
-
-        agents : typing.Optional[typing.Sequence[CommonUuid]]
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_create_or_update(
-            id="id",
-            situation="situation",
-            render_templates=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="POST",
-            json={
-                "user": user,
-                "users": users,
-                "agent": agent,
-                "agents": agents,
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        situation: str,
-        render_templates: bool,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing session by its id (overwrites all existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        situation : str
-            A specific situation that sets the background for this session
-
-        render_templates : bool
-            Render system and assistant message content as jinja templates
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_update(
-            id="id",
-            situation="situation",
-            render_templates=True,
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="PUT",
-            json={
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete a session by its id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def sessions_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        situation: typing.Optional[str] = OMIT,
-        render_templates: typing.Optional[bool] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing session by its id (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        situation : typing.Optional[str]
-            A specific situation that sets the background for this session
-
-        render_templates : typing.Optional[bool]
-            Render system and assistant message content as jinja templates
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.sessions_route_patch(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2983,408 +1390,6 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def users_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: UsersRouteListRequestSortBy,
-        direction: UsersRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteListResponse:
-        """
-        List users (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : UsersRouteListRequestSortBy
-            Sort by a field
-
-        direction : UsersRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        UsersRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_list(
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "users",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_create(
-        self,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new user
-
-        Parameters
-        ----------
-        name : CommonIdentifierSafeUnicode
-            Name of the user
-
-        about : str
-            About the user
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_create(
-            name="name",
-            about="about",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            "users",
-            method="POST",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> UsersUser:
-        """
-        Get a user by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        UsersUser
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_get(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersUser, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_create_or_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a user
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : CommonIdentifierSafeUnicode
-            Name of the user
-
-        about : str
-            About the user
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_create_or_update(
-            id="id",
-            name="name",
-            about="about",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="POST",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing user by id (overwrite existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        name : CommonIdentifierSafeUnicode
-            Name of the user
-
-        about : str
-            About the user
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_update(
-            id="id",
-            name="name",
-            about="about",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="PUT",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete a user by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def users_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
-        about: typing.Optional[str] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing user by id (merge with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        name : typing.Optional[CommonIdentifierSafeUnicode]
-            Name of the user
-
-        about : typing.Optional[str]
-            About the user
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.users_route_patch(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
     def user_docs_route_list(
         self,
         id: CommonUuid,
@@ -3473,7 +1478,7 @@ class JulepApi:
         sort_by: UserDocsSearchRouteSearchRequestSortBy,
         direction: UserDocsSearchRouteSearchRequestDirection,
         metadata_filter: str,
-        body: DocsDocSearchRequest,
+        body: UserDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UserDocsSearchRouteSearchResponse:
         """
@@ -3499,7 +1504,7 @@ class JulepApi:
         metadata_filter : str
             JSON string of object that should be used to filter objects by metadata
 
-        body : DocsDocSearchRequest
+        body : UserDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -3511,7 +1516,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import DocsDocSearchRequest_Vector
+        from julep import DocsVectorDocSearchRequest
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -3519,15 +1524,13 @@ class JulepApi:
             api_key="YOUR_API_KEY",
         )
         client.user_docs_search_route_search(
-            id="string",
+            id="id",
             limit=1,
             offset=1,
             sort_by="created_at",
             direction="asc",
-            metadata_filter="string",
-            body=DocsDocSearchRequest_Vector(
-                text="string",
-                vector=[1.1],
+            metadata_filter="metadata_filter",
+            body=DocsVectorDocSearchRequest(
                 confidence=1.1,
                 alpha=1.1,
                 mmr=True,
@@ -3629,554 +1632,6 @@ class AsyncJulepApi:
             timeout=_defaulted_timeout,
         )
 
-    async def agents_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: AgentsRouteListRequestSortBy,
-        direction: AgentsRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsRouteListResponse:
-        """
-        List Agents (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : AgentsRouteListRequestSortBy
-            Sort by a field
-
-        direction : AgentsRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AgentsRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_list(
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "agents",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_create(
-        self,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsCreateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new Agent
-
-        Parameters
-        ----------
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsCreateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_create(
-                name="name",
-                about="about",
-                model="model",
-                instructions="instructions",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "agents",
-            method="POST",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> AgentsAgent:
-        """
-        Get an Agent by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AgentsAgent
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_get(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsAgent, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_create_or_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsUpdateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update an Agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsUpdateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_create_or_update(
-                id="id",
-                name="name",
-                about="about",
-                model="model",
-                instructions="instructions",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="POST",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsUpdateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Agent by id (overwrites existing values; use PATCH for merging instead)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsUpdateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_update(
-                id="id",
-                name="name",
-                about="about",
-                model="model",
-                instructions="instructions",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="PUT",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete Agent by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agents_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
-        about: typing.Optional[str] = OMIT,
-        model: typing.Optional[str] = OMIT,
-        instructions: typing.Optional[AgentsPatchAgentRequestInstructions] = OMIT,
-        default_settings: typing.Optional[
-            AgentsPatchAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Agent by id (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        name : typing.Optional[CommonIdentifierSafeUnicode]
-            Name of the agent
-
-        about : typing.Optional[str]
-            About the agent
-
-        model : typing.Optional[str]
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : typing.Optional[AgentsPatchAgentRequestInstructions]
-            Instructions for the agent
-
-        default_settings : typing.Optional[AgentsPatchAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agents_route_patch(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
     async def agent_docs_route_list(
         self,
         id: CommonUuid,
@@ -4273,7 +1728,7 @@ class AsyncJulepApi:
         sort_by: AgentsDocsSearchRouteSearchRequestSortBy,
         direction: AgentsDocsSearchRouteSearchRequestDirection,
         metadata_filter: str,
-        body: DocsDocSearchRequest,
+        body: AgentsDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> AgentsDocsSearchRouteSearchResponse:
         """
@@ -4299,7 +1754,7 @@ class AsyncJulepApi:
         metadata_filter : str
             JSON string of object that should be used to filter objects by metadata
 
-        body : DocsDocSearchRequest
+        body : AgentsDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -4313,7 +1768,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import DocsDocSearchRequest_Vector
+        from julep import DocsVectorDocSearchRequest
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -4324,15 +1779,13 @@ class AsyncJulepApi:
 
         async def main() -> None:
             await client.agents_docs_search_route_search(
-                id="string",
+                id="id",
                 limit=1,
                 offset=1,
                 sort_by="created_at",
                 direction="asc",
-                metadata_filter="string",
-                body=DocsDocSearchRequest_Vector(
-                    text="string",
-                    vector=[1.1],
+                metadata_filter="metadata_filter",
+                body=DocsVectorDocSearchRequest(
                     confidence=1.1,
                     alpha=1.1,
                     mmr=True,
@@ -4458,8 +1911,8 @@ class AsyncJulepApi:
         *,
         name: str,
         description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
+        main: typing.Sequence[TasksCreateTaskRequestMainItem],
+        tools: typing.Sequence[TasksTaskTool],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
@@ -4477,10 +1930,10 @@ class AsyncJulepApi:
 
         description : str
 
-        main : typing.Sequence[TasksWorkflowStep]
+        main : typing.Sequence[TasksCreateTaskRequestMainItem]
             The entrypoint of the task.
 
-        tools : typing.Sequence[ToolsCreateToolRequest]
+        tools : typing.Sequence[TasksTaskTool]
             Tools defined specifically for this task not included in the Agent itself.
 
         inherit_tools : bool
@@ -4503,7 +1956,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import ToolsCreateToolRequest
+        from julep import TasksEvaluateStep, TasksTaskTool
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -4517,9 +1970,13 @@ class AsyncJulepApi:
                 id="id",
                 name="name",
                 description="description",
-                main=[],
+                main=[
+                    TasksEvaluateStep(
+                        evaluate={"key": "value"},
+                    )
+                ],
                 tools=[
-                    ToolsCreateToolRequest(
+                    TasksTaskTool(
                         type="function",
                         name="name",
                     )
@@ -4559,8 +2016,8 @@ class AsyncJulepApi:
         child_id: CommonUuid,
         *,
         description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
+        main: typing.Sequence[TasksUpdateTaskRequestMainItem],
+        tools: typing.Sequence[TasksTaskTool],
         inherit_tools: bool,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
@@ -4579,10 +2036,10 @@ class AsyncJulepApi:
 
         description : str
 
-        main : typing.Sequence[TasksWorkflowStep]
+        main : typing.Sequence[TasksUpdateTaskRequestMainItem]
             The entrypoint of the task.
 
-        tools : typing.Sequence[ToolsCreateToolRequest]
+        tools : typing.Sequence[TasksTaskTool]
             Tools defined specifically for this task not included in the Agent itself.
 
         inherit_tools : bool
@@ -4605,7 +2062,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import ToolsCreateToolRequest
+        from julep import TasksEvaluateStep, TasksTaskTool
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -4619,9 +2076,13 @@ class AsyncJulepApi:
                 id="id",
                 child_id="child_id",
                 description="description",
-                main=[],
+                main=[
+                    TasksEvaluateStep(
+                        evaluate={"key": "value"},
+                    )
+                ],
                 tools=[
-                    ToolsCreateToolRequest(
+                    TasksTaskTool(
                         type="function",
                         name="name",
                     )
@@ -4720,9 +2181,9 @@ class AsyncJulepApi:
         child_id: CommonUuid,
         *,
         description: typing.Optional[str] = OMIT,
-        main: typing.Optional[typing.Sequence[TasksWorkflowStep]] = OMIT,
+        main: typing.Optional[typing.Sequence[TasksPatchTaskRequestMainItem]] = OMIT,
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        tools: typing.Optional[typing.Sequence[ToolsCreateToolRequest]] = OMIT,
+        tools: typing.Optional[typing.Sequence[TasksTaskTool]] = OMIT,
         inherit_tools: typing.Optional[bool] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
@@ -4740,13 +2201,13 @@ class AsyncJulepApi:
 
         description : typing.Optional[str]
 
-        main : typing.Optional[typing.Sequence[TasksWorkflowStep]]
+        main : typing.Optional[typing.Sequence[TasksPatchTaskRequestMainItem]]
             The entrypoint of the task.
 
         input_schema : typing.Optional[typing.Dict[str, typing.Any]]
             The schema for the input to the task. `null` means all inputs are valid.
 
-        tools : typing.Optional[typing.Sequence[ToolsCreateToolRequest]]
+        tools : typing.Optional[typing.Sequence[TasksTaskTool]]
             Tools defined specifically for this task not included in the Agent itself.
 
         inherit_tools : typing.Optional[bool]
@@ -4787,531 +2248,6 @@ class AsyncJulepApi:
             f"agents/{jsonable_encoder(id)}/tasks/{jsonable_encoder(child_id)}",
             method="PATCH",
             json={
-                "description": description,
-                "main": main,
-                "input_schema": input_schema,
-                "tools": tools,
-                "inherit_tools": inherit_tools,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agent_tools_route_list(
-        self,
-        id: CommonUuid,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: AgentToolsRouteListRequestSortBy,
-        direction: AgentToolsRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentToolsRouteListResponse:
-        """
-        List tools of the given agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent
-
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : AgentToolsRouteListRequestSortBy
-            Sort by a field
-
-        direction : AgentToolsRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        AgentToolsRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agent_tools_route_list(
-                id="id",
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentToolsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agent_tools_route_create(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        model: str,
-        instructions: AgentsCreateAgentRequestInstructions,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new tool for this agent
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        name : CommonIdentifierSafeUnicode
-            Name of the agent
-
-        about : str
-            About the agent
-
-        model : str
-            Model name to use (gpt-4-turbo, gemini-nano etc)
-
-        instructions : AgentsCreateAgentRequestInstructions
-            Instructions for the agent
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
-            Default settings for all sessions created by this agent
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agent_tools_route_create(
-                id="id",
-                name="name",
-                about="about",
-                model="model",
-                instructions="instructions",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools",
-            method="POST",
-            json={
-                "metadata": metadata,
-                "name": name,
-                "about": about,
-                "model": model,
-                "instructions": instructions,
-                "default_settings": default_settings,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agent_tools_route_update(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        type: ToolsToolType,
-        name: CommonValidPythonIdentifier,
-        function: typing.Optional[ToolsFunctionDef] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing tool (overwrite existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be updated
-
-        type : ToolsToolType
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-
-        name : CommonValidPythonIdentifier
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDef]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agent_tools_route_update(
-                id="id",
-                child_id="child_id",
-                type="function",
-                name="name",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
-            method="PUT",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agent_tools_route_delete(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete an existing tool by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be deleted
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agent_tools_route_delete(
-                id="id",
-                child_id="child_id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def agent_tools_route_patch(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        type: typing.Optional[ToolsToolType] = OMIT,
-        name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
-        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
-        integration: typing.Optional[typing.Any] = OMIT,
-        system: typing.Optional[typing.Any] = OMIT,
-        api_call: typing.Optional[typing.Any] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing tool (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be patched
-
-        type : typing.Optional[ToolsToolType]
-            Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-
-        name : typing.Optional[CommonValidPythonIdentifier]
-            Name of the tool (must be unique for this agent and a valid python identifier string )
-
-        function : typing.Optional[ToolsFunctionDefUpdate]
-
-        integration : typing.Optional[typing.Any]
-
-        system : typing.Optional[typing.Any]
-
-        api_call : typing.Optional[typing.Any]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.agent_tools_route_patch(
-                id="id",
-                child_id="child_id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(id)}/tools/{jsonable_encoder(child_id)}",
-            method="PATCH",
-            json={
-                "type": type,
-                "name": name,
-                "function": function,
-                "integration": integration,
-                "system": system,
-                "api_call": api_call,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def tasks_create_or_update_route_create_or_update(
-        self,
-        parent_id: CommonUuid,
-        id: CommonUuid,
-        *,
-        name: str,
-        description: str,
-        main: typing.Sequence[TasksWorkflowStep],
-        tools: typing.Sequence[ToolsCreateToolRequest],
-        inherit_tools: bool,
-        input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a task
-
-        Parameters
-        ----------
-        parent_id : CommonUuid
-            ID of parent resource
-
-        id : CommonUuid
-
-        name : str
-
-        description : str
-
-        main : typing.Sequence[TasksWorkflowStep]
-            The entrypoint of the task.
-
-        tools : typing.Sequence[ToolsCreateToolRequest]
-            Tools defined specifically for this task not included in the Agent itself.
-
-        inherit_tools : bool
-            Whether to inherit tools from the parent agent or not. Defaults to true.
-
-        input_schema : typing.Optional[typing.Dict[str, typing.Any]]
-            The schema for the input to the task. `null` means all inputs are valid.
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import ToolsCreateToolRequest
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.tasks_create_or_update_route_create_or_update(
-                parent_id="parent_id",
-                id="id",
-                name="name",
-                description="description",
-                main=[],
-                tools=[
-                    ToolsCreateToolRequest(
-                        type="function",
-                        name="name",
-                    )
-                ],
-                inherit_tools=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"agents/{jsonable_encoder(parent_id)}/tasks/{jsonable_encoder(id)}",
-            method="POST",
-            json={
-                "name": name,
                 "description": description,
                 "main": main,
                 "input_schema": input_schema,
@@ -5429,65 +2365,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def embed_route_embed(
-        self,
-        *,
-        body: DocsEmbedQueryRequest,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> DocsEmbedQueryResponse:
-        """
-        Embed a query for search
-
-        Parameters
-        ----------
-        body : DocsEmbedQueryRequest
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        DocsEmbedQueryResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import DocsEmbedQueryRequest
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.embed_route_embed(
-                body=DocsEmbedQueryRequest(
-                    text="text",
-                ),
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "embed",
-            method="POST",
-            json={"body": body},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(DocsEmbedQueryResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5627,608 +2504,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(ExecutionTransitionsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def job_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> JobsJobStatus:
-        """
-        Get the status of an existing Job by its id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        JobsJobStatus
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.job_route_get(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"jobs/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(JobsJobStatus, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: SessionsRouteListRequestSortBy,
-        direction: SessionsRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> SessionsRouteListResponse:
-        """
-        List sessions (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : SessionsRouteListRequestSortBy
-            Sort by a field
-
-        direction : SessionsRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        SessionsRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_list(
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "sessions",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_create(
-        self,
-        *,
-        situation: str,
-        render_templates: bool,
-        user: typing.Optional[CommonUuid] = OMIT,
-        users: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        agent: typing.Optional[CommonUuid] = OMIT,
-        agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new session
-
-        Parameters
-        ----------
-        situation : str
-            A specific situation that sets the background for this session
-
-        render_templates : bool
-            Render system and assistant message content as jinja templates
-
-        user : typing.Optional[CommonUuid]
-            User ID of user associated with this session
-
-        users : typing.Optional[typing.Sequence[CommonUuid]]
-
-        agent : typing.Optional[CommonUuid]
-            Agent ID of agent associated with this session
-
-        agents : typing.Optional[typing.Sequence[CommonUuid]]
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_create(
-                situation="situation",
-                render_templates=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "sessions",
-            method="POST",
-            json={
-                "user": user,
-                "users": users,
-                "agent": agent,
-                "agents": agents,
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> SessionsSession:
-        """
-        Get a session by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        SessionsSession
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_get(
-                id="string",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(SessionsSession, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_create_or_update(
-        self,
-        id: CommonUuid,
-        *,
-        situation: str,
-        render_templates: bool,
-        user: typing.Optional[CommonUuid] = OMIT,
-        users: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        agent: typing.Optional[CommonUuid] = OMIT,
-        agents: typing.Optional[typing.Sequence[CommonUuid]] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a session
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        situation : str
-            A specific situation that sets the background for this session
-
-        render_templates : bool
-            Render system and assistant message content as jinja templates
-
-        user : typing.Optional[CommonUuid]
-            User ID of user associated with this session
-
-        users : typing.Optional[typing.Sequence[CommonUuid]]
-
-        agent : typing.Optional[CommonUuid]
-            Agent ID of agent associated with this session
-
-        agents : typing.Optional[typing.Sequence[CommonUuid]]
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_create_or_update(
-                id="id",
-                situation="situation",
-                render_templates=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="POST",
-            json={
-                "user": user,
-                "users": users,
-                "agent": agent,
-                "agents": agents,
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        situation: str,
-        render_templates: bool,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing session by its id (overwrites all existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        situation : str
-            A specific situation that sets the background for this session
-
-        render_templates : bool
-            Render system and assistant message content as jinja templates
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_update(
-                id="id",
-                situation="situation",
-                render_templates=True,
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="PUT",
-            json={
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete a session by its id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def sessions_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        situation: typing.Optional[str] = OMIT,
-        render_templates: typing.Optional[bool] = OMIT,
-        token_budget: typing.Optional[int] = OMIT,
-        context_overflow: typing.Optional[SessionsContextOverflowType] = OMIT,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing session by its id (merges with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        situation : typing.Optional[str]
-            A specific situation that sets the background for this session
-
-        render_templates : typing.Optional[bool]
-            Render system and assistant message content as jinja templates
-
-        token_budget : typing.Optional[int]
-            Threshold value for the adaptive context functionality
-
-        context_overflow : typing.Optional[SessionsContextOverflowType]
-            Action to start on context window overflow
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.sessions_route_patch(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"sessions/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={
-                "situation": situation,
-                "render_templates": render_templates,
-                "token_budget": token_budget,
-                "context_overflow": context_overflow,
-                "metadata": metadata,
-            },
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6733,464 +3008,6 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def users_route_list(
-        self,
-        *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: UsersRouteListRequestSortBy,
-        direction: UsersRouteListRequestDirection,
-        metadata_filter: str,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> UsersRouteListResponse:
-        """
-        List users (paginated)
-
-        Parameters
-        ----------
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : UsersRouteListRequestSortBy
-            Sort by a field
-
-        direction : UsersRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        UsersRouteListResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_list(
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "users",
-            method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersRouteListResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_create(
-        self,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceCreatedResponse:
-        """
-        Create a new user
-
-        Parameters
-        ----------
-        name : CommonIdentifierSafeUnicode
-            Name of the user
-
-        about : str
-            About the user
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_create(
-                name="name",
-                about="about",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            "users",
-            method="POST",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_get(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> UsersUser:
-        """
-        Get a user by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        UsersUser
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_get(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="GET",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UsersUser, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_create_or_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Create or update a user
-
-        Parameters
-        ----------
-        id : CommonUuid
-
-        name : CommonIdentifierSafeUnicode
-            Name of the user
-
-        about : str
-            About the user
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_create_or_update(
-                id="id",
-                name="name",
-                about="about",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="POST",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_update(
-        self,
-        id: CommonUuid,
-        *,
-        name: CommonIdentifierSafeUnicode,
-        about: str,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing user by id (overwrite existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        name : CommonIdentifierSafeUnicode
-            Name of the user
-
-        about : str
-            About the user
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_update(
-                id="id",
-                name="name",
-                about="about",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="PUT",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete a user by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def users_route_patch(
-        self,
-        id: CommonUuid,
-        *,
-        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        name: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
-        about: typing.Optional[str] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing user by id (merge with existing values)
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        metadata : typing.Optional[typing.Dict[str, typing.Any]]
-
-        name : typing.Optional[CommonIdentifierSafeUnicode]
-            Name of the user
-
-        about : typing.Optional[str]
-            About the user
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.users_route_patch(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"users/{jsonable_encoder(id)}",
-            method="PATCH",
-            json={"metadata": metadata, "name": name, "about": about},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
     async def user_docs_route_list(
         self,
         id: CommonUuid,
@@ -7287,7 +3104,7 @@ class AsyncJulepApi:
         sort_by: UserDocsSearchRouteSearchRequestSortBy,
         direction: UserDocsSearchRouteSearchRequestDirection,
         metadata_filter: str,
-        body: DocsDocSearchRequest,
+        body: UserDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> UserDocsSearchRouteSearchResponse:
         """
@@ -7313,7 +3130,7 @@ class AsyncJulepApi:
         metadata_filter : str
             JSON string of object that should be used to filter objects by metadata
 
-        body : DocsDocSearchRequest
+        body : UserDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -7327,7 +3144,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import DocsDocSearchRequest_Vector
+        from julep import DocsVectorDocSearchRequest
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -7338,15 +3155,13 @@ class AsyncJulepApi:
 
         async def main() -> None:
             await client.user_docs_search_route_search(
-                id="string",
+                id="id",
                 limit=1,
                 offset=1,
                 sort_by="created_at",
                 direction="asc",
-                metadata_filter="string",
-                body=DocsDocSearchRequest_Vector(
-                    text="string",
-                    vector=[1.1],
+                metadata_filter="metadata_filter",
+                body=DocsVectorDocSearchRequest(
                     confidence=1.1,
                     alpha=1.1,
                     mmr=True,

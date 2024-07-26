@@ -6,7 +6,7 @@ export const $Docs_HybridDocSearchRequest = {
   type: "all-of",
   contains: [
     {
-      type: "Docs_DocSearchRequest",
+      type: "Docs_BaseDocSearchRequest",
     },
     {
       properties: {
@@ -24,6 +24,7 @@ export const $Docs_HybridDocSearchRequest = {
               },
             },
           ],
+          isRequired: true,
         },
         vector: {
           type: "any-of",
@@ -45,9 +46,6 @@ export const $Docs_HybridDocSearchRequest = {
               },
             },
           ],
-        },
-        mode: {
-          type: "Enum",
           isRequired: true,
         },
       },

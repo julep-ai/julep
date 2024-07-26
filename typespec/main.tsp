@@ -102,7 +102,7 @@ namespace Api {
     interface TasksCreateOrUpdateRoute extends Tasks.CreateOrUpdateEndpoints {}
 
     @route("/tasks/{id}/executions")
-    interface TaskExecutionsRoute extends Tasks.ExecutionEndpoints, Executions.TaskEndpoints {}
+    interface TaskExecutionsRoute extends Executions.TaskEndpoints {}
 
     @route("/executions")
     interface ExecutionsRoute extends Executions.Endpoints {}

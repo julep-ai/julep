@@ -16,7 +16,6 @@ update_tasks_relation = dict(
         name,
         description,
         input_schema,
-        tools,
         inherit_tools,
         workflows,
         created_at,
@@ -28,10 +27,10 @@ update_tasks_relation = dict(
         name,
         description,
         input_schema,
-        tools_available: tools,
         workflows,
         created_at,
-    }, metadata = {},
+    },
+    metadata = {},
     inherit_tools = true
 
     :replace tasks {
@@ -42,7 +41,7 @@ update_tasks_relation = dict(
         name: String,
         description: String? default null,
         input_schema: Json,
-        tools: [Uuid] default [],
+        tools: [Json] default [],
         inherit_tools: Bool default true,
         workflows: [Json],
         created_at: Float default now(),
@@ -57,7 +56,6 @@ update_tasks_relation = dict(
         name,
         description,
         input_schema,
-        tools_available,
         workflows,
         created_at,
     ] := *tasks {
@@ -67,7 +65,6 @@ update_tasks_relation = dict(
         name,
         description,
         input_schema,
-        tools: tools_available,
         workflows,
         created_at,
     }

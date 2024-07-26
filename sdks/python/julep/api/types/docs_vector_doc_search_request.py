@@ -5,10 +5,11 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .docs_base_doc_search_request import DocsBaseDocSearchRequest
 from .docs_vector_doc_search_request_vector import DocsVectorDocSearchRequestVector
 
 
-class DocsVectorDocSearchRequest(pydantic_v1.BaseModel):
+class DocsVectorDocSearchRequest(DocsBaseDocSearchRequest):
     vector: DocsVectorDocSearchRequestVector = pydantic_v1.Field()
     """
     Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
@@ -42,5 +43,7 @@ class DocsVectorDocSearchRequest(pydantic_v1.BaseModel):
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

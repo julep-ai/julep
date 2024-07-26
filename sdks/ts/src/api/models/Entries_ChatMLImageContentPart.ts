@@ -2,10 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Entries_BaseChatMLContentPart } from "./Entries_BaseChatMLContentPart";
 import type { Entries_ImageURL } from "./Entries_ImageURL";
-export type Entries_ChatMLImageContentPart = Entries_BaseChatMLContentPart & {
-  image_url: Entries_ImageURL;
+export type Entries_ChatMLImageContentPart = {
   /**
    * The image URL
    */

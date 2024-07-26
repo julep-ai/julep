@@ -3,8 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_PyExpression } from "./Common_PyExpression";
-import type { Tasks_WorkflowStep } from "./Tasks_WorkflowStep";
-export type Tasks_EvaluateStep = Tasks_WorkflowStep & {
+export type Tasks_EvaluateStep = {
   /**
    * The expression to evaluate
    */

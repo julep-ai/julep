@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Entries_BaseChatMLContentPart } from "./Entries_BaseChatMLContentPart";
-export type Entries_ChatMLTextContentPart = Entries_BaseChatMLContentPart & {
-  text: string;
+export type Entries_ChatMLTextContentPart = {
   text: string;
   /**
    * The type (fixed to 'text')

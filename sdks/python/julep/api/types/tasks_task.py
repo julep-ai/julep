@@ -6,8 +6,8 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
-from .tasks_workflow_step import TasksWorkflowStep
-from .tools_create_tool_request import ToolsCreateToolRequest
+from .tasks_task_main_item import TasksTaskMainItem
+from .tasks_task_tool import TasksTaskTool
 
 
 class TasksTask(pydantic_v1.BaseModel):
@@ -17,7 +17,7 @@ class TasksTask(pydantic_v1.BaseModel):
 
     name: str
     description: str
-    main: typing.List[TasksWorkflowStep] = pydantic_v1.Field()
+    main: typing.List[TasksTaskMainItem] = pydantic_v1.Field()
     """
     The entrypoint of the task.
     """
@@ -29,7 +29,7 @@ class TasksTask(pydantic_v1.BaseModel):
     The schema for the input to the task. `null` means all inputs are valid.
     """
 
-    tools: typing.List[ToolsCreateToolRequest] = pydantic_v1.Field()
+    tools: typing.List[TasksTaskTool] = pydantic_v1.Field()
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
@@ -39,7 +39,6 @@ class TasksTask(pydantic_v1.BaseModel):
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
 
-    agent_id: CommonUuid
     id: CommonUuid
     created_at: dt.datetime = pydantic_v1.Field()
     """

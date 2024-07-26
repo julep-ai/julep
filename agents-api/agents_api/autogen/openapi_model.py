@@ -13,9 +13,11 @@ from .Tasks import *
 from .Tools import *
 from .Users import *
 
+CreateToolRequest = UpdateToolRequest
 CreateOrUpdateAgentRequest = UpdateAgentRequest
 CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
+CreateOrUpdateTaskRequest = CreateTaskRequest
 
 ChatMLRole = Entry.model_fields["role"].annotation
 

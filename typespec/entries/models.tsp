@@ -39,22 +39,14 @@ model ImageURL {
     detail: ImageDetail = ImageDetail.auto;
 }
 
-@discriminator("type")
-model BaseChatMLContentPart {
-    /** The type of content part */
-    type: string;
-    text?: string;
-    image_url?: ImageURL;
-}
-
-model ChatMLTextContentPart extends BaseChatMLContentPart {
+model ChatMLTextContentPart {
     text: string;
 
     /** The type (fixed to 'text') */
     type: "text" = "text";
 }
 
-model ChatMLImageContentPart extends BaseChatMLContentPart {
+model ChatMLImageContentPart {
     /** The image URL */
     image_url: ImageURL;
 
