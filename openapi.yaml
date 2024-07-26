@@ -2791,6 +2791,9 @@ components:
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
         agent_id:
           type: string
           format: uuid
@@ -2859,7 +2862,7 @@ components:
           format: uuid
         created_at:
           type: string
-          format: uuid
+          format: date-time
         arguments:
           type: object
           properties: {}
@@ -2944,7 +2947,7 @@ components:
         workflow:
           type: string
         arguments:
-          $ref: '#/components/schemas/CELObject'
+          type: object
 
       additionalProperties: true
       required:
@@ -2956,7 +2959,7 @@ components:
         workflow:
           type: string
         arguments:
-          $ref: '#/components/schemas/CELObject'
+          type: object
       required:
         - workflow
         - arguments

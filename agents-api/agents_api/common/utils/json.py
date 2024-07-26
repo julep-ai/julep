@@ -3,6 +3,7 @@
 import json
 from uuid import UUID
 from typing import Any
+from pydantic import BaseModel
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -36,6 +37,9 @@ class CustomJSONEncoder(json.JSONEncoder):
 
         if isinstance(obj, UUID):
             return str(obj)
+
+        if isinstance(obj, BaseModel):
+            return obj.model_dump()
 
         return obj
 

@@ -9,7 +9,6 @@ with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         prompt_step,
         transition_step,
-        tool_call_step,
         if_else_step,
     )
 
@@ -17,8 +16,8 @@ with workflow.unsafe.imports_passed_through():
         ExecutionInput,
         PromptWorkflowStep,
         # EvaluateWorkflowStep,
-        # YieldWorkflowStep,
-        ToolCallWorkflowStep,
+        YieldWorkflowStep,
+        # ToolCallWorkflowStep,
         # ErrorWorkflowStep,
         IfElseWorkflowStep,
         StepContext,
@@ -46,10 +45,10 @@ class TaskExecutionWorkflow:
             developer_id=execution_input.developer_id,
             execution=execution_input.execution,
             task=execution_input.task,
-            # agent=execution_input.agent,
-            # user=execution_input.user,
-            # session=execution_input.session,
-            # tools=execution_input.tools,
+            agent=execution_input.agent,
+            user=execution_input.user,
+            session=execution_input.session,
+            tools=execution_input.tools,
             arguments=execution_input.arguments,
             definition=step,
             inputs=previous_inputs,
@@ -69,26 +68,23 @@ class TaskExecutionWorkflow:
                 # if outputs.tool_calls is not None:
                 #     should_wait = True
 
-                is_last = step_idx + 1 == len(current_workflow)
-
             # case EvaluateWorkflowStep():
             #     result = await workflow.execute_activity(
             #         evaluate_step,
             #         context,
             #         schedule_to_close_timeout=timedelta(seconds=600),
             #     )
-            # case YieldWorkflowStep():
-            #     result = await workflow.execute_activity(
-            #         yield_step,
+            case YieldWorkflowStep():
+                outputs = await workflow.execute_child_workflow(
+                    TaskExecutionWorkflow.run,
+                    args=[execution_input, (step.workflow, 0), previous_inputs],
+                )
+            # case ToolCallWorkflowStep():
+            #     outputs = await workflow.execute_activity(
+            #         tool_call_step,
             #         context,
             #         schedule_to_close_timeout=timedelta(seconds=600),
             #     )
-            case ToolCallWorkflowStep():
-                outputs = await workflow.execute_activity(
-                    tool_call_step,
-                    context,
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
             # case ErrorWorkflowStep():
             #     result = await workflow.execute_activity(
             #         error_step,
@@ -101,7 +97,18 @@ class TaskExecutionWorkflow:
                     context,
                     schedule_to_close_timeout=timedelta(seconds=600),
                 )
+                workflow_step = YieldWorkflowStep(**outputs["goto_workflow"])
 
+                outputs = await workflow.execute_child_workflow(
+                    TaskExecutionWorkflow.run,
+                    args=[
+                        execution_input,
+                        (workflow_step.workflow, 0),
+                        previous_inputs,
+                    ],
+                )
+
+        is_last = step_idx + 1 == len(current_workflow)
         # Transition type
         transition_type = (
             "awaiting_input" if should_wait else ("finish" if is_last else "step")
