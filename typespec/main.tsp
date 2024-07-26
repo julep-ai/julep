@@ -86,6 +86,9 @@ namespace Api {
     @route("/sessions/{id}/history")
     interface HistoryRoute extends Entries.Endpoints {}
 
+    @route("/sessions/{id}/chat")
+    interface ChatRoute extends Chat.Endpoints {}
+
     @route("/embed")
     interface EmbedRoute extends Docs.EmbedEndpoints {}
 

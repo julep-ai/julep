@@ -34,9 +34,6 @@ def list_agents_query(
         offset: Number of agents to skip before starting to collect the result set.
         metadata_filter: Dictionary to filter agents based on metadata.
         client: Instance of CozoClient to execute the query.
-
-    Returns:
-        A pandas DataFrame containing the query results.
     """
     # Transforms the metadata_filter dictionary into a string representation for the datalog query.
     metadata_filter_str = ", ".join(

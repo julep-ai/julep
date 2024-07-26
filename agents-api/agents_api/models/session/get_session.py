@@ -47,6 +47,14 @@ def get_session_query(
             participant_type,
         }
 
+    # We have to do this dance because users can be zero or more
+    users_p[users] :=
+        participants[users, "user"]
+
+    users_p[users] :=
+        not participants[_, "user"],
+        users = []
+
     ?[
         agents,
         users,
@@ -60,7 +68,7 @@ def get_session_query(
         token_budget,
         context_overflow,
     ] := input[developer_id, id],
-        participants[users, "user"],
+        users_p[users],
         participants[agents, "agent"],
         *sessions{
             developer_id,

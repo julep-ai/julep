@@ -1,21 +1,30 @@
 """This module contains functions for querying session data from the 'cozodb' database."""
 
-from beartype import beartype
-
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
+from beartype import beartype
 
+
+from ...autogen.openapi_model import make_session
 from ...common.utils import json
-from ..utils import cozo_query
+from ..utils import (
+    cozo_query,
+    verify_developer_id_query,
+    wrap_in_class,
+)
 
 
+@wrap_in_class(make_session)
 @cozo_query
 @beartype
 def list_sessions_query(
+    *,
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, dict]:
     """Lists sessions from the 'cozodb' database based on the provided filters.
@@ -25,9 +34,6 @@ def list_sessions_query(
         limit (int): The maximum number of sessions to return.
         offset (int): The offset from which to start listing sessions.
         metadata_filter (dict[str, Any]): A dictionary of metadata fields to filter sessions by.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing the queried session data.
     """
     metadata_filter_str = ", ".join(
         [
@@ -36,14 +42,31 @@ def list_sessions_query(
         ]
     )
 
-    query = f"""
+    sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
+
+    list_query = f"""
         input[developer_id] <- [[
             to_uuid($developer_id),
         ]]
 
+        participants[collect(participant_id), participant_type, session_id] :=
+            *session_lookup{{
+                session_id,
+                participant_id,
+                participant_type,
+            }}
+
+        # We have to do this dance because users can be zero or more
+        users_p[users, session_id] :=
+            participants[users, "user", session_id]
+
+        users_p[users, session_id] :=
+            not participants[_, "user", session_id],
+            users = []
+
         ?[
-            agent_id,
-            user_id,
+            agents,
+            users,
             id,
             situation,
             summary,
@@ -66,18 +89,24 @@ def list_sessions_query(
                 context_overflow,
                 @ "NOW"
             }},
-            *session_lookup{{
-                agent_id,
-                user_id,
-                session_id: id,
-            }},
+            users_p[users, id],
+            participants[agents, "agent", id],
             updated_at = to_int(validity),
             {metadata_filter_str}
 
         :limit $limit
         :offset $offset
-        :sort -created_at
+        :sort {sort}
     """
+
+    # Datalog query to retrieve agent information based on filters, sorted by creation date in descending order.
+    queries = [
+        verify_developer_id_query(developer_id),
+        list_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     # Execute the datalog query and return the results as a pandas DataFrame.
     return (

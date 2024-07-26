@@ -15,7 +15,10 @@ from .Users import *
 
 CreateOrUpdateAgentRequest = UpdateAgentRequest
 CreateOrUpdateUserRequest = UpdateUserRequest
+CreateOrUpdateSessionRequest = CreateSessionRequest
+
 ChatMLRole = Entry.model_fields["role"].annotation
+
 
 def make_session(
     *,

@@ -47,19 +47,6 @@ def update_user_query(
         }
     )
 
-    assertion_query = """
-        ?[developer_id, user_id] :=
-            *users {
-                developer_id,
-                user_id,
-            },
-            developer_id = to_uuid($developer_id),
-            user_id = to_uuid($user_id),
-
-        # Assertion to ensure the user exists before updating.
-        :assert some
-    """
-
     # Constructs the update operation for the user, setting new values and updating 'updated_at'.
     update_query = f"""
         # update the user
@@ -84,11 +71,9 @@ def update_user_query(
         :returning
     """
 
-    # Combine the assertion query with the update queries
     queries = [
         verify_developer_id_query(developer_id),
         verify_developer_owns_resource_query(developer_id, "users", user_id=user_id),
-        assertion_query,
         update_query,
     ]
 

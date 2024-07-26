@@ -2,7 +2,6 @@ from functools import wraps
 from typing import Callable, ParamSpec, Type
 from uuid import UUID
 
-from beartype import beartype
 from pydantic import BaseModel
 import pandas as pd
 

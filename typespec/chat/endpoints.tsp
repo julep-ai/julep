@@ -21,13 +21,17 @@ interface Endpoints {
     generate(
         @header contentType: yaml | json;
 
-        @body
+        @path
+        @doc("The session ID")
+        id: uuid;
+
+        @bodyRoot
         @doc("Request to generate a response from the model")
         body: ChatInput;
     ): {
         @statusCode _: "200";
 
-        @body
+        @bodyRoot
         @doc("Response from the model")
         body: ChatResponse;
     };
