@@ -84,6 +84,26 @@ class DocReference(BaseModel):
     snippet: str | None = None
 
 
+class EmbedQueryRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: str | list[str]
+    """
+    Text or texts to embed
+    """
+
+
+class EmbedQueryResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    vectors: list[list[float]]
+    """
+    The embedded vectors
+    """
+
+
 class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
