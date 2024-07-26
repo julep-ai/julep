@@ -18,7 +18,7 @@ from ..utils import (
 @wrap_in_class(make_session)
 @cozo_query
 @beartype
-def list_sessions_query(
+def list_sessions(
     *,
     developer_id: UUID,
     limit: int = 100,

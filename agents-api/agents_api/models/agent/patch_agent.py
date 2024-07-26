@@ -20,11 +20,11 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def patch_agent_query(
+def patch_agent(
     *,
     agent_id: UUID,
     developer_id: UUID,
-    patch_agent: PatchAgentRequest,
+    data: PatchAgentRequest,
 ) -> tuple[str, dict]:
     """Patches agent data based on provided updates.
 
@@ -37,7 +37,7 @@ def patch_agent_query(
     Returns:
     ResourceUpdatedResponse: The updated agent data.
     """
-    update_data = patch_agent.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
 
     # Construct the query for updating agent information in the database.
     # Agent update query

@@ -15,7 +15,7 @@ from ..utils import (
 @wrap_in_class(make_session, one=True)
 @cozo_query
 @beartype
-def get_session_query(
+def get_session(
     *,
     developer_id: UUID,
     session_id: UUID,

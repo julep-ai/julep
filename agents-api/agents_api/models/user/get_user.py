@@ -15,7 +15,7 @@ from ..utils import (
 @wrap_in_class(User, one=True)
 @cozo_query
 @beartype
-def get_user_query(
+def get_user(
     *,
     developer_id: UUID,
     user_id: UUID,

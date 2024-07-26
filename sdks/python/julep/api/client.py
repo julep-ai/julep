@@ -54,6 +54,8 @@ from .types.agents_update_agent_request_default_settings import (
 from .types.agents_update_agent_request_instructions import (
     AgentsUpdateAgentRequestInstructions,
 )
+from .types.chat_route_generate_request import ChatRouteGenerateRequest
+from .types.chat_route_generate_response import ChatRouteGenerateResponse
 from .types.common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .types.common_limit import CommonLimit
 from .types.common_offset import CommonOffset
@@ -2538,6 +2540,71 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def chat_route_generate(
+        self,
+        id: CommonUuid,
+        *,
+        request: ChatRouteGenerateRequest,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> ChatRouteGenerateResponse:
+        """
+        Generate a response from the model
+
+        Parameters
+        ----------
+        id : CommonUuid
+            The session ID
+
+        request : ChatRouteGenerateRequest
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        ChatRouteGenerateResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.chat_route_generate(
+            id="id",
+            request=ChatRouteGenerateRequestPreset(
+                messages=[
+                    EntriesInputChatMlMessage(
+                        role="user",
+                        content="content",
+                    )
+                ],
+                recall=True,
+                remember=True,
+                save=True,
+                stream=True,
+            ),
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}/chat",
+            method="POST",
+            json=request,
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(ChatRouteGenerateResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def history_route_list(
         self,
         id: CommonUuid,
@@ -2995,7 +3062,6 @@ class JulepApi:
         *,
         name: CommonIdentifierSafeUnicode,
         about: str,
-        docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceCreatedResponse:
@@ -3009,9 +3075,6 @@ class JulepApi:
 
         about : str
             About the user
-
-        docs : typing.Sequence[typing.Any]
-            Documents to index for this user. (Max: 100 items)
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -3034,13 +3097,12 @@ class JulepApi:
         client.users_route_create(
             name="name",
             about="about",
-            docs=[],
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             "users",
             method="POST",
-            json={"metadata": metadata, "name": name, "about": about, "docs": docs},
+            json={"metadata": metadata, "name": name, "about": about},
             request_options=request_options,
             omit=OMIT,
         )
@@ -6172,6 +6234,79 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def chat_route_generate(
+        self,
+        id: CommonUuid,
+        *,
+        request: ChatRouteGenerateRequest,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> ChatRouteGenerateResponse:
+        """
+        Generate a response from the model
+
+        Parameters
+        ----------
+        id : CommonUuid
+            The session ID
+
+        request : ChatRouteGenerateRequest
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        ChatRouteGenerateResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.chat_route_generate(
+                id="id",
+                request=ChatRouteGenerateRequestPreset(
+                    messages=[
+                        EntriesInputChatMlMessage(
+                            role="user",
+                            content="content",
+                        )
+                    ],
+                    recall=True,
+                    remember=True,
+                    save=True,
+                    stream=True,
+                ),
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"sessions/{jsonable_encoder(id)}/chat",
+            method="POST",
+            json=request,
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(ChatRouteGenerateResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def history_route_list(
         self,
         id: CommonUuid,
@@ -6685,7 +6820,6 @@ class AsyncJulepApi:
         *,
         name: CommonIdentifierSafeUnicode,
         about: str,
-        docs: typing.Sequence[typing.Any],
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceCreatedResponse:
@@ -6699,9 +6833,6 @@ class AsyncJulepApi:
 
         about : str
             About the user
-
-        docs : typing.Sequence[typing.Any]
-            Documents to index for this user. (Max: 100 items)
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
@@ -6729,7 +6860,6 @@ class AsyncJulepApi:
             await client.users_route_create(
                 name="name",
                 about="about",
-                docs=[],
             )
 
 
@@ -6738,7 +6868,7 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             "users",
             method="POST",
-            json={"metadata": metadata, "name": name, "about": about, "docs": docs},
+            json={"metadata": metadata, "name": name, "about": about},
             request_options=request_options,
             omit=OMIT,
         )

@@ -20,7 +20,7 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def delete_tool_query(
+def delete_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,

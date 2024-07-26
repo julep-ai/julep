@@ -41,11 +41,39 @@ from .agents_update_agent_request_default_settings import (
 from .agents_update_agent_request_instructions import (
     AgentsUpdateAgentRequestInstructions,
 )
+from .chat_base_chat_output import ChatBaseChatOutput
+from .chat_base_chat_response import ChatBaseChatResponse
+from .chat_base_token_log_prob import ChatBaseTokenLogProb
+from .chat_chat_output_chunk import ChatChatOutputChunk
+from .chat_chunk_chat_response import ChatChunkChatResponse
+from .chat_competion_usage import ChatCompetionUsage
 from .chat_completion_response_format import ChatCompletionResponseFormat
 from .chat_completion_response_format_type import ChatCompletionResponseFormatType
+from .chat_finish_reason import ChatFinishReason
 from .chat_generation_preset import ChatGenerationPreset
 from .chat_generation_preset_settings import ChatGenerationPresetSettings
+from .chat_log_prob_response import ChatLogProbResponse
+from .chat_message_chat_response import ChatMessageChatResponse
+from .chat_multiple_chat_output import ChatMultipleChatOutput
 from .chat_open_ai_settings import ChatOpenAiSettings
+from .chat_route_generate_request import ChatRouteGenerateRequest
+from .chat_route_generate_request_agent import ChatRouteGenerateRequestAgent
+from .chat_route_generate_request_agent_tool_choice import (
+    ChatRouteGenerateRequestAgentToolChoice,
+)
+from .chat_route_generate_request_frequency_penalty import (
+    ChatRouteGenerateRequestFrequencyPenalty,
+)
+from .chat_route_generate_request_frequency_penalty_tool_choice import (
+    ChatRouteGenerateRequestFrequencyPenaltyToolChoice,
+)
+from .chat_route_generate_request_preset import ChatRouteGenerateRequestPreset
+from .chat_route_generate_request_preset_tool_choice import (
+    ChatRouteGenerateRequestPresetToolChoice,
+)
+from .chat_route_generate_response import ChatRouteGenerateResponse
+from .chat_single_chat_output import ChatSingleChatOutput
+from .chat_token_log_prob import ChatTokenLogProb
 from .chat_v_llm_settings import ChatVLlmSettings
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_limit import CommonLimit
@@ -86,6 +114,13 @@ from .entries_base_chat_ml_content_part import (
     EntriesBaseChatMlContentPart_ImageUrl,
 )
 from .entries_chat_ml_image_content_part import EntriesChatMlImageContentPart
+from .entries_chat_ml_message import EntriesChatMlMessage
+from .entries_chat_ml_message_content import EntriesChatMlMessageContent
+from .entries_chat_ml_message_content_item import (
+    EntriesChatMlMessageContentItem,
+    EntriesChatMlMessageContentItem_ImageUrl,
+    EntriesChatMlMessageContentItem_Text,
+)
 from .entries_chat_ml_role import EntriesChatMlRole
 from .entries_chat_ml_text_content_part import EntriesChatMlTextContentPart
 from .entries_entry import EntriesEntry
@@ -203,6 +238,8 @@ from .tools_function_call_option import ToolsFunctionCallOption
 from .tools_function_def import ToolsFunctionDef
 from .tools_function_def_update import ToolsFunctionDefUpdate
 from .tools_function_tool import ToolsFunctionTool
+from .tools_named_function_choice import ToolsNamedFunctionChoice
+from .tools_named_tool_choice import ToolsNamedToolChoice, ToolsNamedToolChoice_Function
 from .tools_tool import ToolsTool, ToolsTool_Function
 from .tools_tool_response import ToolsToolResponse
 from .tools_tool_type import ToolsToolType
@@ -246,11 +283,31 @@ __all__ = [
     "AgentsUpdateAgentRequest",
     "AgentsUpdateAgentRequestDefaultSettings",
     "AgentsUpdateAgentRequestInstructions",
+    "ChatBaseChatOutput",
+    "ChatBaseChatResponse",
+    "ChatBaseTokenLogProb",
+    "ChatChatOutputChunk",
+    "ChatChunkChatResponse",
+    "ChatCompetionUsage",
     "ChatCompletionResponseFormat",
     "ChatCompletionResponseFormatType",
+    "ChatFinishReason",
     "ChatGenerationPreset",
     "ChatGenerationPresetSettings",
+    "ChatLogProbResponse",
+    "ChatMessageChatResponse",
+    "ChatMultipleChatOutput",
     "ChatOpenAiSettings",
+    "ChatRouteGenerateRequest",
+    "ChatRouteGenerateRequestAgent",
+    "ChatRouteGenerateRequestAgentToolChoice",
+    "ChatRouteGenerateRequestFrequencyPenalty",
+    "ChatRouteGenerateRequestFrequencyPenaltyToolChoice",
+    "ChatRouteGenerateRequestPreset",
+    "ChatRouteGenerateRequestPresetToolChoice",
+    "ChatRouteGenerateResponse",
+    "ChatSingleChatOutput",
+    "ChatTokenLogProb",
     "ChatVLlmSettings",
     "CommonIdentifierSafeUnicode",
     "CommonLimit",
@@ -287,6 +344,11 @@ __all__ = [
     "EntriesBaseChatMlContentPart",
     "EntriesBaseChatMlContentPart_ImageUrl",
     "EntriesChatMlImageContentPart",
+    "EntriesChatMlMessage",
+    "EntriesChatMlMessageContent",
+    "EntriesChatMlMessageContentItem",
+    "EntriesChatMlMessageContentItem_ImageUrl",
+    "EntriesChatMlMessageContentItem_Text",
     "EntriesChatMlRole",
     "EntriesChatMlTextContentPart",
     "EntriesEntry",
@@ -375,6 +437,9 @@ __all__ = [
     "ToolsFunctionDef",
     "ToolsFunctionDefUpdate",
     "ToolsFunctionTool",
+    "ToolsNamedFunctionChoice",
+    "ToolsNamedToolChoice",
+    "ToolsNamedToolChoice_Function",
     "ToolsTool",
     "ToolsToolResponse",
     "ToolsToolType",

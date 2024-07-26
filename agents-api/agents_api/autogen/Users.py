@@ -32,10 +32,6 @@ class CreateUserRequest(BaseModel):
     """
     About the user
     """
-    docs: Annotated[list, Field([], max_length=100)]
-    """
-    Documents to index for this user. (Max: 100 items)
-    """
 
 
 class PatchUserRequest(BaseModel):

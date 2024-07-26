@@ -26,12 +26,5 @@ export const $Users_CreateUserRequest = {
       description: `About the user`,
       isRequired: true,
     },
-    docs: {
-      type: "array",
-      contains: {
-        properties: {},
-      },
-      isRequired: true,
-    },
   },
 } as const;

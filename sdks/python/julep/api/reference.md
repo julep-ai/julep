@@ -3528,6 +3528,98 @@ client.sessions_route_patch(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">chat_route_generate</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Generate a response from the model
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.chat_route_generate(
+    id="id",
+    request=ChatRouteGenerateRequestPreset(
+        messages=[
+            EntriesInputChatMlMessage(
+                role="user",
+                content="content",
+            )
+        ],
+        recall=True,
+        remember=True,
+        save=True,
+        stream=True,
+    ),
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — The session ID
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request:** `ChatRouteGenerateRequest` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">history_route_list</a>(...)</code></summary>
 <dl>
 <dd>
@@ -4242,7 +4334,6 @@ client = JulepApi(
 client.users_route_create(
     name="name",
     about="about",
-    docs=[],
 )
 
 ```
@@ -4268,14 +4359,6 @@ client.users_route_create(
 <dd>
 
 **about:** `str` — About the user
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**docs:** `typing.Sequence[typing.Any]` — Documents to index for this user. (Max: 100 items)
     
 </dd>
 </dl>

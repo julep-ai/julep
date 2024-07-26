@@ -20,7 +20,7 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def update_user_query(
+def update_user(
     *, developer_id: UUID, user_id: UUID, update_user: UpdateUserRequest
 ) -> tuple[str, dict]:
     """Updates user information in the 'cozodb' database.

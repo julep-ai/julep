@@ -24,18 +24,18 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def create_tools_query(
+def create_tools(
     *,
     developer_id: UUID,
     agent_id: UUID,
-    create_tools: list[CreateToolRequest],
+    data: list[CreateToolRequest],
 ) -> tuple[str, dict]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
     Parameters:
     - agent_id (UUID): The unique identifier for the agent.
-    - create_tools (list[CreateToolRequest]): A list of function definitions to be inserted.
+    - data (list[CreateToolRequest]): A list of function definitions to be inserted.
 
     Returns:
     list[Tool]
@@ -49,7 +49,7 @@ def create_tools_query(
             tool.name,
             getattr(tool, tool.type).dict(),
         ]
-        for tool in create_tools
+        for tool in data
     ]
 
     # Datalog query for inserting new tool records into the 'agent_functions' relation

@@ -15,7 +15,7 @@ from ..utils import (
 @wrap_in_class(Agent, one=True)
 @cozo_query
 @beartype
-def get_agent_query(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
+def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
     """
     Fetches agent details and default settings from the database.
 

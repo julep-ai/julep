@@ -16,7 +16,7 @@ from ..utils import (
 @wrap_in_class(Tool)
 @cozo_query
 @beartype
-def list_tools_query(
+def list_tools(
     *,
     developer_id: UUID,
     agent_id: UUID,

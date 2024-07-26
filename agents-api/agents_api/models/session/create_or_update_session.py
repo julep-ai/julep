@@ -28,15 +28,15 @@ from ..utils import (
 )
 @cozo_query(debug=True)
 @beartype
-def create_or_update_session_query(
+def create_or_update_session(
     *,
     session_id: UUID,
     developer_id: UUID,
-    create_or_update_session: CreateOrUpdateSessionRequest,
+    data: CreateOrUpdateSessionRequest,
 ) -> tuple[str, dict]:
 
-    create_or_update_session.metadata = create_or_update_session.metadata or {}
-    session_data = create_or_update_session.model_dump()
+    data.metadata = data.metadata or {}
+    session_data = data.model_dump()
 
     user = session_data.pop("user")
     agent = session_data.pop("agent")

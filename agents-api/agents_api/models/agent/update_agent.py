@@ -24,11 +24,11 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def update_agent_query(
+def update_agent(
     *,
     agent_id: UUID,
     developer_id: UUID,
-    update_agent: UpdateAgentRequest,
+    data: UpdateAgentRequest,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to update an agent and its default settings in the 'cozodb' database.
@@ -36,14 +36,14 @@ def update_agent_query(
     Parameters:
     - agent_id (UUID): The unique identifier of the agent to be updated.
     - developer_id (UUID): The unique identifier of the developer associated with the agent.
-    - update_agent (UpdateAgentRequest): The request payload containing the updated agent data.
+    - data (UpdateAgentRequest): The request payload containing the updated agent data.
     - client (CozoClient, optional): The database client used to execute the query. Defaults to a pre-configured client instance.
 
     Returns:
     ResourceUpdatedResponse: The updated agent data.
     """
-    default_settings = update_agent.default_settings.model_dump(exclude_none=True)
-    update_data = update_agent.model_dump()
+    default_settings = data.default_settings.model_dump(exclude_none=True)
+    update_data = data.model_dump()
 
     # Remove default settings from the agent update data
     update_data.pop("default_settings", None)

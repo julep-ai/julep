@@ -116,6 +116,20 @@ class FunctionDefUpdate(BaseModel):
     """
 
 
+class NamedToolChoice(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function", "integration", "system", "api_call"]
+    """
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    """
+    function: FunctionCallOption | None = None
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
+
+
 class PatchToolRequest(BaseModel):
     """
     Payload for patching a tool
@@ -216,6 +230,17 @@ class FunctionTool(Tool):
     type: Literal["function"] = "function"
     background: Literal[False] = False
     function: FunctionDef
+    """
+    The function to call
+    """
+
+
+class NamedFunctionChoice(NamedToolChoice):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["function"] = "function"
+    function: FunctionCallOption
     """
     The function to call
     """

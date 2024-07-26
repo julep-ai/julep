@@ -16,7 +16,7 @@ from ..utils import (
 @wrap_in_class(Agent)
 @cozo_query
 @beartype
-def list_agents_query(
+def list_agents(
     *,
     developer_id: UUID,
     limit: int = 100,

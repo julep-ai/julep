@@ -16,8 +16,4 @@ export type Users_CreateUserRequest = {
    * About the user
    */
   about: string;
-  /**
-   * Documents to index for this user. (Max: 100 items)
-   */
-  docs: Array<any>;
 };

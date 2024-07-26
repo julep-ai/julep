@@ -20,7 +20,7 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def patch_tool_query(
+def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, patch_tool: PatchToolRequest
 ) -> tuple[str, dict]:
     """

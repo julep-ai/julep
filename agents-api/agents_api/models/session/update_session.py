@@ -36,14 +36,14 @@ _fields = [
 )
 @cozo_query
 @beartype
-def update_session_query(
+def update_session(
     *,
     session_id: UUID,
     developer_id: UUID,
-    update_session: UpdateSessionRequest,
+    data: UpdateSessionRequest,
 ) -> tuple[str, dict]:
 
-    update_data = update_session.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(
         {k: v for k, v in update_data.items() if v is not None}

@@ -23,11 +23,11 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def patch_user_query(
+def patch_user(
     *,
     developer_id: UUID,
     user_id: UUID,
-    patch_user: PatchUserRequest,
+    data: PatchUserRequest,
 ) -> tuple[str, dict]:
     """
     Generates a datalog query for updating a user's information.
@@ -41,7 +41,7 @@ def patch_user_query(
     - tuple[str, dict]: A pandas DataFrame containing the results of the query execution.
     """
 
-    update_data = patch_user.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
 
     # Prepare data for mutation by filtering out None values and adding system-generated fields.
     metadata = update_data.pop("metadata", {}) or {}

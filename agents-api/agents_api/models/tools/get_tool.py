@@ -23,7 +23,7 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def get_tool_query(
+def get_tool(
     *,
     developer_id: UUID,
     agent_id: UUID,

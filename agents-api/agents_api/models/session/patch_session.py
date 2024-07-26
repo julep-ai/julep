@@ -39,21 +39,21 @@ _fields = [
 )
 @cozo_query
 @beartype
-def patch_session_query(
+def patch_session(
     *,
     session_id: UUID,
     developer_id: UUID,
-    patch_session: PatchSessionRequest,
+    data: PatchSessionRequest,
 ) -> tuple[str, dict]:
     """Patch session data in the 'cozodb' database.
 
     Parameters:
     - session_id (UUID): The unique identifier for the session to be updated.
     - developer_id (UUID): The unique identifier for the developer making the update.
-    - patch_session (PatchSessionRequest): The request payload containing the updates to apply.
+    - data (PatchSessionRequest): The request payload containing the updates to apply.
     """
 
-    update_data = patch_session.model_dump(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
     metadata = update_data.pop("metadata", {}) or {}
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(

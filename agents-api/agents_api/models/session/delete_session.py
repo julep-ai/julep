@@ -26,7 +26,7 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def delete_session_query(
+def delete_session(
     *,
     developer_id: UUID,
     session_id: UUID,

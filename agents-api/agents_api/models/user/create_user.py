@@ -15,11 +15,11 @@ from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
 @wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
 @cozo_query
 @beartype
-def create_user_query(
+def create_user(
     *,
     developer_id: UUID,
     user_id: UUID | None = None,
-    create_user: CreateUserRequest,
+    data: CreateUserRequest,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new user in the CozoDB database.
@@ -37,8 +37,8 @@ def create_user_query(
     """
 
     user_id = user_id or uuid4()
-    create_user.metadata = create_user.metadata or {}
-    user_data = create_user.model_dump()
+    data.metadata = data.metadata or {}
+    user_data = data.model_dump()
 
     create_query = """
         # Then create the user

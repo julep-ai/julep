@@ -28,11 +28,11 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def create_session_query(
+def create_session(
     *,
     developer_id: UUID,
     session_id: UUID | None = None,
-    create_session: CreateSessionRequest,
+    data: CreateSessionRequest,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new session in the database.
@@ -40,8 +40,8 @@ def create_session_query(
 
     session_id = session_id or uuid4()
 
-    create_session.metadata = create_session.metadata or {}
-    session_data = create_session.model_dump()
+    data.metadata = data.metadata or {}
+    session_data = data.model_dump()
 
     user = session_data.pop("user")
     agent = session_data.pop("agent")

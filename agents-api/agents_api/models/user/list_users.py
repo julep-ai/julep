@@ -15,7 +15,7 @@ from ..utils import (
 @wrap_in_class(User)
 @cozo_query
 @beartype
-def list_users_query(
+def list_users(
     *,
     developer_id: UUID,
     limit: int = 100,

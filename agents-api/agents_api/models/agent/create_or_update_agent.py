@@ -17,11 +17,11 @@ from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
 )
 @cozo_query
 @beartype
-def create_or_update_agent_query(
+def create_or_update_agent(
     *,
     developer_id: UUID,
     agent_id: UUID,
-    create_or_update_agent: CreateOrUpdateAgentRequest,
+    data: CreateOrUpdateAgentRequest,
 ) -> tuple[str, dict]:
     """
     Constructs and executes a datalog query to create a new agent in the database.
@@ -42,17 +42,17 @@ def create_or_update_agent_query(
     """
 
     # Extract the agent data from the payload
-    create_or_update_agent.metadata = create_or_update_agent.metadata or {}
-    create_or_update_agent.instructions = (
-        create_or_update_agent.instructions
-        if isinstance(create_or_update_agent.instructions, list)
-        else [create_or_update_agent.instructions]
+    data.metadata = data.metadata or {}
+    data.instructions = (
+        data.instructions
+        if isinstance(data.instructions, list)
+        else [data.instructions]
     )
-    create_or_update_agent.default_settings = (
-        create_or_update_agent.default_settings or {}
+    data.default_settings = (
+        data.default_settings or {}
     )
 
-    agent_data = create_or_update_agent.model_dump()
+    agent_data = data.model_dump()
     default_settings = agent_data.pop("default_settings")
 
     settings_cols, settings_vals = cozo_process_mutate_data(
