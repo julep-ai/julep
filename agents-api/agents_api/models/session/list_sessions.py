@@ -1,13 +1,12 @@
 """This module contains functions for querying session data from the 'cozodb' database."""
 
 from typing import Any, Literal
-from fastapi import HTTPException
-from pycozo.client import QueryException
-from pydantic import ValidationError
 from uuid import UUID
 
 from beartype import beartype
-
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
 from ...autogen.openapi_model import make_session
 from ...common.utils import json

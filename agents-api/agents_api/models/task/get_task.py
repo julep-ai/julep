@@ -1,10 +1,9 @@
-from beartype import beartype
-
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-
 
 from ..utils import (
     cozo_query,
@@ -14,7 +13,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-
 from .create_task import spec_to_task
 
 

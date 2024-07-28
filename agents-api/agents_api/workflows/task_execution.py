@@ -10,7 +10,6 @@ with workflow.unsafe.imports_passed_through():
         prompt_step,
         transition_step,
     )
-
     from ..common.protocol.tasks import (
         ExecutionInput,
         PromptWorkflowStep,

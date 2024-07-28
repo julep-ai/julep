@@ -4,14 +4,13 @@ It constructs and executes a datalog query to insert Task data.
 """
 
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from beartype import beartype
-
-
-from ...autogen.openapi_model import ResourceUpdatedResponse, PatchTaskRequest
+from ...autogen.openapi_model import PatchTaskRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -21,7 +20,7 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .create_task import task_to_spec, TaskSpec
+from .create_task import TaskSpec, task_to_spec
 
 
 @rewrap_exceptions(

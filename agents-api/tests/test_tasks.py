@@ -1,8 +1,10 @@
 import uuid
 from typing import List
+
+from julep.api.types import Execution, Task
 from ward import test
-from tests.fixtures import client, async_client, task, agent
-from julep.api.types import Task, Execution
+
+from tests.fixtures import agent, async_client, client, task
 
 
 @test("create task")

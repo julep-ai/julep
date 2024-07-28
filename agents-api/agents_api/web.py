@@ -2,31 +2,30 @@
 This module initializes the FastAPI application, registers routes, sets up middleware, and configures exception handlers.
 """
 
-import fire
-import uvicorn
 import logging
+
+import fire
 import sentry_sdk
-from fastapi import FastAPI, Request, status, Depends
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from agents_api.common.exceptions import BaseCommonException
-from agents_api.exceptions import PromptTooBigError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from litellm.exceptions import APIError
 from pycozo.client import QueryException
 from temporalio.service import RPCError
-from litellm.exceptions import APIError
 
+from agents_api.common.exceptions import BaseCommonException
 from agents_api.dependencies.auth import get_api_key
 from agents_api.env import sentry_dsn
-
+from agents_api.exceptions import PromptTooBigError
 from agents_api.routers import (
     agents,
-    sessions,
-    users,
     jobs,
+    sessions,
     tasks,
+    users,
 )
-
 
 if not sentry_dsn:
     print("Sentry DSN not found. Sentry will not be enabled.")

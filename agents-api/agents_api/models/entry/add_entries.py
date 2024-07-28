@@ -1,11 +1,10 @@
 import pandas as pd
-
 from beartype import beartype
 
 from ...common.protocol.entries import Entry
-from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
+from ..utils import cozo_query
 
 
 @cozo_query

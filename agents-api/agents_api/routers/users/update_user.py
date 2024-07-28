@@ -1,14 +1,13 @@
 from typing import Annotated
 
-from fastapi import HTTPException, Depends
+from fastapi import Depends, HTTPException
 from pydantic import UUID4
 from starlette.status import HTTP_404_NOT_FOUND
 
-from ...dependencies.developer_id import get_developer_id
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...common.exceptions.users import UserNotFoundError
+from ...dependencies.developer_id import get_developer_id
 from ...models.user.update_user import update_user_query
-from ...autogen.openapi_model import UpdateUserRequest, ResourceUpdatedResponse
-
 from .router import router
 
 

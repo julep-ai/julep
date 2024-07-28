@@ -1,9 +1,11 @@
 from typing import Callable, Literal, Optional, Protocol
 from uuid import UUID
+
 from pydantic import BaseModel
+
 from agents_api.autogen.openapi_model import (
-    ChatMLTextContentPart,
     ChatMLImageContentPart,
+    ChatMLTextContentPart,
 )
 
 
@@ -28,10 +30,12 @@ class ChatML(BaseModel):
     token_count: Optional[int] = None
 
 
-class BaseTask(BaseModel): ...
+class BaseTask(BaseModel):
+    ...
 
 
-class BaseTaskArgs(BaseModel): ...
+class BaseTaskArgs(BaseModel):
+    ...
 
 
 class MemoryManagementTaskArgs(BaseTaskArgs):

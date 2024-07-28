@@ -4,8 +4,8 @@ It utilizes the environs library for environment variable parsing.
 """
 
 from pprint import pprint
-from environs import Env
 
+from environs import Env
 
 # Initialize the Env object for environment variable parsing.
 env = Env()

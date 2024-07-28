@@ -1,10 +1,9 @@
-from beartype import beartype
-
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow

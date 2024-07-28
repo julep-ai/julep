@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from beartype import beartype
-
 from pycozo.client import Client as CozoClient
 
 from ...clients.cozo import client as cozo_client

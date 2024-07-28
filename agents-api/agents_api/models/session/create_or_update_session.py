@@ -1,10 +1,9 @@
-from beartype import beartype
-
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-
 
 from ...autogen.openapi_model import (
     CreateOrUpdateSessionRequest,
@@ -46,7 +45,6 @@ def create_or_update_session(
     developer_id: UUID,
     data: CreateOrUpdateSessionRequest,
 ) -> tuple[str, dict]:
-
     data.metadata = data.metadata or {}
     session_data = data.model_dump()
 

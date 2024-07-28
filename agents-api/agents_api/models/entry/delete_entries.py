@@ -2,7 +2,6 @@ from uuid import UUID
 
 from beartype import beartype
 
-
 from ..utils import cozo_query
 
 

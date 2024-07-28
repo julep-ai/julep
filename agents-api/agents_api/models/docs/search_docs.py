@@ -1,10 +1,9 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
-from beartype import beartype
-
 from typing import Literal
 from uuid import UUID
 
+from beartype import beartype
 
 from ..utils import cozo_query
 

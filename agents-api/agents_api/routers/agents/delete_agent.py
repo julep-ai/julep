@@ -4,12 +4,11 @@ from fastapi import Depends, HTTPException
 from pydantic import UUID4
 from starlette.status import HTTP_202_ACCEPTED, HTTP_404_NOT_FOUND
 
-from ...dependencies.developer_id import get_developer_id
-from ...models.agent.delete_agent import delete_agent_query
+from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.exceptions.agents import AgentNotFoundError
 from ...common.utils.datetime import utcnow
-from ...autogen.openapi_model import ResourceDeletedResponse
-
+from ...dependencies.developer_id import get_developer_id
+from ...models.agent.delete_agent import delete_agent_query
 from .router import router
 
 

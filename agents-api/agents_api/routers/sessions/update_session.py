@@ -4,14 +4,13 @@ from fastapi import Depends, HTTPException
 from pydantic import UUID4
 from starlette.status import HTTP_404_NOT_FOUND
 
+from ...autogen.openapi_model import (
+    ResourceUpdatedResponse,
+    UpdateSessionRequest,
+)
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...dependencies.developer_id import get_developer_id
 from ...models.session.update_session import update_session_query
-from ...autogen.openapi_model import (
-    UpdateSessionRequest,
-    ResourceUpdatedResponse,
-)
-
 from .router import router
 
 

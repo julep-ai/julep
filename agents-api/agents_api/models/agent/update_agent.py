@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import UpdateAgentRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,

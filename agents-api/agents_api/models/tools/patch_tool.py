@@ -1,10 +1,9 @@
 from uuid import UUID
 
-
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-from beartype import beartype
 
 from ...autogen.openapi_model import PatchToolRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data

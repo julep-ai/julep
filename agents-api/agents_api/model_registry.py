@@ -4,17 +4,18 @@ Model Registry maintains a list of supported models and their configs.
 
 import ast
 import json
+import xml.etree.ElementTree as ET
+from typing import Dict, Literal, Optional
+
+import litellm
+from litellm.utils import get_valid_models
+from pydantic import BaseModel
+
 from agents_api.clients.worker.types import ChatML
 from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
     MissingAgentModelAPIKeyError,
 )
-import litellm
-from litellm.utils import get_valid_models
-from pydantic import BaseModel
-from typing import Dict, Literal, Optional
-import xml.etree.ElementTree as ET
-
 
 GPT4_MODELS: Dict[str, int] = {
     # stable model names:

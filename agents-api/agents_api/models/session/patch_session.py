@@ -1,12 +1,11 @@
 """This module contains functions for patching session data in the 'cozodb' database using datalog queries."""
 
+from uuid import UUID
+
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-
-from uuid import UUID
-
 
 from ...autogen.openapi_model import PatchSessionRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
@@ -18,7 +17,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-
 
 _fields = [
     "situation",

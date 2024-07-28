@@ -1,12 +1,11 @@
-from typing import List, Annotated
+from typing import Annotated, List
 
 from fastapi import Depends
 from pydantic import UUID4
 
+from ...autogen.openapi_model import Agent
 from ...dependencies.developer_id import get_developer_id
 from ...models.agent.list_agents import list_agents_query
-from ...autogen.openapi_model import Agent
-
 from .router import router
 
 

@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import Transition, CreateTransitionRequest
+from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -35,7 +35,6 @@ def create_execution_transition(
     data: CreateTransitionRequest,
     task_token: str | None = None,
 ) -> tuple[str, dict]:
-
     transition_id = transition_id or uuid4()
 
     data.metadata = data.metadata or {}

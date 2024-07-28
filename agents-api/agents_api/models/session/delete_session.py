@@ -1,12 +1,11 @@
 """This module contains the implementation for deleting sessions from the 'cozodb' database using datalog queries."""
 
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-
-from beartype import beartype
-
 
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow

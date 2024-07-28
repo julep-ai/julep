@@ -3,21 +3,22 @@ This module contains the functionality for creating a new Task in the 'cozodb` d
 It constructs and executes a datalog query to insert Task data.
 """
 
+import sys
 from uuid import UUID, uuid4
+
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-import sys
 
 if sys.version_info < (3, 11):
-    from typing_extensions import TypedDict, NotRequired
+    from typing_extensions import NotRequired, TypedDict
 else:
-    from typing import TypedDict, NotRequired
+    from typing import NotRequired, TypedDict
 
 
 from beartype import beartype
 
-from ...autogen.openapi_model import Task, CreateTaskRequest, UpdateTaskRequest
+from ...autogen.openapi_model import CreateTaskRequest, Task, UpdateTaskRequest
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,

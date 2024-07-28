@@ -3,9 +3,10 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, computed_field
+
 from agents_api.autogen.openapi_model import (
-    ChatMLRole,
     ChatMLImageContentPart,
+    ChatMLRole,
     ChatMLTextContentPart,
 )
 from agents_api.common.utils.datetime import utcnow

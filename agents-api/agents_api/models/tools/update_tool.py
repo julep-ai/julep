@@ -17,7 +17,7 @@ def update_tool(
     agent_id: UUID,
     tool_id: UUID,
     data: UpdateToolRequest,
-    **kwargs
+    **kwargs,
 ) -> ResourceUpdatedResponse:
     # Same as patch_tool_query, but with a different request payload
     return patch_tool(

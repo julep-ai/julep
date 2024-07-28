@@ -1,12 +1,11 @@
-from beartype import beartype
-
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-
-from ...autogen.openapi_model import UpdateSessionRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateSessionRequest
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -54,7 +53,6 @@ def update_session(
     developer_id: UUID,
     data: UpdateSessionRequest,
 ) -> tuple[str, dict]:
-
     update_data = data.model_dump(exclude_unset=True)
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(

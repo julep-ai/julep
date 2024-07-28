@@ -1,13 +1,12 @@
-from functools import partialmethod, wraps
 import inspect
+from functools import partialmethod, wraps
 from typing import Any, Callable, ParamSpec, Type
 from uuid import UUID
 
-from pydantic import BaseModel
 import pandas as pd
+from pydantic import BaseModel
 
 from ..clients.cozo import client as cozo_client
-
 
 P = ParamSpec("P")
 

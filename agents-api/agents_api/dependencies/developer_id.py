@@ -1,5 +1,6 @@
 import uuid
 from typing import Annotated
+
 from fastapi import Header
 from pydantic import validate_email
 from pydantic_core import PydanticCustomError
@@ -9,7 +10,7 @@ from .exceptions import InvalidHeaderFormat
 
 
 async def get_developer_id(
-    x_developer_id: Annotated[uuid.UUID | None, Header()] = None
+    x_developer_id: Annotated[uuid.UUID | None, Header()] = None,
 ):
     if skip_check_developer_headers:
         return x_developer_id or uuid.UUID("00000000-0000-0000-0000-000000000000")
@@ -27,7 +28,7 @@ async def get_developer_id(
 
 
 async def get_developer_email(
-    x_developer_email: Annotated[str | None, Header()] = None
+    x_developer_email: Annotated[str | None, Header()] = None,
 ):
     if skip_check_developer_headers:
         return x_developer_email or "unknown_user@mail.com"

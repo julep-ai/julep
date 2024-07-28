@@ -14,7 +14,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-
 from .create_task import spec_to_task
 
 

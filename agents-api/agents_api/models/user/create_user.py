@@ -3,15 +3,14 @@ This module contains the functionality for creating a new user in the CozoDB dat
 It defines a query for inserting user data into the 'users' relation.
 """
 
+from uuid import UUID, uuid4
+
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from uuid import uuid4, UUID
-
-
-from ...autogen.openapi_model import User, CreateUserRequest
+from ...autogen.openapi_model import CreateUserRequest, User
 from ..utils import (
     cozo_query,
     partialclass,

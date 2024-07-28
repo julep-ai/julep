@@ -4,14 +4,13 @@ It constructs and executes a datalog query to insert session data.
 """
 
 from uuid import UUID, uuid4
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from beartype import beartype
-
-
-from ...autogen.openapi_model import Session, CreateSessionRequest
+from ...autogen.openapi_model import CreateSessionRequest, Session
 from ..utils import (
     cozo_query,
     partialclass,

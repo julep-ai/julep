@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 
 import asyncio
-from uuid import UUID
-from typing import Callable
 from textwrap import dedent
-from temporalio import activity
+from typing import Callable
+from uuid import UUID
+
 from litellm import acompletion
-from agents_api.models.entry.entries_summarization import (
-    get_toplevel_entries_query,
-    entries_summarization_query,
-)
+from temporalio import activity
+
 from agents_api.common.protocol.entries import Entry
-from ..model_registry import LOCAL_MODELS
-from ..env import model_inference_url, model_api_key, summarization_model_name
+from agents_api.models.entry.entries_summarization import (
+    entries_summarization_query,
+    get_toplevel_entries_query,
+)
 from agents_api.rec_sum.entities import get_entities
 from agents_api.rec_sum.summarize import summarize_messages
 from agents_api.rec_sum.trim import trim_messages
 
+from ..env import model_api_key, model_inference_url, summarization_model_name
+from ..model_registry import LOCAL_MODELS
 
 example_previous_memory = """
 Speaker 1: Composes and listens to music. Likes to buy basketball shoes but doesn't wear them often.

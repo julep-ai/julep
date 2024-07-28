@@ -4,20 +4,19 @@ from typing import Any, Optional, Type
 
 import openai.types as openai_types
 import openai.types.chat as openai_chat_types
-from pydantic import BaseModel
 import temporalio.converter
 from litellm.utils import ModelResponse
+from pydantic import BaseModel
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
     CompositePayloadConverter,
     DefaultPayloadConverter,
     EncodingPayloadConverter,
 )
-from agents_api.common.utils.json import dumps as json_dumps
 
-import agents_api.common.protocol.tasks as tasks
 import agents_api.autogen.openapi_model as openapi_model
-
+import agents_api.common.protocol.tasks as tasks
+from agents_api.common.utils.json import dumps as json_dumps
 
 # Map of model name to class so that we can look up the class when deserializing
 model_class_map = {
@@ -79,7 +78,7 @@ class PydanticPayloadConverter(CompositePayloadConverter):
         # Just add ours as first before the defaults
         super().__init__(
             PydanticEncodingPayloadConverter(),
-            *DefaultPayloadConverter.default_encoding_payload_converters
+            *DefaultPayloadConverter.default_encoding_payload_converters,
         )
 
 

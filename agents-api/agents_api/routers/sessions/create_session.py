@@ -1,18 +1,17 @@
 from typing import Annotated
 from uuid import uuid4
 
+import pandas as pd
 from fastapi import Depends
 from pydantic import UUID4
-import pandas as pd
 from starlette.status import HTTP_201_CREATED
 
-from ...dependencies.developer_id import get_developer_id
-from ...models.session.create_session import create_session_query
 from ...autogen.openapi_model import (
     CreateSessionRequest,
     ResourceCreatedResponse,
 )
-
+from ...dependencies.developer_id import get_developer_id
+from ...models.session.create_session import create_session_query
 from .router import router
 
 

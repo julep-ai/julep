@@ -1,12 +1,11 @@
 """Module for generating datalog queries to update user information in the 'cozodb' database."""
 
 from uuid import UUID
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
-
-from beartype import beartype
-
 
 from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data

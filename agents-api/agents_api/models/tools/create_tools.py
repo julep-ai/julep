@@ -1,14 +1,13 @@
 """This module contains functions for creating tools in the CozoDB database."""
 
 from uuid import UUID, uuid4
+
+from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from beartype import beartype
-
 from ...autogen.openapi_model import CreateToolRequest, Tool
-
 from ..utils import (
     cozo_query,
     partialclass,

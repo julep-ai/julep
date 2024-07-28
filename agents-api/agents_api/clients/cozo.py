@@ -1,6 +1,6 @@
 from pycozo.client import Client
-from ..env import cozo_host, cozo_auth
 
+from ..env import cozo_auth, cozo_host
 
 options = {"host": cozo_host}
 if cozo_auth:

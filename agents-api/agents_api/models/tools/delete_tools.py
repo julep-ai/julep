@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-
 from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ..utils import (

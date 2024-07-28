@@ -1,7 +1,8 @@
-from tenacity import retry, stop_after_attempt, wait_fixed
-from agents_api.env import model_inference_url, model_api_key
-from agents_api.model_registry import LOCAL_MODELS
 from litellm import acompletion
+from tenacity import retry, stop_after_attempt, wait_fixed
+
+from agents_api.env import model_api_key, model_inference_url
+from agents_api.model_registry import LOCAL_MODELS
 
 
 @retry(wait=wait_fixed(2), stop=stop_after_attempt(5))
