@@ -4,7 +4,6 @@ It constructs and executes a datalog query to insert Task data.
 """
 
 from uuid import UUID
-from typing import Any
 
 from beartype import beartype
 

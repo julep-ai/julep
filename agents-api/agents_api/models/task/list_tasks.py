@@ -3,8 +3,6 @@ from uuid import UUID
 
 from beartype import beartype
 
-from ...autogen.openapi_model import Task, CreateTaskRequest
-from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
     verify_developer_id_query,

@@ -10,6 +10,7 @@ export type Executions_Transition = {
   readonly current: Array<any>;
   readonly next: Array<any> | null;
   readonly id: Common_uuid;
+  metadata?: Record<string, any>;
   /**
    * When this resource was created as UTC date-time
    */

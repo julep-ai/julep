@@ -16,6 +16,7 @@ class ExecutionsTransition(pydantic_v1.BaseModel):
     current: typing.List[typing.Any]
     next: typing.Optional[typing.List[typing.Any]] = None
     id: CommonUuid
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
     created_at: dt.datetime = pydantic_v1.Field()
     """
     When this resource was created as UTC date-time

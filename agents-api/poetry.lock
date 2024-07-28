@@ -3930,6 +3930,20 @@ files = [
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
+name = "pydantic-partial"
+version = "0.5.5"
+description = "Create partial models from your pydantic models. Partial models may allow None for certain or all fields."
+optional = false
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "pydantic_partial-0.5.5-py3-none-any.whl", hash = "sha256:1e2f1b2c99ee1e8cd0af82c48873d51b1551bbea10c308b65367c9fa1030e4ba"},
+    {file = "pydantic_partial-0.5.5.tar.gz", hash = "sha256:a903bdf6b2b30c850865843645432537eae81713fba59ee03bae567eb4c4ff3b"},
+]
+
+[package.dependencies]
+pydantic = ">=1.9.0,<3.0.0"
+
+[[package]]
 name = "pydot"
 version = "3.0.1"
 description = "Python interface to Graphviz's Dot"
@@ -5942,4 +5956,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.11"
-content-hash = "728d58e8603503f630eea610a0d7bcbab62298b7a81c0780b8e90d00c3de05b7"
+content-hash = "45cdf80d64f1773a6913588982e6e2f9727cd4a872d1d9fb0d27e620e59b0614"

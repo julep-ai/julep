@@ -91,6 +91,7 @@ class Transition(BaseModel):
     current: Annotated[list, Field(json_schema_extra={"readOnly": True})]
     next: Annotated[list | None, Field(json_schema_extra={"readOnly": True})]
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
+    metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time

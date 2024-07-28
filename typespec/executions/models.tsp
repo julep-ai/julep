@@ -121,5 +121,6 @@ model Transition {
     next: TransitionTarget | null;
 
     ...HasId;
+    ...HasMetadata;
     ...HasTimestamps;
 }

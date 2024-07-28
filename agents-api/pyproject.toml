@@ -35,6 +35,7 @@ beartype = "^0.18.5"
 cel-python = "^0.1.5"
 
 mergedeep = "^1.3.4"
+pydantic-partial = "^0.5.5"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.18.1"
 black = "^24.4.0"

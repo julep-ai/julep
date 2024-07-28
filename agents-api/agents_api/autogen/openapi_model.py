@@ -1,6 +1,8 @@
 # ruff: noqa: F401, F403, F405
 from uuid import UUID
 
+from pydantic_partial import create_partial_model
+
 from .Agents import *
 from .Chat import *
 from .Common import *
@@ -18,6 +20,16 @@ CreateOrUpdateAgentRequest = UpdateAgentRequest
 CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
 CreateOrUpdateTaskRequest = CreateTaskRequest
+
+CreateTransitionRequest = create_partial_model(
+    Transition,
+    # The following fields are optional
+    "id",
+    "execution_id",
+    "created_at",
+    "updated_at",
+    "metadata",
+)
 
 ChatMLRole = Entry.model_fields["role"].annotation
 

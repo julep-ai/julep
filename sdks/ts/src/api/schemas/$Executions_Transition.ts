@@ -54,6 +54,12 @@ export const $Executions_Transition = {
       isReadOnly: true,
       isRequired: true,
     },
+    metadata: {
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
+    },
     created_at: {
       type: "string",
       description: `When this resource was created as UTC date-time`,

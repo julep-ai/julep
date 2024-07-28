@@ -4,7 +4,6 @@ from uuid import UUID
 
 
 from ...autogen.openapi_model import ResourceDeletedResponse
-from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 from ..utils import (
     cozo_query,

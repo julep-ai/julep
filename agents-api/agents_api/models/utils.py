@@ -23,21 +23,33 @@ def verify_developer_id_query(developer_id: UUID | str) -> str:
 
 
 def verify_developer_owns_resource_query(
-    developer_id: UUID | str, resource: str, **resource_id
+    developer_id: UUID | str,
+    resource: str,
+    parents: list[tuple[str, str]] = [],
+    **resource_id,
 ) -> str:
-
     resource_id_key, resource_id_value = next(iter(resource_id.items()))
 
-    return f"""
+    parents.append((resource, resource_id_key))
+    parent_keys = ["developer_id", *map(lambda x: x[1], parents)]
+
+    rule_head = f"""
     ?[{resource_id_key}] :=
-        *{resource}{{
-            developer_id,
-            {resource_id_key},
-        }}, developer_id = to_uuid("{str(developer_id)}"),
-        {resource_id_key} = to_uuid("{str(resource_id_value)}")
-        
-    :assert some
+        developer_id = to_uuid("{str(developer_id)}"),
+        {resource_id_key} = to_uuid("{str(resource_id_value)}"),
     """
+
+    rule_body = ""
+    for parent_key, (relation, key) in zip(parent_keys, parents):
+        rule_body += f"""
+        *{relation}{{
+            {parent_key},
+            {key},
+        }},
+        """
+
+    rule = rule_head + rule_body + "\n:assert some"
+    return rule
 
 
 def cozo_query(
