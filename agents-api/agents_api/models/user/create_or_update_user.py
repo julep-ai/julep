@@ -4,13 +4,29 @@ It includes functions to construct and execute datalog queries for inserting new
 """
 
 from uuid import UUID
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
 from beartype import beartype
 
 from ...autogen.openapi_model import User, CreateOrUpdateUserRequest
-from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
 @wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
 @cozo_query
 @beartype

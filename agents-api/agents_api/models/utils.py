@@ -1,5 +1,6 @@
-from functools import wraps
-from typing import Callable, ParamSpec, Type
+from functools import partialmethod, wraps
+import inspect
+from typing import Any, Callable, ParamSpec, Type
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -9,6 +10,18 @@ from ..clients.cozo import client as cozo_client
 
 
 P = ParamSpec("P")
+
+
+def partialclass(cls, *args, **kwargs):
+    cls_signature = inspect.signature(cls)
+    bound = cls_signature.bind_partial(*args, **kwargs)
+
+    # The `updated=()` argument is necessary to avoid a TypeError when using @wraps for a class
+    @wraps(cls, updated=())
+    class NewCls(cls):
+        __init__ = partialmethod(cls.__init__, *bound.args, **bound.kwargs)
+
+    return NewCls
 
 
 def verify_developer_id_query(developer_id: UUID | str) -> str:
@@ -119,6 +132,48 @@ def wrap_in_class(
                 return cls(**transform(data[0]))
 
             return [cls(**item) for item in map(transform, data)]
+
+        # Set the wrapped function as an attribute of the wrapper,
+        # forwards the __wrapped__ attribute if it exists.
+        setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
+
+        return wrapper
+
+    return decorator
+
+
+def rewrap_exceptions(
+    mapping: dict[
+        Type[BaseException] | Callable[[BaseException], bool],
+        Type[BaseException] | Callable[[BaseException], BaseException],
+    ],
+    /,
+):
+    mappers = [*mapping.items()]
+
+    for i, (check, transform) in enumerate(mappers):
+        if inspect.isclass(check):
+            mappers[i] = (lambda e: isinstance(e, check), mappers[i][1])
+
+        if inspect.isclass(transform):
+            mappers[i] = (mappers[i][0], lambda e: transform(str(e)))
+
+    def decorator(func: Callable[..., Any]):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            nonlocal mappers
+
+            try:
+                result = func(*args, **kwargs)
+
+            except BaseException as e:
+                for check, transform in mappers:
+                    if check(e):
+                        raise transform(e) from e
+
+                raise
+
+            return result
 
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.

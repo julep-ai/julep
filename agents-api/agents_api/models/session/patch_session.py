@@ -1,6 +1,9 @@
 """This module contains functions for patching session data in the 'cozodb' database using datalog queries."""
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
 from uuid import UUID
 
@@ -9,6 +12,8 @@ from ...autogen.openapi_model import PatchSessionRequest, ResourceUpdatedRespons
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
+    partialclass,
+    rewrap_exceptions,
     verify_developer_id_query,
     verify_developer_owns_resource_query,
     wrap_in_class,
@@ -27,6 +32,13 @@ _fields = [
 # TODO: Add support for updating `render_templates` field
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

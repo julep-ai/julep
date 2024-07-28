@@ -1,6 +1,9 @@
 """Module for generating datalog queries to update user information in the 'cozodb' database."""
 
 from uuid import UUID
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
 from beartype import beartype
 
@@ -10,12 +13,21 @@ from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 from ..utils import (
     cozo_query,
+    partialclass,
+    rewrap_exceptions,
     verify_developer_id_query,
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,

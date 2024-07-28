@@ -2,11 +2,21 @@ from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
 from ...autogen.openapi_model import Transition
-from ..utils import cozo_query, wrap_in_class
+from ..utils import cozo_query, partialclass, rewrap_exceptions, wrap_in_class
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
 @wrap_in_class(Transition)
 @cozo_query
 @beartype

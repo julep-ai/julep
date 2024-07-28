@@ -4,14 +4,30 @@ It defines a query for inserting user data into the 'users' relation.
 """
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
 from uuid import uuid4, UUID
 
 
 from ...autogen.openapi_model import User, CreateUserRequest
-from ..utils import cozo_query, verify_developer_id_query, wrap_in_class
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
 @wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
 @cozo_query
 @beartype
