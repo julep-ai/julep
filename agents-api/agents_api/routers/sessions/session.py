@@ -36,7 +36,7 @@ from ...model_registry import (
     load_context,
     validate_and_extract_tool_calls,
 )
-from ...models.entry.add_entries import add_entries_query
+from ...models.entry.create_entries import create_entries as create_entries_query
 from ...models.entry.proc_mem_context import proc_mem_context_query
 from ...models.session.get_cached_response import get_cached_response
 from ...models.session.session_data import get_session_data
@@ -524,7 +524,9 @@ class BaseSession:
             else:
                 raise PromptTooBigError(total_tokens, final_settings.token_budget)
 
-        add_entries_query(entries)
+        create_entries_query(
+            developer_id=self.developer_id, session_id=self.session_id, data=entries
+        )
 
         return bg_task
 

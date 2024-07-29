@@ -7,7 +7,7 @@ from pydantic import UUID4, BaseModel
 
 from ...autogen.openapi_model import Session
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.list_sessions import list_sessions_query
+from ...models.session.list_sessions import list_sessions as list_sessions_query
 from .router import router
 
 
@@ -31,7 +31,10 @@ async def list_sessions(
         )
 
     query_results = list_sessions_query(
-        x_developer_id, limit, offset, metadata_filter=metadata_filter
+        developer_id=x_developer_id,
+        limit=limit,
+        offset=offset,
+        metadata_filter=metadata_filter,
     )
 
     return SessionList(

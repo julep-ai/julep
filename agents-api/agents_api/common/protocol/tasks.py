@@ -18,7 +18,7 @@ from ...autogen.openapi_model import (
     User,
     YieldStep,
 )
-from ...models.execution.get_execution_input import get_execution_input_query
+from ...models.execution.prepare_execution_data import get_execution_input_query
 from ..utils.cozo import uuid_int_list_to_uuid4
 
 WorkflowStep = (
