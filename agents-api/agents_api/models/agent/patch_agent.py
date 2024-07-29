@@ -1,17 +1,42 @@
 from uuid import UUID
 
+from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
+from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
-from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {"id": d["agent_id"], "jobs": [], **d},
+)
 @cozo_query
-def patch_agent_query(
+@beartype
+def patch_agent(
+    *,
     agent_id: UUID,
     developer_id: UUID,
-    default_settings: dict = {},
-    **update_data,
+    data: PatchAgentRequest,
 ) -> tuple[str, dict]:
     """Patches agent data based on provided updates.
 
@@ -22,11 +47,14 @@ def patch_agent_query(
     **update_data: Arbitrary keyword arguments representing data to update.
 
     Returns:
-    pd.DataFrame: The result of the query execution.
+    ResourceUpdatedResponse: The updated agent data.
     """
+    update_data = data.model_dump(exclude_unset=True)
+
     # Construct the query for updating agent information in the database.
     # Agent update query
     metadata = update_data.pop("metadata", {}) or {}
+    default_settings = update_data.pop("default_settings", {}) or {}
     agent_update_cols, agent_update_vals = cozo_process_mutate_data(
         {
             **{k: v for k, v in update_data.items() if v is not None},
@@ -36,8 +64,7 @@ def patch_agent_query(
         }
     )
 
-    agent_update_query = f"""
-    {{
+    update_query = f"""
         # update the agent
         input[{agent_update_cols}] <- $agent_update_vals
 
@@ -50,10 +77,10 @@ def patch_agent_query(
             metadata = concat(md, $metadata)
 
         :update agents {{
-            {agent_update_cols}, metadata,
+            {agent_update_cols},
+            metadata,
         }}
         :returning
-    }}
     """
 
     # Construct the query for updating agent's default settings in the database.
@@ -66,27 +93,32 @@ def patch_agent_query(
     )
 
     settings_update_query = f"""
-    {{
         # update the agent settings
         ?[{settings_cols}] <- $settings_vals
 
         :update agent_default_settings {{
             {settings_cols}
         }}
-    }}
     """
 
     # Combine agent and settings update queries if default settings are provided.
     # Combine the queries
-    queries = [agent_update_query]
+    queries = [update_query]
 
     if len(default_settings) != 0:
         queries.insert(0, settings_update_query)
 
-    combined_query = "\n".join(queries)
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        *queries,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (
-        combined_query,
+        query,
         {
             "agent_update_vals": agent_update_vals,
             "settings_vals": settings_vals,

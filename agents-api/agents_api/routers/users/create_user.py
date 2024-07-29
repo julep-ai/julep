@@ -5,10 +5,9 @@ from fastapi import Depends
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED
 
+from ...autogen.openapi_model import CreateUserRequest, ResourceCreatedResponse
 from ...dependencies.developer_id import get_developer_id
 from ...models.user.create_user import create_user_query
-from ...autogen.openapi_model import CreateUserRequest, ResourceCreatedResponse
-
 from .router import router
 
 

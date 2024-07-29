@@ -1,9 +1,11 @@
 import time
 import uuid
+
 from ward import test
-from agents_api.common.protocol.entries import Entry
-from agents_api.autogen.openapi_model import Role
+
 from agents_api.activities.truncation import get_extra_entries
+from agents_api.autogen.openapi_model import Role
+from agents_api.common.protocol.entries import Entry
 
 
 @test("get extra entries, do not strip system message")

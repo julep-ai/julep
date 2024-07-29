@@ -1,32 +1,31 @@
 from datetime import datetime
 from typing import Annotated, Any, List, Literal, Tuple
 
-from pydantic import BaseModel, Field, UUID4, computed_field
+from pydantic import UUID4, BaseModel, Field, computed_field
 
 from ...autogen.openapi_model import (
-    User,
     Agent,
-    Session,
-    Tool,
-    FunctionDef,
-    PromptWorkflowStep,
-    EvaluateWorkflowStep,
-    YieldWorkflowStep,
-    ToolCallWorkflowStep,
     ErrorWorkflowStep,
-    IfElseWorkflowStep,
-    Task,
+    EvaluateStep,
     Execution,
+    FunctionDef,
+    IfElseWorkflowStep,
+    PromptStep,
+    Session,
+    Task,
+    Tool,
+    ToolCallStep,
+    User,
+    YieldStep,
 )
-
 from ...models.execution.get_execution_input import get_execution_input_query
 from ..utils.cozo import uuid_int_list_to_uuid4
 
 WorkflowStep = (
-    PromptWorkflowStep
-    | EvaluateWorkflowStep
-    | YieldWorkflowStep
-    | ToolCallWorkflowStep
+    PromptStep
+    | EvaluateStep
+    | YieldStep
+    | ToolCallStep
     | ErrorWorkflowStep
     | IfElseWorkflowStep
 )
@@ -63,7 +62,6 @@ class TaskSpec(BaseModel):
 class TaskProtocol(SerializableTask):
     @classmethod
     def from_cozo_data(cls, task_data: dict[str, Any]) -> "SerializableTask":
-
         workflows = task_data.pop("workflows")
         assert len(workflows) > 0
 

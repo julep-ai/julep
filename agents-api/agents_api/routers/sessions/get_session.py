@@ -3,10 +3,9 @@ from typing import Annotated
 from fastapi import Depends, HTTPException
 from pydantic import UUID4
 
+from ...autogen.openapi_model import Session
 from ...dependencies.developer_id import get_developer_id
 from ...models.session.get_session import get_session_query
-from ...autogen.openapi_model import Session
-
 from .router import router
 
 

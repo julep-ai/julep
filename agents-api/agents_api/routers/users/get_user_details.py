@@ -1,14 +1,13 @@
 from typing import Annotated
 
-from fastapi import HTTPException, Depends, status
+from fastapi import Depends, HTTPException, status
 from pycozo.client import QueryException
 from pydantic import UUID4
 
-from ...dependencies.developer_id import get_developer_id
-from ...models.user.get_user import get_user_query
 from ...autogen.openapi_model import User
 from ...common.exceptions.users import UserNotFoundError
-
+from ...dependencies.developer_id import get_developer_id
+from ...models.user.get_user import get_user_query
 from .router import router
 
 

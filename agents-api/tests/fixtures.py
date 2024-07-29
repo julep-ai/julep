@@ -1,8 +1,9 @@
 from uuid import uuid4
-from ward import fixture
-from julep import AsyncClient, Client
-from agents_api.routers.sessions.session import BaseSession
 
+from julep import AsyncClient, Client
+from ward import fixture
+
+from agents_api.routers.sessions.session import BaseSession
 
 # TODO: make clients connect to real service
 

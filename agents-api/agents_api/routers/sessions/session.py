@@ -1,52 +1,48 @@
 import json
-import xxhash
-from functools import reduce
+from dataclasses import dataclass
+from functools import partial, reduce
 from json import JSONDecodeError
 from typing import Callable
 from uuid import uuid4
-from functools import partial
 
-from dataclasses import dataclass
+import litellm
+import xxhash
+from litellm import acompletion
 from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
 
-import litellm
-from litellm import acompletion
-
-from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
+from ...autogen.openapi_model import DocIds, InputChatMLMessage, Tool
 from ...clients.embed import embed
-from ...clients.temporal import run_summarization_task
-from ...clients.temporal import run_truncation_task
+from ...clients.temporal import run_summarization_task, run_truncation_task
 from ...clients.worker.types import ChatML
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
-from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
 from ...common.utils.messages import stringify_content
+from ...common.utils.template import render_template
 from ...env import (
-    embedding_service_url,
     embedding_model_id,
+    embedding_service_url,
+    model_api_key,
+    model_inference_url,
 )
+from ...exceptions import PromptTooBigError
 from ...model_registry import (
-    OLLAMA_MODELS,
-    get_extra_settings,
     LOCAL_MODELS,
     LOCAL_MODELS_WITH_TOOL_CALLS,
+    OLLAMA_MODELS,
+    get_extra_settings,
     load_context,
     validate_and_extract_tool_calls,
 )
-
 from ...models.entry.add_entries import add_entries_query
 from ...models.entry.proc_mem_context import proc_mem_context_query
-from ...models.session.session_data import get_session_data
 from ...models.session.get_cached_response import get_cached_response
+from ...models.session.session_data import get_session_data
 from ...models.session.set_cached_response import set_cached_response
-from ...exceptions import PromptTooBigError
-
 from .exceptions import InputTooBigError
 from .protocol import Settings
-from ...env import model_inference_url, model_api_key
 
 THOUGHTS_STRIP_LEN = 2
 MESSAGES_STRIP_LEN = 4
@@ -411,7 +407,6 @@ class BaseSession:
             settings.tools.extend(tools)
         # If render_templates=True, render the templates
         if session_data is not None and session_data.render_templates:
-
             template_data = {
                 "session": {
                     "id": session_data.session_id,

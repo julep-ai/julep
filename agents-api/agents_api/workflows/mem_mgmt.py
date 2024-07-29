@@ -2,11 +2,12 @@
 
 
 from datetime import timedelta
+
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from ..activities.types import ChatML
     from ..activities.mem_mgmt import mem_mgmt
+    from ..activities.types import ChatML
 
 
 @workflow.defn

@@ -1,58 +1,77 @@
-from typing import Literal, Dict, Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
-from ..utils import cozo_query
+from ...autogen.openapi_model import CreateTransitionRequest, Transition
+from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(Transition, transform=lambda d: {"id": d["transition_id"], **d})
 @cozo_query
 @beartype
-def create_execution_transition_query(
+def create_execution_transition(
+    *,
     developer_id: UUID,
     execution_id: UUID,
-    transition_id: UUID,
-    type: Literal["finish", "wait", "error", "step"],
-    from_: tuple[str, int],
-    to: tuple[str, int] | None,
-    outputs: Dict[str, Any] | None,
+    transition_id: UUID | None = None,
+    data: CreateTransitionRequest,
     task_token: str | None = None,
-    metadata: Dict[str, Any] = {},
 ) -> tuple[str, dict]:
-    # TODO: Check for agent in developer ID; Assert whether dev can access agent and by relation the task
-    # TODO: Check for task and execution
+    transition_id = transition_id or uuid4()
 
-    if outputs is None:
-        outputs = {}
+    data.metadata = data.metadata or {}
+    data.execution_id = execution_id
 
-    query = """
-{
-    ?[execution_id, transition_id, type, from, to, output, task_token, metadata] <- [[
-        to_uuid($execution_id),
-        to_uuid($transition_id),
-        $type,
-        $from,
-        $to,
-        $output,
-        $task_token,
-        $metadata,
-    ]]
-
-    :insert transitions {
-        execution_id, transition_id, type, from, to, output, task_token, metadata,
-    }
-}
-"""
-    return (
-        query,
+    transition_data = data.model_dump(exclude_unset=True)
+    columns, values = cozo_process_mutate_data(
         {
-            "execution_id": str(execution_id),
-            "transition_id": str(transition_id),
-            "type": type,
-            "from": from_,
-            "to": to,
-            "output": outputs,
+            **transition_data,
             "task_token": task_token,
-            "metadata": metadata,
-        },
+            "transition_id": str(transition_id),
+            "execution_id": str(execution_id),
+        }
     )
+
+    insert_query = f"""
+    ?[{columns}] <- $values
+
+    :insert transitions {{
+        {columns}
+    }}
+    
+    :returning
+    """
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(
+            developer_id,
+            "executions",
+            execution_id=execution_id,
+            parents=[("agents", "agent_id"), ("tasks", "task_id")],
+        ),
+        insert_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
+
+    return (query, {"values": values})

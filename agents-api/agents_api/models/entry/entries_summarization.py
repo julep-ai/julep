@@ -1,9 +1,8 @@
 """This module contains functions for querying and summarizing entry data in the 'cozodb' database."""
 
-from beartype import beartype
-
 from uuid import UUID
 
+from beartype import beartype
 
 from ...common.protocol.entries import Entry
 from ...common.utils.messages import content_to_json

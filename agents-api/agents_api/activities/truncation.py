@@ -1,9 +1,11 @@
 from uuid import UUID
+
 from temporalio import activity
-from agents_api.models.entry.entries_summarization import get_toplevel_entries_query
-from agents_api.models.entry.delete_entries import delete_entries
+
 from agents_api.autogen.openapi_model import Role
 from agents_api.common.protocol.entries import Entry
+from agents_api.models.entry.delete_entries import delete_entries
+from agents_api.models.entry.entries_summarization import get_toplevel_entries_query
 
 
 def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[UUID]:

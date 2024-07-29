@@ -1,11 +1,32 @@
 from uuid import UUID
 
+from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
-from ..utils import cozo_query
+from ...autogen.openapi_model import Agent
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(Agent, one=True)
 @cozo_query
-def get_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
+@beartype
+def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
     """
     Fetches agent details and default settings from the database.
 
@@ -17,13 +38,12 @@ def get_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
     - client (CozoClient, optional): The database client used to execute the query.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the agent details and default settings.
+    - Agent
     """
     # Constructing a datalog query to retrieve agent details and default settings.
     # The query uses input parameters for agent_id and developer_id to filter the results.
     # It joins the 'agents' and 'agent_default_settings' relations to fetch comprehensive details.
-    query = """
-    {
+    get_query = """
         input[agent_id, developer_id] <- [[to_uuid($agent_id), to_uuid($developer_id)]]
 
         ?[
@@ -69,8 +89,16 @@ def get_agent_query(developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
                 "min_p": min_p,
                 "preset": preset,
             }
-    }
     """
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        get_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     # Execute the constructed datalog query using the provided CozoClient.
     # The result is returned as a pandas DataFrame.

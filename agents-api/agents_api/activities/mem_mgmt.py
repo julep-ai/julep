@@ -7,7 +7,6 @@ from temporalio import activity
 from ..clients.model import julep_client
 from .types import ChatML, MemoryManagementTaskArgs
 
-
 example_previous_memory = """
 Speaker 1: Composes and listens to music. Likes to buy basketball shoes but doesn't wear them often.
 """.strip()

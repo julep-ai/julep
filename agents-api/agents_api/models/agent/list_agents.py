@@ -1,16 +1,39 @@
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
+from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
+from ...autogen.openapi_model import Agent
 from ...common.utils import json
-from ..utils import cozo_query
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(Agent)
 @cozo_query
-def list_agents_query(
+@beartype
+def list_agents(
+    *,
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, dict]:
     """
@@ -22,9 +45,6 @@ def list_agents_query(
         offset: Number of agents to skip before starting to collect the result set.
         metadata_filter: Dictionary to filter agents based on metadata.
         client: Instance of CozoClient to execute the query.
-
-    Returns:
-        A pandas DataFrame containing the query results.
     """
     # Transforms the metadata_filter dictionary into a string representation for the datalog query.
     metadata_filter_str = ", ".join(
@@ -34,9 +54,12 @@ def list_agents_query(
         ]
     )
 
+    sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
+
     # Datalog query to retrieve agent information based on filters, sorted by creation date in descending order.
-    query = f"""
-    {{
+    queries = [
+        verify_developer_id_query(developer_id),
+        f"""
         input[developer_id] <- [[to_uuid($developer_id)]]
 
         ?[
@@ -64,8 +87,12 @@ def list_agents_query(
         
         :limit $limit
         :offset $offset
-        :sort -created_at
-    }}"""
+        :sort {sort}
+        """,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     return (
         query,

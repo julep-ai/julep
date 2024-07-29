@@ -31,15 +31,14 @@ transformers = "^4.40.1"
 tiktoken = "^0.6.0"
 xxhash = "^3.4.1"
 tenacity = "^8.3.0"
-
-
 beartype = "^0.18.5"
+pydantic-partial = "^0.5.5"
 simpleeval = "^0.9.13"
+
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.18.1"
-black = "^24.4.0"
-ruff = "^0.1.9"
-datamodel-code-generator = "^0.25.3"
+ruff = "^0.5.5"
+datamodel-code-generator = "^0.25.8"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.25.1"
 pytype = ">=2024.4.11"
@@ -51,6 +50,7 @@ ipywidgets = "^8.1.2"
 jupyter-ai = "^2.14.1"
 langchain-openai = "^0.1.6"
 
+wat-inspector = "^0.2.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -59,13 +59,42 @@ build-backend = "poetry.core.masonry.api"
 agents-api = "scripts.agents_api:run"
 
 [tool.poe.tasks]
-format = "black ."
-lint = "ruff agents_api/**/*.py migrations/**/*.py tests/**/*.py --fix --unsafe-fixes"
+format = "ruff format"
+lint = "ruff check --select I --fix --unsafe-fixes agents_api/**/*.py migrations/**/*.py tests/**/*.py"
 typecheck = "pytype --config pytype.toml"
 check = [
-    "format",
     "lint",
+    "format",
     "typecheck",
 ]
 test = "ward"
-codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/openapi_model.py --use-operation-id-as-name --use-double-quotes --use-schema-description --target-python-version 3.10 --reuse-model --collapse-root-models --use-field-description --field-include-all-keys --use-unique-items-as-set --use-subclass-enum --use-union-operator --use-one-literal-as-default --use-annotated --enum-field-as-literal one --output-model-type pydantic_v2.BaseModel"
+codegen = """
+datamodel-codegen \
+  --input ../openapi.yaml \
+  --input-file-type openapi \
+  --output agents_api/autogen/ \
+  --output-model-type pydantic_v2.BaseModel \
+  --strict-nullable \
+  --allow-population-by-field-name \
+  --field-include-all-keys \
+  --enum-field-as-literal all \
+  --field-constraints \
+  --reuse-model \
+  --use-operation-id-as-name \
+  --use-schema-description \
+  --use-field-description \
+  --use-annotated \
+  --use-default \
+  --use-unique-items-as-set \
+  --use-subclass-enum \
+  --use-union-operator \
+  --use-one-literal-as-default \
+  --use-double-quotes \
+  --use-exact-imports \
+  --use-standard-collections \
+  --use-non-positive-negative-number-constrained-types \
+  --collapse-root-models \
+  --target-python-version 3.10 \
+  --openapi-scopes schemas \
+  --keep-model-order \
+  --disable-timestamp"""

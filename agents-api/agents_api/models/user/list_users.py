@@ -1,19 +1,39 @@
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
-
-from ..utils import cozo_query
+from ...autogen.openapi_model import User
 from ...common.utils import json
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    wrap_in_class,
+)
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(User)
 @cozo_query
 @beartype
-def list_users_query(
+def list_users(
+    *,
     developer_id: UUID,
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
 ) -> tuple[str, dict]:
     """
@@ -36,8 +56,10 @@ def list_users_query(
         ]
     )
 
+    sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
+
     # Define the datalog query for retrieving user information based on the specified filters and sorting them by creation date in descending order.
-    query = f"""
+    list_query = f"""
     input[developer_id] <- [[to_uuid($developer_id)]]
 
     ?[
@@ -62,8 +84,16 @@ def list_users_query(
 
     :limit $limit
     :offset $offset
-    :sort -created_at
+    :sort {sort}
     """
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        list_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
 
     # Execute the datalog query with the specified parameters and return the results as a DataFrame.
     return (

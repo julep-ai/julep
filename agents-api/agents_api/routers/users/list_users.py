@@ -2,13 +2,12 @@ import json
 from json import JSONDecodeError
 from typing import Annotated, List
 
-from fastapi import HTTPException, Depends, status
+from fastapi import Depends, HTTPException, status
 from pydantic import UUID4
 
+from ...autogen.openapi_model import User
 from ...dependencies.developer_id import get_developer_id
 from ...models.user.list_users import list_users_query
-from ...autogen.openapi_model import User
-
 from .router import router
 
 

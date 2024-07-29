@@ -1,34 +1,32 @@
 import asyncio
+from uuid import uuid4
+
+from openai.types.chat.chat_completion import ChatCompletion
 
 # import celpy
 from simpleeval import simple_eval
-from openai.types.chat.chat_completion import ChatCompletion
 from temporalio import activity
-from uuid import uuid4
 
 from ...autogen.openapi_model import (
-    PromptWorkflowStep,
-    # EvaluateWorkflowStep,
-    YieldWorkflowStep,
     # ToolCallWorkflowStep,
     # ErrorWorkflowStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
+    PromptWorkflowStep,
+    # EvaluateWorkflowStep,
+    YieldWorkflowStep,
 )
-
+from ...clients.worker.types import ChatML
 from ...common.protocol.tasks import (
     StepContext,
     TransitionInfo,
 )
-
 from ...common.utils.template import render_template
-
 from ...models.execution.create_execution_transition import (
     create_execution_transition_query,
 )
-from ...routers.sessions.session import llm_generate
 from ...routers.sessions.protocol import Settings
-from ...clients.worker.types import ChatML
+from ...routers.sessions.session import llm_generate
 
 
 @activity.defn

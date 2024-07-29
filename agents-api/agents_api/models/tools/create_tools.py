@@ -1,87 +1,119 @@
-from uuid import uuid4, UUID
+"""This module contains functions for creating tools in the CozoDB database."""
+
+from uuid import UUID, uuid4
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
+
+from ...autogen.openapi_model import CreateToolRequest, Tool
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
 
 
-from ...autogen.openapi_model import FunctionDef
-from ...common.utils.cozo import cozo_process_mutate_data
-from ..utils import cozo_query
-from ...common.utils.datetime import utcnow
-
-
-@cozo_query
-@beartype
-def create_function_query(
-    agent_id: UUID,
-    id: UUID,
-    function: FunctionDef,
-) -> tuple[str, dict]:
-    created_at = utcnow().timestamp()
-
-    # Process function definitions
-    function = function.model_dump()
-
-    function_data = {
-        "agent_id": str(agent_id),
-        "tool_id": str(id),
-        "created_at": created_at,
-        "name": function["name"],
-        "description": function["description"],
-        "parameters": function.get("parameters", {}),
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
     }
-
-    function_cols, function_rows = cozo_process_mutate_data(function_data)
-
-    query = f"""
-    {{
-        # Create functions
-        ?[{function_cols}] <- $function_rows
-
-        :insert agent_functions {{
-            {function_cols}
-        }}
-        :returning
-    }}"""
-
-    return (query, {"function_rows": function_rows})
-
-
+)
+@wrap_in_class(
+    Tool,
+    transform=lambda d: {
+        "id": UUID(d.pop("tool_id")),
+        d["type"]: d.pop("spec"),
+        **d,
+    },
+)
 @cozo_query
 @beartype
-def create_multiple_functions_query(
+def create_tools(
+    *,
+    developer_id: UUID,
     agent_id: UUID,
-    functions: list[FunctionDef],
+    data: list[CreateToolRequest],
+    ignore_existing: bool = False,
 ) -> tuple[str, dict]:
-    agent_id = str(agent_id)
-    created_at = utcnow().timestamp()
+    """
+    Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
-    # Process function definitions
-    functions = [fn.model_dump() for fn in functions]
+    Parameters:
+    - agent_id (UUID): The unique identifier for the agent.
+    - data (list[CreateToolRequest]): A list of function definitions to be inserted.
 
-    function_cols, function_rows = "", []
+    Returns:
+    list[Tool]
+    """
 
-    for function in functions:
-        function_data = {
-            "agent_id": agent_id,
-            "created_at": created_at,
-            "tool_id": str(uuid4()),
-            "name": function["name"],
-            "description": function["description"],
-            "parameters": function["parameters"],
+    tools_data = [
+        [
+            str(agent_id),
+            str(uuid4()),
+            tool.type,
+            tool.name,
+            getattr(tool, tool.type).dict(),
+        ]
+        for tool in data
+    ]
+
+    ensure_tool_name_unique_query = """
+        input[agent_id, tool_id, type, name, spec] <- $records
+        ?[tool_id] :=
+            input[agent_id, _, type, name, _],
+            *tools{
+                agent_id: to_uuid(agent_id),
+                tool_id,
+                type,
+                name,
+            }
+
+        :assert none
+    """
+
+    # Datalog query for inserting new tool records into the 'agent_functions' relation
+    create_query = """
+        input[agent_id, tool_id, type, name, spec] <- $records
+        
+        # Do not add duplicate
+        ?[agent_id, tool_id, type, name, spec] :=
+            input[agent_id, tool_id, type, name, spec],
+            not *tools{
+                agent_id: to_uuid(agent_id),
+                type,
+                name,
+            }
+
+        :insert tools {
+            agent_id,
+            tool_id,
+            type,
+            name,
+            spec,
         }
-
-        function_cols, new_function_rows = cozo_process_mutate_data(function_data)
-        function_rows += new_function_rows
-
-    query = f"""
-    {{
-        # Create functions
-        ?[{function_cols}] <- $function_rows
-
-        :insert agent_functions {{
-            {function_cols}
-        }}
         :returning
-    }}"""
+    """
 
-    return (query, {"function_rows": function_rows})
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        create_query,
+    ]
+
+    if not ignore_existing:
+        queries.insert(
+            -1,
+            ensure_tool_name_unique_query,
+        )
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
+
+    return (query, {"records": tools_data})

@@ -3,13 +3,12 @@ This module defines session-related data structures and settings used across the
 It includes definitions for session settings and session data models.
 """
 
+from typing import Dict, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from .agents import AgentDefaultSettings
-
-from typing import Optional, Dict
 
 
 class SessionSettings(AgentDefaultSettings):
