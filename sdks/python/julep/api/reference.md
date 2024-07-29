@@ -3630,7 +3630,7 @@ client.chat_route_generate(
 </dl>
 </details>
 
-<details><summary><code>client.<a href="src/julep/client.py">history_route_list</a>(...)</code></summary>
+<details><summary><code>client.<a href="src/julep/client.py">history_route_history</a>(...)</code></summary>
 <dl>
 <dd>
 
@@ -3642,7 +3642,7 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-Get history of a Session (paginated)
+Get history of a Session
 </dd>
 </dl>
 </dd>
@@ -3663,13 +3663,9 @@ client = JulepApi(
     auth_key="YOUR_AUTH_KEY",
     api_key="YOUR_API_KEY",
 )
-client.history_route_list(
+client.history_route_history(
     id="id",
     limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
 )
 
 ```
@@ -3695,38 +3691,6 @@ client.history_route_list(
 <dd>
 
 **limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `HistoryRouteListRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `HistoryRouteListRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>

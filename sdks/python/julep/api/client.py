@@ -70,6 +70,7 @@ from .types.common_valid_python_identifier import CommonValidPythonIdentifier
 from .types.docs_doc import DocsDoc
 from .types.docs_embed_query_request import DocsEmbedQueryRequest
 from .types.docs_embed_query_response import DocsEmbedQueryResponse
+from .types.entries_history import EntriesHistory
 from .types.execution_transitions_route_list_request_direction import (
     ExecutionTransitionsRouteListRequestDirection,
 )
@@ -81,9 +82,6 @@ from .types.execution_transitions_route_list_response import (
 )
 from .types.executions_execution import ExecutionsExecution
 from .types.executions_update_execution_request import ExecutionsUpdateExecutionRequest
-from .types.history_route_list_request_direction import HistoryRouteListRequestDirection
-from .types.history_route_list_request_sort_by import HistoryRouteListRequestSortBy
-from .types.history_route_list_response import HistoryRouteListResponse
 from .types.jobs_job_status import JobsJobStatus
 from .types.sessions_context_overflow_type import SessionsContextOverflowType
 from .types.sessions_route_list_request_direction import (
@@ -2622,19 +2620,15 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    def history_route_list(
+    def history_route_history(
         self,
         id: CommonUuid,
         *,
         limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: HistoryRouteListRequestSortBy,
-        direction: HistoryRouteListRequestDirection,
-        metadata_filter: str,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> HistoryRouteListResponse:
+    ) -> EntriesHistory:
         """
-        Get history of a Session (paginated)
+        Get history of a Session
 
         Parameters
         ----------
@@ -2644,24 +2638,12 @@ class JulepApi:
         limit : CommonLimit
             Limit the number of items returned
 
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : HistoryRouteListRequestSortBy
-            Sort by a field
-
-        direction : HistoryRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        HistoryRouteListResponse
+        EntriesHistory
             The request has succeeded.
 
         Examples
@@ -2672,30 +2654,20 @@ class JulepApi:
             auth_key="YOUR_AUTH_KEY",
             api_key="YOUR_API_KEY",
         )
-        client.history_route_list(
+        client.history_route_history(
             id="id",
             limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             f"sessions/{jsonable_encoder(id)}/history",
             method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
+            params={"limit": limit},
             request_options=request_options,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(EntriesHistory, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6332,19 +6304,15 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
-    async def history_route_list(
+    async def history_route_history(
         self,
         id: CommonUuid,
         *,
         limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: HistoryRouteListRequestSortBy,
-        direction: HistoryRouteListRequestDirection,
-        metadata_filter: str,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> HistoryRouteListResponse:
+    ) -> EntriesHistory:
         """
-        Get history of a Session (paginated)
+        Get history of a Session
 
         Parameters
         ----------
@@ -6354,24 +6322,12 @@ class AsyncJulepApi:
         limit : CommonLimit
             Limit the number of items returned
 
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : HistoryRouteListRequestSortBy
-            Sort by a field
-
-        direction : HistoryRouteListRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
 
         Returns
         -------
-        HistoryRouteListResponse
+        EntriesHistory
             The request has succeeded.
 
         Examples
@@ -6387,13 +6343,9 @@ class AsyncJulepApi:
 
 
         async def main() -> None:
-            await client.history_route_list(
+            await client.history_route_history(
                 id="id",
                 limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
             )
 
 
@@ -6402,18 +6354,12 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             f"sessions/{jsonable_encoder(id)}/history",
             method="GET",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
+            params={"limit": limit},
             request_options=request_options,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(HistoryRouteListResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(EntriesHistory, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)

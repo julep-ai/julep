@@ -158,9 +158,6 @@ from .executions_update_execution_request import (
     ExecutionsUpdateExecutionRequest_Cancelled,
     ExecutionsUpdateExecutionRequest_Running,
 )
-from .history_route_list_request_direction import HistoryRouteListRequestDirection
-from .history_route_list_request_sort_by import HistoryRouteListRequestSortBy
-from .history_route_list_response import HistoryRouteListResponse
 from .jobs_job_state import JobsJobState
 from .jobs_job_status import JobsJobStatus
 from .sessions_context_overflow_type import SessionsContextOverflowType
@@ -366,9 +363,6 @@ __all__ = [
     "ExecutionsUpdateExecutionRequest",
     "ExecutionsUpdateExecutionRequest_Cancelled",
     "ExecutionsUpdateExecutionRequest_Running",
-    "HistoryRouteListRequestDirection",
-    "HistoryRouteListRequestSortBy",
-    "HistoryRouteListResponse",
     "JobsJobState",
     "JobsJobStatus",
     "SessionsContextOverflowType",

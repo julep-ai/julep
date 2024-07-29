@@ -190,32 +190,22 @@ interface ChildCreateOrUpdateEndpoint<
     };
 }
 
-interface ChildDeleteEndpoint<
-    DocString extends valueof string = "Delete a resource owned by the given parent using its id"
-> {
+interface ChildDeleteEndpoint<DocString extends valueof string = "Delete a resource owned by the given parent using its id"> {
     @delete
-    @doc(
-        DocString
-    )
+    @doc(DocString)
     delete(
         @path
-        @doc(
-            "ID of parent resource",
-        )
+        @doc("ID of parent resource")
         id: uuid,
 
         @path
-        @doc(
-            "ID of the resource to be deleted",
-        )
+        @doc("ID of the resource to be deleted")
         child_id: uuid,
     ): {
         @statusCode _: "202";
 
         @body
-        @doc(
-            "Details of the resource deleted along with ID",
-        )
+        @doc("Details of the resource deleted along with ID")
         body: ResourceDeletedResponse;
     };
 }
@@ -225,20 +215,14 @@ interface ChildUpdateEndpoint<
     DocString extends valueof string = "Update a resource owned by the given parent using its id"
 > {
     @put
-    @doc(
-        DocString
-    )
+    @doc(DocString)
     update(
         @path
-        @doc(
-            "ID of parent resource",
-        )
+        @doc("ID of parent resource")
         id: uuid,
 
         @path
-        @doc(
-            "ID of the resource to be updated",
-        )
+        @doc("ID of the resource to be updated")
         child_id: uuid,
 
         ...UpdateType,
@@ -246,9 +230,7 @@ interface ChildUpdateEndpoint<
         @statusCode _: "200";
 
         @body
-        @doc(
-            "Details of the resource updated along with ID",
-        )
+        @doc("Details of the resource updated along with ID")
         body: ResourceUpdatedResponse;
     };
 }
@@ -258,29 +240,22 @@ interface ChildPatchEndpoint<
     DocString extends valueof string = "Patch a resource owned by the given parent using its id"
 > {
     @patch
-    @doc(
-        DocString
-    )
+    @doc(DocString)
     patch(
         @path
-        @doc(
-            "ID of parent resource",
-        )
+        @doc("ID of parent resource")
         id: uuid,
 
         @path
-        @doc(
-            "ID of the resource to be patched",
-        )
+        @doc("ID of the resource to be patched")
         child_id: uuid,
+
         ...PatchType,
     ): {
         @statusCode _: "200";
 
         @body
-        @doc(
-            "Details of the resource patched along with ID",
-        )
+        @doc("Details of the resource patched along with ID")
         body: ResourceUpdatedResponse;
     };
 }

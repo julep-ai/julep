@@ -1,6 +1,10 @@
+import "@typespec/http";
+
 import "../common";
 import "../sessions";
 import "./models.tsp";
+
+using TypeSpec.Http;
 
 using Common;
 using Sessions;
@@ -12,8 +16,16 @@ namespace Entries;
 //
 
 interface Endpoints
-    extends ChildLimitOffsetPagination<
-            History,
-            "Get history of a Session (paginated)"
-        >,
-        DeleteEndpoint<"Clear the history of a Session (resets the Session)"> {}
+    extends DeleteEndpoint<"Clear the history of a Session (resets the Session)"> {
+    @get
+    @doc("Get history of a Session")
+    history(
+        @path
+        @doc("ID of parent")
+        id: uuid,
+
+        @query
+        @doc("Limit the number of items returned")
+        limit: limit = 100,
+    ): History;
+}

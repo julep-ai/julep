@@ -1298,61 +1298,6 @@ export class DefaultService {
     });
   }
   /**
-   * Get history of a Session (paginated)
-   * @returns any The request has succeeded.
-   * @throws ApiError
-   */
-  public historyRouteList({
-    id,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
-  }: {
-    /**
-     * ID of parent
-     */
-    id: Common_uuid;
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Entries_History>;
-  }> {
-    return this.httpRequest.request({
-      method: "GET",
-      url: "/sessions/{id}/history",
-      path: {
-        id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
-      },
-    });
-  }
-  /**
    * Clear the history of a Session (resets the Session)
    * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
    * @throws ApiError
@@ -1370,6 +1315,35 @@ export class DefaultService {
       url: "/sessions/{id}/history",
       path: {
         id: id,
+      },
+    });
+  }
+  /**
+   * Get history of a Session
+   * @returns Entries_History The request has succeeded.
+   * @throws ApiError
+   */
+  public historyRouteHistory({
+    id,
+    limit = 100,
+  }: {
+    /**
+     * ID of parent
+     */
+    id: Common_uuid;
+    /**
+     * Limit the number of items returned
+     */
+    limit?: Common_limit;
+  }): CancelablePromise<Entries_History> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/sessions/{id}/history",
+      path: {
+        id: id,
+      },
+      query: {
+        limit: limit,
       },
     });
   }
