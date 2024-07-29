@@ -57,6 +57,7 @@ def make_session(
     Create a new session object.
     """
     cls, participants = None, {}
+
     match (len(agents), len(users)):
         case (0, _):
             raise ValueError("At least one agent must be provided.")
@@ -72,3 +73,5 @@ def make_session(
         case _:
             cls = MultiAgentMultiUserSession
             participants = {"agents": agents, "users": users}
+
+    return cls(**{**data, **participants})

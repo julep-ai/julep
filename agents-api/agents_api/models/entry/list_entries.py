@@ -6,10 +6,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import CreateEntryRequest, Entry
-from ...common.utils.cozo import cozo_process_mutate_data
-from ...common.utils.datetime import utcnow
-from ...common.utils.messages import content_to_json
+from ...autogen.openapi_model import Entry
 from ..utils import (
     cozo_query,
     partialclass,
@@ -40,22 +37,22 @@ def list_entries(
     *,
     developer_id: UUID,
     session_id: UUID,
-    limit: int = 100,
     allowed_sources: list[str] = ["api_request", "api_response"],
+    limit: int = 100,
+    offset: int = 0,
+    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, dict]:
     """
     Constructs and executes a query to retrieve entries from the 'cozodb' database.
-
-    Parameters:
-        session_id (UUID): The session ID to filter entries.
-        limit (int): The maximum number of entries to return. Defaults to 100.
-        offset (int): The offset from which to start returning entries. Defaults to 0.
-
     """
+
     developer_id = str(developer_id)
     session_id = str(session_id)
 
-    list_query = """
+    sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
+
+    list_query = f"""
         ?[
             session_id,
             entry_id,
@@ -66,7 +63,7 @@ def list_entries(
             token_count,
             created_at,
             timestamp,
-        ] := *entries{
+        ] := *entries {{
             session_id,
             entry_id,
             role,
@@ -76,15 +73,16 @@ def list_entries(
             token_count,
             created_at,
             timestamp,
-        },
+        }},
         source in $allowed_sources,
         session_id = to_uuid($session_id),
 
-        :sort timestamp
+        :sort {sort}
     """
 
     if limit > 0:
         list_query += f"\n:limit {limit}"
+        list_query += f"\n:offset {offset}"
 
     queries = [
         verify_developer_id_query(developer_id),
