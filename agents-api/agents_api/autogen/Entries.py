@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
@@ -107,7 +107,7 @@ class Entry(BaseModel):
     source: Literal[
         "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
     ]
-    timestamp: int
+    timestamp: Annotated[float, Field(ge=0.0)]
     """
     This is the time that this event refers to.
     """

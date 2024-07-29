@@ -39,7 +39,6 @@ export const $Entries_Entry = {
       type: "number",
       description: `This is the time that this event refers to.`,
       isRequired: true,
-      format: "int32",
     },
     created_at: {
       type: "string",

@@ -14,7 +14,7 @@ inputs = [
 ]
 
 # Keep going past errors to analyze as many files as possible.
-keep_going = false
+keep_going = true
 
 # Run N jobs in parallel. When 'auto' is used, this will be equivalent to the
 # number of CPUs on the host system.

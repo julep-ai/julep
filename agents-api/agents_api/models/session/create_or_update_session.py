@@ -37,7 +37,7 @@ from ..utils import (
         **d,
     },
 )
-@cozo_query(debug=True)
+@cozo_query
 @beartype
 def create_or_update_session(
     *,

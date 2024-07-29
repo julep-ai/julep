@@ -92,7 +92,8 @@ model Entry {
     source: entrySource;
 
     /** This is the time that this event refers to. */
-    timestamp: unixTimestamp32;
+    @minValue(0)
+    timestamp: float;
     
     /** This is the time it was added to the database */
     ...HasCreatedAt;

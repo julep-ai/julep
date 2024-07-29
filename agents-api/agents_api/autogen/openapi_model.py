@@ -1,8 +1,11 @@
 # ruff: noqa: F401, F403, F405
+from typing import Annotated
 from uuid import UUID
 
+from pydantic import AwareDatetime, Field
 from pydantic_partial import create_partial_model
 
+from ..common.utils.datetime import utcnow
 from .Agents import *
 from .Chat import *
 from .Common import *
@@ -32,6 +35,16 @@ CreateTransitionRequest = create_partial_model(
 )
 
 ChatMLRole = Entry.model_fields["role"].annotation
+
+
+class CreateEntryRequest(Entry):
+    id: Annotated[UUID | None, Field(default=None)]
+    created_at: Annotated[AwareDatetime | None, Field(default=None)]
+    timestamp: Annotated[
+        float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())
+    ]
+    tokenizer: str
+    token_count: int
 
 
 def make_session(

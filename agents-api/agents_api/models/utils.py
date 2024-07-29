@@ -37,9 +37,10 @@ def verify_developer_id_query(developer_id: UUID | str) -> str:
 def verify_developer_owns_resource_query(
     developer_id: UUID | str,
     resource: str,
-    parents: list[tuple[str, str]] = [],
+    parents: list[tuple[str, str]] | None = None,
     **resource_id,
 ) -> str:
+    parents = parents or []
     resource_id_key, resource_id_value = next(iter(resource_id.items()))
 
     parents.append((resource, resource_id_key))
@@ -148,27 +149,30 @@ def rewrap_exceptions(
     ],
     /,
 ):
-    mappers = [*mapping.items()]
-
-    for i, (check, transform) in enumerate(mappers):
-        if inspect.isclass(check):
-            mappers[i] = (lambda e: isinstance(e, check), mappers[i][1])
-
-        if inspect.isclass(transform):
-            mappers[i] = (mappers[i][0], lambda e: transform(str(e)))
-
     def decorator(func: Callable[..., Any]):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            nonlocal mappers
+            nonlocal mapping
 
             try:
                 result = func(*args, **kwargs)
 
-            except BaseException as e:
-                for check, transform in mappers:
-                    if check(e):
-                        raise transform(e) from e
+            except BaseException as error:
+                for check, transform in mapping.items():
+                    should_catch = (
+                        isinstance(error, check)
+                        if isinstance(check, type)
+                        else check(error)
+                    )
+
+                    if should_catch:
+                        new_error = (
+                            transform(str(error))
+                            if isinstance(transform, type)
+                            else transform(error)
+                        )
+
+                        raise transform(error) from error
 
                 raise
 
