@@ -4,6 +4,8 @@ import json
 from typing import Any
 from uuid import UUID
 
+from pydantic import BaseModel
+
 
 class CustomJSONEncoder(json.JSONEncoder):
     """A custom JSON encoder subclass that handles None values and UUIDs for JSON serialization. It allows specifying a default value for None objects during initialization."""
@@ -36,6 +38,9 @@ class CustomJSONEncoder(json.JSONEncoder):
 
         if isinstance(obj, UUID):
             return str(obj)
+
+        if isinstance(obj, BaseModel):
+            return obj.model_dump()
 
         return obj
 

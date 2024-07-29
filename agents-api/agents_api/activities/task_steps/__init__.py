@@ -1,18 +1,20 @@
 import asyncio
 from uuid import uuid4
 
-# import celpy
 from openai.types.chat.chat_completion import ChatCompletion
+
+# import celpy
+from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (
-    # EvaluateWorkflowStep,
-    # YieldWorkflowStep,
     # ToolCallWorkflowStep,
     # ErrorWorkflowStep,
-    # IfElseWorkflowStep,
+    IfElseWorkflowStep,
     InputChatMLMessage,
     PromptWorkflowStep,
+    # EvaluateWorkflowStep,
+    YieldWorkflowStep,
 )
 from ...clients.worker.types import ChatML
 from ...common.protocol.tasks import (
@@ -76,24 +78,24 @@ async def prompt_step(context: StepContext) -> dict:
 #     return {"result": result}
 
 
-# @activity.defn
-# async def yield_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, YieldWorkflowStep):
-#         return {}
+@activity.defn
+async def yield_step(context: StepContext) -> dict:
+    if not isinstance(context.definition, YieldWorkflowStep):
+        return {}
 
-#     # TODO: implement
+    # TODO: implement
 
-#     return {"test": "result"}
+    return {"test": "result"}
 
 
 # @activity.defn
 # async def tool_call_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, ToolCallWorkflowStep):
-#         return {}
+#     assert isinstance(context.definition, ToolCallWorkflowStep)
 
-#     # TODO: implement
-
-#     return {"test": "result"}
+#     context.definition.tool_id
+#     context.definition.arguments
+#     # get tool by id
+#     # call tool
 
 
 # @activity.defn
@@ -104,12 +106,18 @@ async def prompt_step(context: StepContext) -> dict:
 #     return {"error": context.definition.error}
 
 
-# @activity.defn
-# async def if_else_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, IfElseWorkflowStep):
-#         return {}
+@activity.defn
+async def if_else_step(context: StepContext) -> dict:
+    assert isinstance(context.definition, IfElseWorkflowStep)
 
-#     return {"test": "result"}
+    context_data: dict = context.model_dump()
+    next_workflow = (
+        context.definition.then
+        if simple_eval(context.definition.if_, names=context_data)
+        else context.definition.else_
+    )
+
+    return {"goto_workflow": next_workflow}
 
 
 @activity.defn

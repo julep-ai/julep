@@ -72,8 +72,3 @@ def make_session(
         case _:
             cls = MultiAgentMultiUserSession
             participants = {"agents": agents, "users": users}
-
-    return cls(
-        **data,
-        **participants,
-    )

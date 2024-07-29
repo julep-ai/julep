@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import uuid4
 
 from fastapi import Depends
 from pydantic import UUID4
@@ -16,13 +17,19 @@ async def create_agent(
     request: CreateAgentRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
-    agent_id = create_agent_query(
+    new_agent_id = uuid4()
+
+    resp = create_agent_query(
         developer_id=x_developer_id,
+        agent_id=new_agent_id,
         name=request.name,
         about=request.about,
-        instructions=request.instructions,
+        instructions=request.instructions or [],
         model=request.model,
-        default_settings=request.default_settings,
-        metadata=request.metadata,
+        default_settings=request.default_settings or {},
+        metadata=request.metadata or {},
     )
-    return ResourceCreatedResponse(id=agent_id, created_at=utcnow())
+
+    resp.iterrows()
+
+    return ResourceCreatedResponse(id=new_agent_id, created_at=resp["created_at"])
