@@ -19,13 +19,14 @@ from ..activities.relationship_summary import relationship_summary
 from ..activities.salient_questions import salient_questions
 from ..activities.summarization import summarization
 from ..activities.task_steps import (
+    prompt_step,
+    evaluate_step,
+    yield_step,
     # tool_call_step,
     # error_step,
     if_else_step,
-    prompt_step,
     transition_step,
     # evaluate_step,
-    yield_step,
 )
 from ..activities.truncation import truncation
 from ..env import (
@@ -74,7 +75,7 @@ async def main():
 
     task_activities = [
         prompt_step,
-        # evaluate_step,
+        evaluate_step,
         yield_step,
         # tool_call_step,
         # error_step,

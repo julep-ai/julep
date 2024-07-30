@@ -10,16 +10,18 @@ with workflow.unsafe.imports_passed_through():
         if_else_step,
         prompt_step,
         transition_step,
+        evaluate_step,
+        tool_call_step,
     )
     from ..common.protocol.tasks import (
         ExecutionInput,
-        # ToolCallWorkflowStep,
+        PromptWorkflowStep,
+        EvaluateWorkflowStep,
+        ToolCallWorkflowStep,
         # ErrorWorkflowStep,
         IfElseWorkflowStep,
-        PromptWorkflowStep,
         StepContext,
         TransitionInfo,
-        # EvaluateWorkflowStep,
         YieldWorkflowStep,
     )
 
@@ -67,23 +69,23 @@ class TaskExecutionWorkflow:
                 # if outputs.tool_calls is not None:
                 #     should_wait = True
 
-            # case EvaluateWorkflowStep():
-            #     result = await workflow.execute_activity(
-            #         evaluate_step,
-            #         context,
-            #         schedule_to_close_timeout=timedelta(seconds=600),
-            #     )
+            case EvaluateWorkflowStep():
+                outputs = await workflow.execute_activity(
+                    evaluate_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
             case YieldWorkflowStep():
                 outputs = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
                     args=[execution_input, (step.workflow, 0), previous_inputs],
                 )
-            # case ToolCallWorkflowStep():
-            #     outputs = await workflow.execute_activity(
-            #         tool_call_step,
-            #         context,
-            #         schedule_to_close_timeout=timedelta(seconds=600),
-            #     )
+            case ToolCallWorkflowStep():
+                outputs = await workflow.execute_activity(
+                    tool_call_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
             # case ErrorWorkflowStep():
             #     result = await workflow.execute_activity(
             #         error_step,
