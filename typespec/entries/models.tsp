@@ -91,6 +91,9 @@ model BaseEntry {
     content: EntryContent | EntryContent[];
     source: entrySource;
 
+    tokenizer?: string;
+    token_count?: uint16;
+
     /** This is the time that this event refers to. */
     @minValue(0)
     timestamp: float;
@@ -101,7 +104,6 @@ model Entry extends BaseEntry {
     ...HasCreatedAt;
     ...HasId;
 }
-
 
 model Relation {
     head: uuid;

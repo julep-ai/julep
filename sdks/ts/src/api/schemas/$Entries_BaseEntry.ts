@@ -35,6 +35,13 @@ export const $Entries_BaseEntry = {
       type: "Enum",
       isRequired: true,
     },
+    tokenizer: {
+      type: "string",
+    },
+    token_count: {
+      type: "number",
+      format: "uint16",
+    },
     timestamp: {
       type: "number",
       description: `This is the time that this event refers to.`,

@@ -34,17 +34,13 @@ CreateTransitionRequest = create_partial_model(
     "metadata",
 )
 
-ChatMLRole = Entry.model_fields["role"].annotation
+ChatMLRole = BaseEntry.model_fields["role"].annotation
 
 
-class CreateEntryRequest(Entry):
-    id: Annotated[UUID | None, Field(default=None)]
-    created_at: Annotated[AwareDatetime | None, Field(default=None)]
+class CreateEntryRequest(BaseEntry):
     timestamp: Annotated[
         float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())
     ]
-    tokenizer: str
-    token_count: int
 
 
 def make_session(

@@ -32,7 +32,7 @@ def list_entries(
     developer_id: UUID,
     session_id: UUID,
     allowed_sources: list[str] = ["api_request", "api_response"],
-    limit: int = 100,
+    limit: int = -1,
     offset: int = 0,
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",

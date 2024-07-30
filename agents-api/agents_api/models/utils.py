@@ -7,8 +7,13 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ..clients.cozo import client as cozo_client
+from ..common.utils.cozo import uuid_int_list_to_uuid4 as fix_uuid
 
 P = ParamSpec("P")
+
+
+def fix_uuid_list(x, attr="id"):
+    return [{**i, attr: fix_uuid(i[attr])} for i in x]
 
 
 def partialclass(cls, *args, **kwargs):

@@ -3,12 +3,18 @@ This module defines session-related data structures and settings used across the
 It includes definitions for session settings and session data models.
 """
 
-from typing import Dict, Optional
-from uuid import UUID
+from typing import Optional
 
 from pydantic import BaseModel
 
-from ...autogen.openapi_model import Agent, Session, Settings, User, make_session
+from ...autogen.openapi_model import (
+    Agent,
+    Entry,
+    Session,
+    Settings,
+    Tool,
+    User,
+)
 from .agents import AgentDefaultSettings
 
 
@@ -30,3 +36,12 @@ class SessionData(BaseModel):
     agents: list[Agent]
     users: list[User] = []
     settings: Optional[Settings] = None
+
+
+class ChatContext(SessionData):
+    """
+    Represents the data associated with a context, including for agents, and users.
+    """
+
+    entries: list[Entry]
+    tools: list[Tool]
