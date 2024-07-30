@@ -10,7 +10,7 @@ from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .entries_image_url import EntriesImageUrl
 
 
-class EntriesEntryContentItemItem_Text(pydantic_v1.BaseModel):
+class EntriesBaseEntryContentItemItem_Text(pydantic_v1.BaseModel):
     text: str
     type: typing.Literal["text"] = "text"
 
@@ -46,7 +46,7 @@ class EntriesEntryContentItemItem_Text(pydantic_v1.BaseModel):
         json_encoders = {dt.datetime: serialize_datetime}
 
 
-class EntriesEntryContentItemItem_ImageUrl(pydantic_v1.BaseModel):
+class EntriesBaseEntryContentItemItem_ImageUrl(pydantic_v1.BaseModel):
     image_url: EntriesImageUrl
     type: typing.Literal["image_url"] = "image_url"
 
@@ -82,6 +82,6 @@ class EntriesEntryContentItemItem_ImageUrl(pydantic_v1.BaseModel):
         json_encoders = {dt.datetime: serialize_datetime}
 
 
-EntriesEntryContentItemItem = typing.Union[
-    EntriesEntryContentItemItem_Text, EntriesEntryContentItemItem_ImageUrl
+EntriesBaseEntryContentItemItem = typing.Union[
+    EntriesBaseEntryContentItemItem_Text, EntriesBaseEntryContentItemItem_ImageUrl
 ]

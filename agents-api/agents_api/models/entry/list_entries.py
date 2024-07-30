@@ -24,13 +24,7 @@ from ..utils import (
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(
-    Entry,
-    transform=lambda d: {
-        "id": UUID(d.pop("entry_id")),
-        **d,
-    },
-)
+@wrap_in_class(Entry)
 @cozo_query
 @beartype
 def list_entries(
@@ -40,8 +34,9 @@ def list_entries(
     allowed_sources: list[str] = ["api_request", "api_response"],
     limit: int = 100,
     offset: int = 0,
-    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
-    direction: Literal["asc", "desc"] = "desc",
+    sort_by: Literal["created_at", "timestamp"] = "timestamp",
+    direction: Literal["asc", "desc"] = "asc",
+    exclude_relations: list[str] = [],
 ) -> tuple[str, dict]:
     """
     Constructs and executes a query to retrieve entries from the 'cozodb' database.
@@ -52,10 +47,19 @@ def list_entries(
 
     sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
 
+    exclude_relations_query = """
+        not *relations {
+            relation,
+            tail: id,
+        },
+        relation in $exclude_relations,
+        # !is_in(relation, $exclude_relations),
+    """
+
     list_query = f"""
         ?[
             session_id,
-            entry_id,
+            id,
             role,
             name,
             content,
@@ -65,7 +69,7 @@ def list_entries(
             timestamp,
         ] := *entries {{
             session_id,
-            entry_id,
+            entry_id: id,
             role,
             name,
             content,
@@ -74,6 +78,7 @@ def list_entries(
             created_at,
             timestamp,
         }},
+        {exclude_relations_query if exclude_relations else ''}
         source in $allowed_sources,
         session_id = to_uuid($session_id),
 
@@ -95,4 +100,11 @@ def list_entries(
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
 
-    return (query, {"session_id": session_id, "allowed_sources": allowed_sources})
+    return (
+        query,
+        {
+            "session_id": session_id,
+            "allowed_sources": allowed_sources,
+            "exclude_relations": exclude_relations,
+        },
+    )

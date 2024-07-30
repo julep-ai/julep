@@ -105,6 +105,15 @@ from .docs_text_only_doc_search_request import DocsTextOnlyDocSearchRequest
 from .docs_text_only_doc_search_request_text import DocsTextOnlyDocSearchRequestText
 from .docs_vector_doc_search_request import DocsVectorDocSearchRequest
 from .docs_vector_doc_search_request_vector import DocsVectorDocSearchRequestVector
+from .entries_base_entry import EntriesBaseEntry
+from .entries_base_entry_content import EntriesBaseEntryContent
+from .entries_base_entry_content_item import EntriesBaseEntryContentItem
+from .entries_base_entry_content_item_item import (
+    EntriesBaseEntryContentItemItem,
+    EntriesBaseEntryContentItemItem_ImageUrl,
+    EntriesBaseEntryContentItemItem_Text,
+)
+from .entries_base_entry_source import EntriesBaseEntrySource
 from .entries_chat_ml_image_content_part import EntriesChatMlImageContentPart
 from .entries_chat_ml_message import EntriesChatMlMessage
 from .entries_chat_ml_message_content import EntriesChatMlMessageContent
@@ -116,14 +125,6 @@ from .entries_chat_ml_message_content_item import (
 from .entries_chat_ml_role import EntriesChatMlRole
 from .entries_chat_ml_text_content_part import EntriesChatMlTextContentPart
 from .entries_entry import EntriesEntry
-from .entries_entry_content import EntriesEntryContent
-from .entries_entry_content_item import EntriesEntryContentItem
-from .entries_entry_content_item_item import (
-    EntriesEntryContentItemItem,
-    EntriesEntryContentItemItem_ImageUrl,
-    EntriesEntryContentItemItem_Text,
-)
-from .entries_entry_source import EntriesEntrySource
 from .entries_history import EntriesHistory
 from .entries_image_detail import EntriesImageDetail
 from .entries_image_url import EntriesImageUrl
@@ -326,6 +327,13 @@ __all__ = [
     "DocsTextOnlyDocSearchRequestText",
     "DocsVectorDocSearchRequest",
     "DocsVectorDocSearchRequestVector",
+    "EntriesBaseEntry",
+    "EntriesBaseEntryContent",
+    "EntriesBaseEntryContentItem",
+    "EntriesBaseEntryContentItemItem",
+    "EntriesBaseEntryContentItemItem_ImageUrl",
+    "EntriesBaseEntryContentItemItem_Text",
+    "EntriesBaseEntrySource",
     "EntriesChatMlImageContentPart",
     "EntriesChatMlMessage",
     "EntriesChatMlMessageContent",
@@ -335,12 +343,6 @@ __all__ = [
     "EntriesChatMlRole",
     "EntriesChatMlTextContentPart",
     "EntriesEntry",
-    "EntriesEntryContent",
-    "EntriesEntryContentItem",
-    "EntriesEntryContentItemItem",
-    "EntriesEntryContentItemItem_ImageUrl",
-    "EntriesEntryContentItemItem_Text",
-    "EntriesEntrySource",
     "EntriesHistory",
     "EntriesImageDetail",
     "EntriesImageUrl",

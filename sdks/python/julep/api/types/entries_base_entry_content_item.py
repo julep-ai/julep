@@ -2,16 +2,15 @@
 
 import typing
 
-from .entries_entry_content_item import EntriesEntryContentItem
+from .entries_base_entry_content_item_item import EntriesBaseEntryContentItemItem
 from .tools_chosen_tool_call import ToolsChosenToolCall
 from .tools_tool import ToolsTool
 from .tools_tool_response import ToolsToolResponse
 
-EntriesEntryContent = typing.Union[
-    typing.List[EntriesEntryContentItem],
+EntriesBaseEntryContentItem = typing.Union[
+    typing.List[EntriesBaseEntryContentItemItem],
     ToolsTool,
     ToolsChosenToolCall,
     str,
     ToolsToolResponse,
-    typing.List[EntriesEntryContentItem],
 ]

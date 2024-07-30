@@ -3,5 +3,5 @@
 import typing
 
 AgentToolsRouteListRequestSortBy = typing.Union[
-    typing.Literal["created_at", "updated_at", "deleted_at"], typing.Any
+    typing.Literal["created_at", "updated_at"], typing.Any
 ]

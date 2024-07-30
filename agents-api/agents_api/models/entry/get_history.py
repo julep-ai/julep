@@ -6,7 +6,7 @@ from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import History
-from ...common.utils.cozo import uuid_int_list_to_uuid4
+from ...common.utils.cozo import uuid_int_list_to_uuid4 as fix_uuid
 from ..utils import (
     cozo_query,
     partialclass,
@@ -28,14 +28,15 @@ from ..utils import (
     History,
     one=True,
     transform=lambda d: {
-        "entries": [
+        "relations": [
             {
                 # This is needed because cozo has a bug:
                 # https://github.com/cozodb/cozo/issues/269
-                "id": uuid_int_list_to_uuid4(entry.pop("id")),
-                **entry,
+                "head": fix_uuid(r["head"]),
+                "relation": r["relation"],
+                "tail": fix_uuid(r["tail"]),
             }
-            for entry in d.pop("entries")
+            for r in d.pop("relations")
         ],
         **d,
     },
@@ -78,49 +79,43 @@ def get_history(
                 "timestamp":   timestamp
             }
 
-        session_relations[collect(relation)] :=
+        session_relations[unique(item)] :=
+            session_id = to_uuid($session_id),
             *entries {
                 session_id,
-                entry_id: head,
-                source,
+                entry_id: head
             },
-            source in $allowed_sources,
-            session_id = to_uuid($session_id),
 
             *relations {
                 head,
                 relation,
-                tail,
+                tail
             },
 
-            relation = {
+            item = {
                 "head": head,
                 "relation": relation,
-                "tail": tail,
+                "tail": tail
             }
 
-
-        session_relations[collect(relation)] :=
+        session_relations[unique(item)] :=
+            session_id = to_uuid($session_id),
             *entries {
                 session_id,
-                entry_id: tail,
-                source,
+                entry_id: tail
             },
-            source in $allowed_sources,
-            session_id = to_uuid($session_id),
 
             *relations {
                 head,
                 relation,
-                tail,
+                tail
             },
 
-            relation = {
+            item = {
                 "head": head,
                 "relation": relation,
-                "tail": tail,
+                "tail": tail
             }
-
 
         ?[entries, relations, session_id, created_at] :=
             session_entries[entries],

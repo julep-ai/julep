@@ -6,21 +6,10 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
-from .entries_chat_ml_role import EntriesChatMlRole
-from .entries_entry_content import EntriesEntryContent
-from .entries_entry_source import EntriesEntrySource
+from .entries_base_entry import EntriesBaseEntry
 
 
-class EntriesEntry(pydantic_v1.BaseModel):
-    role: EntriesChatMlRole
-    name: typing.Optional[str] = None
-    content: EntriesEntryContent
-    source: EntriesEntrySource
-    timestamp: float = pydantic_v1.Field()
-    """
-    This is the time that this event refers to.
-    """
-
+class EntriesEntry(EntriesBaseEntry):
     created_at: dt.datetime = pydantic_v1.Field()
     """
     When this resource was created as UTC date-time
@@ -56,5 +45,7 @@ class EntriesEntry(pydantic_v1.BaseModel):
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}
