@@ -83,7 +83,7 @@ class Transition(BaseModel):
         populate_by_name=True,
     )
     type: Annotated[
-        Literal["finish", "wait", "error", "step", "cancelled"],
+        Literal["finish", "wait", "resume", "error", "step", "cancelled"],
         Field(json_schema_extra={"readOnly": True}),
     ]
     execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
