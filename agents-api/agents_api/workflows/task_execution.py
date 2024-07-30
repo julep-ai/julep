@@ -7,23 +7,22 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
+        evaluate_step,
         if_else_step,
         prompt_step,
-        transition_step,
-        evaluate_step,
         tool_call_step,
+        transition_step,
     )
     from ..common.protocol.tasks import (
+        EvaluateStep,
         ExecutionInput,
-        PromptWorkflowStep,
-        EvaluateWorkflowStep,
-        ToolCallWorkflowStep,
         # ErrorWorkflowStep,
         IfElseWorkflowStep,
-        PromptWorkflowStep,
+        PromptStep,
         StepContext,
+        ToolCallStep,
         TransitionInfo,
-        YieldWorkflowStep,
+        YieldStep,
     )
 
 
@@ -59,7 +58,7 @@ class TaskExecutionWorkflow:
         should_wait = False
         # Run the step
         match step:
-            case PromptWorkflowStep():
+            case PromptStep():
                 outputs = await workflow.execute_activity(
                     prompt_step,
                     context,
@@ -70,18 +69,18 @@ class TaskExecutionWorkflow:
                 # if outputs.tool_calls is not None:
                 #     should_wait = True
 
-            case EvaluateWorkflowStep():
+            case EvaluateStep():
                 outputs = await workflow.execute_activity(
                     evaluate_step,
                     context,
                     schedule_to_close_timeout=timedelta(seconds=600),
                 )
-            case YieldWorkflowStep():
+            case YieldStep():
                 outputs = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
                     args=[execution_input, (step.workflow, 0), previous_inputs],
                 )
-            case ToolCallWorkflowStep():
+            case ToolCallStep():
                 outputs = await workflow.execute_activity(
                     tool_call_step,
                     context,
@@ -99,7 +98,7 @@ class TaskExecutionWorkflow:
                     context,
                     schedule_to_close_timeout=timedelta(seconds=600),
                 )
-                workflow_step = YieldWorkflowStep(**outputs["goto_workflow"])
+                workflow_step = YieldStep(**outputs["goto_workflow"])
 
                 outputs = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,

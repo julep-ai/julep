@@ -11,13 +11,14 @@ from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED
 
 from agents_api.autogen.openapi_model import (
-    CreateExecution,
-    CreateTask,
+    CreateExecutionRequest,
+    CreateTaskRequest,
     Execution,
-    ExecutionTransition,
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
     Task,
+    Transition,
+    UpdateExecutionRequest,
 )
 from agents_api.clients.cozo import client as cozo_client
 from agents_api.clients.temporal import run_task_execution_workflow
@@ -29,11 +30,13 @@ from agents_api.models.execution.get_execution_transition import (
     get_execution_transition_query,
 )
 from agents_api.models.execution.list_execution_transitions import (
-    list_execution_transitions_query,
+    list_execution_transitions as list_execution_transitions_query,
 )
-from agents_api.models.execution.list_executions import list_task_executions_query
-from agents_api.models.execution.update_execution_status import (
-    update_execution_status_query,
+from agents_api.models.execution.list_executions import (
+    list_executions as list_task_executions_query,
+)
+from agents_api.models.execution.update_execution import (
+    update_execution as update_execution_status_query,
 )
 from agents_api.models.execution.update_execution_transition import (
     update_execution_transition_query,
@@ -55,7 +58,7 @@ class ExecutionList(BaseModel):
 
 
 class ExecutionTransitionList(BaseModel):
-    items: list[ExecutionTransition]
+    items: list[Transition]
 
 
 router = APIRouter()
@@ -88,7 +91,7 @@ async def list_tasks(
 
 @router.post("/agents/{agent_id}/tasks", status_code=HTTP_201_CREATED, tags=["tasks"])
 async def create_task(
-    request: CreateTask,
+    request: CreateTaskRequest,
     agent_id: UUID4,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
@@ -107,7 +110,7 @@ async def create_task(
         name=request.name,
         description=request.description,
         input_schema=request.input_schema or {},
-        tools_available=request.tools_available or [],
+        tools_available=request.tools or [],
         workflows=workflows,
     )
 
@@ -158,7 +161,7 @@ async def get_task(
 async def create_task_execution(
     agent_id: UUID4,
     task_id: UUID4,
-    request: CreateExecution,
+    request: CreateExecutionRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     try:
@@ -169,7 +172,7 @@ async def create_task_execution(
             ).iterrows()
         ][0]
 
-        validate(request.arguments, task["input_schema"])
+        validate(request.input, task["input_schema"])
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -194,7 +197,7 @@ async def create_task_execution(
         task_id=task_id,
         execution_id=execution_id,
         developer_id=x_developer_id,
-        arguments=request.arguments,
+        arguments=request.input,
     )
 
     execution_input = ExecutionInput.fetch(
@@ -213,9 +216,10 @@ async def create_task_execution(
         logger.exception(e)
 
         update_execution_status_query(
+            developer_id=x_developer_id,
             task_id=task_id,
             execution_id=execution_id,
-            status="failed",
+            data=UpdateExecutionRequest(status="failed"),
         )
 
         raise HTTPException(
@@ -230,11 +234,14 @@ async def create_task_execution(
 
 @router.get("/agents/{agent_id}/tasks/{task_id}/executions", tags=["tasks"])
 async def list_task_executions(
-    agent_id: UUID4,
     task_id: UUID4,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    limit: int = 100,
+    offset: int = 0,
 ) -> ExecutionList:
-    res = list_task_executions_query(agent_id, task_id, x_developer_id)
+    res = list_task_executions_query(
+        task_id=task_id, developer_id=x_developer_id, limit=limit, offse=offset
+    )
     return ExecutionList(
         items=[Execution(**row.to_dict()) for _, row in res.iterrows()]
     )
@@ -259,7 +266,7 @@ async def get_execution(task_id: UUID4, execution_id: UUID4) -> Execution:
 async def get_execution_transition(
     execution_id: UUID4,
     transition_id: UUID4,
-) -> ExecutionTransition:
+) -> Transition:
     try:
         res = [
             row.to_dict()
@@ -267,7 +274,7 @@ async def get_execution_transition(
                 execution_id, transition_id
             ).iterrows()
         ][0]
-        return ExecutionTransition(**res)
+        return Transition(**res)
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -281,7 +288,7 @@ async def get_execution_transition(
 async def update_execution_transition(
     execution_id: UUID4,
     transition_id: UUID4,
-    request: ExecutionTransition,
+    request: Transition,
 ) -> ResourceUpdatedResponse:
     try:
         resp = update_execution_transition_query(
@@ -309,5 +316,5 @@ async def list_execution_transitions(
         execution_id=execution_id, limit=limit, offset=offset
     )
     return ExecutionTransitionList(
-        items=[ExecutionTransition(**row.to_dict()) for _, row in res.iterrows()]
+        items=[Transition(**row.to_dict()) for _, row in res.iterrows()]
     )

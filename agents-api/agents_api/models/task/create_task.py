@@ -4,6 +4,7 @@ It constructs and executes a datalog query to insert Task data.
 """
 
 import sys
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException
@@ -51,8 +52,11 @@ class TaskSpec(TypedDict):
     tools: NotRequired[list[TaskToolDef]]
     metadata: dict
     workflows: list[Workflow]
+    created_at: datetime
 
 
+# FIXME: resolve this typing issue
+# pytype: disable=bad-return-type
 def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest, **model_opts
 ) -> TaskSpec:
@@ -76,6 +80,9 @@ def task_to_spec(
         tools=tools,
         **task_data,
     )
+
+
+# pytype: enable=bad-return-type
 
 
 def spec_to_task_data(spec: dict) -> dict:

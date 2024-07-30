@@ -2,18 +2,17 @@ import asyncio
 from uuid import uuid4
 
 from openai.types.chat.chat_completion import ChatCompletion
-
 from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (
-    PromptWorkflowStep,
-    EvaluateWorkflowStep,
-    ToolCallWorkflowStep,
+    EvaluateStep,
     # ErrorWorkflowStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
-    YieldWorkflowStep,
+    PromptStep,
+    ToolCallStep,
+    YieldStep,
 )
 from ...clients.worker.types import ChatML
 from ...common.protocol.tasks import (
@@ -22,7 +21,7 @@ from ...common.protocol.tasks import (
 )
 from ...common.utils.template import render_template
 from ...models.execution.create_execution_transition import (
-    create_execution_transition_query,
+    create_execution_transition as create_execution_transition_query,
 )
 from ...routers.sessions.protocol import Settings
 from ...routers.sessions.session import llm_generate
@@ -30,7 +29,7 @@ from ...routers.sessions.session import llm_generate
 
 @activity.defn
 async def prompt_step(context: StepContext) -> dict:
-    assert isinstance(context.definition, PromptWorkflowStep)
+    assert isinstance(context.definition, PromptStep)
 
     # Get context data
     context_data: dict = context.model_dump()
@@ -63,7 +62,7 @@ async def prompt_step(context: StepContext) -> dict:
 
 @activity.defn
 async def evaluate_step(context: StepContext) -> dict:
-    assert isinstance(context.definition, EvaluateWorkflowStep)
+    assert isinstance(context.definition, EvaluateStep)
 
     # FIXME: set the field to keep source code
     source: str = context.definition.evaluate
@@ -76,7 +75,7 @@ async def evaluate_step(context: StepContext) -> dict:
 
 @activity.defn
 async def yield_step(context: StepContext) -> dict:
-    if not isinstance(context.definition, YieldWorkflowStep):
+    if not isinstance(context.definition, YieldStep):
         return {}
 
     # TODO: implement
@@ -86,7 +85,7 @@ async def yield_step(context: StepContext) -> dict:
 
 @activity.defn
 async def tool_call_step(context: StepContext) -> dict:
-    assert isinstance(context.definition, ToolCallWorkflowStep)
+    assert isinstance(context.definition, ToolCallStep)
 
     context.definition.tool_id
     context.definition.arguments
