@@ -5,7 +5,7 @@ from pydantic import UUID4
 
 from ...autogen.openapi_model import Agent
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.list_agents import list_agents as list_agents_query
+from ...models.agent.list_agents import list_agents
 from .router import router
 
 
@@ -16,7 +16,7 @@ async def list_agents(
     offset: int = 0,
     metadata_filter: str = "{}",
 ) -> List[Agent]:
-    agents = list_agents_query(
+    agents = list_agents(
         developer_id=x_developer_id,
         limit=limit,
         offset=offset,

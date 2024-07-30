@@ -85,16 +85,21 @@ model InputChatMLMessage {
 
 alias EntryContent = ChatMLContentPart[] | Tool | ChosenToolCall | string | ToolResponse;
 
-model Entry {
+model BaseEntry {
     role: ChatMLRole;
     name: string | null = null;
     content: EntryContent | EntryContent[];
     source: entrySource;
 
+    tokenizer?: string;
+    token_count?: uint16;
+
     /** This is the time that this event refers to. */
     @minValue(0)
     timestamp: float;
-    
+}
+
+model Entry extends BaseEntry {
     /** This is the time it was added to the database */
     ...HasCreatedAt;
     ...HasId;
@@ -107,7 +112,7 @@ model Relation {
 }
 
 model History {
-    entries: Entry[];
+    entries: BaseEntry[];
     relations: Relation[];
     session_id: Session.id;
 

@@ -36,10 +36,10 @@ from ...model_registry import (
     load_context,
     validate_and_extract_tool_calls,
 )
-from ...models.entry.create_entries import create_entries as create_entries_query
-from ...models.entry.proc_mem_context import proc_mem_context_query
+from ...models.entry.create_entries import create_entries
+from ...models.session.prepare_chat_context import prepare_chat_context
 from ...models.session.get_cached_response import get_cached_response
-from ...models.session.session_data import get_session_data
+from ...models.session.prepare_session_data import prepare_session_data
 from ...models.session.set_cached_response import set_cached_response
 from .exceptions import InputTooBigError
 from .protocol import Settings

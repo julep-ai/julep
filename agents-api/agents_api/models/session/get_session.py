@@ -42,8 +42,6 @@ def get_session(
     developer_id = str(developer_id)
 
     # This query retrieves session information by using `input` to pass parameters,
-    # projects specific fields from the `sessions` and `session_lookup` relations,
-    # and converts `updated_at` to an integer for easier handling.
     get_query = """
     input[developer_id, session_id] <- [[
         to_uuid($developer_id),

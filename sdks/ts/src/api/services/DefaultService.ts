@@ -77,7 +77,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -260,7 +260,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -322,7 +322,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -379,7 +379,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -548,7 +548,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -827,7 +827,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -900,7 +900,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -1400,7 +1400,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -1509,7 +1509,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -1692,7 +1692,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */
@@ -1754,7 +1754,7 @@ export class DefaultService {
     /**
      * Sort by a field
      */
-    sortBy?: "created_at" | "updated_at" | "deleted_at";
+    sortBy?: "created_at" | "updated_at";
     /**
      * Sort direction
      */

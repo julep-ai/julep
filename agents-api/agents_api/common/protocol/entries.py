@@ -1,8 +1,8 @@
 import json
 from typing import Literal
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import Field, computed_field
 
 from ...autogen.openapi_model import (
     ChatMLImageContentPart,
@@ -12,7 +12,6 @@ from ...autogen.openapi_model import (
 from ...autogen.openapi_model import (
     Entry as BaseEntry,
 )
-from ...common.utils.datetime import utcnow
 
 EntrySource = Literal["api_request", "api_response", "internal", "summarizer"]
 Tokenizer = Literal["character_count"]

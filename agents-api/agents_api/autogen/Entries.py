@@ -11,6 +11,48 @@ from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootMo
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
 
+class BaseEntry(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    role: Literal[
+        "user",
+        "agent",
+        "system",
+        "function",
+        "function_response",
+        "function_call",
+        "auto",
+    ]
+    """
+    ChatML role (system|assistant|user|function_call|function|function_response|auto)
+    """
+    name: str | None = None
+    content: (
+        list[ChatMLTextContentPart | ChatMLImageContentPart]
+        | Tool
+        | ChosenToolCall
+        | str
+        | ToolResponse
+        | list[
+            list[ChatMLTextContentPart | ChatMLImageContentPart]
+            | Tool
+            | ChosenToolCall
+            | str
+            | ToolResponse
+        ]
+    )
+    source: Literal[
+        "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
+    ]
+    tokenizer: str | None = None
+    token_count: int | None = None
+    timestamp: Annotated[float, Field(ge=0.0)]
+    """
+    This is the time that this event refers to.
+    """
+
+
 class ChatMLImageContentPart(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -73,44 +115,10 @@ class ChatMLTextContentPart(BaseModel):
     """
 
 
-class Entry(BaseModel):
+class Entry(BaseEntry):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    role: Literal[
-        "user",
-        "agent",
-        "system",
-        "function",
-        "function_response",
-        "function_call",
-        "auto",
-    ]
-    """
-    ChatML role (system|assistant|user|function_call|function|function_response|auto)
-    """
-    name: str | None = None
-    content: (
-        list[ChatMLTextContentPart | ChatMLImageContentPart]
-        | Tool
-        | ChosenToolCall
-        | str
-        | ToolResponse
-        | list[
-            list[ChatMLTextContentPart | ChatMLImageContentPart]
-            | Tool
-            | ChosenToolCall
-            | str
-            | ToolResponse
-        ]
-    )
-    source: Literal[
-        "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
-    ]
-    timestamp: Annotated[float, Field(ge=0.0)]
-    """
-    This is the time that this event refers to.
-    """
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -122,7 +130,7 @@ class History(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    entries: list[Entry]
+    entries: list[BaseEntry]
     relations: list[Relation]
     session_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]

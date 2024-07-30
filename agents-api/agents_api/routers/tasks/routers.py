@@ -18,7 +18,6 @@ from agents_api.autogen.openapi_model import (
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
     Task,
-    UpdateExecutionTransitionRequest,
 )
 from agents_api.clients.cozo import client as cozo_client
 from agents_api.clients.temporal import run_task_execution_workflow

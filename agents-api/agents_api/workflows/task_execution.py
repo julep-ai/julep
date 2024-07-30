@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
         ToolCallWorkflowStep,
         # ErrorWorkflowStep,
         IfElseWorkflowStep,
+        PromptWorkflowStep,
         StepContext,
         TransitionInfo,
         YieldWorkflowStep,

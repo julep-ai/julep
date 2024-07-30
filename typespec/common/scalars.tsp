@@ -29,7 +29,7 @@ scalar limit extends uint16;
 scalar offset extends uint32;
 
 /** Sort by a field */
-alias sortBy = "created_at" | "updated_at" | "deleted_at";
+alias sortBy = "created_at" | "updated_at";
 
 /** Sort direction */
 alias sortDirection = "asc" | "desc";

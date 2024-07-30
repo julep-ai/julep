@@ -5,18 +5,21 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_uuid import CommonUuid
-from .entries_base_entry import EntriesBaseEntry
-from .entries_relation import EntriesRelation
+from .entries_base_entry_content import EntriesBaseEntryContent
+from .entries_base_entry_source import EntriesBaseEntrySource
+from .entries_chat_ml_role import EntriesChatMlRole
 
 
-class EntriesHistory(pydantic_v1.BaseModel):
-    entries: typing.List[EntriesBaseEntry]
-    relations: typing.List[EntriesRelation]
-    session_id: CommonUuid
-    created_at: dt.datetime = pydantic_v1.Field()
+class EntriesBaseEntry(pydantic_v1.BaseModel):
+    role: EntriesChatMlRole
+    name: typing.Optional[str] = None
+    content: EntriesBaseEntryContent
+    source: EntriesBaseEntrySource
+    tokenizer: typing.Optional[str] = None
+    token_count: typing.Optional[int] = None
+    timestamp: float = pydantic_v1.Field()
     """
-    When this resource was created as UTC date-time
+    This is the time that this event refers to.
     """
 
     def json(self, **kwargs: typing.Any) -> str:

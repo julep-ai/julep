@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import CreateEntryRequest, Entry
+from ...autogen.openapi_model import CreateEntryRequest, Entry, Relation
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
@@ -39,7 +39,7 @@ def create_entries(
     *,
     developer_id: UUID,
     session_id: UUID,
-    data: list[Entry],
+    data: list[CreateEntryRequest],
 ) -> tuple[str, dict]:
     developer_id = str(developer_id)
     session_id = str(session_id)
@@ -71,6 +71,47 @@ def create_entries(
         verify_developer_owns_resource_query(
             developer_id, "sessions", session_id=session_id
         ),
+        create_query,
+    ]
+
+    query = "}\n\n{\n".join(queries)
+    query = f"{{ {query} }}"
+
+    return (query, {"rows": rows})
+
+
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(Relation)
+@cozo_query
+@beartype
+def add_entry_relations(
+    *,
+    developer_id: UUID,
+    data: list[Relation],
+) -> tuple[str, dict]:
+    developer_id = str(developer_id)
+
+    data_dicts = [item.model_dump(mode="json") for item in data]
+    cols, rows = cozo_process_mutate_data(data_dicts)
+
+    create_query = f"""
+        ?[{cols}] <- $rows
+
+        :insert relations {{
+            {cols}
+        }}
+
+        :returning
+    """
+
+    queries = [
+        verify_developer_id_query(developer_id),
         create_query,
     ]
 

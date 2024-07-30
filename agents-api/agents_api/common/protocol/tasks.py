@@ -18,7 +18,7 @@ from ...autogen.openapi_model import (
     User,
     YieldStep,
 )
-from ...models.execution.prepare_execution_data import get_execution_input_query
+from ...models.execution.prepare_execution_data import prepare_execution_data
 from ..utils.cozo import uuid_int_list_to_uuid4
 
 WorkflowStep = (
@@ -117,7 +117,7 @@ class ExecutionInput(BaseModel):
     def fetch(
         cls, *, developer_id: UUID4, task_id: UUID4, execution_id: UUID4, client: Any
     ) -> "ExecutionInput":
-        [data] = get_execution_input_query(
+        [data] = prepare_execution_data(
             task_id=task_id,
             execution_id=execution_id,
             client=client,

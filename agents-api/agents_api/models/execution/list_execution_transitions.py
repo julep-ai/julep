@@ -25,7 +25,7 @@ def list_execution_transitions(
     execution_id: UUID,
     limit: int = 100,
     offset: int = 0,
-    sort_by: Literal["created_at", "updated_at", "deleted_at"] = "created_at",
+    sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> tuple[str, dict]:
     sort = f"{'-' if direction == 'desc' else ''}{sort_by}"

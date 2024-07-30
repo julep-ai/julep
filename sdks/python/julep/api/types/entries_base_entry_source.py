@@ -2,7 +2,7 @@
 
 import typing
 
-EntriesEntrySource = typing.Union[
+EntriesBaseEntrySource = typing.Union[
     typing.Literal[
         "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
     ],
