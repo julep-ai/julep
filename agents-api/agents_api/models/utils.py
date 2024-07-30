@@ -171,13 +171,13 @@ def rewrap_exceptions(
                     )
 
                     if should_catch:
-                        (
+                        new_error = (
                             transform(str(error))
                             if isinstance(transform, type)
                             else transform(error)
                         )
 
-                        raise transform(error) from error
+                        raise transform(new_error) from error
 
                 raise
 

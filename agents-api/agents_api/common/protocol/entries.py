@@ -6,6 +6,7 @@ from pydantic import Field, computed_field
 
 from ...autogen.openapi_model import (
     ChatMLImageContentPart,
+    ChatMLRole,
     ChatMLTextContentPart,
 )
 from ...autogen.openapi_model import (

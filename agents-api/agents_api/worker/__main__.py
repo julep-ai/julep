@@ -74,7 +74,7 @@ async def main():
 
     task_activities = [
         prompt_step,
-        # evaluate_step,
+        evaluate_step,
         yield_step,
         # tool_call_step,
         # error_step,

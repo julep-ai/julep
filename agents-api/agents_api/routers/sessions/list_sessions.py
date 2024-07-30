@@ -7,7 +7,7 @@ from pydantic import UUID4, BaseModel
 
 from ...autogen.openapi_model import Session
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.list_sessions import list_sessions_query
+from ...models.session.list_sessions import list_sessions
 from .router import router
 
 
@@ -16,7 +16,7 @@ class SessionList(BaseModel):
 
 
 @router.get("/sessions", tags=["sessions"])
-async def list_sessions(
+async def list_sessions_route(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
@@ -30,8 +30,11 @@ async def list_sessions(
             detail="metadata_filter is not a valid JSON",
         )
 
-    query_results = list_sessions_query(
-        x_developer_id, limit, offset, metadata_filter=metadata_filter
+    query_results = list_sessions(
+        developer_id=x_developer_id,
+        limit=limit,
+        offset=offset,
+        metadata_filter=metadata_filter,
     )
 
     return SessionList(

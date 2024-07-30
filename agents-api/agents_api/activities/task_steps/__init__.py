@@ -3,17 +3,16 @@ from uuid import uuid4
 
 from openai.types.chat.chat_completion import ChatCompletion
 
-# import celpy
 from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (
-    # ToolCallWorkflowStep,
+    PromptWorkflowStep,
+    EvaluateWorkflowStep,
+    ToolCallWorkflowStep,
     # ErrorWorkflowStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
-    PromptWorkflowStep,
-    # EvaluateWorkflowStep,
     YieldWorkflowStep,
 )
 from ...clients.worker.types import ChatML
@@ -62,20 +61,17 @@ async def prompt_step(context: StepContext) -> dict:
     return response
 
 
-# @activity.defn
-# async def evaluate_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, EvaluateWorkflowStep):
-#         return {}
+@activity.defn
+async def evaluate_step(context: StepContext) -> dict:
+    assert isinstance(context.definition, EvaluateWorkflowStep)
 
-#     # FIXME: set the field to keep source code
-#     source: str = context.definition.evaluate
-#     env = celpy.Environment()
-#     ast = env.compile(source)
-#     prog = env.program(ast)
-#     # TODO: set args
-#     args = {}
-#     result = prog.evaluate(args)
-#     return {"result": result}
+    # FIXME: set the field to keep source code
+    source: str = context.definition.evaluate
+    # FIXME: set up names
+    names = {}
+    result = simple_eval(source, names=names)
+
+    return {"result": result}
 
 
 @activity.defn
@@ -88,14 +84,14 @@ async def yield_step(context: StepContext) -> dict:
     return {"test": "result"}
 
 
-# @activity.defn
-# async def tool_call_step(context: StepContext) -> dict:
-#     assert isinstance(context.definition, ToolCallWorkflowStep)
+@activity.defn
+async def tool_call_step(context: StepContext) -> dict:
+    assert isinstance(context.definition, ToolCallWorkflowStep)
 
-#     context.definition.tool_id
-#     context.definition.arguments
-#     # get tool by id
-#     # call tool
+    context.definition.tool_id
+    context.definition.arguments
+    # get tool by id
+    # call tool
 
 
 # @activity.defn
