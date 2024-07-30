@@ -12,6 +12,7 @@ from ...autogen.openapi_model import (
     Entry,
     Session,
     Settings,
+    GenerationPresetSettings, OpenAISettings, VLLMSettings,
     Tool,
     User,
 )
@@ -35,7 +36,7 @@ class SessionData(BaseModel):
     session: Session
     agents: list[Agent]
     users: list[User] = []
-    settings: Optional[Settings] = None
+    settings: Optional[GenerationPresetSettings | OpenAISettings | VLLMSettings] = None
 
 
 class ChatContext(SessionData):
