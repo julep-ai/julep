@@ -10,7 +10,7 @@ from ...autogen.openapi_model import (
 )
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.update_session import update_session_query
+from ...models.session.update_session import update_session as update_session_query
 from .router import router
 
 

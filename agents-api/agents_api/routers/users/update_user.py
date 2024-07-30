@@ -7,7 +7,7 @@ from starlette.status import HTTP_404_NOT_FOUND
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...common.exceptions.users import UserNotFoundError
 from ...dependencies.developer_id import get_developer_id
-from ...models.user.update_user import update_user_query
+from ...models.user.update_user import update_user as update_user_query
 from .router import router
 
 

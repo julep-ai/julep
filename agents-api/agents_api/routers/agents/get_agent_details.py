@@ -7,7 +7,7 @@ from starlette.status import HTTP_404_NOT_FOUND
 from ...autogen.openapi_model import Agent
 from ...common.exceptions.agents import AgentNotFoundError
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.get_agent import get_agent_query
+from ...models.agent.get_agent import get_agent as get_agent_query
 from .router import router
 
 

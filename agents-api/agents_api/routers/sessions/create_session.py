@@ -11,7 +11,7 @@ from ...autogen.openapi_model import (
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.create_session import create_session_query
+from ...models.session.create_session import create_session as create_session_query
 from .router import router
 
 

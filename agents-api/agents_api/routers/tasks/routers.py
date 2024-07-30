@@ -24,8 +24,8 @@ from agents_api.clients.cozo import client as cozo_client
 from agents_api.clients.temporal import run_task_execution_workflow
 from agents_api.common.protocol.tasks import ExecutionInput
 from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.execution.create_execution import create_execution_query
-from agents_api.models.execution.get_execution import get_execution_query
+from agents_api.models.execution.create_execution import create_execution as create_execution_query
+from agents_api.models.execution.get_execution import get_execution as get_execution_query
 from agents_api.models.execution.get_execution_transition import (
     get_execution_transition_query,
 )
@@ -41,9 +41,9 @@ from agents_api.models.execution.update_execution import (
 from agents_api.models.execution.update_execution_transition import (
     update_execution_transition_query,
 )
-from agents_api.models.task.create_task import create_task_query
-from agents_api.models.task.get_task import get_task_query
-from agents_api.models.task.list_tasks import list_tasks_query
+from agents_api.models.task.create_task import create_task as create_task_query
+from agents_api.models.task.get_task import get_task as get_task_query
+from agents_api.models.task.list_tasks import list_tasks as list_tasks_query
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

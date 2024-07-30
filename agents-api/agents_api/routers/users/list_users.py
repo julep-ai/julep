@@ -7,7 +7,7 @@ from pydantic import UUID4
 
 from ...autogen.openapi_model import User
 from ...dependencies.developer_id import get_developer_id
-from ...models.user.list_users import list_users_query
+from ...models.user.list_users import list_users as list_users_query
 from .router import router
 
 

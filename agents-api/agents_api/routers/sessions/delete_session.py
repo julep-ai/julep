@@ -8,7 +8,7 @@ from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_id
-from ...models.session.delete_session import delete_session_query
+from ...models.session.delete_session import delete_session as delete_session_query
 from .router import router
 
 

@@ -8,7 +8,7 @@ from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.exceptions.agents import AgentNotFoundError
 from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.delete_agent import delete_agent_query
+from ...models.agent.delete_agent import delete_agent as delete_agent_query
 from .router import router
 
 

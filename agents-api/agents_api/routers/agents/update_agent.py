@@ -7,7 +7,7 @@ from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...common.exceptions.agents import AgentNotFoundError
 from ...dependencies.developer_id import get_developer_id
-from ...models.agent.update_agent import update_agent_query
+from ...models.agent.update_agent import update_agent as update_agent_query
 from .router import router
 
 
