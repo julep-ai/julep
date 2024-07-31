@@ -29,14 +29,10 @@ from .create_task import spec_to_task
 def get_task(
     *,
     developer_id: UUID,
-    agent_id: UUID,
     task_id: UUID,
 ) -> tuple[str, dict]:
     get_query = """
-    input[agent_id, task_id] <- [[
-        to_uuid($agent_id),
-        to_uuid($task_id),
-    ]]
+    input[task_id] <- [[to_uuid($task_id)]]
 
     task_data[
         task_id,
@@ -51,7 +47,7 @@ def get_task(
         updated_at,
         metadata,
     ] := 
-        input[agent_id, task_id],
+        input[task_id],
         *tasks {
             agent_id,
             task_id,
@@ -69,7 +65,7 @@ def get_task(
         updated_at = to_int(updated_at_ms) / 1000
 
     tool_data[collect(tool_def)] :=
-        input[agent_id, _],
+        task_data[_, agent_id, _, _, _, _, _, _, _, _, _],
         *tools {
             agent_id,
             type,
@@ -115,11 +111,13 @@ def get_task(
 
     queries = [
         verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
+        verify_developer_owns_resource_query(
+            developer_id, "tasks", task_id=task_id, parents=[("agents", "agent_id")]
+        ),
         get_query,
     ]
 
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
 
-    return (query, {"agent_id": str(agent_id), "task_id": str(task_id)})
+    return (query, {"task_id": str(task_id)})
