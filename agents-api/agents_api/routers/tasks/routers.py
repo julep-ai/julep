@@ -170,25 +170,24 @@ async def get_task(
 
 
 @router.post(
-    "/agents/{agent_id}/tasks/{task_id}/executions",
+    "/tasks/{task_id}/executions",
     status_code=HTTP_201_CREATED,
     tags=["tasks"],
 )
 async def create_task_execution(
-    agent_id: UUID4,
     task_id: UUID4,
-    request: CreateExecutionRequest,
+    data: CreateExecutionRequest,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     try:
         task = [
             row.to_dict()
             for _, row in get_task_query(
-                agent_id=agent_id, task_id=task_id, developer_id=x_developer_id
+                task_id=task_id, developer_id=x_developer_id
             ).iterrows()
         ][0]
 
-        validate(request.input, task["input_schema"])
+        validate(data.input, task["input_schema"])
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -209,11 +208,10 @@ async def create_task_execution(
 
     execution_id = uuid4()
     execution = create_execution_query(
-        agent_id=agent_id,
+        developer_id=x_developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        developer_id=x_developer_id,
-        arguments=request.input,
+        data=data,
     )
 
     execution_input = ExecutionInput.fetch(
