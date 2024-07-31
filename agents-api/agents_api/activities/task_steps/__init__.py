@@ -64,13 +64,16 @@ async def prompt_step(context: StepContext) -> dict:
 async def evaluate_step(context: StepContext) -> dict:
     assert isinstance(context.definition, EvaluateStep)
 
-    # FIXME: set the field to keep source code
-    source: str = context.definition.evaluate
-    # FIXME: set up names
     names = {}
-    result = simple_eval(source, names=names)
+    for i in context.inputs:
+        names.update(i)
 
-    return {"result": result}
+    return {
+        "result": {
+            k: simple_eval(v, names=names)
+            for k, v in context.definition.evaluate.items()
+        }
+    }
 
 
 @activity.defn
