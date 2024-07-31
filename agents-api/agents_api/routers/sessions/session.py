@@ -11,7 +11,12 @@ from litellm import acompletion
 from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
 
-from ...autogen.openapi_model import DocIds, InputChatMLMessage, Tool
+from ...autogen.openapi_model import (
+    CreateEntryRequest,
+    DocIds,
+    InputChatMLMessage,
+    Tool,
+)
 from ...clients.embed import embed
 from ...clients.temporal import run_summarization_task, run_truncation_task
 from ...clients.worker.types import ChatML
@@ -38,7 +43,6 @@ from ...model_registry import (
 )
 from ...models.entry.create_entries import create_entries
 from ...models.session.get_cached_response import get_cached_response
-from ...models.session.prepare_chat_context import prepare_chat_context
 from ...models.session.prepare_session_data import prepare_session_data
 from ...models.session.set_cached_response import set_cached_response
 from .exceptions import InputTooBigError
@@ -208,7 +212,9 @@ class BaseSession:
         # TODO: implement locking at some point
 
         # Get session data
-        session_data = get_session_data(self.developer_id, self.session_id)
+        session_data = prepare_session_data(
+            developer_id=self.developer_id, session_id=self.session_id
+        )
         if session_data is None:
             raise SessionNotFoundError(self.developer_id, self.session_id)
 
@@ -502,15 +508,20 @@ class BaseSession:
         entries: list[Entry] = []
         for m in new_input:
             entries.append(
-                Entry(
-                    session_id=self.session_id,
+                CreateEntryRequest(
                     role=m.role,
                     content=m.content,
                     name=m.name,
                 )
             )
 
-        entries.append(new_entry)
+        entries.append(
+            CreateEntryRequest(
+                role=new_entry.role,
+                content=new_entry.content,
+                name=new_entry.name,
+            )
+        )
         bg_task = None
 
         if (
@@ -524,7 +535,7 @@ class BaseSession:
             else:
                 raise PromptTooBigError(total_tokens, final_settings.token_budget)
 
-        create_entries_query(
+        create_entries(
             developer_id=self.developer_id, session_id=self.session_id, data=entries
         )
 

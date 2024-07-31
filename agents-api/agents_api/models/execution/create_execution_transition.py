@@ -17,7 +17,6 @@ from ..utils import (
     wrap_in_class,
 )
 
-
 valid_transitions = {
     # Start state
     "init": ["wait", "error", "step", "cancelled"],
