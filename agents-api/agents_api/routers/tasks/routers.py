@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import uuid4
 
 import pandas as pd
@@ -15,7 +15,7 @@ from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     Execution,
     ResourceCreatedResponse,
-    ResourceUpdatedResponse,
+    # ResourceUpdatedResponse,
     Task,
     Transition,
     UpdateExecutionRequest,
@@ -30,21 +30,26 @@ from agents_api.models.execution.create_execution import (
 from agents_api.models.execution.get_execution import (
     get_execution as get_execution_query,
 )
-from agents_api.models.execution.get_execution_transition import (
-    get_execution_transition as get_execution_transition_query,
-)
+
+# from agents_api.models.execution.get_execution_transition import (
+#     get_execution_transition as get_execution_transition_query,
+# )
 from agents_api.models.execution.list_execution_transitions import (
     list_execution_transitions as list_execution_transitions_query,
+)
+from agents_api.models.execution.list_executions import (
+    list_executions as list_executions_query,
 )
 from agents_api.models.execution.list_executions import (
     list_executions as list_task_executions_query,
 )
 from agents_api.models.execution.update_execution import (
-    update_execution as update_execution_status_query,
+    update_execution as update_execution_query,
 )
-from agents_api.models.execution.update_execution_transition import (
-    update_execution_transition_query,
-)
+
+# from agents_api.models.execution.update_execution_transition import (
+#     update_execution_transition_query,
+# )
 from agents_api.models.task.create_task import create_task as create_task_query
 from agents_api.models.task.get_task import get_task as get_task_query
 from agents_api.models.task.list_tasks import list_tasks as list_tasks_query
@@ -74,9 +79,16 @@ async def list_tasks(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
 ) -> TaskList:
     query_results = list_tasks_query(
-        agent_id=agent_id, developer_id=x_developer_id, limit=limit, offset=offset
+        agent_id=agent_id,
+        developer_id=x_developer_id,
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        direction=direction,
     )
 
     items = []
@@ -219,7 +231,7 @@ async def create_task_execution(
     except Exception as e:
         logger.exception(e)
 
-        update_execution_status_query(
+        update_execution_query(
             developer_id=x_developer_id,
             task_id=task_id,
             execution_id=execution_id,
@@ -251,12 +263,12 @@ async def list_task_executions(
     )
 
 
-@router.get("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
+@router.get("/executions/{execution_id}", tags=["executions"])
 async def get_execution(task_id: UUID4, execution_id: UUID4) -> Execution:
     try:
         res = [
             row.to_dict()
-            for _, row in get_execution_query(task_id, execution_id).iterrows()
+            for _, row in get_execution_query(execution_id=execution_id).iterrows()
         ][0]
         return Execution(**res)
     except (IndexError, KeyError):
@@ -266,51 +278,131 @@ async def get_execution(task_id: UUID4, execution_id: UUID4) -> Execution:
         )
 
 
-@router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
-async def get_execution_transition(
+# TODO: write PATCH query
+@router.patch("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
+async def patch_execution(
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    task_id: UUID4,
     execution_id: UUID4,
-    transition_id: UUID4,
-) -> Transition:
+    data: UpdateExecutionRequest,
+) -> Execution:
     try:
         res = [
             row.to_dict()
-            for _, row in get_execution_transition_query(
-                execution_id, transition_id
+            for _, row in update_execution_query(
+                developer_id=x_developer_id,
+                task_id=task_id,
+                execution_id=execution_id,
+                data=data,
             ).iterrows()
         ][0]
-        return Transition(**res)
+        return Execution(**res)
     except (IndexError, KeyError):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transition not found",
+            detail="Execution not found",
         )
+
+
+@router.put("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
+async def put_execution(
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    task_id: UUID4,
+    execution_id: UUID4,
+    data: UpdateExecutionRequest,
+) -> Execution:
+    try:
+        res = [
+            row.to_dict()
+            for _, row in update_execution_query(
+                developer_id=x_developer_id,
+                task_id=task_id,
+                execution_id=execution_id,
+                data=data,
+            ).iterrows()
+        ][0]
+        return Execution(**res)
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Execution not found",
+        )
+
+
+@router.get("/tasks/{task_id}/executions", tags=["tasks"])
+async def list_execution(
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    task_id: UUID4,
+    limit: int = 100,
+    offset: int = 0,
+    sort_by: Literal["created_at", "updated_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
+) -> list[Execution]:
+    try:
+        res = [
+            Execution(**row.to_dict())
+            for _, row in list_executions_query(
+                developer_id=x_developer_id,
+                task_id=task_id,
+                limit=limit,
+                offset=offset,
+                sort_by=sort_by,
+                direction=direction,
+            ).iterrows()
+        ]
+        return res
+    except (IndexError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Execution not found",
+        )
+
+
+# @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
+# async def get_execution_transition(
+#     execution_id: UUID4,
+#     transition_id: UUID4,
+# ) -> Transition:
+#     try:
+#         res = [
+#             row.to_dict()
+#             for _, row in get_execution_transition_query(
+#                 execution_id, transition_id
+#             ).iterrows()
+#         ][0]
+#         return Transition(**res)
+#     except (IndexError, KeyError):
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Transition not found",
+#         )
 
 
 # TODO: Later; for resuming waiting transitions
 # TODO: Ask for a task token to resume a waiting transition
-@router.put("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
-async def update_execution_transition(
-    execution_id: UUID4,
-    transition_id: UUID4,
-    request: Transition,
-) -> ResourceUpdatedResponse:
-    try:
-        resp = update_execution_transition_query(
-            execution_id, transition_id, **request.model_dump()
-        )
+# @router.put("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
+# async def update_execution_transition(
+#     execution_id: UUID4,
+#     transition_id: UUID4,
+#     request: Transition,
+# ) -> ResourceUpdatedResponse:
+#     try:
+#         resp = update_execution_transition_query(
+#             execution_id, transition_id, **request.model_dump()
+#         )
 
-        return ResourceUpdatedResponse(
-            id=resp["transition_id"][0],
-            updated_at=resp["updated_at"][0][0],
-        )
-    except (IndexError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Transition not found",
-        )
+#         return ResourceUpdatedResponse(
+#             id=resp["transition_id"][0],
+#             updated_at=resp["updated_at"][0][0],
+#         )
+#     except (IndexError, KeyError):
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Transition not found",
+#         )
 
 
-@router.get("/executions/{execution_id}/transitions", tags=["tasks"])
+@router.get("/executions/{execution_id}/transitions", tags=["executions"])
 async def list_execution_transitions(
     execution_id: UUID4,
     limit: int = 100,
