@@ -1,3 +1,4 @@
+import json
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -15,6 +16,20 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+
+valid_transitions = {
+    # Start state
+    "init": ["wait", "error", "step", "cancelled"],
+    # End states
+    "finish": [],
+    "error": [],
+    "cancelled": [],
+    # Intermediate states
+    "wait": ["resume", "error", "cancelled"],
+    "resume": ["wait", "error", "step", "finish", "cancelled"],
+    "step": ["wait", "error", "step", "finish", "cancelled"],
+}
 
 
 @rewrap_exceptions(
@@ -50,6 +65,28 @@ def create_execution_transition(
         }
     )
 
+    # Make sure the transition is valid
+    check_last_transition_query = f"""
+    valid_transition[start, end] <- [
+        {", ".join(f'["{start}", "{end}"]' for start, ends in valid_transitions.items() for end in ends)}
+    ]
+
+    last_transition_type[min_cost(type_created_at)] :=
+        *transitions {{
+            type,
+            created_at,
+        }},
+        type_created_at = [type, -created_at]
+
+    ?[last_type] :=
+        last_transition_type[data],
+        last_type_data = first(data),
+        last_type = if(is_null(last_type_data), "init", last_type_data),
+        valid_transition[last_type, $next_type]
+
+    :assert some
+    """
+
     insert_query = f"""
     ?[{columns}] <- $values
 
@@ -68,10 +105,18 @@ def create_execution_transition(
             execution_id=execution_id,
             parents=[("agents", "agent_id"), ("tasks", "task_id")],
         ),
+        check_last_transition_query,
         insert_query,
     ]
 
     query = "}\n\n{\n".join(queries)
     query = f"{{ {query} }}"
 
-    return (query, {"values": values})
+    return (
+        query,
+        {
+            "values": values,
+            "next_type": data.type,
+            "valid_transitions": valid_transitions,
+        },
+    )

@@ -97,6 +97,7 @@ model TaskTokenResumeExecutionRequest {
 alias TransitionType = (
     | "finish"
     | "wait"
+    | "resume"
     | "error"
     | "step"
     | "cancelled"

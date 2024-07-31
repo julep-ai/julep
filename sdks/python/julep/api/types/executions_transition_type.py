@@ -3,5 +3,5 @@
 import typing
 
 ExecutionsTransitionType = typing.Union[
-    typing.Literal["finish", "wait", "error", "step", "cancelled"], typing.Any
+    typing.Literal["finish", "wait", "resume", "error", "step", "cancelled"], typing.Any
 ]
