@@ -30,24 +30,27 @@ def get_execution(
 ) -> tuple[str, dict]:
     # Executions are allowed direct GET access if they have execution_id
 
+    # NOTE: Do not remove outer curly braces
     query = """
-    input[execution_id] <- [[to_uuid($execution_id)]]
+    {
+      input[execution_id] <- [[to_uuid($execution_id)]]
 
-    ?[id, task_id, status, input, session_id, metadata, created_at, updated_at] := 
-        input[execution_id],
-        *executions {
-            task_id,
-            execution_id,
-            status,
-            input,
-            session_id,
-            metadata,
-            created_at,
-            updated_at,
-        },
-        id = execution_id
+      ?[id, task_id, status, input, session_id, metadata, created_at, updated_at] := 
+          input[execution_id],
+          *executions {
+              task_id,
+              execution_id,
+              status,
+              input,
+              session_id,
+              metadata,
+              created_at,
+              updated_at,
+          },
+          id = execution_id
 
-    :limit 1
+      :limit 1
+    }
     """
 
     return (

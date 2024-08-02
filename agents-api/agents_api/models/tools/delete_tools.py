@@ -36,7 +36,7 @@ def delete_tool(
     developer_id: UUID,
     agent_id: UUID,
     tool_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     agent_id = str(agent_id)
     tool_id = str(tool_id)
 
@@ -60,7 +60,4 @@ def delete_tool(
         delete_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"tool_id": tool_id, "agent_id": agent_id})
+    return (queries, {"tool_id": tool_id, "agent_id": agent_id})

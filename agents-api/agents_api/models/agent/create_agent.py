@@ -38,7 +38,7 @@ def create_agent(
     developer_id: UUID,
     agent_id: UUID | None = None,
     data: CreateAgentRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to create a new agent in the database.
 
@@ -114,11 +114,8 @@ def create_agent(
         agent_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "settings_vals": settings_vals,
             "agent_id": str(agent_id),

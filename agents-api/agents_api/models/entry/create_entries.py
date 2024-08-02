@@ -40,7 +40,7 @@ def create_entries(
     developer_id: UUID,
     session_id: UUID,
     data: list[CreateEntryRequest],
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     session_id = str(session_id)
 
@@ -74,10 +74,7 @@ def create_entries(
         create_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"rows": rows})
+    return (queries, {"rows": rows})
 
 
 @rewrap_exceptions(
@@ -94,7 +91,7 @@ def add_entry_relations(
     *,
     developer_id: UUID,
     data: list[Relation],
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
 
     data_dicts = [item.model_dump(mode="json") for item in data]
@@ -115,7 +112,4 @@ def add_entry_relations(
         create_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"rows": rows})
+    return (queries, {"rows": rows})

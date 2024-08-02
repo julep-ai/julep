@@ -35,7 +35,7 @@ def list_users(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Queries the 'cozodb' database to list users associated with a specific developer.
 
@@ -92,11 +92,8 @@ def list_users(
         list_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     # Execute the datalog query with the specified parameters and return the results as a DataFrame.
     return (
-        query,
+        queries,
         {"developer_id": str(developer_id), "limit": limit, "offset": offset},
     )

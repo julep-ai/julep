@@ -39,7 +39,7 @@ from ..utils import (
 )
 @cozo_query
 @beartype
-def delete_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
+def delete_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict]:
     """
     Constructs and returns a datalog query for deleting an agent and its default settings from the database.
 
@@ -104,7 +104,4 @@ def delete_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
         """,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})
+    return (queries, {"agent_id": str(agent_id), "developer_id": str(developer_id)})

@@ -40,7 +40,7 @@ def update_execution(
     task_id: UUID,
     execution_id: UUID,
     data: UpdateExecutionRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     task_id = str(task_id)
     execution_id = str(execution_id)
@@ -103,10 +103,7 @@ def update_execution(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {"values": values, "valid_previous_statuses": valid_previous_statuses},
     )

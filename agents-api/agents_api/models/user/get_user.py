@@ -30,7 +30,7 @@ def get_user(
     *,
     developer_id: UUID,
     user_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     # Convert UUIDs to strings for query compatibility.
     user_id = str(user_id)
     developer_id = str(developer_id)
@@ -62,7 +62,4 @@ def get_user(
         get_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"developer_id": developer_id, "user_id": user_id})
+    return (queries, {"developer_id": developer_id, "user_id": user_id})

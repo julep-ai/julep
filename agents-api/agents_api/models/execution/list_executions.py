@@ -35,7 +35,7 @@ def list_executions(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
 
     list_query = f"""
@@ -78,7 +78,4 @@ def list_executions(
         list_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"task_id": str(task_id), "limit": limit, "offset": offset})
+    return (queries, {"task_id": str(task_id), "limit": limit, "offset": offset})

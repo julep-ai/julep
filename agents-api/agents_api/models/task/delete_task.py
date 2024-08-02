@@ -41,7 +41,7 @@ def delete_task(
     developer_id: UUID,
     agent_id: UUID,
     task_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     delete_query = """
     input[agent_id, task_id] <- [[
         to_uuid($agent_id),
@@ -71,7 +71,4 @@ def delete_task(
         delete_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"agent_id": str(agent_id), "task_id": str(task_id)})
+    return (queries, {"agent_id": str(agent_id), "task_id": str(task_id)})

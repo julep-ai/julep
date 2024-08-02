@@ -7,12 +7,11 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import make_session
 from ...common.protocol.sessions import ChatContext
-from ...common.utils.cozo import uuid_int_list_to_uuid4 as fix_uuid
 from ..entry.list_entries import list_entries
 from ..tools.list_tools import list_tools
 from ..utils import (
     cozo_query,
-    fix_uuid_list,
+    make_cozo_json_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
@@ -20,10 +19,6 @@ from ..utils import (
     wrap_in_class,
 )
 from .prepare_session_data import prepare_session_data
-
-
-def make_cozo_json_query(fields):
-    return ", ".join(f'"{field}": {field}' for field in fields).strip()
 
 
 @rewrap_exceptions(
@@ -37,14 +32,10 @@ def make_cozo_json_query(fields):
     ChatContext,
     one=True,
     transform=lambda d: {
-        "agents": fix_uuid_list(d["agents"]),
-        "users": fix_uuid_list(d["users"]),
-        "entries": fix_uuid_list(d["entries"]),
-        "tools": fix_uuid_list(d["tools"]),
+        **d,
         "session": make_session(
-            agents=[fix_uuid(a["id"]) for a in d["agents"]],
-            users=[fix_uuid(u["id"]) for u in d["users"]],
-            id=fix_uuid(d["session"].pop("id")),
+            agents=[a["id"] for a in d["agents"]],
+            users=[u["id"] for u in d["users"]],
             **d["session"],
         ),
     },
@@ -59,7 +50,7 @@ def prepare_chat_context(
     # doc_query_embedding: list[float],
     # docs_confidence: float = 0.4,
     # k_docs: int = 3,
-):
+) -> tuple[list[str], dict]:
     """
     Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
     """
@@ -145,11 +136,8 @@ def prepare_chat_context(
         combine_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "session_id": str(session_id),
             **sd_vars,

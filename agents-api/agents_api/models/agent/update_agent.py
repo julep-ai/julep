@@ -36,7 +36,7 @@ def update_agent(
     agent_id: UUID,
     developer_id: UUID,
     data: UpdateAgentRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to update an agent and its default settings in the 'cozodb' database.
 
@@ -127,11 +127,8 @@ def update_agent(
         *queries,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "agent_update_vals": agent_update_vals,
             "settings_vals": settings_vals,

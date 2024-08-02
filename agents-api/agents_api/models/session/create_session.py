@@ -44,7 +44,7 @@ def create_session(
     developer_id: UUID,
     session_id: UUID | None = None,
     data: CreateSessionRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to create a new session in the database.
     """
@@ -133,12 +133,9 @@ def create_session(
         create_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     # Execute the constructed query with the provided parameters and return the result.
     return (
-        query,
+        queries,
         {
             "session_id": str(session_id),
             "developer_id": str(developer_id),

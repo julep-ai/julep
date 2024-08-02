@@ -1,13 +1,11 @@
 from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import Depends
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
-    CreateAgentRequest,
-    CreateOrUpdateAgentRequest,
     CreateToolRequest,
     ResourceCreatedResponse,
 )

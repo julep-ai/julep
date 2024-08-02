@@ -37,7 +37,7 @@ def list_sessions(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """Lists sessions from the 'cozodb' database based on the provided filters.
 
     Parameters:
@@ -116,11 +116,8 @@ def list_sessions(
         list_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     # Execute the datalog query and return the results as a pandas DataFrame.
     return (
-        query,
+        queries,
         {"developer_id": str(developer_id), "limit": limit, "offset": offset},
     )

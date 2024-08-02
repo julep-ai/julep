@@ -35,7 +35,7 @@ def create_or_update_user(
     developer_id: UUID,
     user_id: UUID,
     data: CreateOrUpdateUserRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to create a new user in the database.
 
@@ -95,11 +95,8 @@ def create_or_update_user(
         user_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "user_id": str(user_id),
             "developer_id": str(developer_id),

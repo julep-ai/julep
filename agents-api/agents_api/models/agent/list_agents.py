@@ -35,7 +35,7 @@ def list_agents(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to list agents from the 'cozodb' database.
 
@@ -91,10 +91,7 @@ def list_agents(
         """,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {"developer_id": str(developer_id), "limit": limit, "offset": offset},
     )

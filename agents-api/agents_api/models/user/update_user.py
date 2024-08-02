@@ -33,7 +33,7 @@ from ..utils import (
 @beartype
 def update_user(
     *, developer_id: UUID, user_id: UUID, update_user: UpdateUserRequest
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """Updates user information in the 'cozodb' database.
 
     Parameters:
@@ -88,11 +88,8 @@ def update_user(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "user_update_vals": user_update_vals,
             "developer_id": developer_id,

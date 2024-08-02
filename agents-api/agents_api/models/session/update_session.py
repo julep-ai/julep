@@ -52,7 +52,7 @@ def update_session(
     session_id: UUID,
     developer_id: UUID,
     data: UpdateSessionRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     update_data = data.model_dump(exclude_unset=True)
 
     session_update_cols, session_update_vals = cozo_process_mutate_data(
@@ -98,11 +98,8 @@ def update_session(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "session_update_vals": session_update_vals,
             "session_id": str(session_id),

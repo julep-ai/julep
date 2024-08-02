@@ -48,7 +48,7 @@ def get_history(
     developer_id: UUID,
     session_id: UUID,
     allowed_sources: list[str] = ["api_request", "api_response"],
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     session_id = str(session_id)
 
@@ -132,7 +132,4 @@ def get_history(
         history_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"session_id": session_id, "allowed_sources": allowed_sources})
+    return (queries, {"session_id": session_id, "allowed_sources": allowed_sources})

@@ -37,7 +37,7 @@ def patch_agent(
     agent_id: UUID,
     developer_id: UUID,
     data: PatchAgentRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """Patches agent data based on provided updates.
 
     Parameters:
@@ -114,11 +114,8 @@ def patch_agent(
         *queries,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "agent_update_vals": agent_update_vals,
             "settings_vals": settings_vals,

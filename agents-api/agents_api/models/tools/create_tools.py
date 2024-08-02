@@ -41,7 +41,7 @@ def create_tools(
     agent_id: UUID,
     data: list[CreateToolRequest],
     ignore_existing: bool = False,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
@@ -113,7 +113,4 @@ def create_tools(
             ensure_tool_name_unique_query,
         )
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"records": tools_data})
+    return (queries, {"records": tools_data})

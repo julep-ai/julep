@@ -7,10 +7,8 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import make_session
 from ...common.protocol.sessions import SessionData
-from ...common.utils.cozo import uuid_int_list_to_uuid4 as fix_uuid
 from ..utils import (
     cozo_query,
-    fix_uuid_list,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
@@ -30,13 +28,10 @@ from ..utils import (
     SessionData,
     one=True,
     transform=lambda d: {
-        "agents": fix_uuid_list(d["agents"]),
-        "users": fix_uuid_list(d["users"]),
         "session": make_session(
-            agents=[fix_uuid(a["id"]) for a in d["agents"]],
-            users=[fix_uuid(u["id"]) for u in d["users"]],
-            id=fix_uuid(d["session"].pop("id")),
             **d["session"],
+            agents=[a["id"] for a in d["agents"]],
+            users=[u["id"] for u in d["users"]],
         ),
     },
 )
@@ -46,7 +41,7 @@ def prepare_session_data(
     *,
     developer_id: UUID,
     session_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """Constructs and executes a datalog query to retrieve session data from the 'cozodb' database.
 
     Parameters:
@@ -194,10 +189,7 @@ def prepare_session_data(
         get_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {"developer_id": developer_id, "session_id": session_id},
     )

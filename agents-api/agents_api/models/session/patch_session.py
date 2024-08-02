@@ -54,7 +54,7 @@ def patch_session(
     session_id: UUID,
     developer_id: UUID,
     data: PatchSessionRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """Patch session data in the 'cozodb' database.
 
     Parameters:
@@ -110,11 +110,8 @@ def patch_session(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "session_update_vals": session_update_vals,
             "session_id": str(session_id),

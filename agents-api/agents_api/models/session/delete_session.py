@@ -41,7 +41,7 @@ def delete_session(
     *,
     developer_id: UUID,
     session_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Deletes a session and its related data from the 'cozodb' database.
 
@@ -117,7 +117,4 @@ def delete_session(
         delete_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"session_id": session_id, "developer_id": developer_id})
+    return (queries, {"session_id": session_id, "developer_id": developer_id})

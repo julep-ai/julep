@@ -37,7 +37,7 @@ def create_execution(
     task_id: UUID,
     execution_id: UUID | None = None,
     data: CreateExecutionRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     execution_id = execution_id or uuid4()
 
     developer_id = str(developer_id)
@@ -76,7 +76,4 @@ def create_execution(
         insert_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"values": values})
+    return (queries, {"values": values})
