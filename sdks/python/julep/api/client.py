@@ -994,7 +994,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import TasksEvaluateStep, TasksTaskTool
+        from julep import TasksTaskTool
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -1005,11 +1005,7 @@ class JulepApi:
             id="id",
             name="name",
             description="description",
-            main=[
-                TasksEvaluateStep(
-                    evaluate={"key": "value"},
-                )
-            ],
+            main=[],
             tools=[
                 TasksTaskTool(
                     type="function",
@@ -1092,7 +1088,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import TasksEvaluateStep, TasksTaskTool
+        from julep import TasksTaskTool
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -1103,11 +1099,7 @@ class JulepApi:
             id="id",
             child_id="child_id",
             description="description",
-            main=[
-                TasksEvaluateStep(
-                    evaluate={"key": "value"},
-                )
-            ],
+            main=[],
             tools=[
                 TasksTaskTool(
                     type="function",
@@ -1706,7 +1698,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import TasksEvaluateStep, TasksTaskTool
+        from julep import TasksTaskTool
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -1718,11 +1710,7 @@ class JulepApi:
             id="id",
             name="name",
             description="description",
-            main=[
-                TasksEvaluateStep(
-                    evaluate={"key": "value"},
-                )
-            ],
+            main=[],
             tools=[
                 TasksTaskTool(
                     type="function",
@@ -4488,7 +4476,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import TasksEvaluateStep, TasksTaskTool
+        from julep import TasksTaskTool
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -4502,11 +4490,7 @@ class AsyncJulepApi:
                 id="id",
                 name="name",
                 description="description",
-                main=[
-                    TasksEvaluateStep(
-                        evaluate={"key": "value"},
-                    )
-                ],
+                main=[],
                 tools=[
                     TasksTaskTool(
                         type="function",
@@ -4594,7 +4578,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import TasksEvaluateStep, TasksTaskTool
+        from julep import TasksTaskTool
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -4608,11 +4592,7 @@ class AsyncJulepApi:
                 id="id",
                 child_id="child_id",
                 description="description",
-                main=[
-                    TasksEvaluateStep(
-                        evaluate={"key": "value"},
-                    )
-                ],
+                main=[],
                 tools=[
                     TasksTaskTool(
                         type="function",
@@ -5272,7 +5252,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import TasksEvaluateStep, TasksTaskTool
+        from julep import TasksTaskTool
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -5287,11 +5267,7 @@ class AsyncJulepApi:
                 id="id",
                 name="name",
                 description="description",
-                main=[
-                    TasksEvaluateStep(
-                        evaluate={"key": "value"},
-                    )
-                ],
+                main=[],
                 tools=[
                     TasksTaskTool(
                         type="function",

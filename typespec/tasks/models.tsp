@@ -20,31 +20,30 @@ namespace Tasks;
 // TASK MODELS
 //
 
-// -- cannot use an enum here coz typespec doesnt allow it in discriminated models
-alias WorkflowStepKind = (
-    /** A step that runs a tool */
-    | "tool_call"
+alias WorkflowStepKind =
+    | /** A step that runs a tool */
+      "tool_call"
+    | /** A step that runs a subworkflow */
+      "yield"
+    | /** A step that runs a prompt */
+      "prompt"
+    | /** A step that evaluates an expression */
+      "evaluate"
+    | /** A step that runs a conditional */
+      "if_else"
+    | /** A step that signals that it needs more input before resuming */
+      "wait_for_input"
+    | /** Throw an error */
+      "error";
 
-    /** A step that runs a subworkflow */
-    | "yield"
+model BaseWorkflowStep {
+    /** The kind of step */
+    kind_: WorkflowStepKind;
+}
 
-    /** A step that runs a prompt */
-    | "prompt"
+model ToolCallStep extends BaseWorkflowStep {
+    kind_: "tool_call" = "tool_call";
 
-    /** A step that evaluates an expression */
-    | "evaluate"
-
-    /** A step that runs a conditional */
-    | "if_else"
-
-    /** A step that runs a loop */
-    | "loop"
-
-    /** Throw an error */
-    | "error"
-);
-
-model ToolCallStep {
     /** The tool to run */
     tool: toolRef;
 
@@ -55,7 +54,9 @@ model ToolCallStep {
 /** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
 alias ExpressionObject = Record<PyExpression>;
 
-model YieldStep {
+model YieldStep extends BaseWorkflowStep {
+    kind_: "yield" = "yield";
+
     /** The subworkflow to run */
     workflow: string;
 
@@ -63,7 +64,9 @@ model YieldStep {
     arguments: ExpressionObject;
 }
 
-model PromptStep {
+model PromptStep extends BaseWorkflowStep {
+    kind_: "prompt" = "prompt";
+
     /** The prompt to run */
     prompt: string | InputChatMLMessage[];
 
@@ -71,19 +74,38 @@ model PromptStep {
     settings: ChatSettings;
 }
 
-model EvaluateStep {
+model EvaluateStep extends BaseWorkflowStep {
+    kind_: "evaluate" = "evaluate";
+
     /** The expression to evaluate */
     evaluate: ExpressionObject;
 }
 
-model ErrorWorkflowStep {
+model ErrorWorkflowStep extends BaseWorkflowStep {
+    kind_: "error" = "error";
+
     /** The error message */
     error: string;
 }
 
-alias NonConditionalWorkflowStep = EvaluateStep | ToolCallStep | YieldStep | PromptStep | ErrorWorkflowStep;
+model WaitForInputStep extends BaseWorkflowStep {
+    kind_: "wait_for_input" = "wait_for_input";
 
-model IfElseWorkflowStep {
+    /** Any additional info or data */
+    info: string | Record<unknown>;
+}
+
+alias NonConditionalWorkflowStep =
+    | EvaluateStep
+    | ToolCallStep
+    | YieldStep
+    | PromptStep
+    | ErrorWorkflowStep
+    | WaitForInputStep;
+
+model IfElseWorkflowStep extends BaseWorkflowStep {
+    kind_: "if_else" = "if_else";
+
     /** The condition to evaluate */
     `if`: PyExpression;
 
@@ -144,7 +166,7 @@ model UpdateTaskRequest {
 }
 
 /** Payload for patching a task */
-model PatchTaskRequest is UpdateTaskRequest {}
+model PatchTaskRequest is UpdateTaskRequest;
 
 /** Payload for creating a task */
 @withVisibility("create")
@@ -155,5 +177,6 @@ model CreateTaskRequest {
 model CreateOrUpdateTaskRequest {
     @path
     id: uuid;
+
     ...CreateTaskRequest;
 }

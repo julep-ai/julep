@@ -6,11 +6,12 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_py_expression import CommonPyExpression
+from .tasks_base_workflow_step import TasksBaseWorkflowStep
 from .tasks_if_else_workflow_step_else import TasksIfElseWorkflowStepElse
 from .tasks_if_else_workflow_step_then import TasksIfElseWorkflowStepThen
 
 
-class TasksIfElseWorkflowStep(pydantic_v1.BaseModel):
+class TasksIfElseWorkflowStep(TasksBaseWorkflowStep):
     if_: CommonPyExpression = pydantic_v1.Field(alias="if")
     """
     The condition to evaluate

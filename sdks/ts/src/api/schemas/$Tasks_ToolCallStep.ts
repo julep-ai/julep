@@ -3,23 +3,35 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Tasks_ToolCallStep = {
-  properties: {
-    tool: {
-      type: "all-of",
-      description: `The tool to run`,
-      contains: [
-        {
-          type: "Common_toolRef",
+  type: "all-of",
+  contains: [
+    {
+      type: "Tasks_BaseWorkflowStep",
+    },
+    {
+      properties: {
+        kind_: {
+          type: "Enum",
+          isRequired: true,
         },
-      ],
-      isRequired: true,
-    },
-    arguments: {
-      type: "dictionary",
-      contains: {
-        properties: {},
+        tool: {
+          type: "all-of",
+          description: `The tool to run`,
+          contains: [
+            {
+              type: "Common_toolRef",
+            },
+          ],
+          isRequired: true,
+        },
+        arguments: {
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
+          isRequired: true,
+        },
       },
-      isRequired: true,
     },
-  },
+  ],
 } as const;

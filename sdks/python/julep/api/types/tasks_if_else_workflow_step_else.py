@@ -3,15 +3,16 @@
 import typing
 
 from .tasks_error_workflow_step import TasksErrorWorkflowStep
-from .tasks_evaluate_step import TasksEvaluateStep
 from .tasks_prompt_step import TasksPromptStep
 from .tasks_tool_call_step import TasksToolCallStep
+from .tasks_wait_for_input_step import TasksWaitForInputStep
 from .tasks_yield_step import TasksYieldStep
 
 TasksIfElseWorkflowStepElse = typing.Union[
-    TasksEvaluateStep,
+    typing.Any,
     TasksToolCallStep,
     TasksYieldStep,
     TasksPromptStep,
     TasksErrorWorkflowStep,
+    TasksWaitForInputStep,
 ]

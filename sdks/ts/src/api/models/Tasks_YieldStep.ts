@@ -3,7 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_PyExpression } from "./Common_PyExpression";
-export type Tasks_YieldStep = {
+import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
+export type Tasks_YieldStep = Tasks_BaseWorkflowStep & {
+  kind_: "yield";
   /**
    * The subworkflow to run
    */

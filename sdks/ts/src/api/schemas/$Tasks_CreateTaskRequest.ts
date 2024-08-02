@@ -25,6 +25,9 @@ export const $Tasks_CreateTaskRequest = {
           type: "Tasks_ErrorWorkflowStep",
         },
         {
+          type: "Tasks_WaitForInputStep",
+        },
+        {
           type: "Tasks_IfElseWorkflowStep",
         },
       ],

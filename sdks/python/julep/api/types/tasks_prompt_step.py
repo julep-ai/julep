@@ -5,11 +5,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .tasks_base_workflow_step import TasksBaseWorkflowStep
 from .tasks_prompt_step_prompt import TasksPromptStepPrompt
 from .tasks_prompt_step_settings import TasksPromptStepSettings
 
 
-class TasksPromptStep(pydantic_v1.BaseModel):
+class TasksPromptStep(TasksBaseWorkflowStep):
     prompt: TasksPromptStepPrompt = pydantic_v1.Field()
     """
     The prompt to run
@@ -48,5 +49,7 @@ class TasksPromptStep(pydantic_v1.BaseModel):
     class Config:
         frozen = True
         smart_union = True
+        allow_population_by_field_name = True
+        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

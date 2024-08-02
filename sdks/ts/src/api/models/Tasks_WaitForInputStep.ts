@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
-export type Tasks_ErrorWorkflowStep = Tasks_BaseWorkflowStep & {
-  kind_: "error";
+export type Tasks_WaitForInputStep = Tasks_BaseWorkflowStep & {
+  kind_: "wait_for_input";
   /**
-   * The error message
+   * Any additional info or data
    */
-  error: string;
+  info: string | Record<string, any>;
 };

@@ -3,60 +3,72 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Tasks_IfElseWorkflowStep = {
-  properties: {
-    if: {
-      type: "all-of",
-      description: `The condition to evaluate`,
-      contains: [
-        {
-          type: "Common_PyExpression",
-        },
-      ],
-      isRequired: true,
+  type: "all-of",
+  contains: [
+    {
+      type: "Tasks_BaseWorkflowStep",
     },
-    then: {
-      type: "any-of",
-      description: `The steps to run if the condition is true`,
-      contains: [
-        {
-          type: "Tasks_EvaluateStep",
+    {
+      properties: {
+        kind_: {
+          type: "Enum",
+          isRequired: true,
         },
-        {
-          type: "Tasks_ToolCallStep",
+        if: {
+          type: "all-of",
+          description: `The condition to evaluate`,
+          contains: [
+            {
+              type: "Common_PyExpression",
+            },
+          ],
+          isRequired: true,
         },
-        {
-          type: "Tasks_YieldStep",
+        then: {
+          type: "any-of",
+          description: `The steps to run if the condition is true`,
+          contains: [
+            {
+              type: "Tasks_ToolCallStep",
+            },
+            {
+              type: "Tasks_YieldStep",
+            },
+            {
+              type: "Tasks_PromptStep",
+            },
+            {
+              type: "Tasks_ErrorWorkflowStep",
+            },
+            {
+              type: "Tasks_WaitForInputStep",
+            },
+          ],
+          isRequired: true,
         },
-        {
-          type: "Tasks_PromptStep",
+        else: {
+          type: "any-of",
+          description: `The steps to run if the condition is false`,
+          contains: [
+            {
+              type: "Tasks_ToolCallStep",
+            },
+            {
+              type: "Tasks_YieldStep",
+            },
+            {
+              type: "Tasks_PromptStep",
+            },
+            {
+              type: "Tasks_ErrorWorkflowStep",
+            },
+            {
+              type: "Tasks_WaitForInputStep",
+            },
+          ],
+          isRequired: true,
         },
-        {
-          type: "Tasks_ErrorWorkflowStep",
-        },
-      ],
-      isRequired: true,
+      },
     },
-    else: {
-      type: "any-of",
-      description: `The steps to run if the condition is false`,
-      contains: [
-        {
-          type: "Tasks_EvaluateStep",
-        },
-        {
-          type: "Tasks_ToolCallStep",
-        },
-        {
-          type: "Tasks_YieldStep",
-        },
-        {
-          type: "Tasks_PromptStep",
-        },
-        {
-          type: "Tasks_ErrorWorkflowStep",
-        },
-      ],
-      isRequired: true,
-    },
-  },
+  ],
 } as const;
