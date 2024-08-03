@@ -67,6 +67,7 @@ from .types.common_resource_deleted_response import CommonResourceDeletedRespons
 from .types.common_resource_updated_response import CommonResourceUpdatedResponse
 from .types.common_uuid import CommonUuid
 from .types.common_valid_python_identifier import CommonValidPythonIdentifier
+from .types.docs_create_doc_request_content import DocsCreateDocRequestContent
 from .types.docs_doc import DocsDoc
 from .types.docs_embed_query_request import DocsEmbedQueryRequest
 from .types.docs_embed_query_response import DocsEmbedQueryResponse
@@ -770,6 +771,68 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(AgentDocsRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def agent_docs_route_create(
+        self,
+        id: CommonUuid,
+        *,
+        title: CommonIdentifierSafeUnicode,
+        content: DocsCreateDocRequestContent,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceCreatedResponse:
+        """
+        Create a Doc for this Agent
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        title : CommonIdentifierSafeUnicode
+            Title describing what this document contains
+
+        content : DocsCreateDocRequestContent
+            Contents of the document
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_docs_route_create(
+            id="id",
+            title="title",
+            content="content",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/docs",
+            method="POST",
+            json={"metadata": metadata, "title": title, "content": content},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3441,6 +3504,68 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def user_docs_route_create(
+        self,
+        id: CommonUuid,
+        *,
+        title: CommonIdentifierSafeUnicode,
+        content: DocsCreateDocRequestContent,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceCreatedResponse:
+        """
+        Create a Doc for this User
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        title : CommonIdentifierSafeUnicode
+            Title describing what this document contains
+
+        content : DocsCreateDocRequestContent
+            Contents of the document
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.user_docs_route_create(
+            id="id",
+            title="title",
+            content="content",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"users/{jsonable_encoder(id)}/docs",
+            method="POST",
+            json={"metadata": metadata, "title": title, "content": content},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def user_docs_search_route_search(
         self,
         id: CommonUuid,
@@ -4234,6 +4359,76 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(AgentDocsRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_docs_route_create(
+        self,
+        id: CommonUuid,
+        *,
+        title: CommonIdentifierSafeUnicode,
+        content: DocsCreateDocRequestContent,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceCreatedResponse:
+        """
+        Create a Doc for this Agent
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        title : CommonIdentifierSafeUnicode
+            Title describing what this document contains
+
+        content : DocsCreateDocRequestContent
+            Contents of the document
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.agent_docs_route_create(
+                id="id",
+                title="title",
+                content="content",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/docs",
+            method="POST",
+            json={"metadata": metadata, "title": title, "content": content},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -7220,6 +7415,76 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(UserDocsRouteListResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def user_docs_route_create(
+        self,
+        id: CommonUuid,
+        *,
+        title: CommonIdentifierSafeUnicode,
+        content: DocsCreateDocRequestContent,
+        metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceCreatedResponse:
+        """
+        Create a Doc for this User
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        title : CommonIdentifierSafeUnicode
+            Title describing what this document contains
+
+        content : DocsCreateDocRequestContent
+            Contents of the document
+
+        metadata : typing.Optional[typing.Dict[str, typing.Any]]
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.user_docs_route_create(
+                id="id",
+                title="title",
+                content="content",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"users/{jsonable_encoder(id)}/docs",
+            method="POST",
+            json={"metadata": metadata, "title": title, "content": content},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)

@@ -18,6 +18,7 @@ import type { Common_ResourceCreatedResponse } from "../models/Common_ResourceCr
 import type { Common_ResourceDeletedResponse } from "../models/Common_ResourceDeletedResponse";
 import type { Common_ResourceUpdatedResponse } from "../models/Common_ResourceUpdatedResponse";
 import type { Common_uuid } from "../models/Common_uuid";
+import type { Docs_CreateDocRequest } from "../models/Docs_CreateDocRequest";
 import type { Docs_Doc } from "../models/Docs_Doc";
 import type { Docs_DocReference } from "../models/Docs_DocReference";
 import type { Docs_EmbedQueryRequest } from "../models/Docs_EmbedQueryRequest";
@@ -285,6 +286,31 @@ export class DefaultService {
         direction: direction,
         metadata_filter: metadataFilter,
       },
+    });
+  }
+  /**
+   * Create a Doc for this Agent
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public agentDocsRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Docs_CreateDocRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/agents/{id}/docs",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
   /**
@@ -1717,6 +1743,31 @@ export class DefaultService {
         direction: direction,
         metadata_filter: metadataFilter,
       },
+    });
+  }
+  /**
+   * Create a Doc for this User
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public userDocsRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Docs_CreateDocRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/users/{id}/docs",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
   /**

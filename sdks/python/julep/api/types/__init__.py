@@ -90,6 +90,8 @@ from .common_tool_ref import CommonToolRef
 from .common_uuid import CommonUuid
 from .common_valid_python_identifier import CommonValidPythonIdentifier
 from .docs_base_doc_search_request import DocsBaseDocSearchRequest
+from .docs_create_doc_request import DocsCreateDocRequest
+from .docs_create_doc_request_content import DocsCreateDocRequestContent
 from .docs_doc import DocsDoc
 from .docs_doc_content import DocsDocContent
 from .docs_doc_owner import DocsDocOwner
@@ -351,6 +353,8 @@ __all__ = [
     "CommonUuid",
     "CommonValidPythonIdentifier",
     "DocsBaseDocSearchRequest",
+    "DocsCreateDocRequest",
+    "DocsCreateDocRequestContent",
     "DocsDoc",
     "DocsDocContent",
     "DocsDocOwner",

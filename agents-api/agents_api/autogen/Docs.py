@@ -31,6 +31,30 @@ class BaseDocSearchRequest(BaseModel):
     """
 
 
+class CreateDocRequest(BaseModel):
+    """
+    Payload for creating a doc
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata: dict[str, Any] | None = None
+    title: Annotated[
+        str,
+        Field(
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
+        ),
+    ]
+    """
+    Title describing what this document contains
+    """
+    content: str | list[str]
+    """
+    Contents of the document
+    """
+
+
 class Doc(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
