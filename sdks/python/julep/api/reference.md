@@ -1117,7 +1117,7 @@ Create a new task
 <dd>
 
 ```python
-from julep import TasksEvaluateStep, TasksTaskTool
+from julep import TasksTaskTool
 from julep.client import JulepApi
 
 client = JulepApi(
@@ -1128,11 +1128,7 @@ client.tasks_route_create(
     id="id",
     name="name",
     description="description",
-    main=[
-        TasksEvaluateStep(
-            evaluate={"key": "value"},
-        )
-    ],
+    main=[],
     tools=[
         TasksTaskTool(
             type="function",
@@ -1259,7 +1255,7 @@ Update an existing task (overwrite existing values)
 <dd>
 
 ```python
-from julep import TasksEvaluateStep, TasksTaskTool
+from julep import TasksTaskTool
 from julep.client import JulepApi
 
 client = JulepApi(
@@ -1270,11 +1266,7 @@ client.tasks_route_update(
     id="id",
     child_id="child_id",
     description="description",
-    main=[
-        TasksEvaluateStep(
-            evaluate={"key": "value"},
-        )
-    ],
+    main=[],
     tools=[
         TasksTaskTool(
             type="function",
@@ -2186,7 +2178,7 @@ Create or update a task
 <dd>
 
 ```python
-from julep import TasksEvaluateStep, TasksTaskTool
+from julep import TasksTaskTool
 from julep.client import JulepApi
 
 client = JulepApi(
@@ -2198,11 +2190,7 @@ client.tasks_create_or_update_route_create_or_update(
     id="id",
     name="name",
     description="description",
-    main=[
-        TasksEvaluateStep(
-            evaluate={"key": "value"},
-        )
-    ],
+    main=[],
     tools=[
         TasksTaskTool(
             type="function",

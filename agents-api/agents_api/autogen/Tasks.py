@@ -14,6 +14,18 @@ from .Entries import InputChatMLMessage
 from .Tools import FunctionDef
 
 
+class BaseWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal[
+        "tool_call", "yield", "prompt", "evaluate", "if_else", "wait_for_input", "error"
+    ]
+    """
+    The kind of step
+    """
+
+
 class CreateTaskRequest(BaseModel):
     """
     Payload for creating a task
@@ -30,6 +42,7 @@ class CreateTaskRequest(BaseModel):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | WaitForInputStep
         | IfElseWorkflowStep
     ]
     """
@@ -50,40 +63,55 @@ class CreateTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ErrorWorkflowStep(BaseModel):
+class ErrorWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: Literal["error"] = "error"
     error: str
     """
     The error message
     """
 
 
-class EvaluateStep(BaseModel):
+class EvaluateStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: Literal["evaluate"] = "evaluate"
     evaluate: dict[str, str]
     """
     The expression to evaluate
     """
 
 
-class IfElseWorkflowStep(BaseModel):
+class IfElseWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: Literal["if_else"] = "if_else"
     if_: Annotated[str, Field(alias="if")]
     """
     The condition to evaluate
     """
-    then: EvaluateStep | ToolCallStep | YieldStep | PromptStep | ErrorWorkflowStep
+    then: (
+        Any
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | WaitForInputStep
+    )
     """
     The steps to run if the condition is true
     """
     else_: Annotated[
-        EvaluateStep | ToolCallStep | YieldStep | PromptStep | ErrorWorkflowStep,
+        Any
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | WaitForInputStep,
         Field(alias="else"),
     ]
     """
@@ -107,6 +135,7 @@ class PatchTaskRequest(BaseModel):
             | YieldStep
             | PromptStep
             | ErrorWorkflowStep
+            | WaitForInputStep
             | IfElseWorkflowStep
         ]
         | None
@@ -129,10 +158,11 @@ class PatchTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class PromptStep(BaseModel):
+class PromptStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: Literal["prompt"] = "prompt"
     prompt: str | list[InputChatMLMessage]
     """
     The prompt to run
@@ -356,6 +386,7 @@ class Task(BaseModel):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | WaitForInputStep
         | IfElseWorkflowStep
     ]
     """
@@ -407,10 +438,11 @@ class TaskTool(BaseModel):
     api_call: Any | None = None
 
 
-class ToolCallStep(BaseModel):
+class ToolCallStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: Literal["tool_call"] = "tool_call"
     tool: Annotated[
         str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
     ]
@@ -438,6 +470,7 @@ class UpdateTaskRequest(BaseModel):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | WaitForInputStep
         | IfElseWorkflowStep
     ]
     """
@@ -458,10 +491,22 @@ class UpdateTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class YieldStep(BaseModel):
+class WaitForInputStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: Literal["wait_for_input"] = "wait_for_input"
+    info: str | dict[str, Any]
+    """
+    Any additional info or data
+    """
+
+
+class YieldStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["yield"] = "yield"
     workflow: str
     """
     The subworkflow to run

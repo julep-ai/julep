@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Tasks_ErrorWorkflowStep = {
+export const $Tasks_WaitForInputStep = {
   type: "all-of",
   contains: [
     {
@@ -14,9 +14,20 @@ export const $Tasks_ErrorWorkflowStep = {
           type: "Enum",
           isRequired: true,
         },
-        error: {
-          type: "string",
-          description: `The error message`,
+        info: {
+          type: "any-of",
+          description: `Any additional info or data`,
+          contains: [
+            {
+              type: "string",
+            },
+            {
+              type: "dictionary",
+              contains: {
+                properties: {},
+              },
+            },
+          ],
           isRequired: true,
         },
       },

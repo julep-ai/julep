@@ -5,19 +5,14 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_tool_ref import CommonToolRef
 from .tasks_base_workflow_step import TasksBaseWorkflowStep
+from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 
 
-class TasksToolCallStep(TasksBaseWorkflowStep):
-    tool: CommonToolRef = pydantic_v1.Field()
+class TasksWaitForInputStep(TasksBaseWorkflowStep):
+    info: TasksWaitForInputStepInfo = pydantic_v1.Field()
     """
-    The tool to run
-    """
-
-    arguments: typing.Dict[str, typing.Any] = pydantic_v1.Field()
-    """
-    The input parameters for the tool
+    Any additional info or data
     """
 
     def json(self, **kwargs: typing.Any) -> str:

@@ -194,14 +194,33 @@ from .task_executions_route_list_request_sort_by import (
     TaskExecutionsRouteListRequestSortBy,
 )
 from .task_executions_route_list_response import TaskExecutionsRouteListResponse
+from .tasks_base_workflow_step import TasksBaseWorkflowStep
 from .tasks_create_task_request import TasksCreateTaskRequest
-from .tasks_create_task_request_main_item import TasksCreateTaskRequestMainItem
+from .tasks_create_task_request_main_item import (
+    TasksCreateTaskRequestMainItem,
+    TasksCreateTaskRequestMainItem_Error,
+    TasksCreateTaskRequestMainItem_Evaluate,
+    TasksCreateTaskRequestMainItem_IfElse,
+    TasksCreateTaskRequestMainItem_Prompt,
+    TasksCreateTaskRequestMainItem_ToolCall,
+    TasksCreateTaskRequestMainItem_WaitForInput,
+    TasksCreateTaskRequestMainItem_Yield,
+)
 from .tasks_error_workflow_step import TasksErrorWorkflowStep
 from .tasks_evaluate_step import TasksEvaluateStep
 from .tasks_if_else_workflow_step import TasksIfElseWorkflowStep
 from .tasks_if_else_workflow_step_else import TasksIfElseWorkflowStepElse
 from .tasks_if_else_workflow_step_then import TasksIfElseWorkflowStepThen
-from .tasks_patch_task_request_main_item import TasksPatchTaskRequestMainItem
+from .tasks_patch_task_request_main_item import (
+    TasksPatchTaskRequestMainItem,
+    TasksPatchTaskRequestMainItem_Error,
+    TasksPatchTaskRequestMainItem_Evaluate,
+    TasksPatchTaskRequestMainItem_IfElse,
+    TasksPatchTaskRequestMainItem_Prompt,
+    TasksPatchTaskRequestMainItem_ToolCall,
+    TasksPatchTaskRequestMainItem_WaitForInput,
+    TasksPatchTaskRequestMainItem_Yield,
+)
 from .tasks_prompt_step import TasksPromptStep
 from .tasks_prompt_step_prompt import TasksPromptStepPrompt
 from .tasks_prompt_step_settings import TasksPromptStepSettings
@@ -214,10 +233,30 @@ from .tasks_route_list_request_direction import TasksRouteListRequestDirection
 from .tasks_route_list_request_sort_by import TasksRouteListRequestSortBy
 from .tasks_route_list_response import TasksRouteListResponse
 from .tasks_task import TasksTask
-from .tasks_task_main_item import TasksTaskMainItem
+from .tasks_task_main_item import (
+    TasksTaskMainItem,
+    TasksTaskMainItem_Error,
+    TasksTaskMainItem_Evaluate,
+    TasksTaskMainItem_IfElse,
+    TasksTaskMainItem_Prompt,
+    TasksTaskMainItem_ToolCall,
+    TasksTaskMainItem_WaitForInput,
+    TasksTaskMainItem_Yield,
+)
 from .tasks_task_tool import TasksTaskTool
 from .tasks_tool_call_step import TasksToolCallStep
-from .tasks_update_task_request_main_item import TasksUpdateTaskRequestMainItem
+from .tasks_update_task_request_main_item import (
+    TasksUpdateTaskRequestMainItem,
+    TasksUpdateTaskRequestMainItem_Error,
+    TasksUpdateTaskRequestMainItem_Evaluate,
+    TasksUpdateTaskRequestMainItem_IfElse,
+    TasksUpdateTaskRequestMainItem_Prompt,
+    TasksUpdateTaskRequestMainItem_ToolCall,
+    TasksUpdateTaskRequestMainItem_WaitForInput,
+    TasksUpdateTaskRequestMainItem_Yield,
+)
+from .tasks_wait_for_input_step import TasksWaitForInputStep
+from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 from .tasks_yield_step import TasksYieldStep
 from .tools_chosen_function_call import ToolsChosenFunctionCall
 from .tools_chosen_tool_call import ToolsChosenToolCall, ToolsChosenToolCall_Function
@@ -388,14 +427,29 @@ __all__ = [
     "TaskExecutionsRouteListRequestDirection",
     "TaskExecutionsRouteListRequestSortBy",
     "TaskExecutionsRouteListResponse",
+    "TasksBaseWorkflowStep",
     "TasksCreateTaskRequest",
     "TasksCreateTaskRequestMainItem",
+    "TasksCreateTaskRequestMainItem_Error",
+    "TasksCreateTaskRequestMainItem_Evaluate",
+    "TasksCreateTaskRequestMainItem_IfElse",
+    "TasksCreateTaskRequestMainItem_Prompt",
+    "TasksCreateTaskRequestMainItem_ToolCall",
+    "TasksCreateTaskRequestMainItem_WaitForInput",
+    "TasksCreateTaskRequestMainItem_Yield",
     "TasksErrorWorkflowStep",
     "TasksEvaluateStep",
     "TasksIfElseWorkflowStep",
     "TasksIfElseWorkflowStepElse",
     "TasksIfElseWorkflowStepThen",
     "TasksPatchTaskRequestMainItem",
+    "TasksPatchTaskRequestMainItem_Error",
+    "TasksPatchTaskRequestMainItem_Evaluate",
+    "TasksPatchTaskRequestMainItem_IfElse",
+    "TasksPatchTaskRequestMainItem_Prompt",
+    "TasksPatchTaskRequestMainItem_ToolCall",
+    "TasksPatchTaskRequestMainItem_WaitForInput",
+    "TasksPatchTaskRequestMainItem_Yield",
     "TasksPromptStep",
     "TasksPromptStepPrompt",
     "TasksPromptStepSettings",
@@ -407,9 +461,25 @@ __all__ = [
     "TasksRouteListResponse",
     "TasksTask",
     "TasksTaskMainItem",
+    "TasksTaskMainItem_Error",
+    "TasksTaskMainItem_Evaluate",
+    "TasksTaskMainItem_IfElse",
+    "TasksTaskMainItem_Prompt",
+    "TasksTaskMainItem_ToolCall",
+    "TasksTaskMainItem_WaitForInput",
+    "TasksTaskMainItem_Yield",
     "TasksTaskTool",
     "TasksToolCallStep",
     "TasksUpdateTaskRequestMainItem",
+    "TasksUpdateTaskRequestMainItem_Error",
+    "TasksUpdateTaskRequestMainItem_Evaluate",
+    "TasksUpdateTaskRequestMainItem_IfElse",
+    "TasksUpdateTaskRequestMainItem_Prompt",
+    "TasksUpdateTaskRequestMainItem_ToolCall",
+    "TasksUpdateTaskRequestMainItem_WaitForInput",
+    "TasksUpdateTaskRequestMainItem_Yield",
+    "TasksWaitForInputStep",
+    "TasksWaitForInputStepInfo",
     "TasksYieldStep",
     "ToolsChosenFunctionCall",
     "ToolsChosenToolCall",
