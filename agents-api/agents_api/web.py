@@ -90,9 +90,9 @@ app.add_middleware(
 register_exceptions(app)
 
 app.include_router(agents.router)
-app.include_router(sessions.router)
-app.include_router(users.router)
-app.include_router(jobs.router)
+# app.include_router(sessions.router)
+# app.include_router(users.router)
+# app.include_router(jobs.router)
 app.include_router(tasks.router)
 
 
