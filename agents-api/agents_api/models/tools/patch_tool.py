@@ -33,7 +33,7 @@ from ..utils import (
 @beartype
 def patch_tool(
     *, developer_id: UUID, agent_id: UUID, tool_id: UUID, patch_tool: PatchToolRequest
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     # Execute the datalog query and return the results as a DataFrame
     Updates the tool information for a given agent and tool ID in the 'cozodb' database.
@@ -95,7 +95,4 @@ def patch_tool(
         patch_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, dict(input=tool_vals))
+    return (queries, dict(input=tool_vals))

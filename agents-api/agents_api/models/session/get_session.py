@@ -30,7 +30,7 @@ def get_session(
     *,
     developer_id: UUID,
     session_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to retrieve session information from the 'cozodb' database.
 
@@ -102,7 +102,4 @@ def get_session(
         get_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"session_id": session_id, "developer_id": developer_id})
+    return (queries, {"session_id": session_id, "developer_id": developer_id})

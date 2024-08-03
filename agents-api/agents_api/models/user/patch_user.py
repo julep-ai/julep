@@ -39,7 +39,7 @@ def patch_user(
     developer_id: UUID,
     user_id: UUID,
     data: PatchUserRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Generates a datalog query for updating a user's information.
 
@@ -90,11 +90,8 @@ def patch_user(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "user_update_vals": user_update_vals,
             "metadata": metadata,

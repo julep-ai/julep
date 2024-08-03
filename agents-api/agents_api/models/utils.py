@@ -1,4 +1,5 @@
 import inspect
+import re
 from functools import partialmethod, wraps
 from typing import Any, Callable, ParamSpec, Type
 from uuid import UUID
@@ -7,13 +8,47 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ..clients.cozo import client as cozo_client
-from ..common.utils.cozo import uuid_int_list_to_uuid4 as fix_uuid
+from ..common.utils.cozo import uuid_int_list_to_uuid4
 
 P = ParamSpec("P")
 
 
-def fix_uuid_list(x, attr="id"):
-    return [{**i, attr: fix_uuid(i[attr])} for i in x]
+def fix_uuid(
+    item: dict[str, Any], attr_regex: str = r"^(?:id|.*_id)$"
+) -> dict[str, Any]:
+    # find the attributes that are ids
+    id_attrs = [
+        attr for attr in item.keys() if re.match(attr_regex, attr) and item[attr]
+    ]
+
+    if not id_attrs:
+        return item
+
+    fixed = {
+        **item,
+        **{attr: uuid_int_list_to_uuid4(item[attr]) for attr in id_attrs},
+    }
+
+    return fixed
+
+
+def fix_uuid_list(
+    items: list[dict[str, Any]], attr_regex: str = r"^(?:id|.*_id)$"
+) -> list[dict[str, Any]]:
+    fixed = list(map(lambda item: fix_uuid(item, attr_regex), items))
+    return fixed
+
+
+def fix_uuid_if_present(item: Any, attr_regex: str = r"^(?:id|.*_id)$") -> Any:
+    match item:
+        case [dict(), *_]:
+            return fix_uuid_list(item, attr_regex)
+
+        case dict():
+            return fix_uuid(item, attr_regex)
+
+        case _:
+            return item
 
 
 def partialclass(cls, *args, **kwargs):
@@ -70,10 +105,15 @@ def verify_developer_owns_resource_query(
     return rule
 
 
+def make_cozo_json_query(fields):
+    return ", ".join(f'"{field}": {field}' for field in fields).strip()
+
+
 def cozo_query(
-    func: Callable[P, tuple[str, dict]] | None = None, debug: bool | None = None
+    func: Callable[P, tuple[str | list[str], dict]] | None = None,
+    debug: bool | None = None,
 ):
-    def cozo_query_dec(func: Callable[P, tuple[str, dict]]):
+    def cozo_query_dec(func: Callable[P, tuple[str | list[str], dict]]):
         """
         Decorator that wraps a function that takes arbitrary arguments, and
         returns a (query string, variables) tuple.
@@ -87,7 +127,14 @@ def cozo_query(
 
         @wraps(func)
         def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
-            query, variables = func(*args, **kwargs)
+            queries, variables = func(*args, **kwargs)
+
+            if isinstance(queries, str):
+                query = queries
+            else:
+                queries = [query for query in queries if query]
+                query = "}\n\n{\n".join(queries)
+                query = f"{{ {query} }}"
 
             debug and pprint(
                 dict(
@@ -97,6 +144,9 @@ def cozo_query(
             )
 
             result = client.run(query, variables)
+
+            # Need to fix the UUIDs in the result
+            result = result.map(fix_uuid_if_present)
 
             debug and pprint(
                 dict(

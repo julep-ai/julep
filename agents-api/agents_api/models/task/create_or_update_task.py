@@ -14,6 +14,7 @@ from ...autogen.openapi_model import (
     CreateOrUpdateTaskRequest,
     ResourceUpdatedResponse,
 )
+from ...common.protocol.tasks import task_to_spec
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
 from ..utils import (
@@ -24,7 +25,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .create_task import task_to_spec
 
 
 @rewrap_exceptions(
@@ -52,7 +52,7 @@ def create_or_update_task(
     agent_id: UUID,
     task_id: UUID,
     data: CreateOrUpdateTaskRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     task_id = str(task_id)
@@ -60,7 +60,7 @@ def create_or_update_task(
     data.metadata = data.metadata or {}
     data.input_schema = data.input_schema or {}
 
-    task_data = task_to_spec(data)
+    task_data = task_to_spec(data).model_dump(exclude_none=True, exclude_unset=True)
     task_data.pop("task_id", None)
     task_data["created_at"] = utcnow().timestamp()
 
@@ -93,11 +93,8 @@ def create_or_update_task(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "values": values,
             "agent_id": agent_id,

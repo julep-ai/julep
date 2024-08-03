@@ -26,7 +26,7 @@ from ..utils import (
 @wrap_in_class(Agent, one=True)
 @cozo_query
 @beartype
-def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
+def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict]:
     """
     Fetches agent details and default settings from the database.
 
@@ -44,7 +44,7 @@ def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
     # The query uses input parameters for agent_id and developer_id to filter the results.
     # It joins the 'agents' and 'agent_default_settings' relations to fetch comprehensive details.
     get_query = """
-        input[agent_id, developer_id] <- [[to_uuid($agent_id), to_uuid($developer_id)]]
+        input[agent_id] <- [[to_uuid($agent_id)]]
 
         ?[
             id,
@@ -56,9 +56,8 @@ def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
             metadata,
             default_settings,
             instructions,
-        ] := input[id, developer_id],
+        ] := input[id],
             *agents {
-                developer_id,
                 agent_id: id,
                 model,
                 name,
@@ -97,9 +96,6 @@ def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[str, dict]:
         get_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     # Execute the constructed datalog query using the provided CozoClient.
     # The result is returned as a pandas DataFrame.
-    return (query, {"agent_id": str(agent_id), "developer_id": str(developer_id)})
+    return (queries, {"agent_id": str(agent_id), "developer_id": str(developer_id)})

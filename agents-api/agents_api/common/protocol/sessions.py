@@ -13,7 +13,6 @@ from ...autogen.openapi_model import (
     GenerationPresetSettings,
     OpenAISettings,
     Session,
-    Settings,
     Tool,
     User,
     VLLMSettings,

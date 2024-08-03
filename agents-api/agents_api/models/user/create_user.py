@@ -35,7 +35,7 @@ def create_user(
     developer_id: UUID,
     user_id: UUID | None = None,
     data: CreateUserRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to create a new user in the CozoDB database.
 
@@ -76,11 +76,8 @@ def create_user(
         create_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "user_id": str(user_id),
             "developer_id": str(developer_id),

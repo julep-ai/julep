@@ -53,6 +53,7 @@ def make_session(
     Create a new session object.
     """
     cls, participants = None, {}
+
     match (len(agents), len(users)):
         case (0, _):
             raise ValueError("At least one agent must be provided.")
@@ -70,3 +71,90 @@ def make_session(
             participants = {"agents": agents, "users": users}
 
     return cls(**{**data, **participants})
+
+
+WorkflowStep = (
+    PromptStep
+    | EvaluateStep
+    | YieldStep
+    | ToolCallStep
+    | ErrorWorkflowStep
+    | IfElseWorkflowStep
+)
+
+
+class Workflow(BaseModel):
+    name: str
+    steps: list[WorkflowStep]
+
+
+class TaskToolDef(BaseModel):
+    type: str
+    name: str
+    spec: dict
+    inherited: bool = False
+
+
+_Task = Task
+
+
+class TaskSpec(_Task):
+    model_config = ConfigDict(extra="ignore")
+
+    workflows: list[Workflow]
+    main: list[WorkflowStep] | None = None
+
+
+class TaskSpecDef(TaskSpec):
+    id: UUID | None = None
+    created_at: AwareDatetime | None = None
+    updated_at: AwareDatetime | None = None
+
+
+class PartialTaskSpecDef(TaskSpecDef):
+    name: str | None = None
+
+
+class Task(_Task):
+    model_config = ConfigDict(
+        **{
+            **_Task.model_config,
+            "extra": "allow",
+        }
+    )
+
+
+_CreateTaskRequest = CreateTaskRequest
+
+
+class CreateTaskRequest(_CreateTaskRequest):
+    model_config = ConfigDict(
+        **{
+            **_CreateTaskRequest.model_config,
+            "extra": "allow",
+        }
+    )
+
+
+_PatchTaskRequest = PatchTaskRequest
+
+
+class PatchTaskRequest(_PatchTaskRequest):
+    model_config = ConfigDict(
+        **{
+            **_PatchTaskRequest.model_config,
+            "extra": "allow",
+        }
+    )
+
+
+_UpdateTaskRequest = UpdateTaskRequest
+
+
+class UpdateTaskRequest(_UpdateTaskRequest):
+    model_config = ConfigDict(
+        **{
+            **_UpdateTaskRequest.model_config,
+            "extra": "allow",
+        }
+    )

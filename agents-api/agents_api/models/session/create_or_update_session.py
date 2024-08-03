@@ -44,7 +44,7 @@ def create_or_update_session(
     session_id: UUID,
     developer_id: UUID,
     data: CreateOrUpdateSessionRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     data.metadata = data.metadata or {}
     session_data = data.model_dump()
 
@@ -140,11 +140,8 @@ def create_or_update_session(
         update_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "session_update_vals": session_update_vals,
             "session_id": str(session_id),

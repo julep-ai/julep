@@ -31,7 +31,7 @@ def get_execution_transition(
     developer_id: UUID,
     transition_id: UUID | None = None,
     task_token: str | None = None,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     # At least one of `transition_id` or `task_token` must be provided
     assert (
         transition_id or task_token
@@ -62,7 +62,4 @@ def get_execution_transition(
         get_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"task_token": task_token, "transition_id": transition_id})
+    return (queries, {"task_token": task_token, "transition_id": transition_id})

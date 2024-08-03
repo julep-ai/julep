@@ -35,7 +35,7 @@ def list_tools(
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     agent_id = str(agent_id)
 
     sort = f"{'-' if direction == 'desc' else ''}{sort_by}"
@@ -73,10 +73,7 @@ def list_tools(
         list_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {"agent_id": agent_id, "limit": limit, "offset": offset},
     )

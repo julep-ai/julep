@@ -38,7 +38,7 @@ from ..utils import (
 @beartype
 def delete_entries_for_session(
     *, developer_id: UUID, session_id: UUID
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and returns a datalog query for deleting entries associated with a given session ID from the 'cozodb' database.
 
@@ -82,10 +82,7 @@ def delete_entries_for_session(
         delete_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"session_id": str(session_id)})
+    return (queries, {"session_id": str(session_id)})
 
 
 @rewrap_exceptions(
@@ -107,7 +104,7 @@ def delete_entries_for_session(
 @beartype
 def delete_entries(
     *, developer_id: UUID, session_id: UUID, entry_ids: list[UUID]
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     delete_query = """
         input[entry_id_str] <- $entry_ids
         
@@ -144,7 +141,4 @@ def delete_entries(
         delete_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"entry_ids": [[str(id)] for id in entry_ids]})
+    return (queries, {"entry_ids": [[str(id)] for id in entry_ids]})

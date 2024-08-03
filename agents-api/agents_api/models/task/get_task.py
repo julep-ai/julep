@@ -30,7 +30,7 @@ def get_task(
     *,
     developer_id: UUID,
     task_id: UUID,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     get_query = """
     input[task_id] <- [[to_uuid($task_id)]]
 
@@ -79,7 +79,7 @@ def get_task(
         }
 
     ?[
-        task_id,
+        id,
         agent_id,
         name,
         description,
@@ -93,7 +93,7 @@ def get_task(
     ] := 
         tool_data[inherited_tools],
         task_data[
-            task_id,
+            id,
             agent_id,
             name,
             description,
@@ -117,7 +117,4 @@ def get_task(
         get_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
-    return (query, {"task_id": str(task_id)})
+    return (queries, {"task_id": str(task_id)})

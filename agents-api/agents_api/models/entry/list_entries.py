@@ -37,7 +37,7 @@ def list_entries(
     sort_by: Literal["created_at", "timestamp"] = "timestamp",
     direction: Literal["asc", "desc"] = "asc",
     exclude_relations: list[str] = [],
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a query to retrieve entries from the 'cozodb' database.
     """
@@ -97,11 +97,8 @@ def list_entries(
         list_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "session_id": session_id,
             "allowed_sources": allowed_sources,

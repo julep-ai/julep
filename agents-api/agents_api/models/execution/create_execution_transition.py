@@ -1,4 +1,3 @@
-import json
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -48,7 +47,7 @@ def create_execution_transition(
     transition_id: UUID | None = None,
     data: CreateTransitionRequest,
     task_token: str | None = None,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     transition_id = transition_id or uuid4()
 
     data.metadata = data.metadata or {}
@@ -108,11 +107,8 @@ def create_execution_transition(
         insert_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "values": values,
             "next_type": data.type,

@@ -10,7 +10,8 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import PatchTaskRequest, ResourceUpdatedResponse
+from ...autogen.openapi_model import PatchTaskRequest, ResourceUpdatedResponse, TaskSpec
+from ...common.protocol.tasks import task_to_spec
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -20,7 +21,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .create_task import TaskSpec, task_to_spec
 
 
 @rewrap_exceptions(
@@ -48,22 +48,29 @@ def patch_task(
     agent_id: UUID,
     task_id: UUID,
     data: PatchTaskRequest,
-) -> tuple[str, dict]:
+) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     agent_id = str(agent_id)
     task_id = str(task_id)
 
     data.input_schema = data.input_schema or {}
-    task_data = task_to_spec(data, exclude_none=True, exclude_unset=True)
+    task_data = task_to_spec(data, exclude_none=True, exclude_unset=True).model_dump(
+        exclude_none=True, exclude_unset=True
+    )
     task_data.pop("task_id", None)
 
     assert len(task_data), "No data provided to update task"
     metadata = task_data.pop("metadata", {})
     columns, values = cozo_process_mutate_data(task_data)
 
-    all_columns = TaskSpec.__annotations__.keys()
+    all_columns = list(TaskSpec.model_fields.keys())
+    all_columns.remove("id")
+    all_columns.remove("main")
+
     missing_columns = (
-        set(all_columns) - set(columns.split(",")) - {"metadata", "name", "task_id"}
+        set(all_columns)
+        - set(columns.split(","))
+        - {"metadata", "created_at", "updated_at"}
     )
     missing_columns_str = ",".join(missing_columns)
 
@@ -73,10 +80,9 @@ def patch_task(
             agent_id = to_uuid($agent_id),
             task_id = to_uuid($task_id)
 
-        original[created_at, name, metadata, {missing_columns_str}] :=
+        original[created_at, metadata, {missing_columns_str}] :=
             ids[agent_id, task_id],
             *tasks{{
-                name,
                 agent_id,
                 task_id,
                 created_at,
@@ -84,17 +90,16 @@ def patch_task(
                 {missing_columns_str},
             }}
 
-        ?[created_at, updated_at_ms, agent_id, task_id, name, metadata, {columns}, {missing_columns_str}] :=
+        ?[created_at, updated_at_ms, agent_id, task_id, metadata, {columns}, {missing_columns_str}] :=
             ids[agent_id, task_id],
             input[{columns}],
-            original[created_at, name, _metadata, {missing_columns_str}],
+            original[created_at, _metadata, {missing_columns_str}],
             updated_at_ms = [floor(now() * 1000), true],
             metadata = _metadata ++ $metadata
 
         :put tasks {{
             agent_id,
             task_id,
-            name,
             created_at,
             updated_at_ms,
             metadata,
@@ -110,11 +115,8 @@ def patch_task(
         patch_query,
     ]
 
-    query = "}\n\n{\n".join(queries)
-    query = f"{{ {query} }}"
-
     return (
-        query,
+        queries,
         {
             "values": values,
             "agent_id": agent_id,
