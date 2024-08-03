@@ -4,8 +4,8 @@ It utilizes the environs library for environment variable parsing.
 """
 
 from pprint import pprint
-from environs import Env
 
+from environs import Env
 
 # Initialize the Env object for environment variable parsing.
 env = Env()
@@ -17,12 +17,6 @@ debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
 # Base URL for the COZO service. Defaults to the local development URL if not specified.
 cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
 cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
-prediction_project: str = env.str("PREDICTION_PROJECT", default=None)
-prediction_endpoint_id: str = env.str("PREDICTION_ENDPOINT_ID", default=None)
-prediction_location: str = env.str("PREDICTION_LOCATION", default="us-central1")
-prediction_api_endpoint: str = env.str(
-    "PREDICTION_API_ENDPOINT", default="us-central1-aiplatform.googleapis.com"
-)
 model_api_key: str = env.str("MODEL_API_KEY", default=None)
 model_inference_url: str = env.str("MODEL_INFERENCE_URL", default=None)
 openai_api_key: str = env.str("OPENAI_API_KEY", default="")

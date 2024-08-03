@@ -1,8 +1,10 @@
 """This module provides JSON utilities, including a custom JSON encoder for handling specific object types and a utility function for JSON serialization."""
 
 import json
-from uuid import UUID
 from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -36,6 +38,9 @@ class CustomJSONEncoder(json.JSONEncoder):
 
         if isinstance(obj, UUID):
             return str(obj)
+
+        if isinstance(obj, BaseModel):
+            return obj.model_dump()
 
         return obj
 

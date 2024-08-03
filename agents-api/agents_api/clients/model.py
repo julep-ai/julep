@@ -1,6 +1,6 @@
 from openai import AsyncOpenAI
-from ..env import model_inference_url, model_api_key, openai_api_key
 
+from ..env import model_api_key, model_inference_url, openai_api_key
 
 openai_client = AsyncOpenAI(api_key=openai_api_key)
 

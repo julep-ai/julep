@@ -1,13 +1,12 @@
 import json
-import pandas as pd
-
 from typing import Any
+
+import pandas as pd
 from tenacity import retry, stop_after_attempt
 
 from .data import entities_example_chat
 from .generate import generate
 from .utils import chatml, get_names_from_session
-
 
 ##############
 ## Entities ##

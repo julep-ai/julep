@@ -2,13 +2,12 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException
 from pydantic import UUID4
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
-from ...dependencies.developer_id import get_developer_id
-from ...models.agent.update_agent import update_agent_query
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateAgentRequest
 from ...common.exceptions.agents import AgentNotFoundError
-from ...autogen.openapi_model import UpdateAgentRequest, ResourceUpdatedResponse
-
+from ...dependencies.developer_id import get_developer_id
+from ...models.agent.update_agent import update_agent as update_agent_query
 from .router import router
 
 
@@ -24,15 +23,17 @@ async def update_agent(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     try:
-        updated_agent = update_agent_query(
-            agent_id=agent_id,
-            developer_id=x_developer_id,
-            name=request.name,
-            about=request.about,
-            model=request.model,
-            default_settings=request.default_settings,
-            metadata=request.metadata,
-            instructions=request.instructions,
+        _, updated_agent = next(
+            update_agent_query(
+                agent_id=agent_id,
+                developer_id=x_developer_id,
+                name=request.name,
+                about=request.about,
+                model=request.model,
+                default_settings=request.default_settings,
+                metadata=request.metadata,
+                instructions=request.instructions,
+            ).iterrows()
         )
         return ResourceUpdatedResponse(**updated_agent)
     except AgentNotFoundError as e:

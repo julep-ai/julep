@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from agents_api.autogen.openapi_model import ResponseFormat, Preset, Tool
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from agents_api.autogen.openapi_model import Preset, ResponseFormat, Tool
 
 
 class Settings(BaseModel):

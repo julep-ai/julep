@@ -1,11 +1,10 @@
 """This module contains functions for querying document-related data from the 'cozodb' database using datalog queries."""
 
-from beartype import beartype
-
 import json
-from typing import Literal, Any
+from typing import Any, Literal
 from uuid import UUID
 
+from beartype import beartype
 
 from ..utils import cozo_query
 

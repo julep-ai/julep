@@ -1,9 +1,11 @@
 from typing import Callable, Literal, Optional, Protocol
 from uuid import UUID
+
 from pydantic import BaseModel
+
 from agents_api.autogen.openapi_model import (
-    ChatMLTextContentPart,
     ChatMLImageContentPart,
+    ChatMLTextContentPart,
 )
 
 

@@ -1,16 +1,18 @@
-import tiktoken
-import numpy as np
-from typing import TypedDict, Any
 from dataclasses import dataclass
+from typing import Any, TypedDict
+
+import numpy as np
+import tiktoken
 from tokenizers import Tokenizer
-from agents_api.clients.model import openai_client
+
 from agents_api.clients.embed import embed
+from agents_api.clients.model import openai_client
+from agents_api.env import embedding_service_url
 from agents_api.exceptions import (
     ModelNotSupportedError,
     PromptTooBigError,
     UnknownTokenizerError,
 )
-from agents_api.env import embedding_service_url
 
 
 def normalize_l2(x):

@@ -16,7 +16,7 @@ export class JulepApiClient {
   ) {
     this.request = new HttpRequest({
       BASE: config?.BASE ?? "https://api-alpha.julep.ai/api",
-      VERSION: config?.VERSION ?? "1.0.0",
+      VERSION: config?.VERSION ?? "0.4.0",
       WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
       CREDENTIALS: config?.CREDENTIALS ?? "include",
       TOKEN: config?.TOKEN,

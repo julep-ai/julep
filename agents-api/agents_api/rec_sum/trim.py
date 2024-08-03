@@ -4,8 +4,7 @@ from tenacity import retry, stop_after_attempt
 
 from .data import trim_example_chat, trim_example_result
 from .generate import generate
-from .utils import chatml, add_indices, get_names_from_session
-
+from .utils import add_indices, chatml, get_names_from_session
 
 ##########
 ## Trim ##

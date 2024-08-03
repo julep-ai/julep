@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-
 module_directory = Path(__file__).parent
 
 

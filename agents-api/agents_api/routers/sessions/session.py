@@ -1,49 +1,52 @@
 import json
-import xxhash
-from functools import reduce
+from dataclasses import dataclass
+from functools import partial, reduce
 from json import JSONDecodeError
 from typing import Callable
 from uuid import uuid4
-from functools import partial
 
-from dataclasses import dataclass
+import litellm
+import xxhash
+from litellm import acompletion
 from openai.types.chat.chat_completion import ChatCompletion
 from pydantic import UUID4
 
-import litellm
-from litellm import acompletion
-
-from ...autogen.openapi_model import InputChatMLMessage, Tool, DocIds
+from ...autogen.openapi_model import (
+    CreateEntryRequest,
+    DocIds,
+    InputChatMLMessage,
+    Tool,
+)
 from ...clients.embed import embed
-from ...clients.temporal import run_summarization_task
-from ...clients.temporal import run_truncation_task
+from ...clients.temporal import run_summarization_task, run_truncation_task
 from ...clients.worker.types import ChatML
 from ...common.exceptions.sessions import SessionNotFoundError
 from ...common.protocol.entries import Entry
 from ...common.protocol.sessions import SessionData
-from ...common.utils.template import render_template
 from ...common.utils.json import CustomJSONEncoder
 from ...common.utils.messages import stringify_content
+from ...common.utils.template import render_template
 from ...env import (
-    embedding_service_url,
     embedding_model_id,
+    embedding_service_url,
+    model_api_key,
+    model_inference_url,
 )
+from ...exceptions import PromptTooBigError
 from ...model_registry import (
     LOCAL_MODELS,
     LOCAL_MODELS_WITH_TOOL_CALLS,
+    OLLAMA_MODELS,
+    get_extra_settings,
     load_context,
     validate_and_extract_tool_calls,
 )
-from ...models.entry.add_entries import add_entries_query
-from ...models.entry.proc_mem_context import proc_mem_context_query
-from ...models.session.session_data import get_session_data
+from ...models.entry.create_entries import create_entries
 from ...models.session.get_cached_response import get_cached_response
+from ...models.session.prepare_session_data import prepare_session_data
 from ...models.session.set_cached_response import set_cached_response
-from ...exceptions import PromptTooBigError
-
 from .exceptions import InputTooBigError
 from .protocol import Settings
-from ...env import model_inference_url, model_api_key
 
 THOUGHTS_STRIP_LEN = 2
 MESSAGES_STRIP_LEN = 4
@@ -61,9 +64,7 @@ doc_query_instruction = (
 
 
 def cache(f):
-    async def wrapper(
-        self, init_context: list[ChatML], settings: Settings
-    ) -> ChatCompletion:
+    async def wrapper(init_context: list[ChatML], settings: Settings) -> ChatCompletion:
         key = xxhash.xxh64(
             json.dumps(
                 {
@@ -76,13 +77,59 @@ def cache(f):
         ).hexdigest()
         result = get_cached_response(key=key)
         if not result.size:
-            resp = await f(self, init_context, settings)
+            resp = await f(init_context, settings)
             set_cached_response(key=key, value=resp.model_dump())
             return resp
         choices = result.iloc[0].to_dict()["value"]
         return ChatCompletion(**choices)
 
     return wrapper
+
+
+# FIXME: Refactor llm_generate and cache for use inside tasks as well
+# - these should probably be moved to a separate module
+@cache
+async def llm_generate(
+    init_context: list[ChatML], settings: Settings
+) -> ChatCompletion:
+    init_context = load_context(init_context, settings.model)
+    tools = None
+    api_base = None
+    api_key = None
+    model = settings.model
+    if model in [*LOCAL_MODELS.keys(), *LOCAL_MODELS_WITH_TOOL_CALLS.keys()]:
+        api_base = model_inference_url
+        api_key = model_api_key
+        model = f"openai/{model}"
+    if model in OLLAMA_MODELS:
+        model = f"ollama/{model}"
+
+    if settings.tools:
+        tools = [(tool.model_dump(exclude="id")) for tool in settings.tools]
+
+    extra_body = get_extra_settings(settings)
+
+    litellm.drop_params = True
+    litellm.add_function_to_prompt = True
+
+    res = await acompletion(
+        model=model,
+        messages=init_context,
+        max_tokens=settings.max_tokens,
+        stop=settings.stop,
+        temperature=settings.temperature,
+        frequency_penalty=settings.frequency_penalty,
+        top_p=settings.top_p,
+        presence_penalty=settings.presence_penalty,
+        stream=settings.stream,
+        tools=tools,
+        response_format=settings.response_format,
+        api_base=api_base,
+        api_key=api_key,
+        **extra_body,
+    )
+
+    return res
 
 
 @dataclass
@@ -165,7 +212,9 @@ class BaseSession:
         # TODO: implement locking at some point
 
         # Get session data
-        session_data = get_session_data(self.developer_id, self.session_id)
+        session_data = prepare_session_data(
+            developer_id=self.developer_id, session_id=self.session_id
+        )
         if session_data is None:
             raise SessionNotFoundError(self.developer_id, self.session_id)
 
@@ -364,7 +413,6 @@ class BaseSession:
             settings.tools.extend(tools)
         # If render_templates=True, render the templates
         if session_data is not None and session_data.render_templates:
-
             template_data = {
                 "session": {
                     "id": session_data.session_id,
@@ -399,10 +447,11 @@ class BaseSession:
 
         return messages, settings, doc_ids
 
-    @cache
     async def generate(
         self, init_context: list[ChatML], settings: Settings
     ) -> ChatCompletion:
+        # return await llm_generate(init_context, settings)
+
         init_context = load_context(init_context, settings.model)
         tools = None
         api_base = None
@@ -459,15 +508,20 @@ class BaseSession:
         entries: list[Entry] = []
         for m in new_input:
             entries.append(
-                Entry(
-                    session_id=self.session_id,
+                CreateEntryRequest(
                     role=m.role,
                     content=m.content,
                     name=m.name,
                 )
             )
 
-        entries.append(new_entry)
+        entries.append(
+            CreateEntryRequest(
+                role=new_entry.role,
+                content=new_entry.content,
+                name=new_entry.name,
+            )
+        )
         bg_task = None
 
         if (
@@ -481,7 +535,9 @@ class BaseSession:
             else:
                 raise PromptTooBigError(total_tokens, final_settings.token_budget)
 
-        add_entries_query(entries)
+        create_entries(
+            developer_id=self.developer_id, session_id=self.session_id, data=entries
+        )
 
         return bg_task
 

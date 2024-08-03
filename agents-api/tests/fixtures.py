@@ -1,8 +1,9 @@
 from uuid import uuid4
-from ward import fixture
-from julep import AsyncClient, Client
-from agents_api.routers.sessions.session import BaseSession
 
+from julep import AsyncClient, Client
+from ward import fixture
+
+from agents_api.routers.sessions.session import BaseSession
 
 # TODO: make clients connect to real service
 
@@ -78,4 +79,16 @@ def session(user=user, agent=agent, client=client):
         user_id=user.id,
         agent_id=agent.id,
         situation="test situation",
+    )
+
+
+@fixture
+def task(agent=agent, client=client):
+    return client.tasks.create(
+        agent_id=agent.id,
+        name="task1",
+        description="task 1",
+        tools_available=["tool1"],
+        input_schema={},
+        main=[],
     )

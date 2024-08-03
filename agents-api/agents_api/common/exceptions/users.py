@@ -1,6 +1,7 @@
 """This module defines custom exceptions related to user operations in the agents-api."""
 
 from uuid import UUID
+
 from . import BaseCommonException
 
 

@@ -1,5 +1,6 @@
 import httpx
-from ..env import embedding_service_url, truncate_embed_text, embedding_model_id
+
+from ..env import embedding_model_id, embedding_service_url, truncate_embed_text
 
 
 async def embed(

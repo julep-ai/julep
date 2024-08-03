@@ -1,21 +1,23 @@
 import uuid
+
 from julep.api import (
+    ChatMlMessage,
+    ChatResponse,
+    ChatSettingsResponseFormat,
+    ChatSettingsResponseFormatType,
+    InputChatMlMessage,
+    InputChatMlMessageRole,
     ResourceCreatedResponse,
     ResourceUpdatedResponse,
     Session,
-    ChatResponse,
-    InputChatMlMessage,
-    InputChatMlMessageRole,
-    ChatMlMessage,
-    ToolChoiceOption,
-    ChatSettingsResponseFormat,
-    ChatSettingsResponseFormatType,
-    Tool,
     Suggestion,
+    Tool,
+    ToolChoiceOption,
 )
 from julep.api.core import ApiError
 from ward import test
-from tests.fixtures import client, async_client, user, session, agent
+
+from tests.fixtures import agent, async_client, client, session, user
 
 
 @test("get existing session")

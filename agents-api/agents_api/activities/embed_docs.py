@@ -1,11 +1,11 @@
 from pydantic import UUID4
 from temporalio import activity
+
+from agents_api.embed_models_registry import EmbeddingModel
 from agents_api.env import embedding_model_id
 from agents_api.models.docs.embed_docs import (
     embed_docs_snippets_query,
 )
-from agents_api.embed_models_registry import EmbeddingModel
-
 
 snippet_embed_instruction = "Encode this passage for retrieval: "
 

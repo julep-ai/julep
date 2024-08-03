@@ -1,7 +1,9 @@
 from uuid import uuid4
-from ward import test, raises
-from agents_api.common.protocol.entries import Entry
+
+from ward import raises, test
+
 from agents_api.autogen.openapi_model import Role
+from agents_api.common.protocol.entries import Entry
 from agents_api.routers.sessions.exceptions import InputTooBigError
 from tests.fixtures import base_session
 

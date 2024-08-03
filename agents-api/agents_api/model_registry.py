@@ -4,17 +4,18 @@ Model Registry maintains a list of supported models and their configs.
 
 import ast
 import json
+import xml.etree.ElementTree as ET
+from typing import Dict, Literal, Optional
+
+import litellm
+from litellm.utils import get_valid_models
+from pydantic import BaseModel
+
 from agents_api.clients.worker.types import ChatML
 from agents_api.common.exceptions.agents import (
     AgentModelNotValid,
     MissingAgentModelAPIKeyError,
 )
-import litellm
-from litellm.utils import get_valid_models
-from pydantic import BaseModel
-from typing import Dict, Literal, Optional
-import xml.etree.ElementTree as ET
-
 
 GPT4_MODELS: Dict[str, int] = {
     # stable model names:
@@ -110,6 +111,10 @@ LOCAL_MODELS = {
 LOCAL_MODELS_WITH_TOOL_CALLS = {
     "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768,
     "julep-ai/Hermes-2-Theta-Llama-3-8B": 8192,
+}
+
+OLLAMA_MODELS = {
+    "llama2": 4096,
 }
 
 CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}

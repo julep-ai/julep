@@ -23,7 +23,9 @@ jinja_env.globals["arrow"] = arrow
 
 # Funcs
 async def render_template_string(
-    template_string: str, variables: dict, check: bool = False
+    template_string: str,
+    variables: dict,
+    check: bool = False,
 ) -> str:
     # Parse template
     template = jinja_env.from_string(template_string)
@@ -42,6 +44,7 @@ async def render_template_parts(
     template_strings: list[dict], variables: dict, check: bool = False
 ) -> list[dict]:
     # Parse template
+    # FIXME: should template_strings contain a list of ChatMLTextContentPart? Should we handle it somehow?
     templates = [
         (jinja_env.from_string(msg["text"]) if msg["type"] == "text" else None)
         for msg in template_strings
@@ -70,8 +73,16 @@ async def render_template_parts(
 
 
 async def render_template(
-    template_string: str | list[dict], variables: dict, check: bool = False
+    template_string: str | list[dict],
+    variables: dict,
+    check: bool = False,
+    skip_vars: list[str] | None = None,
 ) -> str | list[dict]:
+    variables = {
+        name: val
+        for name, val in variables.items()
+        if not (skip_vars is not None and isinstance(name, str) and name in skip_vars)
+    }
     if isinstance(template_string, str):
         return await render_template_string(template_string, variables, check)
 

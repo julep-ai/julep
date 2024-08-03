@@ -5,7 +5,6 @@ from temporalio.client import WorkflowExecutionStatus
 from agents_api.autogen.openapi_model import JobStatus, State
 from agents_api.clients.temporal import get_client
 
-
 router = APIRouter()
 
 
