@@ -1,9 +1,9 @@
-from typing import Annotated, List, Literal
+from typing import Annotated, Literal
 
 from fastapi import Depends
 from pydantic import UUID4
 
-from ...autogen.openapi_model import Agent
+from ...autogen.openapi_model import Agent, ListResponse
 from ...dependencies.developer_id import get_developer_id
 from ...models.agent.list_agents import list_agents as list_agents_query
 from .router import router
@@ -17,7 +17,7 @@ async def list_agents(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: str = "{}",
-) -> List[Agent]:
+) -> ListResponse[Agent]:
     agents = list_agents_query(
         developer_id=x_developer_id,
         limit=limit,
@@ -27,4 +27,4 @@ async def list_agents(
         metadata_filter=metadata_filter,
     )
 
-    return agents
+    return ListResponse[Agent](items=agents)

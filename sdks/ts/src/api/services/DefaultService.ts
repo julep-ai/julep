@@ -88,7 +88,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Agents_Agent>;
+    items: Array<Agents_Agent>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -936,7 +936,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Sessions_Session>;
+    items: Array<Sessions_Session>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1545,7 +1545,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Users_User>;
+    items: Array<Users_User>;
   }> {
     return this.httpRequest.request({
       method: "GET",
