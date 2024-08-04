@@ -1,11 +1,12 @@
 # Tests for tool queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
 from agents_api.autogen.openapi_model import FunctionDef, Tool
+
 from .create_tools import create_tools
 from .delete_tool import delete_tool
 from .get_tool import get_tool

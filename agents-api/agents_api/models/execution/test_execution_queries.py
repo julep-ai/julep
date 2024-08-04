@@ -1,19 +1,20 @@
 # Tests for execution queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
 from agents_api.autogen.openapi_model import Execution, Transition
+
 from ..agent.create_agent import create_agent
 from ..task.create_task import create_task
 from .create_execution import create_execution
-from .get_execution import get_execution
-from .list_executions import list_executions
 from .create_execution_transition import create_execution_transition
+from .get_execution import get_execution
 from .get_execution_transition import get_execution_transition
 from .list_execution_transitions import list_execution_transitions
+from .list_executions import list_executions
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -140,7 +141,12 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        data={"type": "step", "from": "test", "to": "test", "outputs": {"input": "test"}},
+        data={
+            "type": "step",
+            "from": "test",
+            "to": "test",
+            "outputs": {"input": "test"},
+        },
         client=client,
     )
 
@@ -156,7 +162,12 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        data={"type": "step", "from": "test", "to": "test", "outputs": {"input": "test"}},
+        data={
+            "type": "step",
+            "from": "test",
+            "to": "test",
+            "outputs": {"input": "test"},
+        },
         client=client,
     )
 
@@ -182,7 +193,12 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        data={"type": "step", "from": "test", "to": "test", "outputs": {"input": "test"}},
+        data={
+            "type": "step",
+            "from": "test",
+            "to": "test",
+            "outputs": {"input": "test"},
+        },
         client=client,
     )
 

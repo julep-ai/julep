@@ -1,11 +1,12 @@
 # Tests for task queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
 from agents_api.autogen.openapi_model import Task
+
 from .create_task import create_task
 from .delete_task import delete_task
 from .get_task import get_task

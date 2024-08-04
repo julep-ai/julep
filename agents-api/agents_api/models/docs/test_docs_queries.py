@@ -1,15 +1,15 @@
 # Tests for entry queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
 from .create_doc import create_doc
 from .delete_doc import delete_doc
+from .embed_snippets import embed_snippets
 from .get_doc import get_doc
 from .list_docs import list_docs
-from .embed_snippets import embed_snippets
 from .search_docs import search_docs_by_embedding
 
 EMBEDDING_SIZE: int = 1024

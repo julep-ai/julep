@@ -3,11 +3,12 @@
 # Tests for user queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import User
+
 from .create_user import create_user
 from .get_user import get_user
 from .list_users import list_users

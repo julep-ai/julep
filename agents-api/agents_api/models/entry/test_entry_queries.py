@@ -6,22 +6,20 @@ It verifies the functionality of adding, retrieving, and processing entries as d
 # Tests for entry queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from ...autogen.openapi_model import FunctionDef
-from ...common.protocol.entries import Entry
-from ..docs.create_docs import create_doc
-from ..docs.embed_snippets import embed_snippets
+from ...autogen.openapi_model import Entry, FunctionDef
 from ..agent.create_agent import create_agent
+from ..docs.create_doc import create_doc
+from ..docs.embed_snippets import embed_snippets
 from ..session.create_session import create_session
-from ..tools.create_tools import create_tool
-from ..tools.embed_tools import embed_tools
+from ..tools.create_tools import create_tools
 from ..user.create_user import create_user
 from .create_entries import create_entries
-from .list_entries import list_entries
 from .get_history import get_history
+from .list_entries import list_entries
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -174,14 +172,16 @@ def _():
             },
             client=client,
         ),
-        create_tool(
+        create_tools(
             developer_id=developer_id,
             agent_id=agent_id,
-            data={
-                "name": test_function.name,
-                "description": test_function.description,
-                "parameters": test_function.parameters,
-            },
+            data=[
+                {
+                    "name": test_function.name,
+                    "description": test_function.description,
+                    "parameters": test_function.parameters,
+                }
+            ],
             client=client,
         ),
         create_doc(
@@ -204,13 +204,6 @@ def _():
                 "title": test_user_doc,
                 "content": [test_user_doc],
             },
-            client=client,
-        ),
-        embed_tools(
-            developer_id=developer_id,
-            agent_id=agent_id,
-            tool_ids=[tool_id],
-            embeddings=[[1.0] * 768],
             client=client,
         ),
         embed_snippets(

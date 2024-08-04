@@ -1,11 +1,12 @@
 # Tests for agent queries
 from uuid import uuid4
 
-from cozo_migrate.api import init, apply
+from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
 from agents_api.autogen.openapi_model import Agent
+
 from .create_agent import create_agent
 from .delete_agent import delete_agent
 from .get_agent import get_agent
@@ -69,9 +70,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    result = get_agent(
-        agent_id=agent_id, developer_id=developer_id, client=client
-    )
+    result = get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     assert result is None
 
@@ -94,9 +93,7 @@ def _():
         client=client,
     )
 
-    result = get_agent(
-        agent_id=agent_id, developer_id=developer_id, client=client
-    )
+    result = get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     assert result is not None
     assert isinstance(result, Agent)
@@ -122,14 +119,10 @@ def _():
     )
 
     # Delete the agent
-    delete_agent(
-        agent_id=agent_id, developer_id=developer_id, client=client
-    )
+    delete_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     # Check that the agent is deleted
-    result = get_agent(
-        agent_id=agent_id, developer_id=developer_id, client=client
-    )
+    result = get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     assert result is None
 
