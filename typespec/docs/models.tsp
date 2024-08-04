@@ -36,6 +36,11 @@ model DocOwner {
     role: "user" | "agent";
 }
 
+model Snippet {
+    index: uint16;
+    content: string;
+}
+
 model DocReference {
     /** The owner of this document. */
     owner: DocOwner;
@@ -43,11 +48,11 @@ model DocReference {
     /** ID of the document */
     id: Doc.id;
 
-    /** Snippets referred to of the document */
-    snippet_index: uint16[];
-
     title?: string;
-    snippet?: string;
+    
+    @minItems(1)
+    snippets: Snippet[];
+    distance: float | null = null;
 }
 
 model EmbedQueryRequest {
@@ -79,25 +84,34 @@ model BaseDocSearchRequest {
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {
-    /** Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[] | float[][];
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
 
     text?: never;
 }
 
 model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
-    /** Text or texts to use in the search. */
-    text: string | string[];
+    /** Text to use in the search. */
+    text: string;
 
     vector?: never;
 }
 
 model HybridDocSearchRequest extends BaseDocSearchRequest {
-    /** Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
-    text: string | string[];
+    /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
+    text: string;
 
-    /** Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[] | float[][];
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
 }
 
 alias DocSearchRequest = VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest;
+
+model DocSearchResponse {
+    /** The documents that were found */
+    docs: DocReference[];
+
+    /** The time taken to search in seconds */
+    @minValueExclusive(0)
+    time: float;
+}

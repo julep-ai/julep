@@ -2,4 +2,4 @@
 
 import typing
 
-DocsTextOnlyDocSearchRequestText = typing.Union[str, typing.List[str]]
+DocsCreateDocRequestContent = typing.Union[str, typing.List[str]]

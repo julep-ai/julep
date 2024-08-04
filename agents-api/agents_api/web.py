@@ -21,10 +21,7 @@ from agents_api.env import sentry_dsn
 from agents_api.exceptions import PromptTooBigError
 from agents_api.routers import (
     agents,
-    jobs,
-    sessions,
     tasks,
-    users,
 )
 
 if not sentry_dsn:

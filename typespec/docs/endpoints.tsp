@@ -18,10 +18,12 @@ namespace Docs;
 //
 
 interface UserEndpoints
-    extends ChildLimitOffsetPagination<Doc, "List Docs owned by a User"> {}
+    extends ChildLimitOffsetPagination<Doc, "List Docs owned by a User">,
+        ChildCreateEndpoint<CreateDocRequest, "Create a Doc for this User"> {}
 
 interface AgentEndpoints
-    extends ChildLimitOffsetPagination<Doc, "List Docs owned by an Agent"> {}
+    extends ChildLimitOffsetPagination<Doc, "List Docs owned by an Agent">,
+        ChildCreateEndpoint<CreateDocRequest, "Create a Doc for this Agent"> {}
 
 interface IndividualDocEndpoints
     extends GetEndpoint<Doc, "Get Doc by id">,
@@ -45,7 +47,5 @@ interface SearchEndpoints<DocString extends valueof string = "Search for documen
 interface EmbedEndpoints {
     @doc("Embed a query for search")
     @post
-    embed(
-        body: EmbedQueryRequest,
-    ): EmbedQueryResponse;
+    embed(body: EmbedQueryRequest): EmbedQueryResponse;
 }

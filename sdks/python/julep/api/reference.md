@@ -843,6 +843,103 @@ client.agent_docs_route_list(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">agent_docs_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a Doc for this Agent
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_docs_route_create(
+    id="id",
+    title="title",
+    content="content",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**title:** `CommonIdentifierSafeUnicode` — Title describing what this document contains
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**content:** `DocsCreateDocRequestContent` — Contents of the document
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">agents_docs_search_route_search</a>(...)</code></summary>
 <dl>
 <dd>
@@ -4876,6 +4973,103 @@ client.user_docs_route_list(
 <dd>
 
 **metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">user_docs_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a Doc for this User
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.user_docs_route_create(
+    id="id",
+    title="title",
+    content="content",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**title:** `CommonIdentifierSafeUnicode` — Title describing what this document contains
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**content:** `DocsCreateDocRequestContent` — Contents of the document
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
     
 </dd>
 </dl>
