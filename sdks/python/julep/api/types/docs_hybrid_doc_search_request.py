@@ -6,19 +6,17 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .docs_base_doc_search_request import DocsBaseDocSearchRequest
-from .docs_hybrid_doc_search_request_text import DocsHybridDocSearchRequestText
-from .docs_hybrid_doc_search_request_vector import DocsHybridDocSearchRequestVector
 
 
 class DocsHybridDocSearchRequest(DocsBaseDocSearchRequest):
-    text: DocsHybridDocSearchRequestText = pydantic_v1.Field()
+    text: str = pydantic_v1.Field()
     """
-    Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
     """
 
-    vector: DocsHybridDocSearchRequestVector = pydantic_v1.Field()
+    vector: typing.List[float] = pydantic_v1.Field()
     """
-    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
 
     def json(self, **kwargs: typing.Any) -> str:

@@ -183,7 +183,9 @@ def wrap_in_class(
 
             nonlocal transform
             transform = transform or (lambda x: x)
+
             if one:
+                assert len(data) >= 1
                 return cls(**transform(data[0]))
 
             return [cls(**item) for item in map(transform, data)]

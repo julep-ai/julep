@@ -5,9 +5,8 @@ from fastapi import Depends
 from pydantic import UUID4
 
 from ...autogen.openapi_model import ResourceDeletedResponse
-from ...common.utils.datetime import utcnow
 from ...dependencies.developer_id import get_developer_id
-from ...models.tools.delete_tools import delete_tool as delete_tool_query
+from ...models.tools.delete_tool import delete_tool
 from .router import router
 
 
@@ -17,12 +16,8 @@ async def delete_agent_tools(
     tool_id: UUID,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
-    _, resp = next(
-        delete_tool_query(
-            developer_id=x_developer_id,
-            agent_id=agent_id,
-            tool_id=tool_id,
-        ).iterrows()
+    return delete_tool(
+        developer_id=x_developer_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
     )
-
-    return ResourceDeletedResponse(id=resp["tool_id"], deleted_at=utcnow())

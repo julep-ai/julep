@@ -100,12 +100,9 @@ class DocReference(BaseModel):
     """
     ID of the document
     """
-    snippet_index: list[int]
-    """
-    Snippets referred to of the document
-    """
     title: str | None = None
-    snippet: str | None = None
+    snippets: Annotated[list[Snippet], Field(min_length=1)]
+    distance: float | None = None
 
 
 class EmbedQueryRequest(BaseModel):
@@ -132,23 +129,31 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    text: str | list[str]
+    text: str
     """
-    Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
     """
-    vector: list[float] | list[list[float]]
+    vector: list[float]
     """
-    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
+
+
+class Snippet(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    index: int
+    content: str
 
 
 class TextOnlyDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    text: str | list[str]
+    text: str
     """
-    Text or texts to use in the search.
+    Text to use in the search.
     """
 
 
@@ -156,7 +161,7 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    vector: list[float] | list[list[float]]
+    vector: list[float]
     """
-    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """

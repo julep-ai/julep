@@ -12,7 +12,7 @@ This module is crucial for the effective management and utilization of tools in 
 # ruff: noqa: F401, F403, F405
 
 from .create_tools import create_tools
-from .delete_tools import delete_tools
+from .delete_tool import delete_tool
 from .get_tool import get_tool
 from .list_tools import list_tools
 from .patch_tool import patch_tool

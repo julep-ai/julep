@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "unify_owner_doc_relations"
 CREATED_AT = 1722710530.126563
@@ -70,11 +70,11 @@ snippets_hnsw_index = dict(
     ::hnsw create snippets:embedding_space {
         fields: [embedding],
         filter: !is_null(embedding),
-        dim: 768,
+        dim: 1024,
         distance: Cosine,
         m: 64,
         ef_construction: 256,
-        extend_candidates: false,
+        extend_candidates: true,
         keep_pruned_connections: false,
     }
     """,
@@ -87,7 +87,7 @@ snippets_hnsw_index = dict(
 snippets_fts_index = dict(
     up="""
     ::fts create snippets:fts {
-        extractor: concat(snippet),
+        extractor: content,
         tokenizer: Simple,
         filters: [Lowercase, Stemmer('english'), Stopwords('en')],
     }
@@ -116,37 +116,44 @@ drop_snippets_hnsw_index = {
     "down": snippets_hnsw_index["up"].replace("snippets:", "information_snippets:"),
 }
 
-
-drop_snippets_fts_index = {
-    "up": snippets_fts_index["down"].replace("snippets:", "information_snippets:"),
-    "down": snippets_fts_index["up"].replace("snippets:", "information_snippets:"),
-}
+drop_snippets_fts_index = dict(
+    up="""
+    ::fts drop information_snippets:fts
+    """,
+    down="""
+    ::fts create information_snippets:fts {
+        extractor: concat(title, ' ', snippet),
+        tokenizer: Simple,
+        filters: [Lowercase, Stemmer('english'), Stopwords('en')],
+    }
+    """,
+)
 
 
 remove_title_from_snippets_table = dict(
     up="""
-    ?[doc_id, snippet_idx, snippet, embedding] :=
+    ?[doc_id, index, content, embedding] :=
         *snippets {
             doc_id,
-            snippet_idx,
-            snippet,
+            snippet_idx: index,
+            snippet: content,
             embedding,
         }
 
      :replace snippets {
         doc_id: Uuid,
-        snippet_idx: Int,
+        index: Int,
         =>
-        snippet: String,
-        embedding: <F32; 768>? default null,
+        content: String,
+        embedding: <F32; 1024>? default null,
     }
     """,
     down="""
     ?[doc_id, snippet_idx, title, snippet, embedding] :=
         *snippets {
             doc_id,
-            snippet_idx,
-            snippet,
+            index: snippet_idx,
+            content: snippet,
             embedding,
         },
         *docs {
@@ -161,7 +168,7 @@ remove_title_from_snippets_table = dict(
         title: String,
         snippet: String,
         embed_instruction: String default 'Encode this passage for retrieval: ',
-        embedding: <F32; 768>? default null,
+        embedding: <F32; 1024>? default null,
     }
     """,
 )
