@@ -1,7 +1,7 @@
 import inspect
 import re
 from functools import partialmethod, wraps
-from typing import Any, Callable, ParamSpec, Type
+from typing import Any, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
 import pandas as pd
@@ -11,6 +11,7 @@ from ..clients.cozo import client as cozo_client
 from ..common.utils.cozo import uuid_int_list_to_uuid4
 
 P = ParamSpec("P")
+T = TypeVar("T")
 
 
 def fix_uuid(
@@ -126,7 +127,9 @@ def cozo_query(
             from pprint import pprint
 
         @wraps(func)
-        def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
+        def wrapper(
+            *args: P.args, client=cozo_client, **kwargs: P.kwargs
+        ) -> pd.DataFrame:
             queries, variables = func(*args, **kwargs)
 
             if isinstance(queries, str):
@@ -173,9 +176,9 @@ def wrap_in_class(
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
 ):
-    def decorator(func: Callable[..., pd.DataFrame]):
+    def decorator(func: Callable[P, pd.DataFrame]):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs):
             df = func(*args, **kwargs)
 
             # Convert df to list of dicts
@@ -206,13 +209,13 @@ def rewrap_exceptions(
     ],
     /,
 ):
-    def decorator(func: Callable[..., Any]):
+    def decorator(func: Callable[P, T]):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             nonlocal mapping
 
             try:
-                result = func(*args, **kwargs)
+                result: T = func(*args, **kwargs)
 
             except BaseException as error:
                 for check, transform in mapping.items():
