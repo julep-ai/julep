@@ -111,7 +111,7 @@ def _():
     user_id = uuid4()
     agent_id = uuid4()
     session_id = uuid4()
-    tool_id = uuid4()
+    uuid4()
     user_doc_id = uuid4()
     agent_doc_id = uuid4()
 
