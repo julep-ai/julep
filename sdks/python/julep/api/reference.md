@@ -3912,7 +3912,6 @@ client = JulepApi(
 )
 client.history_route_history(
     id="id",
-    limit=1,
 )
 
 ```
@@ -3930,14 +3929,6 @@ client.history_route_history(
 <dd>
 
 **id:** `CommonUuid` — ID of parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>

@@ -1,6 +1,5 @@
 """Module for retrieving document snippets from the CozoDB based on document IDs."""
 
-from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -38,14 +37,12 @@ from ..utils import (
 def get_doc(
     *,
     developer_id: UUID,
-    owner_type: Literal["user", "agent"],
     doc_id: UUID,
 ) -> tuple[list[str], dict]:
     """
     Retrieves snippets of documents by their ID from the CozoDB.
 
     Parameters:
-        owner_type (Literal["user", "agent"]): The type of the owner of the document.
         doc_id (UUID): The unique identifier of the document.
         client (CozoClient, optional): The CozoDB client instance. Defaults to a pre-configured client.
 
@@ -67,16 +64,13 @@ def get_doc(
             snippet_data = [index, content]
 
         ?[
-            owner_type,
             id,
             title,
             snippet_data,
             created_at,
             metadata,
         ] := input[id],
-            owner_type = $owner_type,
             *docs {
-                owner_type,
                 doc_id: id,
                 title,
                 created_at,
@@ -90,4 +84,4 @@ def get_doc(
         get_query,
     ]
 
-    return (queries, {"doc_id": doc_id, "owner_type": owner_type})
+    return (queries, {"doc_id": doc_id})

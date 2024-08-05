@@ -1404,25 +1404,17 @@ export class DefaultService {
    */
   public historyRouteHistory({
     id,
-    limit = 100,
   }: {
     /**
      * ID of parent
      */
     id: Common_uuid;
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
   }): CancelablePromise<Entries_History> {
     return this.httpRequest.request({
       method: "GET",
       url: "/sessions/{id}/history",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
       },
     });
   }

@@ -2782,11 +2782,7 @@ class JulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     def history_route_history(
-        self,
-        id: CommonUuid,
-        *,
-        limit: CommonLimit,
-        request_options: typing.Optional[RequestOptions] = None,
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> EntriesHistory:
         """
         Get history of a Session
@@ -2795,9 +2791,6 @@ class JulepApi:
         ----------
         id : CommonUuid
             ID of parent
-
-        limit : CommonLimit
-            Limit the number of items returned
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -2817,13 +2810,11 @@ class JulepApi:
         )
         client.history_route_history(
             id="id",
-            limit=1,
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             f"sessions/{jsonable_encoder(id)}/history",
             method="GET",
-            params={"limit": limit},
             request_options=request_options,
         )
         try:
@@ -6593,11 +6584,7 @@ class AsyncJulepApi:
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
     async def history_route_history(
-        self,
-        id: CommonUuid,
-        *,
-        limit: CommonLimit,
-        request_options: typing.Optional[RequestOptions] = None,
+        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> EntriesHistory:
         """
         Get history of a Session
@@ -6606,9 +6593,6 @@ class AsyncJulepApi:
         ----------
         id : CommonUuid
             ID of parent
-
-        limit : CommonLimit
-            Limit the number of items returned
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -6633,7 +6617,6 @@ class AsyncJulepApi:
         async def main() -> None:
             await client.history_route_history(
                 id="id",
-                limit=1,
             )
 
 
@@ -6642,7 +6625,6 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             f"sessions/{jsonable_encoder(id)}/history",
             method="GET",
-            params={"limit": limit},
             request_options=request_options,
         )
         try:
