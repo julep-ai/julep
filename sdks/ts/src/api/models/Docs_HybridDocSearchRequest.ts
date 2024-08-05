@@ -5,6 +5,14 @@
 import type { Docs_BaseDocSearchRequest } from "./Docs_BaseDocSearchRequest";
 export type Docs_HybridDocSearchRequest = Docs_BaseDocSearchRequest & {
   /**
+   * The confidence cutoff level
+   */
+  confidence: number;
+  /**
+   * The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+   */
+  alpha: number;
+  /**
    * Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
    */
   text: string;

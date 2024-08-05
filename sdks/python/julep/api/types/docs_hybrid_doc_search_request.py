@@ -9,6 +9,16 @@ from .docs_base_doc_search_request import DocsBaseDocSearchRequest
 
 
 class DocsHybridDocSearchRequest(DocsBaseDocSearchRequest):
+    confidence: float = pydantic_v1.Field()
+    """
+    The confidence cutoff level
+    """
+
+    alpha: float = pydantic_v1.Field()
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
+
     text: str = pydantic_v1.Field()
     """
     Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.

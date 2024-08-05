@@ -97,6 +97,7 @@ def search_docs_hybrid(
     query: str,
     query_embedding: list[float],
     k: int = 3,
+    alpha: float = 0.7,  # Weight of the embedding search results (this is a good default)
     embed_search_options: dict = {},
     text_search_options: dict = {},
     **kwargs,
@@ -122,4 +123,4 @@ def search_docs_hybrid(
         **kwargs,
     )
 
-    return dbsf_fuse(text_results, embedding_results)[:k]
+    return dbsf_fuse(text_results, embedding_results, alpha)[:k]

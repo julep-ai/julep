@@ -13,18 +13,7 @@ class BaseDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
-    """
-    The confidence cutoff level
-    """
-    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
-    """
-    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-    """
-    mmr: bool = False
-    """
-    Whether to include the MMR algorithm in the search. Optimizes for diversity in search results.
-    """
+    limit: Annotated[int, Field(10, ge=1, le=100)]
     lang: Literal["en-US"] = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
@@ -105,6 +94,20 @@ class DocReference(BaseModel):
     distance: float | None = None
 
 
+class DocSearchResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    docs: list[DocReference]
+    """
+    The documents that were found
+    """
+    time: Annotated[float, Field(gt=0.0)]
+    """
+    The time taken to search in seconds
+    """
+
+
 class EmbedQueryRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -129,6 +132,14 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
+    """
+    The confidence cutoff level
+    """
+    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
+    """
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
+    """
     text: str
     """
     Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
@@ -161,6 +172,10 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
+    """
+    The confidence cutoff level
+    """
     vector: list[float]
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.

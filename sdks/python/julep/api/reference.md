@@ -976,15 +976,9 @@ client = JulepApi(
 )
 client.agents_docs_search_route_search(
     id="id",
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
     body=DocsVectorDocSearchRequest(
+        limit=1,
         confidence=1.1,
-        alpha=1.1,
-        mmr=True,
         vector=[1.1],
     ),
 )
@@ -1004,46 +998,6 @@ client.agents_docs_search_route_search(
 <dd>
 
 **id:** `CommonUuid` — ID of the parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `AgentsDocsSearchRouteSearchRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `AgentsDocsSearchRouteSearchRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>
@@ -5098,15 +5052,9 @@ client = JulepApi(
 )
 client.user_docs_search_route_search(
     id="id",
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
     body=DocsVectorDocSearchRequest(
+        limit=1,
         confidence=1.1,
-        alpha=1.1,
-        mmr=True,
         vector=[1.1],
     ),
 )
@@ -5126,46 +5074,6 @@ client.user_docs_search_route_search(
 <dd>
 
 **id:** `CommonUuid` — ID of the parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `UserDocsSearchRouteSearchRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `UserDocsSearchRouteSearchRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>

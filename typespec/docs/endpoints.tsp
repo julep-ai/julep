@@ -37,11 +37,8 @@ interface SearchEndpoints<DocString extends valueof string = "Search for documen
         @doc("ID of the parent")
         id: uuid,
 
-        ...PaginationOptions,
         body: DocSearchRequest,
-    ): {
-        results: DocReference[];
-    };
+    ): DocSearchResponse;
 }
 
 interface EmbedEndpoints {

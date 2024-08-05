@@ -21,15 +21,6 @@ from .agents_create_agent_request_instructions import (
 from .agents_docs_search_route_search_request_body import (
     AgentsDocsSearchRouteSearchRequestBody,
 )
-from .agents_docs_search_route_search_request_direction import (
-    AgentsDocsSearchRouteSearchRequestDirection,
-)
-from .agents_docs_search_route_search_request_sort_by import (
-    AgentsDocsSearchRouteSearchRequestSortBy,
-)
-from .agents_docs_search_route_search_response import (
-    AgentsDocsSearchRouteSearchResponse,
-)
 from .agents_patch_agent_request_default_settings import (
     AgentsPatchAgentRequestDefaultSettings,
 )
@@ -97,6 +88,7 @@ from .docs_doc_content import DocsDocContent
 from .docs_doc_owner import DocsDocOwner
 from .docs_doc_owner_role import DocsDocOwnerRole
 from .docs_doc_reference import DocsDocReference
+from .docs_doc_search_response import DocsDocSearchResponse
 from .docs_embed_query_request import DocsEmbedQueryRequest
 from .docs_embed_query_request_text import DocsEmbedQueryRequestText
 from .docs_embed_query_response import DocsEmbedQueryResponse
@@ -274,13 +266,6 @@ from .user_docs_route_list_response import UserDocsRouteListResponse
 from .user_docs_search_route_search_request_body import (
     UserDocsSearchRouteSearchRequestBody,
 )
-from .user_docs_search_route_search_request_direction import (
-    UserDocsSearchRouteSearchRequestDirection,
-)
-from .user_docs_search_route_search_request_sort_by import (
-    UserDocsSearchRouteSearchRequestSortBy,
-)
-from .user_docs_search_route_search_response import UserDocsSearchRouteSearchResponse
 from .users_route_list_request_direction import UsersRouteListRequestDirection
 from .users_route_list_request_sort_by import UsersRouteListRequestSortBy
 from .users_route_list_response import UsersRouteListResponse
@@ -301,9 +286,6 @@ __all__ = [
     "AgentsCreateAgentRequestDefaultSettings",
     "AgentsCreateAgentRequestInstructions",
     "AgentsDocsSearchRouteSearchRequestBody",
-    "AgentsDocsSearchRouteSearchRequestDirection",
-    "AgentsDocsSearchRouteSearchRequestSortBy",
-    "AgentsDocsSearchRouteSearchResponse",
     "AgentsPatchAgentRequestDefaultSettings",
     "AgentsPatchAgentRequestInstructions",
     "AgentsRouteListRequestDirection",
@@ -357,6 +339,7 @@ __all__ = [
     "DocsDocOwner",
     "DocsDocOwnerRole",
     "DocsDocReference",
+    "DocsDocSearchResponse",
     "DocsEmbedQueryRequest",
     "DocsEmbedQueryRequestText",
     "DocsEmbedQueryResponse",
@@ -497,9 +480,6 @@ __all__ = [
     "UserDocsRouteListRequestSortBy",
     "UserDocsRouteListResponse",
     "UserDocsSearchRouteSearchRequestBody",
-    "UserDocsSearchRouteSearchRequestDirection",
-    "UserDocsSearchRouteSearchRequestSortBy",
-    "UserDocsSearchRouteSearchResponse",
     "UsersRouteListRequestDirection",
     "UsersRouteListRequestSortBy",
     "UsersRouteListResponse",

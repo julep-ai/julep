@@ -33,15 +33,6 @@ from .types.agents_create_agent_request_instructions import (
 from .types.agents_docs_search_route_search_request_body import (
     AgentsDocsSearchRouteSearchRequestBody,
 )
-from .types.agents_docs_search_route_search_request_direction import (
-    AgentsDocsSearchRouteSearchRequestDirection,
-)
-from .types.agents_docs_search_route_search_request_sort_by import (
-    AgentsDocsSearchRouteSearchRequestSortBy,
-)
-from .types.agents_docs_search_route_search_response import (
-    AgentsDocsSearchRouteSearchResponse,
-)
 from .types.agents_patch_agent_request_default_settings import (
     AgentsPatchAgentRequestDefaultSettings,
 )
@@ -69,6 +60,7 @@ from .types.common_uuid import CommonUuid
 from .types.common_valid_python_identifier import CommonValidPythonIdentifier
 from .types.docs_create_doc_request_content import DocsCreateDocRequestContent
 from .types.docs_doc import DocsDoc
+from .types.docs_doc_search_response import DocsDocSearchResponse
 from .types.docs_embed_query_request import DocsEmbedQueryRequest
 from .types.docs_embed_query_response import DocsEmbedQueryResponse
 from .types.entries_history import EntriesHistory
@@ -115,15 +107,6 @@ from .types.user_docs_route_list_request_sort_by import UserDocsRouteListRequest
 from .types.user_docs_route_list_response import UserDocsRouteListResponse
 from .types.user_docs_search_route_search_request_body import (
     UserDocsSearchRouteSearchRequestBody,
-)
-from .types.user_docs_search_route_search_request_direction import (
-    UserDocsSearchRouteSearchRequestDirection,
-)
-from .types.user_docs_search_route_search_request_sort_by import (
-    UserDocsSearchRouteSearchRequestSortBy,
-)
-from .types.user_docs_search_route_search_response import (
-    UserDocsSearchRouteSearchResponse,
 )
 from .types.users_route_list_request_direction import UsersRouteListRequestDirection
 from .types.users_route_list_request_sort_by import UsersRouteListRequestSortBy
@@ -842,14 +825,9 @@ class JulepApi:
         self,
         id: CommonUuid,
         *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: AgentsDocsSearchRouteSearchRequestSortBy,
-        direction: AgentsDocsSearchRouteSearchRequestDirection,
-        metadata_filter: str,
         body: AgentsDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsDocsSearchRouteSearchResponse:
+    ) -> DocsDocSearchResponse:
         """
         Search Docs owned by an Agent
 
@@ -858,21 +836,6 @@ class JulepApi:
         id : CommonUuid
             ID of the parent
 
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : AgentsDocsSearchRouteSearchRequestSortBy
-            Sort by a field
-
-        direction : AgentsDocsSearchRouteSearchRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
         body : AgentsDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
@@ -880,7 +843,7 @@ class JulepApi:
 
         Returns
         -------
-        AgentsDocsSearchRouteSearchResponse
+        DocsDocSearchResponse
             The request has succeeded.
 
         Examples
@@ -894,15 +857,9 @@ class JulepApi:
         )
         client.agents_docs_search_route_search(
             id="id",
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
             body=DocsVectorDocSearchRequest(
+                limit=1,
                 confidence=1.1,
-                alpha=1.1,
-                mmr=True,
                 vector=[1.1],
             ),
         )
@@ -910,20 +867,13 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             f"agents/{jsonable_encoder(id)}/search",
             method="POST",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
             json={"body": body},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsDocsSearchRouteSearchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(DocsDocSearchResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3552,14 +3502,9 @@ class JulepApi:
         self,
         id: CommonUuid,
         *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: UserDocsSearchRouteSearchRequestSortBy,
-        direction: UserDocsSearchRouteSearchRequestDirection,
-        metadata_filter: str,
         body: UserDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UserDocsSearchRouteSearchResponse:
+    ) -> DocsDocSearchResponse:
         """
         Search Docs owned by a User
 
@@ -3568,21 +3513,6 @@ class JulepApi:
         id : CommonUuid
             ID of the parent
 
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : UserDocsSearchRouteSearchRequestSortBy
-            Sort by a field
-
-        direction : UserDocsSearchRouteSearchRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
         body : UserDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
@@ -3590,7 +3520,7 @@ class JulepApi:
 
         Returns
         -------
-        UserDocsSearchRouteSearchResponse
+        DocsDocSearchResponse
             The request has succeeded.
 
         Examples
@@ -3604,15 +3534,9 @@ class JulepApi:
         )
         client.user_docs_search_route_search(
             id="id",
-            limit=1,
-            offset=1,
-            sort_by="created_at",
-            direction="asc",
-            metadata_filter="metadata_filter",
             body=DocsVectorDocSearchRequest(
+                limit=1,
                 confidence=1.1,
-                alpha=1.1,
-                mmr=True,
                 vector=[1.1],
             ),
         )
@@ -3620,20 +3544,13 @@ class JulepApi:
         _response = self._client_wrapper.httpx_client.request(
             f"users/{jsonable_encoder(id)}/search",
             method="POST",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
             json={"body": body},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UserDocsSearchRouteSearchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(DocsDocSearchResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4420,14 +4337,9 @@ class AsyncJulepApi:
         self,
         id: CommonUuid,
         *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: AgentsDocsSearchRouteSearchRequestSortBy,
-        direction: AgentsDocsSearchRouteSearchRequestDirection,
-        metadata_filter: str,
         body: AgentsDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> AgentsDocsSearchRouteSearchResponse:
+    ) -> DocsDocSearchResponse:
         """
         Search Docs owned by an Agent
 
@@ -4436,21 +4348,6 @@ class AsyncJulepApi:
         id : CommonUuid
             ID of the parent
 
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : AgentsDocsSearchRouteSearchRequestSortBy
-            Sort by a field
-
-        direction : AgentsDocsSearchRouteSearchRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
         body : AgentsDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
@@ -4458,7 +4355,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        AgentsDocsSearchRouteSearchResponse
+        DocsDocSearchResponse
             The request has succeeded.
 
         Examples
@@ -4477,15 +4374,9 @@ class AsyncJulepApi:
         async def main() -> None:
             await client.agents_docs_search_route_search(
                 id="id",
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
                 body=DocsVectorDocSearchRequest(
+                    limit=1,
                     confidence=1.1,
-                    alpha=1.1,
-                    mmr=True,
                     vector=[1.1],
                 ),
             )
@@ -4496,20 +4387,13 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             f"agents/{jsonable_encoder(id)}/search",
             method="POST",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
             json={"body": body},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(AgentsDocsSearchRouteSearchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(DocsDocSearchResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -7458,14 +7342,9 @@ class AsyncJulepApi:
         self,
         id: CommonUuid,
         *,
-        limit: CommonLimit,
-        offset: CommonOffset,
-        sort_by: UserDocsSearchRouteSearchRequestSortBy,
-        direction: UserDocsSearchRouteSearchRequestDirection,
-        metadata_filter: str,
         body: UserDocsSearchRouteSearchRequestBody,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> UserDocsSearchRouteSearchResponse:
+    ) -> DocsDocSearchResponse:
         """
         Search Docs owned by a User
 
@@ -7474,21 +7353,6 @@ class AsyncJulepApi:
         id : CommonUuid
             ID of the parent
 
-        limit : CommonLimit
-            Limit the number of items returned
-
-        offset : CommonOffset
-            Offset the items returned
-
-        sort_by : UserDocsSearchRouteSearchRequestSortBy
-            Sort by a field
-
-        direction : UserDocsSearchRouteSearchRequestDirection
-            Sort direction
-
-        metadata_filter : str
-            JSON string of object that should be used to filter objects by metadata
-
         body : UserDocsSearchRouteSearchRequestBody
 
         request_options : typing.Optional[RequestOptions]
@@ -7496,7 +7360,7 @@ class AsyncJulepApi:
 
         Returns
         -------
-        UserDocsSearchRouteSearchResponse
+        DocsDocSearchResponse
             The request has succeeded.
 
         Examples
@@ -7515,15 +7379,9 @@ class AsyncJulepApi:
         async def main() -> None:
             await client.user_docs_search_route_search(
                 id="id",
-                limit=1,
-                offset=1,
-                sort_by="created_at",
-                direction="asc",
-                metadata_filter="metadata_filter",
                 body=DocsVectorDocSearchRequest(
+                    limit=1,
                     confidence=1.1,
-                    alpha=1.1,
-                    mmr=True,
                     vector=[1.1],
                 ),
             )
@@ -7534,20 +7392,13 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             f"users/{jsonable_encoder(id)}/search",
             method="POST",
-            params={
-                "limit": limit,
-                "offset": offset,
-                "sort_by": sort_by,
-                "direction": direction,
-                "metadata_filter": metadata_filter,
-            },
             json={"body": body},
             request_options=request_options,
             omit=OMIT,
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(UserDocsSearchRouteSearchResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(DocsDocSearchResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
