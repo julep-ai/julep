@@ -805,6 +805,34 @@ export class DefaultService {
     });
   }
   /**
+   * Resume an execution with a task token
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public executionsRouteResumeWithTaskToken({
+    taskToken,
+    requestBody,
+  }: {
+    /**
+     * A Task Token is a unique identifier for a specific Task Execution.
+     */
+    taskToken: string;
+    /**
+     * Request to resume an execution with a task token
+     */
+    requestBody: Executions_TaskTokenResumeExecutionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/executions",
+      query: {
+        task_token: taskToken,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
    * Get an Execution by id
    * @returns Executions_Execution The request has succeeded.
    * @throws ApiError
@@ -823,6 +851,31 @@ export class DefaultService {
       path: {
         id: id,
       },
+    });
+  }
+  /**
+   * Update an existing Execution
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public executionsRouteUpdate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+    requestBody: Executions_UpdateExecutionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/executions/{id}",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
   /**
@@ -1451,65 +1504,6 @@ export class DefaultService {
         direction: direction,
         metadata_filter: metadataFilter,
       },
-    });
-  }
-  /**
-   * Resume an execution with a task token
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public taskExecutionsRouteResumeWithTaskToken({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of parent Task
-     */
-    id: Common_uuid;
-    /**
-     * Request to resume an execution with a task token
-     */
-    requestBody: Executions_TaskTokenResumeExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}/executions",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing Execution
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public taskExecutionsRouteUpdate({
-    id,
-    childId,
-    requestBody,
-  }: {
-    /**
-     * ID of parent resource
-     */
-    id: Common_uuid;
-    /**
-     * ID of the resource to be updated
-     */
-    childId: Common_uuid;
-    requestBody: Executions_UpdateExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}/executions/{child_id}",
-      path: {
-        id: id,
-        child_id: childId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
     });
   }
   /**

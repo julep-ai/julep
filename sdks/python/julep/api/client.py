@@ -1945,6 +1945,60 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def executions_route_resume_with_task_token(
+        self,
+        *,
+        task_token: str,
+        input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Resume an execution with a task token
+
+        Parameters
+        ----------
+        task_token : str
+            A Task Token is a unique identifier for a specific Task Execution.
+
+        input : typing.Optional[typing.Dict[str, typing.Any]]
+            The input to resume the execution with
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.executions_route_resume_with_task_token(
+            task_token="task_token",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            "executions",
+            method="POST",
+            params={"task_token": task_token},
+            json={"input": input, "status": "running"},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def executions_route_get(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> ExecutionsExecution:
@@ -1984,6 +2038,62 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(ExecutionsExecution, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    def executions_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        request: ExecutionsUpdateExecutionRequest,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing Execution
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request : ExecutionsUpdateExecutionRequest
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        from julep import ExecutionsUpdateExecutionRequest_Cancelled
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.executions_route_update(
+            id="string",
+            request=ExecutionsUpdateExecutionRequest_Cancelled(
+                reason="string",
+            ),
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"executions/{jsonable_encoder(id)}",
+            method="PUT",
+            json=request,
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -2899,125 +3009,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def task_executions_route_resume_with_task_token(
-        self,
-        id: CommonUuid,
-        *,
-        task_token: str,
-        input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Resume an execution with a task token
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent Task
-
-        task_token : str
-            A Task Token is a unique identifier for a specific Task Execution.
-
-        input : typing.Optional[typing.Dict[str, typing.Any]]
-            The input to resume the execution with
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.task_executions_route_resume_with_task_token(
-            id="id",
-            task_token="task_token",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}/executions",
-            method="PUT",
-            json={"task_token": task_token, "input": input, "status": "running"},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def task_executions_route_update(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        request: ExecutionsUpdateExecutionRequest,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Execution
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be updated
-
-        request : ExecutionsUpdateExecutionRequest
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        from julep import ExecutionsUpdateExecutionRequest_Cancelled
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.task_executions_route_update(
-            id="string",
-            child_id="string",
-            request=ExecutionsUpdateExecutionRequest_Cancelled(
-                reason="string",
-            ),
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}/executions/{jsonable_encoder(child_id)}",
-            method="PUT",
-            json=request,
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5661,6 +5652,68 @@ class AsyncJulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    async def executions_route_resume_with_task_token(
+        self,
+        *,
+        task_token: str,
+        input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Resume an execution with a task token
+
+        Parameters
+        ----------
+        task_token : str
+            A Task Token is a unique identifier for a specific Task Execution.
+
+        input : typing.Optional[typing.Dict[str, typing.Any]]
+            The input to resume the execution with
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.executions_route_resume_with_task_token(
+                task_token="task_token",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            "executions",
+            method="POST",
+            params={"task_token": task_token},
+            json={"input": input, "status": "running"},
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     async def executions_route_get(
         self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
     ) -> ExecutionsExecution:
@@ -5708,6 +5761,70 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(ExecutionsExecution, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def executions_route_update(
+        self,
+        id: CommonUuid,
+        *,
+        request: ExecutionsUpdateExecutionRequest,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceUpdatedResponse:
+        """
+        Update an existing Execution
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of the resource
+
+        request : ExecutionsUpdateExecutionRequest
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceUpdatedResponse
+            The request has succeeded.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep import ExecutionsUpdateExecutionRequest_Cancelled
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.executions_route_update(
+                id="string",
+                request=ExecutionsUpdateExecutionRequest_Cancelled(
+                    reason="string",
+                ),
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"executions/{jsonable_encoder(id)}",
+            method="PUT",
+            json=request,
+            request_options=request_options,
+            omit=OMIT,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -6735,141 +6852,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def task_executions_route_resume_with_task_token(
-        self,
-        id: CommonUuid,
-        *,
-        task_token: str,
-        input: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Resume an execution with a task token
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent Task
-
-        task_token : str
-            A Task Token is a unique identifier for a specific Task Execution.
-
-        input : typing.Optional[typing.Dict[str, typing.Any]]
-            The input to resume the execution with
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.task_executions_route_resume_with_task_token(
-                id="id",
-                task_token="task_token",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}/executions",
-            method="PUT",
-            json={"task_token": task_token, "input": input, "status": "running"},
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def task_executions_route_update(
-        self,
-        id: CommonUuid,
-        child_id: CommonUuid,
-        *,
-        request: ExecutionsUpdateExecutionRequest,
-        request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
-        """
-        Update an existing Execution
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of parent resource
-
-        child_id : CommonUuid
-            ID of the resource to be updated
-
-        request : ExecutionsUpdateExecutionRequest
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep import ExecutionsUpdateExecutionRequest_Cancelled
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.task_executions_route_update(
-                id="string",
-                child_id="string",
-                request=ExecutionsUpdateExecutionRequest_Cancelled(
-                    reason="string",
-                ),
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"tasks/{jsonable_encoder(id)}/executions/{jsonable_encoder(child_id)}",
-            method="PUT",
-            json=request,
-            request_options=request_options,
-            omit=OMIT,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)

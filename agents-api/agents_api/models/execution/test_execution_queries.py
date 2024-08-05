@@ -7,8 +7,6 @@ from ward import test
 
 from agents_api.autogen.openapi_model import Execution, Transition
 
-from ..agent.create_agent import create_agent
-from ..task.create_task import create_task
 from .create_execution import create_execution
 from .create_execution_transition import create_execution_transition
 from .get_execution import get_execution

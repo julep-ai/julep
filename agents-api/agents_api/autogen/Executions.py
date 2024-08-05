@@ -68,10 +68,6 @@ class TaskTokenResumeExecutionRequest(BaseModel):
         populate_by_name=True,
     )
     status: Literal["running"] = "running"
-    task_token: str
-    """
-    A Task Token is a unique identifier for a specific Task Execution.
-    """
     input: dict[str, Any] | None = None
     """
     The input to resume the execution with

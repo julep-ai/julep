@@ -8,11 +8,6 @@ export const $Executions_TaskTokenResumeExecutionRequest = {
       type: "Enum",
       isRequired: true,
     },
-    task_token: {
-      type: "string",
-      description: `A Task Token is a unique identifier for a specific Task Execution.`,
-      isRequired: true,
-    },
     input: {
       type: "dictionary",
       contains: {
