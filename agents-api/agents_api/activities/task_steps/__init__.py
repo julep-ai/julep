@@ -6,12 +6,14 @@ from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (
+    CreateTransitionRequest,
     EvaluateStep,
     # ErrorWorkflowStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
     PromptStep,
     ToolCallStep,
+    UpdateExecutionRequest,
     YieldStep,
 )
 from ...clients.worker.types import ChatML
@@ -22,6 +24,9 @@ from ...common.protocol.tasks import (
 from ...common.utils.template import render_template
 from ...models.execution.create_execution_transition import (
     create_execution_transition as create_execution_transition_query,
+)
+from ...models.execution.update_execution import (
+    update_execution as update_execution_query,
 )
 from ...routers.sessions.protocol import Settings
 from ...routers.sessions.session import llm_generate
@@ -140,6 +145,15 @@ async def transition_step(
         execution_id=context.execution.id,
         transition_id=uuid4(),
         **transition_data,
+    )
+
+    update_execution_query(
+        developer_id=context.developer_id,
+        task_id=context.task.id,
+        execution_id=context.execution.id,
+        data=UpdateExecutionRequest(
+            status="awaiting_input",
+        ),
     )
 
     # Raise if it's a waiting step
