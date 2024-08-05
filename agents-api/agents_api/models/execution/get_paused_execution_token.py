@@ -61,10 +61,9 @@ def get_paused_execution_token(
 
     """
 
-    get_query += filter
-
     queries = [
         verify_developer_id_query(developer_id),
+        check_status_query,
         get_query,
     ]
 
