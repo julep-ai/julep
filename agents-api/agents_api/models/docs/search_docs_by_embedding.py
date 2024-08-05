@@ -48,6 +48,7 @@ def search_docs_by_embedding(
     confidence: float = 0.7,
     ef: int = 128,
     mmr_lambda: float = 0.25,
+    embedding_size: int = 1024,
 ) -> tuple[list[str], dict]:
     """
     Searches for document snippets in CozoDB by embedding query.
@@ -60,6 +61,9 @@ def search_docs_by_embedding(
     - confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
     - mmr_lambda (float, optional): The lambda parameter for MMR. Defaults to 0.25.
     """
+
+    assert len(query_embedding) == embedding_size
+    assert sum(query_embedding)
 
     owner_id = str(owner_id)
 
