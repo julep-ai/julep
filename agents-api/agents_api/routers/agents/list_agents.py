@@ -1,6 +1,8 @@
+import json
+from json import JSONDecodeError
 from typing import Annotated, Literal
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from pydantic import UUID4
 
 from ...autogen.openapi_model import Agent, ListResponse
@@ -18,6 +20,14 @@ async def list_agents(
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: str = "{}",
 ) -> ListResponse[Agent]:
+    try:
+        metadata_filter = json.loads(metadata_filter)
+    except JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="metadata_filter is not a valid JSON",
+        )
+
     agents = list_agents_query(
         developer_id=x_developer_id,
         limit=limit,

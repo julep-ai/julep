@@ -9,7 +9,6 @@ from jsonschema.exceptions import ValidationError
 from pycozo.client import QueryException
 from pydantic import UUID4, BaseModel
 from starlette.status import HTTP_201_CREATED
-from temporalio.client import WorkflowHandle
 
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
@@ -23,9 +22,7 @@ from agents_api.autogen.openapi_model import (
     Transition,
     UpdateExecutionRequest,
 )
-from agents_api.clients.cozo import client as cozo_client
 from agents_api.clients.temporal import get_client, run_task_execution_workflow
-from agents_api.common.protocol.tasks import ExecutionInput
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.models.execution.create_execution import (
     create_execution as create_execution_query,
