@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from temporalio.client import Client, TLSConfig
+from temporalio.client import Client, TLSConfig, WorkflowHandle
 
 from agents_api.env import (
     temporal_client_cert,
@@ -75,7 +75,7 @@ async def run_task_execution_workflow(
 ):
     client = await get_client()
 
-    await client.execute_workflow(
+    return await client.start_workflow(
         "TaskExecutionWorkflow",
         args=[execution_input, start, previous_inputs],
         task_queue="memory-task-queue",

@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 
-from temporalio import workflow
+from temporalio import activity, workflow
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
@@ -13,16 +13,19 @@ with workflow.unsafe.imports_passed_through():
         tool_call_step,
         transition_step,
     )
-    from ..common.protocol.tasks import (
-        EvaluateStep,
-        ExecutionInput,
+    from ..autogen.openapi_model import (
         # ErrorWorkflowStep,
+        EvaluateStep,
         IfElseWorkflowStep,
         PromptStep,
-        StepContext,
         ToolCallStep,
-        TransitionInfo,
+        WaitForInputStep,
         YieldStep,
+    )
+    from ..common.protocol.tasks import (
+        ExecutionInput,
+        StepContext,
+        TransitionInfo,
     )
 
 
@@ -36,8 +39,7 @@ class TaskExecutionWorkflow:
         previous_inputs: list[dict] = [],
     ) -> None:
         wf_name, step_idx = start
-        spec = execution_input.task.spec
-        workflow_map = {wf.name: wf.steps for wf in spec.workflows}
+        workflow_map = {wf.name: wf.steps for wf in execution_input.task.workflows}
         current_workflow = workflow_map[wf_name]
         previous_inputs = previous_inputs or [execution_input.arguments]
         step = current_workflow[step_idx]
@@ -108,6 +110,8 @@ class TaskExecutionWorkflow:
                         previous_inputs,
                     ],
                 )
+            case WaitForInputStep():
+                should_wait = True
 
         is_last = step_idx + 1 == len(current_workflow)
         # Transition type

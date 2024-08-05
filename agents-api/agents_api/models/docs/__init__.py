@@ -21,4 +21,5 @@ from .delete_doc import delete_doc
 from .embed_snippets import embed_snippets
 from .get_doc import get_doc
 from .list_docs import list_docs
-from .search_docs import search_docs_by_embedding
+from .search_docs_by_embedding import search_docs_by_embedding
+from .search_docs_by_text import search_docs_by_text
