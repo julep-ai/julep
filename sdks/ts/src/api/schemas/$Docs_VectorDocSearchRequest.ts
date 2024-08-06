@@ -10,6 +10,12 @@ export const $Docs_VectorDocSearchRequest = {
     },
     {
       properties: {
+        confidence: {
+          type: "number",
+          description: `The confidence cutoff level`,
+          isRequired: true,
+          maximum: 1,
+        },
         vector: {
           type: "array",
           contains: {

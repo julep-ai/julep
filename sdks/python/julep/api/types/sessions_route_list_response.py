@@ -9,7 +9,7 @@ from .sessions_session import SessionsSession
 
 
 class SessionsRouteListResponse(pydantic_v1.BaseModel):
-    results: typing.List[SessionsSession]
+    items: typing.List[SessionsSession]
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

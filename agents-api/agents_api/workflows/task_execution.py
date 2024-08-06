@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 
-from temporalio import activity, workflow
+from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (

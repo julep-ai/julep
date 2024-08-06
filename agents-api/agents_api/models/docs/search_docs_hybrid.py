@@ -39,7 +39,11 @@ def dbsf_fuse(
     """
     all_docs = {doc.id: doc for doc in text_results + embedding_results}
 
-    text_scores: dict[UUID, float] = {doc.id: -doc.distance for doc in text_results}
+    assert all(doc.distance is not None in all_docs for doc in text_results)
+
+    text_scores: dict[UUID, float] = {
+        doc.id: -(doc.distance or 0.0) for doc in text_results
+    }
 
     # Because these are cosine distances, we need to invert them
     embedding_scores: dict[UUID, float] = {
@@ -93,6 +97,7 @@ def search_docs_hybrid(
     query: str,
     query_embedding: list[float],
     k: int = 3,
+    alpha: float = 0.7,  # Weight of the embedding search results (this is a good default)
     embed_search_options: dict = {},
     text_search_options: dict = {},
     **kwargs,
@@ -118,4 +123,4 @@ def search_docs_hybrid(
         **kwargs,
     )
 
-    return dbsf_fuse(text_results, embedding_results)[:k]
+    return dbsf_fuse(text_results, embedding_results, alpha)[:k]

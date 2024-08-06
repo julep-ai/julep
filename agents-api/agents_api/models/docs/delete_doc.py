@@ -1,4 +1,3 @@
-from typing import Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -13,7 +12,6 @@ from ..utils import (
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
-    verify_developer_owns_resource_query,
     wrap_in_class,
 )
 
@@ -39,8 +37,6 @@ from ..utils import (
 def delete_doc(
     *,
     developer_id: UUID,
-    owner_type: Literal["user", "agent"],
-    owner_id: UUID,
     doc_id: UUID,
 ) -> tuple[list[str], dict]:
     """Constructs and returns a datalog query for deleting documents and associated information snippets.
@@ -48,8 +44,6 @@ def delete_doc(
     This function targets the 'cozodb' database, allowing for the removal of documents and their related information snippets based on the provided document ID and owner (user or agent).
 
     Parameters:
-        owner_type (Literal["user", "agent"]): The type of the owner, either 'user' or 'agent'.
-        owner_id (UUID): The UUID of the owner.
         doc_id (UUID): The UUID of the document to be deleted.
         client (CozoClient): An instance of the CozoClient to execute the query.
 
@@ -57,12 +51,11 @@ def delete_doc(
         pd.DataFrame: The result of the executed datalog query.
     """
     # Convert UUID parameters to string format for use in the datalog query
-    owner_id = str(owner_id)
     doc_id = str(doc_id)
 
     # The following query is divided into two main parts:
     # 1. Deleting information snippets associated with the document
-    # 2. Deleting the document itself from the owner's collection
+    # 2. Deleting the document itself
     delete_snippets_query = """
         # This section constructs the subquery for identifying and deleting all information snippets associated with the given document ID.
         # Delete snippets
@@ -81,29 +74,17 @@ def delete_doc(
     """
 
     delete_doc_query = """
-        # This section constructs the subquery for deleting the document from the specified owner's (user or agent) document collection.
         # Delete the docs
-        ?[doc_id, owner_id, owner_type] <- [[
-            to_uuid($doc_id),
-            to_uuid($owner_id),
-            $owner_type,
-        ]]
+        ?[doc_id] <- [[ to_uuid($doc_id) ]]
 
-        :delete docs {
-            doc_id,
-            owner_type,
-            owner_id,
-        }
+        :delete docs { doc_id }
         :returning
     """
 
     queries = [
         verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id, f"{owner_type}s", **{f"{owner_type}_id": owner_id}
-        ),
         delete_snippets_query,
         delete_doc_query,
     ]
 
-    return (queries, {"doc_id": doc_id, "owner_id": owner_id, "owner_type": owner_type})
+    return (queries, {"doc_id": doc_id})

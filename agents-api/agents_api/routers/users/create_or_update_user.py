@@ -4,19 +4,23 @@ from fastapi import Depends
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED
 
-from ...autogen.openapi_model import CreateUserRequest, ResourceCreatedResponse
+from ...autogen.openapi_model import CreateOrUpdateUserRequest, ResourceCreatedResponse
 from ...dependencies.developer_id import get_developer_id
-from ...models.user.create_user import create_user as create_user_query
+from ...models.user.create_or_update_user import (
+    create_or_update_user as create_or_update_user_query,
+)
 from .router import router
 
 
-@router.post("/users", status_code=HTTP_201_CREATED, tags=["users"])
-async def create_user(
-    data: CreateUserRequest,
+@router.post("/users/{user_id}", status_code=HTTP_201_CREATED, tags=["users"])
+async def create_or_update_user(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    user_id: UUID4,
+    data: CreateOrUpdateUserRequest,
 ) -> ResourceCreatedResponse:
-    user = create_user_query(
+    user = create_or_update_user_query(
         developer_id=x_developer_id,
+        user_id=user_id,
         data=data,
     )
 

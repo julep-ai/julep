@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from temporalio.client import Client, TLSConfig, WorkflowHandle
+from temporalio.client import Client, TLSConfig
 
 from agents_api.env import (
     temporal_client_cert,

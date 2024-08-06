@@ -23,9 +23,5 @@ interface Endpoints
         @path
         @doc("ID of parent")
         id: uuid,
-
-        @query
-        @doc("Limit the number of items returned")
-        limit: limit = 100,
     ): History;
 }

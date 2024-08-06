@@ -20,7 +20,7 @@ import type { Common_ResourceUpdatedResponse } from "../models/Common_ResourceUp
 import type { Common_uuid } from "../models/Common_uuid";
 import type { Docs_CreateDocRequest } from "../models/Docs_CreateDocRequest";
 import type { Docs_Doc } from "../models/Docs_Doc";
-import type { Docs_DocReference } from "../models/Docs_DocReference";
+import type { Docs_DocSearchResponse } from "../models/Docs_DocSearchResponse";
 import type { Docs_EmbedQueryRequest } from "../models/Docs_EmbedQueryRequest";
 import type { Docs_EmbedQueryResponse } from "../models/Docs_EmbedQueryResponse";
 import type { Docs_HybridDocSearchRequest } from "../models/Docs_HybridDocSearchRequest";
@@ -88,7 +88,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Agents_Agent>;
+    items: Array<Agents_Agent>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -315,17 +315,12 @@ export class DefaultService {
   }
   /**
    * Search Docs owned by an Agent
-   * @returns any The request has succeeded.
+   * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
    */
   public agentsDocsSearchRouteSearch({
     id,
     requestBody,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
   }: {
     /**
      * ID of the parent
@@ -337,41 +332,12 @@ export class DefaultService {
         | Docs_TextOnlyDocSearchRequest
         | Docs_HybridDocSearchRequest;
     };
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Docs_DocReference>;
-  }> {
+  }): CancelablePromise<Docs_DocSearchResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents/{id}/search",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -989,7 +955,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Sessions_Session>;
+    items: Array<Sessions_Session>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1404,25 +1370,17 @@ export class DefaultService {
    */
   public historyRouteHistory({
     id,
-    limit = 100,
   }: {
     /**
      * ID of parent
      */
     id: Common_uuid;
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
   }): CancelablePromise<Entries_History> {
     return this.httpRequest.request({
       method: "GET",
       url: "/sessions/{id}/history",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
       },
     });
   }
@@ -1539,7 +1497,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Users_User>;
+    items: Array<Users_User>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1766,17 +1724,12 @@ export class DefaultService {
   }
   /**
    * Search Docs owned by a User
-   * @returns any The request has succeeded.
+   * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
    */
   public userDocsSearchRouteSearch({
     id,
     requestBody,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
   }: {
     /**
      * ID of the parent
@@ -1788,41 +1741,12 @@ export class DefaultService {
         | Docs_TextOnlyDocSearchRequest
         | Docs_HybridDocSearchRequest;
     };
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Docs_DocReference>;
-  }> {
+  }): CancelablePromise<Docs_DocSearchResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/users/{id}/search",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
       },
       body: requestBody,
       mediaType: "application/json",

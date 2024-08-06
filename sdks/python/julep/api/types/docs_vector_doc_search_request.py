@@ -9,6 +9,11 @@ from .docs_base_doc_search_request import DocsBaseDocSearchRequest
 
 
 class DocsVectorDocSearchRequest(DocsBaseDocSearchRequest):
+    confidence: float = pydantic_v1.Field()
+    """
+    The confidence cutoff level
+    """
+
     vector: typing.List[float] = pydantic_v1.Field()
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.

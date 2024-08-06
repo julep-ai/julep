@@ -11,7 +11,7 @@ from .router import router
 
 
 @router.delete("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
-async def delete_agent_tools(
+async def delete_agent_tool(
     agent_id: UUID,
     tool_id: UUID,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
