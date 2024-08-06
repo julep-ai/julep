@@ -309,12 +309,12 @@ async def patch_execution(
         )
 
 
-@router.put("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
+@router.put("/executions/{execution_id}", tags=["executions"])
 async def put_execution(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     execution_id: UUID4,
     data: ResumeExecutionRequest | StopExecutionRequest,
-) -> Execution:
+):
     temporal_client = await get_client()
     if isinstance(data, StopExecutionRequest):
         handle = temporal_client.get_workflow_handle_for(
@@ -326,7 +326,7 @@ async def put_execution(
             developer_id=x_developer_id, execution_id=execution_id
         )
         handle = temporal_client.get_async_activity_handle(token_data["task_token"])
-        await handle.complete("finished")
+        await handle.complete(data.input)
 
 
 @router.get("/tasks/{task_id}/executions", tags=["tasks"])
