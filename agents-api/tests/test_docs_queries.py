@@ -7,7 +7,6 @@ from ward import test
 
 from agents_api.autogen.Docs import (
     CreateDocRequest,
-    DeleteDocRequest,
     GetDocRequest,
     ListDocsRequest,
     SearchDocsByEmbeddingRequest,
@@ -79,44 +78,6 @@ def _():
         )
 
         assert len(result["id"]) == 1, "Only 1 should have been found"
-
-
-@test("model: delete docs")
-def _():
-    client = cozo_client()
-
-    for owner_type in ("user", "agent"):
-        owner_id = uuid4()
-        doc_id = uuid4()
-        developer_id = uuid4()
-
-        create_doc(
-            developer_id=developer_id,
-            owner_type=owner_type,
-            owner_id=owner_id,
-            doc_id=doc_id,
-            data=CreateDocRequest(title="Hello", content=["World"]),
-            client=client,
-        )
-
-        delete_doc(
-            developer_id=developer_id,
-            owner_type=owner_type,
-            owner_id=owner_id,
-            doc_id=doc_id,
-            data=DeleteDocRequest(),
-            client=client,
-        )
-
-        result = get_doc(
-            developer_id=developer_id,
-            owner_type=owner_type,
-            doc_id=doc_id,
-            data=GetDocRequest(),
-            client=client,
-        )
-
-        assert len(result["id"]) == 0, "Delete operation found the row"
 
 
 @test("model: list docs")

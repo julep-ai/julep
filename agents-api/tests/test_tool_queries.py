@@ -5,13 +5,11 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from agents_api.autogen.openapi_model import (
+from agents_api.autogen.Tools import (
     CreateToolsRequest,
     DeleteToolRequest,
-    FunctionDef,
     GetToolRequest,
     ListToolsRequest,
-    Tool,
 )
 from agents_api.models.tools.create_tools import create_tools
 from agents_api.models.tools.delete_tool import delete_tool
@@ -36,11 +34,11 @@ def _():
     developer_id = uuid4()
     agent_id = uuid4()
 
-    tool = FunctionDef(
-        name="hello_world",
-        description="A function that prints hello world",
-        parameters={"type": "object", "properties": {}},
-    )
+    tool = {
+        "name": "hello_world",
+        "description": "A function that prints hello world",
+        "parameters": {"type": "object", "properties": {}},
+    }
 
     result = create_tools(
         developer_id=developer_id,
@@ -50,7 +48,7 @@ def _():
     )
 
     assert result is not None
-    assert isinstance(result[0], Tool)
+    assert isinstance(result[0], dict)
 
 
 @test("model: delete tool")
@@ -60,11 +58,11 @@ def _():
     agent_id = uuid4()
     tool_id = uuid4()
 
-    tool = FunctionDef(
-        name="hello_world",
-        description="A function that prints hello world",
-        parameters={"type": "object", "properties": {}},
-    )
+    tool = {
+        "name": "hello_world",
+        "description": "A function that prints hello world",
+        "parameters": {"type": "object", "properties": {}},
+    }
 
     create_tools(
         developer_id=developer_id,
@@ -82,7 +80,7 @@ def _():
     )
 
     assert result is not None
-    assert result.id == tool_id
+    assert result["id"] == str(tool_id)
 
 
 @test("model: get tool")
@@ -92,11 +90,11 @@ def _():
     agent_id = uuid4()
     tool_id = uuid4()
 
-    tool = FunctionDef(
-        name="hello_world",
-        description="A function that prints hello world",
-        parameters={"type": "object", "properties": {}},
-    )
+    tool = {
+        "name": "hello_world",
+        "description": "A function that prints hello world",
+        "parameters": {"type": "object", "properties": {}},
+    }
 
     create_tools(
         developer_id=developer_id,
@@ -114,7 +112,7 @@ def _():
     )
 
     assert result is not None
-    assert isinstance(result, Tool)
+    assert isinstance(result, dict)
 
 
 @test("model: list tools")
@@ -123,11 +121,11 @@ def _():
     developer_id = uuid4()
     agent_id = uuid4()
 
-    tool = FunctionDef(
-        name="hello_world",
-        description="A function that prints hello world",
-        parameters={"type": "object", "properties": {}},
-    )
+    tool = {
+        "name": "hello_world",
+        "description": "A function that prints hello world",
+        "parameters": {"type": "object", "properties": {}},
+    }
 
     create_tools(
         developer_id=developer_id,
@@ -144,4 +142,4 @@ def _():
     )
 
     assert result is not None
-    assert all(isinstance(tool, Tool) for tool in result)
+    assert all(isinstance(tool, dict) for tool in result)

@@ -7,7 +7,7 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import raises, test
 
-from agents_api.autogen.openapi_model import (
+from agents_api.autogen.Users import (
     CreateUserRequest,
     GetUserRequest,
     ListUsersRequest,

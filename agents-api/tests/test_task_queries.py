@@ -6,13 +6,6 @@ from pycozo import Client
 from ward import test
 
 from agents_api.autogen.openapi_model import Task
-from agents_api.autogen.Tasks import (
-    CreateTaskRequest,
-    DeleteTaskRequest,
-    GetTaskRequest,
-    ListTasksRequest,
-    UpdateTaskRequest,
-)
 from agents_api.models.task.create_task import create_task
 from agents_api.models.task.delete_task import delete_task
 from agents_api.models.task.get_task import get_task
@@ -42,11 +35,11 @@ def _():
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
-        data=CreateTaskRequest(
-            name="test task",
-            description="test task about",
-            input_schema={"type": "object", "additionalProperties": True},
-        ),
+        data={
+            "name": "test task",
+            "description": "test task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+        },
         client=client,
     )
 
@@ -61,7 +54,6 @@ def _():
         get_task(
             developer_id=developer_id,
             task_id=task_id,
-            data=GetTaskRequest(),
             client=client,
         )
     except Exception as e:
@@ -79,18 +71,17 @@ def _():
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
-        data=CreateTaskRequest(
-            name="test task",
-            description="test task about",
-            input_schema={"type": "object", "additionalProperties": True},
-        ),
+        data={
+            "name": "test task",
+            "description": "test task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+        },
         client=client,
     )
 
     result = get_task(
         developer_id=developer_id,
         task_id=task_id,
-        data=GetTaskRequest(),
         client=client,
     )
 
@@ -109,18 +100,17 @@ def _():
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
-        data=CreateTaskRequest(
-            name="test task",
-            description="test task about",
-            input_schema={"type": "object", "additionalProperties": True},
-        ),
+        data={
+            "name": "test task",
+            "description": "test task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+        },
         client=client,
     )
 
     delete_task(
         developer_id=developer_id,
         task_id=task_id,
-        data=DeleteTaskRequest(),
         client=client,
     )
 
@@ -128,7 +118,6 @@ def _():
         get_task(
             developer_id=developer_id,
             task_id=task_id,
-            data=GetTaskRequest(),
             client=client,
         )
     except Exception as e:
@@ -146,22 +135,22 @@ def _():
         developer_id=developer_id,
         agent_id=agent_id,
         task_id=task_id,
-        data=CreateTaskRequest(
-            name="test task",
-            description="test task about",
-            input_schema={"type": "object", "additionalProperties": True},
-        ),
+        data={
+            "name": "test task",
+            "description": "test task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+        },
         client=client,
     )
 
     result = update_task(
         developer_id=developer_id,
         task_id=task_id,
-        data=UpdateTaskRequest(
-            name="updated task",
-            description="updated task about",
-            input_schema={"type": "object", "additionalProperties": True},
-        ),
+        data={
+            "name": "updated task",
+            "description": "updated task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+        },
         client=client,
     )
 
@@ -179,7 +168,6 @@ def _():
     result = list_tasks(
         developer_id=developer_id,
         agent_id=agent_id,
-        data=ListTasksRequest(),
         client=client,
     )
 

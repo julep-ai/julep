@@ -5,12 +5,15 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from agents_api.autogen.openapi_model import (
-    Agent,
+from agents_api.autogen.Agents import (
     CreateAgentRequest,
     UpdateAgentRequest,
 )
-from agents_api.models import agent
+from agents_api.models.agent.create_agent import create_agent
+from agents_api.models.agent.delete_agent import delete_agent
+from agents_api.models.agent.get_agent import get_agent
+from agents_api.models.agent.list_agents import list_agents
+from agents_api.models.agent.update_agent import update_agent
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -32,7 +35,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    agent.create_agent(
+    create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -50,7 +53,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    agent.create_agent(
+    create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -69,7 +72,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    result = agent.get_agent(
+    result = get_agent(
         agent_id=agent_id, developer_id=developer_id, client=client
     )
 
@@ -82,7 +85,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    agent.create_agent(
+    create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -94,7 +97,7 @@ def _():
         client=client,
     )
 
-    result = agent.get_agent(
+    result = get_agent(
         agent_id=agent_id, developer_id=developer_id, client=client
     )
 
@@ -110,7 +113,7 @@ def _():
     developer_id = uuid4()
 
     # Create the agent
-    agent.create_agent(
+    create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -122,10 +125,10 @@ def _():
     )
 
     # Delete the agent
-    agent.delete_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    delete_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     # Check that the agent is deleted
-    result = agent.get_agent(
+    result = get_agent(
         agent_id=agent_id, developer_id=developer_id, client=client
     )
 
@@ -138,7 +141,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    agent.create_agent(
+    create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data=CreateAgentRequest(
@@ -149,7 +152,7 @@ def _():
         client=client,
     )
 
-    result = agent.update_agent(
+    result = update_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data=UpdateAgentRequest(
@@ -171,7 +174,7 @@ def _():
     client = cozo_client()
     developer_id = uuid4()
 
-    result = agent.list_agents(developer_id=developer_id, client=client)
+    result = list_agents(developer_id=developer_id, client=client)
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)
