@@ -7,7 +7,6 @@ from uuid import UUID
 import pandas as pd
 from pydantic import BaseModel
 
-from ..clients.cozo import client as cozo_client
 from ..common.utils.cozo import uuid_int_list_to_uuid4
 
 P = ParamSpec("P")
@@ -127,9 +126,7 @@ def cozo_query(
             from pprint import pprint
 
         @wraps(func)
-        def wrapper(
-            *args: P.args, client=cozo_client, **kwargs: P.kwargs
-        ) -> pd.DataFrame:
+        def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
             queries, variables = func(*args, **kwargs)
 
             if isinstance(queries, str):
@@ -146,6 +143,9 @@ def cozo_query(
                 )
             )
 
+            from ..clients.cozo import get_cozo_client
+
+            client = client or get_cozo_client()
             result = client.run(query, variables)
 
             # Need to fix the UUIDs in the result
