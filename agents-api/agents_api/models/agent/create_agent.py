@@ -23,6 +23,11 @@ from ..utils import (
 
 @rewrap_exceptions(
     {
+        lambda e: isinstance(e, QueryException)
+        and "asserted to return some results, but returned none"
+        in str(e): lambda *_: HTTPException(
+            detail="developer not found", status_code=403
+        ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
@@ -62,7 +67,7 @@ def create_agent(
     )
     data.default_settings = data.default_settings or {}
 
-    agent_data = data.model_dump()
+    agent_data = data.model_dump(exclude_unset=True)
     default_settings = agent_data.pop("default_settings")
 
     settings_cols, settings_vals = cozo_process_mutate_data(

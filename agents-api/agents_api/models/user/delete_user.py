@@ -58,37 +58,15 @@ def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[list[str], dict]:
         """
         # Delete docs
         ?[user_id, doc_id] :=
-            *user_docs{
-                user_id,
+            *docs{
+                owner_id: user_id,
+                owner_type: "user",
                 doc_id,
             }, user_id = to_uuid($user_id)
 
-        :delete user_docs {
+        :delete docs {
             user_id,
             doc_id
-        }
-        :returning
-        """,
-        """
-        # Delete tools
-        ?[user_id, tool_id] :=
-            *tools{
-                user_id,
-                tool_id,
-            }, user_id = to_uuid($user_id)
-
-        :delete tools {
-            user_id,
-            tool_id
-        }
-        :returning
-        """,
-        """
-        # Delete default user settings
-        ?[user_id] <- [[$user_id]]
-
-        :delete user_default_settings {
-            user_id
         }
         :returning
         """,

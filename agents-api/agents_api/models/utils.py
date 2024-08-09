@@ -188,7 +188,7 @@ def wrap_in_class(
             transform = transform or (lambda x: x)
 
             if one:
-                assert len(data) >= 1
+                assert len(data) >= 1, "Expected one result, got none"
                 return cls(**transform(data[0]))
 
             return [cls(**item) for item in map(transform, data)]
@@ -232,7 +232,9 @@ def rewrap_exceptions(
                             else transform(error)
                         )
 
-                        raise transform(new_error) from error
+                        setattr(new_error, "__cause__", error)
+
+                        raise new_error from error
 
                 raise
 

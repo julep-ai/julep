@@ -32,7 +32,7 @@ from ..utils import (
 @cozo_query
 @beartype
 def update_user(
-    *, developer_id: UUID, user_id: UUID, update_user: UpdateUserRequest
+    *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
 ) -> tuple[list[str], dict]:
     """Updates user information in the 'cozodb' database.
 
@@ -47,7 +47,7 @@ def update_user(
     """
     user_id = str(user_id)
     developer_id = str(developer_id)
-    update_data = update_user.model_dump()
+    update_data = data.model_dump()
 
     # Prepares the update data by filtering out None values and adding user_id and developer_id.
     user_update_cols, user_update_vals = cozo_process_mutate_data(
