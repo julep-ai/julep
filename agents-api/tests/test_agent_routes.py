@@ -60,6 +60,8 @@ def _(make_request=make_request):
 
 @test("route: create or update agent")
 def _(make_request=make_request):
+    agent_id = str(uuid4())
+
     data = dict(
         name="test agent",
         about="test agent about",
@@ -69,7 +71,7 @@ def _(make_request=make_request):
 
     response = make_request(
         method="POST",
-        url="/agents",
+        url=f"/agents/{agent_id}",
         json=data,
     )
 
@@ -162,7 +164,7 @@ def _(make_request=make_request, agent=test_agent):
     assert "test" not in agent["metadata"]
 
 
-@test("model: patch agent")
+@test("route: patch agent")
 def _(make_request=make_request, agent=test_agent):
     agent_id = str(agent.id)
 
@@ -194,7 +196,7 @@ def _(make_request=make_request, agent=test_agent):
     assert "hello" in agent["metadata"]
 
 
-@test("model: list agents")
+@test("route: list agents")
 def _(make_request=make_request):
     response = make_request(
         method="GET",

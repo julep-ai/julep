@@ -18,6 +18,15 @@ from ..utils import (
 
 @rewrap_exceptions(
     {
+        lambda e: isinstance(e, QueryException)
+        and "Developer not found" in str(e): lambda *_: HTTPException(
+            detail="developer does not exist", status_code=403
+        ),
+        lambda e: isinstance(e, QueryException)
+        and "asserted to return some results, but returned none"
+        in str(e): lambda *_: HTTPException(
+            detail="developer doesnt own resource", status_code=404
+        ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),

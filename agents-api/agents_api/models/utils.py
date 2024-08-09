@@ -65,12 +65,15 @@ def partialclass(cls, *args, **kwargs):
 
 def verify_developer_id_query(developer_id: UUID | str) -> str:
     return f"""
-    ?[developer_id] :=
+    matched[count(developer_id)] :=
         *developers{{
             developer_id,
         }}, developer_id = to_uuid("{str(developer_id)}")
         
-    :assert some
+    ?[exists] :=
+        matched[num],
+        exists = num > 0,
+        assert(exists, "Developer does not exist")
     """
 
 

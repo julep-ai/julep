@@ -1,6 +1,6 @@
 import json
 from json import JSONDecodeError
-from typing import Annotated, List, Literal
+from typing import Annotated, Literal
 
 from fastapi import Depends, HTTPException, status
 from pydantic import UUID4
@@ -19,7 +19,7 @@ async def list_users(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: str = "{}",
-) -> List[User]:
+) -> ListResponse[User]:
     try:
         metadata_filter = json.loads(metadata_filter)
     except JSONDecodeError:
@@ -37,4 +37,5 @@ async def list_users(
         metadata_filter=metadata_filter,
     )
 
-    return ListResponse[User](items=users)
+    result = ListResponse[User](items=users)
+    return result
