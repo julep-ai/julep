@@ -5,12 +5,12 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from .create_doc import create_doc
-from .delete_doc import delete_doc
-from .embed_snippets import embed_snippets
-from .get_doc import get_doc
-from .list_docs import list_docs
-from .search_docs import search_docs_by_embedding
+from agents_api.models.docs.create_doc import create_doc
+from agents_api.models.docs.delete_doc import delete_doc
+from agents_api.models.docs.embed_snippets import embed_snippets
+from agents_api.models.docs.get_doc import get_doc
+from agents_api.models.docs.list_docs import list_docs
+from agents_api.models.docs.search_docs_by_embedding import search_docs_by_embedding
 
 EMBEDDING_SIZE: int = 1024
 

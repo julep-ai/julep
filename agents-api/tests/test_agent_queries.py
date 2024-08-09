@@ -5,13 +5,8 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
+from agents_api.models import agent
 from agents_api.autogen.openapi_model import Agent
-
-from .create_agent import create_agent
-from .delete_agent import delete_agent
-from .get_agent import get_agent
-from .list_agents import list_agents
-from .update_agent import update_agent
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -33,7 +28,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    create_agent(
+    agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data={
@@ -51,7 +46,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    create_agent(
+    agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data={
@@ -70,7 +65,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    result = get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    result = agent.get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     assert result is None
 
@@ -81,7 +76,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    create_agent(
+    agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data={
@@ -93,7 +88,7 @@ def _():
         client=client,
     )
 
-    result = get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    result = agent.get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     assert result is not None
     assert isinstance(result, Agent)
@@ -107,7 +102,7 @@ def _():
     developer_id = uuid4()
 
     # Create the agent
-    create_agent(
+    agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data={
@@ -119,10 +114,10 @@ def _():
     )
 
     # Delete the agent
-    delete_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    agent.delete_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     # Check that the agent is deleted
-    result = get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    result = agent.get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     assert result is None
 
@@ -133,7 +128,7 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    create_agent(
+    agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data={
@@ -144,7 +139,7 @@ def _():
         client=client,
     )
 
-    result = update_agent(
+    result = agent.update_agent(
         agent_id=agent_id,
         developer_id=developer_id,
         data={
@@ -166,7 +161,7 @@ def _():
     client = cozo_client()
     developer_id = uuid4()
 
-    result = list_agents(developer_id=developer_id, client=client)
+    result = agent.list_agents(developer_id=developer_id, client=client)
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)

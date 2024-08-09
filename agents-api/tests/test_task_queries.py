@@ -5,13 +5,12 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
+from agents_api.models.task.create_task import create_task
+from agents_api.models.task.delete_task import delete_task
+from agents_api.models.task.get_task import get_task
+from agents_api.models.task.list_tasks import list_tasks
+from agents_api.models.task.update_task import update_task
 from agents_api.autogen.openapi_model import Task
-
-from .create_task import create_task
-from .delete_task import delete_task
-from .get_task import get_task
-from .list_tasks import list_tasks
-from .update_task import update_task
 
 
 def cozo_client(migrations_dir: str = "./migrations"):

@@ -6,11 +6,10 @@ from pycozo import Client
 from ward import test
 
 from agents_api.autogen.openapi_model import FunctionDef, Tool
-
-from .create_tools import create_tools
-from .delete_tool import delete_tool
-from .get_tool import get_tool
-from .list_tools import list_tools
+from agents_api.models.tools.create_tools import create_tools
+from agents_api.models.tools.delete_tool import delete_tool
+from agents_api.models.tools.get_tool import get_tool
+from agents_api.models.tools.list_tools import list_tools
 
 
 def cozo_client(migrations_dir: str = "./migrations"):

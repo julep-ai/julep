@@ -9,10 +9,10 @@ from ward import raises, test
 
 from agents_api.autogen.openapi_model import User
 
-from .create_user import create_user
-from .get_user import get_user
-from .list_users import list_users
-from .update_user import update_user
+from agents_api.models.user.create_user import create_user
+from agents_api.models.user.get_user import get_user
+from agents_api.models.user.list_users import list_users
+from agents_api.models.user.update_user import update_user
 
 
 def cozo_client(migrations_dir: str = "./migrations"):

@@ -10,16 +10,16 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from ...autogen.openapi_model import Entry, FunctionDef
-from ..agent.create_agent import create_agent
-from ..docs.create_doc import create_doc
-from ..docs.embed_snippets import embed_snippets
-from ..session.create_session import create_session
-from ..tools.create_tools import create_tools
-from ..user.create_user import create_user
-from .create_entries import create_entries
-from .get_history import get_history
-from .list_entries import list_entries
+from agents_api.autogen.openapi_model import Entry, FunctionDef
+from agents_api.models.agent.create_agent import create_agent
+from agents_api.models.docs.create_doc import create_doc
+from agents_api.models.docs.embed_snippets import embed_snippets
+from agents_api.models.session.create_session import create_session
+from agents_api.models.tools.create_tools import create_tools
+from agents_api.models.user.create_user import create_user
+from agents_api.models.entry.create_entries import create_entries
+from agents_api.models.entry.get_history import get_history
+from agents_api.models.entry.list_entries import list_entries
 
 MODEL = "julep-ai/samantha-1-turbo"
 

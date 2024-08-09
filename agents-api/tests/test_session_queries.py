@@ -5,12 +5,10 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from agents_api.autogen.openapi_model import Session
-
-from .create_session import create_session
-from .delete_session import delete_session
-from .get_session import get_session
-from .list_sessions import list_sessions
+from agents_api.models.session.create_session import create_session
+from agents_api.models.session.delete_session import delete_session
+from agents_api.models.session.get_session import get_session
+from agents_api.models.session.list_sessions import list_sessions
 
 MODEL = "julep-ai/samantha-1-turbo"
 
