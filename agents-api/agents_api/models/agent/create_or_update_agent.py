@@ -38,7 +38,7 @@ def create_or_update_agent(
     developer_id: UUID,
     agent_id: UUID,
     data: CreateOrUpdateAgentRequest,
-) -> tuple[list[str], dict]:
+) -> tuple[list[str | None], dict]:
     """
     Constructs and executes a datalog query to create a new agent in the database.
 
@@ -123,7 +123,7 @@ def create_or_update_agent(
 
     queries = [
         verify_developer_id_query(developer_id),
-        default_settings and default_settings_query,
+        default_settings_query if default_settings else None,
         agent_query,
     ]
 

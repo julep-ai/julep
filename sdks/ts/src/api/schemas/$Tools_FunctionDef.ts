@@ -6,13 +6,9 @@ export const $Tools_FunctionDef = {
   description: `Function definition`,
   properties: {
     name: {
-      type: "all-of",
       description: `DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.`,
-      contains: [
-        {
-          type: "Common_validPythonIdentifier",
-        },
-      ],
+      properties: {},
+      isNullable: true,
     },
     description: {
       type: "all-of",
@@ -28,7 +24,6 @@ export const $Tools_FunctionDef = {
       contains: {
         properties: {},
       },
-      isRequired: true,
     },
   },
 } as const;

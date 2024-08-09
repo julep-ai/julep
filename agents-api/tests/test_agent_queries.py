@@ -1,12 +1,13 @@
 # Tests for agent queries
 from uuid import uuid4
 
-from ward import test
+from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
     CreateOrUpdateAgentRequest,
+    PatchAgentRequest,
     ResourceUpdatedResponse,
     UpdateAgentRequest,
 )
@@ -66,13 +67,8 @@ def _(client=cozo_client, developer_id=test_developer_id):
 def _(client=cozo_client, developer_id=test_developer_id):
     agent_id = uuid4()
 
-    try:
+    with raises(Exception):
         get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
-    except Exception:
-        pass
-
-    else:
-        assert None
 
 
 @test("model: get agent exists")
@@ -100,12 +96,8 @@ def _(client=cozo_client, developer_id=test_developer_id):
     delete_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
 
     # Check that the agent is deleted
-    try:
+    with raises(Exception):
         get_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
-    except Exception:
-        pass
-    else:
-        raise AssertionError("Agent found")
 
 
 @test("model: update agent")
@@ -116,13 +108,22 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
         data=UpdateAgentRequest(
             name="updated agent",
             about="updated agent about",
-            default_settings={"temperature": 1.5},
+            default_settings={"temperature": 1.0},
+            metadata={"hello": "world"},
         ),
         client=client,
     )
 
     assert result is not None
     assert isinstance(result, ResourceUpdatedResponse)
+
+    agent = get_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        client=client,
+    )
+
+    assert "test" not in agent.metadata
 
 
 @test("model: patch agent")
@@ -130,16 +131,25 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     result = patch_agent(
         agent_id=agent.id,
         developer_id=developer_id,
-        data=UpdateAgentRequest(
+        data=PatchAgentRequest(
             name="patched agent",
             about="patched agent about",
             default_settings={"temperature": 1.0},
+            metadata={"something": "else"},
         ),
         client=client,
     )
 
     assert result is not None
     assert isinstance(result, ResourceUpdatedResponse)
+
+    agent = get_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        client=client,
+    )
+
+    assert "hello" in agent.metadata
 
 
 @test("model: list agents")

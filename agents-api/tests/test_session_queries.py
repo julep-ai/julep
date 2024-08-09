@@ -3,10 +3,10 @@ from uuid import uuid4
 
 from ward import test
 
-from agents_api.autogen.openapi_model import Session, CreateOrUpdateSessionRequest
+from agents_api.autogen.openapi_model import CreateOrUpdateSessionRequest, Session
 from agents_api.autogen.Sessions import CreateSessionRequest
-from agents_api.models.session.create_session import create_session
 from agents_api.models.session.create_or_update_session import create_or_update_session
+from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.session.get_session import get_session
 from agents_api.models.session.list_sessions import list_sessions
@@ -118,7 +118,9 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
 
 
 @test("model: create or update session")
-def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user):
+def _(
+    client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user
+):
     session_id = uuid4()
 
     create_or_update_session(

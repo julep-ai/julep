@@ -32,7 +32,7 @@ from ..utils import (
 @cozo_query
 @beartype
 def patch_tool(
-    *, developer_id: UUID, agent_id: UUID, tool_id: UUID, patch_tool: PatchToolRequest
+    *, developer_id: UUID, agent_id: UUID, tool_id: UUID, data: PatchToolRequest
 ) -> tuple[list[str], dict]:
     """
     # Execute the datalog query and return the results as a DataFrame
@@ -41,14 +41,17 @@ def patch_tool(
     Parameters:
     - agent_id (UUID): The unique identifier of the agent.
     - tool_id (UUID): The unique identifier of the tool to be updated.
-    - patch_tool (PatchToolRequest): The request payload containing the updated tool information.
+    - data (PatchToolRequest): The request payload containing the updated tool information.
 
     Returns:
     - ResourceUpdatedResponse: The updated tool data.
     """
 
+    agent_id = str(agent_id)
+    tool_id = str(tool_id)
+
     # Extract the tool data from the payload
-    patch_data = patch_tool.model_dump(exclude_none=True)
+    patch_data = data.model_dump(exclude_none=True)
 
     # Assert that only one of the tool type fields is present
     tool_specs = [
@@ -64,16 +67,15 @@ def patch_tool(
         patch_data["type"] = patch_data.get("type", tool_type)
         assert patch_data["type"] == tool_type, "Invalid tool update"
 
-    if tool_spec is not None:
-        # Rename the tool definition to 'spec'
-        patch_data["spec"] = tool_spec
+    tool_spec = tool_spec or {}
+    if tool_spec:
         del patch_data[tool_type]
 
     tool_cols, tool_vals = cozo_process_mutate_data(
         {
             **patch_data,
-            "agent_id": str(agent_id),
-            "tool_id": str(tool_id),
+            "agent_id": agent_id,
+            "tool_id": tool_id,
         }
     )
 
@@ -81,11 +83,17 @@ def patch_tool(
     patch_query = f"""
         input[{tool_cols}] <- $input
 
-        ?[{tool_cols}, updated_at] := 
+        ?[{tool_cols}, spec, updated_at] := 
+            *tools {{
+                agent_id: to_uuid($agent_id),
+                tool_id: to_uuid($tool_id),
+                spec: old_spec,
+            }},
             input[{tool_cols}],
+            spec = concat(old_spec, $spec),
             updated_at = now()
 
-        :update tools {{ {tool_cols}, updated_at }}
+        :update tools {{ {tool_cols}, spec, updated_at }}
         :returning
     """
 
@@ -95,4 +103,7 @@ def patch_tool(
         patch_query,
     ]
 
-    return (queries, dict(input=tool_vals))
+    return (
+        queries,
+        dict(input=tool_vals, spec=tool_spec, agent_id=agent_id, tool_id=tool_id),
+    )

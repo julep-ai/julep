@@ -91,6 +91,7 @@ def test_agent(cozo_client=cozo_client, developer_id=test_developer_id):
             model="gpt-4o",
             name="test agent",
             about="test agent about",
+            metadata={"test": "test"},
         ),
         client=cozo_client,
     )
@@ -237,7 +238,6 @@ def test_tool(
     agent=test_agent,
 ):
     function = {
-        "name": "hello_world1",
         "description": "A function that prints hello world",
         "parameters": {"type": "object", "properties": {}},
     }

@@ -9,8 +9,8 @@ from ward import test
 
 from agents_api.autogen.openapi_model import CreateEntryRequest
 from agents_api.models.entry.create_entries import create_entries
-from agents_api.models.entry.list_entries import list_entries
 from agents_api.models.entry.delete_entries import delete_entries
+from agents_api.models.entry.list_entries import list_entries
 from tests.fixtures import cozo_client, test_developer_id, test_session
 
 MODEL = "julep-ai/samantha-1-turbo"
@@ -93,7 +93,7 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     internal_entry = CreateEntryRequest(
         session_id=session.id,
         role="user",
-        content="test entry content",
+        content="internal entry content",
         source="internal",
     )
 
@@ -120,4 +120,4 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     )
 
     # Asserts that no entries are retrieved after deletion.
-    assert len(result) == 0
+    assert all(id not in [entry.id for entry in result] for id in entry_ids)

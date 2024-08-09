@@ -32,13 +32,13 @@ alias ToolChoiceOption = "auto" | "none" | NamedToolChoice;
 /** Function definition */
 model FunctionDef {
     /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
-    name?: validPythonIdentifier = "overriden";
+    name?: null = null;
 
     /** Description of the function  */
     description?: identifierSafeUnicode;
 
     /** The parameters the function accepts */
-    parameters: FunctionParameters;
+    parameters?: FunctionParameters;
 
 }
 

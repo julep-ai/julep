@@ -24,7 +24,7 @@ export const $Tools_PatchToolRequest = {
       ],
     },
     function: {
-      type: "Tools_FunctionDefUpdate",
+      type: "Tools_FunctionDef",
     },
     integration: {
       properties: {},
