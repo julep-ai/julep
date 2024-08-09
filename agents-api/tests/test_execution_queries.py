@@ -6,8 +6,11 @@ from ward import test
 from agents_api.autogen.Executions import (
     CreateExecutionRequest,
 )
-from agents_api.autogen.openapi_model import Execution
+from agents_api.autogen.openapi_model import CreateTransitionRequest, Execution
 from agents_api.models.execution.create_execution import create_execution
+from agents_api.models.execution.create_execution_transition import (
+    create_execution_transition,
+)
 from agents_api.models.execution.get_execution import get_execution
 from agents_api.models.execution.list_executions import list_executions
 from tests.fixtures import cozo_client, test_developer_id, test_execution, test_task
@@ -59,3 +62,24 @@ def _(
     assert isinstance(result, list)
     assert len(result) >= 1
     assert result[0].status == "queued"
+
+
+@test("model: create execution transition")
+def _(client=cozo_client, developer_id=test_developer_id, execution=test_execution):
+    result = create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            **{
+                "type": "step",
+                "output": {"result": "test"},
+                "current": ["main", 0],
+                "next": None,
+            }
+        ),
+        client=client,
+    )
+
+    assert result is not None
+    assert result.type == "step"
+    assert result.output == {"result": "test"}

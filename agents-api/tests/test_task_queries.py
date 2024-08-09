@@ -9,6 +9,7 @@ from agents_api.autogen.openapi_model import (
     Task,
     UpdateTaskRequest,
 )
+from agents_api.models.task.create_or_update_task import create_or_update_task
 from agents_api.models.task.create_task import create_task
 from agents_api.models.task.delete_task import delete_task
 from agents_api.models.task.get_task import get_task
@@ -22,6 +23,26 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     task_id = uuid4()
 
     create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        task_id=task_id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [],
+            }
+        ),
+        client=client,
+    )
+
+
+@test("model: create or update task")
+def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
+    task_id = uuid4()
+
+    create_or_update_task(
         developer_id=developer_id,
         agent_id=agent.id,
         task_id=task_id,

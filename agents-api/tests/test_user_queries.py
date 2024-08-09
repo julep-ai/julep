@@ -6,11 +6,13 @@ from uuid import uuid4
 from ward import test
 
 from agents_api.autogen.openapi_model import (
+    CreateOrUpdateUserRequest,
     CreateUserRequest,
     ResourceUpdatedResponse,
     UpdateUserRequest,
     User,
 )
+from agents_api.models.user.create_or_update_user import create_or_update_user
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.get_user import get_user
 from agents_api.models.user.list_users import list_users
@@ -25,6 +27,21 @@ def _(client=cozo_client, developer_id=test_developer_id):
     create_user(
         developer_id=developer_id,
         data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
+        client=client,
+    )
+
+
+@test("model: create or update user")
+def _(client=cozo_client, developer_id=test_developer_id):
+    """Test that a user can be successfully created or updated."""
+
+    create_or_update_user(
+        developer_id=developer_id,
+        user_id=uuid4(),
+        data=CreateOrUpdateUserRequest(
             name="test user",
             about="test user about",
         ),

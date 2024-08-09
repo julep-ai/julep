@@ -37,7 +37,9 @@ valid_transitions = {
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Transition, transform=lambda d: {"id": d["transition_id"], **d})
+@wrap_in_class(
+    Transition, transform=lambda d: {"id": d["transition_id"], **d}, one=True
+)
 @cozo_query
 @beartype
 def create_execution_transition(

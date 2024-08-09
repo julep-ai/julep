@@ -46,35 +46,7 @@ class FunctionDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: Annotated[str, Field("overriden", pattern="^[^\\W0-9]\\w*$")]
-    """
-    DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
-    """
-    description: Annotated[
-        str | None,
-        Field(
-            None,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ]
-    """
-    Description of the function
-    """
-    parameters: dict[str, Any]
-    """
-    The parameters the function accepts
-    """
-
-
-class FunctionDefUpdate(BaseModel):
-    """
-    Function definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    name: Annotated[str, Field("overriden", pattern="^[^\\W0-9]\\w*$")]
+    name: Any | None = None
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
@@ -124,7 +96,7 @@ class PatchToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDefUpdate | None = None
+    function: FunctionDef | None = None
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None

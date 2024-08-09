@@ -114,7 +114,7 @@ def cozo_query(
     func: Callable[P, tuple[str | list[str], dict]] | None = None,
     debug: bool | None = None,
 ):
-    def cozo_query_dec(func: Callable[P, tuple[str | list[str], dict]]):
+    def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """
         Decorator that wraps a function that takes arbitrary arguments, and
         returns a (query string, variables) tuple.
@@ -135,7 +135,7 @@ def cozo_query(
             if isinstance(queries, str):
                 query = queries
             else:
-                queries = [query for query in queries if query]
+                queries = [str(query) for query in queries if query]
                 query = "}\n\n{\n".join(queries)
                 query = f"{{ {query} }}"
 

@@ -110,7 +110,6 @@ export type { Tools_ChosenFunctionCall } from "./models/Tools_ChosenFunctionCall
 export type { Tools_ChosenToolCall } from "./models/Tools_ChosenToolCall";
 export type { Tools_FunctionCallOption } from "./models/Tools_FunctionCallOption";
 export type { Tools_FunctionDef } from "./models/Tools_FunctionDef";
-export type { Tools_FunctionDefUpdate } from "./models/Tools_FunctionDefUpdate";
 export type { Tools_FunctionTool } from "./models/Tools_FunctionTool";
 export type { Tools_NamedFunctionChoice } from "./models/Tools_NamedFunctionChoice";
 export type { Tools_NamedToolChoice } from "./models/Tools_NamedToolChoice";
@@ -225,7 +224,6 @@ export { $Tools_ChosenFunctionCall } from "./schemas/$Tools_ChosenFunctionCall";
 export { $Tools_ChosenToolCall } from "./schemas/$Tools_ChosenToolCall";
 export { $Tools_FunctionCallOption } from "./schemas/$Tools_FunctionCallOption";
 export { $Tools_FunctionDef } from "./schemas/$Tools_FunctionDef";
-export { $Tools_FunctionDefUpdate } from "./schemas/$Tools_FunctionDefUpdate";
 export { $Tools_FunctionTool } from "./schemas/$Tools_FunctionTool";
 export { $Tools_NamedFunctionChoice } from "./schemas/$Tools_NamedFunctionChoice";
 export { $Tools_NamedToolChoice } from "./schemas/$Tools_NamedToolChoice";
