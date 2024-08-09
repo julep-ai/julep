@@ -843,6 +843,103 @@ client.agent_docs_route_list(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">agent_docs_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a Doc for this Agent
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_docs_route_create(
+    id="id",
+    title="title",
+    content="content",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**title:** `CommonIdentifierSafeUnicode` — Title describing what this document contains
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**content:** `DocsCreateDocRequestContent` — Contents of the document
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">agents_docs_search_route_search</a>(...)</code></summary>
 <dl>
 <dd>
@@ -879,15 +976,9 @@ client = JulepApi(
 )
 client.agents_docs_search_route_search(
     id="id",
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
     body=DocsVectorDocSearchRequest(
+        limit=1,
         confidence=1.1,
-        alpha=1.1,
-        mmr=True,
         vector=[1.1],
     ),
 )
@@ -907,46 +998,6 @@ client.agents_docs_search_route_search(
 <dd>
 
 **id:** `CommonUuid` — ID of the parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `AgentsDocsSearchRouteSearchRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `AgentsDocsSearchRouteSearchRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>
@@ -2514,6 +2565,85 @@ client.embed_route_embed(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">executions_route_resume_with_task_token</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Resume an execution with a task token
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.executions_route_resume_with_task_token(
+    task_token="task_token",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**task_token:** `str` — A Task Token is a unique identifier for a specific Task Execution.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**input:** `typing.Optional[typing.Dict[str, typing.Any]]` — The input to resume the execution with
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">executions_route_get</a>(...)</code></summary>
 <dl>
 <dd>
@@ -2566,6 +2696,89 @@ client.executions_route_get(
 <dd>
 
 **id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">executions_route_update</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing Execution
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import ExecutionsUpdateExecutionRequest_Cancelled
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.executions_route_update(
+    id="string",
+    request=ExecutionsUpdateExecutionRequest_Cancelled(
+        reason="string",
+    ),
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request:** `ExecutionsUpdateExecutionRequest` 
     
 </dd>
 </dl>
@@ -3653,7 +3866,6 @@ client = JulepApi(
 )
 client.history_route_history(
     id="id",
-    limit=1,
 )
 
 ```
@@ -3671,14 +3883,6 @@ client.history_route_history(
 <dd>
 
 **id:** `CommonUuid` — ID of parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -3954,186 +4158,6 @@ client.task_executions_route_create(
 <dd>
 
 **metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">task_executions_route_resume_with_task_token</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Resume an execution with a task token
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.task_executions_route_resume_with_task_token(
-    id="id",
-    task_token="task_token",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of parent Task
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**task_token:** `str` — A Task Token is a unique identifier for a specific Task Execution.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**input:** `typing.Optional[typing.Dict[str, typing.Any]]` — The input to resume the execution with
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">task_executions_route_update</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update an existing Execution
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep import ExecutionsUpdateExecutionRequest_Cancelled
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.task_executions_route_update(
-    id="string",
-    child_id="string",
-    request=ExecutionsUpdateExecutionRequest_Cancelled(
-        reason="string",
-    ),
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of parent resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**child_id:** `CommonUuid` — ID of the resource to be updated
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request:** `ExecutionsUpdateExecutionRequest` 
     
 </dd>
 </dl>
@@ -4895,6 +4919,103 @@ client.user_docs_route_list(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">user_docs_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a Doc for this User
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.user_docs_route_create(
+    id="id",
+    title="title",
+    content="content",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**title:** `CommonIdentifierSafeUnicode` — Title describing what this document contains
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**content:** `DocsCreateDocRequestContent` — Contents of the document
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">user_docs_search_route_search</a>(...)</code></summary>
 <dl>
 <dd>
@@ -4931,15 +5052,9 @@ client = JulepApi(
 )
 client.user_docs_search_route_search(
     id="id",
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
     body=DocsVectorDocSearchRequest(
+        limit=1,
         confidence=1.1,
-        alpha=1.1,
-        mmr=True,
         vector=[1.1],
     ),
 )
@@ -4959,46 +5074,6 @@ client.user_docs_search_route_search(
 <dd>
 
 **id:** `CommonUuid` — ID of the parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `UserDocsSearchRouteSearchRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `UserDocsSearchRouteSearchRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>

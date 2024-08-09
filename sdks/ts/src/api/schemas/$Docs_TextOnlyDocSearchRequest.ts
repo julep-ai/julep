@@ -11,19 +11,8 @@ export const $Docs_TextOnlyDocSearchRequest = {
     {
       properties: {
         text: {
-          type: "any-of",
-          description: `Text or texts to use in the search.`,
-          contains: [
-            {
-              type: "string",
-            },
-            {
-              type: "array",
-              contains: {
-                type: "string",
-              },
-            },
-          ],
+          type: "string",
+          description: `Text to use in the search.`,
           isRequired: true,
         },
       },

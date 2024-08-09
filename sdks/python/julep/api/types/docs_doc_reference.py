@@ -7,6 +7,7 @@ from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
 from .docs_doc_owner import DocsDocOwner
+from .docs_snippet import DocsSnippet
 
 
 class DocsDocReference(pydantic_v1.BaseModel):
@@ -20,13 +21,9 @@ class DocsDocReference(pydantic_v1.BaseModel):
     ID of the document
     """
 
-    snippet_index: typing.List[int] = pydantic_v1.Field()
-    """
-    Snippets referred to of the document
-    """
-
     title: typing.Optional[str] = None
-    snippet: typing.Optional[str] = None
+    snippets: typing.List[DocsSnippet]
+    distance: typing.Optional[float] = None
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

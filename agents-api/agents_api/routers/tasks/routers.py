@@ -15,20 +15,26 @@ from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     Execution,
     ResourceCreatedResponse,
+    ResumeExecutionRequest,
+    StopExecutionRequest,
     # ResourceUpdatedResponse,
     Task,
     Transition,
     UpdateExecutionRequest,
 )
-from agents_api.clients.cozo import client as cozo_client
-from agents_api.clients.temporal import run_task_execution_workflow
-from agents_api.common.protocol.tasks import ExecutionInput
+from agents_api.clients.temporal import get_client, run_task_execution_workflow
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.models.execution.create_execution import (
     create_execution as create_execution_query,
 )
 from agents_api.models.execution.get_execution import (
     get_execution as get_execution_query,
+)
+from agents_api.models.execution.get_paused_execution_token import (
+    get_paused_execution_token,
+)
+from agents_api.models.execution.get_temporal_workflow_data import (
+    get_temporal_workflow_data,
 )
 
 # from agents_api.models.execution.get_execution_transition import (
@@ -43,6 +49,7 @@ from agents_api.models.execution.list_executions import (
 from agents_api.models.execution.list_executions import (
     list_executions as list_task_executions_query,
 )
+from agents_api.models.execution.prepare_execution_input import prepare_execution_input
 from agents_api.models.execution.update_execution import (
     update_execution as update_execution_query,
 )
@@ -207,22 +214,14 @@ async def create_task_execution(
         raise
 
     execution_id = uuid4()
-    execution = create_execution_query(
+    execution_input = prepare_execution_input(
         developer_id=x_developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        data=data,
-    )
-
-    execution_input = ExecutionInput.fetch(
-        developer_id=x_developer_id,
-        task_id=task_id,
-        execution_id=execution_id,
-        client=cozo_client,
     )
 
     try:
-        await run_task_execution_workflow(
+        handle = await run_task_execution_workflow(
             execution_input=execution_input,
             job_id=uuid4(),
         )
@@ -240,6 +239,14 @@ async def create_task_execution(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Task creation failed",
         )
+
+    execution = create_execution_query(
+        developer_id=x_developer_id,
+        task_id=task_id,
+        execution_id=execution_id,
+        data=data,
+        workflow_hande=handle,
+    )
 
     return ResourceCreatedResponse(
         id=execution["execution_id"][0], created_at=execution["created_at"][0]
@@ -302,29 +309,24 @@ async def patch_execution(
         )
 
 
-@router.put("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
+@router.put("/executions/{execution_id}", tags=["executions"])
 async def put_execution(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    task_id: UUID4,
     execution_id: UUID4,
-    data: UpdateExecutionRequest,
-) -> Execution:
-    try:
-        res = [
-            row.to_dict()
-            for _, row in update_execution_query(
-                developer_id=x_developer_id,
-                task_id=task_id,
-                execution_id=execution_id,
-                data=data,
-            ).iterrows()
-        ][0]
-        return Execution(**res)
-    except (IndexError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Execution not found",
+    data: ResumeExecutionRequest | StopExecutionRequest,
+):
+    temporal_client = await get_client()
+    if isinstance(data, StopExecutionRequest):
+        handle = temporal_client.get_workflow_handle_for(
+            *get_temporal_workflow_data(execution_id=execution_id)
         )
+        await handle.cancel()
+    else:
+        token_data = get_paused_execution_token(
+            developer_id=x_developer_id, execution_id=execution_id
+        )
+        handle = temporal_client.get_async_activity_handle(token_data["task_token"])
+        await handle.complete(data.input)
 
 
 @router.get("/tasks/{task_id}/executions", tags=["tasks"])

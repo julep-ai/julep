@@ -105,7 +105,7 @@ namespace Api {
     interface TaskExecutionsRoute extends Executions.TaskEndpoints {}
 
     @route("/executions")
-    interface ExecutionsRoute extends Executions.Endpoints {}
+    interface ExecutionsRoute extends Executions.Endpoints, Executions.PublicEndpoints {}
 
     @route("/executions/{id}/transitions")
     interface ExecutionTransitionsRoute extends Executions.TransitionEndpoints {}

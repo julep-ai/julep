@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { Common_uuid } from "./Common_uuid";
 import type { Docs_DocOwner } from "./Docs_DocOwner";
+import type { Docs_Snippet } from "./Docs_Snippet";
 export type Docs_DocReference = {
   /**
    * The owner of this document.
@@ -13,10 +14,7 @@ export type Docs_DocReference = {
    * ID of the document
    */
   readonly id: Common_uuid;
-  /**
-   * Snippets referred to of the document
-   */
-  snippet_index: Array<number>;
   title?: string;
-  snippet?: string;
+  snippets: Array<Docs_Snippet>;
+  distance: number | null;
 };

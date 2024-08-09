@@ -14,19 +14,15 @@ from .router import router
 
 
 @router.put("/agents/{agent_id}/tools/{tool_id}", tags=["agents"])
-async def update_agent_tools(
+async def update_agent_tool(
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     agent_id: UUID,
     tool_id: UUID,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     data: UpdateToolRequest,
 ) -> ResourceUpdatedResponse:
-    _, resp = next(
-        update_tool_query(
-            developer_id=x_developer_id,
-            agent_id=agent_id,
-            tool_id=tool_id,
-            data=data,
-        ).iterrows()
+    return update_tool_query(
+        developer_id=x_developer_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        data=data,
     )
-
-    return ResourceUpdatedResponse(id=resp["tool_id"], updated_at=resp["updated_at"])

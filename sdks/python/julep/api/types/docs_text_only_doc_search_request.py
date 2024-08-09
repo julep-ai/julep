@@ -6,13 +6,12 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .docs_base_doc_search_request import DocsBaseDocSearchRequest
-from .docs_text_only_doc_search_request_text import DocsTextOnlyDocSearchRequestText
 
 
 class DocsTextOnlyDocSearchRequest(DocsBaseDocSearchRequest):
-    text: DocsTextOnlyDocSearchRequestText = pydantic_v1.Field()
+    text: str = pydantic_v1.Field()
     """
-    Text or texts to use in the search.
+    Text to use in the search.
     """
 
     def json(self, **kwargs: typing.Any) -> str:

@@ -6,13 +6,17 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .docs_base_doc_search_request import DocsBaseDocSearchRequest
-from .docs_vector_doc_search_request_vector import DocsVectorDocSearchRequestVector
 
 
 class DocsVectorDocSearchRequest(DocsBaseDocSearchRequest):
-    vector: DocsVectorDocSearchRequestVector = pydantic_v1.Field()
+    confidence: float = pydantic_v1.Field()
     """
-    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    The confidence cutoff level
+    """
+
+    vector: typing.List[float] = pydantic_v1.Field()
+    """
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """
 
     def json(self, **kwargs: typing.Any) -> str:

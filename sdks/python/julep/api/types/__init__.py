@@ -21,15 +21,6 @@ from .agents_create_agent_request_instructions import (
 from .agents_docs_search_route_search_request_body import (
     AgentsDocsSearchRouteSearchRequestBody,
 )
-from .agents_docs_search_route_search_request_direction import (
-    AgentsDocsSearchRouteSearchRequestDirection,
-)
-from .agents_docs_search_route_search_request_sort_by import (
-    AgentsDocsSearchRouteSearchRequestSortBy,
-)
-from .agents_docs_search_route_search_response import (
-    AgentsDocsSearchRouteSearchResponse,
-)
 from .agents_patch_agent_request_default_settings import (
     AgentsPatchAgentRequestDefaultSettings,
 )
@@ -90,21 +81,21 @@ from .common_tool_ref import CommonToolRef
 from .common_uuid import CommonUuid
 from .common_valid_python_identifier import CommonValidPythonIdentifier
 from .docs_base_doc_search_request import DocsBaseDocSearchRequest
+from .docs_create_doc_request import DocsCreateDocRequest
+from .docs_create_doc_request_content import DocsCreateDocRequestContent
 from .docs_doc import DocsDoc
 from .docs_doc_content import DocsDocContent
 from .docs_doc_owner import DocsDocOwner
 from .docs_doc_owner_role import DocsDocOwnerRole
 from .docs_doc_reference import DocsDocReference
+from .docs_doc_search_response import DocsDocSearchResponse
 from .docs_embed_query_request import DocsEmbedQueryRequest
 from .docs_embed_query_request_text import DocsEmbedQueryRequestText
 from .docs_embed_query_response import DocsEmbedQueryResponse
 from .docs_hybrid_doc_search_request import DocsHybridDocSearchRequest
-from .docs_hybrid_doc_search_request_text import DocsHybridDocSearchRequestText
-from .docs_hybrid_doc_search_request_vector import DocsHybridDocSearchRequestVector
+from .docs_snippet import DocsSnippet
 from .docs_text_only_doc_search_request import DocsTextOnlyDocSearchRequest
-from .docs_text_only_doc_search_request_text import DocsTextOnlyDocSearchRequestText
 from .docs_vector_doc_search_request import DocsVectorDocSearchRequest
-from .docs_vector_doc_search_request_vector import DocsVectorDocSearchRequestVector
 from .entries_base_entry import EntriesBaseEntry
 from .entries_base_entry_content import EntriesBaseEntryContent
 from .entries_base_entry_content_item import EntriesBaseEntryContentItem
@@ -275,13 +266,6 @@ from .user_docs_route_list_response import UserDocsRouteListResponse
 from .user_docs_search_route_search_request_body import (
     UserDocsSearchRouteSearchRequestBody,
 )
-from .user_docs_search_route_search_request_direction import (
-    UserDocsSearchRouteSearchRequestDirection,
-)
-from .user_docs_search_route_search_request_sort_by import (
-    UserDocsSearchRouteSearchRequestSortBy,
-)
-from .user_docs_search_route_search_response import UserDocsSearchRouteSearchResponse
 from .users_route_list_request_direction import UsersRouteListRequestDirection
 from .users_route_list_request_sort_by import UsersRouteListRequestSortBy
 from .users_route_list_response import UsersRouteListResponse
@@ -302,9 +286,6 @@ __all__ = [
     "AgentsCreateAgentRequestDefaultSettings",
     "AgentsCreateAgentRequestInstructions",
     "AgentsDocsSearchRouteSearchRequestBody",
-    "AgentsDocsSearchRouteSearchRequestDirection",
-    "AgentsDocsSearchRouteSearchRequestSortBy",
-    "AgentsDocsSearchRouteSearchResponse",
     "AgentsPatchAgentRequestDefaultSettings",
     "AgentsPatchAgentRequestInstructions",
     "AgentsRouteListRequestDirection",
@@ -351,21 +332,21 @@ __all__ = [
     "CommonUuid",
     "CommonValidPythonIdentifier",
     "DocsBaseDocSearchRequest",
+    "DocsCreateDocRequest",
+    "DocsCreateDocRequestContent",
     "DocsDoc",
     "DocsDocContent",
     "DocsDocOwner",
     "DocsDocOwnerRole",
     "DocsDocReference",
+    "DocsDocSearchResponse",
     "DocsEmbedQueryRequest",
     "DocsEmbedQueryRequestText",
     "DocsEmbedQueryResponse",
     "DocsHybridDocSearchRequest",
-    "DocsHybridDocSearchRequestText",
-    "DocsHybridDocSearchRequestVector",
+    "DocsSnippet",
     "DocsTextOnlyDocSearchRequest",
-    "DocsTextOnlyDocSearchRequestText",
     "DocsVectorDocSearchRequest",
-    "DocsVectorDocSearchRequestVector",
     "EntriesBaseEntry",
     "EntriesBaseEntryContent",
     "EntriesBaseEntryContentItem",
@@ -499,9 +480,6 @@ __all__ = [
     "UserDocsRouteListRequestSortBy",
     "UserDocsRouteListResponse",
     "UserDocsSearchRouteSearchRequestBody",
-    "UserDocsSearchRouteSearchRequestDirection",
-    "UserDocsSearchRouteSearchRequestSortBy",
-    "UserDocsSearchRouteSearchResponse",
     "UsersRouteListRequestDirection",
     "UsersRouteListRequestSortBy",
     "UsersRouteListResponse",

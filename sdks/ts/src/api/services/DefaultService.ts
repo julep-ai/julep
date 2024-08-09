@@ -18,8 +18,9 @@ import type { Common_ResourceCreatedResponse } from "../models/Common_ResourceCr
 import type { Common_ResourceDeletedResponse } from "../models/Common_ResourceDeletedResponse";
 import type { Common_ResourceUpdatedResponse } from "../models/Common_ResourceUpdatedResponse";
 import type { Common_uuid } from "../models/Common_uuid";
+import type { Docs_CreateDocRequest } from "../models/Docs_CreateDocRequest";
 import type { Docs_Doc } from "../models/Docs_Doc";
-import type { Docs_DocReference } from "../models/Docs_DocReference";
+import type { Docs_DocSearchResponse } from "../models/Docs_DocSearchResponse";
 import type { Docs_EmbedQueryRequest } from "../models/Docs_EmbedQueryRequest";
 import type { Docs_EmbedQueryResponse } from "../models/Docs_EmbedQueryResponse";
 import type { Docs_HybridDocSearchRequest } from "../models/Docs_HybridDocSearchRequest";
@@ -87,7 +88,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Agents_Agent>;
+    items: Array<Agents_Agent>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -288,18 +289,38 @@ export class DefaultService {
     });
   }
   /**
+   * Create a Doc for this Agent
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public agentDocsRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Docs_CreateDocRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/agents/{id}/docs",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
    * Search Docs owned by an Agent
-   * @returns any The request has succeeded.
+   * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
    */
   public agentsDocsSearchRouteSearch({
     id,
     requestBody,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
   }: {
     /**
      * ID of the parent
@@ -311,41 +332,12 @@ export class DefaultService {
         | Docs_TextOnlyDocSearchRequest
         | Docs_HybridDocSearchRequest;
     };
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Docs_DocReference>;
-  }> {
+  }): CancelablePromise<Docs_DocSearchResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents/{id}/search",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -779,6 +771,34 @@ export class DefaultService {
     });
   }
   /**
+   * Resume an execution with a task token
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public executionsRouteResumeWithTaskToken({
+    taskToken,
+    requestBody,
+  }: {
+    /**
+     * A Task Token is a unique identifier for a specific Task Execution.
+     */
+    taskToken: string;
+    /**
+     * Request to resume an execution with a task token
+     */
+    requestBody: Executions_TaskTokenResumeExecutionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/executions",
+      query: {
+        task_token: taskToken,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
    * Get an Execution by id
    * @returns Executions_Execution The request has succeeded.
    * @throws ApiError
@@ -797,6 +817,31 @@ export class DefaultService {
       path: {
         id: id,
       },
+    });
+  }
+  /**
+   * Update an existing Execution
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public executionsRouteUpdate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+    requestBody: Executions_UpdateExecutionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/executions/{id}",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
   /**
@@ -910,7 +955,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Sessions_Session>;
+    items: Array<Sessions_Session>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1325,25 +1370,17 @@ export class DefaultService {
    */
   public historyRouteHistory({
     id,
-    limit = 100,
   }: {
     /**
      * ID of parent
      */
     id: Common_uuid;
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
   }): CancelablePromise<Entries_History> {
     return this.httpRequest.request({
       method: "GET",
       url: "/sessions/{id}/history",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
       },
     });
   }
@@ -1428,65 +1465,6 @@ export class DefaultService {
     });
   }
   /**
-   * Resume an execution with a task token
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public taskExecutionsRouteResumeWithTaskToken({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of parent Task
-     */
-    id: Common_uuid;
-    /**
-     * Request to resume an execution with a task token
-     */
-    requestBody: Executions_TaskTokenResumeExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}/executions",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing Execution
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public taskExecutionsRouteUpdate({
-    id,
-    childId,
-    requestBody,
-  }: {
-    /**
-     * ID of parent resource
-     */
-    id: Common_uuid;
-    /**
-     * ID of the resource to be updated
-     */
-    childId: Common_uuid;
-    requestBody: Executions_UpdateExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}/executions/{child_id}",
-      path: {
-        id: id,
-        child_id: childId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
    * List users (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
@@ -1519,7 +1497,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Users_User>;
+    items: Array<Users_User>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1720,18 +1698,38 @@ export class DefaultService {
     });
   }
   /**
+   * Create a Doc for this User
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public userDocsRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Docs_CreateDocRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/users/{id}/docs",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
    * Search Docs owned by a User
-   * @returns any The request has succeeded.
+   * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
    */
   public userDocsSearchRouteSearch({
     id,
     requestBody,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
   }: {
     /**
      * ID of the parent
@@ -1743,41 +1741,12 @@ export class DefaultService {
         | Docs_TextOnlyDocSearchRequest
         | Docs_HybridDocSearchRequest;
     };
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Docs_DocReference>;
-  }> {
+  }): CancelablePromise<Docs_DocSearchResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/users/{id}/search",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
       },
       body: requestBody,
       mediaType: "application/json",

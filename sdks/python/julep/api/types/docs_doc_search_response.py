@@ -8,8 +8,16 @@ from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .docs_doc_reference import DocsDocReference
 
 
-class AgentsDocsSearchRouteSearchResponse(pydantic_v1.BaseModel):
-    results: typing.List[DocsDocReference]
+class DocsDocSearchResponse(pydantic_v1.BaseModel):
+    docs: typing.List[DocsDocReference] = pydantic_v1.Field()
+    """
+    The documents that were found
+    """
+
+    time: float = pydantic_v1.Field()
+    """
+    The time taken to search in seconds
+    """
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

@@ -1,5 +1,5 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated
+from typing import Annotated, Generic, TypeVar
 from uuid import UUID
 
 from pydantic import AwareDatetime, Field
@@ -158,3 +158,10 @@ class UpdateTaskRequest(_UpdateTaskRequest):
             "extra": "allow",
         }
     )
+
+
+DataT = TypeVar("DataT", bound=BaseModel)
+
+
+class ListResponse(BaseModel, Generic[DataT]):
+    items: list[DataT]

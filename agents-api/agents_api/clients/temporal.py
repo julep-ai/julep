@@ -75,7 +75,7 @@ async def run_task_execution_workflow(
 ):
     client = await get_client()
 
-    await client.execute_workflow(
+    return await client.start_workflow(
         "TaskExecutionWorkflow",
         args=[execution_input, start, previous_inputs],
         task_queue="memory-task-queue",

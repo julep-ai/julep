@@ -1,5 +1,9 @@
+import "@typespec/http";
+
 import "../common";
 import "../tasks";
+
+using TypeSpec.Http;
 
 using Common;
 using Tasks;
@@ -80,6 +84,7 @@ model TaskTokenResumeExecutionRequest {
     status: "running" = "running";
 
     /** A Task Token is a unique identifier for a specific Task Execution. */
+    @query
     task_token: string;
 
     /** The input to resume the execution with */

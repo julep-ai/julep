@@ -47,15 +47,10 @@ def prepare_chat_context(
     developer_id: UUID,
     agent_id: UUID,
     session_id: UUID,
-    # doc_query_embedding: list[float],
-    # docs_confidence: float = 0.4,
-    # k_docs: int = 3,
 ) -> tuple[list[str], dict]:
     """
-    Executes a complex query to retrieve memory context based on session ID, tool and document embeddings.
+    Executes a complex query to retrieve memory context based on session ID.
     """
-    # VECTOR_SIZE = 1024
-    # docs_radius: float = 1.0 - docs_confidence
 
     session_data_query, sd_vars = prepare_session_data.__wrapped__(
         developer_id=developer_id, session_id=session_id
@@ -88,9 +83,6 @@ def prepare_chat_context(
             {', '.join(tools_fields)}
         }}
     """
-
-    # TODO: Implement the following queries
-    # docs_query = ...
 
     entries_query, e_vars = list_entries.__wrapped__(
         developer_id=developer_id,
@@ -143,8 +135,5 @@ def prepare_chat_context(
             **sd_vars,
             **t_vars,
             **e_vars,
-            # "doc_query_embedding": doc_query_embedding,
-            # "k_docs": k_docs,
-            # "docs_radius": round(docs_radius, 2),
         },
     )

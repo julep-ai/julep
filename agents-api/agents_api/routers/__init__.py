@@ -9,3 +9,11 @@ Sub-modules within the routers module:
 
 Each sub-module defines its own set of API endpoints and is responsible for handling requests and responses related to its domain, ensuring a modular and organized approach to API development.
 """
+
+# ruff: noqa: F401
+
+from .agents import router as agents_router
+from .docs import router as docs_router
+from .jobs import router as jobs_router
+from .sessions import router as sessions_router
+from .users import router as users_router

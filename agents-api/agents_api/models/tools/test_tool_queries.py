@@ -1,127 +1,138 @@
-# # Tests for entry queries
-# from uuid import uuid4
+# Tests for tool queries
+from uuid import uuid4
 
-# from cozo_migrate.api import init, apply
-# from pycozo import Client
-# from ward import test
+from cozo_migrate.api import apply, init
+from pycozo import Client
+from ward import test
 
-# from ...autogen.openapi_model import FunctionDef
-# from .create_tools import create_function_query, create_multiple_functions_query
-# from .delete_tools import delete_function_by_id_query
-# from .get_tool import get_function_by_id_query
-# from .list_tools import list_functions_by_agent_query
+from agents_api.autogen.openapi_model import FunctionDef, Tool
 
-
-# def cozo_client(migrations_dir: str = "./migrations"):
-#     # Create a new client for each test
-#     # and initialize the schema.
-#     client = Client()
-
-#     init(client)
-#     apply(client, migrations_dir=migrations_dir, all_=True)
-
-#     return client
+from .create_tools import create_tools
+from .delete_tool import delete_tool
+from .get_tool import get_tool
+from .list_tools import list_tools
 
 
-# @test("model: create function")
-# def _():
-#     client = cozo_client()
+def cozo_client(migrations_dir: str = "./migrations"):
+    # Create a new client for each test
+    # and initialize the schema.
+    client = Client()
 
-#     agent_id = uuid4()
-#     tool_id = uuid4()
-#     function = FunctionDef(
-#         name="hello_world",
-#         description="A function that prints hello world",
-#         parameters={"type": "object", "properties": {}},
-#     )
+    init(client)
+    apply(client, migrations_dir=migrations_dir, all_=True)
 
-#     result = create_function_query(agent_id, tool_id, function, client=client)
-
-#     assert result["created_at"][0]
+    return client
 
 
-# @test("model: create multiple functions")
-# def _():
-#     client = cozo_client()
+@test("model: create tool")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
 
-#     agent_id = uuid4()
-#     function = FunctionDef(
-#         name="hello_world",
-#         description="A function that prints hello world",
-#         parameters={"type": "object", "properties": {}},
-#     )
-#     num_functions = 10
+    tool = FunctionDef(
+        name="hello_world",
+        description="A function that prints hello world",
+        parameters={"type": "object", "properties": {}},
+    )
 
-#     result = create_multiple_functions_query(
-#         agent_id, [function] * num_functions, client=client
-#     )
+    result = create_tools(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        data=[tool],
+        client=client,
+    )
 
-#     assert result["created_at"][0]
-#     assert len(result["tool_id"]) == num_functions
-
-
-# @test("model: delete function")
-# def _():
-#     client = cozo_client()
-
-#     # Create function
-#     agent_id = uuid4()
-#     tool_id = uuid4()
-#     function = FunctionDef(
-#         name="hello_world",
-#         description="A function that prints hello world",
-#         parameters={"type": "object", "properties": {}},
-#     )
-
-#     create_function_query(agent_id, tool_id, function, client=client)
-
-#     # Delete function
-#     result = delete_function_by_id_query(agent_id, tool_id, client=client)
-
-#     delete_info = next(
-#         (row for row in result.to_dict("records") if row["_kind"] == "deleted"), None
-#     )
-
-#     assert delete_info is not None, "Delete operation did not find the row"
+    assert result is not None
+    assert isinstance(result[0], Tool)
 
 
-# @test("model: get function")
-# def _():
-#     client = cozo_client()
+@test("model: delete tool")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
+    tool_id = uuid4()
 
-#     # Create function
-#     agent_id = uuid4()
-#     tool_id = uuid4()
-#     function = FunctionDef(
-#         name="hello_world",
-#         description="A function that prints hello world",
-#         parameters={"type": "object", "properties": {}},
-#     )
+    tool = FunctionDef(
+        name="hello_world",
+        description="A function that prints hello world",
+        parameters={"type": "object", "properties": {}},
+    )
 
-#     create_function_query(agent_id, tool_id, function, client=client)
+    create_tools(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        data=[tool],
+        client=client,
+    )
 
-#     # Get function
-#     result = get_function_by_id_query(agent_id, tool_id, client=client)
+    result = delete_tool(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        client=client,
+    )
 
-#     assert len(result["tool_id"]) == 1, "Get operation did not find the row"
+    assert result is not None
+    assert result.id == tool_id
 
 
-# @test("model: list functions")
-# def _():
-#     client = cozo_client()
+@test("model: get tool")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
+    tool_id = uuid4()
 
-#     agent_id = uuid4()
-#     function = FunctionDef(
-#         name="hello_world",
-#         description="A function that prints hello world",
-#         parameters={"type": "object", "properties": {}},
-#     )
-#     num_functions = 10
+    tool = FunctionDef(
+        name="hello_world",
+        description="A function that prints hello world",
+        parameters={"type": "object", "properties": {}},
+    )
 
-#     # Create functions
-#     create_multiple_functions_query(agent_id, [function] * num_functions, client=client)
+    create_tools(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        data=[tool],
+        client=client,
+    )
 
-#     # List functions
-#     result = list_functions_by_agent_query(agent_id, client=client)
+    result = get_tool(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        tool_id=tool_id,
+        client=client,
+    )
 
-#     assert len(result["tool_id"]) == num_functions
+    assert result is not None
+    assert isinstance(result, Tool)
+
+
+@test("model: list tools")
+def _():
+    client = cozo_client()
+    developer_id = uuid4()
+    agent_id = uuid4()
+
+    tool = FunctionDef(
+        name="hello_world",
+        description="A function that prints hello world",
+        parameters={"type": "object", "properties": {}},
+    )
+
+    create_tools(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        data=[tool],
+        client=client,
+    )
+
+    result = list_tools(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        client=client,
+    )
+
+    assert result is not None
+    assert all(isinstance(tool, Tool) for tool in result)

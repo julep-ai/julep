@@ -18,7 +18,7 @@ interface LimitOffsetPagination<
     @get
     @doc(DocString)
     list(...PaginationOptions): {
-        results: Type[];
+        items: Type[];
     };
 }
 

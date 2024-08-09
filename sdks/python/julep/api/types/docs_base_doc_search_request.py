@@ -8,21 +8,7 @@ from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 
 
 class DocsBaseDocSearchRequest(pydantic_v1.BaseModel):
-    confidence: float = pydantic_v1.Field()
-    """
-    The confidence cutoff level
-    """
-
-    alpha: float = pydantic_v1.Field()
-    """
-    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-    """
-
-    mmr: bool = pydantic_v1.Field()
-    """
-    Whether to include the MMR algorithm in the search. Optimizes for diversity in search results.
-    """
-
+    limit: int
     lang: typing.Literal["en-US"] = pydantic_v1.Field(default="en-US")
     """
     The language to be used for text-only search. Support for other languages coming soon.

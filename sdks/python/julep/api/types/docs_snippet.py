@@ -5,11 +5,11 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .docs_doc_reference import DocsDocReference
 
 
-class UserDocsSearchRouteSearchResponse(pydantic_v1.BaseModel):
-    results: typing.List[DocsDocReference]
+class DocsSnippet(pydantic_v1.BaseModel):
+    index: int
+    content: str
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

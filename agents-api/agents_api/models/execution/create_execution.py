@@ -1,12 +1,15 @@
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from temporalio.client import WorkflowHandle
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...common.utils.types import dict_like
 from ..utils import (
     cozo_query,
     partialclass,
@@ -36,7 +39,8 @@ def create_execution(
     developer_id: UUID,
     task_id: UUID,
     execution_id: UUID | None = None,
-    data: CreateExecutionRequest,
+    data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
+    workflow_hande: WorkflowHandle,
 ) -> tuple[list[str], dict]:
     execution_id = execution_id or uuid4()
 
@@ -44,8 +48,30 @@ def create_execution(
     task_id = str(task_id)
     execution_id = str(execution_id)
 
-    data.metadata = data.metadata or {}
-    execution_data = data.model_dump()
+    if isinstance(data, CreateExecutionRequest):
+        data.metadata = data.metadata or {}
+        execution_data = data.model_dump()
+    else:
+        data["metadata"] = data.get("metadata", {})
+        execution_data = data
+
+    temporal_columns, temporal_values = cozo_process_mutate_data(
+        {
+            "execution_id": execution_id,
+            "id": workflow_hande.id,
+            "run_id": workflow_hande.run_id,
+            "first_execution_run_id": workflow_hande.first_execution_run_id,
+            "result_run_id": workflow_hande.result_run_id,
+        }
+    )
+
+    temporal_executions_lookup_query = f"""
+    ?[{temporal_columns}] <- $temporal_values
+
+    :insert temporal_executions_lookup {{
+        {temporal_columns}
+    }}
+    """
 
     columns, values = cozo_process_mutate_data(
         {
@@ -73,7 +99,8 @@ def create_execution(
             task_id=task_id,
             parents=[("agents", "agent_id")],
         ),
+        temporal_executions_lookup_query,
         insert_query,
     ]
 
-    return (queries, {"values": values})
+    return (queries, {"values": values, "temporal_values": temporal_values})

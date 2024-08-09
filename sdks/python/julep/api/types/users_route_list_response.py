@@ -9,7 +9,7 @@ from .users_user import UsersUser
 
 
 class UsersRouteListResponse(pydantic_v1.BaseModel):
-    results: typing.List[UsersUser]
+    items: typing.List[UsersUser]
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

@@ -1,0 +1,54 @@
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+      - .keys:/app/.keys
+    ports:
+      - "4000:4000"
+    env_file:
+      - ../.env
+    command:
+      [
+        "--config",
+        "/app/config.yaml",
+        "--port",
+        "4000",
+        "--num_workers",
+        "8",
+        "--telemetry",
+        "False"
+      ]
+
+    depends_on:
+      - litellm-db
+      - litellm-redis
+
+  litellm-db:
+    image: postgres
+    restart: always
+    volumes:
+      - litellm-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    env_file:
+      - ../.env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d litellm -U llmproxy" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  litellm-redis:
+    image: redis/redis-stack-server
+    restart: always
+    volumes:
+      - litellm-redis-data:/data
+    ports:
+      - "6379:6379"
+    env_file:
+      - ../.env
+
+volumes:
+  litellm-db-data:
+  litellm-redis-data:

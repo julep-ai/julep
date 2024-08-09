@@ -9,7 +9,7 @@ from .agents_agent import AgentsAgent
 
 
 class AgentsRouteListResponse(pydantic_v1.BaseModel):
-    results: typing.List[AgentsAgent]
+    items: typing.List[AgentsAgent]
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {
