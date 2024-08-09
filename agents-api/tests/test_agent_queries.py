@@ -6,13 +6,16 @@ from ward import test
 from agents_api.autogen.openapi_model import (
     Agent,
     CreateAgentRequest,
+    CreateOrUpdateAgentRequest,
     ResourceUpdatedResponse,
     UpdateAgentRequest,
 )
 from agents_api.models.agent.create_agent import create_agent
+from agents_api.models.agent.create_or_update_agent import create_or_update_agent
 from agents_api.models.agent.delete_agent import delete_agent
 from agents_api.models.agent.get_agent import get_agent
 from agents_api.models.agent.list_agents import list_agents
+from agents_api.models.agent.patch_agent import patch_agent
 from agents_api.models.agent.update_agent import update_agent
 from tests.fixtures import cozo_client, test_agent, test_developer_id
 
@@ -35,6 +38,21 @@ def _(client=cozo_client, developer_id=test_developer_id):
     create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
+            name="test agent",
+            about="test agent about",
+            model="gpt-4o",
+            instructions=["test instruction"],
+        ),
+        client=client,
+    )
+
+
+@test("model: create or update agent")
+def _(client=cozo_client, developer_id=test_developer_id):
+    create_or_update_agent(
+        developer_id=developer_id,
+        agent_id=uuid4(),
+        data=CreateOrUpdateAgentRequest(
             name="test agent",
             about="test agent about",
             model="gpt-4o",
@@ -99,6 +117,23 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
             name="updated agent",
             about="updated agent about",
             default_settings={"temperature": 1.5},
+        ),
+        client=client,
+    )
+
+    assert result is not None
+    assert isinstance(result, ResourceUpdatedResponse)
+
+
+@test("model: patch agent")
+def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
+    result = patch_agent(
+        agent_id=agent.id,
+        developer_id=developer_id,
+        data=UpdateAgentRequest(
+            name="patched agent",
+            about="patched agent about",
+            default_settings={"temperature": 1.0},
         ),
         client=client,
     )

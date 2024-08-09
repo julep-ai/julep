@@ -114,3 +114,20 @@ def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
     )
 
     assert len(result) >= 1
+
+
+@test("model: embed snippets")
+def _(client=cozo_client, developer_id=test_developer_id, doc=test_doc):
+    snippet_indices = [0]
+    embeddings = [[1.0] * EMBEDDING_SIZE]
+
+    result = embed_snippets(
+        developer_id=developer_id,
+        doc_id=doc.id,
+        snippet_indices=snippet_indices,
+        embeddings=embeddings,
+        client=client,
+    )
+
+    assert result is not None
+    assert result.id == doc.id
