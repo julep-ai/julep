@@ -1,0 +1,127 @@
+environment_variables:
+  NO_DOCS: "true"
+
+model_list:
+# -*= Paid models =*-
+# -------------------
+
+# Gemini models
+- model_name: gemini-1.5-pro
+  litellm_params:
+    model: vertex_ai_beta/gemini-1.5-pro
+    tags: ["paid"]
+    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
+
+- model_name: claude-3.5-sonnet
+  litellm_params:
+    model: vertex_ai/claude-3-5-sonnet@20240620
+    tags: ["paid"]
+    vertex_credentials: os.environ/GOOGLE_APPLICATION_CREDENTIALS
+
+# OpenAI models
+- model_name: "gpt-4-turbo"
+  litellm_params:
+    model: "openai/gpt-4-turbo"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+- model_name: "gpt-4o"
+  litellm_params:
+    model: "openai/gpt-4o"
+    tags: ["paid"]
+    api_key: os.environ/OPENAI_API_KEY
+
+# Anthropic models
+- model_name: "claude-3.5-sonnet"
+  litellm_params:
+    model: "claude-3-5-sonnet-20240620"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+# Groq models
+- model_name: "llama-3.1-70b"
+  litellm_params:
+    model: "groq/llama-3.1-70b-versatile"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+- model_name: "llama-3.1-8b"
+  litellm_params:
+    model: "groq/llama-3.1-8b-instant"
+    tags: ["paid"]
+    api_key: os.environ/GROQ_API_KEY
+
+
+# -*= Embedding models =*-
+# ------------------------
+
+- model_name: text-embedding-3-large
+  litellm_params:
+    model: "openai/text-embedding-3-large"
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
+- model_name: voyage-multilingual-2
+  litellm_params:
+    model: "voyage/voyage-multilingual-2"
+    api_key: os.environ/VOYAGE_API_KEY
+    tags: ["paid"]
+
+- model_name: voyage-large-2
+  litellm_params:
+    model: "voyage/voyage-large-2"
+    api_key: os.environ/VOYAGE_API_KEY
+    tags: ["paid"]
+
+- model_name: gte-large-en-v1.5
+  litellm_params:
+    model: openai/Alibaba-NLP/gte-large-en-v1.5
+    api_base: os.environ/EMBEDDING_SERVICE_BASE
+    tags: ["free"]
+
+- model_name: bge-m3
+  litellm_params:
+    model: openai/BAAI/bge-m3
+    api_base: os.environ/EMBEDDING_SERVICE_BASE
+    tags: ["free"]
+
+
+# -*= Free models =*-
+# -------------------
+
+- model_name: gpt-4o-mini
+  litellm_params:
+    model: openai/gpt-4o-mini
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["free"]
+
+
+# https://github.com/BerriAI/litellm/blob/main/litellm/__init__.py
+litellm_settings:
+  num_retries: 3
+  request_timeout: 180
+  allowed_fails: 3
+  cooldown_time: 30
+  drop_params: true
+  modify_params: true
+  telemetry: false
+  retry: true
+  add_function_to_prompt: true
+
+  set_verbose: false
+  cache: true
+  cache_params:        # set cache params for redis
+    type: redis
+    namespace: "litellm_caching"
+    host: os.environ/LITELLM_REDIS_HOST
+    port: os.environ/LITELLM_REDIS_PORT
+    password: os.environ/LITELLM_REDIS_PASSWORD
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 3
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/LITELLM_DATABASE_URL
+  enforce_user_param: true
