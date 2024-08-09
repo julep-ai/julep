@@ -1,3 +1,4 @@
+import json
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -44,13 +45,17 @@ def create_entries(
     developer_id = str(developer_id)
     session_id = str(session_id)
 
-    data_dicts = [item.model_dump() for item in data]
+    data_dicts = [item.model_dump(exclude_unset=True) for item in data]
 
     for item in data_dicts:
         item["content"] = content_to_json(item["content"])
         item["session_id"] = session_id
         item["entry_id"] = item.pop("id", None) or str(uuid4())
         item["created_at"] = (item.get("created_at") or utcnow()).timestamp()
+
+        if not item.get("token_count"):
+            item["token_count"] = len(json.dumps(item)) // 3.5
+            item["tokenizer"] = "character_count"
 
     cols, rows = cozo_process_mutate_data(data_dicts)
 

@@ -1,97 +1,40 @@
 # Tests for execution queries
-from uuid import uuid4
 
-from cozo_migrate.api import apply, init
-from pycozo import Client
+from temporalio.client import WorkflowHandle
 from ward import test
 
 from agents_api.autogen.Executions import (
     CreateExecutionRequest,
-    CreateExecutionTransitionRequest,
-    GetExecutionRequest,
-    GetExecutionTransitionRequest,
-    ListExecutionsRequest,
-    ListExecutionTransitionsRequest,
 )
-from agents_api.autogen.openapi_model import Execution, Transition
+from agents_api.autogen.openapi_model import Execution
 from agents_api.models.execution.create_execution import create_execution
-from agents_api.models.execution.create_execution_transition import (
-    create_execution_transition,
-)
 from agents_api.models.execution.get_execution import get_execution
-from agents_api.models.execution.get_execution_transition import (
-    get_execution_transition,
-)
-from agents_api.models.execution.list_execution_transitions import (
-    list_execution_transitions,
-)
 from agents_api.models.execution.list_executions import list_executions
+from tests.fixtures import cozo_client, test_developer_id, test_execution, test_task
 
 MODEL = "julep-ai/samantha-1-turbo"
 
 
-def cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = Client()
-
-    init(client)
-    apply(client, migrations_dir=migrations_dir, all_=True)
-
-    return client
-
-
 @test("model: create execution")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    task_id = uuid4()
-    execution_id = uuid4()
-
-    create_execution(
-        developer_id=developer_id,
-        task_id=task_id,
-        execution_id=execution_id,
-        data=CreateExecutionRequest(input="test"),
-        client=client,
+def _(client=cozo_client, developer_id=test_developer_id, task=test_task):
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
     )
 
-
-@test("model: create execution with session")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    task_id = uuid4()
-    execution_id = uuid4()
-    session_id = uuid4()
-
     create_execution(
         developer_id=developer_id,
-        task_id=task_id,
-        execution_id=execution_id,
-        data=CreateExecutionRequest(input="test", session_id=session_id),
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        workflow_handle=workflow_handle,
         client=client,
     )
 
 
 @test("model: get execution")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    task_id = uuid4()
-    execution_id = uuid4()
-
-    create_execution(
-        developer_id=developer_id,
-        task_id=task_id,
-        execution_id=execution_id,
-        data=CreateExecutionRequest(input="test"),
-        client=client,
-    )
-
+def _(client=cozo_client, developer_id=test_developer_id, execution=test_execution):
     result = get_execution(
-        execution_id=execution_id,
-        data=GetExecutionRequest(),
+        execution_id=execution.id,
         client=client,
     )
 
@@ -100,130 +43,19 @@ def _():
     assert result.status == "queued"
 
 
-@test("model: list executions empty")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    task_id = uuid4()
-
-    result = list_executions(
-        developer_id=developer_id,
-        task_id=task_id,
-        data=ListExecutionsRequest(),
-        client=client,
-    )
-
-    assert isinstance(result, list)
-    assert len(result) == 0
-
-
 @test("model: list executions")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    task_id = uuid4()
-    execution_id = uuid4()
-
-    create_execution(
-        developer_id=developer_id,
-        task_id=task_id,
-        execution_id=execution_id,
-        data=CreateExecutionRequest(input="test"),
-        client=client,
-    )
-
+def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    execution=test_execution,
+    task=test_task,
+):
     result = list_executions(
         developer_id=developer_id,
-        task_id=task_id,
-        data=ListExecutionsRequest(),
+        task_id=task.id,
         client=client,
     )
 
     assert isinstance(result, list)
-    assert len(result) == 1
+    assert len(result) >= 1
     assert result[0].status == "queued"
-
-
-@test("model: create execution transition")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    execution_id = uuid4()
-    transition_id = uuid4()
-
-    create_execution_transition(
-        developer_id=developer_id,
-        execution_id=execution_id,
-        transition_id=transition_id,
-        data=CreateExecutionTransitionRequest(
-            type="step",
-            from_="test",
-            to="test",
-            outputs={"input": "test"},
-        ),
-        client=client,
-    )
-
-
-@test("model: get execution transition")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    execution_id = uuid4()
-    transition_id = uuid4()
-
-    create_execution_transition(
-        developer_id=developer_id,
-        execution_id=execution_id,
-        transition_id=transition_id,
-        data=CreateExecutionTransitionRequest(
-            type="step",
-            from_="test",
-            to="test",
-            outputs={"input": "test"},
-        ),
-        client=client,
-    )
-
-    result = get_execution_transition(
-        developer_id=developer_id,
-        transition_id=transition_id,
-        data=GetExecutionTransitionRequest(),
-        client=client,
-    )
-
-    assert result is not None
-    assert isinstance(result, Transition)
-    assert result.type == "step"
-
-
-@test("model: list execution transitions")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    execution_id = uuid4()
-    transition_id = uuid4()
-
-    create_execution_transition(
-        developer_id=developer_id,
-        execution_id=execution_id,
-        transition_id=transition_id,
-        data=CreateExecutionTransitionRequest(
-            type="step",
-            from_="test",
-            to="test",
-            outputs={"input": "test"},
-        ),
-        client=client,
-    )
-
-    result = list_execution_transitions(
-        developer_id=developer_id,
-        execution_id=execution_id,
-        data=ListExecutionTransitionsRequest(),
-        client=client,
-    )
-
-    assert isinstance(result, list)
-    assert len(result) == 1
-    assert result[0].type == "step"

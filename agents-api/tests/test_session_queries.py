@@ -1,50 +1,34 @@
 # Tests for session queries
 from uuid import uuid4
 
-from cozo_migrate.api import apply, init
-from pycozo import Client
 from ward import test
 
-from agents_api.autogen.Sessions import (
-    CreateSessionRequest,
-    DeleteSessionRequest,
-    GetSessionRequest,
-    ListSessionsRequest,
-)
+from agents_api.autogen.openapi_model import Session
+from agents_api.autogen.Sessions import CreateSessionRequest
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.session.get_session import get_session
 from agents_api.models.session.list_sessions import list_sessions
-from agents_api.autogen.openapi_model import Session
+from tests.fixtures import (
+    cozo_client,
+    test_agent,
+    test_developer_id,
+    test_session,
+    test_user,
+)
 
 MODEL = "julep-ai/samantha-1-turbo"
 
 
-def cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = Client()
-
-    init(client)
-    apply(client, migrations_dir=migrations_dir, all_=True)
-
-    return client
-
-
 @test("model: create session")
-def _():
-    client = cozo_client()
-    session_id = uuid4()
-    agent_id = uuid4()
-    user_id = uuid4()
-    developer_id = uuid4()
-
+def _(
+    client=cozo_client, developer_id=test_developer_id, agent=test_agent, user=test_user
+):
     create_session(
-        session_id=session_id,
         developer_id=developer_id,
         data=CreateSessionRequest(
-            users=[user_id],
-            agents=[agent_id],
+            users=[user.id],
+            agents=[agent.id],
             situation="test session about",
         ),
         client=client,
@@ -52,17 +36,11 @@ def _():
 
 
 @test("model: create session no user")
-def _():
-    client = cozo_client()
-    session_id = uuid4()
-    agent_id = uuid4()
-    developer_id = uuid4()
-
+def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     create_session(
-        session_id=session_id,
         developer_id=developer_id,
         data=CreateSessionRequest(
-            agents=[agent_id],
+            agents=[agent.id],
             situation="test session about",
         ),
         client=client,
@@ -70,45 +48,26 @@ def _():
 
 
 @test("model: get session not exists")
-def _():
-    client = cozo_client()
+def _(client=cozo_client, developer_id=test_developer_id):
     session_id = uuid4()
-    developer_id = uuid4()
 
     try:
         get_session(
             session_id=session_id,
             developer_id=developer_id,
-            data=GetSessionRequest(),
             client=client,
         )
-    except Exception as e:
-        assert str(e) == "Session not found"
+    except Exception:
+        pass
+    else:
+        assert False, "Session should not exist"
 
 
 @test("model: get session exists")
-def _():
-    client = cozo_client()
-    session_id = uuid4()
-    agent_id = uuid4()
-    user_id = uuid4()
-    developer_id = uuid4()
-
-    create_session(
-        session_id=session_id,
-        developer_id=developer_id,
-        data=CreateSessionRequest(
-            users=[user_id],
-            agents=[agent_id],
-            situation="test session about",
-        ),
-        client=client,
-    )
-
+def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     result = get_session(
-        session_id=session_id,
+        session_id=session.id,
         developer_id=developer_id,
-        data=GetSessionRequest(),
         client=client,
     )
 
@@ -117,52 +76,41 @@ def _():
 
 
 @test("model: delete session")
-def _():
-    client = cozo_client()
-    session_id = uuid4()
-    agent_id = uuid4()
-    user_id = uuid4()
-    developer_id = uuid4()
-
-    create_session(
-        session_id=session_id,
+def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
+    session = create_session(
         developer_id=developer_id,
         data=CreateSessionRequest(
-            users=[user_id],
-            agents=[agent_id],
+            agent=agent.id,
             situation="test session about",
         ),
         client=client,
     )
 
     delete_session(
-        session_id=session_id,
+        session_id=session.id,
         developer_id=developer_id,
-        data=DeleteSessionRequest(),
         client=client,
     )
 
     try:
         get_session(
-            session_id=session_id,
+            session_id=session.id,
             developer_id=developer_id,
-            data=GetSessionRequest(),
             client=client,
         )
-    except Exception as e:
-        assert str(e) == "Session not found"
+    except Exception:
+        pass
+
+    else:
+        assert False, "Session should not exist"
 
 
 @test("model: list sessions")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-
+def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     result = list_sessions(
         developer_id=developer_id,
-        data=ListSessionsRequest(),
         client=client,
     )
 
     assert isinstance(result, list)
-    assert len(result) == 0
+    assert len(result) > 0

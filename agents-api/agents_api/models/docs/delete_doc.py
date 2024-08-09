@@ -12,6 +12,7 @@ from ..utils import (
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
+    verify_developer_owns_resource_query,
     wrap_in_class,
 )
 
@@ -37,6 +38,8 @@ from ..utils import (
 def delete_doc(
     *,
     developer_id: UUID,
+    owner_id: UUID,
+    owner_type: str,
     doc_id: UUID,
 ) -> tuple[list[str], dict]:
     """Constructs and returns a datalog query for deleting documents and associated information snippets.
@@ -52,6 +55,7 @@ def delete_doc(
     """
     # Convert UUID parameters to string format for use in the datalog query
     doc_id = str(doc_id)
+    owner_id = str(owner_id)
 
     # The following query is divided into two main parts:
     # 1. Deleting information snippets associated with the document
@@ -75,16 +79,19 @@ def delete_doc(
 
     delete_doc_query = """
         # Delete the docs
-        ?[doc_id] <- [[ to_uuid($doc_id) ]]
+        ?[doc_id, owner_type, owner_id] <- [[ to_uuid($doc_id), $owner_type, to_uuid($owner_id) ]]
 
-        :delete docs { doc_id }
+        :delete docs { doc_id, owner_type, owner_id }
         :returning
     """
 
     queries = [
         verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(
+            developer_id, f"{owner_type}s", **{f"{owner_type}_id": owner_id}
+        ),
         delete_snippets_query,
         delete_doc_query,
     ]
 
-    return (queries, {"doc_id": doc_id})
+    return (queries, {"doc_id": doc_id, "owner_type": owner_type, "owner_id": owner_id})

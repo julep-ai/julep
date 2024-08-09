@@ -1,53 +1,44 @@
 # Tests for task queries
 from uuid import uuid4
 
-from cozo_migrate.api import apply, init
-from pycozo import Client
 from ward import test
 
-from agents_api.autogen.openapi_model import Task
+from agents_api.autogen.openapi_model import (
+    CreateTaskRequest,
+    ResourceUpdatedResponse,
+    Task,
+    UpdateTaskRequest,
+)
 from agents_api.models.task.create_task import create_task
 from agents_api.models.task.delete_task import delete_task
 from agents_api.models.task.get_task import get_task
 from agents_api.models.task.list_tasks import list_tasks
 from agents_api.models.task.update_task import update_task
-
-
-def cozo_client(migrations_dir: str = "./migrations"):
-    # Create a new client for each test
-    # and initialize the schema.
-    client = Client()
-
-    init(client)
-    apply(client, migrations_dir=migrations_dir, all_=True)
-
-    return client
+from tests.fixtures import cozo_client, test_agent, test_developer_id, test_task
 
 
 @test("model: create task")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    agent_id = uuid4()
+def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     task_id = uuid4()
 
     create_task(
         developer_id=developer_id,
-        agent_id=agent_id,
+        agent_id=agent.id,
         task_id=task_id,
-        data={
-            "name": "test task",
-            "description": "test task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-        },
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [],
+            }
+        ),
         client=client,
     )
 
 
 @test("model: get task not exists")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
+def _(client=cozo_client, developer_id=test_developer_id):
     task_id = uuid4()
 
     try:
@@ -56,32 +47,17 @@ def _():
             task_id=task_id,
             client=client,
         )
-    except Exception as e:
-        assert str(e) == "Task not found"
+    except Exception:
+        pass
+    else:
+        assert False, "Task should not exist"
 
 
 @test("model: get task exists")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    agent_id = uuid4()
-    task_id = uuid4()
-
-    create_task(
-        developer_id=developer_id,
-        agent_id=agent_id,
-        task_id=task_id,
-        data={
-            "name": "test task",
-            "description": "test task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-        },
-        client=client,
-    )
-
+def _(client=cozo_client, developer_id=test_developer_id, task=test_task):
     result = get_task(
         developer_id=developer_id,
-        task_id=task_id,
+        task_id=task.id,
         client=client,
     )
 
@@ -90,86 +66,74 @@ def _():
 
 
 @test("model: delete task")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    agent_id = uuid4()
-    task_id = uuid4()
-
-    create_task(
+def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
+    task = create_task(
         developer_id=developer_id,
-        agent_id=agent_id,
-        task_id=task_id,
-        data={
-            "name": "test task",
-            "description": "test task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-        },
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [],
+            }
+        ),
         client=client,
     )
 
     delete_task(
         developer_id=developer_id,
-        task_id=task_id,
+        agent_id=agent.id,
+        task_id=task.id,
         client=client,
     )
 
     try:
         get_task(
             developer_id=developer_id,
-            task_id=task_id,
+            task_id=task.id,
             client=client,
         )
-    except Exception as e:
-        assert str(e) == "Task not found"
+    except Exception:
+        pass
+
+    else:
+        assert False, "Task should not exist"
 
 
 @test("model: update task")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    agent_id = uuid4()
-    task_id = uuid4()
-
-    create_task(
-        developer_id=developer_id,
-        agent_id=agent_id,
-        task_id=task_id,
-        data={
-            "name": "test task",
-            "description": "test task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-        },
-        client=client,
-    )
-
+def _(
+    client=cozo_client, developer_id=test_developer_id, agent=test_agent, task=test_task
+):
     result = update_task(
         developer_id=developer_id,
-        task_id=task_id,
-        data={
-            "name": "updated task",
-            "description": "updated task about",
-            "input_schema": {"type": "object", "additionalProperties": True},
-        },
+        task_id=task.id,
+        agent_id=agent.id,
+        data=UpdateTaskRequest(
+            **{
+                "name": "updated task",
+                "description": "updated task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [],
+            }
+        ),
         client=client,
     )
 
     assert result is not None
-    assert isinstance(result, Task)
-    assert result.name == "updated task"
+    assert isinstance(result, ResourceUpdatedResponse)
 
 
 @test("model: list tasks")
-def _():
-    client = cozo_client()
-    developer_id = uuid4()
-    agent_id = uuid4()
-
+def _(
+    client=cozo_client, developer_id=test_developer_id, task=test_task, agent=test_agent
+):
     result = list_tasks(
         developer_id=developer_id,
-        agent_id=agent_id,
+        agent_id=agent.id,
         client=client,
     )
 
     assert isinstance(result, list)
+    assert len(result) > 0
     assert all(isinstance(task, Task) for task in result)

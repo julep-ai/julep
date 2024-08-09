@@ -40,7 +40,7 @@ def create_execution(
     task_id: UUID,
     execution_id: UUID | None = None,
     data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
-    workflow_hande: WorkflowHandle,
+    workflow_handle: WorkflowHandle,
 ) -> tuple[list[str], dict]:
     execution_id = execution_id or uuid4()
 
@@ -58,10 +58,10 @@ def create_execution(
     temporal_columns, temporal_values = cozo_process_mutate_data(
         {
             "execution_id": execution_id,
-            "id": workflow_hande.id,
-            "run_id": workflow_hande.run_id,
-            "first_execution_run_id": workflow_hande.first_execution_run_id,
-            "result_run_id": workflow_hande.result_run_id,
+            "id": workflow_handle.id,
+            "run_id": workflow_handle.run_id,
+            "first_execution_run_id": workflow_handle.first_execution_run_id,
+            "result_run_id": workflow_handle.result_run_id,
         }
     )
 

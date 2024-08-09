@@ -23,6 +23,11 @@ from ..utils import (
 
 @rewrap_exceptions(
     {
+        lambda e: isinstance(e, QueryException)
+        and "asserted to return some results, but returned none"
+        in str(e): lambda *_: HTTPException(
+            detail="developer not found or doesnt own resource", status_code=404
+        ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
@@ -57,14 +62,18 @@ def delete_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict
         verify_developer_owns_resource_query(developer_id, "agents", agent_id=agent_id),
         """
         # Delete docs
-        ?[agent_id, doc_id] :=
-            *agent_docs{
-                agent_id,
+        ?[owner_id, owner_type, doc_id] :=
+            *docs{
+                owner_type,
+                owner_id,
                 doc_id,
-            }, agent_id = to_uuid($agent_id)
+            },
+            owner_id = to_uuid($agent_id),
+            owner_type = "agent"
 
-        :delete agent_docs {
-            agent_id,
+        :delete docs {
+            owner_type,
+            owner_id,
             doc_id
         }
         :returning
