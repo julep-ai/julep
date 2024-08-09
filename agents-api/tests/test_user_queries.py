@@ -7,8 +7,13 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import raises, test
 
-from agents_api.autogen.openapi_model import User
-
+from agents_api.autogen.openapi_model import (
+    CreateUserRequest,
+    GetUserRequest,
+    ListUsersRequest,
+    UpdateUserRequest,
+    User,
+)
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.get_user import get_user
 from agents_api.models.user.list_users import list_users
@@ -37,10 +42,10 @@ def _():
     create_user(
         user_id=user_id,
         developer_id=developer_id,
-        data={
-            "name": "test user",
-            "about": "test user about",
-        },
+        data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
         client=client,
     )
 
@@ -58,20 +63,20 @@ def _():
         create_user(
             user_id=user_id,
             developer_id=developer_id,
-            data={
-                "name": "test user",
-                "about": "test user about",
-            },
+            data=CreateUserRequest(
+                name="test user",
+                about="test user about",
+            ),
             client=client,
         )
 
         create_user(
             user_id=user_id,
             developer_id=developer_id,
-            data={
-                "name": "test user",
-                "about": "test user about",
-            },
+            data=CreateUserRequest(
+                name="test user",
+                about="test user about",
+            ),
             client=client,
         )
 
@@ -88,10 +93,10 @@ def _():
         update_user(
             user_id=user_id,
             developer_id=developer_id,
-            data={
-                "name": "test user",
-                "about": "test user about",
-            },
+            data=UpdateUserRequest(
+                name="test user",
+                about="test user about",
+            ),
             client=client,
         )
 
@@ -106,10 +111,10 @@ def _():
     create_user(
         user_id=user_id,
         developer_id=developer_id,
-        data={
-            "name": "test user",
-            "about": "test user about",
-        },
+        data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
         client=client,
     )
 
@@ -117,10 +122,10 @@ def _():
     update_result = update_user(
         user_id=user_id,
         developer_id=developer_id,
-        data={
-            "name": "updated user",
-            "about": "updated user about",
-        },
+        data=UpdateUserRequest(
+            name="updated user",
+            about="updated user about",
+        ),
         client=client,
     )
 
@@ -141,6 +146,7 @@ def _():
         get_user(
             user_id=user_id,
             developer_id=developer_id,
+            data=GetUserRequest(),
             client=client,
         )
     except Exception as e:
@@ -157,16 +163,17 @@ def _():
     create_user(
         user_id=user_id,
         developer_id=developer_id,
-        data={
-            "name": "test user",
-            "about": "test user about",
-        },
+        data=CreateUserRequest(
+            name="test user",
+            about="test user about",
+        ),
         client=client,
     )
 
     result = get_user(
         user_id=user_id,
         developer_id=developer_id,
+        data=GetUserRequest(),
         client=client,
     )
 
@@ -182,6 +189,7 @@ def _():
 
     result = list_users(
         developer_id=developer_id,
+        data=ListUsersRequest(),
         client=client,
     )
 

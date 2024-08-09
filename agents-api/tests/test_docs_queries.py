@@ -5,6 +5,13 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
+from agents_api.autogen.Docs import (
+    CreateDocRequest,
+    DeleteDocRequest,
+    GetDocRequest,
+    ListDocsRequest,
+    SearchDocsByEmbeddingRequest,
+)
 from agents_api.models.docs.create_doc import create_doc
 from agents_api.models.docs.delete_doc import delete_doc
 from agents_api.models.docs.embed_snippets import embed_snippets
@@ -40,7 +47,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
-            data={"title": "Hello", "content": ["World"]},
+            data=CreateDocRequest(title="Hello", content=["World"]),
             client=client,
         )
 
@@ -59,7 +66,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
-            data={"title": "Hello", "content": ["World"]},
+            data=CreateDocRequest(title="Hello", content=["World"]),
             client=client,
         )
 
@@ -67,6 +74,7 @@ def _():
             developer_id=developer_id,
             owner_type=owner_type,
             doc_id=doc_id,
+            data=GetDocRequest(),
             client=client,
         )
 
@@ -87,7 +95,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
-            data={"title": "Hello", "content": ["World"]},
+            data=CreateDocRequest(title="Hello", content=["World"]),
             client=client,
         )
 
@@ -96,6 +104,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
+            data=DeleteDocRequest(),
             client=client,
         )
 
@@ -103,6 +112,7 @@ def _():
             developer_id=developer_id,
             owner_type=owner_type,
             doc_id=doc_id,
+            data=GetDocRequest(),
             client=client,
         )
 
@@ -123,7 +133,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
-            data={"title": "Hello", "content": ["World"]},
+            data=CreateDocRequest(title="Hello", content=["World"]),
             client=client,
         )
 
@@ -131,6 +141,7 @@ def _():
             developer_id=developer_id,
             owner_type=owner_type,
             owner_id=owner_id,
+            data=ListDocsRequest(),
             client=client,
         )
 
@@ -151,7 +162,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
-            data={"title": "Hello", "content": ["World"]},
+            data=CreateDocRequest(title="Hello", content=["World"]),
             client=client,
         )
 
@@ -171,7 +182,7 @@ def _():
             developer_id=developer_id,
             owner_type=owner_type,
             owner_id=owner_id,
-            query_embedding=query_embedding,
+            data=SearchDocsByEmbeddingRequest(query_embedding=query_embedding),
             client=client,
         )
 
@@ -198,7 +209,7 @@ def _():
             owner_type=owner_type,
             owner_id=owner_id,
             doc_id=doc_id,
-            data={"title": "Hi", "content": snippets},
+            data=CreateDocRequest(title="Hi", content=snippets),
             client=client,
         )
 

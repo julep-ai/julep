@@ -5,13 +5,27 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from agents_api.models.execution.create_execution import create_execution
-from agents_api.models.execution.create_execution_transition import create_execution_transition
-from agents_api.models.execution.get_execution import get_execution
-from agents_api.models.execution.get_execution_transition import get_execution_transition
-from agents_api.models.execution.list_execution_transitions import list_execution_transitions
-from agents_api.models.execution.list_executions import list_executions
+from agents_api.autogen.Executions import (
+    CreateExecutionRequest,
+    CreateExecutionTransitionRequest,
+    GetExecutionRequest,
+    GetExecutionTransitionRequest,
+    ListExecutionsRequest,
+    ListExecutionTransitionsRequest,
+)
 from agents_api.autogen.openapi_model import Execution, Transition
+from agents_api.models.execution.create_execution import create_execution
+from agents_api.models.execution.create_execution_transition import (
+    create_execution_transition,
+)
+from agents_api.models.execution.get_execution import get_execution
+from agents_api.models.execution.get_execution_transition import (
+    get_execution_transition,
+)
+from agents_api.models.execution.list_execution_transitions import (
+    list_execution_transitions,
+)
+from agents_api.models.execution.list_executions import list_executions
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -38,7 +52,7 @@ def _():
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        data={"input": "test"},
+        data=CreateExecutionRequest(input="test"),
         client=client,
     )
 
@@ -55,7 +69,7 @@ def _():
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        data={"input": "test", "session_id": session_id},
+        data=CreateExecutionRequest(input="test", session_id=session_id),
         client=client,
     )
 
@@ -71,12 +85,13 @@ def _():
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        data={"input": "test"},
+        data=CreateExecutionRequest(input="test"),
         client=client,
     )
 
     result = get_execution(
         execution_id=execution_id,
+        data=GetExecutionRequest(),
         client=client,
     )
 
@@ -94,6 +109,7 @@ def _():
     result = list_executions(
         developer_id=developer_id,
         task_id=task_id,
+        data=ListExecutionsRequest(),
         client=client,
     )
 
@@ -112,13 +128,14 @@ def _():
         developer_id=developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        data={"input": "test"},
+        data=CreateExecutionRequest(input="test"),
         client=client,
     )
 
     result = list_executions(
         developer_id=developer_id,
         task_id=task_id,
+        data=ListExecutionsRequest(),
         client=client,
     )
 
@@ -138,12 +155,12 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        data={
-            "type": "step",
-            "from": "test",
-            "to": "test",
-            "outputs": {"input": "test"},
-        },
+        data=CreateExecutionTransitionRequest(
+            type="step",
+            from_="test",
+            to="test",
+            outputs={"input": "test"},
+        ),
         client=client,
     )
 
@@ -159,18 +176,19 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        data={
-            "type": "step",
-            "from": "test",
-            "to": "test",
-            "outputs": {"input": "test"},
-        },
+        data=CreateExecutionTransitionRequest(
+            type="step",
+            from_="test",
+            to="test",
+            outputs={"input": "test"},
+        ),
         client=client,
     )
 
     result = get_execution_transition(
         developer_id=developer_id,
         transition_id=transition_id,
+        data=GetExecutionTransitionRequest(),
         client=client,
     )
 
@@ -190,18 +208,19 @@ def _():
         developer_id=developer_id,
         execution_id=execution_id,
         transition_id=transition_id,
-        data={
-            "type": "step",
-            "from": "test",
-            "to": "test",
-            "outputs": {"input": "test"},
-        },
+        data=CreateExecutionTransitionRequest(
+            type="step",
+            from_="test",
+            to="test",
+            outputs={"input": "test"},
+        ),
         client=client,
     )
 
     result = list_execution_transitions(
         developer_id=developer_id,
         execution_id=execution_id,
+        data=ListExecutionTransitionsRequest(),
         client=client,
     )
 

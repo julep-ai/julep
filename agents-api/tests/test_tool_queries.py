@@ -5,7 +5,14 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
-from agents_api.autogen.openapi_model import FunctionDef, Tool
+from agents_api.autogen.openapi_model import (
+    CreateToolsRequest,
+    DeleteToolRequest,
+    FunctionDef,
+    GetToolRequest,
+    ListToolsRequest,
+    Tool,
+)
 from agents_api.models.tools.create_tools import create_tools
 from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.tools.get_tool import get_tool
@@ -38,7 +45,7 @@ def _():
     result = create_tools(
         developer_id=developer_id,
         agent_id=agent_id,
-        data=[tool],
+        data=CreateToolsRequest(tools=[tool]),
         client=client,
     )
 
@@ -62,7 +69,7 @@ def _():
     create_tools(
         developer_id=developer_id,
         agent_id=agent_id,
-        data=[tool],
+        data=CreateToolsRequest(tools=[tool]),
         client=client,
     )
 
@@ -70,6 +77,7 @@ def _():
         developer_id=developer_id,
         agent_id=agent_id,
         tool_id=tool_id,
+        data=DeleteToolRequest(),
         client=client,
     )
 
@@ -93,7 +101,7 @@ def _():
     create_tools(
         developer_id=developer_id,
         agent_id=agent_id,
-        data=[tool],
+        data=CreateToolsRequest(tools=[tool]),
         client=client,
     )
 
@@ -101,6 +109,7 @@ def _():
         developer_id=developer_id,
         agent_id=agent_id,
         tool_id=tool_id,
+        data=GetToolRequest(),
         client=client,
     )
 
@@ -123,13 +132,14 @@ def _():
     create_tools(
         developer_id=developer_id,
         agent_id=agent_id,
-        data=[tool],
+        data=CreateToolsRequest(tools=[tool]),
         client=client,
     )
 
     result = list_tools(
         developer_id=developer_id,
         agent_id=agent_id,
+        data=ListToolsRequest(),
         client=client,
     )
 

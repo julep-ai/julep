@@ -5,8 +5,12 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
+from agents_api.autogen.openapi_model import (
+    Agent,
+    CreateAgentRequest,
+    UpdateAgentRequest,
+)
 from agents_api.models import agent
-from agents_api.autogen.openapi_model import Agent
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -31,11 +35,11 @@ def _():
     agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
-        data={
-            "model": MODEL,
-            "name": "test agent",
-            "about": "test agent about",
-        },
+        data=CreateAgentRequest(
+            model=MODEL,
+            name="test agent",
+            about="test agent about",
+        ),
         client=client,
     )
 
@@ -49,12 +53,12 @@ def _():
     agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
-        data={
-            "model": MODEL,
-            "name": "test agent",
-            "about": "test agent about",
-            "instructions": ["test instruction"],
-        },
+        data=CreateAgentRequest(
+            model=MODEL,
+            name="test agent",
+            about="test agent about",
+            instructions=["test instruction"],
+        ),
         client=client,
     )
 
@@ -65,7 +69,9 @@ def _():
     agent_id = uuid4()
     developer_id = uuid4()
 
-    result = agent.get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    result = agent.get_agent(
+        agent_id=agent_id, developer_id=developer_id, client=client
+    )
 
     assert result is None
 
@@ -79,16 +85,18 @@ def _():
     agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
-        data={
-            "model": MODEL,
-            "name": "test agent",
-            "about": "test agent about",
-            "default_settings": {"temperature": 1.5},
-        },
+        data=CreateAgentRequest(
+            model=MODEL,
+            name="test agent",
+            about="test agent about",
+            default_settings={"temperature": 1.5},
+        ),
         client=client,
     )
 
-    result = agent.get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    result = agent.get_agent(
+        agent_id=agent_id, developer_id=developer_id, client=client
+    )
 
     assert result is not None
     assert isinstance(result, Agent)
@@ -105,11 +113,11 @@ def _():
     agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
-        data={
-            "model": MODEL,
-            "name": "test agent",
-            "about": "test agent about",
-        },
+        data=CreateAgentRequest(
+            model=MODEL,
+            name="test agent",
+            about="test agent about",
+        ),
         client=client,
     )
 
@@ -117,7 +125,9 @@ def _():
     agent.delete_agent(agent_id=agent_id, developer_id=developer_id, client=client)
 
     # Check that the agent is deleted
-    result = agent.get_agent(agent_id=agent_id, developer_id=developer_id, client=client)
+    result = agent.get_agent(
+        agent_id=agent_id, developer_id=developer_id, client=client
+    )
 
     assert result is None
 
@@ -131,22 +141,22 @@ def _():
     agent.create_agent(
         agent_id=agent_id,
         developer_id=developer_id,
-        data={
-            "model": MODEL,
-            "name": "test agent",
-            "about": "test agent about",
-        },
+        data=CreateAgentRequest(
+            model=MODEL,
+            name="test agent",
+            about="test agent about",
+        ),
         client=client,
     )
 
     result = agent.update_agent(
         agent_id=agent_id,
         developer_id=developer_id,
-        data={
-            "name": "updated agent",
-            "about": "updated agent about",
-            "default_settings": {"temperature": 1.5},
-        },
+        data=UpdateAgentRequest(
+            name="updated agent",
+            about="updated agent about",
+            default_settings={"temperature": 1.5},
+        ),
         client=client,
     )
 

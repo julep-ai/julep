@@ -10,16 +10,21 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
+from agents_api.autogen.Entries import (
+    CreateEntriesRequest,
+    GetHistoryRequest,
+    ListEntriesRequest,
+)
 from agents_api.autogen.openapi_model import Entry, FunctionDef
 from agents_api.models.agent.create_agent import create_agent
 from agents_api.models.docs.create_doc import create_doc
 from agents_api.models.docs.embed_snippets import embed_snippets
-from agents_api.models.session.create_session import create_session
-from agents_api.models.tools.create_tools import create_tools
-from agents_api.models.user.create_user import create_user
 from agents_api.models.entry.create_entries import create_entries
 from agents_api.models.entry.get_history import get_history
 from agents_api.models.entry.list_entries import list_entries
+from agents_api.models.session.create_session import create_session
+from agents_api.models.tools.create_tools import create_tools
+from agents_api.models.user.create_user import create_user
 
 MODEL = "julep-ai/samantha-1-turbo"
 
@@ -55,7 +60,7 @@ def _():
     create_entries(
         developer_id=developer_id,
         session_id=session_id,
-        data=[test_entry],
+        data=CreateEntriesRequest(entries=[test_entry]),
         client=client,
     )
 
@@ -86,13 +91,14 @@ def _():
     create_entries(
         developer_id=developer_id,
         session_id=session_id,
-        data=[test_entry, internal_entry],
+        data=CreateEntriesRequest(entries=[test_entry, internal_entry]),
         client=client,
     )
 
     result = list_entries(
         developer_id=developer_id,
         session_id=session_id,
+        data=ListEntriesRequest(),
         client=client,
     )
 
@@ -139,7 +145,7 @@ def _():
         create_entries(
             developer_id=developer_id,
             session_id=session_id,
-            data=[test_entry],
+            data=CreateEntriesRequest(entries=[test_entry]),
             client=client,
         ),
         create_user(
@@ -227,6 +233,7 @@ def _():
     result = get_history(
         developer_id=developer_id,
         session_id=session_id,
+        data=GetHistoryRequest(),
         client=client,
     )
 

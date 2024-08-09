@@ -5,6 +5,12 @@ from cozo_migrate.api import apply, init
 from pycozo import Client
 from ward import test
 
+from agents_api.autogen.Sessions import (
+    CreateSessionRequest,
+    DeleteSessionRequest,
+    GetSessionRequest,
+    ListSessionsRequest,
+)
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.session.get_session import get_session
@@ -35,11 +41,11 @@ def _():
     create_session(
         session_id=session_id,
         developer_id=developer_id,
-        data={
-            "users": [user_id],
-            "agents": [agent_id],
-            "situation": "test session about",
-        },
+        data=CreateSessionRequest(
+            users=[user_id],
+            agents=[agent_id],
+            situation="test session about",
+        ),
         client=client,
     )
 
@@ -54,10 +60,10 @@ def _():
     create_session(
         session_id=session_id,
         developer_id=developer_id,
-        data={
-            "agents": [agent_id],
-            "situation": "test session about",
-        },
+        data=CreateSessionRequest(
+            agents=[agent_id],
+            situation="test session about",
+        ),
         client=client,
     )
 
@@ -72,6 +78,7 @@ def _():
         get_session(
             session_id=session_id,
             developer_id=developer_id,
+            data=GetSessionRequest(),
             client=client,
         )
     except Exception as e:
@@ -89,17 +96,18 @@ def _():
     create_session(
         session_id=session_id,
         developer_id=developer_id,
-        data={
-            "users": [user_id],
-            "agents": [agent_id],
-            "situation": "test session about",
-        },
+        data=CreateSessionRequest(
+            users=[user_id],
+            agents=[agent_id],
+            situation="test session about",
+        ),
         client=client,
     )
 
     result = get_session(
         session_id=session_id,
         developer_id=developer_id,
+        data=GetSessionRequest(),
         client=client,
     )
 
@@ -118,17 +126,18 @@ def _():
     create_session(
         session_id=session_id,
         developer_id=developer_id,
-        data={
-            "users": [user_id],
-            "agents": [agent_id],
-            "situation": "test session about",
-        },
+        data=CreateSessionRequest(
+            users=[user_id],
+            agents=[agent_id],
+            situation="test session about",
+        ),
         client=client,
     )
 
     delete_session(
         session_id=session_id,
         developer_id=developer_id,
+        data=DeleteSessionRequest(),
         client=client,
     )
 
@@ -136,6 +145,7 @@ def _():
         get_session(
             session_id=session_id,
             developer_id=developer_id,
+            data=GetSessionRequest(),
             client=client,
         )
     except Exception as e:
@@ -149,6 +159,7 @@ def _():
 
     result = list_sessions(
         developer_id=developer_id,
+        data=ListSessionsRequest(),
         client=client,
     )
 
