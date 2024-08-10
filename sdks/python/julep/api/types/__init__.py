@@ -253,7 +253,6 @@ from .tools_chosen_function_call import ToolsChosenFunctionCall
 from .tools_chosen_tool_call import ToolsChosenToolCall, ToolsChosenToolCall_Function
 from .tools_function_call_option import ToolsFunctionCallOption
 from .tools_function_def import ToolsFunctionDef
-from .tools_function_def_update import ToolsFunctionDefUpdate
 from .tools_function_tool import ToolsFunctionTool
 from .tools_named_function_choice import ToolsNamedFunctionChoice
 from .tools_named_tool_choice import ToolsNamedToolChoice, ToolsNamedToolChoice_Function
@@ -467,7 +466,6 @@ __all__ = [
     "ToolsChosenToolCall_Function",
     "ToolsFunctionCallOption",
     "ToolsFunctionDef",
-    "ToolsFunctionDefUpdate",
     "ToolsFunctionTool",
     "ToolsNamedFunctionChoice",
     "ToolsNamedToolChoice",

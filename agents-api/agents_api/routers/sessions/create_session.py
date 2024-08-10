@@ -26,4 +26,5 @@ async def create_session(
     return ResourceCreatedResponse(
         id=session.id,
         created_at=session.created_at,
+        jobs=[],
     )

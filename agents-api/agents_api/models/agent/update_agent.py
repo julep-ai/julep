@@ -49,7 +49,11 @@ def update_agent(
     Returns:
     ResourceUpdatedResponse: The updated agent data.
     """
-    default_settings = data.default_settings.model_dump(exclude_none=True)
+    default_settings = (
+        data.default_settings.model_dump(exclude_none=True)
+        if data.default_settings
+        else {}
+    )
     update_data = data.model_dump()
 
     # Remove default settings from the agent update data

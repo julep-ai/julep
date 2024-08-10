@@ -2158,7 +2158,7 @@ client.agent_tools_route_patch(
 <dl>
 <dd>
 
-**function:** `typing.Optional[ToolsFunctionDefUpdate]` 
+**function:** `typing.Optional[ToolsFunctionDef]` 
     
 </dd>
 </dl>

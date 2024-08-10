@@ -24,4 +24,4 @@ async def create_or_update_user(
         data=data,
     )
 
-    return ResourceCreatedResponse(id=user.id, created_at=user.created_at)
+    return ResourceCreatedResponse(id=user.id, created_at=user.created_at, jobs=[])

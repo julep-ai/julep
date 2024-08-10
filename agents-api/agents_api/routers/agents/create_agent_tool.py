@@ -25,6 +25,6 @@ async def create_agent_tool(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=[data],
-    )
+    )[0]
 
     return ResourceCreatedResponse(id=tool.id, created_at=tool.created_at)

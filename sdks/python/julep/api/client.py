@@ -98,7 +98,6 @@ from .types.tasks_route_list_response import TasksRouteListResponse
 from .types.tasks_task_tool import TasksTaskTool
 from .types.tasks_update_task_request_main_item import TasksUpdateTaskRequestMainItem
 from .types.tools_function_def import ToolsFunctionDef
-from .types.tools_function_def_update import ToolsFunctionDefUpdate
 from .types.tools_tool_type import ToolsToolType
 from .types.user_docs_route_list_request_direction import (
     UserDocsRouteListRequestDirection,
@@ -1585,7 +1584,7 @@ class JulepApi:
         *,
         type: typing.Optional[ToolsToolType] = OMIT,
         name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
-        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
+        function: typing.Optional[ToolsFunctionDef] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
         api_call: typing.Optional[typing.Any] = OMIT,
@@ -1608,7 +1607,7 @@ class JulepApi:
         name : typing.Optional[CommonValidPythonIdentifier]
             Name of the tool (must be unique for this agent and a valid python identifier string )
 
-        function : typing.Optional[ToolsFunctionDefUpdate]
+        function : typing.Optional[ToolsFunctionDef]
 
         integration : typing.Optional[typing.Any]
 
@@ -5177,7 +5176,7 @@ class AsyncJulepApi:
         *,
         type: typing.Optional[ToolsToolType] = OMIT,
         name: typing.Optional[CommonValidPythonIdentifier] = OMIT,
-        function: typing.Optional[ToolsFunctionDefUpdate] = OMIT,
+        function: typing.Optional[ToolsFunctionDef] = OMIT,
         integration: typing.Optional[typing.Any] = OMIT,
         system: typing.Optional[typing.Any] = OMIT,
         api_call: typing.Optional[typing.Any] = OMIT,
@@ -5200,7 +5199,7 @@ class AsyncJulepApi:
         name : typing.Optional[CommonValidPythonIdentifier]
             Name of the tool (must be unique for this agent and a valid python identifier string )
 
-        function : typing.Optional[ToolsFunctionDefUpdate]
+        function : typing.Optional[ToolsFunctionDef]
 
         integration : typing.Optional[typing.Any]
 

@@ -7,7 +7,7 @@ cd typespec/ && \
     tsp compile .
 cd -
 
-fern generate --local
+fern generate
 
 cd sdks/python && \
     poetry update && \

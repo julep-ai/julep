@@ -8,7 +8,7 @@ import fire
 import sentry_sdk
 import uvicorn
 from fastapi import Depends, FastAPI, Request, status
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
@@ -21,6 +21,8 @@ from agents_api.env import sentry_dsn
 from agents_api.exceptions import PromptTooBigError
 from agents_api.routers import (
     agents,
+    jobs,
+    sessions,
     tasks,
     users,
 )
@@ -88,10 +90,18 @@ app.add_middleware(
 register_exceptions(app)
 
 app.include_router(agents.router)
-# app.include_router(sessions.router)
+app.include_router(sessions.router)
 app.include_router(users.router)
-# app.include_router(jobs.router)
+app.include_router(jobs.router)
 app.include_router(tasks.router)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):  # pylint: disable=unused-argument
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": {"message": str(exc)}},
+    )
 
 
 @app.exception_handler(RPCError)

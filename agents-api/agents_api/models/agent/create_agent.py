@@ -65,7 +65,7 @@ def create_agent(
         if isinstance(data.instructions, list)
         else [data.instructions]
     )
-    data.default_settings = data.default_settings or {}
+    data.default_settings = data.default_settings
 
     agent_data = data.model_dump(exclude_unset=True)
     default_settings = agent_data.pop("default_settings")
