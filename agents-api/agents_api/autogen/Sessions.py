@@ -31,7 +31,7 @@ class CreateSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """
@@ -58,7 +58,7 @@ class PatchSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """
@@ -85,7 +85,7 @@ class Session(BaseModel):
     """
     Summary (null at the beginning) - generated automatically after every interaction
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """
@@ -148,7 +148,7 @@ class UpdateSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """

@@ -24,10 +24,13 @@ async def chat(
     session_id: UUID,
     data: ChatInput,
 ) -> ChatResponse:
+    # First get the chat context
     chat_context = prepare_chat_context(
         developer_id=x_developer_id,
         agent_id=data.agent_id,
         session_id=session_id,
     )
+
+    # Then, use the chat context to chat
 
     print(chat_context)
