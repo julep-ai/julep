@@ -7,7 +7,6 @@ from uuid import UUID
 import pandas as pd
 from pydantic import BaseModel
 
-from ..clients.cozo import client as cozo_client
 from ..common.utils.cozo import uuid_int_list_to_uuid4
 
 P = ParamSpec("P")
@@ -66,12 +65,15 @@ def partialclass(cls, *args, **kwargs):
 
 def verify_developer_id_query(developer_id: UUID | str) -> str:
     return f"""
-    ?[developer_id] :=
+    matched[count(developer_id)] :=
         *developers{{
             developer_id,
         }}, developer_id = to_uuid("{str(developer_id)}")
         
-    :assert some
+    ?[exists] :=
+        matched[num],
+        exists = num > 0,
+        assert(exists, "Developer does not exist")
     """
 
 
@@ -127,9 +129,7 @@ def cozo_query(
             from pprint import pprint
 
         @wraps(func)
-        def wrapper(
-            *args: P.args, client=cozo_client, **kwargs: P.kwargs
-        ) -> pd.DataFrame:
+        def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
             queries, variables = func(*args, **kwargs)
 
             if isinstance(queries, str):
@@ -146,6 +146,9 @@ def cozo_query(
                 )
             )
 
+            from ..clients.cozo import get_cozo_client
+
+            client = client or get_cozo_client()
             result = client.run(query, variables)
 
             # Need to fix the UUIDs in the result

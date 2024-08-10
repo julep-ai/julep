@@ -3,13 +3,13 @@ This module is responsible for loading and providing access to environment varia
 It utilizes the environs library for environment variable parsing.
 """
 
+import random
 from pprint import pprint
 
 from environs import Env
 
 # Initialize the Env object for environment variable parsing.
 env = Env()
-env.read_env()
 
 # Debug mode
 debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
@@ -32,7 +32,12 @@ temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue")
 
 # auth
-api_key: str = env.str("AGENTS_API_KEY")
+_random_generated_key = "".join(str(random.randint(0, 9)) for _ in range(32))
+api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
+
+if api_key == _random_generated_key:
+    print(f"Generated API key since not set in the environment: {api_key}")
+
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 skip_check_developer_headers: bool = env.bool(
     "SKIP_CHECK_DEVELOPER_HEADERS", default=False

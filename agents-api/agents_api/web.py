@@ -22,6 +22,7 @@ from agents_api.exceptions import PromptTooBigError
 from agents_api.routers import (
     agents,
     tasks,
+    users,
 )
 
 if not sentry_dsn:
@@ -88,7 +89,7 @@ register_exceptions(app)
 
 app.include_router(agents.router)
 # app.include_router(sessions.router)
-# app.include_router(users.router)
+app.include_router(users.router)
 # app.include_router(jobs.router)
 app.include_router(tasks.router)
 

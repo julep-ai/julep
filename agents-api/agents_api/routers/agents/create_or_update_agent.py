@@ -27,4 +27,4 @@ async def create_or_update_agent(
         data=data,
     )
 
-    return ResourceCreatedResponse(id=agent.id, created_at=agent.created_at)
+    return ResourceCreatedResponse(id=agent.id, created_at=agent.created_at, jobs=[])

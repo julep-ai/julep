@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 from cozo_migrate.api import apply, init
-from julep import AsyncClient, Client
+from fastapi.testclient import TestClient
 from pycozo import Client as CozoClient
 from temporalio.client import WorkflowHandle
 from ward import fixture
@@ -15,6 +15,7 @@ from agents_api.autogen.openapi_model import (
     CreateToolRequest,
     CreateUserRequest,
 )
+from agents_api.env import api_key, api_key_header_name
 from agents_api.models.agent.create_agent import create_agent
 from agents_api.models.agent.delete_agent import delete_agent
 from agents_api.models.docs.create_doc import create_doc
@@ -28,26 +29,7 @@ from agents_api.models.tools.create_tools import create_tools
 from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
-
-# TODO: make clients connect to real service
-
-
-@fixture(scope="global")
-def client():
-    # Mock server base url
-    base_url = "http://localhost:8080"
-    client = Client(api_key="thisisnotarealapikey", base_url=base_url)
-
-    return client
-
-
-@fixture
-def async_client():
-    # Mock server base url
-    base_url = "http://localhost:8080"
-    client = AsyncClient(api_key="thisisnotarealapikey", base_url=base_url)
-
-    return client
+from agents_api.web import app
 
 
 @fixture(scope="global")
@@ -263,3 +245,26 @@ def test_tool(
         tool_id=tool.id,
         client=client,
     )
+
+
+@fixture(scope="global")
+def client(cozo_client=cozo_client):
+    client = TestClient(app=app)
+    app.state.cozo_client = cozo_client
+
+    return client
+
+
+@fixture(scope="global")
+def make_request(client=client, developer_id=test_developer_id):
+    def _make_request(method, url, **kwargs):
+        headers = kwargs.pop("headers", {})
+        headers = {
+            **headers,
+            "X-Developer-Id": str(developer_id),
+            api_key_header_name: api_key,
+        }
+
+        return client.request(method, url, headers=headers, **kwargs)
+
+    return _make_request

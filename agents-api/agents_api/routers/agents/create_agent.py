@@ -19,9 +19,10 @@ async def create_agent(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     data: CreateAgentRequest,
 ) -> ResourceCreatedResponse:
+    print("create_agent", x_developer_id, data)
     agent = models.agent.create_agent(
         developer_id=x_developer_id,
         data=data,
     )
 
-    return ResourceCreatedResponse(id=agent.id, created_at=agent.created_at)
+    return ResourceCreatedResponse(id=agent.id, created_at=agent.created_at, jobs=[])

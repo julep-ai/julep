@@ -57,15 +57,18 @@ def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[list[str], dict]:
         verify_developer_owns_resource_query(developer_id, "users", user_id=user_id),
         """
         # Delete docs
-        ?[user_id, doc_id] :=
+        ?[owner_type, owner_id, doc_id] :=
             *docs{
-                owner_id: user_id,
-                owner_type: "user",
+                owner_id,
+                owner_type,
                 doc_id,
-            }, user_id = to_uuid($user_id)
+            },
+            owner_id = to_uuid($user_id),
+            owner_type = "user"
 
         :delete docs {
-            user_id,
+            owner_type,
+            owner_id,
             doc_id
         }
         :returning
