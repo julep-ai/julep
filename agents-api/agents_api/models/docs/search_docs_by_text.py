@@ -83,6 +83,24 @@ def search_docs_by_text(
         ] :=
             input[owner_id, query],
             candidate[doc_id],
+            ~snippets:lsh {{
+                doc_id,
+                index,
+                content
+                |
+                query: query,
+                k: {k},
+            }},
+            distance = 10000000,  # Very large distance to depict no distance
+            snippet_data = [index, content]
+
+        search_result[
+            doc_id,
+            snippet_data,
+            distance,
+        ] :=
+            input[owner_id, query],
+            candidate[doc_id],
             ~snippets:fts {{
                 doc_id,
                 index,

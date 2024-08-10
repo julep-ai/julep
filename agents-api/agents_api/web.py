@@ -21,6 +21,7 @@ from agents_api.env import sentry_dsn
 from agents_api.exceptions import PromptTooBigError
 from agents_api.routers import (
     agents,
+    docs,
     jobs,
     sessions,
     tasks,
@@ -93,6 +94,7 @@ app.include_router(agents.router)
 app.include_router(sessions.router)
 app.include_router(users.router)
 app.include_router(jobs.router)
+app.include_router(docs.router)
 app.include_router(tasks.router)
 
 

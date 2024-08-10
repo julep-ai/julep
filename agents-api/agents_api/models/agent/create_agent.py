@@ -60,12 +60,13 @@ def create_agent(
 
     # Extract the agent data from the payload
     data.metadata = data.metadata or {}
+    data.default_settings = data.default_settings or {}
+
     data.instructions = (
         data.instructions
         if isinstance(data.instructions, list)
         else [data.instructions]
     )
-    data.default_settings = data.default_settings
 
     agent_data = data.model_dump(exclude_unset=True)
     default_settings = agent_data.pop("default_settings")
