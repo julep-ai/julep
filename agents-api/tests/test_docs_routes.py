@@ -1,0 +1,179 @@
+from uuid import uuid4
+
+from ward import test
+
+from agents_api.autogen.openapi_model import CreateDocRequest, TextOnlyDocSearchRequest
+from tests.fixtures import make_request, test_agent, test_user
+
+
+@test("route: create user doc")
+def _(make_request=make_request, user=test_user):
+    data = dict(
+        title="Test User Doc",
+        content=["This is a test user document."],
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/users/{user.id}/docs",
+        json=data,
+    )
+
+    assert response.status_code == 201
+
+
+@test("route: create agent doc")
+def _(make_request=make_request, agent=test_agent):
+    data = dict(
+        title="Test Agent Doc",
+        content=["This is a test agent document."],
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/docs",
+        json=data,
+    )
+
+    assert response.status_code == 201
+
+
+@test("route: delete doc")
+def _(make_request=make_request, agent=test_agent):
+    data = dict(
+        title="Test Agent Doc",
+        content=["This is a test agent document."],
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/docs",
+        json=data,
+    )
+    doc_id = response.json()["id"]
+
+    response = make_request(
+        method="DELETE",
+        url=f"/docs/{doc_id}",
+    )
+
+    assert response.status_code == 202
+
+    response = make_request(
+        method="GET",
+        url=f"/docs/{doc_id}",
+    )
+
+    assert response.status_code == 404
+
+
+@test("route: get doc")
+def _(make_request=make_request, agent=test_agent):
+    data = dict(
+        title="Test Agent Doc",
+        content=["This is a test agent document."],
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/docs",
+        json=data,
+    )
+    doc_id = response.json()["id"]
+
+    response = make_request(
+        method="GET",
+        url=f"/docs/{doc_id}",
+    )
+
+    assert response.status_code == 200
+
+
+@test("route: list user docs")
+def _(make_request=make_request, user=test_user):
+    response = make_request(
+        method="GET",
+        url=f"/users/{user.id}/docs",
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
+
+    assert isinstance(docs, list)
+
+
+@test("route: list agent docs")
+def _(make_request=make_request, agent=test_agent):
+    response = make_request(
+        method="GET",
+        url=f"/agents/{agent.id}/docs",
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["items"]
+
+    assert isinstance(docs, list)
+
+
+@test("route: search user docs")
+def _(make_request=make_request, user=test_user):
+    data = dict(
+        title="Test User Doc",
+        content=["This is a test user document."],
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/users/{user.id}/docs",
+        json=data,
+    )
+
+    search_params = TextOnlyDocSearchRequest(
+        text="test",
+        limit=1,
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/users/{user.id}/search",
+        json=search_params.dict(),
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["docs"]
+
+    assert isinstance(docs, list)
+
+
+@test("route: search agent docs")
+def _(make_request=make_request, agent=test_agent):
+    data = dict(
+        title="Test Agent Doc",
+        content=["This is a test agent document."],
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/docs",
+        json=data,
+    )
+
+    search_params = TextOnlyDocSearchRequest(
+        text="test",
+        limit=1,
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/search",
+        json=search_params.dict(),
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["docs"]
+
+    assert isinstance(docs, list)
