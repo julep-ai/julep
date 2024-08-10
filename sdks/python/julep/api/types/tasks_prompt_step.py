@@ -5,9 +5,9 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .chat_chat_settings import ChatChatSettings
 from .tasks_base_workflow_step import TasksBaseWorkflowStep
 from .tasks_prompt_step_prompt import TasksPromptStepPrompt
-from .tasks_prompt_step_settings import TasksPromptStepSettings
 
 
 class TasksPromptStep(TasksBaseWorkflowStep):
@@ -16,7 +16,7 @@ class TasksPromptStep(TasksBaseWorkflowStep):
     The prompt to run
     """
 
-    settings: TasksPromptStepSettings = pydantic_v1.Field()
+    settings: ChatChatSettings = pydantic_v1.Field()
     """
     Settings for the prompt
     """

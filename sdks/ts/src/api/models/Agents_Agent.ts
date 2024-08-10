@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Chat_GenerationPresetSettings } from "./Chat_GenerationPresetSettings";
-import type { Chat_OpenAISettings } from "./Chat_OpenAISettings";
-import type { Chat_vLLMSettings } from "./Chat_vLLMSettings";
+import type { Chat_DefaultChatSettings } from "./Chat_DefaultChatSettings";
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_uuid } from "./Common_uuid";
 export type Agents_Agent = {
@@ -37,8 +35,5 @@ export type Agents_Agent = {
   /**
    * Default settings for all sessions created by this agent
    */
-  default_settings?:
-    | Chat_GenerationPresetSettings
-    | Chat_OpenAISettings
-    | Chat_vLLMSettings;
+  default_settings?: Chat_DefaultChatSettings;
 };

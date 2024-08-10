@@ -200,7 +200,7 @@ client.agents_route_create(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsCreateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -394,7 +394,7 @@ client.agents_route_create_or_update(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsUpdateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -517,7 +517,7 @@ client.agents_route_update(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsUpdateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -707,7 +707,7 @@ client.agents_route_patch(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsPatchAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -1924,7 +1924,7 @@ client.agent_tools_route_create(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsCreateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -3775,7 +3775,7 @@ Generate a response from the model
 <dd>
 
 ```python
-from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+from julep import EntriesInputChatMlMessage
 from julep.client import JulepApi
 
 client = JulepApi(
@@ -3784,18 +3784,16 @@ client = JulepApi(
 )
 client.chat_route_generate(
     id="id",
-    request=ChatRouteGenerateRequestPreset(
-        messages=[
-            EntriesInputChatMlMessage(
-                role="user",
-                content="content",
-            )
-        ],
-        recall=True,
-        remember=True,
-        save=True,
-        stream=True,
-    ),
+    messages=[
+        EntriesInputChatMlMessage(
+            role="user",
+            content="content",
+        )
+    ],
+    recall=True,
+    remember=True,
+    save=True,
+    stream=True,
 )
 
 ```
@@ -3820,7 +3818,175 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**request:** `ChatRouteGenerateRequest` 
+**messages:** `typing.Sequence[EntriesInputChatMlMessage]` — A list of new input messages comprising the conversation so far.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**recall:** `bool` — Whether previous memories should be recalled or not (will be enabled in a future release)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**remember:** `bool` — Whether this interaction should form new memories or not (will be enabled in a future release)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**save:** `bool` — Whether this interaction should be stored in the session history or not
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**stream:** `bool` — Indicates if the server should stream the response as it's generated
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tools:** `typing.Optional[typing.Sequence[ToolsFunctionTool]]` — (Advanced) List of tools that are provided in addition to agent's default set of tools.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tool_choice:** `typing.Optional[ChatChatInputToolChoice]` — Can be one of existing tools given to the agent earlier or the ones provided in this request.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**model:** `typing.Optional[CommonIdentifierSafeUnicode]` — Identifier of the model to be used
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**stop:** `typing.Optional[typing.Sequence[str]]` — Up to 4 sequences where the API will stop generating further tokens.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**seed:** `typing.Optional[int]` — If specified, the system will make a best effort to sample deterministically for that particular seed value
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**max_tokens:** `typing.Optional[int]` — The maximum number of tokens to generate in the chat completion
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**logit_bias:** `typing.Optional[typing.Dict[str, CommonLogitBias]]` — Modify the likelihood of specified tokens appearing in the completion
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**response_format:** `typing.Optional[ChatCompletionResponseFormat]` — Response format (set to `json_object` to restrict output to JSON)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**agent:** `typing.Optional[CommonUuid]` — Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**preset:** `typing.Optional[ChatGenerationPreset]` — Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**frequency_penalty:** `typing.Optional[float]` — Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**presence_penalty:** `typing.Optional[float]` — Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**temperature:** `typing.Optional[float]` — What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**top_p:** `typing.Optional[float]` — Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**repetition_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**length_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**min_p:** `typing.Optional[float]` — Minimum probability compared to leading token to be considered
     
 </dd>
 </dl>

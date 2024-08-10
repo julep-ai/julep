@@ -5,9 +5,19 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .chat_generation_preset import ChatGenerationPreset
 
 
-class ChatOpenAiSettings(pydantic_v1.BaseModel):
+class ChatDefaultChatSettings(pydantic_v1.BaseModel):
+    """
+    Default settings for the chat session (also used by the agent)
+    """
+
+    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
+    """
+    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    """
+
     frequency_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
     """
     Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
@@ -26,6 +36,21 @@ class ChatOpenAiSettings(pydantic_v1.BaseModel):
     top_p: typing.Optional[float] = pydantic_v1.Field(default=None)
     """
     Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
+    """
+
+    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+
+    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    """
+
+    min_p: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Minimum probability compared to leading token to be considered
     """
 
     def json(self, **kwargs: typing.Any) -> str:

@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "add_lsh_index_to_docs"
 CREATED_AT = 1723307805.007054

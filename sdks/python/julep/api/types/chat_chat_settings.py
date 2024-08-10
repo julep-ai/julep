@@ -6,12 +6,13 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .chat_completion_response_format import ChatCompletionResponseFormat
+from .chat_generation_preset import ChatGenerationPreset
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_logit_bias import CommonLogitBias
 from .common_uuid import CommonUuid
 
 
-class TasksPromptStepSettingsAgent(pydantic_v1.BaseModel):
+class ChatChatSettings(pydantic_v1.BaseModel):
     model: typing.Optional[CommonIdentifierSafeUnicode] = pydantic_v1.Field(
         default=None
     )
@@ -58,14 +59,19 @@ class TasksPromptStepSettingsAgent(pydantic_v1.BaseModel):
     Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
     """
 
-    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
     """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
     """
 
-    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    frequency_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
     """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+
+    presence_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
     """
 
     temperature: typing.Optional[float] = pydantic_v1.Field(default=None)
@@ -76,6 +82,16 @@ class TasksPromptStepSettingsAgent(pydantic_v1.BaseModel):
     top_p: typing.Optional[float] = pydantic_v1.Field(default=None)
     """
     Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
+    """
+
+    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+
+    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
     """
 
     min_p: typing.Optional[float] = pydantic_v1.Field(default=None)

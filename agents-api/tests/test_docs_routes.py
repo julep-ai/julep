@@ -1,6 +1,6 @@
 from ward import test
 
-from tests.fixtures import make_request, test_agent, test_user, test_doc, test_user_doc
+from tests.fixtures import make_request, test_agent, test_doc, test_user, test_user_doc
 
 
 @test("route: create user doc")

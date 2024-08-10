@@ -6,13 +6,10 @@ import type { Agents_Agent } from "../models/Agents_Agent";
 import type { Agents_CreateAgentRequest } from "../models/Agents_CreateAgentRequest";
 import type { Agents_PatchAgentRequest } from "../models/Agents_PatchAgentRequest";
 import type { Agents_UpdateAgentRequest } from "../models/Agents_UpdateAgentRequest";
+import type { Chat_ChatInput } from "../models/Chat_ChatInput";
 import type { Chat_ChunkChatResponse } from "../models/Chat_ChunkChatResponse";
-import type { Chat_CompletionResponseFormat } from "../models/Chat_CompletionResponseFormat";
-import type { Chat_GenerationPreset } from "../models/Chat_GenerationPreset";
 import type { Chat_MessageChatResponse } from "../models/Chat_MessageChatResponse";
-import type { Common_identifierSafeUnicode } from "../models/Common_identifierSafeUnicode";
 import type { Common_limit } from "../models/Common_limit";
-import type { Common_logit_bias } from "../models/Common_logit_bias";
 import type { Common_offset } from "../models/Common_offset";
 import type { Common_ResourceCreatedResponse } from "../models/Common_ResourceCreatedResponse";
 import type { Common_ResourceDeletedResponse } from "../models/Common_ResourceDeletedResponse";
@@ -27,7 +24,6 @@ import type { Docs_HybridDocSearchRequest } from "../models/Docs_HybridDocSearch
 import type { Docs_TextOnlyDocSearchRequest } from "../models/Docs_TextOnlyDocSearchRequest";
 import type { Docs_VectorDocSearchRequest } from "../models/Docs_VectorDocSearchRequest";
 import type { Entries_History } from "../models/Entries_History";
-import type { Entries_InputChatMLMessage } from "../models/Entries_InputChatMLMessage";
 import type { Executions_CreateExecutionRequest } from "../models/Executions_CreateExecutionRequest";
 import type { Executions_Execution } from "../models/Executions_Execution";
 import type { Executions_TaskTokenResumeExecutionRequest } from "../models/Executions_TaskTokenResumeExecutionRequest";
@@ -42,8 +38,6 @@ import type { Tasks_CreateTaskRequest } from "../models/Tasks_CreateTaskRequest"
 import type { Tasks_PatchTaskRequest } from "../models/Tasks_PatchTaskRequest";
 import type { Tasks_Task } from "../models/Tasks_Task";
 import type { Tasks_UpdateTaskRequest } from "../models/Tasks_UpdateTaskRequest";
-import type { Tools_FunctionTool } from "../models/Tools_FunctionTool";
-import type { Tools_NamedToolChoice } from "../models/Tools_NamedToolChoice";
 import type { Tools_PatchToolRequest } from "../models/Tools_PatchToolRequest";
 import type { Tools_Tool } from "../models/Tools_Tool";
 import type { Tools_UpdateToolRequest } from "../models/Tools_UpdateToolRequest";
@@ -1122,221 +1116,7 @@ export class DefaultService {
     /**
      * Request to generate a response from the model
      */
-    requestBody:
-      | {
-          /**
-           * A list of new input messages comprising the conversation so far.
-           */
-          messages: Array<Entries_InputChatMLMessage>;
-          /**
-           * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-           */
-          tools?: Array<Tools_FunctionTool>;
-          /**
-           * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-           */
-          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-          /**
-           * Whether previous memories should be recalled or not (will be enabled in a future release)
-           */
-          readonly recall: boolean;
-          /**
-           * Whether this interaction should form new memories or not (will be enabled in a future release)
-           */
-          readonly remember: boolean;
-          /**
-           * Whether this interaction should be stored in the session history or not
-           */
-          save: boolean;
-          /**
-           * Identifier of the model to be used
-           */
-          model?: Common_identifierSafeUnicode;
-          /**
-           * Indicates if the server should stream the response as it's generated
-           */
-          stream: boolean;
-          /**
-           * Up to 4 sequences where the API will stop generating further tokens.
-           */
-          stop?: Array<string>;
-          /**
-           * If specified, the system will make a best effort to sample deterministically for that particular seed value
-           */
-          seed?: number;
-          /**
-           * The maximum number of tokens to generate in the chat completion
-           */
-          max_tokens?: number;
-          /**
-           * Modify the likelihood of specified tokens appearing in the completion
-           */
-          logit_bias?: Record<string, Common_logit_bias>;
-          /**
-           * Response format (set to `json_object` to restrict output to JSON)
-           */
-          response_format?: Chat_CompletionResponseFormat;
-          /**
-           * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-           */
-          agent?: Common_uuid;
-          /**
-           * Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-           */
-          preset?: Chat_GenerationPreset;
-        }
-      | {
-          /**
-           * A list of new input messages comprising the conversation so far.
-           */
-          messages: Array<Entries_InputChatMLMessage>;
-          /**
-           * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-           */
-          tools?: Array<Tools_FunctionTool>;
-          /**
-           * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-           */
-          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-          /**
-           * Whether previous memories should be recalled or not (will be enabled in a future release)
-           */
-          readonly recall: boolean;
-          /**
-           * Whether this interaction should form new memories or not (will be enabled in a future release)
-           */
-          readonly remember: boolean;
-          /**
-           * Whether this interaction should be stored in the session history or not
-           */
-          save: boolean;
-          /**
-           * Identifier of the model to be used
-           */
-          model?: Common_identifierSafeUnicode;
-          /**
-           * Indicates if the server should stream the response as it's generated
-           */
-          stream: boolean;
-          /**
-           * Up to 4 sequences where the API will stop generating further tokens.
-           */
-          stop?: Array<string>;
-          /**
-           * If specified, the system will make a best effort to sample deterministically for that particular seed value
-           */
-          seed?: number;
-          /**
-           * The maximum number of tokens to generate in the chat completion
-           */
-          max_tokens?: number;
-          /**
-           * Modify the likelihood of specified tokens appearing in the completion
-           */
-          logit_bias?: Record<string, Common_logit_bias>;
-          /**
-           * Response format (set to `json_object` to restrict output to JSON)
-           */
-          response_format?: Chat_CompletionResponseFormat;
-          /**
-           * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-           */
-          agent?: Common_uuid;
-          /**
-           * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-           */
-          frequency_penalty?: number;
-          /**
-           * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-           */
-          presence_penalty?: number;
-          /**
-           * What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-           */
-          temperature?: number;
-          /**
-           * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-           */
-          top_p?: number;
-        }
-      | {
-          /**
-           * A list of new input messages comprising the conversation so far.
-           */
-          messages: Array<Entries_InputChatMLMessage>;
-          /**
-           * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-           */
-          tools?: Array<Tools_FunctionTool>;
-          /**
-           * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-           */
-          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-          /**
-           * Whether previous memories should be recalled or not (will be enabled in a future release)
-           */
-          readonly recall: boolean;
-          /**
-           * Whether this interaction should form new memories or not (will be enabled in a future release)
-           */
-          readonly remember: boolean;
-          /**
-           * Whether this interaction should be stored in the session history or not
-           */
-          save: boolean;
-          /**
-           * Identifier of the model to be used
-           */
-          model?: Common_identifierSafeUnicode;
-          /**
-           * Indicates if the server should stream the response as it's generated
-           */
-          stream: boolean;
-          /**
-           * Up to 4 sequences where the API will stop generating further tokens.
-           */
-          stop?: Array<string>;
-          /**
-           * If specified, the system will make a best effort to sample deterministically for that particular seed value
-           */
-          seed?: number;
-          /**
-           * The maximum number of tokens to generate in the chat completion
-           */
-          max_tokens?: number;
-          /**
-           * Modify the likelihood of specified tokens appearing in the completion
-           */
-          logit_bias?: Record<string, Common_logit_bias>;
-          /**
-           * Response format (set to `json_object` to restrict output to JSON)
-           */
-          response_format?: Chat_CompletionResponseFormat;
-          /**
-           * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-           */
-          agent?: Common_uuid;
-          /**
-           * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-           */
-          repetition_penalty?: number;
-          /**
-           * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-           */
-          length_penalty?: number;
-          /**
-           * What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-           */
-          temperature?: number;
-          /**
-           * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-           */
-          top_p?: number;
-          /**
-           * Minimum probability compared to leading token to be considered
-           */
-          min_p?: number;
-        };
+    requestBody: Chat_ChatInput;
   }): CancelablePromise<Chat_ChunkChatResponse | Chat_MessageChatResponse> {
     return this.httpRequest.request({
       method: "POST",

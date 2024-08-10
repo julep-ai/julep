@@ -7,12 +7,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .chat_chat_settings import ChatChatSettings
 from .common_py_expression import CommonPyExpression
 from .common_tool_ref import CommonToolRef
 from .tasks_if_else_workflow_step_else import TasksIfElseWorkflowStepElse
 from .tasks_if_else_workflow_step_then import TasksIfElseWorkflowStepThen
 from .tasks_prompt_step_prompt import TasksPromptStepPrompt
-from .tasks_prompt_step_settings import TasksPromptStepSettings
 from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 
 
@@ -138,7 +138,7 @@ class TasksTaskMainItem_Yield(pydantic_v1.BaseModel):
 
 class TasksTaskMainItem_Prompt(pydantic_v1.BaseModel):
     prompt: TasksPromptStepPrompt
-    settings: TasksPromptStepSettings
+    settings: ChatChatSettings
     kind: typing.Literal["prompt"] = pydantic_v1.Field(alias="kind_", default="prompt")
 
     def json(self, **kwargs: typing.Any) -> str:

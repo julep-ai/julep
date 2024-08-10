@@ -4,6 +4,6 @@ import typing
 
 from .tools_named_tool_choice import ToolsNamedToolChoice
 
-ChatRouteGenerateRequestFrequencyPenaltyToolChoice = typing.Union[
+ChatChatInputToolChoice = typing.Union[
     typing.Literal["auto"], typing.Literal["none"], ToolsNamedToolChoice
 ]

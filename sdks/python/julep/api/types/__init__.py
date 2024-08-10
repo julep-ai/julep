@@ -9,66 +9,42 @@ from .agent_tools_route_list_request_direction import (
 from .agent_tools_route_list_request_sort_by import AgentToolsRouteListRequestSortBy
 from .agent_tools_route_list_response import AgentToolsRouteListResponse
 from .agents_agent import AgentsAgent
-from .agents_agent_default_settings import AgentsAgentDefaultSettings
 from .agents_agent_instructions import AgentsAgentInstructions
 from .agents_create_agent_request import AgentsCreateAgentRequest
-from .agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
-)
 from .agents_create_agent_request_instructions import (
     AgentsCreateAgentRequestInstructions,
 )
 from .agents_docs_search_route_search_request_body import (
     AgentsDocsSearchRouteSearchRequestBody,
 )
-from .agents_patch_agent_request_default_settings import (
-    AgentsPatchAgentRequestDefaultSettings,
-)
 from .agents_patch_agent_request_instructions import AgentsPatchAgentRequestInstructions
 from .agents_route_list_request_direction import AgentsRouteListRequestDirection
 from .agents_route_list_request_sort_by import AgentsRouteListRequestSortBy
 from .agents_route_list_response import AgentsRouteListResponse
 from .agents_update_agent_request import AgentsUpdateAgentRequest
-from .agents_update_agent_request_default_settings import (
-    AgentsUpdateAgentRequestDefaultSettings,
-)
 from .agents_update_agent_request_instructions import (
     AgentsUpdateAgentRequestInstructions,
 )
 from .chat_base_chat_output import ChatBaseChatOutput
 from .chat_base_chat_response import ChatBaseChatResponse
 from .chat_base_token_log_prob import ChatBaseTokenLogProb
+from .chat_chat_input_tool_choice import ChatChatInputToolChoice
 from .chat_chat_output_chunk import ChatChatOutputChunk
+from .chat_chat_settings import ChatChatSettings
 from .chat_chunk_chat_response import ChatChunkChatResponse
 from .chat_competion_usage import ChatCompetionUsage
 from .chat_completion_response_format import ChatCompletionResponseFormat
 from .chat_completion_response_format_type import ChatCompletionResponseFormatType
+from .chat_default_chat_settings import ChatDefaultChatSettings
 from .chat_finish_reason import ChatFinishReason
 from .chat_generation_preset import ChatGenerationPreset
-from .chat_generation_preset_settings import ChatGenerationPresetSettings
 from .chat_log_prob_response import ChatLogProbResponse
 from .chat_message_chat_response import ChatMessageChatResponse
+from .chat_message_chat_response_choices_item import ChatMessageChatResponseChoicesItem
 from .chat_multiple_chat_output import ChatMultipleChatOutput
-from .chat_open_ai_settings import ChatOpenAiSettings
-from .chat_route_generate_request import ChatRouteGenerateRequest
-from .chat_route_generate_request_agent import ChatRouteGenerateRequestAgent
-from .chat_route_generate_request_agent_tool_choice import (
-    ChatRouteGenerateRequestAgentToolChoice,
-)
-from .chat_route_generate_request_frequency_penalty import (
-    ChatRouteGenerateRequestFrequencyPenalty,
-)
-from .chat_route_generate_request_frequency_penalty_tool_choice import (
-    ChatRouteGenerateRequestFrequencyPenaltyToolChoice,
-)
-from .chat_route_generate_request_preset import ChatRouteGenerateRequestPreset
-from .chat_route_generate_request_preset_tool_choice import (
-    ChatRouteGenerateRequestPresetToolChoice,
-)
 from .chat_route_generate_response import ChatRouteGenerateResponse
 from .chat_single_chat_output import ChatSingleChatOutput
 from .chat_token_log_prob import ChatTokenLogProb
-from .chat_v_llm_settings import ChatVLlmSettings
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .common_limit import CommonLimit
 from .common_logit_bias import CommonLogitBias
@@ -214,12 +190,6 @@ from .tasks_patch_task_request_main_item import (
 )
 from .tasks_prompt_step import TasksPromptStep
 from .tasks_prompt_step_prompt import TasksPromptStepPrompt
-from .tasks_prompt_step_settings import TasksPromptStepSettings
-from .tasks_prompt_step_settings_agent import TasksPromptStepSettingsAgent
-from .tasks_prompt_step_settings_frequency_penalty import (
-    TasksPromptStepSettingsFrequencyPenalty,
-)
-from .tasks_prompt_step_settings_preset import TasksPromptStepSettingsPreset
 from .tasks_route_list_request_direction import TasksRouteListRequestDirection
 from .tasks_route_list_request_sort_by import TasksRouteListRequestSortBy
 from .tasks_route_list_response import TasksRouteListResponse
@@ -279,46 +249,36 @@ __all__ = [
     "AgentToolsRouteListRequestSortBy",
     "AgentToolsRouteListResponse",
     "AgentsAgent",
-    "AgentsAgentDefaultSettings",
     "AgentsAgentInstructions",
     "AgentsCreateAgentRequest",
-    "AgentsCreateAgentRequestDefaultSettings",
     "AgentsCreateAgentRequestInstructions",
     "AgentsDocsSearchRouteSearchRequestBody",
-    "AgentsPatchAgentRequestDefaultSettings",
     "AgentsPatchAgentRequestInstructions",
     "AgentsRouteListRequestDirection",
     "AgentsRouteListRequestSortBy",
     "AgentsRouteListResponse",
     "AgentsUpdateAgentRequest",
-    "AgentsUpdateAgentRequestDefaultSettings",
     "AgentsUpdateAgentRequestInstructions",
     "ChatBaseChatOutput",
     "ChatBaseChatResponse",
     "ChatBaseTokenLogProb",
+    "ChatChatInputToolChoice",
     "ChatChatOutputChunk",
+    "ChatChatSettings",
     "ChatChunkChatResponse",
     "ChatCompetionUsage",
     "ChatCompletionResponseFormat",
     "ChatCompletionResponseFormatType",
+    "ChatDefaultChatSettings",
     "ChatFinishReason",
     "ChatGenerationPreset",
-    "ChatGenerationPresetSettings",
     "ChatLogProbResponse",
     "ChatMessageChatResponse",
+    "ChatMessageChatResponseChoicesItem",
     "ChatMultipleChatOutput",
-    "ChatOpenAiSettings",
-    "ChatRouteGenerateRequest",
-    "ChatRouteGenerateRequestAgent",
-    "ChatRouteGenerateRequestAgentToolChoice",
-    "ChatRouteGenerateRequestFrequencyPenalty",
-    "ChatRouteGenerateRequestFrequencyPenaltyToolChoice",
-    "ChatRouteGenerateRequestPreset",
-    "ChatRouteGenerateRequestPresetToolChoice",
     "ChatRouteGenerateResponse",
     "ChatSingleChatOutput",
     "ChatTokenLogProb",
-    "ChatVLlmSettings",
     "CommonIdentifierSafeUnicode",
     "CommonLimit",
     "CommonLogitBias",
@@ -432,10 +392,6 @@ __all__ = [
     "TasksPatchTaskRequestMainItem_Yield",
     "TasksPromptStep",
     "TasksPromptStepPrompt",
-    "TasksPromptStepSettings",
-    "TasksPromptStepSettingsAgent",
-    "TasksPromptStepSettingsFrequencyPenalty",
-    "TasksPromptStepSettingsPreset",
     "TasksRouteListRequestDirection",
     "TasksRouteListRequestSortBy",
     "TasksRouteListResponse",

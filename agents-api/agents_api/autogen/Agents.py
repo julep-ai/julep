@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Chat import GenerationPresetSettings, OpenAISettings, VLLMSettings
+from .Chat import DefaultChatSettings
 
 
 class Agent(BaseModel):
@@ -47,9 +47,7 @@ class Agent(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -86,9 +84,7 @@ class CreateAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -125,9 +121,7 @@ class PatchAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -164,9 +158,7 @@ class UpdateAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """

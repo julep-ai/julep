@@ -165,3 +165,6 @@ DataT = TypeVar("DataT", bound=BaseModel)
 
 class ListResponse(BaseModel, Generic[DataT]):
     items: list[DataT]
+
+
+ChatResponse = ChunkChatResponse | MessageChatResponse

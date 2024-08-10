@@ -2,7 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Chat_OpenAISettings = {
+import type { Chat_GenerationPreset } from "./Chat_GenerationPreset";
+/**
+ * Default settings for the chat session (also used by the agent)
+ */
+export type Chat_DefaultChatSettings = {
+  /**
+   * Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+   */
+  preset?: Chat_GenerationPreset;
   /**
    * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
    */
@@ -19,4 +27,16 @@ export type Chat_OpenAISettings = {
    * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
    */
   top_p?: number;
+  /**
+   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+   */
+  repetition_penalty?: number;
+  /**
+   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+   */
+  length_penalty?: number;
+  /**
+   * Minimum probability compared to leading token to be considered
+   */
+  min_p?: number;
 };
