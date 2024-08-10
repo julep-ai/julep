@@ -14,7 +14,7 @@ with workflow.unsafe.imports_passed_through():
         transition_step,
     )
     from ..autogen.openapi_model import (
-        # ErrorWorkflowStep,
+        ErrorWorkflowStep,
         EvaluateStep,
         IfElseWorkflowStep,
         PromptStep,
@@ -57,7 +57,7 @@ class TaskExecutionWorkflow:
             inputs=previous_inputs,
         )
 
-        should_wait = False
+        should_wait, is_error = False, False
         # Run the step
         match step:
             case PromptStep():
@@ -88,12 +88,8 @@ class TaskExecutionWorkflow:
                     context,
                     schedule_to_close_timeout=timedelta(seconds=600),
                 )
-            # case ErrorWorkflowStep():
-            #     result = await workflow.execute_activity(
-            #         error_step,
-            #         context,
-            #         schedule_to_close_timeout=timedelta(seconds=600),
-            #     )
+            case ErrorWorkflowStep():
+                is_error = True
             case IfElseWorkflowStep():
                 outputs = await workflow.execute_activity(
                     if_else_step,
@@ -116,7 +112,9 @@ class TaskExecutionWorkflow:
         is_last = step_idx + 1 == len(current_workflow)
         # Transition type
         transition_type = (
-            "awaiting_input" if should_wait else ("finish" if is_last else "step")
+            "awaiting_input"
+            if should_wait
+            else ("finish" if is_last else ("error" if is_error else "step"))
         )
 
         # Transition to the next step
@@ -131,6 +129,7 @@ class TaskExecutionWorkflow:
             args=[
                 context,
                 transition_info,
+                "failed" if is_error else "awaiting_input",
             ],
             schedule_to_close_timeout=timedelta(seconds=600),
         )

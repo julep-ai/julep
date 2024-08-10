@@ -20,7 +20,6 @@ from ..activities.salient_questions import salient_questions
 from ..activities.summarization import summarization
 from ..activities.task_steps import (
     evaluate_step,
-    # error_step,
     if_else_step,
     prompt_step,
     tool_call_step,
@@ -77,7 +76,6 @@ async def main():
         evaluate_step,
         yield_step,
         tool_call_step,
-        # error_step,
         if_else_step,
         transition_step,
     ]

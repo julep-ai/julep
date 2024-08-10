@@ -1,4 +1,5 @@
 import asyncio
+from typing import Literal
 from uuid import uuid4
 
 from openai.types.chat.chat_completion import ChatCompletion
@@ -7,8 +8,8 @@ from temporalio import activity
 
 from ...autogen.openapi_model import (
     CreateTransitionRequest,
+    ErrorWorkflowStep,
     EvaluateStep,
-    # ErrorWorkflowStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
     PromptStep,
@@ -28,8 +29,28 @@ from ...models.execution.create_execution_transition import (
 from ...models.execution.update_execution import (
     update_execution as update_execution_query,
 )
-from ...routers.sessions.protocol import Settings
-from ...routers.sessions.session import llm_generate
+
+# from ...routers.sessions.protocol import Settings
+# from ...routers.sessions.session import llm_generate
+
+
+# TODO: remove stubs
+class Settings:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+def llm_generate(*args, **kwargs):
+    return ChatCompletion(
+        id="",
+        choices=[],
+        created=0,
+        model="",
+        object="chat.completion",
+    )
+
+
+#
 
 
 @activity.defn
@@ -40,7 +61,12 @@ async def prompt_step(context: StepContext) -> dict:
     context_data: dict = context.model_dump()
 
     # Render template messages
-    template_messages: list[InputChatMLMessage] = context.definition.prompt
+    prompt = (
+        [InputChatMLMessage(content=context.definition.prompt)]
+        if isinstance(context.definition.prompt, str)
+        else context.definition.prompt
+    )
+    template_messages: list[InputChatMLMessage] = prompt
     messages = await asyncio.gather(
         *[
             render_template(msg.content, context_data, skip_vars=["developer_id"])
@@ -100,13 +126,7 @@ async def tool_call_step(context: StepContext) -> dict:
     # get tool by id
     # call tool
 
-
-# @activity.defn
-# async def error_step(context: StepContext) -> dict:
-#     if not isinstance(context.definition, ErrorWorkflowStep):
-#         return {}
-
-#     return {"error": context.definition.error}
+    return {}
 
 
 @activity.defn
@@ -127,7 +147,16 @@ async def if_else_step(context: StepContext) -> dict:
 async def transition_step(
     context: StepContext,
     transition_info: TransitionInfo,
-) -> dict:
+    execution_status: Literal[
+        "queued",
+        "starting",
+        "running",
+        "awaiting_input",
+        "succeeded",
+        "failed",
+        "cancelled",
+    ] = "awaiting_input",
+):
     print("Running transition step")
     # raise NotImplementedError()
 
@@ -152,10 +181,10 @@ async def transition_step(
         task_id=context.task.id,
         execution_id=context.execution.id,
         data=UpdateExecutionRequest(
-            status="awaiting_input",
+            status=execution_status,
         ),
     )
 
     # Raise if it's a waiting step
-    if transition_info.type == "awaiting_input":
+    if execution_status == "awaiting_input":
         activity.raise_complete_async()
