@@ -30,7 +30,6 @@ from ..utils import (
     one=True,
     transform=lambda d: {
         "id": UUID(d["doc_id"]),
-        "content": [],  # <-- Note: we do not return content on creation
         **d,
     },
 )
@@ -87,6 +86,10 @@ def create_doc(
 
     create_snippets_query = f"""
         ?[{snippet_cols}] <- $snippet_rows
+
+        :create _snippets {{ {snippet_cols} }}
+        }} {{ 
+        ?[{snippet_cols}] <- $snippet_rows
         :insert snippets {{ {snippet_cols} }}
         :returning
     """
@@ -94,8 +97,22 @@ def create_doc(
     # Construct the datalog query for creating the document and its snippets.
     create_doc_query = f"""
         ?[{doc_cols}] <- $doc_rows
+
+        :create _docs {{ {doc_cols} }}
+        }} {{
+        ?[{doc_cols}] <- $doc_rows
         :insert docs {{ {doc_cols} }}
         :returning
+        }} {{
+        snippet_rows[collect(content)] :=
+            *_snippets {{
+                content
+            }}
+
+        ?[{doc_cols}, content, created_at] :=
+            *_docs {{ {doc_cols} }},
+            snippet_rows[content],
+            created_at = now()
     """
 
     queries = [

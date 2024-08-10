@@ -158,6 +158,31 @@ def test_doc(
 
 
 @fixture(scope="global")
+def test_user_doc(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    user=test_user,
+):
+    doc = create_doc(
+        developer_id=developer_id,
+        owner_type="user",
+        owner_id=user.id,
+        data=CreateDocRequest(title="Hello", content=["World"]),
+        client=client,
+    )
+
+    yield doc
+
+    delete_doc(
+        developer_id=developer_id,
+        doc_id=doc.id,
+        owner_type="user",
+        owner_id=user.id,
+        client=client,
+    )
+
+
+@fixture(scope="global")
 def test_task(
     client=cozo_client,
     developer_id=test_developer_id,

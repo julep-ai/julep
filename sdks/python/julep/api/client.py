@@ -820,6 +820,58 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def agent_docs_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete a Doc for this Agent
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.agent_docs_route_delete(
+            id="id",
+            child_id="child_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/docs/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def agents_docs_search_route_search(
         self,
         id: CommonUuid,
@@ -1794,50 +1846,6 @@ class JulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(DocsDoc, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    def individual_docs_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete an existing Doc by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        from julep.client import JulepApi
-
-        client = JulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-        client.individual_docs_route_delete(
-            id="id",
-        )
-        """
-        _response = self._client_wrapper.httpx_client.request(
-            f"docs/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -3497,6 +3505,58 @@ class JulepApi:
             raise ApiError(status_code=_response.status_code, body=_response.text)
         raise ApiError(status_code=_response.status_code, body=_response_json)
 
+    def user_docs_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete a Doc for this User
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        from julep.client import JulepApi
+
+        client = JulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+        client.user_docs_route_delete(
+            id="id",
+            child_id="child_id",
+        )
+        """
+        _response = self._client_wrapper.httpx_client.request(
+            f"users/{jsonable_encoder(id)}/docs/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
     def user_docs_search_route_search(
         self,
         id: CommonUuid,
@@ -4327,6 +4387,66 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def agent_docs_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete a Doc for this Agent
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.agent_docs_route_delete(
+                id="id",
+                child_id="child_id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"agents/{jsonable_encoder(id)}/docs/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -5410,58 +5530,6 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(DocsDoc, _response.json())  # type: ignore
-            _response_json = _response.json()
-        except JSONDecodeError:
-            raise ApiError(status_code=_response.status_code, body=_response.text)
-        raise ApiError(status_code=_response.status_code, body=_response_json)
-
-    async def individual_docs_route_delete(
-        self, id: CommonUuid, *, request_options: typing.Optional[RequestOptions] = None
-    ) -> CommonResourceDeletedResponse:
-        """
-        Delete an existing Doc by id
-
-        Parameters
-        ----------
-        id : CommonUuid
-            ID of the resource
-
-        request_options : typing.Optional[RequestOptions]
-            Request-specific configuration.
-
-        Returns
-        -------
-        CommonResourceDeletedResponse
-            The request has been accepted for processing, but processing has not yet completed.
-
-        Examples
-        --------
-        import asyncio
-
-        from julep.client import AsyncJulepApi
-
-        client = AsyncJulepApi(
-            auth_key="YOUR_AUTH_KEY",
-            api_key="YOUR_API_KEY",
-        )
-
-
-        async def main() -> None:
-            await client.individual_docs_route_delete(
-                id="id",
-            )
-
-
-        asyncio.run(main())
-        """
-        _response = await self._client_wrapper.httpx_client.request(
-            f"docs/{jsonable_encoder(id)}",
-            method="DELETE",
-            request_options=request_options,
-        )
-        try:
-            if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -7332,6 +7400,66 @@ class AsyncJulepApi:
         try:
             if 200 <= _response.status_code < 300:
                 return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
+            _response_json = _response.json()
+        except JSONDecodeError:
+            raise ApiError(status_code=_response.status_code, body=_response.text)
+        raise ApiError(status_code=_response.status_code, body=_response_json)
+
+    async def user_docs_route_delete(
+        self,
+        id: CommonUuid,
+        child_id: CommonUuid,
+        *,
+        request_options: typing.Optional[RequestOptions] = None,
+    ) -> CommonResourceDeletedResponse:
+        """
+        Delete a Doc for this User
+
+        Parameters
+        ----------
+        id : CommonUuid
+            ID of parent resource
+
+        child_id : CommonUuid
+            ID of the resource to be deleted
+
+        request_options : typing.Optional[RequestOptions]
+            Request-specific configuration.
+
+        Returns
+        -------
+        CommonResourceDeletedResponse
+            The request has been accepted for processing, but processing has not yet completed.
+
+        Examples
+        --------
+        import asyncio
+
+        from julep.client import AsyncJulepApi
+
+        client = AsyncJulepApi(
+            auth_key="YOUR_AUTH_KEY",
+            api_key="YOUR_API_KEY",
+        )
+
+
+        async def main() -> None:
+            await client.user_docs_route_delete(
+                id="id",
+                child_id="child_id",
+            )
+
+
+        asyncio.run(main())
+        """
+        _response = await self._client_wrapper.httpx_client.request(
+            f"users/{jsonable_encoder(id)}/docs/{jsonable_encoder(child_id)}",
+            method="DELETE",
+            request_options=request_options,
+        )
+        try:
+            if 200 <= _response.status_code < 300:
+                return pydantic_v1.parse_obj_as(CommonResourceDeletedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)

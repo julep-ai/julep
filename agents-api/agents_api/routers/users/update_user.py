@@ -18,5 +18,5 @@ async def update_user(
     return update_user_query(
         developer_id=x_developer_id,
         user_id=user_id,
-        update_user=data,
+        data=data,
     )

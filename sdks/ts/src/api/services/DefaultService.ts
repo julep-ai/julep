@@ -314,6 +314,33 @@ export class DefaultService {
     });
   }
   /**
+   * Delete a Doc for this Agent
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public agentDocsRouteDelete({
+    id,
+    childId,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be deleted
+     */
+    childId: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/agents/{id}/docs/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+    });
+  }
+  /**
    * Search Docs owned by an Agent
    * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
@@ -724,27 +751,6 @@ export class DefaultService {
   }): CancelablePromise<Docs_Doc> {
     return this.httpRequest.request({
       method: "GET",
-      url: "/docs/{id}",
-      path: {
-        id: id,
-      },
-    });
-  }
-  /**
-   * Delete an existing Doc by id
-   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
-   * @throws ApiError
-   */
-  public individualDocsRouteDelete({
-    id,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-  }): CancelablePromise<Common_ResourceDeletedResponse> {
-    return this.httpRequest.request({
-      method: "DELETE",
       url: "/docs/{id}",
       path: {
         id: id,
@@ -1720,6 +1726,33 @@ export class DefaultService {
       },
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+  /**
+   * Delete a Doc for this User
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public userDocsRouteDelete({
+    id,
+    childId,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be deleted
+     */
+    childId: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/users/{id}/docs/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
     });
   }
   /**

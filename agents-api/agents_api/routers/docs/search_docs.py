@@ -74,6 +74,7 @@ async def search_user_docs(
         owner_id=user_id,
         **params,
     )
+
     end = time.time()
 
     time_taken = end - start
@@ -101,6 +102,7 @@ async def search_agent_docs(
         owner_id=agent_id,
         **params,
     )
+
     end = time.time()
 
     time_taken = end - start

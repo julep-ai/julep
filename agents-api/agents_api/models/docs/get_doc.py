@@ -19,6 +19,9 @@ from ..utils import (
 
 @rewrap_exceptions(
     {
+        lambda e: isinstance(e, AssertionError)
+        and "Expected one result"
+        in repr(e): partialclass(HTTPException, status_code=404),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
