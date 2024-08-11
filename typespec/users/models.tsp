@@ -35,12 +35,9 @@ model UpdateUserRequest {
 model PatchUserRequest is UpdateUserRequest {}
 
 /** Payload for creating a user (and associated documents) */
-model CreateUserRequest {
-    ...UpdateUserRequest;
-}
+model CreateUserRequest is UpdateUserRequest {}
 
-model CreateOrUpdateUserRequest {
+model CreateOrUpdateUserRequest extends CreateUserRequest {
     @path
     id: uuid;
-    ...UpdateUserRequest;
 }

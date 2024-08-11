@@ -5,34 +5,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .chat_generation_preset import ChatGenerationPreset
-from .chat_open_ai_settings import ChatOpenAiSettings
+from .common_uuid import CommonUuid
+from .users_create_user_request import UsersCreateUserRequest
 
 
-class ChatDefaultChatSettings(ChatOpenAiSettings):
-    """
-    Default settings for the chat session (also used by the agent)
-    """
-
-    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-    """
-
-    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-
-    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-    """
-
-    min_p: typing.Optional[float] = pydantic_v1.Field(default=None)
-    """
-    Minimum probability compared to leading token to be considered
-    """
+class UsersCreateOrUpdateUserRequest(UsersCreateUserRequest):
+    id: CommonUuid
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

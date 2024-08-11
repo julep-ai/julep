@@ -1324,7 +1324,7 @@ export class DefaultService {
     requestBody,
   }: {
     id: Common_uuid;
-    requestBody: Users_UpdateUserRequest;
+    requestBody: Users_CreateUserRequest;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "POST",

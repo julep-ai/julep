@@ -5,33 +5,45 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .chat_generation_preset import ChatGenerationPreset
-from .chat_open_ai_settings import ChatOpenAiSettings
+from .common_uuid import CommonUuid
+from .sessions_context_overflow_type import SessionsContextOverflowType
 
 
-class ChatDefaultChatSettings(ChatOpenAiSettings):
+class SessionsCreateOrUpdateSessionRequest(pydantic_v1.BaseModel):
+    id: CommonUuid
+    user: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
     """
-    Default settings for the chat session (also used by the agent)
-    """
-
-    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    User ID of user associated with this session
     """
 
-    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    users: typing.Optional[typing.List[CommonUuid]] = None
+    agent: typing.Optional[CommonUuid] = pydantic_v1.Field(default=None)
     """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-
-    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    Agent ID of agent associated with this session
     """
 
-    min_p: typing.Optional[float] = pydantic_v1.Field(default=None)
+    agents: typing.Optional[typing.List[CommonUuid]] = None
+    token_budget: typing.Optional[int] = pydantic_v1.Field(default=None)
     """
-    Minimum probability compared to leading token to be considered
+    Threshold value for the adaptive context functionality
+    """
+
+    context_overflow: typing.Optional[SessionsContextOverflowType] = pydantic_v1.Field(
+        default=None
+    )
+    """
+    Action to start on context window overflow
+    """
+
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    situation: str = pydantic_v1.Field()
+    """
+    A specific situation that sets the background for this session
+    """
+
+    render_templates: bool = pydantic_v1.Field()
+    """
+    Render system and assistant message content as jinja templates
     """
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -62,7 +74,5 @@ class ChatDefaultChatSettings(ChatOpenAiSettings):
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
-        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

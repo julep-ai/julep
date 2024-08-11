@@ -39,7 +39,7 @@ from .types.agents_route_list_response import AgentsRouteListResponse
 from .types.agents_update_agent_request_instructions import (
     AgentsUpdateAgentRequestInstructions,
 )
-from .types.chat_chat_input_tool_choice import ChatChatInputToolChoice
+from .types.chat_chat_input_data_tool_choice import ChatChatInputDataToolChoice
 from .types.chat_completion_response_format import ChatCompletionResponseFormat
 from .types.chat_default_chat_settings import ChatDefaultChatSettings
 from .types.chat_generation_preset import ChatGenerationPreset
@@ -2664,13 +2664,11 @@ class JulepApi:
         self,
         id: CommonUuid,
         *,
-        messages: typing.Sequence[EntriesInputChatMlMessage],
         recall: bool,
         remember: bool,
         save: bool,
         stream: bool,
-        tools: typing.Optional[typing.Sequence[ToolsFunctionTool]] = OMIT,
-        tool_choice: typing.Optional[ChatChatInputToolChoice] = OMIT,
+        messages: typing.Sequence[EntriesInputChatMlMessage],
         model: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
         stop: typing.Optional[typing.Sequence[str]] = OMIT,
         seed: typing.Optional[int] = OMIT,
@@ -2679,13 +2677,15 @@ class JulepApi:
         response_format: typing.Optional[ChatCompletionResponseFormat] = OMIT,
         agent: typing.Optional[CommonUuid] = OMIT,
         preset: typing.Optional[ChatGenerationPreset] = OMIT,
+        repetition_penalty: typing.Optional[float] = OMIT,
+        length_penalty: typing.Optional[float] = OMIT,
+        min_p: typing.Optional[float] = OMIT,
         frequency_penalty: typing.Optional[float] = OMIT,
         presence_penalty: typing.Optional[float] = OMIT,
         temperature: typing.Optional[float] = OMIT,
         top_p: typing.Optional[float] = OMIT,
-        repetition_penalty: typing.Optional[float] = OMIT,
-        length_penalty: typing.Optional[float] = OMIT,
-        min_p: typing.Optional[float] = OMIT,
+        tools: typing.Optional[typing.Sequence[ToolsFunctionTool]] = OMIT,
+        tool_choice: typing.Optional[ChatChatInputDataToolChoice] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ChatRouteGenerateResponse:
         """
@@ -2695,9 +2695,6 @@ class JulepApi:
         ----------
         id : CommonUuid
             The session ID
-
-        messages : typing.Sequence[EntriesInputChatMlMessage]
-            A list of new input messages comprising the conversation so far.
 
         recall : bool
             Whether previous memories should be recalled or not (will be enabled in a future release)
@@ -2711,11 +2708,8 @@ class JulepApi:
         stream : bool
             Indicates if the server should stream the response as it's generated
 
-        tools : typing.Optional[typing.Sequence[ToolsFunctionTool]]
-            (Advanced) List of tools that are provided in addition to agent's default set of tools.
-
-        tool_choice : typing.Optional[ChatChatInputToolChoice]
-            Can be one of existing tools given to the agent earlier or the ones provided in this request.
+        messages : typing.Sequence[EntriesInputChatMlMessage]
+            A list of new input messages comprising the conversation so far.
 
         model : typing.Optional[CommonIdentifierSafeUnicode]
             Identifier of the model to be used
@@ -2741,6 +2735,15 @@ class JulepApi:
         preset : typing.Optional[ChatGenerationPreset]
             Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
 
+        repetition_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        length_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+
+        min_p : typing.Optional[float]
+            Minimum probability compared to leading token to be considered
+
         frequency_penalty : typing.Optional[float]
             Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
 
@@ -2753,14 +2756,11 @@ class JulepApi:
         top_p : typing.Optional[float]
             Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
 
-        repetition_penalty : typing.Optional[float]
-            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+        tools : typing.Optional[typing.Sequence[ToolsFunctionTool]]
+            (Advanced) List of tools that are provided in addition to agent's default set of tools.
 
-        length_penalty : typing.Optional[float]
-            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-
-        min_p : typing.Optional[float]
-            Minimum probability compared to leading token to be considered
+        tool_choice : typing.Optional[ChatChatInputDataToolChoice]
+            Can be one of existing tools given to the agent earlier or the ones provided in this request.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -2797,9 +2797,6 @@ class JulepApi:
             f"sessions/{jsonable_encoder(id)}/chat",
             method="POST",
             json={
-                "messages": messages,
-                "tools": tools,
-                "tool_choice": tool_choice,
                 "recall": recall,
                 "remember": remember,
                 "save": save,
@@ -2812,13 +2809,16 @@ class JulepApi:
                 "response_format": response_format,
                 "agent": agent,
                 "preset": preset,
+                "repetition_penalty": repetition_penalty,
+                "length_penalty": length_penalty,
+                "min_p": min_p,
                 "frequency_penalty": frequency_penalty,
                 "presence_penalty": presence_penalty,
                 "temperature": temperature,
                 "top_p": top_p,
-                "repetition_penalty": repetition_penalty,
-                "length_penalty": length_penalty,
-                "min_p": min_p,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
             },
             request_options=request_options,
             omit=OMIT,
@@ -6548,13 +6548,11 @@ class AsyncJulepApi:
         self,
         id: CommonUuid,
         *,
-        messages: typing.Sequence[EntriesInputChatMlMessage],
         recall: bool,
         remember: bool,
         save: bool,
         stream: bool,
-        tools: typing.Optional[typing.Sequence[ToolsFunctionTool]] = OMIT,
-        tool_choice: typing.Optional[ChatChatInputToolChoice] = OMIT,
+        messages: typing.Sequence[EntriesInputChatMlMessage],
         model: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
         stop: typing.Optional[typing.Sequence[str]] = OMIT,
         seed: typing.Optional[int] = OMIT,
@@ -6563,13 +6561,15 @@ class AsyncJulepApi:
         response_format: typing.Optional[ChatCompletionResponseFormat] = OMIT,
         agent: typing.Optional[CommonUuid] = OMIT,
         preset: typing.Optional[ChatGenerationPreset] = OMIT,
+        repetition_penalty: typing.Optional[float] = OMIT,
+        length_penalty: typing.Optional[float] = OMIT,
+        min_p: typing.Optional[float] = OMIT,
         frequency_penalty: typing.Optional[float] = OMIT,
         presence_penalty: typing.Optional[float] = OMIT,
         temperature: typing.Optional[float] = OMIT,
         top_p: typing.Optional[float] = OMIT,
-        repetition_penalty: typing.Optional[float] = OMIT,
-        length_penalty: typing.Optional[float] = OMIT,
-        min_p: typing.Optional[float] = OMIT,
+        tools: typing.Optional[typing.Sequence[ToolsFunctionTool]] = OMIT,
+        tool_choice: typing.Optional[ChatChatInputDataToolChoice] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ChatRouteGenerateResponse:
         """
@@ -6579,9 +6579,6 @@ class AsyncJulepApi:
         ----------
         id : CommonUuid
             The session ID
-
-        messages : typing.Sequence[EntriesInputChatMlMessage]
-            A list of new input messages comprising the conversation so far.
 
         recall : bool
             Whether previous memories should be recalled or not (will be enabled in a future release)
@@ -6595,11 +6592,8 @@ class AsyncJulepApi:
         stream : bool
             Indicates if the server should stream the response as it's generated
 
-        tools : typing.Optional[typing.Sequence[ToolsFunctionTool]]
-            (Advanced) List of tools that are provided in addition to agent's default set of tools.
-
-        tool_choice : typing.Optional[ChatChatInputToolChoice]
-            Can be one of existing tools given to the agent earlier or the ones provided in this request.
+        messages : typing.Sequence[EntriesInputChatMlMessage]
+            A list of new input messages comprising the conversation so far.
 
         model : typing.Optional[CommonIdentifierSafeUnicode]
             Identifier of the model to be used
@@ -6625,6 +6619,15 @@ class AsyncJulepApi:
         preset : typing.Optional[ChatGenerationPreset]
             Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
 
+        repetition_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        length_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+
+        min_p : typing.Optional[float]
+            Minimum probability compared to leading token to be considered
+
         frequency_penalty : typing.Optional[float]
             Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
 
@@ -6637,14 +6640,11 @@ class AsyncJulepApi:
         top_p : typing.Optional[float]
             Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
 
-        repetition_penalty : typing.Optional[float]
-            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+        tools : typing.Optional[typing.Sequence[ToolsFunctionTool]]
+            (Advanced) List of tools that are provided in addition to agent's default set of tools.
 
-        length_penalty : typing.Optional[float]
-            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-
-        min_p : typing.Optional[float]
-            Minimum probability compared to leading token to be considered
+        tool_choice : typing.Optional[ChatChatInputDataToolChoice]
+            Can be one of existing tools given to the agent earlier or the ones provided in this request.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -6689,9 +6689,6 @@ class AsyncJulepApi:
             f"sessions/{jsonable_encoder(id)}/chat",
             method="POST",
             json={
-                "messages": messages,
-                "tools": tools,
-                "tool_choice": tool_choice,
                 "recall": recall,
                 "remember": remember,
                 "save": save,
@@ -6704,13 +6701,16 @@ class AsyncJulepApi:
                 "response_format": response_format,
                 "agent": agent,
                 "preset": preset,
+                "repetition_penalty": repetition_penalty,
+                "length_penalty": length_penalty,
+                "min_p": min_p,
                 "frequency_penalty": frequency_penalty,
                 "presence_penalty": presence_penalty,
                 "temperature": temperature,
                 "top_p": top_p,
-                "repetition_penalty": repetition_penalty,
-                "length_penalty": length_penalty,
-                "min_p": min_p,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
             },
             request_options=request_options,
             omit=OMIT,

@@ -3818,14 +3818,6 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**messages:** `typing.Sequence[EntriesInputChatMlMessage]` — A list of new input messages comprising the conversation so far.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
 **recall:** `bool` — Whether previous memories should be recalled or not (will be enabled in a future release)
     
 </dd>
@@ -3858,15 +3850,7 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**tools:** `typing.Optional[typing.Sequence[ToolsFunctionTool]]` — (Advanced) List of tools that are provided in addition to agent's default set of tools.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**tool_choice:** `typing.Optional[ChatChatInputToolChoice]` — Can be one of existing tools given to the agent earlier or the ones provided in this request.
+**messages:** `typing.Sequence[EntriesInputChatMlMessage]` — A list of new input messages comprising the conversation so far.
     
 </dd>
 </dl>
@@ -3938,6 +3922,30 @@ client.chat_route_generate(
 <dl>
 <dd>
 
+**repetition_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**length_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**min_p:** `typing.Optional[float]` — Minimum probability compared to leading token to be considered
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
 **frequency_penalty:** `typing.Optional[float]` — Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
     
 </dd>
@@ -3970,7 +3978,7 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**repetition_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+**tools:** `typing.Optional[typing.Sequence[ToolsFunctionTool]]` — (Advanced) List of tools that are provided in addition to agent's default set of tools.
     
 </dd>
 </dl>
@@ -3978,15 +3986,7 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**length_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**min_p:** `typing.Optional[float]` — Minimum probability compared to leading token to be considered
+**tool_choice:** `typing.Optional[ChatChatInputDataToolChoice]` — Can be one of existing tools given to the agent earlier or the ones provided in this request.
     
 </dd>
 </dl>

@@ -5,33 +5,23 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .chat_generation_preset import ChatGenerationPreset
-from .chat_open_ai_settings import ChatOpenAiSettings
+from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 
 
-class ChatDefaultChatSettings(ChatOpenAiSettings):
+class UsersCreateUserRequest(pydantic_v1.BaseModel):
     """
-    Default settings for the chat session (also used by the agent)
-    """
-
-    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    Payload for creating a user (and associated documents)
     """
 
-    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
+    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
     """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-
-    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    Name of the user
     """
 
-    min_p: typing.Optional[float] = pydantic_v1.Field(default=None)
+    about: str = pydantic_v1.Field()
     """
-    Minimum probability compared to leading token to be considered
+    About the user
     """
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -62,7 +52,5 @@ class ChatDefaultChatSettings(ChatOpenAiSettings):
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
-        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

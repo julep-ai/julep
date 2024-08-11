@@ -5,23 +5,27 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 
 
-class UsersUpdateUserRequest(pydantic_v1.BaseModel):
+class ChatOpenAiSettings(pydantic_v1.BaseModel):
+    frequency_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
     """
-    Payload for updating a user
-    """
-
-    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
-    name: CommonIdentifierSafeUnicode = pydantic_v1.Field()
-    """
-    Name of the user
+    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
     """
 
-    about: str = pydantic_v1.Field()
+    presence_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
     """
-    About the user
+    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    """
+
+    temperature: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+    """
+
+    top_p: typing.Optional[float] = pydantic_v1.Field(default=None)
+    """
+    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
     """
 
     def json(self, **kwargs: typing.Any) -> str:

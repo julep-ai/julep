@@ -10,7 +10,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from .Chat import ChatSettings
 from .Entries import InputChatMLMessage
-from .Tools import FunctionDef
+from .Tools import CreateToolRequest
 
 
 class BaseWorkflowStep(BaseModel):
@@ -218,7 +218,7 @@ class Task(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class TaskTool(BaseModel):
+class TaskTool(CreateToolRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -226,18 +226,6 @@ class TaskTool(BaseModel):
     """
     Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
-    """
-    Name of the tool (must be unique for this agent and a valid python identifier string )
-    """
-    function: FunctionDef | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
 
 
 class ToolCallStep(BaseWorkflowStep):

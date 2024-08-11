@@ -90,6 +90,40 @@ class CreateAgentRequest(BaseModel):
     """
 
 
+class CreateOrUpdateAgentRequest(CreateAgentRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    metadata: dict[str, Any] | None = None
+    name: Annotated[
+        str,
+        Field(
+            "",
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Name of the agent
+    """
+    about: str = ""
+    """
+    About the agent
+    """
+    model: str = ""
+    """
+    Model name to use (gpt-4-turbo, gemini-nano etc)
+    """
+    instructions: str | list[str] = ""
+    """
+    Instructions for the agent
+    """
+    default_settings: DefaultChatSettings | None = None
+    """
+    Default settings for all sessions created by this agent
+    """
+
+
 class PatchAgentRequest(BaseModel):
     """
     Payload for patching a agent

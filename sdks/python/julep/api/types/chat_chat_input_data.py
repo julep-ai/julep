@@ -5,33 +5,29 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .chat_generation_preset import ChatGenerationPreset
-from .chat_open_ai_settings import ChatOpenAiSettings
+from .chat_chat_input_data_tool_choice import ChatChatInputDataToolChoice
+from .entries_input_chat_ml_message import EntriesInputChatMlMessage
+from .tools_function_tool import ToolsFunctionTool
 
 
-class ChatDefaultChatSettings(ChatOpenAiSettings):
+class ChatChatInputData(pydantic_v1.BaseModel):
+    messages: typing.List[EntriesInputChatMlMessage] = pydantic_v1.Field()
     """
-    Default settings for the chat session (also used by the agent)
-    """
-
-    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    A list of new input messages comprising the conversation so far.
     """
 
-    repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
+    tools: typing.Optional[typing.List[ToolsFunctionTool]] = pydantic_v1.Field(
+        default=None
+    )
     """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-
-    length_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    (Advanced) List of tools that are provided in addition to agent's default set of tools.
     """
 
-    min_p: typing.Optional[float] = pydantic_v1.Field(default=None)
+    tool_choice: typing.Optional[ChatChatInputDataToolChoice] = pydantic_v1.Field(
+        default=None
+    )
     """
-    Minimum probability compared to leading token to be considered
+    Can be one of existing tools given to the agent earlier or the ones provided in this request.
     """
 
     def json(self, **kwargs: typing.Any) -> str:
@@ -62,7 +58,5 @@ class ChatDefaultChatSettings(ChatOpenAiSettings):
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
-        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

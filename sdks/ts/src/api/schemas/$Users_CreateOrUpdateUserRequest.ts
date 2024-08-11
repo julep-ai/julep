@@ -2,6 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Users_CreateOrUpdateUserRequest_id = {
+export const $Users_CreateOrUpdateUserRequest = {
   type: "Common_uuid",
 } as const;

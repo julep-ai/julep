@@ -14,6 +14,7 @@ from .agents_create_agent_request import AgentsCreateAgentRequest
 from .agents_create_agent_request_instructions import (
     AgentsCreateAgentRequestInstructions,
 )
+from .agents_create_or_update_agent_request import AgentsCreateOrUpdateAgentRequest
 from .agents_docs_search_route_search_request_body import (
     AgentsDocsSearchRouteSearchRequestBody,
 )
@@ -28,7 +29,8 @@ from .agents_update_agent_request_instructions import (
 from .chat_base_chat_output import ChatBaseChatOutput
 from .chat_base_chat_response import ChatBaseChatResponse
 from .chat_base_token_log_prob import ChatBaseTokenLogProb
-from .chat_chat_input_tool_choice import ChatChatInputToolChoice
+from .chat_chat_input_data import ChatChatInputData
+from .chat_chat_input_data_tool_choice import ChatChatInputDataToolChoice
 from .chat_chat_output_chunk import ChatChatOutputChunk
 from .chat_chat_settings import ChatChatSettings
 from .chat_chunk_chat_response import ChatChunkChatResponse
@@ -42,6 +44,7 @@ from .chat_log_prob_response import ChatLogProbResponse
 from .chat_message_chat_response import ChatMessageChatResponse
 from .chat_message_chat_response_choices_item import ChatMessageChatResponseChoicesItem
 from .chat_multiple_chat_output import ChatMultipleChatOutput
+from .chat_open_ai_settings import ChatOpenAiSettings
 from .chat_route_generate_response import ChatRouteGenerateResponse
 from .chat_single_chat_output import ChatSingleChatOutput
 from .chat_token_log_prob import ChatTokenLogProb
@@ -129,6 +132,9 @@ from .executions_update_execution_request import (
 from .jobs_job_state import JobsJobState
 from .jobs_job_status import JobsJobStatus
 from .sessions_context_overflow_type import SessionsContextOverflowType
+from .sessions_create_or_update_session_request import (
+    SessionsCreateOrUpdateSessionRequest,
+)
 from .sessions_create_session_request import SessionsCreateSessionRequest
 from .sessions_multi_agent_multi_user_session import SessionsMultiAgentMultiUserSession
 from .sessions_multi_agent_no_user_session import SessionsMultiAgentNoUserSession
@@ -221,6 +227,7 @@ from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 from .tasks_yield_step import TasksYieldStep
 from .tools_chosen_function_call import ToolsChosenFunctionCall
 from .tools_chosen_tool_call import ToolsChosenToolCall, ToolsChosenToolCall_Function
+from .tools_create_tool_request import ToolsCreateToolRequest
 from .tools_function_call_option import ToolsFunctionCallOption
 from .tools_function_def import ToolsFunctionDef
 from .tools_function_tool import ToolsFunctionTool
@@ -235,10 +242,11 @@ from .user_docs_route_list_response import UserDocsRouteListResponse
 from .user_docs_search_route_search_request_body import (
     UserDocsSearchRouteSearchRequestBody,
 )
+from .users_create_or_update_user_request import UsersCreateOrUpdateUserRequest
+from .users_create_user_request import UsersCreateUserRequest
 from .users_route_list_request_direction import UsersRouteListRequestDirection
 from .users_route_list_request_sort_by import UsersRouteListRequestSortBy
 from .users_route_list_response import UsersRouteListResponse
-from .users_update_user_request import UsersUpdateUserRequest
 from .users_user import UsersUser
 
 __all__ = [
@@ -252,6 +260,7 @@ __all__ = [
     "AgentsAgentInstructions",
     "AgentsCreateAgentRequest",
     "AgentsCreateAgentRequestInstructions",
+    "AgentsCreateOrUpdateAgentRequest",
     "AgentsDocsSearchRouteSearchRequestBody",
     "AgentsPatchAgentRequestInstructions",
     "AgentsRouteListRequestDirection",
@@ -262,7 +271,8 @@ __all__ = [
     "ChatBaseChatOutput",
     "ChatBaseChatResponse",
     "ChatBaseTokenLogProb",
-    "ChatChatInputToolChoice",
+    "ChatChatInputData",
+    "ChatChatInputDataToolChoice",
     "ChatChatOutputChunk",
     "ChatChatSettings",
     "ChatChunkChatResponse",
@@ -276,6 +286,7 @@ __all__ = [
     "ChatMessageChatResponse",
     "ChatMessageChatResponseChoicesItem",
     "ChatMultipleChatOutput",
+    "ChatOpenAiSettings",
     "ChatRouteGenerateResponse",
     "ChatSingleChatOutput",
     "ChatTokenLogProb",
@@ -347,6 +358,7 @@ __all__ = [
     "JobsJobState",
     "JobsJobStatus",
     "SessionsContextOverflowType",
+    "SessionsCreateOrUpdateSessionRequest",
     "SessionsCreateSessionRequest",
     "SessionsMultiAgentMultiUserSession",
     "SessionsMultiAgentNoUserSession",
@@ -420,6 +432,7 @@ __all__ = [
     "ToolsChosenFunctionCall",
     "ToolsChosenToolCall",
     "ToolsChosenToolCall_Function",
+    "ToolsCreateToolRequest",
     "ToolsFunctionCallOption",
     "ToolsFunctionDef",
     "ToolsFunctionTool",
@@ -434,9 +447,10 @@ __all__ = [
     "UserDocsRouteListRequestSortBy",
     "UserDocsRouteListResponse",
     "UserDocsSearchRouteSearchRequestBody",
+    "UsersCreateOrUpdateUserRequest",
+    "UsersCreateUserRequest",
     "UsersRouteListRequestDirection",
     "UsersRouteListRequestSortBy",
     "UsersRouteListResponse",
-    "UsersUpdateUserRequest",
     "UsersUser",
 ]

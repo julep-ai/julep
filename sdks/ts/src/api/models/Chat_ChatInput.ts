@@ -2,27 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Chat_ChatInputData } from "./Chat_ChatInputData";
 import type { Chat_CompletionResponseFormat } from "./Chat_CompletionResponseFormat";
 import type { Chat_GenerationPreset } from "./Chat_GenerationPreset";
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_logit_bias } from "./Common_logit_bias";
 import type { Common_uuid } from "./Common_uuid";
-import type { Entries_InputChatMLMessage } from "./Entries_InputChatMLMessage";
-import type { Tools_FunctionTool } from "./Tools_FunctionTool";
-import type { Tools_NamedToolChoice } from "./Tools_NamedToolChoice";
-export type Chat_ChatInput = {
-  /**
-   * A list of new input messages comprising the conversation so far.
-   */
-  messages: Array<Entries_InputChatMLMessage>;
-  /**
-   * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-   */
-  tools?: Array<Tools_FunctionTool>;
-  /**
-   * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-   */
-  tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
+export type Chat_ChatInput = Chat_ChatInputData & {
   /**
    * Whether previous memories should be recalled or not (will be enabled in a future release)
    */
@@ -72,6 +58,18 @@ export type Chat_ChatInput = {
    */
   preset?: Chat_GenerationPreset;
   /**
+   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+   */
+  repetition_penalty?: number;
+  /**
+   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+   */
+  length_penalty?: number;
+  /**
+   * Minimum probability compared to leading token to be considered
+   */
+  min_p?: number;
+  /**
    * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
    */
   frequency_penalty?: number;
@@ -87,16 +85,4 @@ export type Chat_ChatInput = {
    * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
    */
   top_p?: number;
-  /**
-   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-   */
-  repetition_penalty?: number;
-  /**
-   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-   */
-  length_penalty?: number;
-  /**
-   * Minimum probability compared to leading token to be considered
-   */
-  min_p?: number;
 };

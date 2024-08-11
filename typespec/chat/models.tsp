@@ -140,15 +140,13 @@ model vLLMSettings {
 }
 
 /** Default settings for the chat session (also used by the agent) */
-model DefaultChatSettings {
+model DefaultChatSettings extends OpenAISettings {
     ...GenerationPresetSettings;
-    ...OpenAISettings;
     ...vLLMSettings;
 }
 
-model ChatSettings {
+model ChatSettings extends DefaultChatSettings {
     ...CommonChatSettings;
-    ...DefaultChatSettings;
 }
 
 /** Usage statistics for the completion request */
@@ -179,8 +177,7 @@ model ChatInputData {
     tool_choice?: ToolChoiceOption;
 }
 
-model ChatInput {
-    ...ChatInputData;
+model ChatInput extends ChatInputData {
     ...MemoryAccessOptions;
     ...ChatSettings;
 }

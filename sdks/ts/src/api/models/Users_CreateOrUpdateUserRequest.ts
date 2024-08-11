@@ -3,4 +3,4 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_uuid } from "./Common_uuid";
-export type Users_CreateOrUpdateUserRequest_id = Common_uuid;
+export type Users_CreateOrUpdateUserRequest = Common_uuid;

@@ -4,6 +4,6 @@ import typing
 
 from .tools_named_tool_choice import ToolsNamedToolChoice
 
-ChatChatInputToolChoice = typing.Union[
+ChatChatInputDataToolChoice = typing.Union[
     typing.Literal["auto"], typing.Literal["none"], ToolsNamedToolChoice
 ]
