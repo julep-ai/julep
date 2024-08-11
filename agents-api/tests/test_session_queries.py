@@ -157,16 +157,11 @@ def _(
     tool=test_tool,
     user=test_user,
 ):
-    try:
-        context = prepare_chat_context(
-            developer_id=developer_id,
-            session_id=session.id,
-            client=client,
-        )
-    except Exception as e:
-        print(repr(e.__cause__))
-        raise
+    context = prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        client=client,
+    )
 
     assert isinstance(context, ChatContext)
-    assert len(context.entries) > 0
     assert len(context.toolsets) > 0

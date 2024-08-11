@@ -7,11 +7,9 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import make_session
 from ...common.protocol.sessions import ChatContext
-from ..entry.list_entries import list_entries
 from ..utils import (
     cozo_query,
     fix_uuid_if_present,
-    make_cozo_json_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
@@ -44,7 +42,7 @@ from .prepare_session_data import prepare_session_data
         ],
     },
 )
-@cozo_query(debug=True)
+@cozo_query
 @beartype
 def prepare_chat_context(
     *,
@@ -105,30 +103,10 @@ def prepare_chat_context(
     }
     """
 
-    [*_, entries_query], e_vars = list_entries.__wrapped__(
-        developer_id=developer_id,
-        session_id=session_id,
-        allowed_sources=["api_request", "api_response", "summarizer"],
-        exclude_relations=["summary_of"],
-    )
-
-    entries_fields = ("source", "role", "name", "content", "token_count", "timestamp")
-
-    entries_query += f"""
-        :create _entries {{
-            {', '.join(entries_fields)}
-        }}
-    """
-
     combine_query = f"""
-        entries_json[collect(entry)] :=
-            *_entries {{ {', '.join(entries_fields)} }},
-            entry = {{ {make_cozo_json_query(entries_fields)} }}
-
-        ?[{', '.join(session_data_fields)}, toolsets, entries] :=
+        ?[{', '.join(session_data_fields)}, toolsets] :=
             *_session_data_json {{ {', '.join(session_data_fields)} }},
-            *_toolsets_json {{ toolsets }},
-            entries_json[entries]
+            *_toolsets_json {{ toolsets }}
     """
 
     queries = [
@@ -137,7 +115,6 @@ def prepare_chat_context(
             developer_id, "sessions", session_id=session_id
         ),
         session_data_query,
-        entries_query,
         toolsets_query,
         combine_query,
     ]
@@ -147,6 +124,5 @@ def prepare_chat_context(
         {
             "session_id": str(session_id),
             **sd_vars,
-            **e_vars,
         },
     )

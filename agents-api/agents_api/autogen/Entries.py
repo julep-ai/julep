@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
 
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
@@ -130,7 +130,7 @@ class History(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    entries: list[BaseEntry]
+    entries: list[Entry]
     relations: list[Relation]
     session_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]

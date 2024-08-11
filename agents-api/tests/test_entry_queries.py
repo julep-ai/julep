@@ -10,6 +10,7 @@ from ward import test
 from agents_api.autogen.openapi_model import CreateEntryRequest
 from agents_api.models.entry.create_entries import create_entries
 from agents_api.models.entry.delete_entries import delete_entries
+from agents_api.models.entry.get_history import get_history
 from agents_api.models.entry.list_entries import list_entries
 from tests.fixtures import cozo_client, test_developer_id, test_session
 
@@ -74,6 +75,45 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
 
     # Asserts that only one entry is retrieved, matching the session_id.
     assert len(result) == 1
+
+
+@test("model: get history")
+def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
+    """
+    Tests the retrieval of entries from the database.
+    Verifies that entries matching specific criteria can be successfully retrieved.
+    """
+
+    test_entry = CreateEntryRequest(
+        session_id=session.id,
+        role="user",
+        source="api_request",
+        content="test entry content",
+    )
+
+    internal_entry = CreateEntryRequest(
+        session_id=session.id,
+        role="user",
+        content="test entry content",
+        source="internal",
+    )
+
+    create_entries(
+        developer_id=developer_id,
+        session_id=session.id,
+        data=[test_entry, internal_entry],
+        client=client,
+    )
+
+    result = get_history(
+        developer_id=developer_id,
+        session_id=session.id,
+        client=client,
+    )
+
+    # Asserts that only one entry is retrieved, matching the session_id.
+    assert len(result.entries) > 0
+    assert result.entries[0].id
 
 
 @test("model: delete entries")

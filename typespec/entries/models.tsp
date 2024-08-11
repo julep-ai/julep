@@ -112,7 +112,7 @@ model Relation {
 }
 
 model History {
-    entries: BaseEntry[];
+    entries: Entry[];
     relations: Relation[];
     session_id: Session.id;
 

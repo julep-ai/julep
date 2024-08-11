@@ -8,8 +8,11 @@ from starlette.status import HTTP_201_CREATED
 from ...autogen.openapi_model import (
     ChatInput,
     ChatResponse,
+    History,
 )
+from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_id
+from ...models.entry.get_history import get_history
 from ...models.session.prepare_chat_context import prepare_chat_context
 from .router import router
 
@@ -31,6 +34,37 @@ async def chat(
         session_id=session_id,
     )
 
-    # Then, use the chat context to chat
+    # Merge the settings and prepare environment
+    request_settings = data.settings
+    chat_context.merge_settings(request_settings)
 
-    print(chat_context)
+    env: dict = chat_context.get_chat_environment()
+
+    # Get the session history
+    history: History = get_history(
+        developer_id=x_developer_id,
+        session_id=session_id,
+        allowed_sources=["api_request", "api_response", "tool_response", "summarizer"],
+    )
+
+    # Keep leaf nodes only
+    relations = history.relations
+    past_entries = [
+        entry.model_dump()
+        for entry in history.entries
+        if entry.id not in {r.head for r in relations}
+    ]
+
+    past_messages = render_template(past_entries, variables=env)
+
+    messages = past_messages + [msg.model_dump() for msg in data.messages]
+
+    # TODO: Implement the chat logic here
+    print(messages)
+
+    # Get the response from the model
+
+    # Save the input and the response to the session history
+
+    # Return the response
+    raise NotImplementedError()
