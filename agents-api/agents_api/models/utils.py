@@ -64,6 +64,28 @@ def partialclass(cls, *args, **kwargs):
     return NewCls
 
 
+def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str) -> str:
+    return f"""
+    input[developer_id, session_id] <- [[
+        to_uuid("{str(developer_id)}"),
+        to_uuid("{str(session_id)}"),
+    ]]
+
+    ?[developer_id, session_id, updated_at] :=
+        input[developer_id, session_id],
+        *sessions {{
+            session_id,
+        }},
+        updated_at = [floor(now()), true]
+
+    :update sessions {{
+        developer_id,
+        session_id,
+        updated_at,
+    }}
+    """
+
+
 def verify_developer_id_query(developer_id: UUID | str) -> str:
     return f"""
     matched[count(developer_id)] :=
