@@ -100,7 +100,6 @@ def search_docs_hybrid(
     alpha: float = 0.7,  # Weight of the embedding search results (this is a good default)
     embed_search_options: dict = {},
     text_search_options: dict = {},
-    **kwargs,
 ) -> list[DocReference]:
     # TODO: We should probably parallelize these queries
     text_results = search_docs_by_text(
@@ -110,7 +109,6 @@ def search_docs_hybrid(
         query=query,
         k=2 * k,
         **text_search_options,
-        **kwargs,
     )
 
     embedding_results = search_docs_by_embedding(
@@ -120,7 +118,6 @@ def search_docs_hybrid(
         query_embedding=query_embedding,
         k=2 * k,
         **embed_search_options,
-        **kwargs,
     )
 
     return dbsf_fuse(text_results, embedding_results, alpha)[:k]

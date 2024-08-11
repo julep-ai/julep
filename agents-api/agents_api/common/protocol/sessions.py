@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from ...autogen.openapi_model import (
     Agent,
+    ChatInput,
     ChatSettings,
     Session,
     Tool,
@@ -65,16 +66,19 @@ class ChatContext(SessionData):
 
         return self.agents[0]
 
-    def merge_settings(self, request_settings: ChatSettings):
+    def merge_settings(self, chat_input: ChatInput) -> ChatSettings:
+        request_settings = ChatSettings.model_validate(chat_input)
         active_agent = self.get_active_agent()
         default_settings = active_agent.default_settings
 
-        self.settings = ChatSettings(
+        self.settings = settings = ChatSettings(
             **{
                 **default_settings.model_dump(),
                 **request_settings.model_dump(exclude_unset=True),
             }
         )
+
+        return settings
 
     def get_active_tools(self) -> list[Tool]:
         """
