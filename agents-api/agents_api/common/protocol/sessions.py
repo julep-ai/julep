@@ -73,6 +73,7 @@ class ChatContext(SessionData):
 
         self.settings = settings = ChatSettings(
             **{
+                "model": active_agent.model,
                 **default_settings.model_dump(),
                 **request_settings.model_dump(exclude_unset=True),
             }

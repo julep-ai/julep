@@ -131,7 +131,6 @@ jobs:
         service-directory:
           - gateway
           - memory-store
-          # - model-serving
 
     steps:
       - uses: actions/checkout@v4

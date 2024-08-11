@@ -6,7 +6,6 @@ from typing import Callable
 from uuid import UUID
 
 import pandas as pd
-from litellm import acompletion
 from temporalio import activity
 
 from agents_api.common.protocol.entries import Entry
@@ -19,8 +18,8 @@ from agents_api.rec_sum.entities import get_entities
 from agents_api.rec_sum.summarize import summarize_messages
 from agents_api.rec_sum.trim import trim_messages
 
-from ..env import model_api_key, model_inference_url, summarization_model_name
-from ..model_registry import LOCAL_MODELS
+from ..clients.litellm import acompletion
+from ..env import summarization_model_name
 
 
 # TODO: remove stubs
@@ -149,12 +148,6 @@ async def run_prompt(
     parser: Callable[[str], str] = lambda x: x,
     **kwargs,
 ) -> str:
-    api_base = None
-    api_key = None
-    if model in LOCAL_MODELS:
-        api_base = model_inference_url
-        api_key = model_api_key
-        model = f"openai/{model}"
     prompt = make_prompt(dialog, previous_memories, **kwargs)
     response = await acompletion(
         model=model,
@@ -168,8 +161,6 @@ async def run_prompt(
         temperature=temperature,
         stop=["<", "<|"],
         stream=False,
-        api_base=api_base,
-        api_key=api_key,
     )
 
     content = response.choices[0].message.content
