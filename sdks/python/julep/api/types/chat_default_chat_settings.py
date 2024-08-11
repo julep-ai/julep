@@ -5,18 +5,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .chat_generation_preset import ChatGenerationPreset
 from .chat_open_ai_settings import ChatOpenAiSettings
 
 
 class ChatDefaultChatSettings(ChatOpenAiSettings):
     """
     Default settings for the chat session (also used by the agent)
-    """
-
-    preset: typing.Optional[ChatGenerationPreset] = pydantic_v1.Field(default=None)
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
     """
 
     repetition_penalty: typing.Optional[float] = pydantic_v1.Field(default=None)

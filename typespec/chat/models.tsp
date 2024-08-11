@@ -18,19 +18,6 @@ namespace Chat;
 // CHAT MODELS
 //
 
-/** Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual) */
-enum GenerationPreset {
-    problem_solving,
-    conversational,
-    fun,
-    prose,
-    creative,
-    business,
-    deterministic,
-    code,
-    multilingual,
-}
-
 /**
  * The reason the model stopped generating tokens. This will be `stop`
  * if the model hit a natural stop point or a provided stop sequence,
@@ -95,11 +82,6 @@ model CommonChatSettings {
     agent?: uuid;
 }
 
-model GenerationPresetSettings {
-    /** Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual) */
-    preset?: GenerationPreset;
-}
-
 model OpenAISettings {
     /** Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. */
     @minValue(-2)
@@ -141,7 +123,6 @@ model vLLMSettings {
 
 /** Default settings for the chat session (also used by the agent) */
 model DefaultChatSettings extends OpenAISettings {
-    ...GenerationPresetSettings;
     ...vLLMSettings;
 }
 

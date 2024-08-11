@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { Chat_ChatInputData } from "./Chat_ChatInputData";
 import type { Chat_CompletionResponseFormat } from "./Chat_CompletionResponseFormat";
-import type { Chat_GenerationPreset } from "./Chat_GenerationPreset";
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_logit_bias } from "./Common_logit_bias";
 import type { Common_uuid } from "./Common_uuid";
@@ -53,10 +52,6 @@ export type Chat_ChatInput = Chat_ChatInputData & {
    * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
    */
   agent?: Common_uuid;
-  /**
-   * Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-   */
-  preset?: Chat_GenerationPreset;
   /**
    * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
    */

@@ -39,7 +39,6 @@ from .chat_completion_response_format import ChatCompletionResponseFormat
 from .chat_completion_response_format_type import ChatCompletionResponseFormatType
 from .chat_default_chat_settings import ChatDefaultChatSettings
 from .chat_finish_reason import ChatFinishReason
-from .chat_generation_preset import ChatGenerationPreset
 from .chat_log_prob_response import ChatLogProbResponse
 from .chat_message_chat_response import ChatMessageChatResponse
 from .chat_message_chat_response_choices_item import ChatMessageChatResponseChoicesItem
@@ -281,7 +280,6 @@ __all__ = [
     "ChatCompletionResponseFormatType",
     "ChatDefaultChatSettings",
     "ChatFinishReason",
-    "ChatGenerationPreset",
     "ChatLogProbResponse",
     "ChatMessageChatResponse",
     "ChatMessageChatResponseChoicesItem",

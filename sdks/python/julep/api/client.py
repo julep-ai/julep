@@ -42,7 +42,6 @@ from .types.agents_update_agent_request_instructions import (
 from .types.chat_chat_input_data_tool_choice import ChatChatInputDataToolChoice
 from .types.chat_completion_response_format import ChatCompletionResponseFormat
 from .types.chat_default_chat_settings import ChatDefaultChatSettings
-from .types.chat_generation_preset import ChatGenerationPreset
 from .types.chat_route_generate_response import ChatRouteGenerateResponse
 from .types.common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .types.common_limit import CommonLimit
@@ -2676,7 +2675,6 @@ class JulepApi:
         logit_bias: typing.Optional[typing.Dict[str, CommonLogitBias]] = OMIT,
         response_format: typing.Optional[ChatCompletionResponseFormat] = OMIT,
         agent: typing.Optional[CommonUuid] = OMIT,
-        preset: typing.Optional[ChatGenerationPreset] = OMIT,
         repetition_penalty: typing.Optional[float] = OMIT,
         length_penalty: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
@@ -2731,9 +2729,6 @@ class JulepApi:
 
         agent : typing.Optional[CommonUuid]
             Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-
-        preset : typing.Optional[ChatGenerationPreset]
-            Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
 
         repetition_penalty : typing.Optional[float]
             Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
@@ -2808,7 +2803,6 @@ class JulepApi:
                 "logit_bias": logit_bias,
                 "response_format": response_format,
                 "agent": agent,
-                "preset": preset,
                 "repetition_penalty": repetition_penalty,
                 "length_penalty": length_penalty,
                 "min_p": min_p,
@@ -6560,7 +6554,6 @@ class AsyncJulepApi:
         logit_bias: typing.Optional[typing.Dict[str, CommonLogitBias]] = OMIT,
         response_format: typing.Optional[ChatCompletionResponseFormat] = OMIT,
         agent: typing.Optional[CommonUuid] = OMIT,
-        preset: typing.Optional[ChatGenerationPreset] = OMIT,
         repetition_penalty: typing.Optional[float] = OMIT,
         length_penalty: typing.Optional[float] = OMIT,
         min_p: typing.Optional[float] = OMIT,
@@ -6615,9 +6608,6 @@ class AsyncJulepApi:
 
         agent : typing.Optional[CommonUuid]
             Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-
-        preset : typing.Optional[ChatGenerationPreset]
-            Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
 
         repetition_penalty : typing.Optional[float]
             Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
@@ -6700,7 +6690,6 @@ class AsyncJulepApi:
                 "logit_bias": logit_bias,
                 "response_format": response_format,
                 "agent": agent,
-                "preset": preset,
                 "repetition_penalty": repetition_penalty,
                 "length_penalty": length_penalty,
                 "min_p": min_p,

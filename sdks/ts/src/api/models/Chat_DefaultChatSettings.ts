@@ -2,16 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Chat_GenerationPreset } from "./Chat_GenerationPreset";
 import type { Chat_OpenAISettings } from "./Chat_OpenAISettings";
 /**
  * Default settings for the chat session (also used by the agent)
  */
 export type Chat_DefaultChatSettings = Chat_OpenAISettings & {
-  /**
-   * Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-   */
-  preset?: Chat_GenerationPreset;
   /**
    * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
    */

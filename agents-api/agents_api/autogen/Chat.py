@@ -263,23 +263,6 @@ class ChatInput(ChatInputData):
     """
     Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
     """
-    preset: (
-        Literal[
-            "problem_solving",
-            "conversational",
-            "fun",
-            "prose",
-            "creative",
-            "business",
-            "deterministic",
-            "code",
-            "multilingual",
-        ]
-        | None
-    ) = None
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-    """
     repetition_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
     """
     Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
@@ -318,23 +301,6 @@ class DefaultChatSettings(OpenAISettings):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    preset: (
-        Literal[
-            "problem_solving",
-            "conversational",
-            "fun",
-            "prose",
-            "creative",
-            "business",
-            "deterministic",
-            "code",
-            "multilingual",
-        ]
-        | None
-    ) = None
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-    """
     repetition_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
     """
     Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.

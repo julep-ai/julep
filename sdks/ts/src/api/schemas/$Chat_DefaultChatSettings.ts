@@ -11,15 +11,6 @@ export const $Chat_DefaultChatSettings = {
     },
     {
       properties: {
-        preset: {
-          type: "all-of",
-          description: `Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)`,
-          contains: [
-            {
-              type: "Chat_GenerationPreset",
-            },
-          ],
-        },
         repetition_penalty: {
           type: "number",
           description: `Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.`,
