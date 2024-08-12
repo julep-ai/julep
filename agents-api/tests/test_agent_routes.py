@@ -139,6 +139,7 @@ def _(make_request=make_request, agent=test_agent):
         name="updated agent",
         about="updated agent about",
         default_settings={"temperature": 1.0},
+        model="gpt-4o",
         metadata={"hello": "world"},
     )
 

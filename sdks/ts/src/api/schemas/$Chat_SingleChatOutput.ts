@@ -12,7 +12,7 @@ export const $Chat_SingleChatOutput = {
     {
       properties: {
         message: {
-          type: "Entries_ChatMLMessage",
+          type: "Entries_InputChatMLMessage",
           isRequired: true,
         },
       },

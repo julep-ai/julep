@@ -22,7 +22,7 @@ enum ImageDetail {
 /** ChatML role (system|assistant|user|function_call|function|function_response|auto) */
 enum ChatMLRole {
     user,
-    agent,
+    assistant,
     system,
     function,
     function_response,

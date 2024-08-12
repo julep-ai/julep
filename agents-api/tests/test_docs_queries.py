@@ -10,14 +10,13 @@ from agents_api.models.docs.get_doc import get_doc
 from agents_api.models.docs.list_docs import list_docs
 from agents_api.models.docs.search_docs_by_embedding import search_docs_by_embedding
 from tests.fixtures import (
+    EMBEDDING_SIZE,
     cozo_client,
     test_agent,
     test_developer_id,
     test_doc,
     test_user,
 )
-
-EMBEDDING_SIZE: int = 1024
 
 
 @test("model: create docs")

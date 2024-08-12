@@ -18,6 +18,9 @@ def dbsf_normalize(scores: list[float]) -> list[float]:
     Scores scaled using minmax scaler with our custom feature range
     (extremes indicated as 3 standard deviations from the mean)
     """
+    if len(scores) < 2:
+        return scores
+
     sd = stdev(scores)
     if sd == 0:
         return scores

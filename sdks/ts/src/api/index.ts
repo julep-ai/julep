@@ -64,7 +64,6 @@ export type { Docs_TextOnlyDocSearchRequest } from "./models/Docs_TextOnlyDocSea
 export type { Docs_VectorDocSearchRequest } from "./models/Docs_VectorDocSearchRequest";
 export type { Entries_BaseEntry } from "./models/Entries_BaseEntry";
 export type { Entries_ChatMLImageContentPart } from "./models/Entries_ChatMLImageContentPart";
-export type { Entries_ChatMLMessage } from "./models/Entries_ChatMLMessage";
 export type { Entries_ChatMLRole } from "./models/Entries_ChatMLRole";
 export type { Entries_ChatMLTextContentPart } from "./models/Entries_ChatMLTextContentPart";
 export type { Entries_Entry } from "./models/Entries_Entry";
@@ -183,7 +182,6 @@ export { $Docs_TextOnlyDocSearchRequest } from "./schemas/$Docs_TextOnlyDocSearc
 export { $Docs_VectorDocSearchRequest } from "./schemas/$Docs_VectorDocSearchRequest";
 export { $Entries_BaseEntry } from "./schemas/$Entries_BaseEntry";
 export { $Entries_ChatMLImageContentPart } from "./schemas/$Entries_ChatMLImageContentPart";
-export { $Entries_ChatMLMessage } from "./schemas/$Entries_ChatMLMessage";
 export { $Entries_ChatMLRole } from "./schemas/$Entries_ChatMLRole";
 export { $Entries_ChatMLTextContentPart } from "./schemas/$Entries_ChatMLTextContentPart";
 export { $Entries_Entry } from "./schemas/$Entries_Entry";

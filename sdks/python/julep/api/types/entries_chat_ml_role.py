@@ -5,7 +5,7 @@ import typing
 EntriesChatMlRole = typing.Union[
     typing.Literal[
         "user",
-        "agent",
+        "assistant",
         "system",
         "function",
         "function_response",
