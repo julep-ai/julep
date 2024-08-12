@@ -2,13 +2,11 @@ import asyncio
 from typing import Literal
 from uuid import uuid4
 
-from openai.types.chat.chat_completion import ChatCompletion
 from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (
     CreateTransitionRequest,
-    ErrorWorkflowStep,
     EvaluateStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
@@ -17,6 +15,7 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
     YieldStep,
 )
+from ...clients.litellm import acompletion
 from ...clients.worker.types import ChatML
 from ...common.protocol.tasks import (
     StepContext,
@@ -29,28 +28,6 @@ from ...models.execution.create_execution_transition import (
 from ...models.execution.update_execution import (
     update_execution as update_execution_query,
 )
-
-# from ...routers.sessions.protocol import Settings
-# from ...routers.sessions.session import llm_generate
-
-
-# TODO: remove stubs
-class Settings:
-    def __init__(self, *args, **kwargs):
-        pass
-
-
-def llm_generate(*args, **kwargs):
-    return ChatCompletion(
-        id="",
-        choices=[],
-        created=0,
-        model="",
-        object="chat.completion",
-    )
-
-
-#
 
 
 @activity.defn
@@ -79,16 +56,14 @@ async def prompt_step(context: StepContext) -> dict:
         for m in messages
     ]
 
+    settings: dict = context.definition.settings.model_dump()
     # Get settings and run llm
-    response: ChatCompletion = await llm_generate(
-        messages,
-        Settings(
-            model=context.definition.settings.model or "gpt-4-turbo",
-            response_format=None,
-        ),
+    response = await acompletion(
+        messages=messages,
+        **settings,
     )
 
-    return response
+    return response.model_dump()
 
 
 @activity.defn
