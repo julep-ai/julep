@@ -12,6 +12,7 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
 from ..utils import (
     cozo_query,
+    mark_session_updated_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
@@ -41,6 +42,7 @@ def create_entries(
     developer_id: UUID,
     session_id: UUID,
     data: list[CreateEntryRequest],
+    mark_session_as_updated: bool = True,
 ) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     session_id = str(session_id)
@@ -76,6 +78,8 @@ def create_entries(
         verify_developer_owns_resource_query(
             developer_id, "sessions", session_id=session_id
         ),
+        mark_session_as_updated
+        and mark_session_updated_query(developer_id, session_id),
         create_query,
     ]
 

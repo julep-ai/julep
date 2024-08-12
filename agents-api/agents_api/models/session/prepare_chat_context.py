@@ -7,11 +7,9 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import make_session
 from ...common.protocol.sessions import ChatContext
-from ..entry.list_entries import list_entries
-from ..tools.list_tools import list_tools
 from ..utils import (
     cozo_query,
-    make_cozo_json_query,
+    fix_uuid_if_present,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
@@ -38,6 +36,10 @@ from .prepare_session_data import prepare_session_data
             users=[u["id"] for u in d["users"]],
             **d["session"],
         ),
+        "toolsets": [
+            {**ts, "tools": [*map(fix_uuid_if_present, ts["tools"])]}
+            for ts in d["toolsets"]
+        ],
     },
 )
 @cozo_query
@@ -45,19 +47,15 @@ from .prepare_session_data import prepare_session_data
 def prepare_chat_context(
     *,
     developer_id: UUID,
-    agent_id: UUID,
     session_id: UUID,
 ) -> tuple[list[str], dict]:
     """
     Executes a complex query to retrieve memory context based on session ID.
     """
 
-    session_data_query, sd_vars = prepare_session_data.__wrapped__(
+    [*_, session_data_query], sd_vars = prepare_session_data.__wrapped__(
         developer_id=developer_id, session_id=session_id
     )
-
-    # Remove the outer curly braces
-    session_data_query = session_data_query.strip()[1:-1]
 
     session_data_fields = ("session", "agents", "users")
 
@@ -69,52 +67,46 @@ def prepare_chat_context(
         }
     """
 
-    tools_query, t_vars = list_tools.__wrapped__(
-        developer_id=developer_id, agent_id=agent_id
-    )
+    toolsets_query = """
+    input[session_id] <- [[to_uuid($session_id)]]
 
-    # Remove the outer curly braces
-    tools_query = tools_query.strip()[1:-1]
+    tools_by_agent[agent_id, collect(tool)] :=
+        input[session_id],
+        *session_lookup{
+            session_id,
+            participant_id: agent_id,
+            participant_type: "agent",
+        },
 
-    tools_fields = ("name", "type", "spec")
+        *tools { agent_id, tool_id, name, type, spec, updated_at, created_at },
+        tool = {
+            "id": tool_id,
+            "name": name,
+            "type": type,
+            "spec": spec,
+            "updated_at": updated_at,
+            "created_at": created_at,
+        }
 
-    tools_query += f"""
-        :create _tools {{
-            {', '.join(tools_fields)}
-        }}
-    """
+    agent_toolsets[collect(toolset)] :=
+        tools_by_agent[agent_id, tools],
+        toolset = {
+            "agent_id": agent_id,
+            "tools": tools,
+        }
 
-    entries_query, e_vars = list_entries.__wrapped__(
-        developer_id=developer_id,
-        session_id=session_id,
-        allowed_sources=["api_request", "api_response", "summarizer"],
-        exclude_relations=["summary_of"],
-    )
+    ?[toolsets] :=
+        agent_toolsets[toolsets]
 
-    # Remove the outer curly braces
-    entries_query = entries_query.strip()[1:-1]
-
-    entries_fields = ("source", "role", "name", "content", "token_count", "timestamp")
-
-    entries_query += f"""
-        :create _entries {{
-            {', '.join(entries_fields)}
-        }}
+    :create _toolsets_json {
+        toolsets: [Json],
+    }
     """
 
     combine_query = f"""
-        tools_json[collect(tool)] :=
-            *_tools {{ {', '.join(tools_fields)} }},
-            tool = {{ {make_cozo_json_query(tools_fields)} }}
-
-        entries_json[collect(entry)] :=
-            *_entries {{ {', '.join(entries_fields)} }},
-            entry = {{ {make_cozo_json_query(entries_fields)} }}
-
-        ?[{', '.join(session_data_fields)}, tools, entries] :=
+        ?[{', '.join(session_data_fields)}, toolsets] :=
             *_session_data_json {{ {', '.join(session_data_fields)} }},
-            tools_json[tools],
-            entries_json[entries]
+            *_toolsets_json {{ toolsets }}
     """
 
     queries = [
@@ -123,8 +115,7 @@ def prepare_chat_context(
             developer_id, "sessions", session_id=session_id
         ),
         session_data_query,
-        tools_query,
-        entries_query,
+        toolsets_query,
         combine_query,
     ]
 
@@ -133,7 +124,5 @@ def prepare_chat_context(
         {
             "session_id": str(session_id),
             **sd_vars,
-            **t_vars,
-            **e_vars,
         },
     )

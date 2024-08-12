@@ -50,8 +50,8 @@ def test_developer_id(cozo_client=cozo_client):
 
     cozo_client.run(
         f"""
-    ?[developer_id, email] <- [["{str(developer_id)}", "developers@julep.ai"]]
-    :insert developers {{ developer_id, email }}
+    ?[developer_id, email, settings] <- [["{str(developer_id)}", "developers@julep.ai", {{}}]]
+    :insert developers {{ developer_id, email, settings }}
     """
     )
 

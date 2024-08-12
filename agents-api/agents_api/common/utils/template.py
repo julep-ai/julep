@@ -88,6 +88,3 @@ async def render_template(
 
     elif isinstance(template_string, list):
         return await render_template_parts(template_string, variables, check)
-
-    else:
-        raise ValueError("template_string should be str or list[dict]")

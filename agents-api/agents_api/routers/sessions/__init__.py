@@ -1,5 +1,6 @@
 # ruff: noqa: F401
 
+from .chat import chat
 from .create_or_update_session import create_or_update_session
 from .create_session import create_session
 from .delete_session import delete_session

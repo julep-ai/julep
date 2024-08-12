@@ -11,27 +11,24 @@ from environs import Env
 # Initialize the Env object for environment variable parsing.
 env = Env()
 
-# Debug mode
-debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
 
-# Base URL for the COZO service. Defaults to the local development URL if not specified.
+# Debug
+# -----
+debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
+sentry_dsn: str = env.str("SENTRY_DSN", default=None)
+
+
+# Cozo
+# ----
 cozo_host: str = env.str("COZO_HOST", default="http://127.0.0.1:9070")
 cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
-model_api_key: str = env.str("MODEL_API_KEY", default=None)
-model_inference_url: str = env.str("MODEL_INFERENCE_URL", default=None)
-openai_api_key: str = env.str("OPENAI_API_KEY", default="")
 summarization_model_name: str = env.str(
     "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )
-worker_url: str = env.str("WORKER_URL", default=None)
 
-sentry_dsn: str = env.str("SENTRY_DSN", default=None)
 
-# Temporal
-temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
-temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue")
-
-# auth
+# Auth
+# ----
 _random_generated_key = "".join(str(random.randint(0, 9)) for _ in range(32))
 api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
 
@@ -43,44 +40,51 @@ skip_check_developer_headers: bool = env.bool(
     "SKIP_CHECK_DEVELOPER_HEADERS", default=False
 )
 
-embedding_service_url: str = env.str(
-    "EMBEDDING_SERVICE_URL", default="http://0.0.0.0:8083/embed"
+
+# Litellm API
+# -----------
+litellm_url: str = env.str("LITELLM_URL", default="http://0.0.0.0:4000")
+litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
+
+
+# Embedding service
+# -----------------
+embedding_service_base: str = env.str(
+    "EMBEDDING_SERVICE_BASE", default="http://0.0.0.0:8082"
 )
-
-
-embedding_model_id: str = env.str("EMBEDDING_MODEL_ID", default="BAAI/bge-m3")
-
+embedding_model_id: str = env.str(
+    "EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5"
+)
 truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=False)
 
+
 # Temporal
+# --------
 temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:7233")
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
+temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
+temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue")
 
-# Consolidate environment variables into a dictionary for easy access and debugging.
+
+# Consolidate environment variables
 environment = dict(
     debug=debug,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,
-    worker_url=worker_url,
     sentry_dsn=sentry_dsn,
     temporal_endpoint=temporal_endpoint,
     temporal_task_queue=temporal_task_queue,
     api_key=api_key,
     api_key_header_name=api_key_header_name,
     skip_check_developer_headers=skip_check_developer_headers,
-    embedding_service_url=embedding_service_url,
+    embedding_service_base=embedding_service_base,
     truncate_embed_text=truncate_embed_text,
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
-    openai_api_key=openai_api_key,
-    docs_embedding_service_url=embedding_service_url,
     embedding_model_id=embedding_model_id,
 )
-
-if openai_api_key == "":
-    print("OpenAI API key not found. OpenAI API will not be enabled.")
 
 if debug:
     # Print the loaded environment variables for debugging purposes.

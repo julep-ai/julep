@@ -24,17 +24,11 @@ from .types.agent_tools_route_list_request_sort_by import (
 )
 from .types.agent_tools_route_list_response import AgentToolsRouteListResponse
 from .types.agents_agent import AgentsAgent
-from .types.agents_create_agent_request_default_settings import (
-    AgentsCreateAgentRequestDefaultSettings,
-)
 from .types.agents_create_agent_request_instructions import (
     AgentsCreateAgentRequestInstructions,
 )
 from .types.agents_docs_search_route_search_request_body import (
     AgentsDocsSearchRouteSearchRequestBody,
-)
-from .types.agents_patch_agent_request_default_settings import (
-    AgentsPatchAgentRequestDefaultSettings,
 )
 from .types.agents_patch_agent_request_instructions import (
     AgentsPatchAgentRequestInstructions,
@@ -42,16 +36,16 @@ from .types.agents_patch_agent_request_instructions import (
 from .types.agents_route_list_request_direction import AgentsRouteListRequestDirection
 from .types.agents_route_list_request_sort_by import AgentsRouteListRequestSortBy
 from .types.agents_route_list_response import AgentsRouteListResponse
-from .types.agents_update_agent_request_default_settings import (
-    AgentsUpdateAgentRequestDefaultSettings,
-)
 from .types.agents_update_agent_request_instructions import (
     AgentsUpdateAgentRequestInstructions,
 )
-from .types.chat_route_generate_request import ChatRouteGenerateRequest
+from .types.chat_chat_input_data_tool_choice import ChatChatInputDataToolChoice
+from .types.chat_completion_response_format import ChatCompletionResponseFormat
+from .types.chat_default_chat_settings import ChatDefaultChatSettings
 from .types.chat_route_generate_response import ChatRouteGenerateResponse
 from .types.common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 from .types.common_limit import CommonLimit
+from .types.common_logit_bias import CommonLogitBias
 from .types.common_offset import CommonOffset
 from .types.common_resource_created_response import CommonResourceCreatedResponse
 from .types.common_resource_deleted_response import CommonResourceDeletedResponse
@@ -64,6 +58,7 @@ from .types.docs_doc_search_response import DocsDocSearchResponse
 from .types.docs_embed_query_request import DocsEmbedQueryRequest
 from .types.docs_embed_query_response import DocsEmbedQueryResponse
 from .types.entries_history import EntriesHistory
+from .types.entries_input_chat_ml_message import EntriesInputChatMlMessage
 from .types.execution_transitions_route_list_request_direction import (
     ExecutionTransitionsRouteListRequestDirection,
 )
@@ -98,6 +93,7 @@ from .types.tasks_route_list_response import TasksRouteListResponse
 from .types.tasks_task_tool import TasksTaskTool
 from .types.tasks_update_task_request_main_item import TasksUpdateTaskRequestMainItem
 from .types.tools_function_def import ToolsFunctionDef
+from .types.tools_function_tool import ToolsFunctionTool
 from .types.tools_tool_type import ToolsToolType
 from .types.user_docs_route_list_request_direction import (
     UserDocsRouteListRequestDirection,
@@ -269,9 +265,7 @@ class JulepApi:
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceCreatedResponse:
         """
@@ -293,7 +287,7 @@ class JulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -394,9 +388,7 @@ class JulepApi:
         model: str,
         instructions: AgentsUpdateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
@@ -420,7 +412,7 @@ class JulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -478,9 +470,7 @@ class JulepApi:
         model: str,
         instructions: AgentsUpdateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
@@ -505,7 +495,7 @@ class JulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -607,9 +597,7 @@ class JulepApi:
         about: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         instructions: typing.Optional[AgentsPatchAgentRequestInstructions] = OMIT,
-        default_settings: typing.Optional[
-            AgentsPatchAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
@@ -634,7 +622,7 @@ class JulepApi:
         instructions : typing.Optional[AgentsPatchAgentRequestInstructions]
             Instructions for the agent
 
-        default_settings : typing.Optional[AgentsPatchAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -1418,9 +1406,7 @@ class JulepApi:
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceCreatedResponse:
         """
@@ -1445,7 +1431,7 @@ class JulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -2677,7 +2663,27 @@ class JulepApi:
         self,
         id: CommonUuid,
         *,
-        request: ChatRouteGenerateRequest,
+        recall: bool,
+        remember: bool,
+        save: bool,
+        stream: bool,
+        messages: typing.Sequence[EntriesInputChatMlMessage],
+        model: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
+        stop: typing.Optional[typing.Sequence[str]] = OMIT,
+        seed: typing.Optional[int] = OMIT,
+        max_tokens: typing.Optional[int] = OMIT,
+        logit_bias: typing.Optional[typing.Dict[str, CommonLogitBias]] = OMIT,
+        response_format: typing.Optional[ChatCompletionResponseFormat] = OMIT,
+        agent: typing.Optional[CommonUuid] = OMIT,
+        repetition_penalty: typing.Optional[float] = OMIT,
+        length_penalty: typing.Optional[float] = OMIT,
+        min_p: typing.Optional[float] = OMIT,
+        frequency_penalty: typing.Optional[float] = OMIT,
+        presence_penalty: typing.Optional[float] = OMIT,
+        temperature: typing.Optional[float] = OMIT,
+        top_p: typing.Optional[float] = OMIT,
+        tools: typing.Optional[typing.Sequence[ToolsFunctionTool]] = OMIT,
+        tool_choice: typing.Optional[ChatChatInputDataToolChoice] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ChatRouteGenerateResponse:
         """
@@ -2688,7 +2694,68 @@ class JulepApi:
         id : CommonUuid
             The session ID
 
-        request : ChatRouteGenerateRequest
+        recall : bool
+            Whether previous memories should be recalled or not (will be enabled in a future release)
+
+        remember : bool
+            Whether this interaction should form new memories or not (will be enabled in a future release)
+
+        save : bool
+            Whether this interaction should be stored in the session history or not
+
+        stream : bool
+            Indicates if the server should stream the response as it's generated
+
+        messages : typing.Sequence[EntriesInputChatMlMessage]
+            A list of new input messages comprising the conversation so far.
+
+        model : typing.Optional[CommonIdentifierSafeUnicode]
+            Identifier of the model to be used
+
+        stop : typing.Optional[typing.Sequence[str]]
+            Up to 4 sequences where the API will stop generating further tokens.
+
+        seed : typing.Optional[int]
+            If specified, the system will make a best effort to sample deterministically for that particular seed value
+
+        max_tokens : typing.Optional[int]
+            The maximum number of tokens to generate in the chat completion
+
+        logit_bias : typing.Optional[typing.Dict[str, CommonLogitBias]]
+            Modify the likelihood of specified tokens appearing in the completion
+
+        response_format : typing.Optional[ChatCompletionResponseFormat]
+            Response format (set to `json_object` to restrict output to JSON)
+
+        agent : typing.Optional[CommonUuid]
+            Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+
+        repetition_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        length_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+
+        min_p : typing.Optional[float]
+            Minimum probability compared to leading token to be considered
+
+        frequency_penalty : typing.Optional[float]
+            Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        presence_penalty : typing.Optional[float]
+            Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        temperature : typing.Optional[float]
+            What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+        top_p : typing.Optional[float]
+            Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+
+        tools : typing.Optional[typing.Sequence[ToolsFunctionTool]]
+            (Advanced) List of tools that are provided in addition to agent's default set of tools.
+
+        tool_choice : typing.Optional[ChatChatInputDataToolChoice]
+            Can be one of existing tools given to the agent earlier or the ones provided in this request.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -2700,7 +2767,7 @@ class JulepApi:
 
         Examples
         --------
-        from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+        from julep import EntriesInputChatMlMessage
         from julep.client import JulepApi
 
         client = JulepApi(
@@ -2709,24 +2776,44 @@ class JulepApi:
         )
         client.chat_route_generate(
             id="id",
-            request=ChatRouteGenerateRequestPreset(
-                messages=[
-                    EntriesInputChatMlMessage(
-                        role="user",
-                        content="content",
-                    )
-                ],
-                recall=True,
-                remember=True,
-                save=True,
-                stream=True,
-            ),
+            messages=[
+                EntriesInputChatMlMessage(
+                    role="user",
+                    content="content",
+                )
+            ],
+            recall=True,
+            remember=True,
+            save=True,
+            stream=True,
         )
         """
         _response = self._client_wrapper.httpx_client.request(
             f"sessions/{jsonable_encoder(id)}/chat",
             method="POST",
-            json=request,
+            json={
+                "recall": recall,
+                "remember": remember,
+                "save": save,
+                "model": model,
+                "stream": stream,
+                "stop": stop,
+                "seed": seed,
+                "max_tokens": max_tokens,
+                "logit_bias": logit_bias,
+                "response_format": response_format,
+                "agent": agent,
+                "repetition_penalty": repetition_penalty,
+                "length_penalty": length_penalty,
+                "min_p": min_p,
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "temperature": temperature,
+                "top_p": top_p,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
+            },
             request_options=request_options,
             omit=OMIT,
         )
@@ -3777,9 +3864,7 @@ class AsyncJulepApi:
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceCreatedResponse:
         """
@@ -3801,7 +3886,7 @@ class AsyncJulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -3918,9 +4003,7 @@ class AsyncJulepApi:
         model: str,
         instructions: AgentsUpdateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
@@ -3944,7 +4027,7 @@ class AsyncJulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -4010,9 +4093,7 @@ class AsyncJulepApi:
         model: str,
         instructions: AgentsUpdateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsUpdateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
@@ -4037,7 +4118,7 @@ class AsyncJulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsUpdateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -4155,9 +4236,7 @@ class AsyncJulepApi:
         about: typing.Optional[str] = OMIT,
         model: typing.Optional[str] = OMIT,
         instructions: typing.Optional[AgentsPatchAgentRequestInstructions] = OMIT,
-        default_settings: typing.Optional[
-            AgentsPatchAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceUpdatedResponse:
         """
@@ -4182,7 +4261,7 @@ class AsyncJulepApi:
         instructions : typing.Optional[AgentsPatchAgentRequestInstructions]
             Instructions for the agent
 
-        default_settings : typing.Optional[AgentsPatchAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -5054,9 +5133,7 @@ class AsyncJulepApi:
         model: str,
         instructions: AgentsCreateAgentRequestInstructions,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
-        default_settings: typing.Optional[
-            AgentsCreateAgentRequestDefaultSettings
-        ] = OMIT,
+        default_settings: typing.Optional[ChatDefaultChatSettings] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> CommonResourceCreatedResponse:
         """
@@ -5081,7 +5158,7 @@ class AsyncJulepApi:
 
         metadata : typing.Optional[typing.Dict[str, typing.Any]]
 
-        default_settings : typing.Optional[AgentsCreateAgentRequestDefaultSettings]
+        default_settings : typing.Optional[ChatDefaultChatSettings]
             Default settings for all sessions created by this agent
 
         request_options : typing.Optional[RequestOptions]
@@ -6465,7 +6542,27 @@ class AsyncJulepApi:
         self,
         id: CommonUuid,
         *,
-        request: ChatRouteGenerateRequest,
+        recall: bool,
+        remember: bool,
+        save: bool,
+        stream: bool,
+        messages: typing.Sequence[EntriesInputChatMlMessage],
+        model: typing.Optional[CommonIdentifierSafeUnicode] = OMIT,
+        stop: typing.Optional[typing.Sequence[str]] = OMIT,
+        seed: typing.Optional[int] = OMIT,
+        max_tokens: typing.Optional[int] = OMIT,
+        logit_bias: typing.Optional[typing.Dict[str, CommonLogitBias]] = OMIT,
+        response_format: typing.Optional[ChatCompletionResponseFormat] = OMIT,
+        agent: typing.Optional[CommonUuid] = OMIT,
+        repetition_penalty: typing.Optional[float] = OMIT,
+        length_penalty: typing.Optional[float] = OMIT,
+        min_p: typing.Optional[float] = OMIT,
+        frequency_penalty: typing.Optional[float] = OMIT,
+        presence_penalty: typing.Optional[float] = OMIT,
+        temperature: typing.Optional[float] = OMIT,
+        top_p: typing.Optional[float] = OMIT,
+        tools: typing.Optional[typing.Sequence[ToolsFunctionTool]] = OMIT,
+        tool_choice: typing.Optional[ChatChatInputDataToolChoice] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
     ) -> ChatRouteGenerateResponse:
         """
@@ -6476,7 +6573,68 @@ class AsyncJulepApi:
         id : CommonUuid
             The session ID
 
-        request : ChatRouteGenerateRequest
+        recall : bool
+            Whether previous memories should be recalled or not (will be enabled in a future release)
+
+        remember : bool
+            Whether this interaction should form new memories or not (will be enabled in a future release)
+
+        save : bool
+            Whether this interaction should be stored in the session history or not
+
+        stream : bool
+            Indicates if the server should stream the response as it's generated
+
+        messages : typing.Sequence[EntriesInputChatMlMessage]
+            A list of new input messages comprising the conversation so far.
+
+        model : typing.Optional[CommonIdentifierSafeUnicode]
+            Identifier of the model to be used
+
+        stop : typing.Optional[typing.Sequence[str]]
+            Up to 4 sequences where the API will stop generating further tokens.
+
+        seed : typing.Optional[int]
+            If specified, the system will make a best effort to sample deterministically for that particular seed value
+
+        max_tokens : typing.Optional[int]
+            The maximum number of tokens to generate in the chat completion
+
+        logit_bias : typing.Optional[typing.Dict[str, CommonLogitBias]]
+            Modify the likelihood of specified tokens appearing in the completion
+
+        response_format : typing.Optional[ChatCompletionResponseFormat]
+            Response format (set to `json_object` to restrict output to JSON)
+
+        agent : typing.Optional[CommonUuid]
+            Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+
+        repetition_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        length_penalty : typing.Optional[float]
+            Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+
+        min_p : typing.Optional[float]
+            Minimum probability compared to leading token to be considered
+
+        frequency_penalty : typing.Optional[float]
+            Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        presence_penalty : typing.Optional[float]
+            Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+
+        temperature : typing.Optional[float]
+            What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+
+        top_p : typing.Optional[float]
+            Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+
+        tools : typing.Optional[typing.Sequence[ToolsFunctionTool]]
+            (Advanced) List of tools that are provided in addition to agent's default set of tools.
+
+        tool_choice : typing.Optional[ChatChatInputDataToolChoice]
+            Can be one of existing tools given to the agent earlier or the ones provided in this request.
 
         request_options : typing.Optional[RequestOptions]
             Request-specific configuration.
@@ -6490,7 +6648,7 @@ class AsyncJulepApi:
         --------
         import asyncio
 
-        from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+        from julep import EntriesInputChatMlMessage
         from julep.client import AsyncJulepApi
 
         client = AsyncJulepApi(
@@ -6502,18 +6660,16 @@ class AsyncJulepApi:
         async def main() -> None:
             await client.chat_route_generate(
                 id="id",
-                request=ChatRouteGenerateRequestPreset(
-                    messages=[
-                        EntriesInputChatMlMessage(
-                            role="user",
-                            content="content",
-                        )
-                    ],
-                    recall=True,
-                    remember=True,
-                    save=True,
-                    stream=True,
-                ),
+                messages=[
+                    EntriesInputChatMlMessage(
+                        role="user",
+                        content="content",
+                    )
+                ],
+                recall=True,
+                remember=True,
+                save=True,
+                stream=True,
             )
 
 
@@ -6522,7 +6678,29 @@ class AsyncJulepApi:
         _response = await self._client_wrapper.httpx_client.request(
             f"sessions/{jsonable_encoder(id)}/chat",
             method="POST",
-            json=request,
+            json={
+                "recall": recall,
+                "remember": remember,
+                "save": save,
+                "model": model,
+                "stream": stream,
+                "stop": stop,
+                "seed": seed,
+                "max_tokens": max_tokens,
+                "logit_bias": logit_bias,
+                "response_format": response_format,
+                "agent": agent,
+                "repetition_penalty": repetition_penalty,
+                "length_penalty": length_penalty,
+                "min_p": min_p,
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "temperature": temperature,
+                "top_p": top_p,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
+            },
             request_options=request_options,
             omit=OMIT,
         )

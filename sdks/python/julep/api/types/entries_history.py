@@ -6,12 +6,12 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
-from .entries_base_entry import EntriesBaseEntry
+from .entries_entry import EntriesEntry
 from .entries_relation import EntriesRelation
 
 
 class EntriesHistory(pydantic_v1.BaseModel):
-    entries: typing.List[EntriesBaseEntry]
+    entries: typing.List[EntriesEntry]
     relations: typing.List[EntriesRelation]
     session_id: CommonUuid
     created_at: dt.datetime = pydantic_v1.Field()

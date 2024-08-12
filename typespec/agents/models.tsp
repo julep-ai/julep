@@ -46,11 +46,12 @@ model UpdateAgentRequest {
 model PatchAgentRequest is UpdateAgentRequest {}
 
 /** Payload for creating a agent (and associated documents) */
+@withVisibility("create")
 model CreateAgentRequest {
     ...UpdateAgentRequest;
 }
 
-model CreateOrUpdateAgentRequest {
+model CreateOrUpdateAgentRequest extends CreateAgentRequest {
     @path
     id: uuid;
     ...UpdateAgentRequest;

@@ -31,7 +31,7 @@ class CreateSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """
@@ -58,7 +58,7 @@ class PatchSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """
@@ -85,7 +85,7 @@ class Session(BaseModel):
     """
     Summary (null at the beginning) - generated automatically after every interaction
     """
-    render_templates: bool = False
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """
@@ -148,7 +148,41 @@ class UpdateSessionRequest(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    render_templates: bool = False
+    render_templates: bool = True
+    """
+    Render system and assistant message content as jinja templates
+    """
+    token_budget: int | None = None
+    """
+    Threshold value for the adaptive context functionality
+    """
+    context_overflow: Literal["truncate", "adaptive"] | None = None
+    """
+    Action to start on context window overflow
+    """
+    metadata: dict[str, Any] | None = None
+
+
+class CreateOrUpdateSessionRequest(CreateSessionRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    user: UUID | None = None
+    """
+    User ID of user associated with this session
+    """
+    users: list[UUID] | None = None
+    agent: UUID | None = None
+    """
+    Agent ID of agent associated with this session
+    """
+    agents: list[UUID] | None = None
+    situation: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{"\n\n"}}\n\n{%- if agent.instructions -%}\nInstructions:{{"\n"}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{"\n"}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{"\n"}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{"\n"}}\n{%- endif -%}\n\n{%- if tools -%}\nTools:{{"\n"}}\n  {%- for tool in tools -%}\n    {%- if tool.type == "function" -%}\n      - {{tool.function.name}}\n      {%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}{{"\n"}}\n    {%- else -%}\n      - {{ 0/0 }} {# Error: Other tool types aren\'t supported yet. #}\n    {%- endif -%}\n  {%- endfor -%}\n{{"\n\n"}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{"\n"}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{"\n"}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{"\n"}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{"\n"}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
+    """
+    A specific situation that sets the background for this session
+    """
+    render_templates: bool = True
     """
     Render system and assistant message content as jinja templates
     """

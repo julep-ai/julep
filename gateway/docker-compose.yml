@@ -2,7 +2,6 @@ name: julep-gateway
 version: "3"
 
 include:
-  - ../model-serving/docker-compose.yml
   - ../agents-api/docker-compose.yml
 
 services:
@@ -23,8 +22,6 @@ services:
 
     container_name: gateway
     depends_on:
-      model-serving:
-        condition: service_started
       agents-api:
         condition: service_started
     build:

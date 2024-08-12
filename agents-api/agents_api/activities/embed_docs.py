@@ -1,11 +1,8 @@
 from pydantic import UUID4
 from temporalio import activity
 
-from agents_api.embed_models_registry import EmbeddingModel
-from agents_api.env import embedding_model_id
-from agents_api.models.docs.embed_docs import (
-    embed_docs_snippets_query,
-)
+from agents_api.clients.embed import embed
+from agents_api.models.docs.embed_snippets import embed_snippets as embed_snippets_query
 
 snippet_embed_instruction = "Encode this passage for retrieval: "
 
@@ -13,8 +10,7 @@ snippet_embed_instruction = "Encode this passage for retrieval: "
 @activity.defn
 async def embed_docs(doc_id: UUID4, title: str, content: list[str]) -> None:
     indices, snippets = list(zip(*enumerate(content)))
-    model = EmbeddingModel.from_model_name(embedding_model_id)
-    embeddings = await model.embed(
+    embeddings = await embed(
         [
             {
                 "instruction": snippet_embed_instruction,
@@ -24,7 +20,7 @@ async def embed_docs(doc_id: UUID4, title: str, content: list[str]) -> None:
         ]
     )
 
-    embed_docs_snippets_query(
+    embed_snippets_query(
         doc_id=doc_id,
         snippet_indices=indices,
         embeddings=embeddings,

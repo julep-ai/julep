@@ -5,12 +5,10 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .agents_update_agent_request_default_settings import (
-    AgentsUpdateAgentRequestDefaultSettings,
-)
 from .agents_update_agent_request_instructions import (
     AgentsUpdateAgentRequestInstructions,
 )
+from .chat_default_chat_settings import ChatDefaultChatSettings
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 
 
@@ -40,8 +38,8 @@ class AgentsUpdateAgentRequest(pydantic_v1.BaseModel):
     Instructions for the agent
     """
 
-    default_settings: typing.Optional[AgentsUpdateAgentRequestDefaultSettings] = (
-        pydantic_v1.Field(default=None)
+    default_settings: typing.Optional[ChatDefaultChatSettings] = pydantic_v1.Field(
+        default=None
     )
     """
     Default settings for all sessions created by this agent

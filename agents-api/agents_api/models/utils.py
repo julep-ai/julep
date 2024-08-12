@@ -11,6 +11,7 @@ from ..common.utils.cozo import uuid_int_list_to_uuid4
 
 P = ParamSpec("P")
 T = TypeVar("T")
+ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 def fix_uuid(
@@ -61,6 +62,28 @@ def partialclass(cls, *args, **kwargs):
         __init__ = partialmethod(cls.__init__, *bound.args, **bound.kwargs)
 
     return NewCls
+
+
+def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str) -> str:
+    return f"""
+    input[developer_id, session_id] <- [[
+        to_uuid("{str(developer_id)}"),
+        to_uuid("{str(session_id)}"),
+    ]]
+
+    ?[developer_id, session_id, updated_at] :=
+        input[developer_id, session_id],
+        *sessions {{
+            session_id,
+        }},
+        updated_at = [floor(now()), true]
+
+    :update sessions {{
+        developer_id,
+        session_id,
+        updated_at,
+    }}
+    """
 
 
 def verify_developer_id_query(developer_id: UUID | str) -> str:
@@ -175,13 +198,13 @@ def cozo_query(
 
 
 def wrap_in_class(
-    cls: Type[BaseModel] | Callable[..., BaseModel],
+    cls: Type[ModelT] | Callable[..., ModelT],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
 ):
     def decorator(func: Callable[P, pd.DataFrame]):
         @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
             df = func(*args, **kwargs)
 
             # Convert df to list of dicts
@@ -192,9 +215,11 @@ def wrap_in_class(
 
             if one:
                 assert len(data) >= 1, "Expected one result, got none"
-                return cls(**transform(data[0]))
+                obj: ModelT = cls(**transform(data[0]))
+                return obj
 
-            return [cls(**item) for item in map(transform, data)]
+            objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
+            return objs
 
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.
