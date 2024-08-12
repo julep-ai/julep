@@ -13,7 +13,7 @@ async def get_developer_id(
     x_developer_id: Annotated[UUID | None, Header()] = None,
 ) -> UUID:
     if skip_check_developer_headers:
-        return UUID("00000000-0000-0000-0000-000000000000")
+        return x_developer_id or UUID("00000000-0000-0000-0000-000000000000")
 
     if not x_developer_id:
         raise InvalidHeaderFormat("X-Developer-Id header required")
@@ -33,7 +33,7 @@ async def get_developer_data(
     x_developer_id: Annotated[UUID | None, Header()] = None,
 ) -> Developer:
     if skip_check_developer_headers:
-        x_developer_id = UUID("00000000-0000-0000-0000-000000000000")
+        x_developer_id = x_developer_id or UUID("00000000-0000-0000-0000-000000000000")
 
     if not x_developer_id:
         raise InvalidHeaderFormat("X-Developer-Id header required")
