@@ -1,6 +1,13 @@
 from ward import test
 
-from tests.fixtures import make_request, test_agent, test_doc, test_user, test_user_doc
+from tests.fixtures import (
+    make_request,
+    patch_embed_acompletion,
+    test_agent,
+    test_doc,
+    test_user,
+    test_user_doc,
+)
 
 
 @test("route: create user doc")
@@ -160,3 +167,22 @@ def _(make_request=make_request, user=test_user, doc=test_user_doc):
 
     # FIXME: This test is failing because the search is not returning the expected results
     # assert len(docs) >= 1
+
+
+@test("routes: embed route")
+async def _(
+    make_request=make_request,
+    mocks=patch_embed_acompletion,
+):
+    (embed, _) = mocks
+
+    response = make_request(
+        method="POST",
+        url="/embed",
+        json={"text": "blah blah"},
+    )
+
+    result = response.json()
+    assert "vectors" in result
+
+    embed.assert_called()

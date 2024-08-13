@@ -1,0 +1,28 @@
+from typing import Annotated
+
+from fastapi import Depends
+from pydantic import UUID4
+
+import agents_api.clients.embed as embedder
+
+from ...autogen.openapi_model import (
+    EmbedQueryRequest,
+    EmbedQueryResponse,
+)
+from ...dependencies.developer_id import get_developer_id
+from .router import router
+
+
+@router.post("/embed", tags=["docs"])
+async def embed(
+    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    data: EmbedQueryRequest,
+) -> EmbedQueryResponse:
+    text_to_embed: str | list[str] = data.text
+    text_to_embed: list[str] = (
+        [text_to_embed] if isinstance(text_to_embed, str) else text_to_embed
+    )
+
+    vectors = await embedder.embed(inputs=text_to_embed)
+
+    return EmbedQueryResponse(vectors=vectors)
