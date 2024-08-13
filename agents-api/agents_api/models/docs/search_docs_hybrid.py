@@ -95,8 +95,7 @@ def dbsf_fuse(
 def search_docs_hybrid(
     *,
     developer_id: UUID,
-    owner_type: Literal["user", "agent"],
-    owner_id: UUID,
+    owners: list[tuple[Literal["user", "agent"], UUID]],
     query: str,
     query_embedding: list[float],
     k: int = 3,
@@ -107,8 +106,7 @@ def search_docs_hybrid(
     # TODO: We should probably parallelize these queries
     text_results = search_docs_by_text(
         developer_id=developer_id,
-        owner_type=owner_type,
-        owner_id=owner_id,
+        owners=owners,
         query=query,
         k=2 * k,
         **text_search_options,
@@ -116,8 +114,7 @@ def search_docs_hybrid(
 
     embedding_results = search_docs_by_embedding(
         developer_id=developer_id,
-        owner_type=owner_type,
-        owner_id=owner_id,
+        owners=owners,
         query_embedding=query_embedding,
         k=2 * k,
         **embed_search_options,

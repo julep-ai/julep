@@ -10,16 +10,15 @@ export const $Chat_ChatInput = {
     },
     {
       properties: {
-        recall: {
+        remember: {
           type: "boolean",
-          description: `Whether previous memories should be recalled or not (will be enabled in a future release)`,
+          description: `DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)`,
           isReadOnly: true,
           isRequired: true,
         },
-        remember: {
+        recall: {
           type: "boolean",
-          description: `Whether this interaction should form new memories or not (will be enabled in a future release)`,
-          isReadOnly: true,
+          description: `Whether previous memories and docs should be recalled or not`,
           isRequired: true,
         },
         save: {

@@ -9,13 +9,13 @@ export type Chat_CompetionUsage = {
   /**
    * Number of tokens in the generated completion
    */
-  readonly completion_tokens: number;
+  readonly completion_tokens?: number;
   /**
    * Number of tokens in the prompt
    */
-  readonly prompt_tokens: number;
+  readonly prompt_tokens?: number;
   /**
    * Total number of tokens used in the request (prompt + completion)
    */
-  readonly total_tokens: number;
+  readonly total_tokens?: number;
 };

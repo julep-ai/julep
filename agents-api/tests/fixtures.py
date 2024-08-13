@@ -78,7 +78,7 @@ def test_developer(cozo_client=cozo_client, developer_id=test_developer_id):
     )
 
 
-@fixture(scope="global")
+@fixture(scope="test")
 def patch_embed_acompletion():
     mock_model_response = ModelResponse(
         id="fake_id",

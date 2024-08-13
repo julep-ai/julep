@@ -2663,8 +2663,8 @@ class JulepApi:
         self,
         id: CommonUuid,
         *,
-        recall: bool,
         remember: bool,
+        recall: bool,
         save: bool,
         stream: bool,
         messages: typing.Sequence[EntriesInputChatMlMessage],
@@ -2694,11 +2694,11 @@ class JulepApi:
         id : CommonUuid
             The session ID
 
-        recall : bool
-            Whether previous memories should be recalled or not (will be enabled in a future release)
-
         remember : bool
-            Whether this interaction should form new memories or not (will be enabled in a future release)
+            DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
+
+        recall : bool
+            Whether previous memories and docs should be recalled or not
 
         save : bool
             Whether this interaction should be stored in the session history or not
@@ -2782,8 +2782,8 @@ class JulepApi:
                     content="content",
                 )
             ],
-            recall=True,
             remember=True,
+            recall=True,
             save=True,
             stream=True,
         )
@@ -2792,8 +2792,8 @@ class JulepApi:
             f"sessions/{jsonable_encoder(id)}/chat",
             method="POST",
             json={
-                "recall": recall,
                 "remember": remember,
+                "recall": recall,
                 "save": save,
                 "model": model,
                 "stream": stream,
@@ -6542,8 +6542,8 @@ class AsyncJulepApi:
         self,
         id: CommonUuid,
         *,
-        recall: bool,
         remember: bool,
+        recall: bool,
         save: bool,
         stream: bool,
         messages: typing.Sequence[EntriesInputChatMlMessage],
@@ -6573,11 +6573,11 @@ class AsyncJulepApi:
         id : CommonUuid
             The session ID
 
-        recall : bool
-            Whether previous memories should be recalled or not (will be enabled in a future release)
-
         remember : bool
-            Whether this interaction should form new memories or not (will be enabled in a future release)
+            DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
+
+        recall : bool
+            Whether previous memories and docs should be recalled or not
 
         save : bool
             Whether this interaction should be stored in the session history or not
@@ -6666,8 +6666,8 @@ class AsyncJulepApi:
                         content="content",
                     )
                 ],
-                recall=True,
                 remember=True,
+                recall=True,
                 save=True,
                 stream=True,
             )
@@ -6679,8 +6679,8 @@ class AsyncJulepApi:
             f"sessions/{jsonable_encoder(id)}/chat",
             method="POST",
             json={
-                "recall": recall,
                 "remember": remember,
+                "recall": recall,
                 "save": save,
                 "model": model,
                 "stream": stream,

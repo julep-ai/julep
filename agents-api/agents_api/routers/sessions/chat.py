@@ -32,6 +32,7 @@ async def get_messages(
     session_id: UUID,
     new_raw_messages: list[dict],
     chat_context: ChatContext,
+    recall: bool,
 ):
     assert len(new_raw_messages) > 0
 
@@ -50,6 +51,9 @@ async def get_messages(
         if entry.id not in {r.head for r in relations}
     ]
 
+    if not recall:
+        return past_messages, []
+
     # Search matching docs
     [query_embedding, *_] = await embed.embed(
         inputs=[
@@ -60,10 +64,14 @@ async def get_messages(
     )
     query_text = new_raw_messages[-1]["content"]
 
+    # List all the applicable owners to search docs from
+    active_agent_id = chat_context.get_active_agent().id
+    user_ids = [user.id for user in chat_context.users]
+    owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
+
     doc_references: list[DocReference] = search_docs_hybrid(
         developer_id=developer.id,
-        owner_type="agent",
-        owner_id=chat_context.get_active_agent().id,
+        owners=owners,
         query=query_text,
         query_embedding=query_embedding,
     )
@@ -79,7 +87,7 @@ async def get_messages(
 async def chat(
     developer: Annotated[Developer, Depends(get_developer_data)],
     session_id: UUID,
-    data: ChatInput,
+    input: ChatInput,
     background_tasks: BackgroundTasks,
 ) -> ChatResponse:
     # First get the chat context
@@ -89,10 +97,10 @@ async def chat(
     )
 
     # Merge the settings and prepare environment
-    chat_context.merge_settings(data)
+    chat_context.merge_settings(input)
     settings: dict = chat_context.settings.model_dump()
     env: dict = chat_context.get_chat_environment()
-    new_raw_messages = [msg.model_dump() for msg in data.messages]
+    new_raw_messages = [msg.model_dump() for msg in input.messages]
 
     # Render the messages
     past_messages, doc_references = await get_messages(
@@ -100,22 +108,27 @@ async def chat(
         session_id=session_id,
         new_raw_messages=new_raw_messages,
         chat_context=chat_context,
+        recall=input.recall,
     )
 
     env["docs"] = doc_references
     new_messages = await render_template(new_raw_messages, variables=env)
     messages = past_messages + new_messages
 
+    # Get the tools
+    tools = settings.get("tools") or chat_context.get_active_tools()
+
     # Get the response from the model
     model_response = await litellm.acompletion(
         messages=messages,
+        tools=tools,
+        user=str(developer.id),  # For tracking usage
+        tags=developer.tags,  # For filtering models in litellm
         **settings,
-        user=str(developer.id),
-        tags=developer.tags,
     )
 
     # Save the input and the response to the session history
-    if data.save:
+    if input.save:
         new_entries = [
             CreateEntryRequest(**msg, source="api_request") for msg in new_messages
         ]
@@ -128,7 +141,7 @@ async def chat(
         )
 
     # Return the response
-    chat_response_class = ChunkChatResponse if data.stream else MessageChatResponse
+    chat_response_class = ChunkChatResponse if input.stream else MessageChatResponse
     chat_response: ChatResponse = chat_response_class(
         id=uuid4(),
         created_at=utcnow(),

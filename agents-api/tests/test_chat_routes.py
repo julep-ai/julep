@@ -28,6 +28,46 @@ async def _(
     assert (await embed.embed())[0][0] == 1.0
 
 
+@test("chat: check that non-recall get_messages works")
+async def _(
+    developer=test_developer,
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+    session=test_session,
+    tool=test_tool,
+    user=test_user,
+    mocks=patch_embed_acompletion,
+):
+    (embed, _) = mocks
+
+    chat_context = prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        client=client,
+    )
+
+    session_id = session.id
+
+    new_raw_messages = [{"role": "user", "content": "hello"}]
+
+    past_messages, doc_references = await get_messages(
+        developer=developer,
+        session_id=session_id,
+        new_raw_messages=new_raw_messages,
+        chat_context=chat_context,
+        recall=False,
+    )
+
+    assert isinstance(past_messages, list)
+    assert len(past_messages) >= 0
+    assert isinstance(doc_references, list)
+    assert len(doc_references) == 0
+
+    # Check that embed was not called
+    embed.assert_not_called()
+
+
 @test("chat: check that get_messages works")
 async def _(
     developer=test_developer,
@@ -56,6 +96,7 @@ async def _(
         session_id=session_id,
         new_raw_messages=new_raw_messages,
         chat_context=chat_context,
+        recall=True,
     )
 
     assert isinstance(past_messages, list)

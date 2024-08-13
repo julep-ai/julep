@@ -41,8 +41,7 @@ from ..utils import (
 def search_docs_by_text(
     *,
     developer_id: UUID,
-    owner_type: Literal["user", "agent"],
-    owner_id: UUID,
+    owners: list[tuple[Literal["user", "agent"], UUID]],
     query: str,
     k: int = 3,
 ) -> tuple[list[str], dict]:
@@ -50,28 +49,29 @@ def search_docs_by_text(
     Searches for document snippets in CozoDB by embedding query.
 
     Parameters:
-    - owner_type (Literal["user", "agent"]): The type of the owner of the documents.
-    - owner_id (UUID): The unique identifier of the owner.
+    - owners (list[tuple[Literal["user", "agent"], UUID]]): The type of the owner of the documents.
     - query (str): The query string.
     - k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
     """
 
-    owner_id = str(owner_id)
+    owners: list[list[str]] = [
+        [owner_type, str(owner_id)] for owner_type, owner_id in owners
+    ]
 
     # Construct the datalog query for searching document snippets
     search_query = f"""
+        owners[owner_type, owner_id] <- $owners
         input[
+            owner_type,
             owner_id,
-            query,
-        ] <- [[
-            to_uuid($owner_id),
-            $query,
-        ]]
+        ] :=
+            owners[owner_type, owner_id_str],
+            owner_id = to_uuid(owner_id_str)
 
         candidate[doc_id] :=
-            input[owner_id, _],
+            input[owner_type, owner_id],
             *docs {{
-                owner_type: $owner_type,
+                owner_type,
                 owner_id,
                 doc_id
             }}
@@ -81,17 +81,16 @@ def search_docs_by_text(
             snippet_data,
             distance,
         ] :=
-            input[owner_id, query],
             candidate[doc_id],
             ~snippets:lsh {{
                 doc_id,
                 index,
                 content
                 |
-                query: query,
+                query: $query,
                 k: {k},
             }},
-            distance = 10000000,  # Very large distance to depict no distance
+            distance = 10000000,  # Very large distance to depict no valid distance
             snippet_data = [index, content]
 
         search_result[
@@ -99,14 +98,13 @@ def search_docs_by_text(
             snippet_data,
             distance,
         ] :=
-            input[owner_id, query],
             candidate[doc_id],
             ~snippets:fts {{
                 doc_id,
                 index,
                 content
                 |
-                query: query,
+                query: $query,
                 k: {k},
                 score_kind: 'tf_idf',
                 bind_score: score,
@@ -119,10 +117,12 @@ def search_docs_by_text(
             collect(snippet),
             distance,
             title,
+            owner_type,
+            owner_id,
         ] :=
             candidate[doc_id],
             *docs {{
-                owner_type: $owner_type,
+                owner_type,
                 owner_id,
                 doc_id,
                 title,
@@ -145,12 +145,16 @@ def search_docs_by_text(
             snippets,
             distance,
             title,
-        ] := m[
-            id,
-            snippets,
-            distance,
-            title,
-        ], owner_type = $owner_type, owner_id = $owner_id
+        ] := 
+            input[owner_type, owner_id],
+            m[
+                id,
+                snippets,
+                distance,
+                title,
+                owner_type,
+                owner_id,
+            ]
 
         # Sort the results by distance to find the closest matches
         :sort distance
@@ -159,13 +163,16 @@ def search_docs_by_text(
 
     queries = [
         verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id, f"{owner_type}s", **{f"{owner_type}_id": owner_id}
-        ),
+        *[
+            verify_developer_owns_resource_query(
+                developer_id, f"{owner_type}s", **{f"{owner_type}_id": owner_id}
+            )
+            for owner_type, owner_id in owners
+        ],
         search_query,
     ]
 
     return (
         queries,
-        {"owner_type": owner_type, "owner_id": owner_id, "query": query},
+        {"owners": owners, "query": query},
     )

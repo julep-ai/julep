@@ -3790,8 +3790,8 @@ client.chat_route_generate(
             content="content",
         )
     ],
-    recall=True,
     remember=True,
+    recall=True,
     save=True,
     stream=True,
 )
@@ -3818,7 +3818,7 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**recall:** `bool` — Whether previous memories should be recalled or not (will be enabled in a future release)
+**remember:** `bool` — DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
     
 </dd>
 </dl>
@@ -3826,7 +3826,7 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**remember:** `bool` — Whether this interaction should form new memories or not (will be enabled in a future release)
+**recall:** `bool` — Whether previous memories and docs should be recalled or not
     
 </dd>
 </dl>
