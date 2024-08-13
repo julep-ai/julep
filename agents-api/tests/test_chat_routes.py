@@ -2,7 +2,9 @@
 
 from ward import test
 
+from agents_api.autogen.Sessions import CreateSessionRequest
 from agents_api.clients import embed, litellm
+from agents_api.models.session.create_session import create_session
 from agents_api.models.session.prepare_chat_context import prepare_chat_context
 from agents_api.routers.sessions.chat import get_messages
 from tests.fixtures import (
@@ -66,9 +68,20 @@ async def _(
 @test("chat: check that chat route calls both mocks")
 async def _(
     make_request=make_request,
-    session=test_session,
+    developer_id=test_developer_id,
+    agent=test_agent,
     mocks=patch_embed_acompletion,
+    client=cozo_client,
 ):
+    session = create_session(
+        developer_id=developer_id,
+        data=CreateSessionRequest(
+            agent=agent.id,
+            situation="test session about",
+        ),
+        client=client,
+    )
+
     (embed, acompletion) = mocks
 
     response = make_request(

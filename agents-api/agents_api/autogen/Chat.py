@@ -23,7 +23,7 @@ class BaseChatOutput(BaseModel):
     """
     The reason the model stopped generating tokens
     """
-    logprobs: Annotated[LogProbResponse | None, Field(...)]
+    logprobs: LogProbResponse | None = None
     """
     The log probabilities of tokens
     """
@@ -33,7 +33,7 @@ class BaseChatResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    usage: Annotated[CompetionUsage | None, Field(...)]
+    usage: CompetionUsage | None = None
     """
     Usage statistics for the completion request
     """
@@ -61,7 +61,7 @@ class BaseTokenLogProb(BaseModel):
     """
     The log probability of the token
     """
-    bytes: Annotated[list[int] | None, Field(...)]
+    bytes: list[int] | None = None
 
 
 class ChatInputData(BaseModel):

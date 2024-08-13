@@ -8,5 +8,5 @@ export type Chat_BaseTokenLogProb = {
    * The log probability of the token
    */
   logprob: number;
-  bytes: Array<number> | null;
+  bytes?: Array<number>;
 };

@@ -169,7 +169,7 @@ model BaseTokenLogProb {
     /** The log probability of the token */
     logprob: float32;
 
-    bytes: uint16[] | null;
+    bytes?: uint16[];
 }
 
 model TokenLogProb extends BaseTokenLogProb {
@@ -188,7 +188,7 @@ model BaseChatOutput {
     finish_reason: FinishReason;
 
     /** The log probabilities of tokens */
-    logprobs: LogProbResponse | null;
+    logprobs?: LogProbResponse;
 }
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
@@ -211,7 +211,7 @@ model ChatOutputChunk extends BaseChatOutput {
 
 model BaseChatResponse {
     /** Usage statistics for the completion request */
-    usage: CompetionUsage | null;
+    usage?: CompetionUsage;
 
     /** Background job IDs that may have been spawned from this interaction. */
     jobs: uuid[];
