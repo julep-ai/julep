@@ -9,13 +9,13 @@ import type { Common_logit_bias } from "./Common_logit_bias";
 import type { Common_uuid } from "./Common_uuid";
 export type Chat_ChatInput = Chat_ChatInputData & {
   /**
-   * Whether previous memories should be recalled or not (will be enabled in a future release)
-   */
-  readonly recall: boolean;
-  /**
-   * Whether this interaction should form new memories or not (will be enabled in a future release)
+   * DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
    */
   readonly remember: boolean;
+  /**
+   * Whether previous memories and docs should be recalled or not
+   */
+  recall: boolean;
   /**
    * Whether this interaction should be stored in the session history or not
    */

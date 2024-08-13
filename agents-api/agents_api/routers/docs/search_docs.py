@@ -70,8 +70,7 @@ async def search_user_docs(
     start = time.time()
     docs = search_fn(
         developer_id=x_developer_id,
-        owner_type="user",
-        owner_id=user_id,
+        owners=[("user", user_id)],
         **params,
     )
 
@@ -98,8 +97,7 @@ async def search_agent_docs(
     start = time.time()
     docs = search_fn(
         developer_id=x_developer_id,
-        owner_type="agent",
-        owner_id=agent_id,
+        owners=[("agent", agent_id)],
         **params,
     )
 

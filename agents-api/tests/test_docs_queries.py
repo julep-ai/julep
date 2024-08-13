@@ -9,6 +9,7 @@ from agents_api.models.docs.embed_snippets import embed_snippets
 from agents_api.models.docs.get_doc import get_doc
 from agents_api.models.docs.list_docs import list_docs
 from agents_api.models.docs.search_docs_by_embedding import search_docs_by_embedding
+from agents_api.models.docs.search_docs_by_text import search_docs_by_text
 from tests.fixtures import (
     EMBEDDING_SIZE,
     cozo_client,
@@ -82,7 +83,29 @@ def _(
     assert len(result) >= 1
 
 
-@test("model: search docs")
+@test("model: search docs by text")
+def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
+    create_doc(
+        developer_id=developer_id,
+        owner_type="agent",
+        owner_id=agent.id,
+        data=CreateDocRequest(
+            title="Hello", content=["The world is a funny little thing"]
+        ),
+        client=client,
+    )
+
+    result = search_docs_by_text(
+        developer_id=developer_id,
+        owners=[("agent", agent.id)],
+        query="funny",
+        client=client,
+    )
+
+    assert len(result) >= 1
+
+
+@test("model: search docs by embedding")
 def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
     doc = create_doc(
         developer_id=developer_id,
@@ -106,8 +129,7 @@ def _(client=cozo_client, agent=test_agent, developer_id=test_developer_id):
 
     result = search_docs_by_embedding(
         developer_id=developer_id,
-        owner_type="agent",
-        owner_id=agent.id,
+        owners=[("agent", agent.id)],
         query_embedding=query_embedding,
         client=client,
     )

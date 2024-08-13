@@ -34,13 +34,12 @@ enum FinishReason {
 
 /** Determines how the session accesses history and memories */
 model MemoryAccessOptions {
-    /** Whether previous memories should be recalled or not (will be enabled in a future release) */
-    @visibility("read") // DISABLED
-    recall: boolean = false;
-
-    /** Whether this interaction should form new memories or not (will be enabled in a future release) */
+    /** DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) */
     @visibility("read") // DISABLED
     remember: boolean = false;
+
+    /** Whether previous memories and docs should be recalled or not */
+    recall: boolean = true;
 
     /** Whether this interaction should be stored in the session history or not */
     save: boolean = true;
@@ -134,15 +133,15 @@ model ChatSettings extends DefaultChatSettings {
 model CompetionUsage {
     /** Number of tokens in the generated completion */
     @visibility("read")
-    completion_tokens: uint32;
+    completion_tokens?: uint32;
 
     /** Number of tokens in the prompt */
     @visibility("read")
-    prompt_tokens: uint32;
+    prompt_tokens?: uint32;
 
     /** Total number of tokens used in the request (prompt + completion) */
     @visibility("read")
-    total_tokens: uint32;
+    total_tokens?: uint32;
 }
 
 model ChatInputData {

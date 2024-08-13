@@ -12,17 +12,17 @@ class ChatCompetionUsage(pydantic_v1.BaseModel):
     Usage statistics for the completion request
     """
 
-    completion_tokens: int = pydantic_v1.Field()
+    completion_tokens: typing.Optional[int] = pydantic_v1.Field(default=None)
     """
     Number of tokens in the generated completion
     """
 
-    prompt_tokens: int = pydantic_v1.Field()
+    prompt_tokens: typing.Optional[int] = pydantic_v1.Field(default=None)
     """
     Number of tokens in the prompt
     """
 
-    total_tokens: int = pydantic_v1.Field()
+    total_tokens: typing.Optional[int] = pydantic_v1.Field(default=None)
     """
     Total number of tokens used in the request (prompt + completion)
     """

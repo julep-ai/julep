@@ -114,15 +114,21 @@ class CompetionUsage(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    completion_tokens: Annotated[int, Field(json_schema_extra={"readOnly": True})]
+    completion_tokens: Annotated[
+        int | None, Field(None, json_schema_extra={"readOnly": True})
+    ]
     """
     Number of tokens in the generated completion
     """
-    prompt_tokens: Annotated[int, Field(json_schema_extra={"readOnly": True})]
+    prompt_tokens: Annotated[
+        int | None, Field(None, json_schema_extra={"readOnly": True})
+    ]
     """
     Number of tokens in the prompt
     """
-    total_tokens: Annotated[int, Field(json_schema_extra={"readOnly": True})]
+    total_tokens: Annotated[
+        int | None, Field(None, json_schema_extra={"readOnly": True})
+    ]
     """
     Total number of tokens used in the request (prompt + completion)
     """
@@ -213,13 +219,13 @@ class ChatInput(ChatInputData):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    recall: Annotated[bool, Field(False, json_schema_extra={"readOnly": True})]
-    """
-    Whether previous memories should be recalled or not (will be enabled in a future release)
-    """
     remember: Annotated[bool, Field(False, json_schema_extra={"readOnly": True})]
     """
-    Whether this interaction should form new memories or not (will be enabled in a future release)
+    DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
+    """
+    recall: bool = True
+    """
+    Whether previous memories and docs should be recalled or not
     """
     save: bool = True
     """

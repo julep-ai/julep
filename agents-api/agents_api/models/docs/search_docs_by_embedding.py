@@ -41,8 +41,7 @@ from ..utils import (
 def search_docs_by_embedding(
     *,
     developer_id: UUID,
-    owner_type: Literal["user", "agent"],
-    owner_id: UUID,
+    owners: list[tuple[Literal["user", "agent"], UUID]],
     query_embedding: list[float],
     k: int = 3,
     confidence: float = 0.7,
@@ -65,25 +64,29 @@ def search_docs_by_embedding(
     assert len(query_embedding) == embedding_size
     assert sum(query_embedding)
 
-    owner_id = str(owner_id)
+    owners: list[list[str]] = [
+        [owner_type, str(owner_id)] for owner_type, owner_id in owners
+    ]
 
     # Calculate the search radius based on confidence level
     radius: float = 1.0 - confidence
 
     # Construct the datalog query for searching document snippets
     interim_query = f"""
+        owners[owner_type, owner_id] <- $owners
         input[
+            owner_type,
             owner_id,
             query_embedding,
-        ] <- [[
-            to_uuid($owner_id),
-            vec($query_embedding),
-        ]]
+        ] :=
+            owners[owner_type, owner_id_str],
+            owner_id = to_uuid(owner_id_str),
+            query_embedding = vec($query_embedding)
 
         candidate[doc_id] :=
-            input[owner_id, _],
+            input[owner_type, owner_id, _],
             *docs {{
-                owner_type: $owner_type,
+                owner_type,
                 owner_id,
                 doc_id
             }}
@@ -125,7 +128,7 @@ def search_docs_by_embedding(
             index,
             distance,
         ] :=
-            input[owner_id, query],
+            input[_, __, query],
             candidate[doc_id],
             ~snippets:embedding_space {{
                 doc_id,
@@ -151,6 +154,8 @@ def search_docs_by_embedding(
             snippet_data = [index, content]
 
         ?[
+            owner_type,
+            owner_id,
             doc_id,
             snippet_data,
             distance,
@@ -175,6 +180,8 @@ def search_docs_by_embedding(
         :limit {k}
 
         :create _interim {{
+            owner_type,
+            owner_id,
             doc_id,
             snippet_data,
             distance,
@@ -186,18 +193,23 @@ def search_docs_by_embedding(
     collect_query = """
         m[
             doc_id,
+            owner_type,
+            owner_id,
             collect(snippet),
             distance,
             title,
-        ] := *_interim {
-            doc_id,
-            snippet_data,
-            distance,
-            title,
-        }, snippet = {
-            "index": snippet_data->0,
-            "content": snippet_data->1,
-        }
+        ] := 
+            *_interim {
+                owner_type,
+                owner_id,
+                doc_id,
+                snippet_data,
+                distance,
+                title,
+            }, snippet = {
+                "index": snippet_data->0,
+                "content": snippet_data->1,
+            }
 
         ?[
             id,
@@ -208,17 +220,22 @@ def search_docs_by_embedding(
             title,
         ] := m[
             id,
+            owner_type,
+            owner_id,
             snippets,
             distance,
             title,
-        ], owner_type = $owner_type, owner_id = $owner_id
+        ]
     """
 
     queries = [
         verify_developer_id_query(developer_id),
-        verify_developer_owns_resource_query(
-            developer_id, f"{owner_type}s", **{f"{owner_type}_id": owner_id}
-        ),
+        *[
+            verify_developer_owns_resource_query(
+                developer_id, f"{owner_type}s", **{f"{owner_type}_id": owner_id}
+            )
+            for owner_type, owner_id in owners
+        ],
         interim_query,
         collect_query,
     ]
@@ -226,8 +243,7 @@ def search_docs_by_embedding(
     return (
         queries,
         {
-            "owner_type": owner_type,
-            "owner_id": owner_id,
+            "owners": owners,
             "query_embedding": query_embedding,
         },
     )
