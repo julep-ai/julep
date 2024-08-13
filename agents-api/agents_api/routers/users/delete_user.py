@@ -14,5 +14,4 @@ from .router import router
 async def delete_user(
     user_id: UUID4, x_developer_id: Annotated[UUID4, Depends(get_developer_id)]
 ) -> ResourceDeletedResponse:
-    print(user_id)
     return delete_user_query(developer_id=x_developer_id, user_id=user_id)

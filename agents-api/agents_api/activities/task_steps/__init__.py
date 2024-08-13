@@ -14,7 +14,9 @@ from ...autogen.openapi_model import (
     UpdateExecutionRequest,
     YieldStep,
 )
-from ...clients.litellm import acompletion
+from ...clients import (
+    litellm,  # We dont directly import `acompletion` so we can mock it
+)
 from ...clients.worker.types import ChatML
 from ...common.protocol.tasks import (
     StepContext,
@@ -57,7 +59,7 @@ async def prompt_step(context: StepContext) -> dict:
 
     settings: dict = context.definition.settings.model_dump()
     # Get settings and run llm
-    response = await acompletion(
+    response = await litellm.acompletion(
         messages=messages,
         **settings,
     )
