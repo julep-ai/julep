@@ -118,6 +118,11 @@ async def chat(
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
 
+    # Truncate the messages if necessary
+    if chat_context.session.context_overflow == "truncate":
+        # messages = messages[-settings["max_tokens"] :]
+        raise NotImplementedError("Truncation is not yet implemented")
+
     # Get the response from the model
     model_response = await litellm.acompletion(
         messages=messages,
@@ -129,9 +134,12 @@ async def chat(
 
     # Save the input and the response to the session history
     if input.save:
+        # TODO: Count the number of tokens before saving it to the session
+
         new_entries = [
             CreateEntryRequest(**msg, source="api_request") for msg in new_messages
         ]
+
         background_tasks.add_task(
             create_entries,
             developer_id=developer.id,
@@ -140,12 +148,19 @@ async def chat(
             mark_session_as_updated=True,
         )
 
+    # Adaptive context handling
+    jobs = []
+    if chat_context.session.context_overflow == "adaptive":
+        # TODO: Start the adaptive context workflow
+        # jobs = [await start_adaptive_context_workflow]
+        raise NotImplementedError("Adaptive context is not yet implemented")
+
     # Return the response
     chat_response_class = ChunkChatResponse if input.stream else MessageChatResponse
     chat_response: ChatResponse = chat_response_class(
         id=uuid4(),
         created_at=utcnow(),
-        jobs=[],
+        jobs=jobs,
         docs=doc_references,
         usage=model_response.usage.model_dump(),
         choices=[choice.model_dump() for choice in model_response.choices],
