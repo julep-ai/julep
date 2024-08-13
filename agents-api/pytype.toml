@@ -2,15 +2,10 @@
 
 [tool.pytype]
 
-# Space-separated list of files or directories to exclude.
-exclude = [
-    '**/*_test.py',
-    '**/test_*.py',
-]
-
 # Space-separated list of files or directories to process.
 inputs = [
     'agents_api',
+    'tests',
 ]
 
 # Keep going past errors to analyze as many files as possible.
@@ -30,7 +25,7 @@ platform = 'linux'
 pythonpath = '.'
 
 # Python version (major.minor) of the target code.
-python_version = '3.10'
+python_version = '3.11'
 
 # Bind 'self' in methods with non-transparent decorators. This flag is temporary
 # and will be removed once this behavior is enabled by default.
@@ -38,7 +33,7 @@ bind_decorated_methods = true
 
 # Don't allow None to match bool. This flag is temporary and will be removed
 # once this behavior is enabled by default.
-none_is_not_bool = false
+none_is_not_bool = true
 
 # Enable parameter count checks for overriding methods with renamed arguments.
 # This flag is temporary and will be removed once this behavior is enabled by
@@ -64,20 +59,20 @@ require_override_decorator = false
 precise_return = true
 
 # Experimental: Solve unknown types to label with structural types.
-protocols = false
+protocols = true
 
 # Experimental: Only load submodules that are explicitly imported.
 strict_import = true
 
 # Experimental: Enable exhaustive checking of function parameter types.
-strict_parameter_checks = false
+strict_parameter_checks = true
 
 # Experimental: Emit errors for comparisons between incompatible primitive
 # types.
-strict_primitive_comparisons = false
+strict_primitive_comparisons = true
 
 # Experimental: Check that variables are defined in all possible code paths.
-strict_undefined_checks = false
+strict_undefined_checks = true
 
 # Experimental: FOR TESTING ONLY. Use pytype/rewrite/.
 use_rewrite = false

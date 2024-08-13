@@ -3,7 +3,8 @@ from typing import Callable
 
 from temporalio import activity
 
-from ..clients.model import julep_client
+from agents_api.clients import litellm
+
 from .types import MemoryDensityTaskArgs
 
 
@@ -56,14 +57,14 @@ def make_prompt(args: MemoryDensityTaskArgs):
 
 async def run_prompt(
     memory: str,
-    model: str = "julep-ai/samantha-1-turbo",
+    model: str = "gpt-4o",
     max_tokens: int = 400,
     temperature: float = 0.2,
     parser: Callable[[str], str] = lambda x: x,
 ) -> str:
     prompt = make_prompt(MemoryDensityTaskArgs(memory=memory))
 
-    response = await julep_client.chat.completions.create(
+    response = await litellm.acompletion(
         model=model,
         messages=[
             {

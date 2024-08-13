@@ -3,7 +3,8 @@ from typing import Callable
 
 from temporalio import activity
 
-from ..clients.model import julep_client
+from agents_api.clients import litellm
+
 from .types import ChatML, DialogInsightsTaskArgs
 
 
@@ -57,7 +58,7 @@ async def run_prompt(
     dialog: list[ChatML],
     person1: str,
     person2: str,
-    model: str = "julep-ai/samantha-1-turbo",
+    model: str = "gpt-4o",
     max_tokens: int = 400,
     temperature: float = 0.4,
     parser: Callable[[str], str] = lambda x: x,
@@ -66,7 +67,7 @@ async def run_prompt(
         DialogInsightsTaskArgs(dialog=dialog, person1=person1, person2=person2)
     )
 
-    response = await julep_client.chat.completions.create(
+    response = await litellm.acompletion(
         model=model,
         messages=[
             {

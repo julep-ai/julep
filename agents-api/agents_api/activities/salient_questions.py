@@ -3,7 +3,7 @@ from typing import Callable
 
 from temporalio import activity
 
-from ..clients.model import julep_client
+from ..clients import litellm
 from .types import SalientQuestionsTaskArgs
 
 
@@ -33,14 +33,14 @@ def make_prompt(args: SalientQuestionsTaskArgs):
 async def run_prompt(
     statements: list[str],
     num: int = 3,
-    model: str = "julep-ai/samantha-1-turbo",
+    model: str = "gpt-4o",
     max_tokens: int = 400,
     temperature: float = 0.6,
     parser: Callable[[str], str] = lambda x: x,
 ) -> str:
     prompt = make_prompt(SalientQuestionsTaskArgs(statements=statements, num=num))
 
-    response = await julep_client.chat.completions.create(
+    response = await litellm.acompletion(
         model=model,
         messages=[
             {

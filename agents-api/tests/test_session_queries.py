@@ -21,7 +21,7 @@ from tests.fixtures import (
     test_user,
 )
 
-MODEL = "julep-ai/samantha-1-turbo"
+MODEL = "gpt-4o"
 
 
 @test("model: create session")
