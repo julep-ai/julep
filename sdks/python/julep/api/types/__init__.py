@@ -84,13 +84,6 @@ from .entries_base_entry_content_item_item import (
 )
 from .entries_base_entry_source import EntriesBaseEntrySource
 from .entries_chat_ml_image_content_part import EntriesChatMlImageContentPart
-from .entries_chat_ml_message import EntriesChatMlMessage
-from .entries_chat_ml_message_content import EntriesChatMlMessageContent
-from .entries_chat_ml_message_content_item import (
-    EntriesChatMlMessageContentItem,
-    EntriesChatMlMessageContentItem_ImageUrl,
-    EntriesChatMlMessageContentItem_Text,
-)
 from .entries_chat_ml_role import EntriesChatMlRole
 from .entries_chat_ml_text_content_part import EntriesChatMlTextContentPart
 from .entries_entry import EntriesEntry
@@ -323,11 +316,6 @@ __all__ = [
     "EntriesBaseEntryContentItemItem_Text",
     "EntriesBaseEntrySource",
     "EntriesChatMlImageContentPart",
-    "EntriesChatMlMessage",
-    "EntriesChatMlMessageContent",
-    "EntriesChatMlMessageContentItem",
-    "EntriesChatMlMessageContentItem_ImageUrl",
-    "EntriesChatMlMessageContentItem_Text",
     "EntriesChatMlRole",
     "EntriesChatMlTextContentPart",
     "EntriesEntry",

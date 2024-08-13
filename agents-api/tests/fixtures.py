@@ -1,7 +1,9 @@
+from unittest.mock import patch
 from uuid import uuid4
 
 from cozo_migrate.api import apply, init
 from fastapi.testclient import TestClient
+from litellm.types.utils import Choices, ModelResponse
 from pycozo import Client as CozoClient
 from temporalio.client import WorkflowHandle
 from ward import fixture
@@ -18,6 +20,7 @@ from agents_api.autogen.openapi_model import (
 from agents_api.env import api_key, api_key_header_name
 from agents_api.models.agent.create_agent import create_agent
 from agents_api.models.agent.delete_agent import delete_agent
+from agents_api.models.developer.get_developer import get_developer
 from agents_api.models.docs.create_doc import create_doc
 from agents_api.models.docs.delete_doc import delete_doc
 from agents_api.models.execution.create_execution import create_execution
@@ -30,6 +33,8 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
+
+EMBEDDING_SIZE: int = 1024
 
 
 @fixture(scope="global")
@@ -63,6 +68,32 @@ def test_developer_id(cozo_client=cozo_client):
     :delete developers {{ developer_id, email }}
     """
     )
+
+
+@fixture(scope="global")
+def test_developer(cozo_client=cozo_client, developer_id=test_developer_id):
+    return get_developer(
+        developer_id=developer_id,
+        client=cozo_client,
+    )
+
+
+@fixture(scope="global")
+def patch_embed_acompletion():
+    mock_model_response = ModelResponse(
+        id="fake_id",
+        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
+        created=0,
+        object="text_completion",
+    )
+
+    with patch("agents_api.clients.embed.embed") as embed, patch(
+        "agents_api.clients.litellm.acompletion"
+    ) as acompletion:
+        embed.return_value = [[1.0] * EMBEDDING_SIZE]
+        acompletion.return_value = mock_model_response
+
+        yield embed, acompletion
 
 
 @fixture(scope="global")
@@ -232,10 +263,12 @@ def test_execution(
 
     yield execution
 
-    client.run(f"""
+    client.run(
+        f"""
     ?[execution_id] <- ["{str(execution.id)}"]
     :delete executions {{ execution_id  }}
-    """)
+    """
+    )
 
 
 @fixture(scope="global")

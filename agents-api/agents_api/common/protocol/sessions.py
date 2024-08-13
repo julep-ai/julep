@@ -54,7 +54,7 @@ class ChatContext(SessionData):
         """
         Get the active agent from the session data.
         """
-        requested_agent: UUID | None = self.settings.agent
+        requested_agent: UUID | None = self.settings and self.settings.agent
 
         if requested_agent:
             assert requested_agent in [agent.id for agent in self.agents], (
@@ -67,7 +67,7 @@ class ChatContext(SessionData):
         return self.agents[0]
 
     def merge_settings(self, chat_input: ChatInput) -> ChatSettings:
-        request_settings = ChatSettings.model_validate(chat_input)
+        request_settings = chat_input.model_dump(exclude_unset=True)
         active_agent = self.get_active_agent()
         default_settings = active_agent.default_settings
 
@@ -75,7 +75,7 @@ class ChatContext(SessionData):
             **{
                 "model": active_agent.model,
                 **default_settings.model_dump(),
-                **request_settings.model_dump(exclude_unset=True),
+                **request_settings,
             }
         )
 

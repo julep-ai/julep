@@ -108,6 +108,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
         data=UpdateAgentRequest(
             name="updated agent",
             about="updated agent about",
+            model="gpt-4o",
             default_settings={"temperature": 1.0},
             metadata={"hello": "world"},
         ),

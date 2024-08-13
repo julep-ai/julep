@@ -13,5 +13,5 @@ export type Chat_BaseChatOutput = {
   /**
    * The log probabilities of tokens
    */
-  logprobs: Chat_LogProbResponse | null;
+  logprobs?: Chat_LogProbResponse;
 };

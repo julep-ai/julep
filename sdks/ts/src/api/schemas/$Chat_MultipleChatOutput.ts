@@ -14,7 +14,7 @@ export const $Chat_MultipleChatOutput = {
         messages: {
           type: "array",
           contains: {
-            type: "Entries_ChatMLMessage",
+            type: "Entries_InputChatMLMessage",
           },
           isRequired: true,
         },
