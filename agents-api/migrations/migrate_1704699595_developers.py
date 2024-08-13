@@ -29,7 +29,7 @@ def up(client):
         =>
         name: String,
         about: String,
-        model: String default 'julep-ai/samantha-1-turbo',
+        model: String default 'gpt-4o',
         created_at: Float default now(),
         updated_at: Float default now(),
     }
@@ -99,7 +99,7 @@ def down(client):
         =>
         name: String,
         about: String,
-        model: String default 'julep-ai/samantha-1-turbo',
+        model: String default 'gpt-4o',
         created_at: Float default now(),
         updated_at: Float default now(),
     }

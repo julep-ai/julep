@@ -4,7 +4,8 @@ from uuid import UUID
 
 from temporalio import activity
 
-from ..clients.model import julep_client
+from agents_api.clients import litellm
+
 from .types import ChatML, MemoryManagementTaskArgs
 
 example_previous_memory = """
@@ -120,7 +121,7 @@ async def run_prompt(
     dialog: list[ChatML],
     session_id: UUID,
     previous_memories: list[str] = [],
-    model: str = "julep-ai/samantha-1-turbo",
+    model: str = "gpt-4o",
     max_tokens: int = 400,
     temperature: float = 0.4,
     parser: Callable[[str], str] = lambda x: x,
@@ -134,7 +135,7 @@ async def run_prompt(
         )
     )
 
-    response = await julep_client.chat.completions.create(
+    response = await litellm.acompletion(
         model=model,
         messages=[
             {

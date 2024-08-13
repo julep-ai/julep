@@ -15,7 +15,7 @@ from agents_api.models.execution.get_execution import get_execution
 from agents_api.models.execution.list_executions import list_executions
 from tests.fixtures import cozo_client, test_developer_id, test_execution, test_task
 
-MODEL = "julep-ai/samantha-1-turbo"
+MODEL = "gpt-4o"
 
 
 @test("model: create execution")

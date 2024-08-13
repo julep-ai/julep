@@ -2,7 +2,6 @@
 The `activities` module within the agents-api package is designed to facilitate various activities related to agent interactions. This includes handling memory management, generating insights from dialogues, summarizing relationships, and more. Each file within the module offers specific functionality:
 
 - `co_density.py`: Conducts cognitive density analysis to generate concise, entity-dense summaries.
-- `demo.py`: Provides a simple demonstration of defining an activity with Temporal.
 - `dialog_insights.py`: Extracts insights from dialogues, identifying details that participants might find interesting.
 - `mem_mgmt.py`: Manages memory by updating and incorporating new personality information from dialogues.
 - `mem_rating.py`: Rates memories based on their poignancy and importance.

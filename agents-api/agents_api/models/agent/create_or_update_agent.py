@@ -48,7 +48,7 @@ def create_or_update_agent(
     - name (str): The name of the agent.
     - about (str): A description of the agent.
     - instructions (list[str], optional): A list of instructions for using the agent. Defaults to an empty list.
-    - model (str, optional): The model identifier for the agent. Defaults to "julep-ai/samantha-1-turbo".
+    - model (str, optional): The model identifier for the agent. Defaults to "gpt-4o".
     - metadata (dict, optional): A dictionary of metadata for the agent. Defaults to an empty dict.
     - default_settings (dict, optional): A dictionary of default settings for the agent. Defaults to an empty dict.
     - client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.

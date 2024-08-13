@@ -87,8 +87,8 @@ CLAUDE_MODELS: Dict[str, int] = {
 OPENAI_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **GPT3_5_MODELS, **GPT3_MODELS}
 
 LOCAL_MODELS = {
-    "julep-ai/samantha-1-turbo": 32768,
-    "julep-ai/samantha-1-turbo-awq": 32768,
+    "gpt-4o": 32768,
+    "gpt-4o-awq": 32768,
     "TinyLlama/TinyLlama_v1.1": 2048,
     "casperhansen/llama-3-8b-instruct-awq": 8192,
     "julep-ai/Hermes-2-Theta-Llama-3-8B": 8192,

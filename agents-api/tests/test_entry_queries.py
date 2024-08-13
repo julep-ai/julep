@@ -14,7 +14,7 @@ from agents_api.models.entry.get_history import get_history
 from agents_api.models.entry.list_entries import list_entries
 from tests.fixtures import cozo_client, test_developer_id, test_session
 
-MODEL = "julep-ai/samantha-1-turbo"
+MODEL = "gpt-4o"
 
 
 @test("model: create entry")

@@ -3,7 +3,7 @@ from typing import Callable
 
 from temporalio import activity
 
-from ..clients.model import julep_client
+from ..clients import litellm
 from .types import MemoryRatingTaskArgs
 
 
@@ -40,14 +40,14 @@ def make_prompt(args: MemoryRatingTaskArgs):
 
 async def run_prompt(
     memory: str,
-    model: str = "julep-ai/samantha-1-turbo",
+    model: str = "gpt-4o",
     max_tokens: int = 400,
     temperature: float = 0.1,
     parser: Callable[[str], str] = lambda x: x,
 ) -> str:
     prompt = make_prompt(MemoryRatingTaskArgs(memory=memory))
 
-    response = await julep_client.chat.completions.create(
+    response = await litellm.acompletion(
         model=model,
         messages=[
             {

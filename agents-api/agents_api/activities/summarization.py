@@ -18,7 +18,7 @@ from agents_api.rec_sum.entities import get_entities
 from agents_api.rec_sum.summarize import summarize_messages
 from agents_api.rec_sum.trim import trim_messages
 
-from ..clients.litellm import acompletion
+from ..clients import litellm
 from ..env import summarization_model_name
 
 
@@ -142,14 +142,14 @@ def make_prompt(
 async def run_prompt(
     dialog: list[Entry],
     previous_memories: list[str],
-    model: str = "julep-ai/samantha-1-turbo",
+    model: str = "gpt-4o",
     max_tokens: int = 400,
     temperature: float = 0.1,
     parser: Callable[[str], str] = lambda x: x,
     **kwargs,
 ) -> str:
     prompt = make_prompt(dialog, previous_memories, **kwargs)
-    response = await acompletion(
+    response = await litellm.acompletion(
         model=model,
         messages=[
             {
