@@ -232,6 +232,7 @@ def wrap_in_class(
     cls: Type[ModelT] | Callable[..., ModelT],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
+    _kind: str | None = None,
 ):
     def decorator(func: Callable[P, pd.DataFrame]):
         @wraps(func)
@@ -239,6 +240,9 @@ def wrap_in_class(
             df = func(*args, **kwargs)
 
             # Convert df to list of dicts
+            if _kind:
+                df = df[df["_kind"] == _kind]
+
             data = df.to_dict(orient="records")
 
             nonlocal transform

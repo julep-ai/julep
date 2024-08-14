@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import make_session
 from ...common.protocol.sessions import ChatContext
+from ..session.prepare_session_data import prepare_session_data
 from ..utils import (
     cozo_query,
     fix_uuid_if_present,
@@ -16,7 +17,6 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
-from .prepare_session_data import prepare_session_data
 
 
 @rewrap_exceptions(

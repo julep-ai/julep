@@ -62,6 +62,7 @@ def get_history(
                 content,
                 source,
                 token_count,
+                tokenizer,
                 created_at,
                 timestamp,
             },
@@ -75,6 +76,7 @@ def get_history(
                 "content":     content,
                 "source":      source,
                 "token_count": token_count,
+                "tokenizer":   tokenizer,
                 "created_at":  created_at,
                 "timestamp":   timestamp
             }

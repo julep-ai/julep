@@ -65,6 +65,7 @@ def list_entries(
             content,
             source,
             token_count,
+            tokenizer,
             created_at,
             timestamp,
         ] := *entries {{
@@ -75,6 +76,7 @@ def list_entries(
             content,
             source,
             token_count,
+            tokenizer,
             created_at,
             timestamp,
         }},

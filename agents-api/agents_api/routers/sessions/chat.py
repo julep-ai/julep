@@ -9,74 +9,18 @@ from ...autogen.openapi_model import (
     ChatResponse,
     ChunkChatResponse,
     CreateEntryRequest,
-    DocReference,
-    History,
     MessageChatResponse,
 )
-from ...clients import embed, litellm
+from ...clients import litellm
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
-from ...models.docs.search_docs_hybrid import search_docs_hybrid
+from ...models.chat.gather_messages import gather_messages
+from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
-from ...models.entry.get_history import get_history
-from ...models.session.prepare_chat_context import prepare_chat_context
 from .router import router
-
-
-async def get_messages(
-    *,
-    developer: Developer,
-    session_id: UUID,
-    new_raw_messages: list[dict],
-    chat_context: ChatContext,
-    recall: bool,
-):
-    assert len(new_raw_messages) > 0
-
-    # Get the session history
-    history: History = get_history(
-        developer_id=developer.id,
-        session_id=session_id,
-        allowed_sources=["api_request", "api_response", "tool_response", "summarizer"],
-    )
-
-    # Keep leaf nodes only
-    relations = history.relations
-    past_messages = [
-        entry.model_dump()
-        for entry in history.entries
-        if entry.id not in {r.head for r in relations}
-    ]
-
-    if not recall:
-        return past_messages, []
-
-    # Search matching docs
-    [query_embedding, *_] = await embed.embed(
-        inputs=[
-            f"{msg.get('name') or msg['role']}: {msg['content']}"
-            for msg in new_raw_messages
-        ],
-        join_inputs=True,
-    )
-    query_text = new_raw_messages[-1]["content"]
-
-    # List all the applicable owners to search docs from
-    active_agent_id = chat_context.get_active_agent().id
-    user_ids = [user.id for user in chat_context.users]
-    owners = [("user", user_id) for user_id in user_ids] + [("agent", active_agent_id)]
-
-    doc_references: list[DocReference] = search_docs_hybrid(
-        developer_id=developer.id,
-        owners=owners,
-        query=query_text,
-        query_embedding=query_embedding,
-    )
-
-    return past_messages, doc_references
 
 
 @router.post(
@@ -87,7 +31,7 @@ async def get_messages(
 async def chat(
     developer: Annotated[Developer, Depends(get_developer_data)],
     session_id: UUID,
-    input: ChatInput,
+    chat_input: ChatInput,
     background_tasks: BackgroundTasks,
 ) -> ChatResponse:
     # First get the chat context
@@ -97,18 +41,17 @@ async def chat(
     )
 
     # Merge the settings and prepare environment
-    chat_context.merge_settings(input)
+    chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings.model_dump()
     env: dict = chat_context.get_chat_environment()
-    new_raw_messages = [msg.model_dump() for msg in input.messages]
+    new_raw_messages = [msg.model_dump() for msg in chat_input.messages]
 
     # Render the messages
-    past_messages, doc_references = await get_messages(
+    past_messages, doc_references = await gather_messages(
         developer=developer,
         session_id=session_id,
-        new_raw_messages=new_raw_messages,
         chat_context=chat_context,
-        recall=input.recall,
+        chat_input=chat_input,
     )
 
     env["docs"] = doc_references
@@ -118,7 +61,7 @@ async def chat(
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
 
-    # Truncate the messages if necessary
+    # TODO: Truncate the messages if necessary
     if chat_context.session.context_overflow == "truncate":
         # messages = messages[-settings["max_tokens"] :]
         raise NotImplementedError("Truncation is not yet implemented")
@@ -133,11 +76,12 @@ async def chat(
     )
 
     # Save the input and the response to the session history
-    if input.save:
-        # TODO: Count the number of tokens before saving it to the session
-
+    if chat_input.save:
         new_entries = [
-            CreateEntryRequest(**msg, source="api_request") for msg in new_messages
+            CreateEntryRequest.from_model_input(
+                model=settings["model"], **msg, source="api_request"
+            )
+            for msg in new_messages
         ]
 
         background_tasks.add_task(
@@ -156,7 +100,9 @@ async def chat(
         raise NotImplementedError("Adaptive context is not yet implemented")
 
     # Return the response
-    chat_response_class = ChunkChatResponse if input.stream else MessageChatResponse
+    chat_response_class = (
+        ChunkChatResponse if chat_input.stream else MessageChatResponse
+    )
     chat_response: ChatResponse = chat_response_class(
         id=uuid4(),
         created_at=utcnow(),
