@@ -78,8 +78,7 @@ def create_entries(
         verify_developer_owns_resource_query(
             developer_id, "sessions", session_id=session_id
         ),
-        mark_session_as_updated
-        and mark_session_updated_query(developer_id, session_id),
+        mark_session_updated_query(developer_id, session_id) if mark_session_as_updated else "",
         create_query,
     ]
 
