@@ -57,7 +57,7 @@ def make_entities_prompt(
 @retry(stop=stop_after_attempt(2))
 async def get_entities(
     chat_session,
-    model="gpt-4-turbo",
+    model="gpt-4o",
     stop=["</ct:entities"],
     temperature=0.7,
     **kwargs,

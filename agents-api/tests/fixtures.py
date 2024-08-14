@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from litellm.types.utils import Choices, ModelResponse
 from pycozo import Client as CozoClient
 from temporalio.client import WorkflowHandle
+from temporalio.testing import ActivityEnvironment, WorkflowEnvironment
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
@@ -33,6 +34,7 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
+from agents_api.worker.worker import create_worker
 
 EMBEDDING_SIZE: int = 1024
 
@@ -47,6 +49,31 @@ def cozo_client(migrations_dir: str = "./migrations"):
     apply(client, migrations_dir=migrations_dir, all_=True)
 
     return client
+
+
+@fixture(scope="test")
+def activity_environment():
+    return ActivityEnvironment()
+
+
+@fixture(scope="global")
+async def workflow_environment():
+    wf_env = await WorkflowEnvironment.start_local()
+    return wf_env
+
+
+@fixture(scope="global")
+async def temporal_client(wf_env=workflow_environment):
+    return wf_env.client
+
+
+@fixture(scope="global")
+async def temporal_worker(temporal_client=temporal_client):
+    worker = await create_worker(client=temporal_client)
+
+    async with worker as running_worker:
+        yield running_worker
+        await running_worker.shutdown()
 
 
 @fixture(scope="global")

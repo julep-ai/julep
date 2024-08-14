@@ -37,7 +37,7 @@ def embed_snippets(
     *,
     developer_id: UUID,
     doc_id: UUID,
-    snippet_indices: list[int] | tuple[int],
+    snippet_indices: list[int] | tuple[int, ...],
     embeddings: list[list[float]],
     embedding_size: int = 1024,
 ) -> tuple[list[str], dict]:
