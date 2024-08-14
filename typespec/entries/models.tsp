@@ -91,8 +91,8 @@ model BaseEntry {
     content: EntryContent | EntryContent[];
     source: entrySource;
 
-    tokenizer?: string;
-    token_count?: uint16;
+    tokenizer: string;
+    token_count: uint16;
 
     /** This is the time that this event refers to. */
     @minValue(0)

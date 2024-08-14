@@ -45,8 +45,8 @@ class BaseEntry(BaseModel):
     source: Literal[
         "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
     ]
-    tokenizer: str | None = None
-    token_count: int | None = None
+    tokenizer: str
+    token_count: int
     timestamp: Annotated[float, Field(ge=0.0)]
     """
     This is the time that this event refers to.

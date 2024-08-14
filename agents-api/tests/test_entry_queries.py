@@ -27,8 +27,8 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that the entry can be successfully added using the create_entries function.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="internal",
         content="test entry content",
@@ -50,8 +50,8 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that the entry can be successfully added using the create_entries function.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="internal",
         content="test entry content",
@@ -84,15 +84,15 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that entries matching specific criteria can be successfully retrieved.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="api_request",
         content="test entry content",
     )
 
-    internal_entry = CreateEntryRequest(
-        session_id=session.id,
+    internal_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         content="test entry content",
         source="internal",
@@ -122,15 +122,15 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that entries matching specific criteria can be successfully retrieved.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="api_request",
         content="test entry content",
     )
 
-    internal_entry = CreateEntryRequest(
-        session_id=session.id,
+    internal_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         content="test entry content",
         source="internal",
@@ -161,15 +161,15 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that entries can be successfully deleted using the delete_entries function.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="api_request",
         content="test entry content",
     )
 
-    internal_entry = CreateEntryRequest(
-        session_id=session.id,
+    internal_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         content="internal entry content",
         source="internal",
