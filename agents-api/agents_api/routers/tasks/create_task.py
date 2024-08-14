@@ -29,6 +29,4 @@ async def create_task(
         data=data,
     )
 
-    return ResourceCreatedResponse(
-        id=task.id, created_at=task.created_at, jobs=[]
-    )
+    return ResourceCreatedResponse(id=task.id, created_at=task.created_at, jobs=[])

@@ -81,7 +81,7 @@ def update_session(
             *sessions{{
                 {rest_fields}, @ "NOW"
             }},
-            updated_at = [floor(now()), true]
+            updated_at = 'ASSERT'
 
         :put sessions {{
             {all_fields}, updated_at

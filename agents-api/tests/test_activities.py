@@ -5,7 +5,6 @@ from agents_api.activities.embed_docs import embed_docs
 from .fixtures import (
     cozo_client,
     patch_embed_acompletion,
-    temporal_client,
     temporal_worker,
     test_developer_id,
     test_doc,
@@ -46,7 +45,6 @@ async def _(
 async def _(
     workflow_environment=workflow_environment,
     worker=temporal_worker,
-    client=temporal_client,
 ):
     async with workflow_environment as wf_env:
         assert wf_env is not None

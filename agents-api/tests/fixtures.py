@@ -59,21 +59,19 @@ def activity_environment():
 @fixture(scope="global")
 async def workflow_environment():
     wf_env = await WorkflowEnvironment.start_local()
-    return wf_env
+    yield wf_env
+    await wf_env.shutdown()
 
 
 @fixture(scope="global")
-async def temporal_client(wf_env=workflow_environment):
-    return wf_env.client
+async def temporal_worker(wf_env=workflow_environment):
+    worker = await create_worker(client=wf_env.client)
 
-
-@fixture(scope="global")
-async def temporal_worker(temporal_client=temporal_client):
-    worker = await create_worker(client=temporal_client)
-
+    # FIXME: This does not stop the worker properly
+    c = worker.shutdown()
     async with worker as running_worker:
         yield running_worker
-        await running_worker.shutdown()
+        await c
 
 
 @fixture(scope="global")

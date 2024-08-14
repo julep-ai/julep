@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -46,6 +48,7 @@ async def create_worker(client: Client | None = None):
     # Initialize the worker with the specified task queue, workflows, and activities
     worker = Worker(
         client,
+        graceful_shutdown_timeout=timedelta(seconds=30),
         task_queue=temporal_task_queue,
         workflows=[
             SummarizationWorkflow,

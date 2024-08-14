@@ -71,16 +71,42 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
         to_uuid("{str(session_id)}"),
     ]]
 
-    ?[developer_id, session_id, updated_at] :=
+    ?[
+        developer_id, 
+        session_id,
+        situation,
+        summary,
+        created_at,
+        metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
+        updated_at,
+    ] :=
         input[developer_id, session_id],
         *sessions {{
             session_id,
+            situation,
+            summary,
+            created_at,
+            metadata,
+            render_templates,
+            token_budget,
+            context_overflow,
+            @ 'NOW'
         }},
         updated_at = [floor(now()), true]
 
-    :update sessions {{
+    :put sessions {{
         developer_id,
         session_id,
+        situation,
+        summary,
+        created_at,
+        metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
         updated_at,
     }}
     """
@@ -148,8 +174,7 @@ def cozo_query(
         and then run the query using the client, returning a DataFrame.
         """
 
-        if debug:
-            from pprint import pprint
+        from pprint import pprint
 
         @wraps(func)
         def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
@@ -162,17 +187,23 @@ def cozo_query(
                 query = "}\n\n{\n".join(queries)
                 query = f"{{ {query} }}"
 
+            debug and print(query)
             debug and pprint(
                 dict(
-                    query=query,
                     variables=variables,
                 )
             )
 
+            # Run the query
             from ..clients.cozo import get_cozo_client
 
-            client = client or get_cozo_client()
-            result = client.run(query, variables)
+            try:
+                client = client or get_cozo_client()
+                result = client.run(query, variables)
+
+            except Exception as e:
+                debug and print(repr(getattr(e, "__cause__", None) or e))
+                raise
 
             # Need to fix the UUIDs in the result
             result = result.map(fix_uuid_if_present)
