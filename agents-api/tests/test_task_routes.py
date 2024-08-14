@@ -3,24 +3,24 @@ from uuid import uuid4
 
 from ward import test
 
-from tests.fixtures import client, make_request, test_execution, test_task
+from tests.fixtures import client, make_request, test_agent
 
 
 @test("route: unauthorized should fail")
-def _(client=client):
+def _(client=client, agent=test_agent):
     data = dict(
         name="test user",
         main={
             "kind_": "evaluate",
             "evaluate": {
                 "additionalProp1": "value1",
-            }
+            },
         },
     )
 
     response = client.request(
         method="POST",
-        url="/tasks",
+        url=f"/agents/{str(agent.id)}/tasks",
         data=data,
     )
 
@@ -28,20 +28,20 @@ def _(client=client):
 
 
 @test("route: create task")
-def _(make_request=make_request):
+def _(make_request=make_request, agent=test_agent):
     data = dict(
         name="test user",
         main={
             "kind_": "evaluate",
             "evaluate": {
                 "additionalProp1": "value1",
-            }
+            },
         },
     )
 
     response = make_request(
         method="POST",
-        url="/tasks",
+        url=f"/agents/{str(agent.id)}/tasks",
         json=data,
     )
 

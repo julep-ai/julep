@@ -11,7 +11,6 @@ from ...autogen.openapi_model import (
     InputChatMLMessage,
     PromptStep,
     ToolCallStep,
-    UpdateExecutionRequest,
     YieldStep,
 )
 from ...clients import (
@@ -24,9 +23,6 @@ from ...common.protocol.tasks import (
 from ...common.utils.template import render_template
 from ...models.execution.create_execution_transition import (
     create_execution_transition as create_execution_transition_query,
-)
-from ...models.execution.update_execution import (
-    update_execution as update_execution_query,
 )
 
 
@@ -134,8 +130,7 @@ async def transition_step(
         "cancelled",
     ] = "awaiting_input",
 ):
-    print("Running transition step")
-    # raise NotImplementedError()
+    activity.heartbeat("Running transition step")
 
     # Get transition info
     transition_data = transition_info.model_dump(by_alias=False)
@@ -150,16 +145,9 @@ async def transition_step(
         developer_id=context.developer_id,
         execution_id=context.execution.id,
         transition_id=uuid4(),
-        **transition_data,
-    )
-
-    update_execution_query(
-        developer_id=context.developer_id,
+        update_execution_status=True,
         task_id=context.task.id,
-        execution_id=context.execution.id,
-        data=UpdateExecutionRequest(
-            status=execution_status,
-        ),
+        **transition_data,
     )
 
     # Raise if it's a waiting step

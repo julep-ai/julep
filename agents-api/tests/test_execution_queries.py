@@ -83,3 +83,31 @@ def _(client=cozo_client, developer_id=test_developer_id, execution=test_executi
     assert result is not None
     assert result.type == "step"
     assert result.output == {"result": "test"}
+
+
+@test("model: create execution transition with execution update")
+def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    task=test_task,
+    execution=test_execution,
+):
+    result = create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            **{
+                "type": "step",
+                "output": {"result": "test"},
+                "current": ["main", 0],
+                "next": None,
+            }
+        ),
+        task_id=task.id,
+        update_execution_status=True,
+        client=client,
+    )
+
+    assert result is not None
+    assert result.type == "step"
+    assert result.output == {"result": "test"}

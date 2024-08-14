@@ -25,7 +25,7 @@ from ...autogen.openapi_model import (
 class ExecutionInput(BaseModel):
     developer_id: UUID
     execution: Execution
-    task: TaskSpec
+    task: TaskSpecDef
     agent: Agent
     tools: list[Tool]
     arguments: dict[str, Any]
