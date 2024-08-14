@@ -44,7 +44,7 @@ def make_summarize_prompt(session, user="a user", assistant="gpt-4-turbo", **_):
 @retry(stop=stop_after_attempt(2))
 async def summarize_messages(
     chat_session,
-    model="gpt-4-turbo",
+    model="gpt-4o",
     stop=["</ct:summarized"],
     temperature=0.8,
     **kwargs,

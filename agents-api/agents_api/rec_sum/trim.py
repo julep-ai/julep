@@ -42,7 +42,7 @@ def make_trim_prompt(session, user="a user", assistant="gpt-4-turbo", **_):
 @retry(stop=stop_after_attempt(2))
 async def trim_messages(
     chat_session,
-    model="gpt-4-turbo",
+    model="gpt-4o",
     stop=["</ct:trimmed"],
     temperature=0.7,
     **kwargs,

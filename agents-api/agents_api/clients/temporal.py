@@ -13,7 +13,11 @@ from ..common.protocol.tasks import ExecutionInput
 from ..worker.codec import pydantic_data_converter
 
 
-async def get_client():
+async def get_client(
+    worker_url: str = temporal_worker_url,
+    namespace: str = temporal_namespace,
+    data_converter=pydantic_data_converter,
+):
     tls_config = False
 
     if temporal_private_key and temporal_client_cert:
@@ -23,15 +27,17 @@ async def get_client():
         )
 
     return await Client.connect(
-        temporal_worker_url,
-        namespace=temporal_namespace,
+        worker_url,
+        namespace=namespace,
         tls=tls_config,
-        data_converter=pydantic_data_converter,
+        data_converter=data_converter,
     )
 
 
-async def run_summarization_task(session_id: UUID, job_id: UUID):
-    client = await get_client()
+async def run_summarization_task(
+    session_id: UUID, job_id: UUID, client: Client | None = None
+):
+    client = client or (await get_client())
 
     await client.execute_workflow(
         "SummarizationWorkflow",
@@ -42,9 +48,13 @@ async def run_summarization_task(session_id: UUID, job_id: UUID):
 
 
 async def run_embed_docs_task(
-    doc_id: UUID, title: str, content: list[str], job_id: UUID
+    doc_id: UUID,
+    title: str,
+    content: list[str],
+    job_id: UUID,
+    client: Client | None = None,
 ):
-    client = await get_client()
+    client = client or (await get_client())
 
     await client.execute_workflow(
         "EmbedDocsWorkflow",
@@ -55,9 +65,12 @@ async def run_embed_docs_task(
 
 
 async def run_truncation_task(
-    token_count_threshold: int, session_id: UUID, job_id: UUID
+    token_count_threshold: int,
+    session_id: UUID,
+    job_id: UUID,
+    client: Client | None = None,
 ):
-    client = await get_client()
+    client = client or (await get_client())
 
     await client.execute_workflow(
         "TruncationWorkflow",
@@ -72,8 +85,9 @@ async def run_task_execution_workflow(
     job_id: UUID,
     start: tuple[str, int] = ("main", 0),
     previous_inputs: list[dict] = [],
+    client: Client | None = None,
 ):
-    client = await get_client()
+    client = client or (await get_client())
 
     return await client.start_workflow(
         "TaskExecutionWorkflow",

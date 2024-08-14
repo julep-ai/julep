@@ -4,9 +4,9 @@ from uuid import UUID
 
 from temporalio import activity
 
-from agents_api.clients import litellm
-
-from .types import ChatML, MemoryManagementTaskArgs
+from ..autogen.openapi_model import InputChatMLMessage
+from ..clients import litellm
+from .types import MemoryManagementTaskArgs
 
 example_previous_memory = """
 Speaker 1: Composes and listens to music. Likes to buy basketball shoes but doesn't wear them often.
@@ -118,7 +118,7 @@ def make_prompt(
 
 
 async def run_prompt(
-    dialog: list[ChatML],
+    dialog: list[InputChatMLMessage],
     session_id: UUID,
     previous_memories: list[str] = [],
     model: str = "gpt-4o",
@@ -156,7 +156,9 @@ async def run_prompt(
 
 @activity.defn
 async def mem_mgmt(
-    dialog: list[ChatML], session_id: UUID, previous_memories: list[str] = []
+    dialog: list[InputChatMLMessage],
+    session_id: UUID,
+    previous_memories: list[str] = [],
 ) -> None:
     # session_id = UUID(session_id)
     # entries = [

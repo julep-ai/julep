@@ -27,28 +27,30 @@ class Entry(BaseEntry):
     token_count: int
     tokenizer: str = Field(default="character_count")
 
-    @computed_field
-    @property
-    def token_count(self) -> int:
-        """Calculates the token count based on the content's character count. The tokenizer 'character_count' divides the length of the content by 3.5 to estimate the token count. Raises NotImplementedError for unknown tokenizers."""
-        if self.tokenizer == "character_count":
-            content_length = 0
-            if isinstance(self.content, str):
-                content_length = len(self.content)
-            elif isinstance(self.content, dict):
-                content_length = len(json.dumps(self.content))
-            elif isinstance(self.content, list):
-                for part in self.content:
-                    if isinstance(part, ChatMLTextContentPart):
-                        content_length += len(part.text)
-                    elif isinstance(part, ChatMLImageContentPart):
-                        content_length += (
-                            LOW_IMAGE_TOKEN_COUNT
-                            if part.image_url.detail == "low"
-                            else HIGH_IMAGE_TOKEN_COUNT
-                        )
+    # TODO: Replace this with a proper implementation.
 
-            # Divide the content length by 3.5 to estimate token count based on character count.
-            return int(content_length // 3.5)
+    # @computed_field
+    # @property
+    # def token_count(self) -> int:
+    #     """Calculates the token count based on the content's character count. The tokenizer 'character_count' divides the length of the content by 3.5 to estimate the token count. Raises NotImplementedError for unknown tokenizers."""
+    #     if self.tokenizer == "character_count":
+    #         content_length = 0
+    #         if isinstance(self.content, str):
+    #             content_length = len(self.content)
+    #         elif isinstance(self.content, dict):
+    #             content_length = len(json.dumps(self.content))
+    #         elif isinstance(self.content, list):
+    #             for part in self.content:
+    #                 if isinstance(part, ChatMLTextContentPart):
+    #                     content_length += len(part.text)
+    #                 elif isinstance(part, ChatMLImageContentPart):
+    #                     content_length += (
+    #                         LOW_IMAGE_TOKEN_COUNT
+    #                         if part.image_url.detail == "low"
+    #                         else HIGH_IMAGE_TOKEN_COUNT
+    #                     )
 
-        raise NotImplementedError(f"Unknown tokenizer: {self.tokenizer}")
+    #         # Divide the content length by 3.5 to estimate token count based on character count.
+    #         return int(content_length // 3.5)
+
+    #     raise NotImplementedError(f"Unknown tokenizer: {self.tokenizer}")

@@ -17,7 +17,6 @@ from ...autogen.openapi_model import (
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
-from ...clients.worker.types import ChatML
 from ...common.protocol.tasks import (
     StepContext,
     TransitionInfo,
@@ -53,7 +52,9 @@ async def prompt_step(context: StepContext) -> dict:
     )
 
     messages = [
-        ChatML(role="user", content=m) if isinstance(m, str) else ChatML(**m)
+        InputChatMLMessage(role="user", content=m)
+        if isinstance(m, str)
+        else InputChatMLMessage(**m)
         for m in messages
     ]
 
