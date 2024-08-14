@@ -31,6 +31,7 @@ from ..utils import (
     Execution,
     one=True,
     transform=lambda d: {"id": d["execution_id"], **d},
+    _kind="inserted",
 )
 @cozo_query
 @beartype

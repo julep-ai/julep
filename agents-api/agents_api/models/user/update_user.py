@@ -28,6 +28,7 @@ from ..utils import (
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["user_id"], "jobs": [], **d},
+    _kind="replaced",
 )
 @cozo_query
 @beartype

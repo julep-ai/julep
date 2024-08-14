@@ -39,6 +39,7 @@ from ..utils import (
         "updated_at": d["updated_at_ms"][0] / 1000,
         **d,
     },
+    _kind="replaced",
 )
 @cozo_query
 @beartype

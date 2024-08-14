@@ -32,6 +32,7 @@ from ..utils import (
         d["type"]: d.pop("spec"),
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype

@@ -90,7 +90,7 @@ def create_entries(
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Relation)
+@wrap_in_class(Relation, _kind="inserted")
 @cozo_query
 @beartype
 def add_entry_relations(

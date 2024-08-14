@@ -32,7 +32,12 @@ from ..utils import (
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
+@wrap_in_class(
+    User,
+    one=True,
+    transform=lambda d: {"id": UUID(d.pop("user_id")), **d},
+    _kind="inserted",
+)
 @cozo_query
 @beartype
 def create_user(

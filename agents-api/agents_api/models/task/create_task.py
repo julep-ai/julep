@@ -32,7 +32,7 @@ from ..utils import (
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(spec_to_task, one=True)
+@wrap_in_class(spec_to_task, one=True, _kind="inserted")
 @cozo_query
 @beartype
 def create_task(

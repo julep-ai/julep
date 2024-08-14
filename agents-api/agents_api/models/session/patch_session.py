@@ -46,6 +46,7 @@ _fields = [
         "jobs": [],
         **d,
     },
+    _kind="replaced",
 )
 @cozo_query
 @beartype
