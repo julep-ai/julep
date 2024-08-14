@@ -5,7 +5,11 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import CreateTransitionRequest, Transition
+from ...autogen.openapi_model import (
+    CreateTransitionRequest,
+    Transition,
+    UpdateExecutionRequest,
+)
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -15,6 +19,7 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+from .update_execution import update_execution
 
 valid_transitions = {
     # Start state
@@ -27,6 +32,16 @@ valid_transitions = {
     "wait": ["resume", "error", "cancelled"],
     "resume": ["wait", "error", "step", "finish", "cancelled"],
     "step": ["wait", "error", "step", "finish", "cancelled"],
+}
+
+transition_to_execution_status = {
+    "init": "queued",
+    "wait": "awaiting_input",
+    "resume": "running",
+    "step": "running",
+    "finish": "succeeded",
+    "error": "failed",
+    "cancelled": "cancelled",
 }
 
 
@@ -46,17 +61,22 @@ def create_execution_transition(
     *,
     developer_id: UUID,
     execution_id: UUID,
-    transition_id: UUID | None = None,
     data: CreateTransitionRequest,
+    # Only one of these needed
+    transition_id: UUID | None = None,
     task_token: str | None = None,
+    # Only required for updating the execution status as well
+    update_execution_status: bool = False,
+    task_id: UUID | None = None,
 ) -> tuple[list[str], dict]:
     transition_id = transition_id or uuid4()
 
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
 
+    # Prepare the transition data
     transition_data = data.model_dump(exclude_unset=True)
-    columns, values = cozo_process_mutate_data(
+    columns, transition_values = cozo_process_mutate_data(
         {
             **transition_data,
             "task_token": task_token,
@@ -87,8 +107,9 @@ def create_execution_transition(
     :assert some
     """
 
+    # Prepare the insert query
     insert_query = f"""
-    ?[{columns}] <- $values
+    ?[{columns}] <- $transition_values
 
     :insert transitions {{
         {columns}
@@ -96,6 +117,29 @@ def create_execution_transition(
     
     :returning
     """
+
+    validate_status_query, update_execution_query, update_execution_params = (
+        "",
+        "",
+        {},
+    )
+
+    if update_execution_status:
+        assert (
+            task_id is not None
+        ), "task_id is required for updating the execution status"
+
+        # Prepare the execution update query
+        [*_, validate_status_query, update_execution_query], update_execution_params = (
+            update_execution.__wrapped__(
+                developer_id=developer_id,
+                task_id=task_id,
+                execution_id=execution_id,
+                data=UpdateExecutionRequest(
+                    status=transition_to_execution_status[data.type]
+                ),
+            )
+        )
 
     queries = [
         verify_developer_id_query(developer_id),
@@ -105,6 +149,8 @@ def create_execution_transition(
             execution_id=execution_id,
             parents=[("agents", "agent_id"), ("tasks", "task_id")],
         ),
+        validate_status_query,
+        update_execution_query,
         check_last_transition_query,
         insert_query,
     ]
@@ -112,8 +158,9 @@ def create_execution_transition(
     return (
         queries,
         {
-            "values": values,
+            "transition_values": transition_values,
             "next_type": data.type,
             "valid_transitions": valid_transitions,
+            **update_execution_params,
         },
     )
