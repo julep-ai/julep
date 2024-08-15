@@ -28,6 +28,7 @@ from ..utils import (
     ResourceDeletedResponse,
     one=True,
     transform=lambda d: {"id": d["tool_id"], "deleted_at": utcnow(), "jobs": [], **d},
+    _kind="deleted",
 )
 @cozo_query
 @beartype

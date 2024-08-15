@@ -36,6 +36,7 @@ from ..utils import (
         "deleted_at": utcnow(),
         "jobs": [],
     },
+    _kind="deleted",
 )
 @cozo_query
 @beartype

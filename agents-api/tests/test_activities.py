@@ -5,7 +5,6 @@ from agents_api.activities.embed_docs import embed_docs
 from .fixtures import (
     cozo_client,
     patch_embed_acompletion,
-    temporal_client,
     temporal_worker,
     test_developer_id,
     test_doc,
@@ -17,7 +16,18 @@ from .fixtures import (
 # from agents_api.common.protocol.entries import Entry
 
 
-@test("activity: embed_docs")
+@test("activity: check that workflow environment and worker are started correctly")
+async def _(
+    workflow_environment=workflow_environment,
+    worker=temporal_worker,
+):
+    async with workflow_environment as wf_env:
+        assert wf_env is not None
+        assert worker is not None
+        assert worker.is_running
+
+
+@test("activity: call direct embed_docs")
 async def _(
     cozo_client=cozo_client,
     developer_id=test_developer_id,
@@ -40,18 +50,6 @@ async def _(
     )
 
     embed.assert_called_once()
-
-
-@test("activity: check that workflow environment and worker are started correctly")
-async def _(
-    workflow_environment=workflow_environment,
-    worker=temporal_worker,
-    client=temporal_client,
-):
-    async with workflow_environment as wf_env:
-        assert wf_env is not None
-        assert worker is not None
-        assert worker.is_running
 
 
 # @test("get extra entries, do not strip system message")

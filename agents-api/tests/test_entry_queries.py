@@ -5,6 +5,8 @@ It verifies the functionality of adding, retrieving, and processing entries as d
 
 # Tests for entry queries
 
+import time
+
 from ward import test
 
 from agents_api.autogen.openapi_model import CreateEntryRequest
@@ -12,6 +14,7 @@ from agents_api.models.entry.create_entries import create_entries
 from agents_api.models.entry.delete_entries import delete_entries
 from agents_api.models.entry.get_history import get_history
 from agents_api.models.entry.list_entries import list_entries
+from agents_api.models.session.get_session import get_session
 from tests.fixtures import cozo_client, test_developer_id, test_session
 
 MODEL = "gpt-4o"
@@ -24,8 +27,8 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that the entry can be successfully added using the create_entries function.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="internal",
         content="test entry content",
@@ -35,8 +38,43 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         developer_id=developer_id,
         session_id=session.id,
         data=[test_entry],
+        mark_session_as_updated=False,
         client=client,
     )
+
+
+@test("model: create entry, update session")
+def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
+    """
+    Tests the addition of a new entry to the database.
+    Verifies that the entry can be successfully added using the create_entries function.
+    """
+
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
+        role="user",
+        source="internal",
+        content="test entry content",
+    )
+
+    # FIXME: We should make sessions.updated_at also a updated_at_ms field to avoid this sleep
+    time.sleep(1)
+
+    create_entries(
+        developer_id=developer_id,
+        session_id=session.id,
+        data=[test_entry],
+        mark_session_as_updated=True,
+        client=client,
+    )
+
+    updated_session = get_session(
+        developer_id=developer_id,
+        session_id=session.id,
+        client=client,
+    )
+
+    assert updated_session.updated_at > session.updated_at
 
 
 @test("model: get entries")
@@ -46,15 +84,15 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that entries matching specific criteria can be successfully retrieved.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="api_request",
         content="test entry content",
     )
 
-    internal_entry = CreateEntryRequest(
-        session_id=session.id,
+    internal_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         content="test entry content",
         source="internal",
@@ -84,15 +122,15 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that entries matching specific criteria can be successfully retrieved.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="api_request",
         content="test entry content",
     )
 
-    internal_entry = CreateEntryRequest(
-        session_id=session.id,
+    internal_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         content="test entry content",
         source="internal",
@@ -123,15 +161,15 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
     Verifies that entries can be successfully deleted using the delete_entries function.
     """
 
-    test_entry = CreateEntryRequest(
-        session_id=session.id,
+    test_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         source="api_request",
         content="test entry content",
     )
 
-    internal_entry = CreateEntryRequest(
-        session_id=session.id,
+    internal_entry = CreateEntryRequest.from_model_input(
+        model=MODEL,
         role="user",
         content="internal entry content",
         source="internal",

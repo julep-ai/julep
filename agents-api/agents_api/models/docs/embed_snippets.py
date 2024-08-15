@@ -30,6 +30,7 @@ from ..utils import (
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["doc_id"], "updated_at": utcnow(), "jobs": []},
+    _kind="replaced",
 )
 @cozo_query
 @beartype

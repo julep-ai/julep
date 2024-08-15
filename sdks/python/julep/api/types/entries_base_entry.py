@@ -15,8 +15,8 @@ class EntriesBaseEntry(pydantic_v1.BaseModel):
     name: typing.Optional[str] = None
     content: EntriesBaseEntryContent
     source: EntriesBaseEntrySource
-    tokenizer: typing.Optional[str] = None
-    token_count: typing.Optional[int] = None
+    tokenizer: str
+    token_count: int
     timestamp: float = pydantic_v1.Field()
     """
     This is the time that this event refers to.

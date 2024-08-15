@@ -1,4 +1,3 @@
-import json
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -34,6 +33,7 @@ from ..utils import (
         "id": UUID(d.pop("entry_id")),
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -55,10 +55,6 @@ def create_entries(
         item["entry_id"] = item.pop("id", None) or str(uuid4())
         item["created_at"] = (item.get("created_at") or utcnow()).timestamp()
 
-        if not item.get("token_count"):
-            item["token_count"] = len(json.dumps(item)) // 3.5
-            item["tokenizer"] = "character_count"
-
     cols, rows = cozo_process_mutate_data(data_dicts)
 
     # Construct a datalog query to insert the processed entries into the 'cozodb' database.
@@ -78,8 +74,9 @@ def create_entries(
         verify_developer_owns_resource_query(
             developer_id, "sessions", session_id=session_id
         ),
-        mark_session_as_updated
-        and mark_session_updated_query(developer_id, session_id),
+        mark_session_updated_query(developer_id, session_id)
+        if mark_session_as_updated
+        else "",
         create_query,
     ]
 
@@ -93,7 +90,7 @@ def create_entries(
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Relation)
+@wrap_in_class(Relation, _kind="inserted")
 @cozo_query
 @beartype
 def add_entry_relations(

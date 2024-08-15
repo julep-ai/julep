@@ -17,8 +17,8 @@ export type Entries_BaseEntry = {
     | "internal"
     | "summarizer"
     | "meta";
-  tokenizer?: string;
-  token_count?: number;
+  tokenizer: string;
+  token_count: number;
   /**
    * This is the time that this event refers to.
    */

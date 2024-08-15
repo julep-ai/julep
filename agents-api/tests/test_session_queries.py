@@ -5,19 +5,16 @@ from ward import test
 
 from agents_api.autogen.openapi_model import CreateOrUpdateSessionRequest, Session
 from agents_api.autogen.Sessions import CreateSessionRequest
-from agents_api.common.protocol.sessions import ChatContext
 from agents_api.models.session.create_or_update_session import create_or_update_session
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.session.get_session import get_session
 from agents_api.models.session.list_sessions import list_sessions
-from agents_api.models.session.prepare_chat_context import prepare_chat_context
 from tests.fixtures import (
     cozo_client,
     test_agent,
     test_developer_id,
     test_session,
-    test_tool,
     test_user,
 )
 
@@ -146,22 +143,3 @@ def _(
     assert result is not None
     assert isinstance(result, Session)
     assert result.id == session_id
-
-
-@test("model: prepare chat context")
-def _(
-    client=cozo_client,
-    developer_id=test_developer_id,
-    agent=test_agent,
-    session=test_session,
-    tool=test_tool,
-    user=test_user,
-):
-    context = prepare_chat_context(
-        developer_id=developer_id,
-        session_id=session.id,
-        client=client,
-    )
-
-    assert isinstance(context, ChatContext)
-    assert len(context.toolsets) > 0

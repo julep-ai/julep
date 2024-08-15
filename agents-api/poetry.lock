@@ -2103,18 +2103,18 @@ files = [
 
 [[package]]
 name = "langchain"
-version = "0.2.13"
+version = "0.2.14"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain-0.2.13-py3-none-any.whl", hash = "sha256:80f21e48cdada424dd2af9bbf42234fe095744cf181b31eeb63d1da7479e2783"},
-    {file = "langchain-0.2.13.tar.gz", hash = "sha256:947e96ac3153a46aa6a0d8207e5f8b6794084c397f60a01bbf4bba78e6838fee"},
+    {file = "langchain-0.2.14-py3-none-any.whl", hash = "sha256:eed76194ee7d9c081037a3df7868d4de90e0410b51fc1ca933a8379e464bf40c"},
+    {file = "langchain-0.2.14.tar.gz", hash = "sha256:dc2aa5a58882054fb5d043c39ab8332ebd055f88f17839da68e1c7fd0a4fefe2"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
-langchain-core = ">=0.2.30,<0.3.0"
+langchain-core = ">=0.2.32,<0.3.0"
 langchain-text-splitters = ">=0.2.0,<0.3.0"
 langsmith = ">=0.1.17,<0.2.0"
 numpy = {version = ">=1,<2", markers = "python_version < \"3.12\""}
@@ -2149,13 +2149,13 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<9.0.0"
 
 [[package]]
 name = "langchain-core"
-version = "0.2.30"
+version = "0.2.32"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.2.30-py3-none-any.whl", hash = "sha256:ea7eccb9566dd51b2b74bd292c4239d843a77cdba8ffae2b5edf7000d70d4194"},
-    {file = "langchain_core-0.2.30.tar.gz", hash = "sha256:552ec586698140062cd299a83bad7e308f925b496d306b62529579c6fb122f7a"},
+    {file = "langchain_core-0.2.32-py3-none-any.whl", hash = "sha256:1f5584cf0034909e35ea17010a847d4079417e0ddcb5a9eb3fbb2bd55f3268c0"},
+    {file = "langchain_core-0.2.32.tar.gz", hash = "sha256:d82cdc350bbbe74261330d87056b7d9f1fb567828e9e03f708d23a48b941819e"},
 ]
 
 [package.dependencies]
@@ -2255,13 +2255,13 @@ dev = ["Sphinx (>=5.1.1)", "black (==23.12.1)", "build (>=0.10.0)", "coverage (>
 
 [[package]]
 name = "litellm"
-version = "1.43.9"
+version = "1.43.12"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.43.9-py3-none-any.whl", hash = "sha256:54253281139e61f130b7e1a613a11f7a5ee896c2ee8536b0ca9a5ffbfce4c5f0"},
-    {file = "litellm-1.43.9.tar.gz", hash = "sha256:c397a14c9b851f007f09c99e5a28606f7f122fdb4ae954931220f60e9edc6918"},
+    {file = "litellm-1.43.12-py3-none-any.whl", hash = "sha256:f2c5f498a079df6eb8448ac41704367a389ea679a22e195c79b7963ede5cc462"},
+    {file = "litellm-1.43.12.tar.gz", hash = "sha256:719eca58904942465dfd827e9d8f317112996ef481db71f9562f5263a553c74a"},
 ]
 
 [package.dependencies]

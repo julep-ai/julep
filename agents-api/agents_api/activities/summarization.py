@@ -1,23 +1,13 @@
 #!/usr/bin/env python3
 
-import asyncio
-from textwrap import dedent
-from typing import Callable
-from uuid import UUID
 
 import pandas as pd
 from temporalio import activity
 
-# from agents_api.common.protocol.entries import Entry
 # from agents_api.models.entry.entries_summarization import (
 #     entries_summarization_query,
 #     get_toplevel_entries_query,
 # )
-from agents_api.rec_sum.entities import get_entities
-from agents_api.rec_sum.summarize import summarize_messages
-from agents_api.rec_sum.trim import trim_messages
-
-from ..env import summarization_model_name
 
 
 # TODO: remove stubs

@@ -34,7 +34,10 @@ from ..utils import (
     }
 )
 @wrap_in_class(
-    Agent, one=True, transform=lambda d: {"id": UUID(d.pop("agent_id")), **d}
+    Agent,
+    one=True,
+    transform=lambda d: {"id": UUID(d.pop("agent_id")), **d},
+    _kind="inserted",
 )
 @cozo_query
 @beartype

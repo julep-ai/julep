@@ -1,4 +1,5 @@
 # Tests for task routes
+
 from uuid import uuid4
 
 from ward import test
@@ -10,12 +11,14 @@ from tests.fixtures import client, make_request, test_agent
 def _(client=client, agent=test_agent):
     data = dict(
         name="test user",
-        main={
-            "kind_": "evaluate",
-            "evaluate": {
-                "additionalProp1": "value1",
-            },
-        },
+        main=[
+            {
+                "kind_": "evaluate",
+                "evaluate": {
+                    "additionalProp1": "value1",
+                },
+            }
+        ],
     )
 
     response = client.request(
@@ -31,12 +34,14 @@ def _(client=client, agent=test_agent):
 def _(make_request=make_request, agent=test_agent):
     data = dict(
         name="test user",
-        main={
-            "kind_": "evaluate",
-            "evaluate": {
-                "additionalProp1": "value1",
-            },
-        },
+        main=[
+            {
+                "kind_": "evaluate",
+                "evaluate": {
+                    "additionalProp1": "value1",
+                },
+            }
+        ],
     )
 
     response = make_request(

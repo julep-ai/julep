@@ -2,9 +2,7 @@ from uuid import UUID
 
 from temporalio import activity
 
-# from agents_api.autogen.openapi_model import Role
-from agents_api.common.protocol.entries import Entry
-from agents_api.models.entry.delete_entries import delete_entries
+from agents_api.autogen.openapi_model import Entry
 
 # from agents_api.models.entry.entries_summarization import get_toplevel_entries_query
 
@@ -13,8 +11,7 @@ def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list
     if not len(messages):
         return messages
 
-    result: list[UUID] = []
-    token_cnt, offset = 0, 0
+    _token_cnt, _offset = 0, 0
     # if messages[0].role == Role.system:
     #     token_cnt, offset = messages[0].token_count, 1
 

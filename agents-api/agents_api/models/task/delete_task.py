@@ -33,6 +33,7 @@ from ..utils import (
         "deleted_at": utcnow(),
         **d,
     },
+    _kind="deleted",
 )
 @cozo_query
 @beartype

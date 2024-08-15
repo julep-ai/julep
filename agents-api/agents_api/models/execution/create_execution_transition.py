@@ -53,7 +53,10 @@ transition_to_execution_status = {
     }
 )
 @wrap_in_class(
-    Transition, transform=lambda d: {"id": d["transition_id"], **d}, one=True
+    Transition,
+    transform=lambda d: {"id": d["transition_id"], **d},
+    one=True,
+    _kind="inserted",
 )
 @cozo_query
 @beartype

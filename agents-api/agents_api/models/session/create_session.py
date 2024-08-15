@@ -36,6 +36,7 @@ from ..utils import (
         "updated_at": (d.pop("updated_at")[0]),
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype

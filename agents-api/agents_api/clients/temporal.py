@@ -34,52 +34,6 @@ async def get_client(
     )
 
 
-async def run_summarization_task(
-    session_id: UUID, job_id: UUID, client: Client | None = None
-):
-    client = client or (await get_client())
-
-    await client.execute_workflow(
-        "SummarizationWorkflow",
-        args=[str(session_id)],
-        task_queue="memory-task-queue",
-        id=str(job_id),
-    )
-
-
-async def run_embed_docs_task(
-    doc_id: UUID,
-    title: str,
-    content: list[str],
-    job_id: UUID,
-    client: Client | None = None,
-):
-    client = client or (await get_client())
-
-    await client.execute_workflow(
-        "EmbedDocsWorkflow",
-        args=[str(doc_id), title, content],
-        task_queue="memory-task-queue",
-        id=str(job_id),
-    )
-
-
-async def run_truncation_task(
-    token_count_threshold: int,
-    session_id: UUID,
-    job_id: UUID,
-    client: Client | None = None,
-):
-    client = client or (await get_client())
-
-    await client.execute_workflow(
-        "TruncationWorkflow",
-        args=[str(session_id), token_count_threshold],
-        task_queue="memory-task-queue",
-        id=str(job_id),
-    )
-
-
 async def run_task_execution_workflow(
     execution_input: ExecutionInput,
     job_id: UUID,

@@ -1,7 +1,9 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated, Generic, TypeVar
+from typing import Annotated, Generic, Self, Type, TypeVar
 from uuid import UUID
 
+from litellm.utils import _select_tokenizer as select_tokenizer
+from litellm.utils import token_counter
 from pydantic import AwareDatetime, Field
 from pydantic_partial import create_partial_model
 
@@ -34,13 +36,66 @@ CreateTransitionRequest = create_partial_model(
     "metadata",
 )
 
-ChatMLRole = BaseEntry.model_fields["role"].annotation
+ChatMLRole = Literal[
+    "user",
+    "assistant",
+    "system",
+    "function",
+    "function_response",
+    "function_call",
+    "auto",
+]
+
+ChatMLContent = (
+    list[ChatMLTextContentPart | ChatMLImageContentPart]
+    | Tool
+    | ChosenToolCall
+    | str
+    | ToolResponse
+    | list[
+        list[ChatMLTextContentPart | ChatMLImageContentPart]
+        | Tool
+        | ChosenToolCall
+        | str
+        | ToolResponse
+    ]
+)
+
+ChatMLSource = Literal[
+    "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
+]
 
 
 class CreateEntryRequest(BaseEntry):
     timestamp: Annotated[
         float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())
     ]
+
+    @classmethod
+    def from_model_input(
+        cls: Type[Self],
+        model: str,
+        *,
+        role: ChatMLRole,
+        content: ChatMLContent,
+        name: str | None = None,
+        source: ChatMLSource,
+        **kwargs: dict,
+    ) -> Self:
+        tokenizer: dict = select_tokenizer(model=model)
+        token_count = token_counter(
+            model=model, messages=[{"role": role, "content": content, "name": name}]
+        )
+
+        return cls(
+            role=role,
+            content=content,
+            name=name,
+            source=source,
+            tokenizer=tokenizer["type"],
+            token_count=token_count,
+            **kwargs,
+        )
 
 
 def make_session(

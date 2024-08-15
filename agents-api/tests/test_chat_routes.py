@@ -2,11 +2,12 @@
 
 from ward import test
 
-from agents_api.autogen.Sessions import CreateSessionRequest
+from agents_api.autogen.openapi_model import ChatInput, CreateSessionRequest
 from agents_api.clients import embed, litellm
+from agents_api.common.protocol.sessions import ChatContext
+from agents_api.models.chat.gather_messages import gather_messages
+from agents_api.models.chat.prepare_chat_context import prepare_chat_context
 from agents_api.models.session.create_session import create_session
-from agents_api.models.session.prepare_chat_context import prepare_chat_context
-from agents_api.routers.sessions.chat import get_messages
 from tests.fixtures import (
     cozo_client,
     make_request,
@@ -28,7 +29,7 @@ async def _(
     assert (await embed.embed())[0][0] == 1.0
 
 
-@test("chat: check that non-recall get_messages works")
+@test("chat: check that non-recall gather_messages works")
 async def _(
     developer=test_developer,
     client=cozo_client,
@@ -49,14 +50,13 @@ async def _(
 
     session_id = session.id
 
-    new_raw_messages = [{"role": "user", "content": "hello"}]
+    messages = [{"role": "user", "content": "hello"}]
 
-    past_messages, doc_references = await get_messages(
+    past_messages, doc_references = await gather_messages(
         developer=developer,
         session_id=session_id,
-        new_raw_messages=new_raw_messages,
         chat_context=chat_context,
-        recall=False,
+        chat_input=ChatInput(messages=messages, recall=False),
     )
 
     assert isinstance(past_messages, list)
@@ -68,7 +68,7 @@ async def _(
     embed.assert_not_called()
 
 
-@test("chat: check that get_messages works")
+@test("chat: check that gather_messages works")
 async def _(
     developer=test_developer,
     client=cozo_client,
@@ -89,14 +89,13 @@ async def _(
 
     session_id = session.id
 
-    new_raw_messages = [{"role": "user", "content": "hello"}]
+    messages = [{"role": "user", "content": "hello"}]
 
-    past_messages, doc_references = await get_messages(
+    past_messages, doc_references = await gather_messages(
         developer=developer,
         session_id=session_id,
-        new_raw_messages=new_raw_messages,
         chat_context=chat_context,
-        recall=True,
+        chat_input=ChatInput(messages=messages, recall=True),
     )
 
     assert isinstance(past_messages, list)
@@ -136,3 +135,22 @@ async def _(
     # Check that both mocks were called at least once
     embed.assert_called()
     acompletion.assert_called()
+
+
+@test("model: prepare chat context")
+def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+    session=test_session,
+    tool=test_tool,
+    user=test_user,
+):
+    context = prepare_chat_context(
+        developer_id=developer_id,
+        session_id=session.id,
+        client=client,
+    )
+
+    assert isinstance(context, ChatContext)
+    assert len(context.toolsets) > 0

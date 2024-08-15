@@ -46,6 +46,7 @@ _fields = [
         "jobs": [],
         **d,
     },
+    _kind="replaced",
 )
 @cozo_query
 @beartype
@@ -92,7 +93,7 @@ def patch_session(
             *sessions{{
                 {rest_fields}, metadata: md, @ "NOW"
             }},
-            updated_at = [floor(now()), true],
+            updated_at = 'ASSERT',
             metadata = concat(md, $metadata),
 
         :put sessions {{
