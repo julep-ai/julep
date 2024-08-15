@@ -848,13 +848,13 @@ test = ["flufl.flake8", "importlib-resources (>=1.3)", "jaraco.test (>=5.4)", "p
 
 [[package]]
 name = "importlib-resources"
-version = "6.4.1"
+version = "6.4.2"
 description = "Read resources from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_resources-6.4.1-py3-none-any.whl", hash = "sha256:8fbee7ba7376ca7c47ce8d31b96b93d8787349845f01ebdbee5ef90409035234"},
-    {file = "importlib_resources-6.4.1.tar.gz", hash = "sha256:5ede8acf5d752abda46fb6922a4a6ab782b6d904dfd362bf2d8b857eee1759d9"},
+    {file = "importlib_resources-6.4.2-py3-none-any.whl", hash = "sha256:8bba8c54a8a3afaa1419910845fa26ebd706dc716dd208d9b158b4b6966f5c5c"},
+    {file = "importlib_resources-6.4.2.tar.gz", hash = "sha256:6cbfbefc449cc6e2095dd184691b7a12a04f40bc75dd4c55d31c34f174cdf57a"},
 ]
 
 [package.dependencies]

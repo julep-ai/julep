@@ -74,6 +74,18 @@ async def temporal_worker(wf_env=workflow_environment):
         await c
 
 
+@fixture(scope="test")
+def patch_temporal_get_client(
+    wf_env=workflow_environment,
+    temporal_worker=temporal_worker,
+):
+    mock_client = wf_env.client
+
+    with patch("agents_api.clients.temporal.get_client") as get_client:
+        get_client.return_value = mock_client
+        yield get_client
+
+
 @fixture(scope="global")
 def test_developer_id(cozo_client=cozo_client):
     developer_id = uuid4()

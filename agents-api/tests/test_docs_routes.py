@@ -25,6 +25,9 @@ def _(make_request=make_request, user=test_user):
 
     assert response.status_code == 201
 
+    result = response.json()
+    assert len(result["jobs"]) > 0
+
 
 @test("route: create agent doc")
 def _(make_request=make_request, agent=test_agent):
@@ -41,9 +44,8 @@ def _(make_request=make_request, agent=test_agent):
 
     assert response.status_code == 201
 
-    # FIXME: Should create a job to process the document
-    # result = response.json()
-    # assert len(result["jobs"]) > 0
+    result = response.json()
+    assert len(result["jobs"]) > 0
 
 
 @test("route: delete doc")
