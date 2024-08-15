@@ -65,7 +65,7 @@ def prepare_execution_input(
     )
 
     # Remove the outer curly braces
-    task_query = task_query.strip()[1:-1]
+    task_query = task_query[-1].strip()
 
     task_fields = (
         "id",

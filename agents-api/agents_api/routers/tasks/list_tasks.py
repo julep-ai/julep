@@ -32,10 +32,10 @@ async def list_tasks(
     )
 
     tasks = []
-    for _, row in query_results.iterrows():
-        row_dict = row.to_dict()
+    for row in query_results:
+        row_dict = row.model_dump()
 
-        for workflow in row_dict["workflows"]:
+        for workflow in row_dict.get("workflows", []):
             if workflow["name"] == "main":
                 row_dict["main"] = workflow["steps"]
                 break

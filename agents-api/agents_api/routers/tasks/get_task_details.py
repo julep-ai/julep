@@ -13,35 +13,32 @@ from agents_api.models.task.get_task import get_task as get_task_query
 from .router import router
 
 
-@router.get("/agents/{agent_id}/tasks/{task_id}", tags=["tasks"])
+@router.get("/tasks/{task_id}", tags=["tasks"])
 async def get_task_details(
     task_id: UUID4,
-    agent_id: UUID4,
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> Task:
+    not_found = HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+    )
+
     try:
-        resp = [
-            row.to_dict()
-            for _, row in get_task_query(
-                agent_id=agent_id, task_id=task_id, developer_id=x_developer_id
-            ).iterrows()
-        ][0]
-
-        for workflow in resp["workflows"]:
-            if workflow["name"] == "main":
-                resp["main"] = workflow["steps"]
-                break
-
-        return Task(**resp)
-    except (IndexError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found",
+        task = get_task_query(
+            developer_id=x_developer_id, task_id=task_id
         )
+        task_data = task.model_dump()
+    except AssertionError:
+        raise not_found
     except QueryException as e:
         if e.code == "transact::assertion_failure":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise not_found
 
         raise
+
+    for workflow in task_data.get("workflows", []):
+        if workflow["name"] == "main":
+            task_data["main"] = workflow.get("steps", [])
+            break
+
+    return Task(**task_data)
+    

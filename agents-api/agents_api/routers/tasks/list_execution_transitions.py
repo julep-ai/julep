@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import UUID4
 
 from agents_api.autogen.openapi_model import (
@@ -16,13 +18,17 @@ async def list_execution_transitions(
     execution_id: UUID4,
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Transition]:
-    res = list_execution_transitions_query(
-        execution_id=execution_id, limit=limit, offset=offset
+    transitions = list_execution_transitions_query(
+        execution_id=execution_id,
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        direction=direction,
     )
-    return ListResponse[Transition](
-        items=[Transition(**row.to_dict()) for _, row in res.iterrows()]
-    )
+    return ListResponse[Transition](items=transitions)
 
 
 # @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])

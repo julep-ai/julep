@@ -14,13 +14,8 @@ from .router import router
 @router.get("/executions/{execution_id}", tags=["executions"])
 async def get_execution_details(execution_id: UUID4) -> Execution:
     try:
-        res = [
-            row.to_dict()
-            for _, row in get_execution_query(execution_id=execution_id).iterrows()
-        ][0]
-        return Execution(**res)
-    except (IndexError, KeyError):
+        return get_execution_query(execution_id=execution_id)
+    except AssertionError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Execution not found",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Execution not found"
         )

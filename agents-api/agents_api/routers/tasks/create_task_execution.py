@@ -42,23 +42,16 @@ async def create_task_execution(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     try:
-        task = [
-            row.to_dict()
-            for _, row in get_task_query(
-                task_id=task_id, developer_id=x_developer_id
-            ).iterrows()
-        ][0]
+        task = get_task_query(
+            task_id=task_id, developer_id=x_developer_id
+        )
+        task_data = task.model_dump()
 
-        validate(data.input, task["input_schema"])
+        validate(data.input, task_data["input_schema"])
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid request arguments schema",
-        )
-    except (IndexError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found",
         )
     except QueryException as e:
         if e.code == "transact::assertion_failure":

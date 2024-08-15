@@ -16,6 +16,7 @@ from agents_api.autogen.openapi_model import (
     CreateSessionRequest,
     CreateTaskRequest,
     CreateToolRequest,
+    CreateTransitionRequest,
     CreateUserRequest,
 )
 from agents_api.env import api_key, api_key_header_name
@@ -25,6 +26,9 @@ from agents_api.models.developer.get_developer import get_developer
 from agents_api.models.docs.create_doc import create_doc
 from agents_api.models.docs.delete_doc import delete_doc
 from agents_api.models.execution.create_execution import create_execution
+from agents_api.models.execution.create_execution_transition import (
+    create_execution_transition,
+)
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.task.create_task import create_task
@@ -304,6 +308,34 @@ def test_execution(
         f"""
     ?[execution_id] <- ["{str(execution.id)}"]
     :delete executions {{ execution_id  }}
+    """
+    )
+
+
+@fixture(scope="global")
+def test_transition(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    execution=test_execution,
+):
+    transition = create_execution_transition(
+        developer_id=developer_id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="step",
+            output={},
+            current=[],
+            next=[],
+        ),
+        client=client,
+    )
+
+    yield transition
+
+    client.run(
+        f"""
+    ?[transition_id] <- ["{str(transition.id)}"]
+    :delete transitions {{ transition_id  }}
     """
     )
 

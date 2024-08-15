@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import Depends
 from pydantic import UUID4
@@ -21,10 +21,15 @@ async def list_task_executions(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
+    sort_by: Literal["created_at", "updated_at"] = "created_at",
+    direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Execution]:
-    res = list_task_executions_query(
-        task_id=task_id, developer_id=x_developer_id, limit=limit, offse=offset
+    executions = list_task_executions_query(
+        task_id=task_id,
+        developer_id=x_developer_id,
+        limit=limit,
+        offse=offset,
+        sort_by=sort_by,
+        direction=direction,
     )
-    return ListResponse[Execution](
-        items=[Execution(**row.to_dict()) for _, row in res.iterrows()]
-    )
+    return ListResponse[Execution](items=executions)
