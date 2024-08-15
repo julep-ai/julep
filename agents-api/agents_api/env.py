@@ -15,6 +15,7 @@ env = Env()
 # Debug
 # -----
 debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
+testing: bool = env.bool("AGENTS_API_TESTING", default=False)
 sentry_dsn: str = env.str("SENTRY_DSN", default=None)
 
 

@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -39,6 +40,7 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
+# from agents_api.worker.worker import create_worker
 from agents_api.worker.worker import create_worker
 
 EMBEDDING_SIZE: int = 1024
@@ -62,29 +64,26 @@ def activity_environment():
 
 
 @fixture(scope="global")
-async def workflow_environment():
-    wf_env = await WorkflowEnvironment.start_local()
-    yield wf_env
-    await wf_env.shutdown()
+async def temporal_worker():
+    async with (await WorkflowEnvironment.start_local()) as env:
+        worker = create_worker(client=env.client)
+        worker_task = asyncio.create_task(worker.run())
 
+        yield worker
 
-@fixture(scope="global")
-async def temporal_worker(wf_env=workflow_environment):
-    worker = await create_worker(client=wf_env.client)
-
-    # FIXME: This does not stop the worker properly
-    c = worker.shutdown()
-    async with worker as running_worker:
-        yield running_worker
-        await c
-
+        kill_signal = worker.shutdown()
+        worker_task.cancel()
+        await asyncio.wait(
+            [kill_signal, worker_task],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        
 
 @fixture(scope="test")
 def patch_temporal_get_client(
-    wf_env=workflow_environment,
     temporal_worker=temporal_worker,
 ):
-    mock_client = wf_env.client
+    mock_client = temporal_worker.client
 
     with patch("agents_api.clients.temporal.get_client") as get_client:
         get_client.return_value = mock_client

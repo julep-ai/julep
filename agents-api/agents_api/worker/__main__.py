@@ -7,6 +7,7 @@ It supports various workflows and activities related to agents' operations.
 
 import asyncio
 
+from ..clients import temporal
 from .worker import create_worker
 
 
@@ -16,7 +17,8 @@ async def main():
     then starts the worker to listen for tasks on the configured task queue.
     """
 
-    worker = await create_worker()
+    client = await temporal.get_client()
+    worker = create_worker(client)
 
     # Start the worker to listen for and process tasks
     await worker.run()

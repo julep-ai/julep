@@ -3,6 +3,7 @@ from ward import test
 from tests.fixtures import (
     make_request,
     patch_embed_acompletion,
+    patch_temporal_get_client,
     test_agent,
     test_doc,
     test_user,
@@ -11,7 +12,7 @@ from tests.fixtures import (
 
 
 @test("route: create user doc")
-def _(make_request=make_request, user=test_user):
+def _(make_request=make_request, user=test_user, get_client=patch_temporal_get_client):
     data = dict(
         title="Test User Doc",
         content=["This is a test user document."],
@@ -23,6 +24,7 @@ def _(make_request=make_request, user=test_user):
         json=data,
     )
 
+    get_client.assert_called()
     assert response.status_code == 201
 
     result = response.json()
@@ -30,7 +32,7 @@ def _(make_request=make_request, user=test_user):
 
 
 @test("route: create agent doc")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client):
     data = dict(
         title="Test Agent Doc",
         content=["This is a test agent document."],
@@ -42,6 +44,7 @@ def _(make_request=make_request, agent=test_agent):
         json=data,
     )
 
+    get_client.assert_called()
     assert response.status_code == 201
 
     result = response.json()
@@ -49,7 +52,7 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: delete doc")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client):
     data = dict(
         title="Test Agent Doc",
         content=["This is a test agent document."],
@@ -78,7 +81,7 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: get doc")
-def _(make_request=make_request, agent=test_agent):
+def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client):
     data = dict(
         title="Test Agent Doc",
         content=["This is a test agent document."],

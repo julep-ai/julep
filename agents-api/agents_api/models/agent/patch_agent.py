@@ -29,7 +29,7 @@ from ..utils import (
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["agent_id"], "jobs": [], **d},
-    _kind="replaced",
+    _kind="inserted",
 )
 @cozo_query
 @beartype

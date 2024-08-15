@@ -2,9 +2,9 @@ from uuid import UUID
 
 from temporalio import activity
 
-from agents_api.clients import embed as embedder
-from agents_api.clients.cozo import get_cozo_client
-from agents_api.models.docs.embed_snippets import embed_snippets as embed_snippets_query
+from ..clients import embed as embedder
+from ..clients.cozo import get_cozo_client
+from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 
 snippet_embed_instruction = "Encode this passage for retrieval: "
 

@@ -8,7 +8,6 @@ from .fixtures import (
     temporal_worker,
     test_developer_id,
     test_doc,
-    workflow_environment,
 )
 
 # from agents_api.activities.truncation import get_extra_entries
@@ -18,13 +17,9 @@ from .fixtures import (
 
 @test("activity: check that workflow environment and worker are started correctly")
 async def _(
-    workflow_environment=workflow_environment,
     worker=temporal_worker,
 ):
-    async with workflow_environment as wf_env:
-        assert wf_env is not None
-        assert worker is not None
-        assert worker.is_running
+    assert worker.is_running
 
 
 @test("activity: call direct embed_docs")
