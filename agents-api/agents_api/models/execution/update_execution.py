@@ -49,7 +49,9 @@ def update_execution(
     task_id = str(task_id)
     execution_id = str(execution_id)
 
-    valid_previous_statuses: list[str] | None = valid_previous_statuses_map.get(data.status, None)
+    valid_previous_statuses: list[str] | None = valid_previous_statuses_map.get(
+        data.status, None
+    )
 
     execution_data: dict = data.model_dump(exclude_none=True)
 

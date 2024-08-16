@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from ward import test
 
-from tests.fixtures import (
+from .fixtures import (
     client,
     make_request,
     test_agent,
@@ -12,6 +12,7 @@ from tests.fixtures import (
     test_task,
     test_transition,
 )
+from .utils import patch_testing_temporal
 
 
 @test("route: unauthorized should fail")
@@ -61,17 +62,18 @@ def _(make_request=make_request, agent=test_agent):
 
 
 @test("route: create task execution")
-def _(make_request=make_request, task=test_task):
+async def _(make_request=make_request, task=test_task):
     data = dict(
         input={},
         metadata={},
     )
 
-    response = make_request(
-        method="POST",
-        url=f"/tasks/{str(task.id)}/executions",
-        json=data,
-    )
+    async with patch_testing_temporal():
+        response = make_request(
+            method="POST",
+            url=f"/tasks/{str(task.id)}/executions",
+            json=data,
+        )
 
     assert response.status_code == 201
 
