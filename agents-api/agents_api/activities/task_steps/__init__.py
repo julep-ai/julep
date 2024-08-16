@@ -1,11 +1,10 @@
 import asyncio
-from typing import Literal
-from uuid import uuid4
 
 from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (
+    CreateTransitionRequest,
     EvaluateStep,
     IfElseWorkflowStep,
     InputChatMLMessage,
@@ -18,7 +17,7 @@ from ...clients import (
 )
 from ...common.protocol.tasks import (
     StepContext,
-    TransitionInfo,
+    StepOutcome,
 )
 from ...common.utils.template import render_template
 from ...models.execution.create_execution_transition import (
@@ -27,9 +26,7 @@ from ...models.execution.create_execution_transition import (
 
 
 @activity.defn
-async def prompt_step(context: StepContext) -> dict:
-    assert isinstance(context.definition, PromptStep)
-
+async def prompt_step(context: StepContext[PromptStep]) -> StepOutcome:
     # Get context data
     context_data: dict = context.model_dump()
 
@@ -39,6 +36,7 @@ async def prompt_step(context: StepContext) -> dict:
         if isinstance(context.definition.prompt, str)
         else context.definition.prompt
     )
+
     template_messages: list[InputChatMLMessage] = prompt
     messages = await asyncio.gather(
         *[
@@ -61,7 +59,10 @@ async def prompt_step(context: StepContext) -> dict:
         **settings,
     )
 
-    return response.model_dump()
+    return StepOutcome(
+        output=response.model_dump(),
+        next=None,
+    )
 
 
 @activity.defn
@@ -103,10 +104,9 @@ async def tool_call_step(context: StepContext) -> dict:
 
 
 @activity.defn
-async def if_else_step(context: StepContext) -> dict:
-    assert isinstance(context.definition, IfElseWorkflowStep)
-
+async def if_else_step(context: StepContext[IfElseWorkflowStep]) -> dict:
     context_data: dict = context.model_dump()
+
     next_workflow = (
         context.definition.then
         if simple_eval(context.definition.if_, names=context_data)
@@ -118,38 +118,27 @@ async def if_else_step(context: StepContext) -> dict:
 
 @activity.defn
 async def transition_step(
-    context: StepContext,
-    transition_info: TransitionInfo,
-    execution_status: Literal[
-        "queued",
-        "starting",
-        "running",
-        "awaiting_input",
-        "succeeded",
-        "failed",
-        "cancelled",
-    ] = "awaiting_input",
+    context: StepContext[None],
+    transition_info: CreateTransitionRequest,
 ):
-    activity.heartbeat("Running transition step")
-
-    # Get transition info
-    transition_data = transition_info.model_dump(by_alias=False)
+    need_to_wait = transition_info.type == "wait"
 
     # Get task token if it's a waiting step
-    if transition_info.type == "awaiting_input":
+    if need_to_wait:
         task_token = activity.info().task_token
-        transition_data["__task_token"] = task_token
+        transition_info.task_token = task_token
 
     # Create transition
+    activity.heartbeat("Creating transition in db")
     create_execution_transition_query(
         developer_id=context.developer_id,
         execution_id=context.execution.id,
-        transition_id=uuid4(),
-        update_execution_status=True,
         task_id=context.task.id,
-        **transition_data,
+        data=transition_info,
+        update_execution_status=True,
     )
 
     # Raise if it's a waiting step
-    if execution_status == "awaiting_input":
+    if need_to_wait:
+        activity.heartbeat("Starting to wait")
         activity.raise_complete_async()

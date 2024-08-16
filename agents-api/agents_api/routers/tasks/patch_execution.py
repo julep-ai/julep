@@ -1,10 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from pydantic import UUID4
 
 from agents_api.autogen.openapi_model import (
-    Execution,
     ResourceUpdatedResponse,
     UpdateExecutionRequest,
 )

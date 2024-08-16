@@ -1,7 +1,7 @@
-from typing import Annotated, Any, List, Tuple
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ...autogen.openapi_model import (
     Agent,
@@ -15,11 +15,41 @@ from ...autogen.openapi_model import (
     TaskSpecDef,
     TaskToolDef,
     Tool,
+    TransitionTarget,
     UpdateTaskRequest,
     User,
     Workflow,
     WorkflowStep,
 )
+
+
+valid_transitions = {
+    # Start state
+    "init": ["wait", "error", "step", "cancelled"],
+    # End states
+    "finish": [],
+    "error": [],
+    "cancelled": [],
+    # Intermediate states
+    "wait": ["resume", "error", "cancelled"],
+    "resume": ["wait", "error", "step", "finish", "cancelled"],
+    "step": ["wait", "error", "step", "finish", "cancelled"],
+}
+
+valid_previous_statuses = {
+    "running": ["queued", "starting", "awaiting_input"],
+    "cancelled": ["queued", "starting", "awaiting_input", "running"],
+}
+
+transition_to_execution_status = {
+    "init": "queued",
+    "wait": "awaiting_input",
+    "resume": "running",
+    "step": "running",
+    "finish": "succeeded",
+    "error": "failed",
+    "cancelled": "cancelled",
+}
 
 
 class ExecutionInput(BaseModel):
@@ -29,13 +59,19 @@ class ExecutionInput(BaseModel):
     agent: Agent
     tools: list[Tool]
     arguments: dict[str, Any]
+
+    # Not used at the moment
     user: User | None = None
     session: Session | None = None
 
 
-class StepContext(ExecutionInput):
-    definition: WorkflowStep
+WorkflowStepType = TypeVar("WorkflowStepType", bound=WorkflowStep)
+
+
+class StepContext(ExecutionInput, Generic[WorkflowStepType]):
+    definition: WorkflowStepType | None
     inputs: list[dict[str, Any]]
+    current: TransitionTarget
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
@@ -46,11 +82,9 @@ class StepContext(ExecutionInput):
         return dump
 
 
-class TransitionInfo(BaseModel):
-    from_: Tuple[str, int]
-    to: List[str | int] | None = None
-    type: Annotated[str, Field(pattern="^(finish|wait|error|step)$")]
-    outputs: dict[str, Any] | None = None
+class StepOutcome(BaseModel):
+    output: dict[str, Any]
+    next: TransitionTarget | None = None
 
 
 def task_to_spec(

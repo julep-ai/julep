@@ -76,12 +76,10 @@ def _(client=cozo_client, developer_id=test_developer_id, execution=test_executi
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
-            **{
-                "type": "step",
-                "output": {"result": "test"},
-                "current": ["main", 0],
-                "next": None,
-            }
+            type="step",
+            output={"result": "test"},
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "main", "step": 1},
         ),
         client=client,
     )
@@ -102,12 +100,10 @@ def _(
         developer_id=developer_id,
         execution_id=execution.id,
         data=CreateTransitionRequest(
-            **{
-                "type": "step",
-                "output": {"result": "test"},
-                "current": ["main", 0],
-                "next": None,
-            }
+            type="cancelled",
+            output={"result": "test"},
+            current={"workflow": "main", "step": 0},
+            next=None,
         ),
         task_id=task.id,
         update_execution_status=True,
@@ -115,5 +111,5 @@ def _(
     )
 
     assert result is not None
-    assert result.type == "step"
+    assert result.type == "cancelled"
     assert result.output == {"result": "test"}

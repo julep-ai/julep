@@ -32,7 +32,9 @@ def _(make_request=make_request, user=test_user, get_client=patch_temporal_get_c
 
 
 @test("route: create agent doc")
-def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client):
+def _(
+    make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client
+):
     data = dict(
         title="Test Agent Doc",
         content=["This is a test agent document."],
@@ -52,7 +54,9 @@ def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get
 
 
 @test("route: delete doc")
-def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client):
+def _(
+    make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client
+):
     data = dict(
         title="Test Agent Doc",
         content=["This is a test agent document."],
@@ -81,7 +85,9 @@ def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get
 
 
 @test("route: get doc")
-def _(make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client):
+def _(
+    make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client
+):
     data = dict(
         title="Test Agent Doc",
         content=["This is a test agent document."],

@@ -115,6 +115,7 @@ from .executions_execution_status import ExecutionsExecutionStatus
 from .executions_resume_execution_request import ExecutionsResumeExecutionRequest
 from .executions_stop_execution_request import ExecutionsStopExecutionRequest
 from .executions_transition import ExecutionsTransition
+from .executions_transition_target import ExecutionsTransitionTarget
 from .executions_transition_type import ExecutionsTransitionType
 from .executions_update_execution_request import (
     ExecutionsUpdateExecutionRequest,
@@ -337,6 +338,7 @@ __all__ = [
     "ExecutionsResumeExecutionRequest",
     "ExecutionsStopExecutionRequest",
     "ExecutionsTransition",
+    "ExecutionsTransitionTarget",
     "ExecutionsTransitionType",
     "ExecutionsUpdateExecutionRequest",
     "ExecutionsUpdateExecutionRequest_Cancelled",

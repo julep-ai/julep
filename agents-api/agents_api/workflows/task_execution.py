@@ -25,7 +25,6 @@ with workflow.unsafe.imports_passed_through():
     from ..common.protocol.tasks import (
         ExecutionInput,
         StepContext,
-        TransitionInfo,
     )
 
 
@@ -35,10 +34,10 @@ class TaskExecutionWorkflow:
     async def run(
         self,
         execution_input: ExecutionInput,
-        start: tuple[str, int] = ("main", 0),
+        current: tuple[str, int] = ("main", 0),
         previous_inputs: list[dict] = [],
     ) -> None:
-        wf_name, step_idx = start
+        wf_name, step_idx = current
         workflow_map = {wf.name: wf.steps for wf in execution_input.task.workflows}
         current_workflow = workflow_map[wf_name]
         previous_inputs = previous_inputs or [execution_input.arguments]

@@ -40,6 +40,7 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
+
 # from agents_api.worker.worker import create_worker
 from agents_api.worker.worker import create_worker
 
@@ -65,7 +66,7 @@ def activity_environment():
 
 @fixture(scope="global")
 async def temporal_worker():
-    async with (await WorkflowEnvironment.start_local()) as env:
+    async with await WorkflowEnvironment.start_local() as env:
         worker = create_worker(client=env.client)
         worker_task = asyncio.create_task(worker.run())
 
@@ -77,7 +78,7 @@ async def temporal_worker():
             [kill_signal, worker_task],
             return_when=asyncio.FIRST_COMPLETED,
         )
-        
+
 
 @fixture(scope="test")
 def patch_temporal_get_client(

@@ -108,7 +108,10 @@ alias TransitionType = (
     | "cancelled"
 );
 
-alias TransitionTarget = [validPythonIdentifier, uint16];
+model TransitionTarget {
+    workflow: validPythonIdentifier;
+    step: uint16;
+}
 
 model Transition {
     @visibility("read")

@@ -5,28 +5,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_uuid import CommonUuid
-from .executions_transition_target import ExecutionsTransitionTarget
-from .executions_transition_type import ExecutionsTransitionType
+from .common_valid_python_identifier import CommonValidPythonIdentifier
 
 
-class ExecutionsTransition(pydantic_v1.BaseModel):
-    type: ExecutionsTransitionType
-    execution_id: CommonUuid
-    output: typing.Dict[str, typing.Any]
-    current: ExecutionsTransitionTarget
-    next: typing.Optional[ExecutionsTransitionTarget] = None
-    id: CommonUuid
-    metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
-    created_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was created as UTC date-time
-    """
-
-    updated_at: dt.datetime = pydantic_v1.Field()
-    """
-    When this resource was updated as UTC date-time
-    """
+class ExecutionsTransitionTarget(pydantic_v1.BaseModel):
+    workflow: CommonValidPythonIdentifier
+    step: int
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

@@ -5,8 +5,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import make_session
-from ...common.protocol.sessions import ChatContext
+from ...common.protocol.sessions import ChatContext, make_session
 from ..session.prepare_session_data import prepare_session_data
 from ..utils import (
     cozo_query,
