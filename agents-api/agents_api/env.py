@@ -66,7 +66,7 @@ temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
 temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
-temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="memory-task-queue")
+temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 
 
 # Consolidate environment variables
