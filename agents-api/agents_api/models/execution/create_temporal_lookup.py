@@ -1,21 +1,18 @@
-from typing import Annotated
 from uuid import UUID, uuid4
 
 from beartype import beartype
 from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
+from temporalio.client import WorkflowHandle
 
-from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.cozo import cozo_process_mutate_data
-from ...common.utils.types import dict_like
 from ..utils import (
     cozo_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
     verify_developer_owns_resource_query,
-    wrap_in_class,
 )
 
 
@@ -26,20 +23,14 @@ from ..utils import (
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(
-    Execution,
-    one=True,
-    transform=lambda d: {"id": d["execution_id"], **d},
-    _kind="inserted",
-)
 @cozo_query
 @beartype
-def create_execution(
+def create_temporal_lookup(
     *,
     developer_id: UUID,
     task_id: UUID,
     execution_id: UUID | None = None,
-    data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
+    workflow_handle: WorkflowHandle,
 ) -> tuple[list[str], dict]:
     execution_id = execution_id or uuid4()
 
@@ -47,29 +38,22 @@ def create_execution(
     task_id = str(task_id)
     execution_id = str(execution_id)
 
-    if isinstance(data, CreateExecutionRequest):
-        data.metadata = data.metadata or {}
-        execution_data = data.model_dump()
-    else:
-        data["metadata"] = data.get("metadata", {})
-        execution_data = data
-
-    columns, values = cozo_process_mutate_data(
+    temporal_columns, temporal_values = cozo_process_mutate_data(
         {
-            **execution_data,
-            "task_id": task_id,
             "execution_id": execution_id,
+            "id": workflow_handle.id,
+            "run_id": workflow_handle.run_id,
+            "first_execution_run_id": workflow_handle.first_execution_run_id,
+            "result_run_id": workflow_handle.result_run_id,
         }
     )
 
-    insert_query = f"""
-    ?[{columns}] <- $values
+    temporal_executions_lookup_query = f"""
+    ?[{temporal_columns}] <- $temporal_values
 
-    :insert executions {{
-        {columns}
+    :insert temporal_executions_lookup {{
+        {temporal_columns}
     }}
-
-    :returning
     """
 
     queries = [
@@ -80,7 +64,7 @@ def create_execution(
             task_id=task_id,
             parents=[("agents", "agent_id")],
         ),
-        insert_query,
+        temporal_executions_lookup_query,
     ]
 
-    return (queries, {"values": values})
+    return (queries, {"temporal_values": temporal_values})
