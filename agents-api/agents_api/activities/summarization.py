@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+from beartype import beartype
 import pandas as pd
 from temporalio import activity
 
@@ -20,6 +21,7 @@ def get_toplevel_entries_query(*args, **kwargs):
 
 
 @activity.defn
+@beartype
 async def summarization(session_id: str) -> None:
     raise NotImplementedError()
     # session_id = UUID(session_id)

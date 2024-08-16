@@ -1,7 +1,7 @@
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from ...autogen.openapi_model import (
     Agent,
@@ -16,6 +16,7 @@ from ...autogen.openapi_model import (
     TaskToolDef,
     Tool,
     TransitionTarget,
+    TransitionType,
     UpdateTaskRequest,
     User,
     Workflow,
@@ -73,18 +74,29 @@ class StepContext(ExecutionInput, Generic[WorkflowStepType]):
     inputs: list[dict[str, Any]]
     current: TransitionTarget
 
+    @computed_field
+    @property
+    def outputs(self) -> list[dict[str, Any]]:
+        return self.inputs[1:]
+
+    @computed_field
+    @property
+    def current_input(self) -> dict[str, Any]:
+        return self.inputs[-1]
+
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
-
-        dump["_"] = self.inputs[-1]
-        dump["outputs"] = self.inputs[1:]
+        dump["_"] = self.current_input
 
         return dump
 
 
-class StepOutcome(BaseModel):
-    output: dict[str, Any]
-    next: TransitionTarget | None = None
+OutcomeType = TypeVar("OutcomeType", bound=BaseModel)
+
+
+class StepOutcome(BaseModel, Generic[OutcomeType]):
+    output: OutcomeType | None
+    transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 
 def task_to_spec(

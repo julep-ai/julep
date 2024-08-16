@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from beartype import beartype
 from temporalio import activity
 
 from ..clients import embed as embedder
@@ -10,6 +11,7 @@ snippet_embed_instruction = "Encode this passage for retrieval: "
 
 
 @activity.defn
+@beartype
 async def embed_docs(
     developer_id: UUID,
     doc_id: UUID,

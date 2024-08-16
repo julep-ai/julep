@@ -1,6 +1,7 @@
 from textwrap import dedent
 from typing import Callable
 
+from beartype import beartype
 from temporalio import activity
 
 from ..clients import litellm
@@ -67,6 +68,7 @@ async def run_prompt(
 
 
 @activity.defn
+@beartype
 async def mem_rating(memory: str) -> None:
     # session_id = UUID(session_id)
     # entries = [
