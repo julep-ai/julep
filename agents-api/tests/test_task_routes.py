@@ -122,11 +122,12 @@ def _(make_request=make_request, task=test_task):
     assert response.status_code == 200
 
 
+# FIXME: This test is failing
 @test("model: list execution transitions")
-def _(make_request=make_request, transition=test_transition):
+def _(make_request=make_request, execution=test_execution, transition=test_transition):
     response = make_request(
         method="GET",
-        url=f"/executions/{str(transition.execution_id)}/transitions",
+        url=f"/executions/{str(execution.id)}/transitions",
     )
 
     assert response.status_code == 200
