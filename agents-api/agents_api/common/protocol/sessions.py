@@ -73,12 +73,16 @@ class ChatContext(SessionData):
     def merge_settings(self, chat_input: ChatInput) -> ChatSettings:
         request_settings = chat_input.model_dump(exclude_unset=True)
         active_agent = self.get_active_agent()
-        default_settings = active_agent.default_settings
+
+        default_settings: AgentDefaultSettings | None = active_agent.default_settings
+        default_settings: dict = (
+            default_settings and default_settings.model_dump() or {}
+        )
 
         self.settings = settings = ChatSettings(
             **{
                 "model": active_agent.model,
-                **default_settings.model_dump(),
+                **default_settings,
                 **request_settings,
             }
         )
@@ -102,13 +106,15 @@ class ChatContext(SessionData):
         """
         current_agent = self.get_active_agent()
         tools = self.get_active_tools()
+        settings: ChatSettings | None = self.settings
+        settings: dict = settings and settings.model_dump() or {}
 
         return {
             "session": self.session.model_dump(),
             "agents": [agent.model_dump() for agent in self.agents],
             "current_agent": current_agent.model_dump(),
             "users": [user.model_dump() for user in self.users],
-            "settings": self.settings.model_dump(),
+            "settings": settings,
             "tools": [tool.model_dump() for tool in tools],
         }
 

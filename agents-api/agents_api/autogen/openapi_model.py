@@ -1,5 +1,5 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated, Generic, Self, Type, TypeVar
+from typing import Annotated, Generic, Literal, Self, Type, TypeVar
 from uuid import UUID
 
 from litellm.utils import _select_tokenizer as select_tokenizer

@@ -15,7 +15,7 @@ from ...models.execution.create_execution_transition import (
 @activity.defn
 @beartype
 async def transition_step(
-    context: StepContext[None],
+    context: StepContext,
     transition_info: CreateTransitionRequest,
 ) -> None:
     need_to_wait = transition_info.type == "wait"

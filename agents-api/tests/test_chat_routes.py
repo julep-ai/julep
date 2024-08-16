@@ -26,7 +26,7 @@ async def _(
     _=patch_embed_acompletion,
 ):
     assert (await litellm.acompletion(model="gpt-4o", messages=[])).id == "fake_id"
-    assert (await embed.embed())[0][0] == 1.0
+    assert (await embed.embed())[0][0] == 1.0  # pytype: disable=missing-parameter
 
 
 @test("chat: check that non-recall gather_messages works")

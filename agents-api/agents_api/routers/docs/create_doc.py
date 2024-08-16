@@ -6,6 +6,7 @@ from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import Client as TemporalClient
 
+from ...activities.types import EmbedDocsPayload
 from ...autogen.openapi_model import CreateDocRequest, ResourceCreatedResponse
 from ...clients import temporal
 from ...dependencies.developer_id import get_developer_id
@@ -15,6 +16,8 @@ from .router import router
 
 
 async def run_embed_docs_task(
+    *,
+    developer_id: UUID,
     doc_id: UUID,
     title: str,
     content: list[str],
@@ -31,9 +34,17 @@ async def run_embed_docs_task(
     if testing:
         return None
 
+    embed_payload = EmbedDocsPayload(
+        developer_id=developer_id,
+        doc_id=doc_id,
+        content=content,
+        title=title,
+        embed_instruction=None,
+    )
+
     handle = await client.start_workflow(
         EmbedDocsWorkflow.run,
-        args=[str(doc_id), title, content],
+        embed_payload,
         task_queue=temporal_task_queue,
         id=str(job_id),
     )
@@ -60,6 +71,7 @@ async def create_user_doc(
     embed_job_id = uuid4()
 
     await run_embed_docs_task(
+        developer_id=x_developer_id,
         doc_id=doc.id,
         title=doc.title,
         content=doc.content,
@@ -89,6 +101,7 @@ async def create_agent_doc(
     embed_job_id = uuid4()
 
     await run_embed_docs_task(
+        developer_id=x_developer_id,
         doc_id=doc.id,
         title=doc.title,
         content=doc.content,

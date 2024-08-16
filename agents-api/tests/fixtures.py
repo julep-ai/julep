@@ -74,10 +74,7 @@ async def temporal_worker():
 
         kill_signal = worker.shutdown()
         worker_task.cancel()
-        await asyncio.wait(
-            [kill_signal, worker_task],
-            return_when=asyncio.FIRST_COMPLETED,
-        )
+        await asyncio.gather(kill_signal, worker_task)
 
 
 @fixture(scope="test")

@@ -5,9 +5,6 @@ from datetime import timedelta
 
 from temporalio import workflow
 
-from agents_api.autogen.Executions import TransitionTarget
-from agents_api.autogen.openapi_model import CreateTransitionRequest, TransitionType
-
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         evaluate_step,
@@ -18,11 +15,14 @@ with workflow.unsafe.imports_passed_through():
         yield_step,
     )
     from ..autogen.openapi_model import (
+        CreateTransitionRequest,
         ErrorWorkflowStep,
         EvaluateStep,
         IfElseWorkflowStep,
         PromptStep,
         ToolCallStep,
+        TransitionTarget,
+        TransitionType,
         # WaitForInputStep,
         # WorkflowStep,
         YieldStep,
@@ -156,7 +156,7 @@ class TaskExecutionWorkflow:
 
         # 4. Closing
         # End if the last step
-        if context.is_last_step:
+        if transition_type in ("finish", "cancelled"):
             return final_output
 
         # Otherwise, recurse to the next step

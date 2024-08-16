@@ -1,6 +1,7 @@
 from ward import test
 
 from agents_api.activities.embed_docs import embed_docs
+from agents_api.activities.types import EmbedDocsPayload
 
 from .fixtures import (
     cozo_client,
@@ -36,11 +37,14 @@ async def _(
     include_title = True
 
     await embed_docs(
-        developer_id=developer_id,
-        doc_id=doc.id,
-        title=title,
-        content=content,
-        include_title=include_title,
+        EmbedDocsPayload(
+            developer_id=developer_id,
+            doc_id=doc.id,
+            title=title,
+            content=content,
+            include_title=include_title,
+            embed_instruction=None,
+        ),
         cozo_client=cozo_client,
     )
 

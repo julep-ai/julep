@@ -9,6 +9,8 @@ from agents_api.autogen.openapi_model import Entry
 
 
 def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[UUID]:
+    raise NotImplementedError()
+
     if not len(messages):
         return messages
 
