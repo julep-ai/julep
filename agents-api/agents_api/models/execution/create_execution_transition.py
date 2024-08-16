@@ -10,6 +10,7 @@ from ...autogen.openapi_model import (
     Transition,
     UpdateExecutionRequest,
 )
+from ...common.protocol.tasks import transition_to_execution_status, valid_transitions
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -21,28 +22,22 @@ from ..utils import (
 )
 from .update_execution import update_execution
 
-valid_transitions = {
-    # Start state
-    "init": ["wait", "error", "step", "cancelled"],
-    # End states
-    "finish": [],
-    "error": [],
-    "cancelled": [],
-    # Intermediate states
-    "wait": ["resume", "error", "cancelled"],
-    "resume": ["wait", "error", "step", "finish", "cancelled"],
-    "step": ["wait", "error", "step", "finish", "cancelled"],
-}
 
-transition_to_execution_status = {
-    "init": "queued",
-    "wait": "awaiting_input",
-    "resume": "running",
-    "step": "running",
-    "finish": "succeeded",
-    "error": "failed",
-    "cancelled": "cancelled",
-}
+def validate_transition_targets(data: CreateTransitionRequest) -> None:
+    # Make sure the current/next targets are valid
+    if data.type in ("finish", "error", "cancelled"):
+        assert data.next is None, "Next target must be None for finish/error/cancelled"
+
+    if data.type in ("wait", "init"):
+        assert data.next is None, "Next target must be None for wait/init"
+
+    if data.type in ("resume", "step"):
+        assert data.next is not None, "Next target must be provided for resume/step"
+
+        if data.next.workflow == data.current.workflow:
+            assert (
+                data.next.step > data.current.step
+            ), "Next step must be greater than current"
 
 
 @rewrap_exceptions(
@@ -54,7 +49,12 @@ transition_to_execution_status = {
 )
 @wrap_in_class(
     Transition,
-    transform=lambda d: {"id": d["transition_id"], **d},
+    transform=lambda d: {
+        **d,
+        "id": d["transition_id"],
+        "current": {"workflow": d["current"][0], "step": d["current"][1]},
+        "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
+    },
     one=True,
     _kind="inserted",
 )
@@ -78,7 +78,19 @@ def create_execution_transition(
     data.execution_id = execution_id
 
     # Prepare the transition data
-    transition_data = data.model_dump(exclude_unset=True)
+    transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
+
+    # Parse the current and next targets
+    validate_transition_targets(data)
+    current_target = transition_data.pop("current")
+    next_target = transition_data.pop("next")
+
+    transition_data["current"] = (current_target["workflow"], current_target["step"])
+    transition_data["next"] = next_target and (
+        next_target["workflow"],
+        next_target["step"],
+    )
+
     columns, transition_values = cozo_process_mutate_data(
         {
             **transition_data,

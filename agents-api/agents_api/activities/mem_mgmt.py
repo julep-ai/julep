@@ -2,6 +2,7 @@ from textwrap import dedent
 from typing import Callable
 from uuid import UUID
 
+from beartype import beartype
 from temporalio import activity
 
 from ..autogen.openapi_model import InputChatMLMessage
@@ -155,6 +156,7 @@ async def run_prompt(
 
 
 @activity.defn
+@beartype
 async def mem_mgmt(
     dialog: list[InputChatMLMessage],
     session_id: UUID,

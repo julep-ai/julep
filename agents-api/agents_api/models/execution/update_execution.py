@@ -9,6 +9,9 @@ from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
     UpdateExecutionRequest,
 )
+from ...common.protocol.tasks import (
+    valid_previous_statuses as valid_previous_statuses_map,
+)
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -31,7 +34,7 @@ from ..utils import (
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["execution_id"], "jobs": [], **d},
-    _kind="replaced",
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -46,17 +49,7 @@ def update_execution(
     task_id = str(task_id)
     execution_id = str(execution_id)
 
-    valid_previous_statuses = []
-    match data.status:
-        case "running":
-            valid_previous_statuses = ["queued", "starting", "awaiting_input"]
-        case "cancelled":
-            valid_previous_statuses = [
-                "queued",
-                "starting",
-                "awaiting_input",
-                "running",
-            ]
+    valid_previous_statuses = valid_previous_statuses_map[data.status]
 
     execution_data = data.model_dump(exclude_none=True)
 

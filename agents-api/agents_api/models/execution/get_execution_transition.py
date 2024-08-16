@@ -37,9 +37,6 @@ def get_execution_transition(
         transition_id or task_token
     ), "At least one of `transition_id` or `task_token` must be provided."
 
-    fields = [k for k in Transition.model_fields.keys() if k != "id"]
-    fields_str = ", ".join(fields)
-
     if transition_id:
         transition_id = str(transition_id)
         filter = "id = to_uuid($transition_id)"
@@ -47,12 +44,24 @@ def get_execution_transition(
     else:
         filter = "task_token = $task_token"
 
-    get_query = f"""
-    ?[id, {fields_str}] :=
-        *transitions {{
-            transition_id: id,
-            {fields_str}
-        }},
+    get_query = """
+        ?[id, type, current, next, output, metadata, updated_at, created_at] :=
+            *transitions {
+                transition_id: id,
+                type,
+                current: current_tuple,
+                next: next_tuple,
+                output,
+                metadata,
+                updated_at,
+                created_at,
+            },
+            current = {"state": current_tuple->0, "step": current_tuple->1},
+            next = if(
+                isnull(next_tuple),
+                null,
+                {"state": next_tuple->0, "step": next_tuple->1},
+            ),
     """
 
     get_query += filter

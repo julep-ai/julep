@@ -2255,13 +2255,13 @@ dev = ["Sphinx (>=5.1.1)", "black (==23.12.1)", "build (>=0.10.0)", "coverage (>
 
 [[package]]
 name = "litellm"
-version = "1.43.12"
+version = "1.43.13"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.43.12-py3-none-any.whl", hash = "sha256:f2c5f498a079df6eb8448ac41704367a389ea679a22e195c79b7963ede5cc462"},
-    {file = "litellm-1.43.12.tar.gz", hash = "sha256:719eca58904942465dfd827e9d8f317112996ef481db71f9562f5263a553c74a"},
+    {file = "litellm-1.43.13-py3-none-any.whl", hash = "sha256:47c27c1c1b394d6098c68eec637008b07a254dadc4b82206b1a9f960621a8776"},
+    {file = "litellm-1.43.13.tar.gz", hash = "sha256:b0273cbed3f7a35f197c98d92b1a13038b430e5e78d30db7d94d8237a3b98641"},
 ]
 
 [package.dependencies]
@@ -2867,13 +2867,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.40.6"
+version = "1.40.8"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.40.6-py3-none-any.whl", hash = "sha256:b36372124a779381a420a34dd96f762baa748b6bdfaf83a6b9f2745f72ccc1c5"},
-    {file = "openai-1.40.6.tar.gz", hash = "sha256:2239232bcb7f4bd4ce8e02544b5769618582411cf399816d96686d1b6c1e5c8d"},
+    {file = "openai-1.40.8-py3-none-any.whl", hash = "sha256:3ed4ddad48e0dde059c9b4d3dc240e47781beca2811e52ba449ddc4a471a2fd4"},
+    {file = "openai-1.40.8.tar.gz", hash = "sha256:e225f830b946378e214c5b2cfa8df28ba2aeb7e9d44f738cb2a926fd971f5bc0"},
 ]
 
 [package.dependencies]

@@ -28,18 +28,22 @@ export const $Executions_Transition = {
       isRequired: true,
     },
     current: {
-      type: "array",
-      contains: {
-        properties: {},
-      },
+      type: "all-of",
+      contains: [
+        {
+          type: "Executions_TransitionTarget",
+        },
+      ],
       isReadOnly: true,
       isRequired: true,
     },
     next: {
-      type: "array",
-      contains: {
-        properties: {},
-      },
+      type: "all-of",
+      contains: [
+        {
+          type: "Executions_TransitionTarget",
+        },
+      ],
       isReadOnly: true,
       isRequired: true,
       isNullable: true,

@@ -25,3 +25,12 @@ class MemoryRatingTaskArgs(BaseModel):
 class MemoryRatingTask(BaseModel):
     name: Literal["memory_rating.v1"]
     args: MemoryRatingTaskArgs
+
+
+class EmbedDocsPayload(BaseModel):
+    developer_id: UUID
+    doc_id: UUID
+    content: list[str]
+    embed_instruction: str | None
+    title: str | None = None
+    include_title: bool = False  # Need to be a separate parameter for the activity

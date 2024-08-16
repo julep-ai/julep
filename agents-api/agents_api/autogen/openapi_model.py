@@ -1,5 +1,5 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated, Generic, Self, Type, TypeVar
+from typing import Annotated, Generic, Literal, Self, Type, TypeVar
 from uuid import UUID
 
 from litellm.utils import _select_tokenizer as select_tokenizer
@@ -20,31 +20,31 @@ from .Tasks import *
 from .Tools import *
 from .Users import *
 
+# Generic models
+# --------------
+
+DataT = TypeVar("DataT", bound=BaseModel)
+
+
+class ListResponse(BaseModel, Generic[DataT]):
+    items: list[DataT]
+
+
+# Aliases
+# -------
+
 CreateToolRequest = UpdateToolRequest
 CreateOrUpdateAgentRequest = UpdateAgentRequest
 CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
 CreateOrUpdateTaskRequest = CreateTaskRequest
+ChatResponse = ChunkChatResponse | MessageChatResponse
 
-CreateTransitionRequest = create_partial_model(
-    Transition,
-    # The following fields are optional
-    "id",
-    "execution_id",
-    "created_at",
-    "updated_at",
-    "metadata",
-)
 
-ChatMLRole = Literal[
-    "user",
-    "assistant",
-    "system",
-    "function",
-    "function_response",
-    "function_call",
-    "auto",
-]
+# Custom types (not generated correctly)
+# --------------------------------------
+
+# TODO: Remove these when auto-population is fixed
 
 ChatMLContent = (
     list[ChatMLTextContentPart | ChatMLImageContentPart]
@@ -61,9 +61,53 @@ ChatMLContent = (
     ]
 )
 
+ChatMLRole = Literal[
+    "user",
+    "assistant",
+    "system",
+    "function",
+    "function_response",
+    "function_call",
+    "auto",
+]
+assert BaseEntry.model_fields["role"].annotation == ChatMLRole
+
 ChatMLSource = Literal[
     "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
 ]
+assert BaseEntry.model_fields["source"].annotation == ChatMLSource
+
+
+ExecutionStatus = Literal[
+    "queued",
+    "starting",
+    "running",
+    "awaiting_input",
+    "succeeded",
+    "failed",
+    "cancelled",
+]
+assert Execution.model_fields["status"].annotation == ExecutionStatus
+
+
+TransitionType = Literal["finish", "wait", "resume", "error", "step", "cancelled"]
+assert Transition.model_fields["type"].annotation == TransitionType
+
+
+# Create models
+# -------------
+
+CreateTransitionRequest = create_partial_model(
+    Transition,
+    #
+    # The following fields are optional
+    "id",
+    "execution_id",
+    "created_at",
+    "updated_at",
+    "metadata",
+)
+CreateTransitionRequest.model_rebuild()
 
 
 class CreateEntryRequest(BaseEntry):
@@ -98,35 +142,8 @@ class CreateEntryRequest(BaseEntry):
         )
 
 
-def make_session(
-    *,
-    agents: list[UUID],
-    users: list[UUID],
-    **data: dict,
-) -> Session:
-    """
-    Create a new session object.
-    """
-    cls, participants = None, {}
-
-    match (len(agents), len(users)):
-        case (0, _):
-            raise ValueError("At least one agent must be provided.")
-        case (1, 0):
-            cls = SingleAgentNoUserSession
-            participants = {"agent": agents[0]}
-        case (1, 1):
-            cls = SingleAgentSingleUserSession
-            participants = {"agent": agents[0], "user": users[0]}
-        case (1, u) if u > 1:
-            cls = SingleAgentMultiUserSession
-            participants = {"agent": agents[0], "users": users}
-        case _:
-            cls = MultiAgentMultiUserSession
-            participants = {"agents": agents, "users": users}
-
-    return cls(**{**data, **participants})
-
+# Task related models
+# -------------------
 
 WorkflowStep = (
     PromptStep
@@ -157,7 +174,9 @@ class TaskSpec(_Task):
     model_config = ConfigDict(extra="ignore")
 
     workflows: list[Workflow]
-    main: list[WorkflowStep] | None = None
+
+    # Remove main field from the model
+    main: None = None
 
 
 class TaskSpecDef(TaskSpec):
@@ -213,13 +232,3 @@ class UpdateTaskRequest(_UpdateTaskRequest):
             "extra": "allow",
         }
     )
-
-
-DataT = TypeVar("DataT", bound=BaseModel)
-
-
-class ListResponse(BaseModel, Generic[DataT]):
-    items: list[DataT]
-
-
-ChatResponse = ChunkChatResponse | MessageChatResponse

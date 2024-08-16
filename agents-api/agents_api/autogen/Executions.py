@@ -84,8 +84,10 @@ class Transition(BaseModel):
     ]
     execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     output: Annotated[dict[str, Any], Field(json_schema_extra={"readOnly": True})]
-    current: Annotated[list, Field(json_schema_extra={"readOnly": True})]
-    next: Annotated[list | None, Field(json_schema_extra={"readOnly": True})]
+    current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
+    next: Annotated[
+        TransitionTarget | None, Field(json_schema_extra={"readOnly": True})
+    ]
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -96,6 +98,17 @@ class Transition(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
+
+
+class TransitionTarget(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    workflow: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
+    """
+    Valid python identifier names
+    """
+    step: int
 
 
 class UpdateExecutionRequest(BaseModel):

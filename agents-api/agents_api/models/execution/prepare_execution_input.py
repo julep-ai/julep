@@ -29,7 +29,7 @@ from .get_execution import get_execution
     }
 )
 @wrap_in_class(ExecutionInput, one=True)
-@cozo_query(debug=True)
+@cozo_query
 @beartype
 def prepare_execution_input(
     *,

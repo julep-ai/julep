@@ -1,7 +1,7 @@
-from typing import Annotated, Any, List, Tuple
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, computed_field
 
 from ...autogen.openapi_model import (
     Agent,
@@ -15,11 +15,41 @@ from ...autogen.openapi_model import (
     TaskSpecDef,
     TaskToolDef,
     Tool,
+    TransitionTarget,
+    TransitionType,
     UpdateTaskRequest,
     User,
     Workflow,
     WorkflowStep,
 )
+
+valid_transitions = {
+    # Start state
+    "init": ["wait", "error", "step", "cancelled"],
+    # End states
+    "finish": [],
+    "error": [],
+    "cancelled": [],
+    # Intermediate states
+    "wait": ["resume", "error", "cancelled"],
+    "resume": ["wait", "error", "step", "finish", "cancelled"],
+    "step": ["wait", "error", "step", "finish", "cancelled"],
+}
+
+valid_previous_statuses = {
+    "running": ["queued", "starting", "awaiting_input"],
+    "cancelled": ["queued", "starting", "awaiting_input", "running"],
+}
+
+transition_to_execution_status = {
+    "init": "queued",
+    "wait": "awaiting_input",
+    "resume": "running",
+    "step": "running",
+    "finish": "succeeded",
+    "error": "failed",
+    "cancelled": "cancelled",
+}
 
 
 class ExecutionInput(BaseModel):
@@ -29,28 +59,60 @@ class ExecutionInput(BaseModel):
     agent: Agent
     tools: list[Tool]
     arguments: dict[str, Any]
+
+    # Not used at the moment
     user: User | None = None
     session: Session | None = None
 
 
-class StepContext(ExecutionInput):
-    definition: WorkflowStep
+WorkflowStepType = TypeVar("WorkflowStepType", bound=WorkflowStep)
+
+
+class StepContext(BaseModel, Generic[WorkflowStepType]):
+    execution_input: ExecutionInput
     inputs: list[dict[str, Any]]
+    cursor: TransitionTarget
+
+    @computed_field
+    @property
+    def outputs(self) -> list[dict[str, Any]]:
+        return self.inputs[1:]
+
+    @computed_field
+    @property
+    def current_input(self) -> dict[str, Any]:
+        return self.inputs[-1]
+
+    @computed_field
+    @property
+    def current_workflow(self) -> Workflow:
+        workflows: list[Workflow] = self.execution_input.task.workflows
+        return next(wf for wf in workflows if wf.name == self.cursor.workflow)
+
+    @computed_field
+    @property
+    def current_step(self) -> WorkflowStepType:
+        step = self.current_workflow[self.cursor.step]
+        return step
+
+    @computed_field
+    @property
+    def is_last_step(self) -> bool:
+        return (self.cursor.step + 1) == len(self.current_workflow)
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
-
-        dump["_"] = self.inputs[-1]
-        dump["outputs"] = self.inputs[1:]
+        dump["_"] = self.current_input
 
         return dump
 
 
-class TransitionInfo(BaseModel):
-    from_: Tuple[str, int]
-    to: List[str | int] | None = None
-    type: Annotated[str, Field(pattern="^(finish|wait|error|step)$")]
-    outputs: dict[str, Any] | None = None
+OutcomeType = TypeVar("OutcomeType", bound=BaseModel)
+
+
+class StepOutcome(BaseModel, Generic[OutcomeType]):
+    output: OutcomeType | None
+    transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 
 def task_to_spec(

@@ -1,6 +1,7 @@
 from ward import test
 
 from agents_api.activities.embed_docs import embed_docs
+from agents_api.activities.types import EmbedDocsPayload
 
 from .fixtures import (
     cozo_client,
@@ -8,7 +9,6 @@ from .fixtures import (
     temporal_worker,
     test_developer_id,
     test_doc,
-    workflow_environment,
 )
 
 # from agents_api.activities.truncation import get_extra_entries
@@ -18,13 +18,9 @@ from .fixtures import (
 
 @test("activity: check that workflow environment and worker are started correctly")
 async def _(
-    workflow_environment=workflow_environment,
     worker=temporal_worker,
 ):
-    async with workflow_environment as wf_env:
-        assert wf_env is not None
-        assert worker is not None
-        assert worker.is_running
+    assert worker.is_running
 
 
 @test("activity: call direct embed_docs")
@@ -41,11 +37,14 @@ async def _(
     include_title = True
 
     await embed_docs(
-        developer_id=developer_id,
-        doc_id=doc.id,
-        title=title,
-        content=content,
-        include_title=include_title,
+        EmbedDocsPayload(
+            developer_id=developer_id,
+            doc_id=doc.id,
+            title=title,
+            content=content,
+            include_title=include_title,
+            embed_instruction=None,
+        ),
         cozo_client=cozo_client,
     )
 
