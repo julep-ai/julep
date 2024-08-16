@@ -49,9 +49,9 @@ def update_execution(
     task_id = str(task_id)
     execution_id = str(execution_id)
 
-    valid_previous_statuses = valid_previous_statuses_map[data.status]
+    valid_previous_statuses: list[str] | None = valid_previous_statuses_map.get(data.status, None)
 
-    execution_data = data.model_dump(exclude_none=True)
+    execution_data: dict = data.model_dump(exclude_none=True)
 
     columns, values = cozo_process_mutate_data(
         {
@@ -93,7 +93,7 @@ def update_execution(
             task_id=task_id,
             parents=[("agents", "agent_id")],
         ),
-        validate_status_query,
+        validate_status_query if valid_previous_statuses is not None else "",
         update_query,
     ]
 
