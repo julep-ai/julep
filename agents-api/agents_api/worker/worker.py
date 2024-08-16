@@ -10,6 +10,7 @@ def create_worker(client: Client):
     then create a worker to listen for tasks on the configured task queue.
     """
 
+    from ..activities.demo import demo_activity
     from ..activities.embed_docs import embed_docs
     from ..activities.mem_mgmt import mem_mgmt
     from ..activities.mem_rating import mem_rating
@@ -26,6 +27,7 @@ def create_worker(client: Client):
     from ..env import (
         temporal_task_queue,
     )
+    from ..workflows.demo import DemoWorkflow
     from ..workflows.embed_docs import EmbedDocsWorkflow
     from ..workflows.mem_mgmt import MemMgmtWorkflow
     from ..workflows.mem_rating import MemRatingWorkflow
@@ -48,6 +50,7 @@ def create_worker(client: Client):
         graceful_shutdown_timeout=timedelta(seconds=30),
         task_queue=temporal_task_queue,
         workflows=[
+            DemoWorkflow,
             SummarizationWorkflow,
             MemMgmtWorkflow,
             MemRatingWorkflow,
@@ -57,6 +60,7 @@ def create_worker(client: Client):
         ],
         activities=[
             *task_activities,
+            demo_activity,
             summarization,
             mem_mgmt,
             mem_rating,
