@@ -8,6 +8,7 @@ from ..env import (
     temporal_client_cert,
     temporal_namespace,
     temporal_private_key,
+    temporal_task_queue,
     temporal_worker_url,
 )
 from ..worker.codec import pydantic_data_converter
@@ -49,6 +50,6 @@ async def run_task_execution_workflow(
     return await client.start_workflow(
         TaskExecutionWorkflow.run,
         args=[execution_input, start, previous_inputs],
-        task_queue="memory-task-queue",
+        task_queue=temporal_task_queue,
         id=str(job_id),
     )

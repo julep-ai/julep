@@ -63,7 +63,6 @@ check = [
     "format",
     "typecheck",
 ]
-test = "ward"
 codegen = """
 datamodel-codegen \
   --input ../openapi.yaml \
@@ -94,3 +93,7 @@ datamodel-codegen \
   --openapi-scopes schemas \
   --keep-model-order \
   --disable-timestamp"""
+
+[tool.poe.tasks.test]
+env = { AGENTS_API_TESTING = "true" }
+cmd = "ward test"
