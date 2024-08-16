@@ -19,6 +19,7 @@ from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.models.execution.create_execution import (
     create_execution as create_execution_query,
 )
+from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
 from agents_api.models.execution.prepare_execution_input import prepare_execution_input
 from agents_api.models.execution.update_execution import (
     update_execution as update_execution_query,
@@ -42,9 +43,7 @@ async def create_task_execution(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     try:
-        task = get_task_query(
-            task_id=task_id, developer_id=x_developer_id
-        )
+        task = get_task_query(task_id=task_id, developer_id=x_developer_id)
         task_data = task.model_dump()
 
         validate(data.input, task_data["input_schema"])
@@ -62,6 +61,13 @@ async def create_task_execution(
         raise
 
     execution_id = uuid4()
+    execution = create_execution_query(
+        developer_id=x_developer_id,
+        task_id=task_id,
+        execution_id=execution_id,
+        data=data,
+    )
+
     execution_input = prepare_execution_input(
         developer_id=x_developer_id,
         task_id=task_id,
@@ -88,14 +94,15 @@ async def create_task_execution(
             detail="Task creation failed",
         )
 
-    execution = create_execution_query(
+    create_temporal_lookup(
         developer_id=x_developer_id,
         task_id=task_id,
         execution_id=execution_id,
-        data=data,
-        workflow_hande=handle,
+        workflow_handle=handle,
     )
 
     return ResourceCreatedResponse(
-        id=execution["execution_id"][0], created_at=execution["created_at"][0]
+        id=execution.id,
+        created_at=execution.created_at,
+        jobs=[],
     )

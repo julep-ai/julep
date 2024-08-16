@@ -11,6 +11,7 @@ from agents_api.models.execution.create_execution import create_execution
 from agents_api.models.execution.create_execution_transition import (
     create_execution_transition,
 )
+from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
 from agents_api.models.execution.get_execution import get_execution
 from agents_api.models.execution.list_executions import list_executions
 from tests.fixtures import cozo_client, test_developer_id, test_execution, test_task
@@ -29,6 +30,11 @@ def _(client=cozo_client, developer_id=test_developer_id, task=test_task):
         developer_id=developer_id,
         task_id=task.id,
         data=CreateExecutionRequest(input={"test": "test"}),
+        client=client,
+    )
+    create_temporal_lookup(
+        developer_id=developer_id,
+        task_id=task.id,
         workflow_handle=workflow_handle,
         client=client,
     )

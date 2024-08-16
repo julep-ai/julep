@@ -156,7 +156,7 @@ def prepare_execution_input(
       *_execution {{ {', '.join(execution_fields)} }},
       execution = {{ {make_cozo_json_query(execution_fields)} }}
 
-    ?[developer_id, execution, task, agent, user, session, tools] :=
+    ?[developer_id, execution, task, agent, user, session, tools, arguments] :=
       developer_id = to_uuid($developer_id),
 
       agent_json[agent],
@@ -167,6 +167,7 @@ def prepare_execution_input(
       # TODO: Enable these later
       user = null,
       session = null,
+      arguments = {{}},
     """
 
     queries = [

@@ -28,7 +28,7 @@ async def list_task_executions(
         task_id=task_id,
         developer_id=x_developer_id,
         limit=limit,
-        offse=offset,
+        offset=offset,
         sort_by=sort_by,
         direction=direction,
     )

@@ -29,6 +29,7 @@ from agents_api.models.execution.create_execution import create_execution
 from agents_api.models.execution.create_execution_transition import (
     create_execution_transition,
 )
+from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
 from agents_api.models.session.create_session import create_session
 from agents_api.models.session.delete_session import delete_session
 from agents_api.models.task.create_task import create_task
@@ -298,6 +299,11 @@ def test_execution(
         developer_id=developer_id,
         task_id=task.id,
         data=CreateExecutionRequest(input={"test": "test"}),
+        client=client,
+    )
+    create_temporal_lookup(
+        developer_id=developer_id,
+        task_id=task.id,
         workflow_handle=workflow_handle,
         client=client,
     )
@@ -324,8 +330,8 @@ def test_transition(
         data=CreateTransitionRequest(
             type="step",
             output={},
-            current=[],
-            next=[],
+            current=["main", 0],
+            next=["wf1", 1],
         ),
         client=client,
     )

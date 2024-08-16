@@ -23,9 +23,7 @@ async def get_task_details(
     )
 
     try:
-        task = get_task_query(
-            developer_id=x_developer_id, task_id=task_id
-        )
+        task = get_task_query(developer_id=x_developer_id, task_id=task_id)
         task_data = task.model_dump()
     except AssertionError:
         raise not_found
@@ -41,4 +39,3 @@ async def get_task_details(
             break
 
     return Task(**task_data)
-    
