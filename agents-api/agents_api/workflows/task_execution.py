@@ -3,9 +3,10 @@
 
 from datetime import timedelta
 
-from agents_api.autogen.Executions import TransitionTarget
-from agents_api.autogen.openapi_model import CreateTransitionRequest
 from temporalio import workflow
+
+from agents_api.autogen.Executions import TransitionTarget
+from agents_api.autogen.openapi_model import CreateTransitionRequest, TransitionType
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
@@ -16,21 +17,22 @@ with workflow.unsafe.imports_passed_through():
         transition_step,
         yield_step,
     )
-
     from ..autogen.openapi_model import (
         ErrorWorkflowStep,
         EvaluateStep,
         IfElseWorkflowStep,
         PromptStep,
         ToolCallStep,
-        WaitForInputStep,
+        # WaitForInputStep,
+        # WorkflowStep,
         YieldStep,
     )
-
     from ..common.protocol.tasks import (
         ExecutionInput,
+        # OutcomeType,
         StepContext,
         StepOutcome,
+        # Workflow,
     )
 
 
@@ -53,45 +55,87 @@ class TaskExecutionWorkflow:
         previous_inputs: list[dict] = [],
     ) -> None:
         previous_inputs = previous_inputs or [execution_input.arguments]
-        workflow_map = {wf.name: wf.steps for wf in execution_input.task.workflows}
 
-        current_workflow = workflow_map[start.workflow]
-        step = current_workflow[start.step]
-        step_type = type(step)
-
-        context = StepContext[step_type](
-            developer_id=execution_input.developer_id,
-            execution=execution_input.execution,
-            task=execution_input.task,
-            agent=execution_input.agent,
-            user=execution_input.user,
-            session=execution_input.session,
-            tools=execution_input.tools,
-            arguments=execution_input.arguments,
-            definition=step,
+        context = StepContext(
+            execution_input=execution_input,
             inputs=previous_inputs,
+            current=start,
         )
 
-        next = None
-        outcome = None
-        activity = STEP_TO_ACTIVITY.get(step_type)
-        final_output = None
-        is_last = False
+        step_type = type(context.current_step)
 
-        if activity:
+        # 1. First execute the current step's activity if applicable
+        if activity := STEP_TO_ACTIVITY.get(step_type):
             outcome = await workflow.execute_activity(
                 activity,
                 context,
                 schedule_to_close_timeout=timedelta(seconds=600),
             )
 
-        match step, outcome:
-            case YieldStep(), StepOutcome(output=output, transition_to=(transition_type, next)):
+        # 2. Then, based on the outcome and step type, decide what to do next
+        #    (By default, exit if last otherwise transition 'step' to the next step)
+        final_output = None
+        transition_type: TransitionType
+        next_target: TransitionTarget | None
+        metadata: dict = {"step_type": step_type.__name__}
+
+        if context.is_last_step:
+            transition_type = "finish"
+            next_target = None
+
+        else:
+            transition_type = "step"
+            next_target = TransitionTarget(
+                workflow=context.cursor.workflow, step=context.cursor.step + 1
+            )
+
+        # 3. Orchestrate the step
+        match context.current_step, outcome:
+            case EvaluateStep(), StepOutcome(output=output):
+                final_output = output
                 transition_request = CreateTransitionRequest(
                     type=transition_type,
-                    current=start,
+                    current=context.cursor,
+                    next=next_target,
+                    output=final_output,
+                    metadata=metadata,
+                )
+
+                await workflow.execute_activity(
+                    transition_step,
+                    args=[context, transition_request],
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
+
+            case ErrorWorkflowStep(error=error), _:
+                final_output = dict(error=error)
+                transition_type = "error"
+                transition_request = CreateTransitionRequest(
+                    type=transition_type,
+                    current=context.cursor,
+                    next=None,
+                    output=final_output,
+                    metadata=metadata,
+                )
+
+                await workflow.execute_activity(
+                    transition_step,
+                    args=[context, transition_request],
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
+
+                raise Exception(f"Error raised by ErrorWorkflowStep: {error}")
+
+            case YieldStep(), StepOutcome(
+                output=output, transition_to=(transition_type, next)
+            ):
+                final_output = output
+                transition_request = CreateTransitionRequest(
+                    type=transition_type,
+                    current=context.cursor,
                     next=next,
-                    output=output,
+                    output=final_output,
+                    metadata=metadata,
                 )
 
                 await workflow.execute_activity(
@@ -110,7 +154,15 @@ class TaskExecutionWorkflow:
             case _:
                 raise NotImplementedError()
 
-        is_last = start.step + 1 == len(current_workflow)
+        # 4. Closing
+        # End if the last step
+        if context.is_last_step:
+            return final_output
+
+        # Otherwise, recurse to the next step
+        workflow.continue_as_new(
+            execution_input, next_target, previous_inputs + [final_output]
+        )
 
         ##################
 
@@ -123,30 +175,18 @@ class TaskExecutionWorkflow:
         #             context,
         #             schedule_to_close_timeout=timedelta(seconds=600),
         #         )
-
+        #
         #         # TODO: ChatCompletion does not have tool_calls
         #         # if outputs.tool_calls is not None:
         #         #     should_wait = True
 
-        #     case EvaluateStep():
-        #         outputs = await workflow.execute_activity(
-        #             evaluate_step,
-        #             context,
-        #             schedule_to_close_timeout=timedelta(seconds=600),
-        #         )
-        #     case YieldStep():
-        #         outputs = await workflow.execute_child_workflow(
-        #             TaskExecutionWorkflow.run,
-        #             args=[execution_input, (step.workflow, 0), previous_inputs],
-        #         )
         #     case ToolCallStep():
         #         outputs = await workflow.execute_activity(
         #             tool_call_step,
         #             context,
         #             schedule_to_close_timeout=timedelta(seconds=600),
         #         )
-        #     case ErrorWorkflowStep():
-        #         is_error = True
+
         #     case IfElseWorkflowStep():
         #         outputs = await workflow.execute_activity(
         #             if_else_step,
@@ -154,7 +194,7 @@ class TaskExecutionWorkflow:
         #             schedule_to_close_timeout=timedelta(seconds=600),
         #         )
         #         workflow_step = YieldStep(**outputs["goto_workflow"])
-
+        #
         #         outputs = await workflow.execute_child_workflow(
         #             TaskExecutionWorkflow.run,
         #             args=[
@@ -163,41 +203,6 @@ class TaskExecutionWorkflow:
         #                 previous_inputs,
         #             ],
         #         )
+
         #     case WaitForInputStep():
         #         should_wait = True
-
-        # # Transition type
-        # transition_type = (
-        #     "awaiting_input"
-        #     if should_wait
-        #     else ("finish" if is_last else ("error" if is_error else "step"))
-        # )
-
-        # # Transition to the next step
-        # transition_info = TransitionInfo(
-        #     from_=(wf_name, step_idx),
-        #     to=None if (is_last or should_wait) else (wf_name, step_idx + 1),
-        #     type=transition_type,
-        # )
-
-        # await workflow.execute_activity(
-        #     transition_step,
-        #     args=[
-        #         context,
-        #         transition_info,
-        #         "failed" if is_error else "awaiting_input",
-        #     ],
-        #     schedule_to_close_timeout=timedelta(seconds=600),
-        # )
-
-        # # FIXME: this is just a demo, we should handle the end of the workflow properly
-        # # -----
-
-        # # End if the last step
-        # if is_last:
-        #     return outputs
-
-        # # Otherwise, recurse to the next step
-        # workflow.continue_as_new(
-        #     execution_input, (wf_name, step_idx + 1), previous_inputs + [outputs]
-        # )

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 
-from beartype import beartype
 import pandas as pd
+from beartype import beartype
 from temporalio import activity
 
 # from agents_api.models.entry.entries_summarization import (

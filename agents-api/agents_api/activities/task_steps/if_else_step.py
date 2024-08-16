@@ -1,5 +1,4 @@
 from beartype import beartype
-from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import (

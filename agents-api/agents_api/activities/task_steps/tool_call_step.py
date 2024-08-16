@@ -1,13 +1,9 @@
 from beartype import beartype
 from temporalio import activity
 
-from ...autogen.openapi_model import (
-    ToolCallStep,
-)
 from ...common.protocol.tasks import (
     StepContext,
 )
-
 
 
 @activity.defn

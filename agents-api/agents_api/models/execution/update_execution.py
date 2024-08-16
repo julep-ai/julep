@@ -9,7 +9,9 @@ from ...autogen.openapi_model import (
     ResourceUpdatedResponse,
     UpdateExecutionRequest,
 )
-from ...common.protocol.tasks import valid_previous_statuses as valid_previous_statuses_map
+from ...common.protocol.tasks import (
+    valid_previous_statuses as valid_previous_statuses_map,
+)
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,

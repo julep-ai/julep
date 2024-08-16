@@ -23,7 +23,6 @@ from ...autogen.openapi_model import (
     WorkflowStep,
 )
 
-
 valid_transitions = {
     # Start state
     "init": ["wait", "error", "step", "cancelled"],
@@ -69,10 +68,10 @@ class ExecutionInput(BaseModel):
 WorkflowStepType = TypeVar("WorkflowStepType", bound=WorkflowStep)
 
 
-class StepContext(ExecutionInput, Generic[WorkflowStepType]):
-    definition: WorkflowStepType | None
+class StepContext(BaseModel, Generic[WorkflowStepType]):
+    execution_input: ExecutionInput
     inputs: list[dict[str, Any]]
-    current: TransitionTarget
+    cursor: TransitionTarget
 
     @computed_field
     @property
@@ -83,6 +82,23 @@ class StepContext(ExecutionInput, Generic[WorkflowStepType]):
     @property
     def current_input(self) -> dict[str, Any]:
         return self.inputs[-1]
+
+    @computed_field
+    @property
+    def current_workflow(self) -> Workflow:
+        workflows: list[Workflow] = self.execution_input.task.workflows
+        return next(wf for wf in workflows if wf.name == self.cursor.workflow)
+
+    @computed_field
+    @property
+    def current_step(self) -> WorkflowStepType:
+        step = self.current_workflow[self.cursor.step]
+        return step
+
+    @computed_field
+    @property
+    def is_last_step(self) -> bool:
+        return (self.cursor.step + 1) == len(self.current_workflow)
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
