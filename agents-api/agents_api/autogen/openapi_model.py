@@ -1,11 +1,10 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated, Generic, Literal, Self, Type, TypeVar
+from typing import Annotated, Any, Generic, Literal, Self, Type, TypeVar
 from uuid import UUID
 
 from litellm.utils import _select_tokenizer as select_tokenizer
 from litellm.utils import token_counter
 from pydantic import AwareDatetime, Field
-from pydantic_partial import create_partial_model
 
 from ..common.utils.datetime import utcnow
 from .Agents import *
@@ -97,17 +96,15 @@ assert Transition.model_fields["type"].annotation == TransitionType
 # Create models
 # -------------
 
-CreateTransitionRequest = create_partial_model(
-    Transition,
-    #
-    # The following fields are optional
-    "id",
-    "execution_id",
-    "created_at",
-    "updated_at",
-    "metadata",
-)
-CreateTransitionRequest.model_rebuild()
+
+class CreateTransitionRequest(Transition):
+    # The following fields are optional in this
+
+    id: UUID | None = None
+    execution_id: UUID | None = None
+    created_at: AwareDatetime | None = None
+    updated_at: AwareDatetime | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class CreateEntryRequest(BaseEntry):

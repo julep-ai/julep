@@ -25,3 +25,6 @@ async def _(client=cozo_client, developer_id=test_developer_id, task=test_task):
         assert execution.task_id == task.id
         assert execution.input == data.input
         mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert result["hello"] == "world"

@@ -232,7 +232,7 @@ def test_task(
                 "name": "test task",
                 "description": "test task about",
                 "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [],
+                "main": [{"evaluate": {"hello": '"world"'}}],
             }
         ),
         client=client,

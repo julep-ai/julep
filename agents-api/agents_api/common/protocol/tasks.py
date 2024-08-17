@@ -93,13 +93,13 @@ class StepContext(BaseModel, Generic[WorkflowStepType]):
     @computed_field
     @property
     def current_step(self) -> WorkflowStepType:
-        step = self.current_workflow[self.cursor.step]
+        step = self.current_workflow.steps[self.cursor.step]
         return step
 
     @computed_field
     @property
     def is_last_step(self) -> bool:
-        return (self.cursor.step + 1) == len(self.current_workflow)
+        return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
@@ -108,11 +108,8 @@ class StepContext(BaseModel, Generic[WorkflowStepType]):
         return dump
 
 
-OutcomeType = TypeVar("OutcomeType", bound=BaseModel)
-
-
-class StepOutcome(BaseModel, Generic[OutcomeType]):
-    output: OutcomeType | None
+class StepOutcome(BaseModel):
+    output: Any
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 

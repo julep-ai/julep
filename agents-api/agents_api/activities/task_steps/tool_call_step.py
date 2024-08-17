@@ -10,10 +10,10 @@ from ...common.protocol.tasks import (
 @beartype
 async def tool_call_step(context: StepContext) -> dict:
     raise NotImplementedError()
-    # assert isinstance(context.definition, ToolCallStep)
+    # assert isinstance(context.current_step, ToolCallStep)
 
-    # context.definition.tool_id
-    # context.definition.arguments
+    # context.current_step.tool_id
+    # context.current_step.arguments
     # # get tool by id
     # # call tool
 

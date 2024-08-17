@@ -25,9 +25,9 @@ async def prompt_step(context: StepContext[PromptStep]) -> StepOutcome:
 
     # Render template messages
     prompt = (
-        [InputChatMLMessage(content=context.definition.prompt)]
-        if isinstance(context.definition.prompt, str)
-        else context.definition.prompt
+        [InputChatMLMessage(content=context.current_step.prompt)]
+        if isinstance(context.current_step.prompt, str)
+        else context.current_step.prompt
     )
 
     template_messages: list[InputChatMLMessage] = prompt
@@ -47,7 +47,7 @@ async def prompt_step(context: StepContext[PromptStep]) -> StepOutcome:
         for m in messages
     ]
 
-    settings: dict = context.definition.settings.model_dump()
+    settings: dict = context.current_step.settings.model_dump()
     # Get settings and run llm
     response = await litellm.acompletion(
         messages=messages,

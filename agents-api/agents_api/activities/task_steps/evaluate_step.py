@@ -1,6 +1,3 @@
-from typing import Any
-
-from beartype import beartype
 from temporalio import activity
 
 from ...activities.task_steps.utils import simple_eval_dict
@@ -12,14 +9,16 @@ from ...common.protocol.tasks import (
 from ...env import testing
 
 
-@beartype
 async def evaluate_step(
     context: StepContext[EvaluateStep],
-) -> StepOutcome[dict[str, Any]]:
-    exprs = context.definition.arguments
+) -> StepOutcome:
+    assert isinstance(context.current_step, EvaluateStep)
+
+    exprs = context.current_step.evaluate
     output = simple_eval_dict(exprs, values=context.model_dump())
 
-    return StepOutcome(output=output)
+    result = StepOutcome(output=output)
+    return result
 
 
 # Note: This is here just for clarity. We could have just imported evaluate_step directly

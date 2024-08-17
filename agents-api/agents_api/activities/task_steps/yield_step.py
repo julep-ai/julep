@@ -1,5 +1,3 @@
-from typing import Any
-
 from beartype import beartype
 from temporalio import activity
 
@@ -12,7 +10,7 @@ from .utils import simple_eval_dict
 
 
 @beartype
-async def yield_step(context: StepContext[YieldStep]) -> StepOutcome[dict[str, Any]]:
+async def yield_step(context: StepContext[YieldStep]) -> StepOutcome:
     all_workflows = context.execution_input.task.workflows
     workflow = context.current_step.workflow
 

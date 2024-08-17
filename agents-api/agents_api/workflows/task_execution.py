@@ -29,11 +29,11 @@ with workflow.unsafe.imports_passed_through():
     )
     from ..common.protocol.tasks import (
         ExecutionInput,
-        # OutcomeType,
         StepContext,
         StepOutcome,
         # Workflow,
     )
+    from ..env import testing
 
 
 STEP_TO_ACTIVITY = {
@@ -59,7 +59,7 @@ class TaskExecutionWorkflow:
         context = StepContext(
             execution_input=execution_input,
             inputs=previous_inputs,
-            current=start,
+            cursor=start,
         )
 
         step_type = type(context.current_step)
@@ -69,7 +69,8 @@ class TaskExecutionWorkflow:
             outcome = await workflow.execute_activity(
                 activity,
                 context,
-                schedule_to_close_timeout=timedelta(seconds=600),
+                # TODO: This should be a configurable timeout everywhere based on the task
+                schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
             )
 
         # 2. Then, based on the outcome and step type, decide what to do next
