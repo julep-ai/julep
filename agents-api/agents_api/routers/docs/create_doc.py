@@ -29,11 +29,6 @@ async def run_embed_docs_task(
 
     client = client or (await temporal.get_client())
 
-    # TODO: Remove this conditional once we have a way to run workflows in
-    #       a test environment.
-    if testing:
-        return None
-
     embed_payload = EmbedDocsPayload(
         developer_id=developer_id,
         doc_id=doc_id,
@@ -49,7 +44,10 @@ async def run_embed_docs_task(
         id=str(job_id),
     )
 
-    background_tasks.add_task(handle.result)
+    # TODO: Remove this conditional once we have a way to run workflows in
+    #       a test environment.
+    if not testing:
+        background_tasks.add_task(handle.result)
 
     return handle
 

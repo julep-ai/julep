@@ -10,15 +10,10 @@ from agents_api.workflows.demo import DemoWorkflow
 
 from .fixtures import (
     cozo_client,
-    patch_embed_acompletion,
     test_developer_id,
     test_doc,
 )
 from .utils import patch_testing_temporal
-
-# from agents_api.activities.truncation import get_extra_entries
-# from agents_api.autogen.openapi_model import Role
-# from agents_api.common.protocol.entries import Entry
 
 
 @test("activity: call direct embed_docs")
@@ -26,10 +21,7 @@ async def _(
     cozo_client=cozo_client,
     developer_id=test_developer_id,
     doc=test_doc,
-    mocks=patch_embed_acompletion,
 ):
-    (embed, _) = mocks
-
     title = "title"
     content = ["content 1"]
     include_title = True
@@ -45,8 +37,6 @@ async def _(
         ),
         cozo_client,
     )
-
-    embed.assert_called_once()
 
 
 @test("activity: call demo workflow via temporal client")

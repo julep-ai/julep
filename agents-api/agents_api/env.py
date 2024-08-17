@@ -85,10 +85,18 @@ environment = dict(
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
     embedding_model_id=embedding_model_id,
+    testing=testing,
 )
 
-if debug:
+if debug or testing:
     # Print the loaded environment variables for debugging purposes.
     print("Environment variables:")
     pprint(environment)
     print()
+
+    # Yell if testing is enabled
+    print("@" * 80)
+    print(
+        f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@"
+    )
+    print("@" * 80)
