@@ -1,3 +1,5 @@
+from typing import Callable
+
 from beartype import beartype
 from temporalio import activity
 
@@ -33,8 +35,8 @@ async def yield_step(context: StepContext[YieldStep]) -> StepOutcome:
 
 # Note: This is here just for clarity. We could have just imported yield_step directly
 # They do the same thing, so we dont need to mock the yield_step function
-mock_yield_step = yield_step
+mock_yield_step: Callable[[StepContext], StepOutcome] = yield_step
 
-yield_step = activity.defn(name="yield_step")(
+yield_step: Callable[[StepContext], StepOutcome] = activity.defn(name="yield_step")(
     yield_step if not testing else mock_yield_step
 )

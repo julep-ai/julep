@@ -5,11 +5,12 @@ It utilizes the environs library for environment variable parsing.
 
 import random
 from pprint import pprint
+from typing import Any, Dict
 
 from environs import Env
 
 # Initialize the Env object for environment variable parsing.
-env = Env()
+env: Any = Env()
 
 
 # Debug
@@ -30,7 +31,7 @@ summarization_model_name: str = env.str(
 
 # Auth
 # ----
-_random_generated_key = "".join(str(random.randint(0, 9)) for _ in range(32))
+_random_generated_key: str = "".join(str(random.randint(0, 9)) for _ in range(32))
 api_key: str = env.str("AGENTS_API_KEY", _random_generated_key)
 
 if api_key == _random_generated_key:
@@ -65,12 +66,12 @@ temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:723
 temporal_namespace: str = env.str("TEMPORAL_NAMESPACE", default="default")
 temporal_client_cert: str = env.str("TEMPORAL_CLIENT_CERT", default=None)
 temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
-temporal_endpoint = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
-temporal_task_queue = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
+temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
+temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 
 
 # Consolidate environment variables
-environment = dict(
+environment: Dict[str, Any] = dict(
     debug=debug,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,

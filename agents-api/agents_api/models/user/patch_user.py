@@ -1,5 +1,6 @@
 """Module for generating datalog queries to update user information in the 'cozodb' database."""
 
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -18,6 +19,9 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

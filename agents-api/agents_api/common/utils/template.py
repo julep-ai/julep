@@ -1,14 +1,16 @@
+from typing import List
+
 import arrow
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
 
-__all__ = [
+__all__: List[str] = [
     "render_template",
 ]
 
 # jinja environment
-jinja_env = ImmutableSandboxedEnvironment(
+jinja_env: ImmutableSandboxedEnvironment = ImmutableSandboxedEnvironment(
     autoescape=False,
     trim_blocks=True,
     lstrip_blocks=True,

@@ -1,3 +1,4 @@
+from typing import Any, List, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -16,7 +17,10 @@ from ..utils import (
     wrap_in_class,
 )
 
-_fields = [
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
+_fields: List[str] = [
     "situation",
     "summary",
     "metadata",

@@ -3,6 +3,7 @@ This module initializes the FastAPI application, registers routes, sets up middl
 """
 
 import logging
+from typing import Any, Callable
 
 import fire
 import sentry_sdk
@@ -37,10 +38,10 @@ else:
     )
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def make_exception_handler(status: int):
+def make_exception_handler(status: int) -> Callable[[Any, Any], Any]:
     """
     Creates a custom exception handler for the application.
 
@@ -60,7 +61,7 @@ def make_exception_handler(status: int):
     return _handler
 
 
-def register_exceptions(app: FastAPI):
+def register_exceptions(app: FastAPI) -> None:
     """
     Registers custom exception handlers for the FastAPI application.
 
@@ -77,7 +78,7 @@ def register_exceptions(app: FastAPI):
     )
 
 
-app = FastAPI(dependencies=[Depends(get_api_key)])
+app: Any = FastAPI(dependencies=[Depends(get_api_key)])
 
 app.add_middleware(
     CORSMiddleware,
@@ -147,7 +148,7 @@ def main(
     timeout_keep_alive=30,
     workers=None,
     log_level="info",
-):
+) -> None:
     uvicorn.run(
         app,
         host=host,

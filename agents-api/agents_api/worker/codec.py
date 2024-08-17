@@ -19,7 +19,7 @@ import agents_api.common.protocol.tasks as tasks
 from agents_api.common.utils.json import dumps as json_dumps
 
 # Map of model name to class so that we can look up the class when deserializing
-model_class_map = {
+model_class_map: dict = {
     subclass.__module__ + "." + subclass.__name__: subclass
     for subclass in {
         # All the models we want to support
@@ -83,7 +83,7 @@ class PydanticPayloadConverter(CompositePayloadConverter):
 
 
 # Use the default data converter, but change the payload converter.
-pydantic_data_converter = dataclasses.replace(
+pydantic_data_converter: Any = dataclasses.replace(
     temporalio.converter.default(),
     payload_converter_class=PydanticPayloadConverter,
 )

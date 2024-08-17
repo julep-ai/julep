@@ -66,7 +66,7 @@ GPT3_MODELS: Dict[str, int] = {
 }
 
 
-DISCONTINUED_MODELS = {
+DISCONTINUED_MODELS: Dict[str, int] = {
     "code-davinci-002": 8001,
     "code-davinci-001": 8001,
     "code-cushman-002": 2048,
@@ -84,9 +84,14 @@ CLAUDE_MODELS: Dict[str, int] = {
     "claude-3-haiku-20240307": 180000,
 }
 
-OPENAI_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **GPT3_5_MODELS, **GPT3_MODELS}
+OPENAI_MODELS: Dict[str, int] = {
+    **GPT4_MODELS,
+    **TURBO_MODELS,
+    **GPT3_5_MODELS,
+    **GPT3_MODELS,
+}
 
-LOCAL_MODELS = {
+LOCAL_MODELS: Dict[str, int] = {
     "gpt-4o": 32768,
     "gpt-4o-awq": 32768,
     "TinyLlama/TinyLlama_v1.1": 2048,
@@ -95,13 +100,13 @@ LOCAL_MODELS = {
     "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768,
 }
 
-LOCAL_MODELS_WITH_TOOL_CALLS = {
+LOCAL_MODELS_WITH_TOOL_CALLS: Dict[str, int] = {
     "OpenPipe/Hermes-2-Theta-Llama-3-8B-32k": 32768,
     "julep-ai/Hermes-2-Theta-Llama-3-8B": 8192,
 }
 
-OLLAMA_MODELS = {
+OLLAMA_MODELS: Dict[str, int] = {
     "llama2": 4096,
 }
 
-CHAT_MODELS = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}
+CHAT_MODELS: Dict[str, int] = {**GPT4_MODELS, **TURBO_MODELS, **CLAUDE_MODELS}

@@ -1,10 +1,11 @@
 from datetime import timedelta
+from typing import Any
 
 from temporalio.client import Client
 from temporalio.worker import Worker
 
 
-def create_worker(client: Client):
+def create_worker(client: Client) -> Any:
     """
     Initializes the Temporal client and worker with TLS configuration (if provided),
     then create a worker to listen for tasks on the configured task queue.
