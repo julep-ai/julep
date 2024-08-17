@@ -8,10 +8,21 @@ export type Tasks_BaseWorkflowStep = {
    */
   kind_:
     | "tool_call"
-    | "yield"
     | "prompt"
     | "evaluate"
-    | "if_else"
     | "wait_for_input"
+    | "log"
+    | "embed"
+    | "search"
+    | "set"
+    | "get"
+    | "foreach"
+    | "map_reduce"
+    | "parallel"
+    | "switch"
+    | "if_else"
+    | "sleep"
+    | "return"
+    | "yield"
     | "error";
 };

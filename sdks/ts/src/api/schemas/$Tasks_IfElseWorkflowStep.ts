@@ -41,6 +41,27 @@ export const $Tasks_IfElseWorkflowStep = {
               type: "Tasks_ErrorWorkflowStep",
             },
             {
+              type: "Tasks_SleepStep",
+            },
+            {
+              type: "Tasks_ReturnStep",
+            },
+            {
+              type: "Tasks_GetStep",
+            },
+            {
+              type: "Tasks_SetStep",
+            },
+            {
+              type: "Tasks_LogStep",
+            },
+            {
+              type: "Tasks_EmbedStep",
+            },
+            {
+              type: "Tasks_SearchStep",
+            },
+            {
               type: "Tasks_WaitForInputStep",
             },
           ],
@@ -61,6 +82,27 @@ export const $Tasks_IfElseWorkflowStep = {
             },
             {
               type: "Tasks_ErrorWorkflowStep",
+            },
+            {
+              type: "Tasks_SleepStep",
+            },
+            {
+              type: "Tasks_ReturnStep",
+            },
+            {
+              type: "Tasks_GetStep",
+            },
+            {
+              type: "Tasks_SetStep",
+            },
+            {
+              type: "Tasks_LogStep",
+            },
+            {
+              type: "Tasks_EmbedStep",
+            },
+            {
+              type: "Tasks_SearchStep",
             },
             {
               type: "Tasks_WaitForInputStep",
