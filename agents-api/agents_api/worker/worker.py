@@ -20,6 +20,7 @@ def create_worker(client: Client) -> Any:
         evaluate_step,
         if_else_step,
         prompt_step,
+        return_step,
         tool_call_step,
         transition_step,
         yield_step,
@@ -37,12 +38,13 @@ def create_worker(client: Client) -> Any:
     from ..workflows.truncation import TruncationWorkflow
 
     task_activities = [
-        prompt_step,
         evaluate_step,
-        yield_step,
-        tool_call_step,
         if_else_step,
+        prompt_step,
+        return_step,
+        tool_call_step,
         transition_step,
+        yield_step,
     ]
 
     # Initialize the worker with the specified task queue, workflows, and activities
