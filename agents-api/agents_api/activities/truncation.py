@@ -31,7 +31,6 @@ def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list
 @activity.defn
 @beartype
 async def truncation(session_id: str, token_count_threshold: int) -> None:
-    print(session_id, token_count_threshold)
     session_id = UUID(session_id)
 
     # delete_entries(

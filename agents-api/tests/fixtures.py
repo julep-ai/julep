@@ -1,4 +1,3 @@
-import asyncio
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -7,7 +6,6 @@ from fastapi.testclient import TestClient
 from litellm.types.utils import Choices, ModelResponse
 from pycozo import Client as CozoClient
 from temporalio.client import WorkflowHandle
-from temporalio.testing import ActivityEnvironment, WorkflowEnvironment
 from ward import fixture
 
 from agents_api.autogen.openapi_model import (
@@ -41,9 +39,6 @@ from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
 
-# from agents_api.worker.worker import create_worker
-from agents_api.worker.worker import create_worker
-
 EMBEDDING_SIZE: int = 1024
 
 
@@ -57,35 +52,6 @@ def cozo_client(migrations_dir: str = "./migrations"):
     apply(client, migrations_dir=migrations_dir, all_=True)
 
     return client
-
-
-@fixture(scope="test")
-def activity_environment():
-    return ActivityEnvironment()
-
-
-@fixture(scope="global")
-async def temporal_worker():
-    async with await WorkflowEnvironment.start_local() as env:
-        worker = create_worker(client=env.client)
-        worker_task = asyncio.create_task(worker.run())
-
-        yield worker
-
-        kill_signal = worker.shutdown()
-        worker_task.cancel()
-        await asyncio.gather(kill_signal, worker_task)
-
-
-@fixture(scope="test")
-def patch_temporal_get_client(
-    temporal_worker=temporal_worker,
-):
-    mock_client = temporal_worker.client
-
-    with patch("agents_api.clients.temporal.get_client") as get_client:
-        get_client.return_value = mock_client
-        yield get_client
 
 
 @fixture(scope="global")
@@ -327,8 +293,8 @@ def test_transition(
         data=CreateTransitionRequest(
             type="step",
             output={},
-            current=["main", 0],
-            next=["wf1", 1],
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "wf1", "step": 1},
         ),
         client=client,
     )

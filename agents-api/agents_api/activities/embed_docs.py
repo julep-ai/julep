@@ -3,11 +3,11 @@ from temporalio import activity
 
 from ..clients import embed as embedder
 from ..clients.cozo import get_cozo_client
+from ..env import testing
 from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 from .types import EmbedDocsPayload
 
 
-@activity.defn
 @beartype
 async def embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
     indices, snippets = list(zip(*enumerate(payload.content)))
@@ -30,3 +30,13 @@ async def embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
         embeddings=embeddings,
         client=cozo_client or get_cozo_client(),
     )
+
+
+async def mock_embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
+    # Does nothing
+    return None
+
+
+embed_docs = activity.defn(name="embed_docs")(
+    embed_docs if not testing else mock_embed_docs
+)

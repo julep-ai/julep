@@ -1,111 +1,107 @@
 from ward import test
 
-from tests.fixtures import (
+from .fixtures import (
     make_request,
     patch_embed_acompletion,
-    patch_temporal_get_client,
     test_agent,
     test_doc,
     test_user,
     test_user_doc,
 )
+from .utils import patch_testing_temporal
 
 
 @test("route: create user doc")
-def _(make_request=make_request, user=test_user, get_client=patch_temporal_get_client):
-    data = dict(
-        title="Test User Doc",
-        content=["This is a test user document."],
-    )
+async def _(make_request=make_request, user=test_user):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test User Doc",
+            content=["This is a test user document."],
+        )
 
-    response = make_request(
-        method="POST",
-        url=f"/users/{user.id}/docs",
-        json=data,
-    )
+        response = make_request(
+            method="POST",
+            url=f"/users/{user.id}/docs",
+            json=data,
+        )
 
-    get_client.assert_called()
-    assert response.status_code == 201
+        assert response.status_code == 201
 
-    result = response.json()
-    assert len(result["jobs"]) > 0
+        result = response.json()
+        assert len(result["jobs"]) > 0
 
 
 @test("route: create agent doc")
-def _(
-    make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client
-):
-    data = dict(
-        title="Test Agent Doc",
-        content=["This is a test agent document."],
-    )
+async def _(make_request=make_request, agent=test_agent):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test Agent Doc",
+            content=["This is a test agent document."],
+        )
 
-    response = make_request(
-        method="POST",
-        url=f"/agents/{agent.id}/docs",
-        json=data,
-    )
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
 
-    get_client.assert_called()
-    assert response.status_code == 201
+        assert response.status_code == 201
 
-    result = response.json()
-    assert len(result["jobs"]) > 0
+        result = response.json()
+        assert len(result["jobs"]) > 0
 
 
 @test("route: delete doc")
-def _(
-    make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client
-):
-    data = dict(
-        title="Test Agent Doc",
-        content=["This is a test agent document."],
-    )
+async def _(make_request=make_request, agent=test_agent):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test Agent Doc",
+            content=["This is a test agent document."],
+        )
 
-    response = make_request(
-        method="POST",
-        url=f"/agents/{agent.id}/docs",
-        json=data,
-    )
-    doc_id = response.json()["id"]
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        doc_id = response.json()["id"]
 
-    response = make_request(
-        method="DELETE",
-        url=f"/agents/{agent.id}/docs/{doc_id}",
-    )
+        response = make_request(
+            method="DELETE",
+            url=f"/agents/{agent.id}/docs/{doc_id}",
+        )
 
-    assert response.status_code == 202
+        assert response.status_code == 202
 
-    response = make_request(
-        method="GET",
-        url=f"/docs/{doc_id}",
-    )
+        response = make_request(
+            method="GET",
+            url=f"/docs/{doc_id}",
+        )
 
-    assert response.status_code == 404
+        assert response.status_code == 404
 
 
 @test("route: get doc")
-def _(
-    make_request=make_request, agent=test_agent, get_client=patch_temporal_get_client
-):
-    data = dict(
-        title="Test Agent Doc",
-        content=["This is a test agent document."],
-    )
+async def _(make_request=make_request, agent=test_agent):
+    async with patch_testing_temporal():
+        data = dict(
+            title="Test Agent Doc",
+            content=["This is a test agent document."],
+        )
 
-    response = make_request(
-        method="POST",
-        url=f"/agents/{agent.id}/docs",
-        json=data,
-    )
-    doc_id = response.json()["id"]
+        response = make_request(
+            method="POST",
+            url=f"/agents/{agent.id}/docs",
+            json=data,
+        )
+        doc_id = response.json()["id"]
 
-    response = make_request(
-        method="GET",
-        url=f"/docs/{doc_id}",
-    )
+        response = make_request(
+            method="GET",
+            url=f"/docs/{doc_id}",
+        )
 
-    assert response.status_code == 200
+        assert response.status_code == 200
 
 
 @test("route: list user docs")

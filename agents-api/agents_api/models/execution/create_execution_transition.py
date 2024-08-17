@@ -113,13 +113,16 @@ def create_execution_transition(
         }},
         type_created_at = [type, -created_at]
 
-    ?[last_type] :=
+    matched[collect(last_type)] :=
         last_transition_type[data],
         last_type_data = first(data),
         last_type = if(is_null(last_type_data), "init", last_type_data),
         valid_transition[last_type, $next_type]
 
-    :assert some
+    ?[valid] :=
+        matched[prev_transitions],
+        found = length(prev_transitions),
+        valid = assert(found > 0, "Invalid transition"),
     """
 
     # Prepare the insert query

@@ -5,17 +5,12 @@ from temporalio import activity
 
 from agents_api.autogen.Executions import TransitionTarget
 
-from ...autogen.openapi_model import (
-    YieldStep,
-)
-from ...common.protocol.tasks import (
-    StepContext,
-    StepOutcome,
-)
+from ...autogen.openapi_model import YieldStep
+from ...common.protocol.tasks import StepContext, StepOutcome
+from ...env import testing
 from .utils import simple_eval_dict
 
 
-@activity.defn
 @beartype
 async def yield_step(context: StepContext[YieldStep]) -> StepOutcome[dict[str, Any]]:
     all_workflows = context.execution_input.task.workflows
@@ -36,3 +31,12 @@ async def yield_step(context: StepContext[YieldStep]) -> StepOutcome[dict[str, A
     )
 
     return StepOutcome(output=arguments, transition_to=("step", transition_target))
+
+
+# Note: This is here just for clarity. We could have just imported yield_step directly
+# They do the same thing, so we dont need to mock the yield_step function
+mock_yield_step = yield_step
+
+yield_step = activity.defn(name="yield_step")(
+    yield_step if not testing else mock_yield_step
+)
