@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
 
+import asyncio
 from datetime import timedelta
 
 from temporalio import workflow
+from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         evaluate_step,
         if_else_step,
         prompt_step,
+        return_step,
         tool_call_step,
         transition_step,
         yield_step,
@@ -20,6 +23,9 @@ with workflow.unsafe.imports_passed_through():
         EvaluateStep,
         IfElseWorkflowStep,
         PromptStep,
+        ReturnStep,
+        SleepFor,
+        SleepStep,
         ToolCallStep,
         TransitionTarget,
         TransitionType,
@@ -42,6 +48,7 @@ STEP_TO_ACTIVITY = {
     ToolCallStep: tool_call_step,
     IfElseWorkflowStep: if_else_step,
     YieldStep: yield_step,
+    ReturnStep: return_step,
 }
 
 
@@ -63,6 +70,7 @@ class TaskExecutionWorkflow:
         )
 
         step_type = type(context.current_step)
+        outcome = None
 
         # 1. First execute the current step's activity if applicable
         if activity := STEP_TO_ACTIVITY.get(step_type):
@@ -73,8 +81,8 @@ class TaskExecutionWorkflow:
                 schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
             )
 
-        # 2. Then, based on the outcome and step type, decide what to do next
-        #    (By default, exit if last otherwise transition 'step' to the next step)
+        # 2a. Then, based on the outcome and step type, decide what to do next
+        #     (By default, exit if last otherwise transition 'step' to the next step)
         final_output = None
         transition_type: TransitionType
         next_target: TransitionTarget | None
@@ -90,67 +98,81 @@ class TaskExecutionWorkflow:
                 workflow=context.cursor.workflow, step=context.cursor.step + 1
             )
 
+        # 2b. Prep a transition request
+        async def transition():
+            # NOTE: The variables are closured from the outer scope
+            transition_request = CreateTransitionRequest(
+                type=transition_type,
+                current=context.cursor,
+                next=next_target,
+                output=final_output,
+                metadata=metadata,
+            )
+
+            return await workflow.execute_activity(
+                transition_step,
+                args=[context, transition_request],
+                schedule_to_close_timeout=timedelta(seconds=600),
+            )
+
         # 3. Orchestrate the step
         match context.current_step, outcome:
-            case EvaluateStep(), StepOutcome(output=output):
+            case ReturnStep(), StepOutcome(output=output):
                 final_output = output
-                transition_request = CreateTransitionRequest(
-                    type=transition_type,
-                    current=context.cursor,
-                    next=next_target,
-                    output=final_output,
-                    metadata=metadata,
+                transition_type = "finish"
+                await transition()
+
+            case SleepStep(
+                sleep=SleepFor(
+                    seconds=seconds,
+                    minutes=minutes,
+                    hours=hours,
+                    days=days,
+                )
+            ), _:
+                seconds = seconds + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
+                assert seconds > 0, "Sleep duration must be greater than 0"
+
+                final_output = await asyncio.sleep(
+                    seconds, result=context.current_input
                 )
 
-                await workflow.execute_activity(
-                    transition_step,
-                    args=[context, transition_request],
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
+                await transition()
+
+            case EvaluateStep(), StepOutcome(output=output):
+                final_output = output
+                await transition()
 
             case ErrorWorkflowStep(error=error), _:
                 final_output = dict(error=error)
                 transition_type = "error"
-                transition_request = CreateTransitionRequest(
-                    type=transition_type,
-                    current=context.cursor,
-                    next=None,
-                    output=final_output,
-                    metadata=metadata,
-                )
+                await transition()
 
-                await workflow.execute_activity(
-                    transition_step,
-                    args=[context, transition_request],
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
-
-                raise Exception(f"Error raised by ErrorWorkflowStep: {error}")
+                raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
 
             case YieldStep(), StepOutcome(
-                output=output, transition_to=(transition_type, next)
+                output=output, transition_to=(yield_transition_type, yield_next_target)
             ):
-                final_output = output
-                transition_request = CreateTransitionRequest(
-                    type=transition_type,
-                    current=context.cursor,
-                    next=next,
-                    output=final_output,
-                    metadata=metadata,
-                )
+                # Save the original transition state
+                original_next_target = next_target
+                original_transition_type = transition_type
 
-                await workflow.execute_activity(
-                    transition_step,
-                    args=[context, transition_request],
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
+                final_output = output
+                transition_type = yield_transition_type
+                next_target = yield_next_target
+
+                await transition()
 
                 yield_outcome: StepOutcome = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
-                    args=[execution_input, next, [output]],
+                    args=[execution_input, yield_next_target, [output]],
                 )
 
-                final_output = yield_outcome.output
+                # Restore the next target to the original value
+                next_target = original_next_target
+                transition_type = original_transition_type
+
+                final_output = yield_outcome
 
             case _:
                 raise NotImplementedError()
@@ -161,6 +183,8 @@ class TaskExecutionWorkflow:
             return final_output
 
         # Otherwise, recurse to the next step
+        # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
+        #       Otherwise, we should just call the next step as a child workflow
         workflow.continue_as_new(
             args=[execution_input, next_target, previous_inputs + [final_output]]
         )

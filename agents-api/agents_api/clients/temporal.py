@@ -1,3 +1,4 @@
+from datetime import timedelta
 from uuid import UUID
 
 from temporalio.client import Client, TLSConfig
@@ -52,4 +53,5 @@ async def run_task_execution_workflow(
         args=[execution_input, start, previous_inputs],
         task_queue=temporal_task_queue,
         id=str(job_id),
+        run_timeout=timedelta(days=31),
     )

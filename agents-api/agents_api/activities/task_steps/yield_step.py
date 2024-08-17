@@ -5,14 +5,13 @@ from temporalio import activity
 
 from agents_api.autogen.Executions import TransitionTarget
 
-from ...autogen.openapi_model import YieldStep
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
 from .utils import simple_eval_dict
 
 
 @beartype
-async def yield_step(context: StepContext[YieldStep]) -> StepOutcome:
+async def yield_step(context: StepContext) -> StepOutcome:
     all_workflows = context.execution_input.task.workflows
     workflow = context.current_step.workflow
 

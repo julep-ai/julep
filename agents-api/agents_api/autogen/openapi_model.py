@@ -149,6 +149,18 @@ WorkflowStep = (
     | ToolCallStep
     | ErrorWorkflowStep
     | IfElseWorkflowStep
+    | ReturnStep
+    | SleepStep
+    | WaitForInputStep
+    | LogStep
+    | EmbedStep
+    | SearchStep
+    | SetStep
+    | GetStep
+    | ForeachStep
+    | MapReduceStep
+    | ParallelStep
+    | SwitchStep
 )
 
 
