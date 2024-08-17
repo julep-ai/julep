@@ -162,48 +162,5 @@ class TaskExecutionWorkflow:
 
         # Otherwise, recurse to the next step
         workflow.continue_as_new(
-            execution_input, next_target, previous_inputs + [final_output]
+            args=[execution_input, next_target, previous_inputs + [final_output]]
         )
-
-        ##################
-
-        # should_wait, is_error = False, False
-        # # Run the step
-        # match step:
-        #     case PromptStep():
-        #         outputs = await workflow.execute_activity(
-        #             prompt_step,
-        #             context,
-        #             schedule_to_close_timeout=timedelta(seconds=600),
-        #         )
-        #
-        #         # TODO: ChatCompletion does not have tool_calls
-        #         # if outputs.tool_calls is not None:
-        #         #     should_wait = True
-
-        #     case ToolCallStep():
-        #         outputs = await workflow.execute_activity(
-        #             tool_call_step,
-        #             context,
-        #             schedule_to_close_timeout=timedelta(seconds=600),
-        #         )
-
-        #     case IfElseWorkflowStep():
-        #         outputs = await workflow.execute_activity(
-        #             if_else_step,
-        #             context,
-        #             schedule_to_close_timeout=timedelta(seconds=600),
-        #         )
-        #         workflow_step = YieldStep(**outputs["goto_workflow"])
-        #
-        #         outputs = await workflow.execute_child_workflow(
-        #             TaskExecutionWorkflow.run,
-        #             args=[
-        #                 execution_input,
-        #                 (workflow_step.workflow, 0),
-        #                 previous_inputs,
-        #             ],
-        #         )
-
-        #     case WaitForInputStep():
-        #         should_wait = True

@@ -167,7 +167,7 @@ def prepare_execution_input(
       # TODO: Enable these later
       user = null,
       session = null,
-      arguments = {{}},
+      arguments = execution->"input"
     """
 
     queries = [
