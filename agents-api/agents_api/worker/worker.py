@@ -19,6 +19,7 @@ def create_worker(client: Client) -> Any:
     from ..activities.task_steps import (
         evaluate_step,
         if_else_step,
+        log_step,
         prompt_step,
         return_step,
         tool_call_step,
@@ -40,6 +41,7 @@ def create_worker(client: Client) -> Any:
     task_activities = [
         evaluate_step,
         if_else_step,
+        log_step,
         prompt_step,
         return_step,
         tool_call_step,

@@ -11,6 +11,7 @@ with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         evaluate_step,
         if_else_step,
+        log_step,
         prompt_step,
         return_step,
         tool_call_step,
@@ -22,6 +23,7 @@ with workflow.unsafe.imports_passed_through():
         ErrorWorkflowStep,
         EvaluateStep,
         IfElseWorkflowStep,
+        LogStep,
         PromptStep,
         ReturnStep,
         SleepFor,
@@ -43,12 +45,16 @@ with workflow.unsafe.imports_passed_through():
 
 
 STEP_TO_ACTIVITY = {
-    PromptStep: prompt_step,
     EvaluateStep: evaluate_step,
-    ToolCallStep: tool_call_step,
     IfElseWorkflowStep: if_else_step,
-    YieldStep: yield_step,
     ReturnStep: return_step,
+    PromptStep: prompt_step,
+    ToolCallStep: tool_call_step,
+    YieldStep: yield_step,
+}
+
+STEP_TO_LOCAL_ACTIVITY = {
+    LogStep: log_step,
 }
 
 
@@ -74,7 +80,14 @@ class TaskExecutionWorkflow:
 
         # 1. First execute the current step's activity if applicable
         if activity := STEP_TO_ACTIVITY.get(step_type):
-            outcome = await workflow.execute_activity(
+            execute_activity = workflow.execute_activity
+        elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
+            execute_activity = workflow.execute_local_activity
+        else:
+            execute_activity = None
+
+        if execute_activity:
+            outcome = await execute_activity(
                 activity,
                 context,
                 # TODO: This should be a configurable timeout everywhere based on the task
@@ -99,14 +112,14 @@ class TaskExecutionWorkflow:
             )
 
         # 2b. Prep a transition request
-        async def transition():
+        async def transition(**kwargs):
             # NOTE: The variables are closured from the outer scope
             transition_request = CreateTransitionRequest(
-                type=transition_type,
-                current=context.cursor,
-                next=next_target,
-                output=final_output,
-                metadata=metadata,
+                type=kwargs.get("type", transition_type),
+                current=kwargs.get("current", context.cursor),
+                next=kwargs.get("next", next_target),
+                output=kwargs.get("output", final_output),
+                metadata=kwargs.get("metadata", metadata),
             )
 
             return await workflow.execute_activity(
@@ -117,6 +130,10 @@ class TaskExecutionWorkflow:
 
         # 3. Orchestrate the step
         match context.current_step, outcome:
+            case LogStep(), StepOutcome(output=output):
+                await transition(output=dict(logged=output))
+                final_output = context.current_input
+
             case ReturnStep(), StepOutcome(output=output):
                 final_output = output
                 transition_type = "finish"
@@ -153,24 +170,14 @@ class TaskExecutionWorkflow:
             case YieldStep(), StepOutcome(
                 output=output, transition_to=(yield_transition_type, yield_next_target)
             ):
-                # Save the original transition state
-                original_next_target = next_target
-                original_transition_type = transition_type
-
-                final_output = output
-                transition_type = yield_transition_type
-                next_target = yield_next_target
-
-                await transition()
+                await transition(
+                    output=output, type=yield_transition_type, next=yield_next_target
+                )
 
                 yield_outcome: StepOutcome = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
                     args=[execution_input, yield_next_target, [output]],
                 )
-
-                # Restore the next target to the original value
-                next_target = original_next_target
-                transition_type = original_transition_type
 
                 final_output = yield_outcome
 

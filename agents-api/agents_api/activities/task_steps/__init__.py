@@ -2,6 +2,7 @@
 
 from .evaluate_step import evaluate_step
 from .if_else_step import if_else_step
+from .log_step import log_step
 from .prompt_step import prompt_step
 from .raise_complete_async import raise_complete_async
 from .return_step import return_step
