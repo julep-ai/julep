@@ -84,7 +84,7 @@ model WaitForInputStep extends BaseWorkflowStep {
     kind_: "wait_for_input" = "wait_for_input";
 
     /** Any additional info or data */
-    info: string | Record<unknown>;
+    wait_for_input: ExpressionObject;
 }
 
 model LogStep extends BaseWorkflowStep {

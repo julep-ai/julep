@@ -5,12 +5,12 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .common_py_expression import CommonPyExpression
 from .tasks_base_workflow_step import TasksBaseWorkflowStep
-from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 
 
 class TasksWaitForInputStep(TasksBaseWorkflowStep):
-    info: TasksWaitForInputStepInfo = pydantic_v1.Field()
+    wait_for_input: typing.Dict[str, CommonPyExpression] = pydantic_v1.Field()
     """
     Any additional info or data
     """

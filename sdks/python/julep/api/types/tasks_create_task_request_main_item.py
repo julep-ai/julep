@@ -21,7 +21,6 @@ from .tasks_prompt_step_prompt import TasksPromptStepPrompt
 from .tasks_search_step_search import TasksSearchStepSearch
 from .tasks_set_step_set import TasksSetStepSet
 from .tasks_sleep_for import TasksSleepFor
-from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 
 
 class TasksCreateTaskRequestMainItem_Evaluate(pydantic_v1.BaseModel):
@@ -488,7 +487,7 @@ class TasksCreateTaskRequestMainItem_Search(pydantic_v1.BaseModel):
 
 
 class TasksCreateTaskRequestMainItem_WaitForInput(pydantic_v1.BaseModel):
-    info: TasksWaitForInputStepInfo
+    wait_for_input: typing.Dict[str, CommonPyExpression]
     kind: typing.Literal["wait_for_input"] = pydantic_v1.Field(
         alias="kind_", default="wait_for_input"
     )

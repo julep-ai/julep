@@ -14,20 +14,11 @@ export const $Tasks_WaitForInputStep = {
           type: "Enum",
           isRequired: true,
         },
-        info: {
-          type: "any-of",
-          description: `Any additional info or data`,
-          contains: [
-            {
-              type: "string",
-            },
-            {
-              type: "dictionary",
-              contains: {
-                properties: {},
-              },
-            },
-          ],
+        wait_for_input: {
+          type: "dictionary",
+          contains: {
+            type: "Common_PyExpression",
+          },
           isRequired: true,
         },
       },

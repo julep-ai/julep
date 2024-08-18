@@ -1,9 +1,10 @@
+import logging
 from typing import Callable
 
 from beartype import beartype
 from temporalio import activity
 
-from agents_api.autogen.Executions import TransitionTarget
+from agents_api.autogen.openapi_model import TransitionTarget, YieldStep
 
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
@@ -12,24 +13,33 @@ from .utils import simple_eval_dict
 
 @beartype
 async def yield_step(context: StepContext) -> StepOutcome:
-    all_workflows = context.execution_input.task.workflows
-    workflow = context.current_step.workflow
+    # NOTE: This activity is only for returning immediately, so we just evaluate the expression
+    #       Hence, it's a local activity and SHOULD NOT fail
+    try:
+        assert isinstance(context.current_step, YieldStep)
 
-    assert workflow in [
-        wf.name for wf in all_workflows
-    ], f"Workflow {workflow} not found in task"
+        all_workflows = context.execution_input.task.workflows
+        workflow = context.current_step.workflow
 
-    # Evaluate the expressions in the arguments
-    exprs = context.current_step.arguments
-    arguments = simple_eval_dict(exprs, values=context.model_dump())
+        assert workflow in [
+            wf.name for wf in all_workflows
+        ], f"Workflow {workflow} not found in task"
 
-    # Transition to the first step of that workflow
-    transition_target = TransitionTarget(
-        workflow=workflow,
-        step=0,
-    )
+        # Evaluate the expressions in the arguments
+        exprs = context.current_step.arguments
+        arguments = simple_eval_dict(exprs, values=context.model_dump())
 
-    return StepOutcome(output=arguments, transition_to=("step", transition_target))
+        # Transition to the first step of that workflow
+        transition_target = TransitionTarget(
+            workflow=workflow,
+            step=0,
+        )
+
+        return StepOutcome(output=arguments, transition_to=("step", transition_target))
+
+    except Exception as e:
+        logging.error(f"Error in log_step: {e}")
+        return StepOutcome(output=None)
 
 
 # Note: This is here just for clarity. We could have just imported yield_step directly

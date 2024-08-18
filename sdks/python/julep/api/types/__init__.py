@@ -281,7 +281,6 @@ from .tasks_update_task_request_main_item import (
     TasksUpdateTaskRequestMainItem_Yield,
 )
 from .tasks_wait_for_input_step import TasksWaitForInputStep
-from .tasks_wait_for_input_step_info import TasksWaitForInputStepInfo
 from .tasks_yield_step import TasksYieldStep
 from .tools_chosen_function_call import ToolsChosenFunctionCall
 from .tools_chosen_tool_call import ToolsChosenToolCall, ToolsChosenToolCall_Function
@@ -545,7 +544,6 @@ __all__ = [
     "TasksUpdateTaskRequestMainItem_WaitForInput",
     "TasksUpdateTaskRequestMainItem_Yield",
     "TasksWaitForInputStep",
-    "TasksWaitForInputStepInfo",
     "TasksYieldStep",
     "ToolsChosenFunctionCall",
     "ToolsChosenToolCall",

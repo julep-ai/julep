@@ -10,28 +10,30 @@ from temporalio.exceptions import ApplicationError
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         evaluate_step,
-        if_else_step,
+        # if_else_step,
         log_step,
-        prompt_step,
+        # prompt_step,
+        raise_complete_async,
         return_step,
-        tool_call_step,
+        # tool_call_step,
         transition_step,
+        wait_for_input_step,
         yield_step,
     )
     from ..autogen.openapi_model import (
         CreateTransitionRequest,
         ErrorWorkflowStep,
         EvaluateStep,
-        IfElseWorkflowStep,
+        # IfElseWorkflowStep,
         LogStep,
-        PromptStep,
+        # PromptStep,
         ReturnStep,
         SleepFor,
         SleepStep,
-        ToolCallStep,
+        # ToolCallStep,
         TransitionTarget,
         TransitionType,
-        # WaitForInputStep,
+        WaitForInputStep,
         # WorkflowStep,
         YieldStep,
     )
@@ -45,16 +47,17 @@ with workflow.unsafe.imports_passed_through():
 
 
 STEP_TO_ACTIVITY = {
-    PromptStep: prompt_step,
-    ToolCallStep: tool_call_step,
-    YieldStep: yield_step,
+    # PromptStep: prompt_step,
+    # ToolCallStep: tool_call_step,
+    WaitForInputStep: wait_for_input_step,
 }
 
 STEP_TO_LOCAL_ACTIVITY = {
     # NOTE: local activities are directly called in the workflow executor
     #       They MUST NOT FAIL, otherwise they will crash the workflow
     EvaluateStep: evaluate_step,
-    IfElseWorkflowStep: if_else_step,
+    # IfElseWorkflowStep: if_else_step,
+    YieldStep: yield_step,
     LogStep: log_step,
     ReturnStep: return_step,
 }
@@ -179,6 +182,9 @@ class TaskExecutionWorkflow:
             case YieldStep(), StepOutcome(
                 output=output, transition_to=(yield_transition_type, yield_next_target)
             ):
+                if output is None:
+                    raise ApplicationError("yield step threw an error")
+
                 await transition(
                     output=output, type=yield_transition_type, next=yield_next_target
                 )
@@ -189,6 +195,15 @@ class TaskExecutionWorkflow:
                 )
 
                 final_output = yield_outcome
+
+            case WaitForInputStep(), StepOutcome(output=output):
+                await transition(output=output, type="wait", next=None)
+
+                transition_type = "resume"
+                final_output = await execute_activity(
+                    raise_complete_async,
+                    schedule_to_close_timeout=timedelta(days=31),
+                )
 
             case _:
                 raise NotImplementedError()

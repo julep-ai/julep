@@ -24,6 +24,7 @@ def create_worker(client: Client) -> Any:
         return_step,
         tool_call_step,
         transition_step,
+        wait_for_input_step,
         yield_step,
     )
     from ..activities.truncation import truncation
@@ -46,6 +47,7 @@ def create_worker(client: Client) -> Any:
         return_step,
         tool_call_step,
         transition_step,
+        wait_for_input_step,
         yield_step,
     ]
 

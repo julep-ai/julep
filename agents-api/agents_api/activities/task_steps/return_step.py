@@ -1,4 +1,5 @@
 import logging
+
 from temporalio import activity
 
 from ...activities.task_steps.utils import simple_eval_dict

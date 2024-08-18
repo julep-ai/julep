@@ -612,7 +612,7 @@ class WaitForInputStep(BaseWorkflowStep):
         populate_by_name=True,
     )
     kind_: Literal["wait_for_input"] = "wait_for_input"
-    info: str | dict[str, Any]
+    wait_for_input: dict[str, str]
     """
     Any additional info or data
     """

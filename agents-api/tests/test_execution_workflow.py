@@ -1,6 +1,9 @@
 # Tests for task queries
 
-from ward import test, raises
+import asyncio
+
+from google.protobuf.json_format import MessageToDict
+from ward import raises, test
 
 from agents_api.autogen.openapi_model import CreateExecutionRequest, CreateTaskRequest
 from agents_api.models.task.create_task import create_task
@@ -382,3 +385,66 @@ async def _(
 
             result = await handle.result()
             assert result["hello"] == data.input["test"]
+
+
+@test("workflow: wait for input step start")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [
+                    {"wait_for_input": {"hi": '"bye"'}},
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        # Let it run for a bit
+        await asyncio.sleep(1)
+
+        # Get the history
+        history = await handle.fetch_history()
+        events = [MessageToDict(e) for e in history.events]
+        assert len(events) > 0
+
+        activities_scheduled = [
+            event.get("activityTaskScheduledEventAttributes", {})
+            .get("activityType", {})
+            .get("name")
+            for event in events
+            if "ACTIVITY_TASK_SCHEDULED" in event["eventType"]
+        ]
+        activities_scheduled = [
+            activity for activity in activities_scheduled if activity
+        ]
+
+        assert activities_scheduled == [
+            "wait_for_input_step",
+            "transition_step",
+            "raise_complete_async",
+        ]
