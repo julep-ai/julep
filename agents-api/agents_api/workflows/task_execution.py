@@ -10,7 +10,7 @@ from temporalio.exceptions import ApplicationError
 with workflow.unsafe.imports_passed_through():
     from ..activities.task_steps import (
         evaluate_step,
-        # if_else_step,
+        if_else_step,
         log_step,
         # prompt_step,
         raise_complete_async,
@@ -24,7 +24,7 @@ with workflow.unsafe.imports_passed_through():
         CreateTransitionRequest,
         ErrorWorkflowStep,
         EvaluateStep,
-        # IfElseWorkflowStep,
+        IfElseWorkflowStep,
         LogStep,
         # PromptStep,
         ReturnStep,
@@ -56,7 +56,7 @@ STEP_TO_LOCAL_ACTIVITY = {
     # NOTE: local activities are directly called in the workflow executor
     #       They MUST NOT FAIL, otherwise they will crash the workflow
     EvaluateStep: evaluate_step,
-    # IfElseWorkflowStep: if_else_step,
+    IfElseWorkflowStep: if_else_step,
     YieldStep: yield_step,
     LogStep: log_step,
     ReturnStep: return_step,
@@ -95,16 +95,17 @@ class TaskExecutionWorkflow:
             outcome = await execute_activity(
                 activity,
                 context,
+                #
                 # TODO: This should be a configurable timeout everywhere based on the task
                 schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
             )
 
-        # 2a. Then, based on the outcome and step type, decide what to do next
+        # 2a. Set globals
         #     (By default, exit if last otherwise transition 'step' to the next step)
         final_output = None
         transition_type: TransitionType
         next_target: TransitionTarget | None
-        metadata: dict = {"step_type": step_type.__name__}
+        metadata: dict = {"__meta__": {"step_type": step_type.__name__}}
 
         if context.is_last_step:
             transition_type = "finish"
@@ -131,19 +132,16 @@ class TaskExecutionWorkflow:
                 schedule_to_close_timeout=timedelta(seconds=600),
             )
 
-        # 3. Orchestrate the step
+        # 3. Then, based on the outcome and step type, decide what to do next
         match context.current_step, outcome:
-            case LogStep(), StepOutcome(output=output):
-                if output is None:
-                    raise ApplicationError("log step threw an error")
+            case step, StepOutcome(output=None):
+                raise ApplicationError(f"{step.__class__.__name__} step threw an error")
 
+            case LogStep(), StepOutcome(output=output):
                 await transition(output=dict(logged=output))
                 final_output = context.current_input
 
             case ReturnStep(), StepOutcome(output=output):
-                if output is None:
-                    raise ApplicationError("return step threw an error")
-
                 final_output = output
                 transition_type = "finish"
                 await transition()
@@ -166,9 +164,6 @@ class TaskExecutionWorkflow:
                 await transition()
 
             case EvaluateStep(), StepOutcome(output=output):
-                if output is None:
-                    raise ApplicationError("evaluate step threw an error")
-
                 final_output = output
                 await transition()
 
@@ -182,9 +177,6 @@ class TaskExecutionWorkflow:
             case YieldStep(), StepOutcome(
                 output=output, transition_to=(yield_transition_type, yield_next_target)
             ):
-                if output is None:
-                    raise ApplicationError("yield step threw an error")
-
                 await transition(
                     output=output, type=yield_transition_type, next=yield_next_target
                 )

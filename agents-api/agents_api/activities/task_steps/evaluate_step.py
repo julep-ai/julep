@@ -1,5 +1,6 @@
 import logging
 
+from beartype import beartype
 from temporalio import activity
 
 from ...activities.task_steps.utils import simple_eval_dict
@@ -8,6 +9,7 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
 
 
+@beartype
 async def evaluate_step(context: StepContext) -> StepOutcome:
     # NOTE: This activity is only for returning immediately, so we just evaluate the expression
     #       Hence, it's a local activity and SHOULD NOT fail
@@ -21,7 +23,7 @@ async def evaluate_step(context: StepContext) -> StepOutcome:
         return result
 
     except Exception as e:
-        logging.error(f"Error in log_step: {e}")
+        logging.error(f"Error in evaluate_step: {e}")
         return StepOutcome(output=None)
 
 

@@ -1,5 +1,6 @@
 import logging
 
+from beartype import beartype
 from simpleeval import simple_eval
 from temporalio import activity
 
@@ -11,9 +12,8 @@ from ...common.protocol.tasks import (
 from ...env import testing
 
 
-async def log_step(
-    context: StepContext,
-) -> StepOutcome:
+@beartype
+async def log_step(context: StepContext) -> StepOutcome:
     # NOTE: This activity is only for logging, so we just evaluate the expression
     #       Hence, it's a local activity and SHOULD NOT fail
     try:
