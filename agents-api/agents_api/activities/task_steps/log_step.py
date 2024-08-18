@@ -14,8 +14,8 @@ from ...env import testing
 async def log_step(
     context: StepContext,
 ) -> StepOutcome:
-    # This activity is only for logging, so we just evaluate the expression
-    # Hence, it's a local activity and SHOULD NOT fail
+    # NOTE: This activity is only for logging, so we just evaluate the expression
+    #       Hence, it's a local activity and SHOULD NOT fail
     try:
         assert isinstance(context.current_step, LogStep)
 

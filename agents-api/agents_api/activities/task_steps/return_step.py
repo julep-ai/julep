@@ -1,3 +1,4 @@
+import logging
 from temporalio import activity
 
 from ...activities.task_steps.utils import simple_eval_dict
@@ -9,16 +10,21 @@ from ...common.protocol.tasks import (
 from ...env import testing
 
 
-async def return_step(
-    context: StepContext,
-) -> StepOutcome:
-    assert isinstance(context.current_step, ReturnStep)
+async def return_step(context: StepContext) -> StepOutcome:
+    # NOTE: This activity is only for returning immediately, so we just evaluate the expression
+    #       Hence, it's a local activity and SHOULD NOT fail
+    try:
+        assert isinstance(context.current_step, ReturnStep)
 
-    exprs: dict[str, str] = context.current_step.return_
-    output = simple_eval_dict(exprs, values=context.model_dump())
+        exprs: dict[str, str] = context.current_step.return_
+        output = simple_eval_dict(exprs, values=context.model_dump())
 
-    result = StepOutcome(output=output)
-    return result
+        result = StepOutcome(output=output)
+        return result
+
+    except Exception as e:
+        logging.error(f"Error in log_step: {e}")
+        return StepOutcome(output=None)
 
 
 # Note: This is here just for clarity. We could have just imported return_step directly

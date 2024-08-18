@@ -45,16 +45,18 @@ with workflow.unsafe.imports_passed_through():
 
 
 STEP_TO_ACTIVITY = {
-    EvaluateStep: evaluate_step,
-    IfElseWorkflowStep: if_else_step,
-    ReturnStep: return_step,
     PromptStep: prompt_step,
     ToolCallStep: tool_call_step,
     YieldStep: yield_step,
 }
 
 STEP_TO_LOCAL_ACTIVITY = {
+    # NOTE: local activities are directly called in the workflow executor
+    #       They MUST NOT FAIL, otherwise they will crash the workflow
+    EvaluateStep: evaluate_step,
+    IfElseWorkflowStep: if_else_step,
     LogStep: log_step,
+    ReturnStep: return_step,
 }
 
 
@@ -107,9 +109,7 @@ class TaskExecutionWorkflow:
 
         else:
             transition_type = "step"
-            next_target = TransitionTarget(
-                workflow=context.cursor.workflow, step=context.cursor.step + 1
-            )
+            next_target = TransitionTarget(workflow=start.workflow, step=start.step + 1)
 
         # 2b. Prep a transition request
         async def transition(**kwargs):
@@ -131,10 +131,16 @@ class TaskExecutionWorkflow:
         # 3. Orchestrate the step
         match context.current_step, outcome:
             case LogStep(), StepOutcome(output=output):
+                if output is None:
+                    raise ApplicationError("log step threw an error")
+
                 await transition(output=dict(logged=output))
                 final_output = context.current_input
 
             case ReturnStep(), StepOutcome(output=output):
+                if output is None:
+                    raise ApplicationError("return step threw an error")
+
                 final_output = output
                 transition_type = "finish"
                 await transition()
@@ -157,6 +163,9 @@ class TaskExecutionWorkflow:
                 await transition()
 
             case EvaluateStep(), StepOutcome(output=output):
+                if output is None:
+                    raise ApplicationError("evaluate step threw an error")
+
                 final_output = output
                 await transition()
 
