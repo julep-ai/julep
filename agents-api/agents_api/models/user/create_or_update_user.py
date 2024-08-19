@@ -3,6 +3,7 @@ This module contains the functionality for creating users in the CozoDB database
 It includes functions to construct and execute datalog queries for inserting new user records.
 """
 
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -18,6 +19,9 @@ from ..utils import (
     verify_developer_id_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

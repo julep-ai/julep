@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from tenacity import retry, stop_after_attempt
 
@@ -10,7 +11,7 @@ from .utils import add_indices, chatml, get_names_from_session
 ## Trim ##
 ##########
 
-trim_example_plan = """\
+trim_example_plan: str = """\
 Thinking step by step:
 - To trim the context, let's examine the messages in the session above.
 - Messages 1, 2, and 3 are succinct and do not need trimming.
@@ -18,7 +19,7 @@ Thinking step by step:
 - Message 7 is short enough and doesn't need any edits."""
 
 
-trim_instructions = """\
+trim_instructions: str = """\
 Your goal is to identify messages in the session that are needlessly verbose and then trim them in length without losing any meaning or changing the tone of the message.
 
 Instructions:
@@ -32,7 +33,7 @@ Instructions:
 # It is important to make keep the tone, setting and flow of the conversation consistent while trimming the messages.
 
 
-def make_trim_prompt(session, user="a user", assistant="gpt-4-turbo", **_):
+def make_trim_prompt(session, user="a user", assistant="gpt-4-turbo", **_) -> List[str]:
     return [
         f"You are given a session history of a chat between {user or 'a user'} and {assistant or 'gpt-4-turbo'}. The session is formatted in the ChatML JSON format (from OpenAI).\n\n{trim_instructions}\n\n<ct:example-session>\n{json.dumps(add_indices(trim_example_chat), indent=2)}\n</ct:example-session>\n\n<ct:example-plan>\n{trim_example_plan}\n</ct:example-plan>\n\n<ct:example-trimmed>\n{json.dumps(trim_example_result, indent=2)}\n</ct:example-trimmed>",
         f"Begin! Write the trimmed messages as a json list. First write your plan inside <ct:plan></ct:plan> and then your answer between <ct:trimmed></ct:trimmed>.\n\n<ct:session>\n{json.dumps(add_indices(session), indent=2)}\n\n</ct:session>",

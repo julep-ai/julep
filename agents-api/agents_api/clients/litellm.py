@@ -1,11 +1,14 @@
 from functools import wraps
+from typing import List, TypeVar
 
 from litellm import acompletion as _acompletion
 from litellm.utils import CustomStreamWrapper, ModelResponse
 
 from ..env import litellm_master_key, litellm_url
 
-__all__ = ["acompletion"]
+_RWrapped = TypeVar("_RWrapped")
+
+__all__: List[str] = ["acompletion"]
 
 
 @wraps(_acompletion)

@@ -20,9 +20,11 @@ async def patch_testing_temporal():
     logger.setLevel(logging.ERROR)
 
     # Start a local Temporal environment
-    async with await WorkflowEnvironment.start_local() as env:
-        # Set the correct codec
-        env.client._config["data_converter"] = pydantic_data_converter
+    async with await WorkflowEnvironment.start_time_skipping(
+        data_converter=pydantic_data_converter
+    ) as env:
+        # # Set the correct codec
+        # env.client._config["data_converter"] = pydantic_data_converter
 
         # Create a worker with our workflows and start it
         worker = create_worker(client=env.client)

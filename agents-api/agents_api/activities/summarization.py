@@ -12,11 +12,11 @@ from temporalio import activity
 
 
 # TODO: remove stubs
-def entries_summarization_query(*args, **kwargs):
+def entries_summarization_query(*args, **kwargs) -> pd.DataFrame:
     return pd.DataFrame()
 
 
-def get_toplevel_entries_query(*args, **kwargs):
+def get_toplevel_entries_query(*args, **kwargs) -> pd.DataFrame:
     return pd.DataFrame()
 
 

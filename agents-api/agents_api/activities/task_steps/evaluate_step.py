@@ -1,25 +1,30 @@
-from typing import Any
+import logging
 
 from beartype import beartype
 from temporalio import activity
 
 from ...activities.task_steps.utils import simple_eval_dict
 from ...autogen.openapi_model import EvaluateStep
-from ...common.protocol.tasks import (
-    StepContext,
-    StepOutcome,
-)
+from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
 
 
 @beartype
-async def evaluate_step(
-    context: StepContext[EvaluateStep],
-) -> StepOutcome[dict[str, Any]]:
-    exprs = context.definition.arguments
-    output = simple_eval_dict(exprs, values=context.model_dump())
+async def evaluate_step(context: StepContext) -> StepOutcome:
+    # NOTE: This activity is only for returning immediately, so we just evaluate the expression
+    #       Hence, it's a local activity and SHOULD NOT fail
+    try:
+        assert isinstance(context.current_step, EvaluateStep)
 
-    return StepOutcome(output=output)
+        exprs = context.current_step.evaluate
+        output = simple_eval_dict(exprs, values=context.model_dump())
+
+        result = StepOutcome(output=output)
+        return result
+
+    except BaseException as e:
+        logging.error(f"Error in evaluate_step: {e}")
+        return StepOutcome(error=str(e))
 
 
 # Note: This is here just for clarity. We could have just imported evaluate_step directly

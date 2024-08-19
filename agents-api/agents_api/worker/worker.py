@@ -1,10 +1,11 @@
 from datetime import timedelta
+from typing import Any
 
 from temporalio.client import Client
 from temporalio.worker import Worker
 
 
-def create_worker(client: Client):
+def create_worker(client: Client) -> Any:
     """
     Initializes the Temporal client and worker with TLS configuration (if provided),
     then create a worker to listen for tasks on the configured task queue.
@@ -18,9 +19,13 @@ def create_worker(client: Client):
     from ..activities.task_steps import (
         evaluate_step,
         if_else_step,
+        log_step,
         prompt_step,
+        return_step,
+        switch_step,
         tool_call_step,
         transition_step,
+        wait_for_input_step,
         yield_step,
     )
     from ..activities.truncation import truncation
@@ -36,12 +41,16 @@ def create_worker(client: Client):
     from ..workflows.truncation import TruncationWorkflow
 
     task_activities = [
-        prompt_step,
         evaluate_step,
-        yield_step,
-        tool_call_step,
         if_else_step,
+        log_step,
+        prompt_step,
+        return_step,
+        switch_step,
+        tool_call_step,
         transition_step,
+        wait_for_input_step,
+        yield_step,
     ]
 
     # Initialize the worker with the specified task queue, workflows, and activities

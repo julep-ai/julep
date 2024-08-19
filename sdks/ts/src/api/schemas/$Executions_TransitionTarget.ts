@@ -5,7 +5,7 @@
 export const $Executions_TransitionTarget = {
   properties: {
     workflow: {
-      type: "Common_validPythonIdentifier",
+      type: "Common_identifierSafeUnicode",
       isRequired: true,
     },
     step: {

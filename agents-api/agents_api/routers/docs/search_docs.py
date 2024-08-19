@@ -1,5 +1,5 @@
 import time
-from typing import Annotated
+from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 
 from fastapi import Depends
 from pydantic import UUID4
@@ -17,7 +17,11 @@ from ...models.docs.search_docs_hybrid import search_docs_hybrid
 from .router import router
 
 
-def get_search_fn_and_params(search_params):
+def get_search_fn_and_params(
+    search_params,
+) -> Tuple[
+    Any, Optional[Dict[str, Union[float, int, str, Dict[str, float], List[float]]]]
+]:
     search_fn, params = None, None
 
     match search_params:

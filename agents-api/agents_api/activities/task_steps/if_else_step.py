@@ -1,24 +1,40 @@
+import logging
+
 from beartype import beartype
+from simpleeval import simple_eval
 from temporalio import activity
 
-from ...autogen.openapi_model import (
-    IfElseWorkflowStep,
-)
+from ...autogen.openapi_model import IfElseWorkflowStep
 from ...common.protocol.tasks import (
     StepContext,
+    StepOutcome,
 )
+from ...env import testing
 
 
-@activity.defn
 @beartype
-async def if_else_step(context: StepContext[IfElseWorkflowStep]) -> dict:
-    raise NotImplementedError()
-    # context_data: dict = context.model_dump()
+async def if_else_step(context: StepContext) -> StepOutcome:
+    # NOTE: This activity is only for logging, so we just evaluate the expression
+    #       Hence, it's a local activity and SHOULD NOT fail
+    try:
+        assert isinstance(context.current_step, IfElseWorkflowStep)
 
-    # next_workflow = (
-    #     context.definition.then
-    #     if simple_eval(context.definition.if_, names=context_data)
-    #     else context.definition.else_
-    # )
+        expr: str = context.current_step.if_
+        output = simple_eval(expr, names=context.model_dump())
+        output: bool = bool(output)
 
-    # return {"goto_workflow": next_workflow}
+        result = StepOutcome(output=output)
+        return result
+
+    except BaseException as e:
+        logging.error(f"Error in if_else_step: {e}")
+        return StepOutcome(error=str(e))
+
+
+# Note: This is here just for clarity. We could have just imported if_else_step directly
+# They do the same thing, so we dont need to mock the if_else_step function
+mock_if_else_step = if_else_step
+
+if_else_step = activity.defn(name="if_else_step")(
+    if_else_step if not testing else mock_if_else_step
+)

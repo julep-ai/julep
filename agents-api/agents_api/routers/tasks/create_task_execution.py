@@ -30,7 +30,7 @@ from ...models.execution.update_execution import (
 from ...models.task.get_task import get_task as get_task_query
 from .router import router
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 

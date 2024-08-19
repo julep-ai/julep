@@ -1,11 +1,13 @@
-from typing import Any, Generic, TypeVar
+from typing import Annotated, Any, Type
 from uuid import UUID
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field
+from pydantic_partial import create_partial_model
 
 from ...autogen.openapi_model import (
     Agent,
     CreateTaskRequest,
+    CreateTransitionRequest,
     Execution,
     PartialTaskSpecDef,
     PatchTaskRequest,
@@ -53,6 +55,9 @@ transition_to_execution_status = {
 }
 
 
+PendingTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+
+
 class ExecutionInput(BaseModel):
     developer_id: UUID
     execution: Execution
@@ -66,40 +71,37 @@ class ExecutionInput(BaseModel):
     session: Session | None = None
 
 
-WorkflowStepType = TypeVar("WorkflowStepType", bound=WorkflowStep)
-
-
-class StepContext(BaseModel, Generic[WorkflowStepType]):
+class StepContext(BaseModel):
     execution_input: ExecutionInput
     inputs: list[dict[str, Any]]
     cursor: TransitionTarget
 
     @computed_field
     @property
-    def outputs(self) -> list[dict[str, Any]]:
+    def outputs(self) -> Annotated[list[dict[str, Any]], Field(exclude=True)]:
         return self.inputs[1:]
 
     @computed_field
     @property
-    def current_input(self) -> dict[str, Any]:
+    def current_input(self) -> Annotated[dict[str, Any], Field(exclude=True)]:
         return self.inputs[-1]
 
     @computed_field
     @property
-    def current_workflow(self) -> Workflow:
+    def current_workflow(self) -> Annotated[Workflow, Field(exclude=True)]:
         workflows: list[Workflow] = self.execution_input.task.workflows
         return next(wf for wf in workflows if wf.name == self.cursor.workflow)
 
     @computed_field
     @property
-    def current_step(self) -> WorkflowStepType:
-        step = self.current_workflow[self.cursor.step]
+    def current_step(self) -> Annotated[WorkflowStep, Field(exclude=True)]:
+        step = self.current_workflow.steps[self.cursor.step]
         return step
 
     @computed_field
     @property
-    def is_last_step(self) -> bool:
-        return (self.cursor.step + 1) == len(self.current_workflow)
+    def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
+        return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
@@ -108,11 +110,9 @@ class StepContext(BaseModel, Generic[WorkflowStepType]):
         return dump
 
 
-OutcomeType = TypeVar("OutcomeType", bound=BaseModel)
-
-
-class StepOutcome(BaseModel, Generic[OutcomeType]):
-    output: OutcomeType | None
+class StepOutcome(BaseModel):
+    error: str | None = None
+    output: Any
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 

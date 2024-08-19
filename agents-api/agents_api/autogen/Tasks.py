@@ -9,6 +9,12 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from .Chat import ChatSettings
+from .Docs import (
+    EmbedQueryRequest,
+    HybridDocSearchRequest,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
 from .Entries import InputChatMLMessage
 from .Tools import CreateToolRequest
 
@@ -18,10 +24,55 @@ class BaseWorkflowStep(BaseModel):
         populate_by_name=True,
     )
     kind_: Literal[
-        "tool_call", "yield", "prompt", "evaluate", "if_else", "wait_for_input", "error"
+        "tool_call",
+        "prompt",
+        "evaluate",
+        "wait_for_input",
+        "log",
+        "embed",
+        "search",
+        "set",
+        "get",
+        "foreach",
+        "map_reduce",
+        "parallel",
+        "switch",
+        "if_else",
+        "sleep",
+        "return",
+        "yield",
+        "error",
     ]
     """
     The kind of step
+    """
+
+
+class CaseThen(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    case: str
+    """
+    The condition to evaluate
+    """
+    then: (
+        Any
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | WaitForInputStep
+    )
+    """
+    The steps to run if the condition is true
     """
 
 
@@ -41,8 +92,19 @@ class CreateTaskRequest(BaseModel):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
         | WaitForInputStep
         | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | MapReduceStep
     ]
     """
     The entrypoint of the task.
@@ -60,6 +122,17 @@ class CreateTaskRequest(BaseModel):
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
+
+
+class EmbedStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["embed"] = "embed"
+    embed: EmbedQueryRequest
+    """
+    The text to embed
+    """
 
 
 class ErrorWorkflowStep(BaseWorkflowStep):
@@ -84,6 +157,56 @@ class EvaluateStep(BaseWorkflowStep):
     """
 
 
+class ForeachDo(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    in_: Annotated[str, Field(alias="in")]
+    """
+    The variable to iterate over
+    """
+    do: list[
+        Any
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | WaitForInputStep
+    ]
+    """
+    The steps to run for each iteration
+    """
+
+
+class ForeachStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["foreach"] = "foreach"
+    foreach: ForeachDo
+    """
+    The steps to run for each iteration
+    """
+
+
+class GetStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["get"] = "get"
+    get: str
+    """
+    The key to get
+    """
+
+
 class IfElseWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -99,6 +222,13 @@ class IfElseWorkflowStep(BaseWorkflowStep):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
         | WaitForInputStep
     )
     """
@@ -110,11 +240,83 @@ class IfElseWorkflowStep(BaseWorkflowStep):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
         | WaitForInputStep,
         Field(alias="else"),
     ]
     """
     The steps to run if the condition is false
+    """
+
+
+class LogStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["log"] = "log"
+    log: str
+    """
+    The value to log
+    """
+
+
+class MapOver(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    over: str
+    """
+    The variable to iterate over
+    """
+    workflow: str
+    """
+    The subworkflow to run for each iteration
+    """
+
+
+class MapReduceStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["map_reduce"] = "map_reduce"
+    map: MapOver
+    """
+    The steps to run for each iteration
+    """
+    reduce: str
+    """
+    The expression to reduce the results (`_` is a list of outputs)
+    """
+
+
+class ParallelStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["parallel"] = "parallel"
+    parallel: list[
+        Any
+        | ToolCallStep
+        | YieldStep
+        | PromptStep
+        | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | WaitForInputStep
+    ]
+    """
+    The steps to run in parallel. Max concurrency will depend on the platform
     """
 
 
@@ -134,8 +336,19 @@ class PatchTaskRequest(BaseModel):
             | YieldStep
             | PromptStep
             | ErrorWorkflowStep
+            | SleepStep
+            | ReturnStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
             | WaitForInputStep
             | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | MapReduceStep
         ]
         | None
     ) = None
@@ -172,6 +385,97 @@ class PromptStep(BaseWorkflowStep):
     """
 
 
+class ReturnStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["return"] = "return"
+    return_: Annotated[dict[str, str], Field(alias="return")]
+    """
+    The value to return
+    """
+
+
+class SearchStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["search"] = "search"
+    search: VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
+    """
+    The search query
+    """
+
+
+class SetKey(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    key: str
+    """
+    The key to set
+    """
+    value: str
+    """
+    The value to set
+    """
+
+
+class SetStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["set"] = "set"
+    set: SetKey | list[SetKey]
+    """
+    The value to set
+    """
+
+
+class SleepFor(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    seconds: Annotated[int, Field(0, ge=0)]
+    """
+    The number of seconds to sleep for
+    """
+    minutes: Annotated[int, Field(0, ge=0)]
+    """
+    The number of minutes to sleep for
+    """
+    hours: Annotated[int, Field(0, ge=0)]
+    """
+    The number of hours to sleep for
+    """
+    days: Annotated[int, Field(0, ge=0)]
+    """
+    The number of days to sleep for
+    """
+
+
+class SleepStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["sleep"] = "sleep"
+    sleep: SleepFor
+    """
+    The duration to sleep for
+    """
+
+
+class SwitchStep(BaseWorkflowStep):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Literal["switch"] = "switch"
+    switch: list[CaseThen]
+    """
+    The cond tree
+    """
+
+
 class Task(BaseModel):
     """
     Object describing a Task
@@ -188,8 +492,19 @@ class Task(BaseModel):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
         | WaitForInputStep
         | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | MapReduceStep
     ]
     """
     The entrypoint of the task.
@@ -260,8 +575,19 @@ class UpdateTaskRequest(BaseModel):
         | YieldStep
         | PromptStep
         | ErrorWorkflowStep
+        | SleepStep
+        | ReturnStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
         | WaitForInputStep
         | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | MapReduceStep
     ]
     """
     The entrypoint of the task.
@@ -286,7 +612,7 @@ class WaitForInputStep(BaseWorkflowStep):
         populate_by_name=True,
     )
     kind_: Literal["wait_for_input"] = "wait_for_input"
-    info: str | dict[str, Any]
+    wait_for_input: dict[str, str]
     """
     Any additional info or data
     """

@@ -1,3 +1,4 @@
+from typing import TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -17,6 +18,8 @@ from ..utils import (
     partialclass,
     rewrap_exceptions,
 )
+
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

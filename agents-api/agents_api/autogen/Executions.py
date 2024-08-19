@@ -104,9 +104,16 @@ class TransitionTarget(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    workflow: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
+    workflow: Annotated[
+        str,
+        Field(
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
+        ),
+    ]
     """
-    Valid python identifier names
+    For Unicode character safety
+    See: https://unicode.org/reports/tr31/
+    See: https://www.unicode.org/reports/tr39/#Identifier_Characters
     """
     step: int
 

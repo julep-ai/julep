@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -19,6 +20,9 @@ from ..utils import (
     wrap_in_class,
 )
 from .get_execution import get_execution
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
@@ -167,7 +171,7 @@ def prepare_execution_input(
       # TODO: Enable these later
       user = null,
       session = null,
-      arguments = {{}},
+      arguments = execution->"input"
     """
 
     queries = [

@@ -1,3 +1,5 @@
+from typing import Callable
+
 from temporalio import activity
 
 from ..env import testing
@@ -12,6 +14,6 @@ async def mock_demo_activity(a: int, b: int) -> int:
     return a + b
 
 
-demo_activity = activity.defn(name="demo_activity")(
+demo_activity: Callable[[int, int], int] = activity.defn(name="demo_activity")(
     demo_activity if not testing else mock_demo_activity
 )

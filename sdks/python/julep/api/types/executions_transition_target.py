@@ -5,11 +5,11 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .common_valid_python_identifier import CommonValidPythonIdentifier
+from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
 
 
 class ExecutionsTransitionTarget(pydantic_v1.BaseModel):
-    workflow: CommonValidPythonIdentifier
+    workflow: CommonIdentifierSafeUnicode
     step: int
 
     def json(self, **kwargs: typing.Any) -> str:

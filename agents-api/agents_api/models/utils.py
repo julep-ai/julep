@@ -195,10 +195,10 @@ def cozo_query(
             )
 
             # Run the query
-            from ..clients.cozo import get_cozo_client
+            from ..clients import cozo
 
             try:
-                client = client or get_cozo_client()
+                client = client or cozo.get_cozo_client()
                 result = client.run(query, variables)
 
             except Exception as e:

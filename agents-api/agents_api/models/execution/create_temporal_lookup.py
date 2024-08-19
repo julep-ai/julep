@@ -1,3 +1,4 @@
+from typing import TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -14,6 +15,8 @@ from ..utils import (
     verify_developer_id_query,
     verify_developer_owns_resource_query,
 )
+
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

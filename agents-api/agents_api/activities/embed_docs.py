@@ -1,8 +1,8 @@
 from beartype import beartype
 from temporalio import activity
 
+from ..clients import cozo
 from ..clients import embed as embedder
-from ..clients.cozo import get_cozo_client
 from ..env import testing
 from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 from .types import EmbedDocsPayload
@@ -28,7 +28,7 @@ async def embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
         doc_id=payload.doc_id,
         snippet_indices=indices,
         embeddings=embeddings,
-        client=cozo_client or get_cozo_client(),
+        client=cozo_client or cozo.get_cozo_client(),
     )
 
 

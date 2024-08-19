@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -8,6 +8,9 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import Transition
 from ..utils import cozo_query, partialclass, rewrap_exceptions, wrap_in_class
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
