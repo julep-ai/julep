@@ -6,10 +6,9 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_py_expression import CommonPyExpression
-from .tasks_base_workflow_step import TasksBaseWorkflowStep
 
 
-class TasksWaitForInputStep(TasksBaseWorkflowStep):
+class TasksWaitForInputStep(pydantic_v1.BaseModel):
     wait_for_input: typing.Dict[str, CommonPyExpression] = pydantic_v1.Field()
     """
     Any additional info or data
@@ -43,7 +42,5 @@ class TasksWaitForInputStep(TasksBaseWorkflowStep):
     class Config:
         frozen = True
         smart_union = True
-        allow_population_by_field_name = True
-        populate_by_name = True
         extra = pydantic_v1.Extra.allow
         json_encoders = {dt.datetime: serialize_datetime}

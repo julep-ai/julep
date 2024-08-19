@@ -1042,7 +1042,7 @@ class JulepApi:
         Returns
         -------
         CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
+            The request has succeeded.
 
         Examples
         --------
@@ -1709,14 +1709,14 @@ class JulepApi:
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
+    ) -> CommonResourceCreatedResponse:
         """
         Create or update a task
 
         Parameters
         ----------
         parent_id : CommonUuid
-            ID of parent resource
+            ID of the agent
 
         id : CommonUuid
 
@@ -1743,8 +1743,8 @@ class JulepApi:
 
         Returns
         -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
 
         Examples
         --------
@@ -1787,7 +1787,7 @@ class JulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)
@@ -4729,7 +4729,7 @@ class AsyncJulepApi:
         Returns
         -------
         CommonResourceCreatedResponse
-            The request has succeeded and a new resource has been created as a result.
+            The request has succeeded.
 
         Examples
         --------
@@ -5468,14 +5468,14 @@ class AsyncJulepApi:
         input_schema: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         metadata: typing.Optional[typing.Dict[str, typing.Any]] = OMIT,
         request_options: typing.Optional[RequestOptions] = None,
-    ) -> CommonResourceUpdatedResponse:
+    ) -> CommonResourceCreatedResponse:
         """
         Create or update a task
 
         Parameters
         ----------
         parent_id : CommonUuid
-            ID of parent resource
+            ID of the agent
 
         id : CommonUuid
 
@@ -5502,8 +5502,8 @@ class AsyncJulepApi:
 
         Returns
         -------
-        CommonResourceUpdatedResponse
-            The request has succeeded.
+        CommonResourceCreatedResponse
+            The request has succeeded and a new resource has been created as a result.
 
         Examples
         --------
@@ -5554,7 +5554,7 @@ class AsyncJulepApi:
         )
         try:
             if 200 <= _response.status_code < 300:
-                return pydantic_v1.parse_obj_as(CommonResourceUpdatedResponse, _response.json())  # type: ignore
+                return pydantic_v1.parse_obj_as(CommonResourceCreatedResponse, _response.json())  # type: ignore
             _response_json = _response.json()
         except JSONDecodeError:
             raise ApiError(status_code=_response.status_code, body=_response.text)

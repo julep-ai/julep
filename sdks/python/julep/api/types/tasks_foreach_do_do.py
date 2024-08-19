@@ -15,7 +15,7 @@ from .tasks_tool_call_step import TasksToolCallStep
 from .tasks_wait_for_input_step import TasksWaitForInputStep
 from .tasks_yield_step import TasksYieldStep
 
-TasksForeachDoDoItem = typing.Union[
+TasksForeachDoDo = typing.Union[
     typing.Any,
     TasksToolCallStep,
     TasksYieldStep,

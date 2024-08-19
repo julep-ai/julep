@@ -2345,7 +2345,7 @@ client.tasks_create_or_update_route_create_or_update(
 <dl>
 <dd>
 
-**parent_id:** `CommonUuid` — ID of parent resource
+**parent_id:** `CommonUuid` — ID of the agent
     
 </dd>
 </dl>

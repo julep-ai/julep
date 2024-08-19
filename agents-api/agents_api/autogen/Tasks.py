@@ -57,7 +57,7 @@ class CaseThen(BaseModel):
     The condition to evaluate
     """
     then: (
-        Any
+        EvaluateStep
         | ToolCallStep
         | YieldStep
         | PromptStep
@@ -165,8 +165,8 @@ class ForeachDo(BaseModel):
     """
     The variable to iterate over
     """
-    do: list[
-        Any
+    do: (
+        EvaluateStep
         | ToolCallStep
         | YieldStep
         | PromptStep
@@ -179,7 +179,7 @@ class ForeachDo(BaseModel):
         | EmbedStep
         | SearchStep
         | WaitForInputStep
-    ]
+    )
     """
     The steps to run for each iteration
     """
@@ -217,7 +217,7 @@ class IfElseWorkflowStep(BaseWorkflowStep):
     The condition to evaluate
     """
     then: (
-        Any
+        EvaluateStep
         | ToolCallStep
         | YieldStep
         | PromptStep
@@ -235,7 +235,7 @@ class IfElseWorkflowStep(BaseWorkflowStep):
     The steps to run if the condition is true
     """
     else_: Annotated[
-        Any
+        EvaluateStep
         | ToolCallStep
         | YieldStep
         | PromptStep
@@ -289,9 +289,9 @@ class MapReduceStep(BaseWorkflowStep):
     """
     The steps to run for each iteration
     """
-    reduce: str
+    reduce: str | None = None
     """
-    The expression to reduce the results (`_` is a list of outputs)
+    The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list.
     """
 
 
@@ -301,7 +301,7 @@ class ParallelStep(BaseWorkflowStep):
     )
     kind_: Literal["parallel"] = "parallel"
     parallel: list[
-        Any
+        EvaluateStep
         | ToolCallStep
         | YieldStep
         | PromptStep

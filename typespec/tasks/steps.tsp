@@ -23,6 +23,7 @@ namespace Tasks;
 /** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
 alias ExpressionObject = Record<PyExpression>;
 
+@discriminator("kind_")
 model BaseWorkflowStep {
     /** The kind of step */
     kind_: WorkflowStepKind;
@@ -159,7 +160,7 @@ model ForeachDo {
     in: PyExpression;
 
     /** The steps to run for each iteration */
-    do: NonConditionalWorkflowStep[];
+    do: NonConditionalWorkflowStep;
 }
 
 model ForeachStep extends BaseWorkflowStep {
@@ -183,8 +184,8 @@ model MapReduceStep extends BaseWorkflowStep {
     /** The steps to run for each iteration */
     map: MapOver;
 
-    /** The expression to reduce the results (`_` is a list of outputs) */
-    reduce: PyExpression;
+    /** The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list. */
+    reduce?: PyExpression;
 }
 
 /////////////////////////

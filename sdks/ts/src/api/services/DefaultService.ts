@@ -421,7 +421,7 @@ export class DefaultService {
   }
   /**
    * Create a new task
-   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @returns Common_ResourceCreatedResponse The request has succeeded.
    * @throws ApiError
    */
   public tasksRouteCreate({
@@ -704,7 +704,7 @@ export class DefaultService {
   }
   /**
    * Create or update a task
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public tasksCreateOrUpdateRouteCreateOrUpdate({
@@ -713,12 +713,12 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of parent resource
+     * ID of the agent
      */
     parentId: Common_uuid;
     id: Common_uuid;
     requestBody: Tasks_CreateTaskRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents/{parent_id}/tasks/{id}",

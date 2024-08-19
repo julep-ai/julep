@@ -26,13 +26,12 @@ export const $Tasks_MapReduceStep = {
         },
         reduce: {
           type: "all-of",
-          description: `The expression to reduce the results (\`_\` is a list of outputs)`,
+          description: `The expression to reduce the results (\`_\` is a list of outputs). If not provided, the results are returned as a list.`,
           contains: [
             {
               type: "Common_PyExpression",
             },
           ],
-          isRequired: true,
         },
       },
     },

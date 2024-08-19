@@ -5,11 +5,10 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
-from .tasks_base_workflow_step import TasksBaseWorkflowStep
 from .tasks_set_step_set import TasksSetStepSet
 
 
-class TasksSetStep(TasksBaseWorkflowStep):
+class TasksSetStep(pydantic_v1.BaseModel):
     set_: TasksSetStepSet = pydantic_v1.Field(alias="set")
     """
     The value to set

@@ -6,10 +6,9 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_py_expression import CommonPyExpression
-from .tasks_base_workflow_step import TasksBaseWorkflowStep
 
 
-class TasksReturnStep(TasksBaseWorkflowStep):
+class TasksReturnStep(pydantic_v1.BaseModel):
     return_: typing.Dict[str, CommonPyExpression] = pydantic_v1.Field(alias="return")
     """
     The value to return
