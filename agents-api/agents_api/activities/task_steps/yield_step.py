@@ -37,9 +37,9 @@ async def yield_step(context: StepContext) -> StepOutcome:
 
         return StepOutcome(output=arguments, transition_to=("step", transition_target))
 
-    except Exception as e:
+    except BaseException as e:
         logging.error(f"Error in log_step: {e}")
-        return StepOutcome(output=None)
+        return StepOutcome(error=str(e))
 
 
 # Note: This is here just for clarity. We could have just imported yield_step directly

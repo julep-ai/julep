@@ -23,9 +23,9 @@ async def return_step(context: StepContext) -> StepOutcome:
         result = StepOutcome(output=output)
         return result
 
-    except Exception as e:
+    except BaseException as e:
         logging.error(f"Error in log_step: {e}")
-        return StepOutcome(output=None)
+        return StepOutcome(error=str(e))
 
 
 # Note: This is here just for clarity. We could have just imported return_step directly

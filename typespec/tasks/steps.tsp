@@ -28,6 +28,10 @@ model BaseWorkflowStep {
     kind_: WorkflowStepKind;
 }
 
+BREAKING THIS FILE INTENTIONALLY SO IT DOESTN'T GET COMPILED
+BECAUSE IT SEEMS LIKE TYPESPEC HAS A BUG WHERE IT ADDS `{}` TO THE RENDERED `NonConditionalWorkflowStep`
+YOU CAN COMMENT THIS AND COMPILE IF YOU KNOW WHAT YOU'RE DOING
+
 alias NonConditionalWorkflowStep =
     | EvaluateStep
     | ToolCallStep

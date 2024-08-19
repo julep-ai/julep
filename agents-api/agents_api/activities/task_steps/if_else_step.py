@@ -21,13 +21,14 @@ async def if_else_step(context: StepContext) -> StepOutcome:
 
         expr: str = context.current_step.if_
         output = simple_eval(expr, names=context.model_dump())
+        output: bool = bool(output)
 
         result = StepOutcome(output=output)
         return result
 
-    except Exception as e:
+    except BaseException as e:
         logging.error(f"Error in if_else_step: {e}")
-        return StepOutcome(output=None)
+        return StepOutcome(error=str(e))
 
 
 # Note: This is here just for clarity. We could have just imported if_else_step directly

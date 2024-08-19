@@ -109,7 +109,7 @@ alias TransitionType = (
 );
 
 model TransitionTarget {
-    workflow: validPythonIdentifier;
+    workflow: identifierSafeUnicode;
     step: uint16;
 }
 

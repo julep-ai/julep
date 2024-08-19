@@ -22,9 +22,9 @@ async def evaluate_step(context: StepContext) -> StepOutcome:
         result = StepOutcome(output=output)
         return result
 
-    except Exception as e:
+    except BaseException as e:
         logging.error(f"Error in evaluate_step: {e}")
-        return StepOutcome(output=None)
+        return StepOutcome(error=str(e))
 
 
 # Note: This is here just for clarity. We could have just imported evaluate_step directly

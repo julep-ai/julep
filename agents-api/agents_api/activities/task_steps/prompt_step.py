@@ -3,23 +3,17 @@ import asyncio
 from beartype import beartype
 from temporalio import activity
 
-from ...autogen.openapi_model import (
-    InputChatMLMessage,
-    PromptStep,
-)
+from ...autogen.openapi_model import InputChatMLMessage
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
-from ...common.protocol.tasks import (
-    StepContext,
-    StepOutcome,
-)
+from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.utils.template import render_template
 
 
 @activity.defn
 @beartype
-async def prompt_step(context: StepContext[PromptStep]) -> StepOutcome:
+async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
     context_data: dict = context.model_dump()
 
