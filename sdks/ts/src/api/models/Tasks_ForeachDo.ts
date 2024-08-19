@@ -23,7 +23,7 @@ export type Tasks_ForeachDo = {
   /**
    * The steps to run for each iteration
    */
-  do: Array<
+  do:
     | Tasks_ToolCallStep
     | Tasks_YieldStep
     | Tasks_PromptStep
@@ -35,6 +35,5 @@ export type Tasks_ForeachDo = {
     | Tasks_LogStep
     | Tasks_EmbedStep
     | Tasks_SearchStep
-    | Tasks_WaitForInputStep
-  >;
+    | Tasks_WaitForInputStep;
 };

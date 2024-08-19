@@ -688,7 +688,7 @@ class TasksUpdateTaskRequestMainItem_Parallel(pydantic_v1.BaseModel):
 
 class TasksUpdateTaskRequestMainItem_MapReduce(pydantic_v1.BaseModel):
     map_: TasksMapOver = pydantic_v1.Field(alias="map")
-    reduce: CommonPyExpression
+    reduce: typing.Optional[CommonPyExpression] = None
     kind: typing.Literal["map_reduce"] = pydantic_v1.Field(
         alias="kind_", default="map_reduce"
     )

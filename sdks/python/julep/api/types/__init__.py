@@ -160,7 +160,26 @@ from .task_executions_route_list_request_sort_by import (
     TaskExecutionsRouteListRequestSortBy,
 )
 from .task_executions_route_list_response import TaskExecutionsRouteListResponse
-from .tasks_base_workflow_step import TasksBaseWorkflowStep
+from .tasks_base_workflow_step import (
+    TasksBaseWorkflowStep,
+    TasksBaseWorkflowStep_Embed,
+    TasksBaseWorkflowStep_Error,
+    TasksBaseWorkflowStep_Foreach,
+    TasksBaseWorkflowStep_Get,
+    TasksBaseWorkflowStep_IfElse,
+    TasksBaseWorkflowStep_Log,
+    TasksBaseWorkflowStep_MapReduce,
+    TasksBaseWorkflowStep_Parallel,
+    TasksBaseWorkflowStep_Prompt,
+    TasksBaseWorkflowStep_Return,
+    TasksBaseWorkflowStep_Search,
+    TasksBaseWorkflowStep_Set,
+    TasksBaseWorkflowStep_Sleep,
+    TasksBaseWorkflowStep_Switch,
+    TasksBaseWorkflowStep_ToolCall,
+    TasksBaseWorkflowStep_WaitForInput,
+    TasksBaseWorkflowStep_Yield,
+)
 from .tasks_case_then import TasksCaseThen
 from .tasks_case_then_then import TasksCaseThenThen
 from .tasks_create_task_request import TasksCreateTaskRequest
@@ -189,7 +208,7 @@ from .tasks_embed_step import TasksEmbedStep
 from .tasks_error_workflow_step import TasksErrorWorkflowStep
 from .tasks_evaluate_step import TasksEvaluateStep
 from .tasks_foreach_do import TasksForeachDo
-from .tasks_foreach_do_do_item import TasksForeachDoDoItem
+from .tasks_foreach_do_do import TasksForeachDoDo
 from .tasks_foreach_step import TasksForeachStep
 from .tasks_get_step import TasksGetStep
 from .tasks_if_else_workflow_step import TasksIfElseWorkflowStep
@@ -432,6 +451,23 @@ __all__ = [
     "TaskExecutionsRouteListRequestSortBy",
     "TaskExecutionsRouteListResponse",
     "TasksBaseWorkflowStep",
+    "TasksBaseWorkflowStep_Embed",
+    "TasksBaseWorkflowStep_Error",
+    "TasksBaseWorkflowStep_Foreach",
+    "TasksBaseWorkflowStep_Get",
+    "TasksBaseWorkflowStep_IfElse",
+    "TasksBaseWorkflowStep_Log",
+    "TasksBaseWorkflowStep_MapReduce",
+    "TasksBaseWorkflowStep_Parallel",
+    "TasksBaseWorkflowStep_Prompt",
+    "TasksBaseWorkflowStep_Return",
+    "TasksBaseWorkflowStep_Search",
+    "TasksBaseWorkflowStep_Set",
+    "TasksBaseWorkflowStep_Sleep",
+    "TasksBaseWorkflowStep_Switch",
+    "TasksBaseWorkflowStep_ToolCall",
+    "TasksBaseWorkflowStep_WaitForInput",
+    "TasksBaseWorkflowStep_Yield",
     "TasksCaseThen",
     "TasksCaseThenThen",
     "TasksCreateTaskRequest",
@@ -458,7 +494,7 @@ __all__ = [
     "TasksErrorWorkflowStep",
     "TasksEvaluateStep",
     "TasksForeachDo",
-    "TasksForeachDoDoItem",
+    "TasksForeachDoDo",
     "TasksForeachStep",
     "TasksGetStep",
     "TasksIfElseWorkflowStep",

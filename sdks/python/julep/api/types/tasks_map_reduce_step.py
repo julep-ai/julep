@@ -6,19 +6,18 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_py_expression import CommonPyExpression
-from .tasks_base_workflow_step import TasksBaseWorkflowStep
 from .tasks_map_over import TasksMapOver
 
 
-class TasksMapReduceStep(TasksBaseWorkflowStep):
+class TasksMapReduceStep(pydantic_v1.BaseModel):
     map_: TasksMapOver = pydantic_v1.Field(alias="map")
     """
     The steps to run for each iteration
     """
 
-    reduce: CommonPyExpression = pydantic_v1.Field()
+    reduce: typing.Optional[CommonPyExpression] = pydantic_v1.Field(default=None)
     """
-    The expression to reduce the results (`_` is a list of outputs)
+    The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list.
     """
 
     def json(self, **kwargs: typing.Any) -> str:

@@ -6,7 +6,7 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_py_expression import CommonPyExpression
-from .tasks_foreach_do_do_item import TasksForeachDoDoItem
+from .tasks_foreach_do_do import TasksForeachDoDo
 
 
 class TasksForeachDo(pydantic_v1.BaseModel):
@@ -15,7 +15,7 @@ class TasksForeachDo(pydantic_v1.BaseModel):
     The variable to iterate over
     """
 
-    do: typing.List[TasksForeachDoDoItem] = pydantic_v1.Field()
+    do: TasksForeachDoDo = pydantic_v1.Field()
     """
     The steps to run for each iteration
     """
