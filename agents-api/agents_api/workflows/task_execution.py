@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
         ReturnStep,
         SleepFor,
         SleepStep,
+        SwitchStep,
         # ToolCallStep,
         TransitionTarget,
         WaitForInputStep,
@@ -40,8 +41,10 @@ STEP_TO_ACTIVITY = {
     # ToolCallStep: tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
     LogStep: task_steps.log_step,
+    SwitchStep: task_steps.switch_step,
 }
 
+# Use few local activities (currently experimental)
 STEP_TO_LOCAL_ACTIVITY = {
     # NOTE: local activities are directly called in the workflow executor
     #       They MUST NOT FAIL, otherwise they will crash the workflow
@@ -142,6 +145,13 @@ class TaskExecutionWorkflow:
                 await transition(output=output, type="finish", next=None)
                 return output  # <--- Byeeee!
 
+            case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
+                raise NotImplementedError("SwitchStep is not implemented")
+
+            case SwitchStep(), StepOutcome(output=index) if index < 0:
+                # If no case matched, then the output will be -1
+                raise NotImplementedError("SwitchStep is not implemented")
+
             case IfElseWorkflowStep(then=then_branch, else_=else_branch), StepOutcome(
                 output=condition
             ):
@@ -150,7 +160,7 @@ class TaskExecutionWorkflow:
 
                 # Create a faux workflow
                 if_else_wf_name = (
-                    f"{context.cursor.workflow}[{context.cursor.step}].if_else"
+                    f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
                 )
                 if_else_wf_name += ".then" if condition else ".else"
 

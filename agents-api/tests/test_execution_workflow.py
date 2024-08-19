@@ -494,3 +494,60 @@ async def _(
 
         result = await handle.result()
         assert result["hello"] == "world"
+
+
+@test("workflow: switch step")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [
+                    {
+                        "switch": [
+                            {
+                                "case": "False",
+                                "then": {"evaluate": {"hello": '"bubbles"'}},
+                            },
+                            {
+                                "case": "True",
+                                "then": {"evaluate": {"hello": '"world"'}},
+                            },
+                            {
+                                "case": "True",
+                                "then": {"evaluate": {"hello": '"bye"'}},
+                            },
+                        ]
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert result["hello"] == "world"
