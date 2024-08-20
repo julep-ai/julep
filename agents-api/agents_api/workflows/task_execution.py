@@ -29,6 +29,8 @@ with workflow.unsafe.imports_passed_through():
         WaitForInputStep,
         Workflow,
         YieldStep,
+        MapReduceStep,
+        MapOver,
     )
     from ..common.protocol.tasks import (
         ExecutionInput,
@@ -227,6 +229,35 @@ class TaskExecutionWorkflow:
                     state.output = await workflow.execute_child_workflow(
                         TaskExecutionWorkflow.run,
                         args=foreach_args,
+                    )
+
+            case MapReduceStep(map=MapOver(workflow=workflow_name)), StepOutcome(output=items):
+                for item in items:
+                    map_reduce_task = execution_input.task.model_copy()
+                    # TODO: set steps list
+                    map_reduce_task.workflows = [
+                        Workflow(name=workflow_name, steps=[])
+                    ]
+
+                    # Create a new execution input
+                    map_reduce_execution_input = execution_input.model_copy()
+                    map_reduce_execution_input.task = foreach_task
+
+                    # Set the next target to the chosen branch
+                    map_reduce_next_target = TransitionTarget(
+                        workflow=workflow_name, step=0
+                    )
+
+                    map_reduce_args = [
+                        map_reduce_execution_input,
+                        map_reduce_next_target,
+                        previous_inputs + [{"item": item}],
+                    ]
+
+                    # Execute the chosen branch and come back here
+                    state.output = await workflow.execute_child_workflow(
+                        TaskExecutionWorkflow.run,
+                        args=map_reduce_args,
                     )
 
             case SwitchStep(switch=cases), StepOutcome(output=int(case_num)):
