@@ -1,6 +1,7 @@
 # ruff: noqa: F401, F403, F405
 
 from .evaluate_step import evaluate_step
+from .for_each_step import for_each_step
 from .if_else_step import if_else_step
 from .log_step import log_step
 from .prompt_step import prompt_step

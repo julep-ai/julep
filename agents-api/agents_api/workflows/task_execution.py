@@ -14,8 +14,11 @@ with workflow.unsafe.imports_passed_through():
         CreateTransitionRequest,
         ErrorWorkflowStep,
         EvaluateStep,
+        ForeachDo,
+        ForeachStep,
         IfElseWorkflowStep,
         LogStep,
+        MapReduceStep,
         # PromptStep,
         ReturnStep,
         SleepFor,
@@ -26,10 +29,6 @@ with workflow.unsafe.imports_passed_through():
         WaitForInputStep,
         Workflow,
         YieldStep,
-        ForeachStep,
-        ForeachDo,
-        SwitchStep,
-        MapReduceStep,
     )
     from ..common.protocol.tasks import (
         ExecutionInput,
@@ -52,6 +51,7 @@ STEP_TO_ACTIVITY = {
     ReturnStep: task_steps.return_step,
     YieldStep: task_steps.yield_step,
     IfElseWorkflowStep: task_steps.if_else_step,
+    ForeachStep: task_steps.for_each_step,
 }
 
 # TODO: Avoid local activities for now (currently experimental)
@@ -198,14 +198,10 @@ class TaskExecutionWorkflow:
                     args=if_else_args,
                 )
 
-            case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(
-                output=items
-            ):
+            case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(output=items):
                 for i, item in enumerate(items):
                     # Create a faux workflow
-                    foreach_wf_name = (
-                        f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
-                    )
+                    foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
 
                     foreach_task = execution_input.task.model_copy()
                     foreach_task.workflows = [
@@ -217,12 +213,14 @@ class TaskExecutionWorkflow:
                     foreach_execution_input.task = foreach_task
 
                     # Set the next target to the chosen branch
-                    foreach_next_target = TransitionTarget(workflow=foreach_wf_name, step=0)
+                    foreach_next_target = TransitionTarget(
+                        workflow=foreach_wf_name, step=0
+                    )
 
                     foreach_args = [
                         foreach_execution_input,
                         foreach_next_target,
-                        previous_inputs + [item],
+                        previous_inputs + [{"item": item}],
                     ]
 
                     # Execute the chosen branch and come back here
@@ -230,10 +228,8 @@ class TaskExecutionWorkflow:
                         TaskExecutionWorkflow.run,
                         args=foreach_args,
                     )
-            
-            case SwitchStep(switch=cases), StepOutcome(
-                output=int(case_num)
-            ):
+
+            case SwitchStep(switch=cases), StepOutcome(output=int(case_num)):
                 if case_num > 0:
                     chosen_branch = cases[case_num]
 
