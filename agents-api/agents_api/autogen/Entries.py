@@ -6,13 +6,21 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import (
+    AnyUrl,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+)
 
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
 
 class BaseEntry(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     role: Literal[
@@ -55,6 +63,7 @@ class BaseEntry(BaseModel):
 
 class ChatMLImageContentPart(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     image_url: ImageURL
@@ -69,6 +78,7 @@ class ChatMLImageContentPart(BaseModel):
 
 class ChatMLTextContentPart(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     text: str
@@ -80,6 +90,7 @@ class ChatMLTextContentPart(BaseModel):
 
 class Entry(BaseEntry):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -91,6 +102,7 @@ class Entry(BaseEntry):
 
 class History(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     entries: list[Entry]
@@ -104,6 +116,7 @@ class History(BaseModel):
 
 class ImageURL(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     url: AnyUrl
@@ -118,6 +131,7 @@ class ImageURL(BaseModel):
 
 class InputChatMLMessage(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     role: Literal[
@@ -140,7 +154,7 @@ class InputChatMLMessage(BaseModel):
     """
     Name
     """
-    continue_: Annotated[bool | None, Field(None, alias="continue")]
+    continue_: Annotated[StrictBool | None, Field(None, alias="continue")]
     """
     Whether to continue this message or return a new one
     """
@@ -148,6 +162,7 @@ class InputChatMLMessage(BaseModel):
 
 class Relation(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     head: UUID

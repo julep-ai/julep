@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Chat import ChatSettings
 from .Docs import (
@@ -21,6 +21,7 @@ from .Tools import CreateToolRequest
 
 class BaseWorkflowStep(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal[
@@ -50,6 +51,7 @@ class BaseWorkflowStep(BaseModel):
 
 class CaseThen(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     case: str
@@ -82,6 +84,7 @@ class CreateTaskRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     name: str
@@ -117,7 +120,7 @@ class CreateTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
@@ -126,6 +129,7 @@ class CreateTaskRequest(BaseModel):
 
 class EmbedStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["embed"] = "embed"
@@ -137,6 +141,7 @@ class EmbedStep(BaseWorkflowStep):
 
 class ErrorWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["error"] = "error"
@@ -148,6 +153,7 @@ class ErrorWorkflowStep(BaseWorkflowStep):
 
 class EvaluateStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["evaluate"] = "evaluate"
@@ -159,6 +165,7 @@ class EvaluateStep(BaseWorkflowStep):
 
 class ForeachDo(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     in_: Annotated[str, Field(alias="in")]
@@ -187,6 +194,7 @@ class ForeachDo(BaseModel):
 
 class ForeachStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["foreach"] = "foreach"
@@ -198,6 +206,7 @@ class ForeachStep(BaseWorkflowStep):
 
 class GetStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["get"] = "get"
@@ -209,6 +218,7 @@ class GetStep(BaseWorkflowStep):
 
 class IfElseWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["if_else"] = "if_else"
@@ -257,6 +267,7 @@ class IfElseWorkflowStep(BaseWorkflowStep):
 
 class LogStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["log"] = "log"
@@ -268,6 +279,7 @@ class LogStep(BaseWorkflowStep):
 
 class MapOver(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     over: str
@@ -282,6 +294,7 @@ class MapOver(BaseModel):
 
 class MapReduceStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["map_reduce"] = "map_reduce"
@@ -297,6 +310,7 @@ class MapReduceStep(BaseWorkflowStep):
 
 class ParallelStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["parallel"] = "parallel"
@@ -326,6 +340,7 @@ class PatchTaskRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     description: str = ""
@@ -363,7 +378,7 @@ class PatchTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
@@ -372,6 +387,7 @@ class PatchTaskRequest(BaseModel):
 
 class PromptStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["prompt"] = "prompt"
@@ -387,6 +403,7 @@ class PromptStep(BaseWorkflowStep):
 
 class ReturnStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["return"] = "return"
@@ -398,6 +415,7 @@ class ReturnStep(BaseWorkflowStep):
 
 class SearchStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["search"] = "search"
@@ -409,6 +427,7 @@ class SearchStep(BaseWorkflowStep):
 
 class SetKey(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     key: str
@@ -423,6 +442,7 @@ class SetKey(BaseModel):
 
 class SetStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["set"] = "set"
@@ -434,6 +454,7 @@ class SetStep(BaseWorkflowStep):
 
 class SleepFor(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     seconds: Annotated[int, Field(0, ge=0)]
@@ -456,6 +477,7 @@ class SleepFor(BaseModel):
 
 class SleepStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["sleep"] = "sleep"
@@ -467,6 +489,7 @@ class SleepStep(BaseWorkflowStep):
 
 class SwitchStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["switch"] = "switch"
@@ -482,6 +505,7 @@ class Task(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     name: str
@@ -517,7 +541,7 @@ class Task(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
@@ -535,9 +559,10 @@ class Task(BaseModel):
 
 class TaskTool(CreateToolRequest):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
-    inherited: Annotated[bool, Field(False, json_schema_extra={"readOnly": True})]
+    inherited: Annotated[StrictBool, Field(False, json_schema_extra={"readOnly": True})]
     """
     Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
@@ -545,6 +570,7 @@ class TaskTool(CreateToolRequest):
 
 class ToolCallStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["tool_call"] = "tool_call"
@@ -554,7 +580,7 @@ class ToolCallStep(BaseWorkflowStep):
     """
     The tool to run
     """
-    arguments: dict[str, Any]
+    arguments: dict[str, str]
     """
     The input parameters for the tool
     """
@@ -566,6 +592,7 @@ class UpdateTaskRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     description: str = ""
@@ -600,7 +627,7 @@ class UpdateTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
@@ -609,6 +636,7 @@ class UpdateTaskRequest(BaseModel):
 
 class WaitForInputStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["wait_for_input"] = "wait_for_input"
@@ -620,6 +648,7 @@ class WaitForInputStep(BaseWorkflowStep):
 
 class YieldStep(BaseWorkflowStep):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["yield"] = "yield"

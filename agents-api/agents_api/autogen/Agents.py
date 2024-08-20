@@ -13,6 +13,7 @@ from .Chat import DefaultChatSettings
 
 class Agent(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -59,6 +60,7 @@ class CreateAgentRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -92,6 +94,7 @@ class CreateAgentRequest(BaseModel):
 
 class CreateOrUpdateAgentRequest(CreateAgentRequest):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -130,6 +133,7 @@ class PatchAgentRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -167,6 +171,7 @@ class UpdateAgentRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None

@@ -5,6 +5,7 @@
 import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
 import type { Tasks_EmbedStep } from "./Tasks_EmbedStep";
 import type { Tasks_ErrorWorkflowStep } from "./Tasks_ErrorWorkflowStep";
+import type { Tasks_EvaluateStep } from "./Tasks_EvaluateStep";
 import type { Tasks_GetStep } from "./Tasks_GetStep";
 import type { Tasks_LogStep } from "./Tasks_LogStep";
 import type { Tasks_PromptStep } from "./Tasks_PromptStep";
@@ -21,6 +22,7 @@ export type Tasks_ParallelStep = Tasks_BaseWorkflowStep & {
    * The steps to run in parallel. Max concurrency will depend on the platform
    */
   parallel: Array<
+    | Tasks_EvaluateStep
     | Tasks_ToolCallStep
     | Tasks_YieldStep
     | Tasks_PromptStep

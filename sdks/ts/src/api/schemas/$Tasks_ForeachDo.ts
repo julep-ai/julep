@@ -19,6 +19,9 @@ export const $Tasks_ForeachDo = {
       description: `The steps to run for each iteration`,
       contains: [
         {
+          type: "Tasks_EvaluateStep",
+        },
+        {
           type: "Tasks_ToolCallStep",
         },
         {

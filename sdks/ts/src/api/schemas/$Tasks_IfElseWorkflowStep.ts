@@ -29,6 +29,9 @@ export const $Tasks_IfElseWorkflowStep = {
           description: `The steps to run if the condition is true`,
           contains: [
             {
+              type: "Tasks_EvaluateStep",
+            },
+            {
               type: "Tasks_ToolCallStep",
             },
             {
@@ -71,6 +74,9 @@ export const $Tasks_IfElseWorkflowStep = {
           type: "any-of",
           description: `The steps to run if the condition is false`,
           contains: [
+            {
+              type: "Tasks_EvaluateStep",
+            },
             {
               type: "Tasks_ToolCallStep",
             },

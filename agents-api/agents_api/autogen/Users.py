@@ -15,6 +15,7 @@ class CreateUserRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -40,6 +41,7 @@ class PatchUserRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -65,6 +67,7 @@ class UpdateUserRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -86,6 +89,7 @@ class UpdateUserRequest(BaseModel):
 
 class User(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -116,6 +120,7 @@ class User(BaseModel):
 
 class CreateOrUpdateUserRequest(CreateUserRequest):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: UUID

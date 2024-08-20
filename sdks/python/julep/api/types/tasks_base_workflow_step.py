@@ -25,7 +25,7 @@ from .tasks_sleep_for import TasksSleepFor
 
 class TasksBaseWorkflowStep_ToolCall(pydantic_v1.BaseModel):
     tool: CommonToolRef
-    arguments: typing.Dict[str, typing.Any]
+    arguments: typing.Dict[str, CommonPyExpression]
     kind: typing.Literal["tool_call"] = pydantic_v1.Field(
         alias="kind_", default="tool_call"
     )

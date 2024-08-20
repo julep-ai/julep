@@ -5,6 +5,7 @@ import typing
 
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
+from .common_py_expression import CommonPyExpression
 from .common_tool_ref import CommonToolRef
 
 
@@ -14,7 +15,7 @@ class TasksToolCallStep(pydantic_v1.BaseModel):
     The tool to run
     """
 
-    arguments: typing.Dict[str, typing.Any] = pydantic_v1.Field()
+    arguments: typing.Dict[str, CommonPyExpression] = pydantic_v1.Field()
     """
     The input parameters for the tool
     """

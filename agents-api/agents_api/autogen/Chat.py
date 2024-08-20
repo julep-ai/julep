@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Common import LogitBias
 from .Docs import DocReference
@@ -16,6 +16,7 @@ from .Tools import FunctionTool, NamedToolChoice
 
 class BaseChatOutput(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     index: int
@@ -31,6 +32,7 @@ class BaseChatOutput(BaseModel):
 
 class BaseChatResponse(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     usage: CompetionUsage | None = None
@@ -54,6 +56,7 @@ class BaseChatResponse(BaseModel):
 
 class BaseTokenLogProb(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     token: str
@@ -66,6 +69,7 @@ class BaseTokenLogProb(BaseModel):
 
 class ChatInputData(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     messages: Annotated[list[InputChatMLMessage], Field(min_length=1)]
@@ -88,6 +92,7 @@ class ChatOutputChunk(BaseChatOutput):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     delta: InputChatMLMessage
@@ -98,6 +103,7 @@ class ChatOutputChunk(BaseChatOutput):
 
 class ChunkChatResponse(BaseChatResponse):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     choices: list[ChatOutputChunk]
@@ -112,6 +118,7 @@ class CompetionUsage(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     completion_tokens: Annotated[
@@ -136,6 +143,7 @@ class CompetionUsage(BaseModel):
 
 class CompletionResponseFormat(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["text", "json_object"] = "text"
@@ -146,6 +154,7 @@ class CompletionResponseFormat(BaseModel):
 
 class LogProbResponse(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     content: Annotated[list[TokenLogProb] | None, Field(...)]
@@ -156,6 +165,7 @@ class LogProbResponse(BaseModel):
 
 class MessageChatResponse(BaseChatResponse):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     choices: list[SingleChatOutput | MultipleChatOutput]
@@ -170,6 +180,7 @@ class MultipleChatOutput(BaseChatOutput):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     messages: list[InputChatMLMessage]
@@ -177,6 +188,7 @@ class MultipleChatOutput(BaseChatOutput):
 
 class OpenAISettings(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     frequency_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
@@ -203,6 +215,7 @@ class SingleChatOutput(BaseChatOutput):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     message: InputChatMLMessage
@@ -210,6 +223,7 @@ class SingleChatOutput(BaseChatOutput):
 
 class TokenLogProb(BaseTokenLogProb):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     top_logprobs: list[BaseTokenLogProb]
@@ -217,17 +231,18 @@ class TokenLogProb(BaseTokenLogProb):
 
 class ChatInput(ChatInputData):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
-    remember: Annotated[bool, Field(False, json_schema_extra={"readOnly": True})]
+    remember: Annotated[StrictBool, Field(False, json_schema_extra={"readOnly": True})]
     """
     DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
     """
-    recall: bool = True
+    recall: StrictBool = True
     """
     Whether previous memories and docs should be recalled or not
     """
-    save: bool = True
+    save: StrictBool = True
     """
     Whether this interaction should be stored in the session history or not
     """
@@ -241,7 +256,7 @@ class ChatInput(ChatInputData):
     """
     Identifier of the model to be used
     """
-    stream: bool = False
+    stream: StrictBool = False
     """
     Indicates if the server should stream the response as it's generated
     """
@@ -305,6 +320,7 @@ class DefaultChatSettings(OpenAISettings):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     repetition_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
@@ -323,6 +339,7 @@ class DefaultChatSettings(OpenAISettings):
 
 class ChatSettings(DefaultChatSettings):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     model: Annotated[
@@ -335,7 +352,7 @@ class ChatSettings(DefaultChatSettings):
     """
     Identifier of the model to be used
     """
-    stream: bool = False
+    stream: StrictBool = False
     """
     Indicates if the server should stream the response as it's generated
     """

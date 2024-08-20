@@ -27,7 +27,7 @@ export const $Tasks_ToolCallStep = {
         arguments: {
           type: "dictionary",
           contains: {
-            properties: {},
+            type: "Common_PyExpression",
           },
           isRequired: true,
         },

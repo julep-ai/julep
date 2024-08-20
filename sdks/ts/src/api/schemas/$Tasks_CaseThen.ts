@@ -19,6 +19,9 @@ export const $Tasks_CaseThen = {
       description: `The steps to run if the condition is true`,
       contains: [
         {
+          type: "Tasks_EvaluateStep",
+        },
+        {
           type: "Tasks_ToolCallStep",
         },
         {
