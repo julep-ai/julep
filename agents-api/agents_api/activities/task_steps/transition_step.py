@@ -22,7 +22,6 @@ async def transition_step(
         transition_info.task_token = task_token
 
     # Create transition
-    activity.heartbeat("Creating transition in db")
     create_execution_transition_query(
         developer_id=context.developer_id,
         execution_id=context.execution.id,

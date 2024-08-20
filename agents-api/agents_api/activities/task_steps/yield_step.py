@@ -1,4 +1,3 @@
-import logging
 from typing import Callable
 
 from beartype import beartype
@@ -38,7 +37,7 @@ async def yield_step(context: StepContext) -> StepOutcome:
         return StepOutcome(output=arguments, transition_to=("step", transition_target))
 
     except BaseException as e:
-        logging.error(f"Error in log_step: {e}")
+        activity.logger.error(f"Error in yield_step: {e}")
         return StepOutcome(error=str(e))
 
 
