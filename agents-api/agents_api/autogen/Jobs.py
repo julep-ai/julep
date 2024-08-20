@@ -11,7 +11,6 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 class JobStatus(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -27,6 +26,7 @@ class JobStatus(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]

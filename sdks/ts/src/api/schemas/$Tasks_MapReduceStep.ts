@@ -25,13 +25,17 @@ export const $Tasks_MapReduceStep = {
           isRequired: true,
         },
         reduce: {
-          type: "all-of",
+          type: "any-of",
           description: `The expression to reduce the results (\`_\` is a list of outputs). If not provided, the results are returned as a list.`,
           contains: [
             {
               type: "Common_PyExpression",
             },
+            {
+              type: "Enum",
+            },
           ],
+          isRequired: true,
         },
       },
     },

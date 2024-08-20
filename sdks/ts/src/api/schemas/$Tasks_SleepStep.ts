@@ -16,7 +16,7 @@ export const $Tasks_SleepStep = {
         },
         sleep: {
           type: "all-of",
-          description: `The duration to sleep for`,
+          description: `The duration to sleep for (max 31 days)`,
           contains: [
             {
               type: "Tasks_SleepFor",

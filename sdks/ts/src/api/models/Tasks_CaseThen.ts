@@ -20,7 +20,7 @@ export type Tasks_CaseThen = {
   /**
    * The condition to evaluate
    */
-  case: Common_PyExpression;
+  case: Common_PyExpression | "_";
   /**
    * The steps to run if the condition is true
    */

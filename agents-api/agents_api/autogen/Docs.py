@@ -11,7 +11,6 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 class BaseDocSearchRequest(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     limit: Annotated[int, Field(10, ge=1, le=100)]
@@ -27,16 +26,10 @@ class CreateDocRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
-    title: Annotated[
-        str,
-        Field(
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
-        ),
-    ]
+    title: Annotated[str, Field(max_length=800)]
     """
     Title describing what this document contains
     """
@@ -48,7 +41,6 @@ class CreateDocRequest(BaseModel):
 
 class Doc(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -57,12 +49,7 @@ class Doc(BaseModel):
     """
     When this resource was created as UTC date-time
     """
-    title: Annotated[
-        str,
-        Field(
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
-        ),
-    ]
+    title: Annotated[str, Field(max_length=800)]
     """
     Title describing what this document contains
     """
@@ -74,7 +61,6 @@ class Doc(BaseModel):
 
 class DocOwner(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -83,7 +69,6 @@ class DocOwner(BaseModel):
 
 class DocReference(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     owner: DocOwner
@@ -101,7 +86,6 @@ class DocReference(BaseModel):
 
 class DocSearchResponse(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     docs: list[DocReference]
@@ -116,7 +100,6 @@ class DocSearchResponse(BaseModel):
 
 class EmbedQueryRequest(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     text: str | list[str]
@@ -127,7 +110,6 @@ class EmbedQueryRequest(BaseModel):
 
 class EmbedQueryResponse(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     vectors: list[list[float]]
@@ -138,7 +120,6 @@ class EmbedQueryResponse(BaseModel):
 
 class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
@@ -161,7 +142,6 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
 
 class Snippet(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     index: int
@@ -170,7 +150,6 @@ class Snippet(BaseModel):
 
 class TextOnlyDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     text: str
@@ -181,7 +160,6 @@ class TextOnlyDocSearchRequest(BaseDocSearchRequest):
 
 class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]

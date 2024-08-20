@@ -2,9 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Common_validPythonIdentifier = {
+export const $Common_JinjaTemplate = {
   type: "string",
-  description: `Valid python identifier names`,
-  maxLength: 40,
-  pattern: "^[^\\W0-9]\\w*$",
+  description: `A valid jinja template.`,
 } as const;

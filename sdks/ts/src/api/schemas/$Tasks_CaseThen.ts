@@ -5,11 +5,14 @@
 export const $Tasks_CaseThen = {
   properties: {
     case: {
-      type: "all-of",
+      type: "any-of",
       description: `The condition to evaluate`,
       contains: [
         {
           type: "Common_PyExpression",
+        },
+        {
+          type: "Enum",
         },
       ],
       isRequired: true,

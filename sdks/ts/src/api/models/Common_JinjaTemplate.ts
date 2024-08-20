@@ -2,10 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Entries_ChatMLTextContentPart = {
-  text: string;
-  /**
-   * The type (fixed to 'text')
-   */
-  type: "text";
-};
+/**
+ * A valid jinja template.
+ */
+export type Common_JinjaTemplate = string;

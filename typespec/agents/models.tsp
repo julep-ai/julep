@@ -20,8 +20,7 @@ model Agent {
     ...HasTimestamps;
 
     /** Name of the agent */
-    @maxLength(120)
-    name: identifierSafeUnicode = "";
+    name: identifierSafeUnicode = identifierSafeUnicode("");
 
     /** About the agent */
     about: string = "";

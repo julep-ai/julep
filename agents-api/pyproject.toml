@@ -71,12 +71,11 @@ datamodel-codegen \
   --strict-types bool \
   --strict-nullable \
   --allow-population-by-field-name \
-  --allow-extra-fields \
   --field-include-all-keys \
+  --reuse-model \
   --snake-case-field \
   --enum-field-as-literal all \
   --field-constraints \
-  --reuse-model \
   --use-operation-id-as-name \
   --use-schema-description \
   --use-field-description \
@@ -90,8 +89,8 @@ datamodel-codegen \
   --use-exact-imports \
   --use-standard-collections \
   --use-non-positive-negative-number-constrained-types \
-  --collapse-root-models \
   --target-python-version 3.11 \
+  --collapse-root-models \
   --openapi-scopes schemas \
   --keep-model-order \
   --disable-timestamp"""

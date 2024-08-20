@@ -20,10 +20,19 @@ export const $Tasks_YieldStep = {
           isRequired: true,
         },
         arguments: {
-          type: "dictionary",
-          contains: {
-            type: "Common_PyExpression",
-          },
+          type: "any-of",
+          description: `The input parameters for the subworkflow (defaults to last step output)`,
+          contains: [
+            {
+              type: "dictionary",
+              contains: {
+                type: "Common_PyExpression",
+              },
+            },
+            {
+              type: "Enum",
+            },
+          ],
           isRequired: true,
         },
       },

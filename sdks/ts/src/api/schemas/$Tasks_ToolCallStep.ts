@@ -25,10 +25,19 @@ export const $Tasks_ToolCallStep = {
           isRequired: true,
         },
         arguments: {
-          type: "dictionary",
-          contains: {
-            type: "Common_PyExpression",
-          },
+          type: "any-of",
+          description: `The input parameters for the tool (defaults to last step output)`,
+          contains: [
+            {
+              type: "dictionary",
+              contains: {
+                type: "Common_PyExpression",
+              },
+            },
+            {
+              type: "Enum",
+            },
+          ],
           isRequired: true,
         },
       },

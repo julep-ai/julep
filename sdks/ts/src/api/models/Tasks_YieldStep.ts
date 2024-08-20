@@ -11,7 +11,7 @@ export type Tasks_YieldStep = Tasks_BaseWorkflowStep & {
    */
   workflow: string;
   /**
-   * The input parameters for the subworkflow
+   * The input parameters for the subworkflow (defaults to last step output)
    */
-  arguments: Record<string, Common_PyExpression>;
+  arguments: Record<string, Common_PyExpression> | "_";
 };

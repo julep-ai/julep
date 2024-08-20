@@ -15,7 +15,6 @@ class CreateSessionRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     user: UUID | None = None
@@ -53,7 +52,6 @@ class PatchSessionRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     situation: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{"\n\n"}}\n\n{%- if agent.instructions -%}\nInstructions:{{"\n"}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{"\n"}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{"\n"}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{"\n"}}\n{%- endif -%}\n\n{%- if tools -%}\nTools:{{"\n"}}\n  {%- for tool in tools -%}\n    {%- if tool.type == "function" -%}\n      - {{tool.function.name}}\n      {%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}{{"\n"}}\n    {%- else -%}\n      - {{ 0/0 }} {# Error: Other tool types aren\'t supported yet. #}\n    {%- endif -%}\n  {%- endfor -%}\n{{"\n\n"}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{"\n"}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{"\n"}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{"\n"}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{"\n"}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
@@ -77,7 +75,6 @@ class PatchSessionRequest(BaseModel):
 
 class Session(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     situation: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{"\n\n"}}\n\n{%- if agent.instructions -%}\nInstructions:{{"\n"}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{"\n"}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{"\n"}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{"\n"}}\n{%- endif -%}\n\n{%- if tools -%}\nTools:{{"\n"}}\n  {%- for tool in tools -%}\n    {%- if tool.type == "function" -%}\n      - {{tool.function.name}}\n      {%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}{{"\n"}}\n    {%- else -%}\n      - {{ 0/0 }} {# Error: Other tool types aren\'t supported yet. #}\n    {%- endif -%}\n  {%- endfor -%}\n{{"\n\n"}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{"\n"}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{"\n"}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{"\n"}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{"\n"}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
@@ -118,7 +115,6 @@ class Session(BaseModel):
 
 class SingleAgentMultiUserSession(Session):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     agent: UUID
@@ -127,7 +123,6 @@ class SingleAgentMultiUserSession(Session):
 
 class SingleAgentNoUserSession(Session):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     agent: UUID
@@ -135,7 +130,6 @@ class SingleAgentNoUserSession(Session):
 
 class SingleAgentSingleUserSession(Session):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     agent: UUID
@@ -148,7 +142,6 @@ class UpdateSessionRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     situation: str = '{%- if agent.name -%}\nYou are {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if agent.about -%}\nAbout you: {{agent.name}}.{{" "}}\n{%- endif -%}\n\n{%- if user -%}\nYou are talking to a user\n  {%- if user.name -%}{{" "}} and their name is {{user.name}}\n    {%- if user.about -%}. About the user: {{user.about}}.{%- else -%}.{%- endif -%}\n  {%- endif -%}\n{%- endif -%}\n\n{{"\n\n"}}\n\n{%- if agent.instructions -%}\nInstructions:{{"\n"}}\n  {%- if agent.instructions is string -%}\n    {{agent.instructions}}{{"\n"}}\n  {%- else -%}\n    {%- for instruction in agent.instructions -%}\n      - {{instruction}}{{"\n"}}\n    {%- endfor -%}\n  {%- endif -%}\n  {{"\n"}}\n{%- endif -%}\n\n{%- if tools -%}\nTools:{{"\n"}}\n  {%- for tool in tools -%}\n    {%- if tool.type == "function" -%}\n      - {{tool.function.name}}\n      {%- if tool.function.description -%}: {{tool.function.description}}{%- endif -%}{{"\n"}}\n    {%- else -%}\n      - {{ 0/0 }} {# Error: Other tool types aren\'t supported yet. #}\n    {%- endif -%}\n  {%- endfor -%}\n{{"\n\n"}}\n{%- endif -%}\n\n{%- if docs -%}\nRelevant documents:{{"\n"}}\n  {%- for doc in docs -%}\n    {{doc.title}}{{"\n"}}\n    {%- if doc.content is string -%}\n      {{doc.content}}{{"\n"}}\n    {%- else -%}\n      {%- for snippet in doc.content -%}\n        {{snippet}}{{"\n"}}\n      {%- endfor -%}\n    {%- endif -%}\n    {{"---"}}\n  {%- endfor -%}\n{%- endif -%}'
@@ -172,7 +165,6 @@ class UpdateSessionRequest(BaseModel):
 
 class CreateOrUpdateSessionRequest(CreateSessionRequest):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -207,7 +199,6 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
 
 class MultiAgentMultiUserSession(Session):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     agents: list[UUID]
@@ -216,7 +207,6 @@ class MultiAgentMultiUserSession(Session):
 
 class MultiAgentNoUserSession(Session):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     agents: list[UUID]
@@ -224,7 +214,6 @@ class MultiAgentNoUserSession(Session):
 
 class MultiAgentSingleUserSession(Session):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     agents: list[UUID]

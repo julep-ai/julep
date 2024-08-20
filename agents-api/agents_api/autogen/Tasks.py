@@ -15,13 +15,12 @@ from .Docs import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from .Entries import InputChatMLMessage
+from .Entries import ChatMLImageContentPart
 from .Tools import CreateToolRequest
 
 
 class BaseWorkflowStep(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal[
@@ -51,10 +50,9 @@ class BaseWorkflowStep(BaseModel):
 
 class CaseThen(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
-    case: str
+    case: Literal["_"] | str
     """
     The condition to evaluate
     """
@@ -78,13 +76,26 @@ class CaseThen(BaseModel):
     """
 
 
+class Content(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: str
+    """
+    A valid jinja template.
+    """
+    type: Literal["text"] = "text"
+    """
+    The type (fixed to 'text')
+    """
+
+
 class CreateTaskRequest(BaseModel):
     """
     Payload for creating a task
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     name: str
@@ -129,7 +140,6 @@ class CreateTaskRequest(BaseModel):
 
 class EmbedStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["embed"] = "embed"
@@ -141,7 +151,6 @@ class EmbedStep(BaseWorkflowStep):
 
 class ErrorWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["error"] = "error"
@@ -153,7 +162,6 @@ class ErrorWorkflowStep(BaseWorkflowStep):
 
 class EvaluateStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["evaluate"] = "evaluate"
@@ -165,7 +173,6 @@ class EvaluateStep(BaseWorkflowStep):
 
 class ForeachDo(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     in_: Annotated[str, Field(alias="in")]
@@ -194,7 +201,6 @@ class ForeachDo(BaseModel):
 
 class ForeachStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["foreach"] = "foreach"
@@ -206,7 +212,6 @@ class ForeachStep(BaseWorkflowStep):
 
 class GetStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["get"] = "get"
@@ -218,7 +223,6 @@ class GetStep(BaseWorkflowStep):
 
 class IfElseWorkflowStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["if_else"] = "if_else"
@@ -267,7 +271,6 @@ class IfElseWorkflowStep(BaseWorkflowStep):
 
 class LogStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["log"] = "log"
@@ -279,7 +282,6 @@ class LogStep(BaseWorkflowStep):
 
 class MapOver(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     over: str
@@ -294,7 +296,6 @@ class MapOver(BaseModel):
 
 class MapReduceStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["map_reduce"] = "map_reduce"
@@ -302,7 +303,7 @@ class MapReduceStep(BaseWorkflowStep):
     """
     The steps to run for each iteration
     """
-    reduce: str | None = None
+    reduce: Literal["_"] | str = "_"
     """
     The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list.
     """
@@ -310,7 +311,6 @@ class MapReduceStep(BaseWorkflowStep):
 
 class ParallelStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["parallel"] = "parallel"
@@ -340,7 +340,6 @@ class PatchTaskRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     description: str = ""
@@ -385,13 +384,42 @@ class PatchTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
+class PromptItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    role: Literal[
+        "user",
+        "assistant",
+        "system",
+        "function",
+        "function_response",
+        "function_call",
+        "auto",
+    ]
+    """
+    The role of the message
+    """
+    content: list[str] | list[Content | ChatMLImageContentPart] | str
+    """
+    The content parts of the message
+    """
+    name: str | None = None
+    """
+    Name
+    """
+    continue_: Annotated[StrictBool | None, Field(None, alias="continue")]
+    """
+    Whether to continue this message or return a new one
+    """
+
+
 class PromptStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["prompt"] = "prompt"
-    prompt: str | list[InputChatMLMessage]
+    prompt: list[PromptItem] | str
     """
     The prompt to run
     """
@@ -403,7 +431,6 @@ class PromptStep(BaseWorkflowStep):
 
 class ReturnStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["return"] = "return"
@@ -415,7 +442,6 @@ class ReturnStep(BaseWorkflowStep):
 
 class SearchStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["search"] = "search"
@@ -427,7 +453,6 @@ class SearchStep(BaseWorkflowStep):
 
 class SetKey(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     key: str
@@ -442,11 +467,10 @@ class SetKey(BaseModel):
 
 class SetStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["set"] = "set"
-    set: SetKey | list[SetKey]
+    set: SetKey
     """
     The value to set
     """
@@ -454,22 +478,21 @@ class SetStep(BaseWorkflowStep):
 
 class SleepFor(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
-    seconds: Annotated[int, Field(0, ge=0)]
+    seconds: Annotated[int, Field(0, ge=0, le=60)]
     """
     The number of seconds to sleep for
     """
-    minutes: Annotated[int, Field(0, ge=0)]
+    minutes: Annotated[int, Field(0, ge=0, le=60)]
     """
     The number of minutes to sleep for
     """
-    hours: Annotated[int, Field(0, ge=0)]
+    hours: Annotated[int, Field(0, ge=0, le=24)]
     """
     The number of hours to sleep for
     """
-    days: Annotated[int, Field(0, ge=0)]
+    days: Annotated[int, Field(0, ge=0, le=30)]
     """
     The number of days to sleep for
     """
@@ -477,23 +500,21 @@ class SleepFor(BaseModel):
 
 class SleepStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["sleep"] = "sleep"
     sleep: SleepFor
     """
-    The duration to sleep for
+    The duration to sleep for (max 31 days)
     """
 
 
 class SwitchStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["switch"] = "switch"
-    switch: list[CaseThen]
+    switch: Annotated[list[CaseThen], Field(min_length=1)]
     """
     The cond tree
     """
@@ -505,7 +526,6 @@ class Task(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     name: str
@@ -559,7 +579,6 @@ class Task(BaseModel):
 
 class TaskTool(CreateToolRequest):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     inherited: Annotated[StrictBool, Field(False, json_schema_extra={"readOnly": True})]
@@ -570,7 +589,6 @@ class TaskTool(CreateToolRequest):
 
 class ToolCallStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["tool_call"] = "tool_call"
@@ -580,9 +598,9 @@ class ToolCallStep(BaseWorkflowStep):
     """
     The tool to run
     """
-    arguments: dict[str, str]
+    arguments: dict[str, str] | Literal["_"] = "_"
     """
-    The input parameters for the tool
+    The input parameters for the tool (defaults to last step output)
     """
 
 
@@ -592,7 +610,6 @@ class UpdateTaskRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     description: str = ""
@@ -636,7 +653,6 @@ class UpdateTaskRequest(BaseModel):
 
 class WaitForInputStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["wait_for_input"] = "wait_for_input"
@@ -648,7 +664,6 @@ class WaitForInputStep(BaseWorkflowStep):
 
 class YieldStep(BaseWorkflowStep):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     kind_: Literal["yield"] = "yield"
@@ -656,7 +671,7 @@ class YieldStep(BaseWorkflowStep):
     """
     The subworkflow to run
     """
-    arguments: dict[str, str]
+    arguments: dict[str, str] | Literal["_"] = "_"
     """
-    The input parameters for the subworkflow
+    The input parameters for the subworkflow (defaults to last step output)
     """

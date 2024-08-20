@@ -21,8 +21,9 @@ namespace Tasks;
 //
 
 /** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
-alias ExpressionObject = Record<PyExpression>;
-alias NestedExpressionObject = Record<PyExpression | ExpressionObject>;
+alias TypedExpression<T> = PyExpression;
+alias ExpressionObject<T> = Record<TypedExpression<T>>;
+alias NestedExpressionObject<T> = Record<TypedExpression<T> | ExpressionObject<T>>;
 
 @discriminator("kind_")
 model BaseWorkflowStep {
@@ -61,15 +62,15 @@ model ToolCallStep extends BaseWorkflowStep {
     /** The tool to run */
     tool: toolRef;
 
-    /** The input parameters for the tool */
-    arguments: ExpressionObject;
+    /** The input parameters for the tool (defaults to last step output) */
+    arguments: ExpressionObject<unknown> | "_" = "_";
 }
 
 model PromptStep extends BaseWorkflowStep {
     kind_: "prompt" = "prompt";
 
     /** The prompt to run */
-    prompt: string | InputChatMLMessage[];
+    prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
     /** Settings for the prompt */
     settings: ChatSettings;
@@ -79,21 +80,21 @@ model EvaluateStep extends BaseWorkflowStep {
     kind_: "evaluate" = "evaluate";
 
     /** The expression to evaluate */
-    evaluate: ExpressionObject;
+    evaluate: ExpressionObject<unknown>;
 }
 
 model WaitForInputStep extends BaseWorkflowStep {
     kind_: "wait_for_input" = "wait_for_input";
 
     /** Any additional info or data */
-    wait_for_input: ExpressionObject;
+    wait_for_input: ExpressionObject<unknown>;
 }
 
 model LogStep extends BaseWorkflowStep {
     kind_: "log" = "log";
 
     /** The value to log */
-    log: PyExpression;
+    log: TypedExpression<string>;
 }
 
 ////////////////////////
@@ -130,14 +131,14 @@ model SetKey {
     key: string;
 
     /** The value to set */
-    value: PyExpression;
+    value: TypedExpression<unknown>;
 }
 
 model SetStep extends BaseWorkflowStep {
     kind_: "set" = "set";
 
     /** The value to set */
-    set: SetKey | SetKey[];
+    set: SetKey;
 }
 
 ///////////////////////
@@ -154,7 +155,7 @@ model ParallelStep extends BaseWorkflowStep {
 
 model ForeachDo {
     /** The variable to iterate over */
-    in: PyExpression;
+    in: TypedExpression<Array<unknown>>;
 
     /** The steps to run for each iteration */
     do: NonConditionalWorkflowStep;
@@ -169,7 +170,7 @@ model ForeachStep extends BaseWorkflowStep {
 
 model MapOver {
     /** The variable to iterate over */
-    over: PyExpression;
+    over: TypedExpression<Array<unknown>>;
 
     /** The subworkflow to run for each iteration */
     workflow: string;
@@ -182,7 +183,7 @@ model MapReduceStep extends BaseWorkflowStep {
     map: MapOver;
 
     /** The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list. */
-    reduce?: PyExpression;
+    reduce: TypedExpression<unknown> | "_" = "_";
 }
 
 /////////////////////////
@@ -193,7 +194,7 @@ model IfElseWorkflowStep extends BaseWorkflowStep {
     kind_: "if_else" = "if_else";
 
     /** The condition to evaluate */
-    `if`: PyExpression;
+    `if`: TypedExpression<boolean>;
 
     /** The steps to run if the condition is true */
     then: NonConditionalWorkflowStep;
@@ -204,7 +205,7 @@ model IfElseWorkflowStep extends BaseWorkflowStep {
 
 model CaseThen {
     /** The condition to evaluate */
-    case: PyExpression;
+    case: TypedExpression<boolean> | "_";  // To support '_' as a value
 
     /** The steps to run if the condition is true */
     then: NonConditionalWorkflowStep;
@@ -214,6 +215,7 @@ model SwitchStep extends BaseWorkflowStep {
     kind_: "switch" = "switch";
 
     /** The cond tree */
+    @minItems(1)
     switch: CaseThen[];
 }
 
@@ -227,8 +229,8 @@ model YieldStep extends BaseWorkflowStep {
     /** The subworkflow to run */
     workflow: string;
 
-    /** The input parameters for the subworkflow */
-    arguments: ExpressionObject;
+    /** The input parameters for the subworkflow (defaults to last step output) */
+    arguments: ExpressionObject<unknown> | "_" = "_";
 }
 
 model ErrorWorkflowStep extends BaseWorkflowStep {
@@ -241,25 +243,29 @@ model ErrorWorkflowStep extends BaseWorkflowStep {
 model SleepFor {
     /** The number of seconds to sleep for */
     @minValue(0)
+    @maxValue(60)
     seconds: uint16 = 0;
 
     /** The number of minutes to sleep for */
     @minValue(0)
+    @maxValue(60)
     minutes: uint16 = 0;
 
     /** The number of hours to sleep for */
     @minValue(0)
+    @maxValue(24)
     hours: uint16 = 0;
 
     /** The number of days to sleep for */
     @minValue(0)
+    @maxValue(30)
     days: uint16 = 0;
 }
 
 model SleepStep extends BaseWorkflowStep {
     kind_: "sleep" = "sleep";
 
-    /** The duration to sleep for */
+    /** The duration to sleep for (max 31 days) */
     sleep: SleepFor;
 }
 
@@ -267,5 +273,5 @@ model ReturnStep extends BaseWorkflowStep {
     kind_: "return" = "return";
 
     /** The value to return */
-    `return`: ExpressionObject;
+    `return`: ExpressionObject<unknown>;
 }

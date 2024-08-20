@@ -12,14 +12,10 @@ export const $Docs_CreateDocRequest = {
       },
     },
     title: {
-      type: "all-of",
+      type: "string",
       description: `Title describing what this document contains`,
-      contains: [
-        {
-          type: "Common_identifierSafeUnicode",
-        },
-      ],
       isRequired: true,
+      maxLength: 800,
     },
     content: {
       type: "any-of",

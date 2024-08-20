@@ -20,6 +20,8 @@ class YamlMiddleware:
         ]:
             return await call_next(request)
 
+        # TODO: This should be wrapped in a try/except block to catch any parsing errors
+        #
         # Parse the YAML body into a Python object
         body = yaml.load(await request.body(), yaml.CSafeLoader)
         request._json = body

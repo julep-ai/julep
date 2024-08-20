@@ -9,5 +9,5 @@ export type Tasks_SetStep = Tasks_BaseWorkflowStep & {
   /**
    * The value to set
    */
-  set: Tasks_SetKey | Array<Tasks_SetKey>;
+  set: Tasks_SetKey;
 };

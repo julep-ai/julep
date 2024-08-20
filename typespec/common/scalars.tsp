@@ -12,11 +12,13 @@ scalar uuid extends string;
  * See: https://unicode.org/reports/tr31/
  * See: https://www.unicode.org/reports/tr39/#Identifier_Characters
  */
+@maxLength(120)
 @pattern("^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$")
 scalar identifierSafeUnicode extends string;
 
 /** Valid python identifier names */
 @pattern("^[^\\W0-9]\\w*$")
+@maxLength(40)
 scalar validPythonIdentifier extends string;
 
 /** Limit the number of results */
@@ -52,3 +54,6 @@ scalar toolRef extends string;
 
 /** A simple python expression compatible with SimpleEval. */
 scalar PyExpression extends string;
+
+/** A valid jinja template. */
+scalar JinjaTemplate extends string;

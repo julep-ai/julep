@@ -15,17 +15,11 @@ export const $Tasks_SetStep = {
           isRequired: true,
         },
         set: {
-          type: "any-of",
+          type: "all-of",
           description: `The value to set`,
           contains: [
             {
               type: "Tasks_SetKey",
-            },
-            {
-              type: "array",
-              contains: {
-                type: "Tasks_SetKey",
-              },
             },
           ],
           isRequired: true,

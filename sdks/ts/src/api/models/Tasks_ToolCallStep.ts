@@ -12,7 +12,7 @@ export type Tasks_ToolCallStep = Tasks_BaseWorkflowStep & {
    */
   tool: Common_toolRef;
   /**
-   * The input parameters for the tool
+   * The input parameters for the tool (defaults to last step output)
    */
-  arguments: Record<string, Common_PyExpression>;
+  arguments: Record<string, Common_PyExpression> | "_";
 };

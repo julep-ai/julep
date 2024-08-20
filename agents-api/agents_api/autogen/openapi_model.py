@@ -38,6 +38,8 @@ CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
 CreateOrUpdateTaskRequest = CreateTaskRequest
 ChatResponse = ChunkChatResponse | MessageChatResponse
+ChatMLTextContentPart = Content
+InputChatMLMessage = Message
 
 
 # Custom types (not generated correctly)

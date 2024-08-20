@@ -19,13 +19,7 @@ export const $Tasks_PromptStep = {
           description: `The prompt to run`,
           contains: [
             {
-              type: "string",
-            },
-            {
-              type: "array",
-              contains: {
-                type: "Entries_InputChatMLMessage",
-              },
+              type: "Common_JinjaTemplate",
             },
           ],
           isRequired: true,

@@ -14,5 +14,5 @@ export type Tasks_MapReduceStep = Tasks_BaseWorkflowStep & {
   /**
    * The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list.
    */
-  reduce?: Common_PyExpression;
+  reduce: Common_PyExpression | "_";
 };
