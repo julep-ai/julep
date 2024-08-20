@@ -40,18 +40,24 @@ STEP_TO_ACTIVITY = {
     # PromptStep: prompt_step,
     # ToolCallStep: tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
-    LogStep: task_steps.log_step,
     SwitchStep: task_steps.switch_step,
-}
-
-# Use few local activities (currently experimental)
-STEP_TO_LOCAL_ACTIVITY = {
-    # NOTE: local activities are directly called in the workflow executor
-    #       They MUST NOT FAIL, otherwise they will crash the workflow
+    # FIXME: These should be moved to local activities
+    #        once temporal has fixed error handling for local activities
+    LogStep: task_steps.log_step,
     EvaluateStep: task_steps.evaluate_step,
     ReturnStep: task_steps.return_step,
     YieldStep: task_steps.yield_step,
     IfElseWorkflowStep: task_steps.if_else_step,
+}
+
+# TODO: Avoid local activities for now (currently experimental)
+STEP_TO_LOCAL_ACTIVITY = {
+    # # NOTE: local activities are directly called in the workflow executor
+    # #       They MUST NOT FAIL, otherwise they will crash the workflow
+    # EvaluateStep: task_steps.evaluate_step,
+    # ReturnStep: task_steps.return_step,
+    # YieldStep: task_steps.yield_step,
+    # IfElseWorkflowStep: task_steps.if_else_step,
 }
 
 
@@ -131,7 +137,7 @@ class TaskExecutionWorkflow:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
                 raise ApplicationError(
-                    f"{step.__class__.__name__} step threw error: {error}"
+                    f"{type(step).__name__} step threw error: {error}"
                 )
 
             case LogStep(), StepOutcome(output=output):
