@@ -1,5 +1,3 @@
-import logging
-
 from beartype import beartype
 from temporalio import activity
 
@@ -23,7 +21,7 @@ async def evaluate_step(context: StepContext) -> StepOutcome:
         return result
 
     except BaseException as e:
-        logging.error(f"Error in evaluate_step: {e}")
+        activity.logger.error(f"Error in evaluate_step: {e}")
         return StepOutcome(error=str(e))
 
 

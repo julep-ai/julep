@@ -1,4 +1,5 @@
 from datetime import timedelta
+from inspect import getmembers, isfunction
 from typing import Any
 
 from temporalio.client import Client
@@ -11,23 +12,12 @@ def create_worker(client: Client) -> Any:
     then create a worker to listen for tasks on the configured task queue.
     """
 
+    from ..activities import task_steps
     from ..activities.demo import demo_activity
     from ..activities.embed_docs import embed_docs
     from ..activities.mem_mgmt import mem_mgmt
     from ..activities.mem_rating import mem_rating
     from ..activities.summarization import summarization
-    from ..activities.task_steps import (
-        evaluate_step,
-        if_else_step,
-        log_step,
-        prompt_step,
-        return_step,
-        switch_step,
-        tool_call_step,
-        transition_step,
-        wait_for_input_step,
-        yield_step,
-    )
     from ..activities.truncation import truncation
     from ..env import (
         temporal_task_queue,
@@ -40,18 +30,7 @@ def create_worker(client: Client) -> Any:
     from ..workflows.task_execution import TaskExecutionWorkflow
     from ..workflows.truncation import TruncationWorkflow
 
-    task_activities = [
-        evaluate_step,
-        if_else_step,
-        log_step,
-        prompt_step,
-        return_step,
-        switch_step,
-        tool_call_step,
-        transition_step,
-        wait_for_input_step,
-        yield_step,
-    ]
+    task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
 
     # Initialize the worker with the specified task queue, workflows, and activities
     worker = Worker(

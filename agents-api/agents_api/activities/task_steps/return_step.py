@@ -1,5 +1,3 @@
-import logging
-
 from temporalio import activity
 
 from ...activities.task_steps.utils import simple_eval_dict
@@ -24,7 +22,7 @@ async def return_step(context: StepContext) -> StepOutcome:
         return result
 
     except BaseException as e:
-        logging.error(f"Error in log_step: {e}")
+        activity.logger.error(f"Error in log_step: {e}")
         return StepOutcome(error=str(e))
 
 
