@@ -26,6 +26,10 @@ with workflow.unsafe.imports_passed_through():
         WaitForInputStep,
         Workflow,
         YieldStep,
+        ForeachStep,
+        ForeachDo,
+        SwitchStep,
+        MapReduceStep,
     )
     from ..common.protocol.tasks import (
         ExecutionInput,
@@ -193,6 +197,74 @@ class TaskExecutionWorkflow:
                     TaskExecutionWorkflow.run,
                     args=if_else_args,
                 )
+
+            case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(
+                output=items
+            ):
+                for i, item in enumerate(items):
+                    # Create a faux workflow
+                    foreach_wf_name = (
+                        f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
+                    )
+
+                    foreach_task = execution_input.task.model_copy()
+                    foreach_task.workflows = [
+                        Workflow(name=foreach_wf_name, steps=[do_step])
+                    ]
+
+                    # Create a new execution input
+                    foreach_execution_input = execution_input.model_copy()
+                    foreach_execution_input.task = foreach_task
+
+                    # Set the next target to the chosen branch
+                    foreach_next_target = TransitionTarget(workflow=foreach_wf_name, step=0)
+
+                    foreach_args = [
+                        foreach_execution_input,
+                        foreach_next_target,
+                        previous_inputs + [item],
+                    ]
+
+                    # Execute the chosen branch and come back here
+                    state.output = await workflow.execute_child_workflow(
+                        TaskExecutionWorkflow.run,
+                        args=foreach_args,
+                    )
+            
+            case SwitchStep(switch=cases), StepOutcome(
+                output=int(case_num)
+            ):
+                if case_num > 0:
+                    chosen_branch = cases[case_num]
+
+                    # Create a faux workflow
+                    case_wf_name = (
+                        f"`{context.cursor.workflow}`[{context.cursor.step}].case"
+                    )
+
+                    case_task = execution_input.task.model_copy()
+                    case_task.workflows = [
+                        Workflow(name=case_wf_name, steps=[chosen_branch.then])
+                    ]
+
+                    # Create a new execution input
+                    case_execution_input = execution_input.model_copy()
+                    case_execution_input.task = case_task
+
+                    # Set the next target to the chosen branch
+                    case_next_target = TransitionTarget(workflow=case_wf_name, step=0)
+
+                    case_args = [
+                        case_execution_input,
+                        case_next_target,
+                        previous_inputs,
+                    ]
+
+                    # Execute the chosen branch and come back here
+                    state.output = await workflow.execute_child_workflow(
+                        TaskExecutionWorkflow.run,
+                        args=case_args,
+                    )
 
             case SleepStep(
                 sleep=SleepFor(

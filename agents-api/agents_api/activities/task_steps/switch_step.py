@@ -12,8 +12,6 @@ from ...env import testing
 
 @beartype
 async def switch_step(context: StepContext) -> StepOutcome:
-    # NOTE: This activity is only for logging, so we just evaluate the expression
-    #       Hence, it's a local activity and SHOULD NOT fail
     try:
         assert isinstance(context.current_step, SwitchStep)
 
