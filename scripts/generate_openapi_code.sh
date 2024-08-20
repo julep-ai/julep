@@ -3,6 +3,9 @@
 # Turn on echo command
 set -x
 
+# Exit on error
+set -e
+
 cd typespec/ && \
     tsp compile .
 cd -

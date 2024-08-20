@@ -22,16 +22,13 @@ namespace Tasks;
 
 /** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
 alias ExpressionObject = Record<PyExpression>;
+alias NestedExpressionObject = Record<PyExpression | ExpressionObject>;
 
 @discriminator("kind_")
 model BaseWorkflowStep {
     /** The kind of step */
     kind_: WorkflowStepKind;
 }
-
-BREAKING THIS FILE INTENTIONALLY SO IT DOESTN'T GET COMPILED
-BECAUSE IT SEEMS LIKE TYPESPEC HAS A BUG WHERE IT ADDS `{}` TO THE RENDERED `NonConditionalWorkflowStep`
-YOU CAN COMMENT THIS AND COMPILE IF YOU KNOW WHAT YOU'RE DOING
 
 alias NonConditionalWorkflowStep =
     | EvaluateStep
@@ -65,7 +62,7 @@ model ToolCallStep extends BaseWorkflowStep {
     tool: toolRef;
 
     /** The input parameters for the tool */
-    arguments: Record<unknown>;
+    arguments: ExpressionObject;
 }
 
 model PromptStep extends BaseWorkflowStep {

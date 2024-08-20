@@ -30,6 +30,7 @@ tenacity = "^9.0.0"
 beartype = "^0.18.5"
 pydantic-partial = "^0.5.5"
 simpleeval = "^0.9.13"
+lz4 = "^4.3.3"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
@@ -66,9 +67,12 @@ datamodel-codegen \
   --input-file-type openapi \
   --output agents_api/autogen/ \
   --output-model-type pydantic_v2.BaseModel \
+  --strict-types bool \
   --strict-nullable \
   --allow-population-by-field-name \
+  --allow-extra-fields \
   --field-include-all-keys \
+  --snake-case-field \
   --enum-field-as-literal all \
   --field-constraints \
   --reuse-model \
@@ -86,7 +90,7 @@ datamodel-codegen \
   --use-standard-collections \
   --use-non-positive-negative-number-constrained-types \
   --collapse-root-models \
-  --target-python-version 3.10 \
+  --target-python-version 3.11 \
   --openapi-scopes schemas \
   --keep-model-order \
   --disable-timestamp"""

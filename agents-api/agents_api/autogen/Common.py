@@ -38,6 +38,7 @@ class Offset(RootModel[int]):
 
 class ResourceCreatedResponse(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -56,6 +57,7 @@ class ResourceCreatedResponse(BaseModel):
 
 class ResourceDeletedResponse(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -74,6 +76,7 @@ class ResourceDeletedResponse(BaseModel):
 
 class ResourceUpdatedResponse(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: UUID

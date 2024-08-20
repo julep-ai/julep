@@ -15,6 +15,7 @@ class ChosenToolCall(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -34,6 +35,7 @@ class CreateToolRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -52,6 +54,7 @@ class CreateToolRequest(BaseModel):
 
 class FunctionCallOption(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     name: str
@@ -66,6 +69,7 @@ class FunctionDef(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     name: Any | None = None
@@ -90,6 +94,7 @@ class FunctionDef(BaseModel):
 
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -108,6 +113,7 @@ class PatchToolRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"] | None = None
@@ -126,6 +132,7 @@ class PatchToolRequest(BaseModel):
 
 class Tool(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -153,6 +160,7 @@ class Tool(BaseModel):
 
 class ToolResponse(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -168,6 +176,7 @@ class UpdateToolRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -186,6 +195,7 @@ class UpdateToolRequest(BaseModel):
 
 class ChosenFunctionCall(ChosenToolCall):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function"] = "function"
@@ -197,6 +207,7 @@ class ChosenFunctionCall(ChosenToolCall):
 
 class FunctionTool(Tool):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function"] = "function"
@@ -209,6 +220,7 @@ class FunctionTool(Tool):
 
 class NamedFunctionChoice(NamedToolChoice):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function"] = "function"

@@ -65,7 +65,7 @@ class TasksTaskMainItem_Evaluate(pydantic_v1.BaseModel):
 
 class TasksTaskMainItem_ToolCall(pydantic_v1.BaseModel):
     tool: CommonToolRef
-    arguments: typing.Dict[str, typing.Any]
+    arguments: typing.Dict[str, CommonPyExpression]
     kind: typing.Literal["tool_call"] = pydantic_v1.Field(
         alias="kind_", default="tool_call"
     )

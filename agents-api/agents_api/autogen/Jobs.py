@@ -6,11 +6,12 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 
 class JobStatus(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -36,7 +37,7 @@ class JobStatus(BaseModel):
     """
     Reason for the current state of the job
     """
-    has_progress: bool = False
+    has_progress: StrictBool = False
     """
     Whether this Job supports progress updates
     """

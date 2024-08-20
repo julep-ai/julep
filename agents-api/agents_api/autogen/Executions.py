@@ -15,6 +15,7 @@ class CreateExecutionRequest(BaseModel):
     """
 
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     input: dict[str, Any]
@@ -26,6 +27,7 @@ class CreateExecutionRequest(BaseModel):
 
 class Execution(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     task_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -65,6 +67,7 @@ class Execution(BaseModel):
 
 class TaskTokenResumeExecutionRequest(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     status: Literal["running"] = "running"
@@ -76,6 +79,7 @@ class TaskTokenResumeExecutionRequest(BaseModel):
 
 class Transition(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     type: Annotated[
@@ -102,6 +106,7 @@ class Transition(BaseModel):
 
 class TransitionTarget(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     workflow: Annotated[
@@ -120,6 +125,7 @@ class TransitionTarget(BaseModel):
 
 class UpdateExecutionRequest(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     status: Literal[
@@ -135,6 +141,7 @@ class UpdateExecutionRequest(BaseModel):
 
 class ResumeExecutionRequest(UpdateExecutionRequest):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     status: Literal["running"] = "running"
@@ -146,6 +153,7 @@ class ResumeExecutionRequest(UpdateExecutionRequest):
 
 class StopExecutionRequest(UpdateExecutionRequest):
     model_config = ConfigDict(
+        extra="allow",
         populate_by_name=True,
     )
     status: Literal["cancelled"] = "cancelled"
