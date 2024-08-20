@@ -38,7 +38,9 @@ async def update_execution(
             token_data = get_paused_execution_token(
                 developer_id=x_developer_id, execution_id=execution_id
             )
-            act_handle = temporal_client.get_async_activity_handle(token_data["task_token"])
+            act_handle = temporal_client.get_async_activity_handle(
+                token_data["task_token"]
+            )
             await act_handle.complete(data.input)
 
         case _:

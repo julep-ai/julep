@@ -11,16 +11,18 @@ import uvicorn
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from pycozo.client import QueryException
 from temporalio.service import RPCError
 
-from agents_api.common.exceptions import BaseCommonException
-from agents_api.dependencies.auth import get_api_key
-from agents_api.env import sentry_dsn
-from agents_api.exceptions import PromptTooBigError
-from agents_api.routers import (
+from .common.exceptions import BaseCommonException
+from .dependencies.auth import get_api_key
+from .env import sentry_dsn
+from .exceptions import PromptTooBigError
+from .middleware import YamlMiddleware
+from .routers import (
     agents,
     docs,
     jobs,
@@ -88,6 +90,11 @@ app.add_middleware(
     allow_headers=["*"],
     max_age=3600,
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
+
+# Add yaml middleware
+app.middleware("http")(YamlMiddleware(path_regex=r"/agents/.+/tasks.*"))
 
 register_exceptions(app)
 

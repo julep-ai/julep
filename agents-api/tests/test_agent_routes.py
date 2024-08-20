@@ -17,7 +17,7 @@ def _(client=client):
     response = client.request(
         method="POST",
         url="/agents",
-        data=data,
+        json=data,
     )
 
     assert response.status_code == 403
