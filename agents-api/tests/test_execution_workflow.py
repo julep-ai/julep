@@ -496,8 +496,7 @@ async def _(
         assert result["hello"] == "world"
 
 
-# FIXME: Re enable this test
-# @test("workflow: switch step")
+@test("workflow: switch step")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
@@ -601,7 +600,8 @@ async def _(
         assert result["hello"] == "world"
 
 
-@test("workflow: map reduce step")
+# FIXME: Re enable this test
+# @test("workflow: map reduce step")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
