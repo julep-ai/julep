@@ -2,10 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Tasks_BaseWorkflowStep = {
+export const $Tasks_LogStepDef = {
   properties: {
-    kind_: {
-      type: "Enum",
+    log: {
+      type: "all-of",
+      description: `The value to log`,
+      contains: [
+        {
+          type: "Common_PyExpression",
+        },
+      ],
       isRequired: true,
     },
   },

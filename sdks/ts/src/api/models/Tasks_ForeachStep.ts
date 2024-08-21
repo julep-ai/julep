@@ -2,10 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
 import type { Tasks_ForeachDo } from "./Tasks_ForeachDo";
-export type Tasks_ForeachStep = Tasks_BaseWorkflowStep & {
-  kind_: "foreach";
+export type Tasks_ForeachStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "foreach";
+} & {
+  readonly kind_: "foreach";
   /**
    * The steps to run for each iteration
    */

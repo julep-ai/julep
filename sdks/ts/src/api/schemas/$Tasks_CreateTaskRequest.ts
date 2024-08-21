@@ -16,19 +16,7 @@ export const $Tasks_CreateTaskRequest = {
           type: "Tasks_ToolCallStep",
         },
         {
-          type: "Tasks_YieldStep",
-        },
-        {
           type: "Tasks_PromptStep",
-        },
-        {
-          type: "Tasks_ErrorWorkflowStep",
-        },
-        {
-          type: "Tasks_SleepStep",
-        },
-        {
-          type: "Tasks_ReturnStep",
         },
         {
           type: "Tasks_GetStep",
@@ -46,6 +34,18 @@ export const $Tasks_CreateTaskRequest = {
           type: "Tasks_SearchStep",
         },
         {
+          type: "Tasks_ReturnStep",
+        },
+        {
+          type: "Tasks_SleepStep",
+        },
+        {
+          type: "Tasks_ErrorWorkflowStep",
+        },
+        {
+          type: "Tasks_YieldStep",
+        },
+        {
           type: "Tasks_WaitForInputStep",
         },
         {
@@ -61,7 +61,77 @@ export const $Tasks_CreateTaskRequest = {
           type: "Tasks_ParallelStep",
         },
         {
-          type: "Tasks_MapReduceStep",
+          type: "all-of",
+          contains: [
+            {
+              properties: {
+                kind_: {
+                  type: "Enum",
+                  isReadOnly: true,
+                  isRequired: true,
+                },
+              },
+            },
+            {
+              properties: {
+                kind_: {
+                  type: "Enum",
+                  isReadOnly: true,
+                  isRequired: true,
+                },
+                map: {
+                  type: "any-of",
+                  description: `The steps to run for each iteration`,
+                  contains: [
+                    {
+                      type: "Tasks_MapOverEvaluate",
+                    },
+                    {
+                      type: "Tasks_MapOverToolCall",
+                    },
+                    {
+                      type: "Tasks_MapOverPrompt",
+                    },
+                    {
+                      type: "Tasks_MapOverGet",
+                    },
+                    {
+                      type: "Tasks_MapOverSet",
+                    },
+                    {
+                      type: "Tasks_MapOverLog",
+                    },
+                    {
+                      type: "Tasks_MapOverEmbed",
+                    },
+                    {
+                      type: "Tasks_MapOverSearch",
+                    },
+                  ],
+                  isRequired: true,
+                },
+                reduce: {
+                  type: "all-of",
+                  description: `The expression to reduce the results.
+              If not provided, the results are collected and returned as a list.
+              A special parameter named \`results\` is the accumulator and \`_\` is the current value.`,
+                  contains: [
+                    {
+                      type: "Common_PyExpression",
+                    },
+                  ],
+                },
+                initial: {
+                  type: "all-of",
+                  contains: [
+                    {
+                      type: "Common_PyExpression",
+                    },
+                  ],
+                },
+              },
+            },
+          ],
         },
       ],
     },

@@ -20,30 +20,41 @@ namespace Tasks;
 // STEP DEFINITIONS
 //
 
-/** An object where values are strings in the Common Expression Language that get evaluated before being passed downstream */
+/** A simple python expression evaluated at runtime that is expected to return type T. */
 alias TypedExpression<T> = PyExpression;
+
+/** A python expression that takes an accumulator `results` and an input item `_` and reduces them. */
+alias ReduceExpression<Value = unknown, Accumulator = Array<Value>> = TypedExpression<Accumulator>;
+
+/** A string->string object where the values are python expressions that get evaluated to give a final object. */
 alias ExpressionObject<T> = Record<TypedExpression<T>>;
+
+/** Nested expression object. */
 alias NestedExpressionObject<T> = Record<TypedExpression<T> | ExpressionObject<T>>;
 
 @discriminator("kind_")
-model BaseWorkflowStep {
+model BaseWorkflowStep<T extends WorkflowStepKind> {
     /** The kind of step */
-    kind_: WorkflowStepKind;
+    @visibility("read")
+    kind_: T;
 }
 
-alias NonConditionalWorkflowStep =
+alias MappableWorkflowStep =
     | EvaluateStep
     | ToolCallStep
-    | YieldStep
     | PromptStep
-    | ErrorWorkflowStep
-    | SleepStep
-    | ReturnStep
     | GetStep
     | SetStep
     | LogStep
     | EmbedStep
-    | SearchStep
+    | SearchStep;
+
+alias NonConditionalWorkflowStep =
+    | MappableWorkflowStep
+    | ReturnStep
+    | SleepStep
+    | ErrorWorkflowStep
+    | YieldStep
     | WaitForInputStep;
 
 alias ConditionalStep = IfElseWorkflowStep | SwitchStep;
@@ -56,9 +67,14 @@ alias CreateWorkflowStep = WorkflowStep;
 /// Common steps ///
 ////////////////////
 
-model ToolCallStep extends BaseWorkflowStep {
+model ToolCallStep extends BaseWorkflowStep<"tool_call"> {
+    @visibility("read")
     kind_: "tool_call" = "tool_call";
 
+    ...ToolCallStepDef;
+}
+
+model ToolCallStepDef {
     /** The tool to run */
     tool: toolRef;
 
@@ -66,9 +82,14 @@ model ToolCallStep extends BaseWorkflowStep {
     arguments: ExpressionObject<unknown> | "_" = "_";
 }
 
-model PromptStep extends BaseWorkflowStep {
+model PromptStep extends BaseWorkflowStep<"prompt"> {
+    @visibility("read")
     kind_: "prompt" = "prompt";
 
+    ...PromptStepDef;
+}
+
+model PromptStepDef {
     /** The prompt to run */
     prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
@@ -76,23 +97,43 @@ model PromptStep extends BaseWorkflowStep {
     settings: ChatSettings;
 }
 
-model EvaluateStep extends BaseWorkflowStep {
+model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
+    @visibility("read")
     kind_: "evaluate" = "evaluate";
 
+    ...EvaluateStepDef;
+}
+
+model EvaluateStepDef {
     /** The expression to evaluate */
     evaluate: ExpressionObject<unknown>;
 }
 
-model WaitForInputStep extends BaseWorkflowStep {
+model WaitForInputStep extends BaseWorkflowStep<"wait_for_input"> {
+    @visibility("read")
     kind_: "wait_for_input" = "wait_for_input";
 
-    /** Any additional info or data */
-    wait_for_input: ExpressionObject<unknown>;
+    ...WaitForInputStepDef;
 }
 
-model LogStep extends BaseWorkflowStep {
+model WaitForInputInfo {
+    /** Any additional info or data */
+    info: ExpressionObject<unknown>;
+}
+
+model WaitForInputStepDef {
+    /** Any additional info or data */
+    wait_for_input: WaitForInputInfo;
+}
+
+model LogStep extends BaseWorkflowStep<"log"> {
+    @visibility("read")
     kind_: "log" = "log";
 
+    ...LogStepDef;
+}
+
+model LogStepDef {
     /** The value to log */
     log: TypedExpression<string>;
 }
@@ -101,16 +142,26 @@ model LogStep extends BaseWorkflowStep {
 /// Doc search steps ///
 ////////////////////////
 
-model EmbedStep extends BaseWorkflowStep {
+model EmbedStep extends BaseWorkflowStep<"embed"> {
+    @visibility("read")
     kind_: "embed" = "embed";
 
+    ...EmbedStepDef;
+}
+
+model EmbedStepDef {
     /** The text to embed */
     embed: EmbedQueryRequest;
 }
 
-model SearchStep extends BaseWorkflowStep {
+model SearchStep extends BaseWorkflowStep<"search"> {
+    @visibility("read")
     kind_: "search" = "search";
 
+    ...SearchStepDef;
+}
+
+model SearchStepDef {
     /** The search query */
     search: DocSearchRequest;
 }
@@ -119,9 +170,14 @@ model SearchStep extends BaseWorkflowStep {
 /// Key-value steps ///
 ///////////////////////
 
-model GetStep extends BaseWorkflowStep {
+model GetStep extends BaseWorkflowStep<"get"> {
+    @visibility("read")
     kind_: "get" = "get";
 
+    ...GetStepDef;
+}
+
+model GetStepDef {
     /** The key to get */
     get: string;
 }
@@ -134,9 +190,14 @@ model SetKey {
     value: TypedExpression<unknown>;
 }
 
-model SetStep extends BaseWorkflowStep {
+model SetStep extends BaseWorkflowStep<"set"> {
+    @visibility("read")
     kind_: "set" = "set";
 
+    ...SetStepDef;
+}
+
+model SetStepDef {
     /** The value to set */
     set: SetKey;
 }
@@ -145,54 +206,118 @@ model SetStep extends BaseWorkflowStep {
 /// Iteration steps ///
 ///////////////////////
 
-
-model ParallelStep extends BaseWorkflowStep {
+model ParallelStep extends BaseWorkflowStep<"parallel"> {
+    @visibility("read")
     kind_: "parallel" = "parallel";
 
-    /** The steps to run in parallel. Max concurrency will depend on the platform */
-    parallel: NonConditionalWorkflowStep[];
+    ...ParallelStepDef;
+}
+
+model ParallelStepDef {
+    /** The steps to run in parallel. Max concurrency will depend on the platform. */
+    @maxItems(100)
+    parallel: MappableWorkflowStep[];
 }
 
 model ForeachDo {
-    /** The variable to iterate over */
+    /** The variable to iterate over.
+     * VALIDATION: Should NOT return more than 1000 elements. */
     in: TypedExpression<Array<unknown>>;
 
     /** The steps to run for each iteration */
-    do: NonConditionalWorkflowStep;
+    do: MappableWorkflowStep;
 }
 
-model ForeachStep extends BaseWorkflowStep {
+model ForeachStep extends BaseWorkflowStep<"foreach"> {
+    @visibility("read")
     kind_: "foreach" = "foreach";
 
+    ...ForeachStepDef;
+}
+
+model ForeachStepDef {
     /** The steps to run for each iteration */
     foreach: ForeachDo;
 }
 
-model MapOver {
+model BaseMapOver {
     /** The variable to iterate over */
     over: TypedExpression<Array<unknown>>;
-
-    /** The subworkflow to run for each iteration */
-    workflow: string;
 }
 
-model MapReduceStep extends BaseWorkflowStep {
+model MapOverEvaluate extends EvaluateStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverToolCall extends ToolCallStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverPrompt extends PromptStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverGet extends GetStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverSet extends SetStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverLog extends LogStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverEmbed extends EmbedStepDef {
+    ...BaseMapOver;
+}
+
+model MapOverSearch extends SearchStepDef {
+    ...BaseMapOver;
+}
+
+alias MapOver =
+    | MapOverEvaluate
+    | MapOverToolCall
+    | MapOverPrompt
+    | MapOverGet
+    | MapOverSet
+    | MapOverLog
+    | MapOverEmbed
+    | MapOverSearch;
+
+model MapReduceStep<Value = unknown, Accumulator = Array<Value>> extends BaseWorkflowStep<"map_reduce"> {
+    @visibility("read")
     kind_: "map_reduce" = "map_reduce";
 
+    ...MapReduceStepDef<Value, Accumulator>;
+}
+
+model MapReduceStepDef<Value = unknown, Accumulator = Array<Value>> {
     /** The steps to run for each iteration */
     map: MapOver;
 
-    /** The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list. */
-    reduce: TypedExpression<unknown> | "_" = "_";
+    /** The expression to reduce the results.
+     * If not provided, the results are collected and returned as a list. 
+     * A special parameter named `results` is the accumulator and `_` is the current value. */
+    reduce?: ReduceExpression<Value, Accumulator>;
+
+    initial?: TypedExpression<Accumulator> = "[]";
 }
 
 /////////////////////////
 /// Conditional steps ///
 /////////////////////////
 
-model IfElseWorkflowStep extends BaseWorkflowStep {
+model IfElseWorkflowStep extends BaseWorkflowStep<"if_else"> {
+    @visibility("read")
     kind_: "if_else" = "if_else";
 
+    ...IfElseWorkflowStepDef;
+}
+
+model IfElseWorkflowStepDef {
     /** The condition to evaluate */
     `if`: TypedExpression<boolean>;
 
@@ -205,15 +330,20 @@ model IfElseWorkflowStep extends BaseWorkflowStep {
 
 model CaseThen {
     /** The condition to evaluate */
-    case: TypedExpression<boolean> | "_";  // To support '_' as a value
+    case: TypedExpression<boolean> | "_"; // To support '_' as a value
 
     /** The steps to run if the condition is true */
     then: NonConditionalWorkflowStep;
 }
 
-model SwitchStep extends BaseWorkflowStep {
+model SwitchStep extends BaseWorkflowStep<"switch"> {
+    @visibility("read")
     kind_: "switch" = "switch";
 
+    ...SwitchStepDef;
+}
+
+model SwitchStepDef {
     /** The cond tree */
     @minItems(1)
     switch: CaseThen[];
@@ -223,19 +353,31 @@ model SwitchStep extends BaseWorkflowStep {
 /// Other control flow ///
 //////////////////////////
 
-model YieldStep extends BaseWorkflowStep {
+model YieldStep extends BaseWorkflowStep<"yield"> {
+    @visibility("read")
     kind_: "yield" = "yield";
 
-    /** The subworkflow to run */
+    ...YieldStepDef;
+}
+
+model YieldStepDef {
+    /** The subworkflow to run.
+     * VALIDATION: Should resolve to a defined subworkflow.
+     */
     workflow: string;
 
     /** The input parameters for the subworkflow (defaults to last step output) */
     arguments: ExpressionObject<unknown> | "_" = "_";
 }
 
-model ErrorWorkflowStep extends BaseWorkflowStep {
+model ErrorWorkflowStep extends BaseWorkflowStep<"error"> {
+    @visibility("read")
     kind_: "error" = "error";
 
+    ...ErrorWorkflowStepDef;
+}
+
+model ErrorWorkflowStepDef {
     /** The error message */
     error: string;
 }
@@ -262,16 +404,26 @@ model SleepFor {
     days: uint16 = 0;
 }
 
-model SleepStep extends BaseWorkflowStep {
+model SleepStep extends BaseWorkflowStep<"sleep"> {
+    @visibility("read")
     kind_: "sleep" = "sleep";
 
+    ...SleepStepDef;
+}
+
+model SleepStepDef {
     /** The duration to sleep for (max 31 days) */
     sleep: SleepFor;
 }
 
-model ReturnStep extends BaseWorkflowStep {
+model ReturnStep extends BaseWorkflowStep<"return"> {
+    @visibility("read")
     kind_: "return" = "return";
 
+    ...ReturnStepDef;
+}
+
+model ReturnStepDef {
     /** The value to return */
     `return`: ExpressionObject<unknown>;
 }

@@ -6,17 +6,25 @@ export const $Tasks_YieldStep = {
   type: "all-of",
   contains: [
     {
-      type: "Tasks_BaseWorkflowStep",
+      properties: {
+        kind_: {
+          type: "Enum",
+          isReadOnly: true,
+          isRequired: true,
+        },
+      },
     },
     {
       properties: {
         kind_: {
           type: "Enum",
+          isReadOnly: true,
           isRequired: true,
         },
         workflow: {
           type: "string",
-          description: `The subworkflow to run`,
+          description: `The subworkflow to run.
+        VALIDATION: Should resolve to a defined subworkflow.`,
           isRequired: true,
         },
         arguments: {

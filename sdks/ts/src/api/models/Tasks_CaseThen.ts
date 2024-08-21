@@ -27,15 +27,15 @@ export type Tasks_CaseThen = {
   then:
     | Tasks_EvaluateStep
     | Tasks_ToolCallStep
-    | Tasks_YieldStep
     | Tasks_PromptStep
-    | Tasks_ErrorWorkflowStep
-    | Tasks_SleepStep
-    | Tasks_ReturnStep
     | Tasks_GetStep
     | Tasks_SetStep
     | Tasks_LogStep
     | Tasks_EmbedStep
     | Tasks_SearchStep
+    | Tasks_ReturnStep
+    | Tasks_SleepStep
+    | Tasks_ErrorWorkflowStep
+    | Tasks_YieldStep
     | Tasks_WaitForInputStep;
 };

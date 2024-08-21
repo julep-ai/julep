@@ -2,10 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
 import type { Tasks_SleepFor } from "./Tasks_SleepFor";
-export type Tasks_SleepStep = Tasks_BaseWorkflowStep & {
-  kind_: "sleep";
+export type Tasks_SleepStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "sleep";
+} & {
+  readonly kind_: "sleep";
   /**
    * The duration to sleep for (max 31 days)
    */

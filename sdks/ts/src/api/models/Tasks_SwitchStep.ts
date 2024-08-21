@@ -2,10 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
 import type { Tasks_CaseThen } from "./Tasks_CaseThen";
-export type Tasks_SwitchStep = Tasks_BaseWorkflowStep & {
-  kind_: "switch";
+export type Tasks_SwitchStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "switch";
+} & {
+  readonly kind_: "switch";
   /**
    * The cond tree
    */

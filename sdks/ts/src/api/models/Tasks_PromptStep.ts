@@ -4,9 +4,13 @@
 /* eslint-disable */
 import type { Chat_ChatSettings } from "./Chat_ChatSettings";
 import type { Common_JinjaTemplate } from "./Common_JinjaTemplate";
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
-export type Tasks_PromptStep = Tasks_BaseWorkflowStep & {
-  kind_: "prompt";
+export type Tasks_PromptStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "prompt";
+} & {
+  readonly kind_: "prompt";
   /**
    * The prompt to run
    */

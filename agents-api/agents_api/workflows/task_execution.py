@@ -68,7 +68,7 @@ class TaskExecutionWorkflow:
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-        previous_inputs: list[dict] = [],
+        previous_inputs: list[Any] = [],
     ) -> Any:
         # 0. Prepare context
         previous_inputs = previous_inputs or [execution_input.arguments]

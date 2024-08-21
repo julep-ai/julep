@@ -5,9 +5,13 @@
 import type { Docs_HybridDocSearchRequest } from "./Docs_HybridDocSearchRequest";
 import type { Docs_TextOnlyDocSearchRequest } from "./Docs_TextOnlyDocSearchRequest";
 import type { Docs_VectorDocSearchRequest } from "./Docs_VectorDocSearchRequest";
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
-export type Tasks_SearchStep = Tasks_BaseWorkflowStep & {
-  kind_: "search";
+export type Tasks_SearchStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "search";
+} & {
+  readonly kind_: "search";
   /**
    * The search query
    */

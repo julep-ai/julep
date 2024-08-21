@@ -19,35 +19,6 @@ from .Entries import ChatMLImageContentPart
 from .Tools import CreateToolRequest
 
 
-class BaseWorkflowStep(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    kind_: Literal[
-        "tool_call",
-        "prompt",
-        "evaluate",
-        "wait_for_input",
-        "log",
-        "embed",
-        "search",
-        "set",
-        "get",
-        "foreach",
-        "map_reduce",
-        "parallel",
-        "switch",
-        "if_else",
-        "sleep",
-        "return",
-        "yield",
-        "error",
-    ]
-    """
-    The kind of step
-    """
-
-
 class CaseThen(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -59,16 +30,16 @@ class CaseThen(BaseModel):
     then: (
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
     )
     """
@@ -103,22 +74,22 @@ class CreateTaskRequest(BaseModel):
     main: list[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
         | IfElseWorkflowStep
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | MapReduceStep
+        | MainModel
     ]
     """
     The entrypoint of the task.
@@ -138,33 +109,68 @@ class CreateTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class EmbedStep(BaseWorkflowStep):
+class EmbedStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["embed"] = "embed"
+    kind_: Annotated[
+        Literal["embed"], Field("embed", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     embed: EmbedQueryRequest
     """
     The text to embed
     """
 
 
-class ErrorWorkflowStep(BaseWorkflowStep):
+class EmbedStepDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["error"] = "error"
+    embed: EmbedQueryRequest
+    """
+    The text to embed
+    """
+
+
+class ErrorWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["error"], Field("error", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     error: str
     """
     The error message
     """
 
 
-class EvaluateStep(BaseWorkflowStep):
+class EvaluateStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["evaluate"] = "evaluate"
+    kind_: Annotated[
+        Literal["evaluate"], Field("evaluate", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    evaluate: dict[str, str]
+    """
+    The expression to evaluate
+    """
+
+
+class EvaluateStepDef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     evaluate: dict[str, str]
     """
     The expression to evaluate
@@ -177,55 +183,74 @@ class ForeachDo(BaseModel):
     )
     in_: Annotated[str, Field(alias="in")]
     """
-    The variable to iterate over
+    The variable to iterate over.
+    VALIDATION: Should NOT return more than 1000 elements.
     """
     do: (
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
-        | WaitForInputStep
     )
     """
     The steps to run for each iteration
     """
 
 
-class ForeachStep(BaseWorkflowStep):
+class ForeachStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["foreach"] = "foreach"
+    kind_: Annotated[
+        Literal["foreach"], Field("foreach", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     foreach: ForeachDo
     """
     The steps to run for each iteration
     """
 
 
-class GetStep(BaseWorkflowStep):
+class GetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["get"] = "get"
+    kind_: Annotated[Literal["get"], Field("get", json_schema_extra={"readOnly": True})]
+    """
+    The kind of step
+    """
     get: str
     """
     The key to get
     """
 
 
-class IfElseWorkflowStep(BaseWorkflowStep):
+class GetStepDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["if_else"] = "if_else"
+    get: str
+    """
+    The key to get
+    """
+
+
+class IfElseWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["if_else"], Field("if_else", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     if_: Annotated[str, Field(alias="if")]
     """
     The condition to evaluate
@@ -233,16 +258,16 @@ class IfElseWorkflowStep(BaseWorkflowStep):
     then: (
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
     )
     """
@@ -251,16 +276,16 @@ class IfElseWorkflowStep(BaseWorkflowStep):
     else_: Annotated[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep,
         Field(alias="else"),
     ]
@@ -269,18 +294,99 @@ class IfElseWorkflowStep(BaseWorkflowStep):
     """
 
 
-class LogStep(BaseWorkflowStep):
+class LogStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["log"] = "log"
+    kind_: Annotated[Literal["log"], Field("log", json_schema_extra={"readOnly": True})]
+    """
+    The kind of step
+    """
     log: str
     """
     The value to log
     """
 
 
-class MapOver(BaseModel):
+class LogStepDef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    log: str
+    """
+    The value to log
+    """
+
+
+class Main(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    map: (
+        MapOverEvaluate
+        | MapOverToolCall
+        | MapOverPrompt
+        | MapOverGet
+        | MapOverSet
+        | MapOverLog
+        | MapOverEmbed
+        | MapOverSearch
+    )
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list. 
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: str = "[]"
+    """
+    A simple python expression compatible with SimpleEval.
+    """
+
+
+class MainModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["map_reduce"], Field("map_reduce", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    map: (
+        MapOverEvaluate
+        | MapOverToolCall
+        | MapOverPrompt
+        | MapOverGet
+        | MapOverSet
+        | MapOverLog
+        | MapOverEmbed
+        | MapOverSearch
+    )
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list. 
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: str = "[]"
+    """
+    A simple python expression compatible with SimpleEval.
+    """
+
+
+class MapOverEmbed(EmbedStepDef):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -288,49 +394,63 @@ class MapOver(BaseModel):
     """
     The variable to iterate over
     """
-    workflow: str
-    """
-    The subworkflow to run for each iteration
-    """
 
 
-class MapReduceStep(BaseWorkflowStep):
+class MapOverEvaluate(EvaluateStepDef):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["map_reduce"] = "map_reduce"
-    map: MapOver
+    over: str
     """
-    The steps to run for each iteration
-    """
-    reduce: Literal["_"] | str = "_"
-    """
-    The expression to reduce the results (`_` is a list of outputs). If not provided, the results are returned as a list.
+    The variable to iterate over
     """
 
 
-class ParallelStep(BaseWorkflowStep):
+class MapOverGet(GetStepDef):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["parallel"] = "parallel"
-    parallel: list[
-        EvaluateStep
-        | ToolCallStep
-        | YieldStep
-        | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
-        | GetStep
-        | SetStep
-        | LogStep
-        | EmbedStep
-        | SearchStep
-        | WaitForInputStep
+    over: str
+    """
+    The variable to iterate over
+    """
+
+
+class MapOverLog(LogStepDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    over: str
+    """
+    The variable to iterate over
+    """
+
+
+class ParallelStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["parallel"], Field("parallel", json_schema_extra={"readOnly": True})
     ]
     """
-    The steps to run in parallel. Max concurrency will depend on the platform
+    The kind of step
+    """
+    parallel: Annotated[
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+        ],
+        Field(max_length=100),
+    ]
+    """
+    The steps to run in parallel. Max concurrency will depend on the platform.
     """
 
 
@@ -347,22 +467,22 @@ class PatchTaskRequest(BaseModel):
         list[
             EvaluateStep
             | ToolCallStep
-            | YieldStep
             | PromptStep
-            | ErrorWorkflowStep
-            | SleepStep
-            | ReturnStep
             | GetStep
             | SetStep
             | LogStep
             | EmbedStep
             | SearchStep
+            | ReturnStep
+            | SleepStep
+            | ErrorWorkflowStep
+            | YieldStep
             | WaitForInputStep
             | IfElseWorkflowStep
             | SwitchStep
             | ForeachStep
             | ParallelStep
-            | MapReduceStep
+            | Main
         ]
         | None
     ) = None
@@ -414,11 +534,16 @@ class PromptItem(BaseModel):
     """
 
 
-class PromptStep(BaseWorkflowStep):
+class PromptStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["prompt"] = "prompt"
+    kind_: Annotated[
+        Literal["prompt"], Field("prompt", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     prompt: list[PromptItem] | str
     """
     The prompt to run
@@ -429,22 +554,56 @@ class PromptStep(BaseWorkflowStep):
     """
 
 
-class ReturnStep(BaseWorkflowStep):
+class PromptStepDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["return"] = "return"
+    prompt: list[PromptItem] | str
+    """
+    The prompt to run
+    """
+    settings: ChatSettings
+    """
+    Settings for the prompt
+    """
+
+
+class ReturnStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["return"], Field("return", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     return_: Annotated[dict[str, str], Field(alias="return")]
     """
     The value to return
     """
 
 
-class SearchStep(BaseWorkflowStep):
+class SearchStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["search"] = "search"
+    kind_: Annotated[
+        Literal["search"], Field("search", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    search: VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
+    """
+    The search query
+    """
+
+
+class SearchStepDef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     search: VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
     """
     The search query
@@ -465,11 +624,24 @@ class SetKey(BaseModel):
     """
 
 
-class SetStep(BaseWorkflowStep):
+class SetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["set"] = "set"
+    kind_: Annotated[Literal["set"], Field("set", json_schema_extra={"readOnly": True})]
+    """
+    The kind of step
+    """
+    set: SetKey
+    """
+    The value to set
+    """
+
+
+class SetStepDef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     set: SetKey
     """
     The value to set
@@ -498,22 +670,32 @@ class SleepFor(BaseModel):
     """
 
 
-class SleepStep(BaseWorkflowStep):
+class SleepStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["sleep"] = "sleep"
+    kind_: Annotated[
+        Literal["sleep"], Field("sleep", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     sleep: SleepFor
     """
     The duration to sleep for (max 31 days)
     """
 
 
-class SwitchStep(BaseWorkflowStep):
+class SwitchStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["switch"] = "switch"
+    kind_: Annotated[
+        Literal["switch"], Field("switch", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     switch: Annotated[list[CaseThen], Field(min_length=1)]
     """
     The cond tree
@@ -533,22 +715,22 @@ class Task(BaseModel):
     main: list[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
         | IfElseWorkflowStep
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | MapReduceStep
+        | MainModel
     ]
     """
     The entrypoint of the task.
@@ -587,11 +769,32 @@ class TaskTool(CreateToolRequest):
     """
 
 
-class ToolCallStep(BaseWorkflowStep):
+class ToolCallStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["tool_call"] = "tool_call"
+    kind_: Annotated[
+        Literal["tool_call"], Field("tool_call", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    tool: Annotated[
+        str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
+    ]
+    """
+    The tool to run
+    """
+    arguments: dict[str, str] | Literal["_"] = "_"
+    """
+    The input parameters for the tool (defaults to last step output)
+    """
+
+
+class ToolCallStepDef(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
     tool: Annotated[
         str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
     ]
@@ -616,22 +819,22 @@ class UpdateTaskRequest(BaseModel):
     main: list[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
-        | ErrorWorkflowStep
-        | SleepStep
-        | ReturnStep
         | GetStep
         | SetStep
         | LogStep
         | EmbedStep
         | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
         | IfElseWorkflowStep
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | MapReduceStep
+        | MainModel
     ]
     """
     The entrypoint of the task.
@@ -651,27 +854,79 @@ class UpdateTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class WaitForInputStep(BaseWorkflowStep):
+class WaitForInputStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["wait_for_input"] = "wait_for_input"
+    kind_: Annotated[
+        Literal["wait_for_input"],
+        Field("wait_for_input", json_schema_extra={"readOnly": True}),
+    ]
+    """
+    The kind of step
+    """
     wait_for_input: dict[str, str]
     """
     Any additional info or data
     """
 
 
-class YieldStep(BaseWorkflowStep):
+class YieldStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["yield"] = "yield"
+    kind_: Annotated[
+        Literal["yield"], Field("yield", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     workflow: str
     """
-    The subworkflow to run
+    The subworkflow to run.
+    VALIDATION: Should resolve to a defined subworkflow.
     """
     arguments: dict[str, str] | Literal["_"] = "_"
     """
     The input parameters for the subworkflow (defaults to last step output)
+    """
+
+
+class MapOverPrompt(PromptStepDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    over: str
+    """
+    The variable to iterate over
+    """
+
+
+class MapOverSearch(SearchStepDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    over: str
+    """
+    The variable to iterate over
+    """
+
+
+class MapOverSet(SetStepDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    over: str
+    """
+    The variable to iterate over
+    """
+
+
+class MapOverToolCall(ToolCallStepDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    over: str
+    """
+    The variable to iterate over
     """
