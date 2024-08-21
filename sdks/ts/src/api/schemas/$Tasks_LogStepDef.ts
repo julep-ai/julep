@@ -2,14 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Entries_ChatMLTextContentPart = {
+export const $Tasks_LogStepDef = {
   properties: {
-    text: {
-      type: "string",
-      isRequired: true,
-    },
-    type: {
-      type: "Enum",
+    log: {
+      type: "all-of",
+      description: `The value to log`,
+      contains: [
+        {
+          type: "Common_PyExpression",
+        },
+      ],
       isRequired: true,
     },
   },

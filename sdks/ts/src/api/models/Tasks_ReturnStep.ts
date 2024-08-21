@@ -3,9 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_PyExpression } from "./Common_PyExpression";
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
-export type Tasks_ReturnStep = Tasks_BaseWorkflowStep & {
-  kind_: "return";
+export type Tasks_ReturnStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "return";
+} & {
+  readonly kind_: "return";
   /**
    * The value to return
    */

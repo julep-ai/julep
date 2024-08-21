@@ -18,8 +18,7 @@ model User {
     ...HasTimestamps;
 
     /** Name of the user */
-    @maxLength(120)
-    name: identifierSafeUnicode = "";
+    name: identifierSafeUnicode = identifierSafeUnicode("");
 
     /** About the user */
     about: string = "";

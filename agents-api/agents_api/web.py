@@ -80,8 +80,14 @@ def register_exceptions(app: FastAPI) -> None:
     )
 
 
+# TODO: Auth logic should be moved into global middleware _per router_
+#       Because some routes don't require auth
+# See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
+#
 app: Any = FastAPI(dependencies=[Depends(get_api_key)])
 
+# TODO: CORS should be enabled only for JWT auth
+#
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

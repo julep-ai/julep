@@ -5,11 +5,14 @@
 export const $Tasks_CaseThen = {
   properties: {
     case: {
-      type: "all-of",
+      type: "any-of",
       description: `The condition to evaluate`,
       contains: [
         {
           type: "Common_PyExpression",
+        },
+        {
+          type: "Enum",
         },
       ],
       isRequired: true,
@@ -25,19 +28,7 @@ export const $Tasks_CaseThen = {
           type: "Tasks_ToolCallStep",
         },
         {
-          type: "Tasks_YieldStep",
-        },
-        {
           type: "Tasks_PromptStep",
-        },
-        {
-          type: "Tasks_ErrorWorkflowStep",
-        },
-        {
-          type: "Tasks_SleepStep",
-        },
-        {
-          type: "Tasks_ReturnStep",
         },
         {
           type: "Tasks_GetStep",
@@ -53,6 +44,18 @@ export const $Tasks_CaseThen = {
         },
         {
           type: "Tasks_SearchStep",
+        },
+        {
+          type: "Tasks_ReturnStep",
+        },
+        {
+          type: "Tasks_SleepStep",
+        },
+        {
+          type: "Tasks_ErrorWorkflowStep",
+        },
+        {
+          type: "Tasks_YieldStep",
         },
         {
           type: "Tasks_WaitForInputStep",

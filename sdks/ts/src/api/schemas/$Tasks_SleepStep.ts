@@ -6,17 +6,24 @@ export const $Tasks_SleepStep = {
   type: "all-of",
   contains: [
     {
-      type: "Tasks_BaseWorkflowStep",
+      properties: {
+        kind_: {
+          type: "Enum",
+          isReadOnly: true,
+          isRequired: true,
+        },
+      },
     },
     {
       properties: {
         kind_: {
           type: "Enum",
+          isReadOnly: true,
           isRequired: true,
         },
         sleep: {
           type: "all-of",
-          description: `The duration to sleep for`,
+          description: `The duration to sleep for (max 31 days)`,
           contains: [
             {
               type: "Tasks_SleepFor",

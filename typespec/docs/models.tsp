@@ -19,7 +19,7 @@ model Doc {
 
     /** Title describing what this document contains */
     @maxLength(800)
-    title: identifierSafeUnicode;
+    title: string;
 
     /** Contents of the document */
     content: string | string[];

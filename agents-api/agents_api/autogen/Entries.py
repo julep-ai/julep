@@ -6,21 +6,13 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import (
-    AnyUrl,
-    AwareDatetime,
-    BaseModel,
-    ConfigDict,
-    Field,
-    StrictBool,
-)
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
 
 class BaseEntry(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     role: Literal[
@@ -37,13 +29,13 @@ class BaseEntry(BaseModel):
     """
     name: str | None = None
     content: (
-        list[ChatMLTextContentPart | ChatMLImageContentPart]
+        list[Content | ChatMLImageContentPart]
         | Tool
         | ChosenToolCall
         | str
         | ToolResponse
         | list[
-            list[ChatMLTextContentPart | ChatMLImageContentPart]
+            list[Content | ChatMLImageContentPart]
             | Tool
             | ChosenToolCall
             | str
@@ -63,7 +55,6 @@ class BaseEntry(BaseModel):
 
 class ChatMLImageContentPart(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     image_url: ImageURL
@@ -76,9 +67,38 @@ class ChatMLImageContentPart(BaseModel):
     """
 
 
-class ChatMLTextContentPart(BaseModel):
+class ChatMLRole(
+    RootModel[
+        Literal[
+            "user",
+            "assistant",
+            "system",
+            "function",
+            "function_response",
+            "function_call",
+            "auto",
+        ]
+    ]
+):
     model_config = ConfigDict(
-        extra="allow",
+        populate_by_name=True,
+    )
+    root: Literal[
+        "user",
+        "assistant",
+        "system",
+        "function",
+        "function_response",
+        "function_call",
+        "auto",
+    ]
+    """
+    ChatML role (system|assistant|user|function_call|function|function_response|auto)
+    """
+
+
+class Content(BaseModel):
+    model_config = ConfigDict(
         populate_by_name=True,
     )
     text: str
@@ -90,7 +110,6 @@ class ChatMLTextContentPart(BaseModel):
 
 class Entry(BaseEntry):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -102,7 +121,6 @@ class Entry(BaseEntry):
 
 class History(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     entries: list[Entry]
@@ -116,7 +134,6 @@ class History(BaseModel):
 
 class ImageURL(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     url: AnyUrl
@@ -129,40 +146,8 @@ class ImageURL(BaseModel):
     """
 
 
-class InputChatMLMessage(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-    )
-    role: Literal[
-        "user",
-        "assistant",
-        "system",
-        "function",
-        "function_response",
-        "function_call",
-        "auto",
-    ]
-    """
-    The role of the message
-    """
-    content: str | list[str] | list[ChatMLTextContentPart | ChatMLImageContentPart]
-    """
-    The content parts of the message
-    """
-    name: str | None = None
-    """
-    Name
-    """
-    continue_: Annotated[StrictBool | None, Field(None, alias="continue")]
-    """
-    Whether to continue this message or return a new one
-    """
-
-
 class Relation(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     head: UUID

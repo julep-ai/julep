@@ -20,22 +20,22 @@ export type Tasks_CaseThen = {
   /**
    * The condition to evaluate
    */
-  case: Common_PyExpression;
+  case: Common_PyExpression | "_";
   /**
    * The steps to run if the condition is true
    */
   then:
     | Tasks_EvaluateStep
     | Tasks_ToolCallStep
-    | Tasks_YieldStep
     | Tasks_PromptStep
-    | Tasks_ErrorWorkflowStep
-    | Tasks_SleepStep
-    | Tasks_ReturnStep
     | Tasks_GetStep
     | Tasks_SetStep
     | Tasks_LogStep
     | Tasks_EmbedStep
     | Tasks_SearchStep
+    | Tasks_ReturnStep
+    | Tasks_SleepStep
+    | Tasks_ErrorWorkflowStep
+    | Tasks_YieldStep
     | Tasks_WaitForInputStep;
 };

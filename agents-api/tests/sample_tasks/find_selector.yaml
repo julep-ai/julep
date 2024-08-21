@@ -1,0 +1,85 @@
+name: Find request and selector for identity provider
+
+input_schema:
+  type: object
+  properties:
+    screenshot_base64:
+      type: string
+    network_requests:
+      type: array
+      items:
+        type: object
+        properties:
+          request:
+            type: object
+            properties:
+              url:
+                type: string
+              method:
+                type: string
+              headers:
+                type: object
+                additionalProperties:
+                  type: string
+              body:
+                type: string
+          response:
+            type: object
+            properties:
+              status:
+                type: integer
+              headers:
+                type: object
+                additionalProperties:
+                  type: string
+              body:
+                type: string
+    parameters:
+      type: array
+      items:
+        type: string
+
+main:
+- map:
+  over: _.parameters
+
+  prompt:
+  - role: system
+    content: |-
+    From the screenshot below, can you identify if the page has {{_}} for the user?
+    Write your answer in the following yaml format:
+
+    found: true|false
+    value: <value>|null
+
+    Just write your answer in the above format only.
+    Please do not include any other information or explanation in the response.
+
+  - role: user
+    content:
+    - type: image
+      image_url: 'inputs[0].screenshot_base64'
+
+  reduce: >-
+  results
+  + [
+    yaml.safe_load(_["choices"][0]["message"]["content"].trim())
+  ]
+
+- evaluate: >-
+  [
+    {"value": result["value"], "network_request": request}
+    for request in execution.input.network_requests
+    if result["value"] in nr.response.body
+    for result in _
+    if result["found"]
+  ]
+
+- if: len(_) > 0
+  then:
+    workflow: find_selectors
+    arguments:
+      results: list(zip(_, execution.input.network_requests))
+      parameters: execution.input.parameters
+  else:
+    error: 'Could not find the selector in any of the network requests'

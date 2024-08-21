@@ -6,12 +6,19 @@ export const $Tasks_PromptStep = {
   type: "all-of",
   contains: [
     {
-      type: "Tasks_BaseWorkflowStep",
+      properties: {
+        kind_: {
+          type: "Enum",
+          isReadOnly: true,
+          isRequired: true,
+        },
+      },
     },
     {
       properties: {
         kind_: {
           type: "Enum",
+          isReadOnly: true,
           isRequired: true,
         },
         prompt: {
@@ -19,13 +26,7 @@ export const $Tasks_PromptStep = {
           description: `The prompt to run`,
           contains: [
             {
-              type: "string",
-            },
-            {
-              type: "array",
-              contains: {
-                type: "Entries_InputChatMLMessage",
-              },
+              type: "Common_JinjaTemplate",
             },
           ],
           isRequired: true,

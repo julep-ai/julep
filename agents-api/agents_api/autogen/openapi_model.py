@@ -38,6 +38,11 @@ CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
 CreateOrUpdateTaskRequest = CreateTaskRequest
 ChatResponse = ChunkChatResponse | MessageChatResponse
+ChatMLTextContentPart = Content
+InputChatMLMessage = Message
+
+# TODO: Figure out wtf... 🤷‍♂️
+MapReduceStep = MainModel
 
 
 # Custom types (not generated correctly)

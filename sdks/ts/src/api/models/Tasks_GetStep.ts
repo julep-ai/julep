@@ -2,9 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
-export type Tasks_GetStep = Tasks_BaseWorkflowStep & {
-  kind_: "get";
+export type Tasks_GetStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "get";
+} & {
+  readonly kind_: "get";
   /**
    * The key to get
    */

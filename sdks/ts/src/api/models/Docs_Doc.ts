@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_uuid } from "./Common_uuid";
 export type Docs_Doc = {
   readonly id: Common_uuid;
@@ -14,7 +13,7 @@ export type Docs_Doc = {
   /**
    * Title describing what this document contains
    */
-  title: Common_identifierSafeUnicode;
+  title: string;
   /**
    * Contents of the document
    */

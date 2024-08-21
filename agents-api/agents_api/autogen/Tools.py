@@ -15,7 +15,6 @@ class ChosenToolCall(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -35,14 +34,13 @@ class CreateToolRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
+    name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
@@ -54,7 +52,6 @@ class CreateToolRequest(BaseModel):
 
 class FunctionCallOption(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     name: str
@@ -69,7 +66,6 @@ class FunctionDef(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     name: Any | None = None
@@ -80,6 +76,7 @@ class FunctionDef(BaseModel):
         str | None,
         Field(
             None,
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -94,7 +91,6 @@ class FunctionDef(BaseModel):
 
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
@@ -113,14 +109,13 @@ class PatchToolRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"] | None = None
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    name: Annotated[str | None, Field(None, pattern="^[^\\W0-9]\\w*$")]
+    name: Annotated[str | None, Field(None, max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
@@ -132,14 +127,13 @@ class PatchToolRequest(BaseModel):
 
 class Tool(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
+    name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
@@ -160,7 +154,6 @@ class Tool(BaseModel):
 
 class ToolResponse(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -176,14 +169,13 @@ class UpdateToolRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function", "integration", "system", "api_call"]
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
+    name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
@@ -195,7 +187,6 @@ class UpdateToolRequest(BaseModel):
 
 class ChosenFunctionCall(ChosenToolCall):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function"] = "function"
@@ -207,7 +198,6 @@ class ChosenFunctionCall(ChosenToolCall):
 
 class FunctionTool(Tool):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function"] = "function"
@@ -220,7 +210,6 @@ class FunctionTool(Tool):
 
 class NamedFunctionChoice(NamedToolChoice):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     type: Literal["function"] = "function"

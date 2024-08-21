@@ -6,12 +6,19 @@ export const $Tasks_IfElseWorkflowStep = {
   type: "all-of",
   contains: [
     {
-      type: "Tasks_BaseWorkflowStep",
+      properties: {
+        kind_: {
+          type: "Enum",
+          isReadOnly: true,
+          isRequired: true,
+        },
+      },
     },
     {
       properties: {
         kind_: {
           type: "Enum",
+          isReadOnly: true,
           isRequired: true,
         },
         if: {
@@ -35,19 +42,7 @@ export const $Tasks_IfElseWorkflowStep = {
               type: "Tasks_ToolCallStep",
             },
             {
-              type: "Tasks_YieldStep",
-            },
-            {
               type: "Tasks_PromptStep",
-            },
-            {
-              type: "Tasks_ErrorWorkflowStep",
-            },
-            {
-              type: "Tasks_SleepStep",
-            },
-            {
-              type: "Tasks_ReturnStep",
             },
             {
               type: "Tasks_GetStep",
@@ -63,6 +58,18 @@ export const $Tasks_IfElseWorkflowStep = {
             },
             {
               type: "Tasks_SearchStep",
+            },
+            {
+              type: "Tasks_ReturnStep",
+            },
+            {
+              type: "Tasks_SleepStep",
+            },
+            {
+              type: "Tasks_ErrorWorkflowStep",
+            },
+            {
+              type: "Tasks_YieldStep",
             },
             {
               type: "Tasks_WaitForInputStep",
@@ -81,19 +88,7 @@ export const $Tasks_IfElseWorkflowStep = {
               type: "Tasks_ToolCallStep",
             },
             {
-              type: "Tasks_YieldStep",
-            },
-            {
               type: "Tasks_PromptStep",
-            },
-            {
-              type: "Tasks_ErrorWorkflowStep",
-            },
-            {
-              type: "Tasks_SleepStep",
-            },
-            {
-              type: "Tasks_ReturnStep",
             },
             {
               type: "Tasks_GetStep",
@@ -109,6 +104,18 @@ export const $Tasks_IfElseWorkflowStep = {
             },
             {
               type: "Tasks_SearchStep",
+            },
+            {
+              type: "Tasks_ReturnStep",
+            },
+            {
+              type: "Tasks_SleepStep",
+            },
+            {
+              type: "Tasks_ErrorWorkflowStep",
+            },
+            {
+              type: "Tasks_YieldStep",
             },
             {
               type: "Tasks_WaitForInputStep",

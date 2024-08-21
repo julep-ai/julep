@@ -39,8 +39,8 @@ model ImageURL {
     detail: ImageDetail = ImageDetail.auto;
 }
 
-model ChatMLTextContentPart {
-    text: string;
+model ChatMLTextContentPart<T extends string = string> {
+    text: T;
 
     /** The type (fixed to 'text') */
     type: "text" = "text";
@@ -54,14 +54,14 @@ model ChatMLImageContentPart {
     type: "image_url" = "image_url";
 }
 
-alias ChatMLContentPart = ChatMLTextContentPart | ChatMLImageContentPart;
+alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart;
 
-model ChatMLMessage {
+model ChatMLMessage<T extends string = string> {
     /** The role of the message */
     role: ChatMLRole;
 
     /** The content parts of the message */
-    content: string | string[] | ChatMLContentPart[];
+    content: T | T[] | ChatMLContentPart<T>[];
 
     /** Name */
     name?: string;
@@ -79,11 +79,11 @@ model ChatMLMessage {
 }
 
 @withVisibility("create")
-model InputChatMLMessage {
-    ...ChatMLMessage;
+model InputChatMLMessage<T extends string = string> {
+    ...ChatMLMessage<T>;
 }
 
-alias EntryContent = ChatMLContentPart[] | Tool | ChosenToolCall | string | ToolResponse;
+alias EntryContent = ChatMLContentPart<string>[] | Tool | ChosenToolCall | string | ToolResponse;
 
 model BaseEntry {
     role: ChatMLRole;

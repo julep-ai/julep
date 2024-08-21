@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Entries_ChatMLTextContentPart = {
-  text: string;
+import type { Tasks_SetKey } from "./Tasks_SetKey";
+export type Tasks_SetStepDef = {
   /**
-   * The type (fixed to 'text')
+   * The value to set
    */
-  type: "text";
+  set: Tasks_SetKey;
 };

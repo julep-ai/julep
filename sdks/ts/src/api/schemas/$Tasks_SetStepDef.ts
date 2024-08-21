@@ -2,10 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Tasks_BaseWorkflowStep = {
+export const $Tasks_SetStepDef = {
   properties: {
-    kind_: {
-      type: "Enum",
+    set: {
+      type: "all-of",
+      description: `The value to set`,
+      contains: [
+        {
+          type: "Tasks_SetKey",
+        },
+      ],
       isRequired: true,
     },
   },

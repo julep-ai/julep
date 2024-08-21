@@ -3,9 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Docs_EmbedQueryRequest } from "./Docs_EmbedQueryRequest";
-import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
-export type Tasks_EmbedStep = Tasks_BaseWorkflowStep & {
-  kind_: "embed";
+export type Tasks_EmbedStep = {
+  /**
+   * The kind of step
+   */
+  readonly kind_: "embed";
+} & {
+  readonly kind_: "embed";
   /**
    * The text to embed
    */

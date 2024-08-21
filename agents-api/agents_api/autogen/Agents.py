@@ -13,7 +13,6 @@ from .Chat import DefaultChatSettings
 
 class Agent(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
@@ -30,6 +29,7 @@ class Agent(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -60,7 +60,6 @@ class CreateAgentRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -68,6 +67,7 @@ class CreateAgentRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -94,7 +94,6 @@ class CreateAgentRequest(BaseModel):
 
 class CreateOrUpdateAgentRequest(CreateAgentRequest):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -103,6 +102,7 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -133,7 +133,6 @@ class PatchAgentRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -141,6 +140,7 @@ class PatchAgentRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -171,7 +171,6 @@ class UpdateAgentRequest(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     metadata: dict[str, Any] | None = None
@@ -179,6 +178,7 @@ class UpdateAgentRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]

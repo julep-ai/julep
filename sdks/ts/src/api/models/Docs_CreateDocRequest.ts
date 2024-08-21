@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 /**
  * Payload for creating a doc
  */
@@ -11,7 +10,7 @@ export type Docs_CreateDocRequest = {
   /**
    * Title describing what this document contains
    */
-  title: Common_identifierSafeUnicode;
+  title: string;
   /**
    * Contents of the document
    */

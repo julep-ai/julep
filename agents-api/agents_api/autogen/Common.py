@@ -9,6 +9,16 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
+class JinjaTemplate(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: str
+    """
+    A valid jinja template.
+    """
+
+
 class Limit(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -36,9 +46,18 @@ class Offset(RootModel[int]):
     """
 
 
+class PyExpression(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: str
+    """
+    A simple python expression compatible with SimpleEval.
+    """
+
+
 class ResourceCreatedResponse(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -57,7 +76,6 @@ class ResourceCreatedResponse(BaseModel):
 
 class ResourceDeletedResponse(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID
@@ -76,7 +94,6 @@ class ResourceDeletedResponse(BaseModel):
 
 class ResourceUpdatedResponse(BaseModel):
     model_config = ConfigDict(
-        extra="allow",
         populate_by_name=True,
     )
     id: UUID

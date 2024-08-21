@@ -6,7 +6,8 @@ export const $Tasks_ForeachDo = {
   properties: {
     in: {
       type: "all-of",
-      description: `The variable to iterate over`,
+      description: `The variable to iterate over.
+      VALIDATION: Should NOT return more than 1000 elements.`,
       contains: [
         {
           type: "Common_PyExpression",
@@ -25,19 +26,7 @@ export const $Tasks_ForeachDo = {
           type: "Tasks_ToolCallStep",
         },
         {
-          type: "Tasks_YieldStep",
-        },
-        {
           type: "Tasks_PromptStep",
-        },
-        {
-          type: "Tasks_ErrorWorkflowStep",
-        },
-        {
-          type: "Tasks_SleepStep",
-        },
-        {
-          type: "Tasks_ReturnStep",
         },
         {
           type: "Tasks_GetStep",
@@ -53,9 +42,6 @@ export const $Tasks_ForeachDo = {
         },
         {
           type: "Tasks_SearchStep",
-        },
-        {
-          type: "Tasks_WaitForInputStep",
         },
       ],
       isRequired: true,

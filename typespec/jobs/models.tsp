@@ -24,8 +24,7 @@ model JobStatus {
     ...HasTimestamps;
 
     /** Name of the job */
-    @maxLength(120)
-    name: identifierSafeUnicode = "";
+    name: identifierSafeUnicode = identifierSafeUnicode("");
 
     /** Reason for the current state of the job */
     reason: string = "";
