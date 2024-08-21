@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
+from simpleeval import simple_eval
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
@@ -29,8 +30,6 @@ with workflow.unsafe.imports_passed_through():
         WaitForInputStep,
         Workflow,
         YieldStep,
-        MapReduceStep,
-        MapOver,
     )
     from ..common.protocol.tasks import (
         ExecutionInput,
@@ -54,6 +53,7 @@ STEP_TO_ACTIVITY = {
     YieldStep: task_steps.yield_step,
     IfElseWorkflowStep: task_steps.if_else_step,
     ForeachStep: task_steps.for_each_step,
+    MapReduceStep: task_steps.map_reduce_step,
 }
 
 # TODO: Avoid local activities for now (currently experimental)
@@ -158,11 +158,40 @@ class TaskExecutionWorkflow:
                 return output  # <--- Byeeee!
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
-                raise NotImplementedError("SwitchStep is not implemented")
+                chosen_branch = switch[index]
+
+                # Create a faux workflow
+                case_wf_name = (
+                    f"`{context.cursor.workflow}`[{context.cursor.step}].case"
+                )
+
+                case_task = execution_input.task.model_copy()
+                case_task.workflows = [
+                    Workflow(name=case_wf_name, steps=[chosen_branch.then])
+                ]
+
+                # Create a new execution input
+                case_execution_input = execution_input.model_copy()
+                case_execution_input.task = case_task
+
+                # Set the next target to the chosen branch
+                case_next_target = TransitionTarget(workflow=case_wf_name, step=0)
+
+                case_args = [
+                    case_execution_input,
+                    case_next_target,
+                    previous_inputs,
+                ]
+
+                # Execute the chosen branch and come back here
+                state.output = await workflow.execute_child_workflow(
+                    TaskExecutionWorkflow.run,
+                    args=case_args,
+                )
 
             case SwitchStep(), StepOutcome(output=index) if index < 0:
                 # If no case matched, then the output will be -1
-                raise NotImplementedError("SwitchStep is not implemented")
+                raise ApplicationError("Negative indices not allowed")
 
             case IfElseWorkflowStep(then=then_branch, else_=else_branch), StepOutcome(
                 output=condition
@@ -231,17 +260,18 @@ class TaskExecutionWorkflow:
                         args=foreach_args,
                     )
 
-            case MapReduceStep(map=MapOver(workflow=workflow_name)), StepOutcome(output=items):
-                for item in items:
+            case MapReduceStep(reduce=reduce, initial=initial), StepOutcome(
+                output=items
+            ):
+                for i, item in enumerate(items):
+                    workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
                     map_reduce_task = execution_input.task.model_copy()
-                    # TODO: set steps list
-                    map_reduce_task.workflows = [
-                        Workflow(name=workflow_name, steps=[])
-                    ]
+                    # TODO: set steps
+                    map_reduce_task.workflows = [Workflow(name=workflow_name, steps=[])]
 
                     # Create a new execution input
                     map_reduce_execution_input = execution_input.model_copy()
-                    map_reduce_execution_input.task = foreach_task
+                    map_reduce_execution_input.task = map_reduce_task
 
                     # Set the next target to the chosen branch
                     map_reduce_next_target = TransitionTarget(
@@ -255,43 +285,23 @@ class TaskExecutionWorkflow:
                     ]
 
                     # Execute the chosen branch and come back here
-                    state.output = await workflow.execute_child_workflow(
+                    output = await workflow.execute_child_workflow(
                         TaskExecutionWorkflow.run,
                         args=map_reduce_args,
                     )
-
-            case SwitchStep(switch=cases), StepOutcome(output=int(case_num)):
-                if case_num > 0:
-                    chosen_branch = cases[case_num]
-
-                    # Create a faux workflow
-                    case_wf_name = (
-                        f"`{context.cursor.workflow}`[{context.cursor.step}].case"
+                    initial = simple_eval(
+                        reduce, names={"initial": initial, "output": output}
                     )
 
-                    case_task = execution_input.task.model_copy()
-                    case_task.workflows = [
-                        Workflow(name=case_wf_name, steps=[chosen_branch.then])
-                    ]
-
-                    # Create a new execution input
-                    case_execution_input = execution_input.model_copy()
-                    case_execution_input.task = case_task
-
-                    # Set the next target to the chosen branch
-                    case_next_target = TransitionTarget(workflow=case_wf_name, step=0)
-
-                    case_args = [
-                        case_execution_input,
-                        case_next_target,
-                        previous_inputs,
-                    ]
-
-                    # Execute the chosen branch and come back here
-                    state.output = await workflow.execute_child_workflow(
-                        TaskExecutionWorkflow.run,
-                        args=case_args,
-                    )
+                transition_request = CreateTransitionRequest(
+                    current=context.cursor,
+                    initial=initial,
+                )
+                state.output = await execute_activity(
+                    task_steps.transition_step,
+                    args=[context, transition_request],
+                    schedule_to_close_timeout=timedelta(seconds=600),
+                )
 
             case SleepStep(
                 sleep=SleepFor(
