@@ -5,7 +5,12 @@ import asyncio
 from google.protobuf.json_format import MessageToDict
 from ward import raises, test
 
-from agents_api.autogen.openapi_model import CreateExecutionRequest, CreateTaskRequest, MainModel, MapOverEvaluate
+from agents_api.autogen.openapi_model import (
+    CreateExecutionRequest,
+    CreateTaskRequest,
+    MainModel,
+    MapOverEvaluate,
+)
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 
@@ -619,7 +624,7 @@ async def _(
                 "main": [
                     {
                         "over": "'a b c'.split()",
-                        "evaluate": { "res": "_" },
+                        "evaluate": {"res": "_"},
                     },
                 ],
             },
@@ -643,3 +648,53 @@ async def _(
 
         result = await handle.result()
         assert result["res"] == {"test": "input"}
+
+
+@test("workflow: prompt step")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+   
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [
+                    {
+                        "prompt": [
+                            {
+                                "role": "user",
+                                "content": "message",
+                            },
+                        ],
+                        "settings": {},
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert result["hello"] == "world"

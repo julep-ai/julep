@@ -21,7 +21,7 @@ with workflow.unsafe.imports_passed_through():
         IfElseWorkflowStep,
         LogStep,
         MapReduceStep,
-        # PromptStep,
+        PromptStep,
         ReturnStep,
         SleepFor,
         SleepStep,
@@ -43,7 +43,7 @@ with workflow.unsafe.imports_passed_through():
 
 
 STEP_TO_ACTIVITY = {
-    # PromptStep: prompt_step,
+    PromptStep: task_steps.prompt_step,
     # ToolCallStep: tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
     SwitchStep: task_steps.switch_step,
@@ -359,6 +359,9 @@ class TaskExecutionWorkflow:
                     task_steps.raise_complete_async,
                     schedule_to_close_timeout=timedelta(days=31),
                 )
+
+            case PromptStep(), StepOutcome(output=response):
+                state.output = response.get("choices", [{}])[0].get("message")
 
             case _:
                 raise ApplicationError("Not implemented")
