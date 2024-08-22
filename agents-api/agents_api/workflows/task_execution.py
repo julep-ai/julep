@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
+from pydantic import RootModel
 from simpleeval import simple_eval
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
@@ -29,6 +30,7 @@ with workflow.unsafe.imports_passed_through():
         TransitionTarget,
         WaitForInputStep,
         Workflow,
+        WorkflowStep,
         YieldStep,
     )
     from ..common.protocol.tasks import (
@@ -65,6 +67,8 @@ STEP_TO_LOCAL_ACTIVITY = {
     # YieldStep: task_steps.yield_step,
     # IfElseWorkflowStep: task_steps.if_else_step,
 }
+
+GenericStep = RootModel[WorkflowStep]
 
 
 @workflow.defn
@@ -260,14 +264,18 @@ class TaskExecutionWorkflow:
                         args=foreach_args,
                     )
 
-            case MapReduceStep(reduce=reduce, initial=initial), StepOutcome(
-                output=items
-            ):
+            case MapReduceStep(
+                map=map_defn, reduce=reduce, initial=initial
+            ), StepOutcome(output=items):
                 for i, item in enumerate(items):
                     workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
                     map_reduce_task = execution_input.task.model_copy()
-                    # TODO: set steps
-                    map_reduce_task.workflows = [Workflow(name=workflow_name, steps=[])]
+                    defn_dict = map_defn.model_dump()
+                    defn_dict.pop("over")
+                    step_defn = GenericStep(**defn_dict)
+                    map_reduce_task.workflows = [
+                        Workflow(name=workflow_name, steps=[step_defn])
+                    ]
 
                     # Create a new execution input
                     map_reduce_execution_input = execution_input.model_copy()
