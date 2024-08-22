@@ -5,7 +5,7 @@ import asyncio
 from google.protobuf.json_format import MessageToDict
 from ward import raises, test
 
-from agents_api.autogen.openapi_model import CreateExecutionRequest, CreateTaskRequest
+from agents_api.autogen.openapi_model import CreateExecutionRequest, CreateTaskRequest, MainModel, MapOverEvaluate
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 
@@ -600,8 +600,7 @@ async def _(
         assert result["hello"] == "world"
 
 
-# FIXME: Re enable this test
-# @test("workflow: map reduce step")
+@test("workflow: map reduce step")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
@@ -619,12 +618,11 @@ async def _(
                 "input_schema": {"type": "object", "additionalProperties": True},
                 "main": [
                     {
-                        "map": {"over": "'a b c'.split()"},
-                        "reduce": "result.append(_)",
-                        "initial": [],
+                        "over": "'a b c'.split()",
+                        "evaluate": { "res": "_" },
                     },
                 ],
-            }
+            },
         ),
         client=client,
     )
@@ -644,4 +642,4 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         result = await handle.result()
-        assert result["hello"] == "world"
+        assert result["res"] == {"test": "input"}
