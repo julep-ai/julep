@@ -1,8 +1,10 @@
 # Tests for task queries
 
 import asyncio
+from unittest.mock import patch
 
 from google.protobuf.json_format import MessageToDict
+from litellm.types.utils import Choices, ModelResponse
 from ward import raises, test
 
 from agents_api.autogen.openapi_model import (
@@ -16,6 +18,8 @@ from agents_api.routers.tasks.create_task_execution import start_execution
 
 from .fixtures import cozo_client, test_agent, test_developer_id
 from .utils import patch_testing_temporal
+
+EMBEDDING_SIZE: int = 1024
 
 
 @test("workflow: evaluate step single")
@@ -656,45 +660,55 @@ async def _(
     developer_id=test_developer_id,
     agent=test_agent,
 ):
-    data = CreateExecutionRequest(input={"test": "input"})
-   
-    task = create_task(
-        developer_id=developer_id,
-        agent_id=agent.id,
-        data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {
-                        "prompt": [
-                            {
-                                "role": "user",
-                                "content": "message",
-                            },
-                        ],
-                        "settings": {},
-                    },
-                ],
-            }
-        ),
-        client=client,
+    mock_model_response = ModelResponse(
+        id="fake_id",
+        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
+        created=0,
+        object="text_completion",
     )
 
-    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-        execution, handle = await start_execution(
+    with patch("agents_api.clients.litellm.acompletion") as acompletion:
+        acompletion.return_value = mock_model_response
+        data = CreateExecutionRequest(input={"test": "input"})
+
+        task = create_task(
             developer_id=developer_id,
-            task_id=task.id,
-            data=data,
+            agent_id=agent.id,
+            data=CreateTaskRequest(
+                **{
+                    "name": "test task",
+                    "description": "test task about",
+                    "input_schema": {"type": "object", "additionalProperties": True},
+                    "main": [
+                        {
+                            "prompt": [
+                                {
+                                    "role": "user",
+                                    "content": "message",
+                                },
+                            ],
+                            "settings": {},
+                        },
+                    ],
+                }
+            ),
             client=client,
         )
 
-        assert handle is not None
-        assert execution.task_id == task.id
-        assert execution.input == data.input
+        async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
 
-        mock_run_task_execution_workflow.assert_called_once()
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
 
-        result = await handle.result()
-        assert result["hello"] == "world"
+            mock_run_task_execution_workflow.assert_called_once()
+
+            result = await handle.result()
+            assert result["content"] == "Hello, world!"
+            assert result["role"] == "assistant"
