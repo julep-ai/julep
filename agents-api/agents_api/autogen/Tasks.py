@@ -89,7 +89,7 @@ class CreateTaskRequest(BaseModel):
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | MainModel
+        | Main
     ]
     """
     The entrypoint of the task.
@@ -125,16 +125,6 @@ class EmbedStep(BaseModel):
     """
 
 
-class EmbedStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    embed: EmbedQueryRequest
-    """
-    The text to embed
-    """
-
-
 class ErrorWorkflowStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -161,16 +151,6 @@ class EvaluateStep(BaseModel):
     """
     The kind of step
     """
-    evaluate: dict[str, str]
-    """
-    The expression to evaluate
-    """
-
-
-class EvaluateStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
     evaluate: dict[str, str]
     """
     The expression to evaluate
@@ -225,16 +205,6 @@ class GetStep(BaseModel):
     """
     The kind of step
     """
-    get: str
-    """
-    The key to get
-    """
-
-
-class GetStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
     get: str
     """
     The key to get
@@ -308,50 +278,7 @@ class LogStep(BaseModel):
     """
 
 
-class LogStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    log: str
-    """
-    The value to log
-    """
-
-
 class Main(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    kind_: str | None = None
-    """
-    Discriminator property for BaseWorkflowStep.
-    """
-    map: (
-        MapOverEvaluate
-        | MapOverToolCall
-        | MapOverPrompt
-        | MapOverGet
-        | MapOverSet
-        | MapOverLog
-        | MapOverEmbed
-        | MapOverSearch
-    )
-    """
-    The steps to run for each iteration
-    """
-    reduce: str | None = None
-    """
-    The expression to reduce the results.
-    If not provided, the results are collected and returned as a list. 
-    A special parameter named `results` is the accumulator and `_` is the current value.
-    """
-    initial: str = "[]"
-    """
-    A simple python expression compatible with SimpleEval.
-    """
-
-
-class MainModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -361,15 +288,19 @@ class MainModel(BaseModel):
     """
     The kind of step
     """
+    over: str
+    """
+    The variable to iterate over
+    """
     map: (
-        MapOverEvaluate
-        | MapOverToolCall
-        | MapOverPrompt
-        | MapOverGet
-        | MapOverSet
-        | MapOverLog
-        | MapOverEmbed
-        | MapOverSearch
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
     )
     """
     The steps to run for each iteration
@@ -377,53 +308,44 @@ class MainModel(BaseModel):
     reduce: str | None = None
     """
     The expression to reduce the results.
-    If not provided, the results are collected and returned as a list. 
+    If not provided, the results are collected and returned as a list.
     A special parameter named `results` is the accumulator and `_` is the current value.
     """
-    initial: str = "[]"
-    """
-    A simple python expression compatible with SimpleEval.
-    """
+    initial: Any = []
 
 
-class MapOverEmbed(EmbedStepDef):
+class MainModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
     over: str
     """
     The variable to iterate over
     """
-
-
-class MapOverEvaluate(EvaluateStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
     )
-    over: str
     """
-    The variable to iterate over
+    The steps to run for each iteration
     """
-
-
-class MapOverGet(GetStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    over: str
+    reduce: str | None = None
     """
-    The variable to iterate over
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
     """
-
-
-class MapOverLog(LogStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    over: str
-    """
-    The variable to iterate over
-    """
+    initial: Any = []
 
 
 class ParallelStep(BaseModel):
@@ -482,7 +404,7 @@ class PatchTaskRequest(BaseModel):
             | SwitchStep
             | ForeachStep
             | ParallelStep
-            | Main
+            | MainModel
         ]
         | None
     ) = None
@@ -554,20 +476,6 @@ class PromptStep(BaseModel):
     """
 
 
-class PromptStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    prompt: list[PromptItem] | str
-    """
-    The prompt to run
-    """
-    settings: ChatSettings
-    """
-    Settings for the prompt
-    """
-
-
 class ReturnStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -600,16 +508,6 @@ class SearchStep(BaseModel):
     """
 
 
-class SearchStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    search: VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
-    """
-    The search query
-    """
-
-
 class SetKey(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -632,16 +530,6 @@ class SetStep(BaseModel):
     """
     The kind of step
     """
-    set: SetKey
-    """
-    The value to set
-    """
-
-
-class SetStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
     set: SetKey
     """
     The value to set
@@ -730,7 +618,7 @@ class Task(BaseModel):
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | MainModel
+        | Main
     ]
     """
     The entrypoint of the task.
@@ -791,22 +679,6 @@ class ToolCallStep(BaseModel):
     """
 
 
-class ToolCallStepDef(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    tool: Annotated[
-        str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
-    ]
-    """
-    The tool to run
-    """
-    arguments: dict[str, str] | Literal["_"] = "_"
-    """
-    The input parameters for the tool (defaults to last step output)
-    """
-
-
 class UpdateTaskRequest(BaseModel):
     """
     Payload for updating a task
@@ -834,7 +706,7 @@ class UpdateTaskRequest(BaseModel):
         | SwitchStep
         | ForeachStep
         | ParallelStep
-        | MainModel
+        | Main
     ]
     """
     The entrypoint of the task.
@@ -854,6 +726,16 @@ class UpdateTaskRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
+class WaitForInputInfo(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    info: dict[str, str]
+    """
+    Any additional info or data
+    """
+
+
 class WaitForInputStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -865,7 +747,7 @@ class WaitForInputStep(BaseModel):
     """
     The kind of step
     """
-    wait_for_input: dict[str, str]
+    wait_for_input: WaitForInputInfo
     """
     Any additional info or data
     """
@@ -889,44 +771,4 @@ class YieldStep(BaseModel):
     arguments: dict[str, str] | Literal["_"] = "_"
     """
     The input parameters for the subworkflow (defaults to last step output)
-    """
-
-
-class MapOverPrompt(PromptStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    over: str
-    """
-    The variable to iterate over
-    """
-
-
-class MapOverSearch(SearchStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    over: str
-    """
-    The variable to iterate over
-    """
-
-
-class MapOverSet(SetStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    over: str
-    """
-    The variable to iterate over
-    """
-
-
-class MapOverToolCall(ToolCallStepDef):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    over: str
-    """
-    The variable to iterate over
     """

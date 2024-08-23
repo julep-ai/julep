@@ -22,10 +22,13 @@ export const $Tasks_WaitForInputStep = {
           isRequired: true,
         },
         wait_for_input: {
-          type: "dictionary",
-          contains: {
-            type: "Common_PyExpression",
-          },
+          type: "all-of",
+          description: `Any additional info or data`,
+          contains: [
+            {
+              type: "Tasks_WaitForInputInfo",
+            },
+          ],
           isRequired: true,
         },
       },

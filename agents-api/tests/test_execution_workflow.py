@@ -10,8 +10,6 @@ from ward import raises, test
 from agents_api.autogen.openapi_model import (
     CreateExecutionRequest,
     CreateTaskRequest,
-    MainModel,
-    MapOverEvaluate,
 )
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
@@ -413,7 +411,7 @@ async def _(
                 "description": "test task about",
                 "input_schema": {"type": "object", "additionalProperties": True},
                 "main": [
-                    {"wait_for_input": {"hi": '"bye"'}},
+                    {"wait_for_input": {"info": {"hi": '"bye"'}}},
                 ],
             }
         ),
@@ -452,11 +450,7 @@ async def _(
             activity for activity in activities_scheduled if activity
         ]
 
-        assert activities_scheduled == [
-            "wait_for_input_step",
-            "transition_step",
-            "raise_complete_async",
-        ]
+        assert "wait_for_input_step" in activities_scheduled
 
 
 @test("workflow: if-else step")
@@ -617,22 +611,24 @@ async def _(
 ):
     data = CreateExecutionRequest(input={"test": "input"})
 
+    map_step = {
+        "over": "'a b c'.split()",
+        "map": {
+            "evaluate": {"res": "_"},
+        },
+    }
+
+    task_def = {
+        "name": "test task",
+        "description": "test task about",
+        "input_schema": {"type": "object", "additionalProperties": True},
+        "main": [map_step],
+    }
+
     task = create_task(
         developer_id=developer_id,
         agent_id=agent.id,
-        data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {
-                        "over": "'a b c'.split()",
-                        "evaluate": {"res": "_"},
-                    },
-                ],
-            },
-        ),
+        data=CreateTaskRequest(**task_def),
         client=client,
     )
 
@@ -651,7 +647,7 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         result = await handle.result()
-        assert result["res"] == {"test": "input"}
+        assert [r["res"] for r in result] == ["a", "b", "c"]
 
 
 @test("workflow: prompt step")

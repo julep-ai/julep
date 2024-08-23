@@ -73,7 +73,7 @@ class ExecutionInput(BaseModel):
 
 class StepContext(BaseModel):
     execution_input: ExecutionInput
-    inputs: list[dict[str, Any]]
+    inputs: list[Any]
     cursor: TransitionTarget
 
     @computed_field
@@ -112,7 +112,7 @@ class StepContext(BaseModel):
 
 class StepOutcome(BaseModel):
     error: str | None = None
-    output: Any
+    output: Any = None
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 

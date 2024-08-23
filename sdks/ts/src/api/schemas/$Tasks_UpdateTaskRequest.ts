@@ -79,33 +79,43 @@ export const $Tasks_UpdateTaskRequest = {
                   isReadOnly: true,
                   isRequired: true,
                 },
+                over: {
+                  type: "all-of",
+                  description: `The variable to iterate over`,
+                  contains: [
+                    {
+                      type: "Common_PyExpression",
+                    },
+                  ],
+                  isRequired: true,
+                },
                 map: {
                   type: "any-of",
                   description: `The steps to run for each iteration`,
                   contains: [
                     {
-                      type: "Tasks_MapOverEvaluate",
+                      type: "Tasks_EvaluateStep",
                     },
                     {
-                      type: "Tasks_MapOverToolCall",
+                      type: "Tasks_ToolCallStep",
                     },
                     {
-                      type: "Tasks_MapOverPrompt",
+                      type: "Tasks_PromptStep",
                     },
                     {
-                      type: "Tasks_MapOverGet",
+                      type: "Tasks_GetStep",
                     },
                     {
-                      type: "Tasks_MapOverSet",
+                      type: "Tasks_SetStep",
                     },
                     {
-                      type: "Tasks_MapOverLog",
+                      type: "Tasks_LogStep",
                     },
                     {
-                      type: "Tasks_MapOverEmbed",
+                      type: "Tasks_EmbedStep",
                     },
                     {
-                      type: "Tasks_MapOverSearch",
+                      type: "Tasks_SearchStep",
                     },
                   ],
                   isRequired: true,
@@ -122,12 +132,7 @@ export const $Tasks_UpdateTaskRequest = {
                   ],
                 },
                 initial: {
-                  type: "all-of",
-                  contains: [
-                    {
-                      type: "Common_PyExpression",
-                    },
-                  ],
+                  properties: {},
                 },
               },
             },

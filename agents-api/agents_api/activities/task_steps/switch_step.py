@@ -1,5 +1,4 @@
 from beartype import beartype
-from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import SwitchStep
@@ -8,6 +7,7 @@ from ...common.protocol.tasks import (
     StepOutcome,
 )
 from ...env import testing
+from ..utils import get_evaluator
 
 
 @beartype
@@ -17,11 +17,12 @@ async def switch_step(context: StepContext) -> StepOutcome:
 
         # Assume that none of the cases evaluate to truthy
         output: int = -1
-
         cases: list[str] = [c.case for c in context.current_step.switch]
 
+        evaluator = get_evaluator(names=context.model_dump())
+
         for i, case in enumerate(cases):
-            result = simple_eval(case, names=context.model_dump())
+            result = evaluator.eval(case)
 
             if result:
                 output = i
