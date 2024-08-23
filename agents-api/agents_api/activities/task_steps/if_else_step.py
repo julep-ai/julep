@@ -1,5 +1,4 @@
 from beartype import beartype
-from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import IfElseWorkflowStep
@@ -8,6 +7,7 @@ from ...common.protocol.tasks import (
     StepOutcome,
 )
 from ...env import testing
+from .base_evaluate import base_evaluate
 
 
 @beartype
@@ -18,7 +18,7 @@ async def if_else_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, IfElseWorkflowStep)
 
         expr: str = context.current_step.if_
-        output = simple_eval(expr, names=context.model_dump())
+        output = await base_evaluate(expr, context.model_dump())
         output: bool = bool(output)
 
         result = StepOutcome(output=output)

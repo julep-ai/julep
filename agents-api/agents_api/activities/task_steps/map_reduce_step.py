@@ -1,7 +1,6 @@
 import logging
 
 from beartype import beartype
-from simpleeval import simple_eval
 from temporalio import activity
 
 from ...autogen.openapi_model import MapReduceStep
@@ -10,6 +9,7 @@ from ...common.protocol.tasks import (
     StepOutcome,
 )
 from ...env import testing
+from .base_evaluate import base_evaluate
 
 
 @beartype
@@ -17,11 +17,10 @@ async def map_reduce_step(context: StepContext) -> StepOutcome:
     try:
         assert isinstance(context.current_step, MapReduceStep)
 
-        return StepOutcome(
-            output=simple_eval(
-                context.current_step.map.over, names=context.model_dump()
-            )
-        )
+        output = await base_evaluate(context.current_step.over, context.model_dump())
+
+        return StepOutcome(output=output)
+
     except BaseException as e:
         logging.error(f"Error in map_reduce_step: {e}")
         return StepOutcome(error=str(e))

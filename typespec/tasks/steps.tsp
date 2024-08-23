@@ -240,70 +240,22 @@ model ForeachStepDef {
     foreach: ForeachDo;
 }
 
-model BaseMapOver {
-    /** The variable to iterate over */
-    over: TypedExpression<Array<unknown>>;
-}
-
-model MapOverEvaluate extends EvaluateStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverToolCall extends ToolCallStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverPrompt extends PromptStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverGet extends GetStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverSet extends SetStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverLog extends LogStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverEmbed extends EmbedStepDef {
-    ...BaseMapOver;
-}
-
-model MapOverSearch extends SearchStepDef {
-    ...BaseMapOver;
-}
-
-alias MapOver =
-    | MapOverEvaluate
-    | MapOverToolCall
-    | MapOverPrompt
-    | MapOverGet
-    | MapOverSet
-    | MapOverLog
-    | MapOverEmbed
-    | MapOverSearch;
-
 model MapReduceStep<Value = unknown, Accumulator = Array<Value>> extends BaseWorkflowStep<"map_reduce"> {
     @visibility("read")
     kind_: "map_reduce" = "map_reduce";
 
-    ...MapReduceStepDef<Value, Accumulator>;
-}
+    /** The variable to iterate over */
+    over: TypedExpression<Array<unknown>>;
 
-model MapReduceStepDef<Value = unknown, Accumulator = Array<Value>> {
     /** The steps to run for each iteration */
-    map: MapOver;
+    map: MappableWorkflowStep;
 
     /** The expression to reduce the results.
-     * If not provided, the results are collected and returned as a list. 
+     * If not provided, the results are collected and returned as a list.
      * A special parameter named `results` is the accumulator and `_` is the current value. */
     reduce?: ReduceExpression<Value, Accumulator>;
 
-    initial?: TypedExpression<Accumulator> = "[]";
+    initial?: unknown = #[];
 }
 
 /////////////////////////

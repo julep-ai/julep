@@ -6,7 +6,6 @@ from datetime import timedelta
 from typing import Any
 
 from pydantic import RootModel
-from simpleeval import simple_eval
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
@@ -267,12 +266,15 @@ class TaskExecutionWorkflow:
             case MapReduceStep(
                 map=map_defn, reduce=reduce, initial=initial
             ), StepOutcome(output=items):
+                initial = initial or []
+                reduce = reduce or "initial + [_]"
+
                 for i, item in enumerate(items):
                     workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
                     map_reduce_task = execution_input.task.model_copy()
+
                     defn_dict = map_defn.model_dump()
-                    defn_dict.pop("over")
-                    step_defn = GenericStep(**defn_dict)
+                    step_defn = GenericStep(**defn_dict).root
                     map_reduce_task.workflows = [
                         Workflow(name=workflow_name, steps=[step_defn])
                     ]
@@ -289,7 +291,7 @@ class TaskExecutionWorkflow:
                     map_reduce_args = [
                         map_reduce_execution_input,
                         map_reduce_next_target,
-                        previous_inputs + [{"item": item}],
+                        previous_inputs + [item],
                     ]
 
                     # Execute the chosen branch and come back here
@@ -297,19 +299,18 @@ class TaskExecutionWorkflow:
                         TaskExecutionWorkflow.run,
                         args=map_reduce_args,
                     )
-                    initial = simple_eval(
-                        reduce, names={"initial": initial, "output": output}
+
+                    initial = await execute_activity(
+                        task_steps.base_evaluate,
+                        args=[
+                            reduce,
+                            {"initial": initial, "_": output},
+                        ],
+                        schedule_to_close_timeout=timedelta(seconds=2),
                     )
 
-                transition_request = CreateTransitionRequest(
-                    current=context.cursor,
-                    initial=initial,
-                )
-                state.output = await execute_activity(
-                    task_steps.transition_step,
-                    args=[context, transition_request],
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
+                state.output = initial
+                await transition()
 
             case SleepStep(
                 sleep=SleepFor(

@@ -75,7 +75,7 @@ model StopExecutionRequest extends UpdateExecutionRequest {
 
 model ResumeExecutionRequest extends UpdateExecutionRequest {
     status: "running" = "running";
-    
+
     /** The input to resume the execution with */
     input?: Record<unknown>;
 }
@@ -121,7 +121,7 @@ model Transition {
     execution_id: Execution.id;
 
     @visibility("read")
-    output: Record<unknown>;
+    output: unknown;
 
     @visibility("read")
     current: TransitionTarget;

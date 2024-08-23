@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Common_PyExpression } from "./Common_PyExpression";
+import type { Tasks_WaitForInputInfo } from "./Tasks_WaitForInputInfo";
 export type Tasks_WaitForInputStep = {
   /**
    * The kind of step
@@ -13,5 +13,5 @@ export type Tasks_WaitForInputStep = {
   /**
    * Any additional info or data
    */
-  wait_for_input: Record<string, Common_PyExpression>;
+  wait_for_input: Tasks_WaitForInputInfo;
 };

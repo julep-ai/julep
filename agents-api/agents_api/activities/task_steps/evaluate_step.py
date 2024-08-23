@@ -1,28 +1,35 @@
+from typing import Any
+
 from beartype import beartype
 from temporalio import activity
 
-from ...activities.task_steps.utils import simple_eval_dict
-from ...autogen.openapi_model import EvaluateStep
+from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
 
 
 @beartype
-async def evaluate_step(context: StepContext) -> StepOutcome:
-    # NOTE: This activity is only for returning immediately, so we just evaluate the expression
-    #       Hence, it's a local activity and SHOULD NOT fail
+async def evaluate_step(
+    context: StepContext,
+    additional_values: dict[str, Any] = {},
+    override_expr: dict[str, str] | None = None,
+) -> StepOutcome:
     try:
-        assert isinstance(context.current_step, EvaluateStep)
+        expr = (
+            override_expr
+            if override_expr is not None
+            else context.current_step.evaluate
+        )
 
-        exprs = context.current_step.evaluate
-        output = simple_eval_dict(exprs, values=context.model_dump())
-
+        values = context.model_dump() | additional_values
+        output = simple_eval_dict(expr, values)
         result = StepOutcome(output=output)
+
         return result
 
     except BaseException as e:
         activity.logger.error(f"Error in evaluate_step: {e}")
-        return StepOutcome(error=str(e))
+        return StepOutcome(error=str(e) or repr(e))
 
 
 # Note: This is here just for clarity. We could have just imported evaluate_step directly

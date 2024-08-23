@@ -42,7 +42,7 @@ ChatMLTextContentPart = Content
 InputChatMLMessage = Message
 
 # TODO: Figure out wtf... 🤷‍♂️
-MapReduceStep = MainModel
+MapReduceStep = Main
 
 
 # Custom types (not generated correctly)
@@ -163,9 +163,9 @@ WorkflowStep = (
     | SetStep
     | GetStep
     | ForeachStep
-    | MapReduceStep
     | ParallelStep
     | SwitchStep
+    | MapReduceStep
 )
 
 
