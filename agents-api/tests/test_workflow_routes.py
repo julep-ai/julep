@@ -34,7 +34,7 @@ async def _(
             method="POST",
             url=f"/agents/{agent_id}/tasks/{task_id}",
             json=task_data,
-        )
+        ).raise_for_status()
 
         execution_data = dict(input={"test": "input"})
 
@@ -42,7 +42,7 @@ async def _(
             method="POST",
             url=f"/tasks/{task_id}/executions",
             json=execution_data,
-        )
+        ).raise_for_status()
 
 
 @test("workflow route: evaluate step single with yaml")
@@ -61,23 +61,23 @@ async def _(
         client,
     ):
         task_data = """
-        name: test task
-        description: test task about
-        input_schema:
-        type: object
-        additionalProperties: true
+name: test task
+description: test task about
+input_schema:
+  type: object
+  additionalProperties: true
 
-        main:
-            - evaluate:
-                hello: '"world"'
-        """
+main:
+  - evaluate:
+      hello: '"world"'
+"""
 
         make_request(
             method="POST",
             url=f"/agents/{agent_id}/tasks/{task_id}",
-            content=task_data,
+            content=task_data.encode("utf-8"),
             headers={"Content-Type": "text/yaml"},
-        )
+        ).raise_for_status()
 
         execution_data = dict(input={"test": "input"})
 
@@ -85,4 +85,4 @@ async def _(
             method="POST",
             url=f"/tasks/{task_id}/executions",
             json=execution_data,
-        )
+        ).raise_for_status()

@@ -31,7 +31,7 @@ interface CreateOrUpdateEndpoints {
 
         @body
         @doc("Details of the task updated along with ID")
-        body: ResourceCreatedResponse;
+        body: ResourceUpdatedResponse;
     };
 }
 

@@ -32,16 +32,16 @@ async def _(
             client,
         ):
             make_request(
-                method="POST",
+                method="PUT",
                 url=f"/agents/{agent_id}/tasks/{task_id}",
                 headers={"Content-Type": "application/x-yaml"},
                 data=task_def,
-            )
+            ).raise_for_status()
 
-            # execution_data = dict(input={"test": "input"})
+            execution_data = dict(input={"test": "input"})
 
-            # make_request(
-            #     method="POST",
-            #     url=f"/tasks/{task_id}/executions",
-            #     json=execution_data,
-            # )
+            make_request(
+                method="POST",
+                url=f"/tasks/{task_id}/executions",
+                json=execution_data,
+            ).raise_for_status()
