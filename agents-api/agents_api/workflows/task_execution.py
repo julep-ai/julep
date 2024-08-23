@@ -267,7 +267,7 @@ class TaskExecutionWorkflow:
                 map=map_defn, reduce=reduce, initial=initial
             ), StepOutcome(output=items):
                 initial = initial or []
-                reduce = reduce or "initial + [_]"
+                reduce = reduce or "results + [_]"
 
                 for i, item in enumerate(items):
                     workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
@@ -304,7 +304,7 @@ class TaskExecutionWorkflow:
                         task_steps.base_evaluate,
                         args=[
                             reduce,
-                            {"initial": initial, "_": output},
+                            {"results": initial, "_": output},
                         ],
                         schedule_to_close_timeout=timedelta(seconds=2),
                     )
