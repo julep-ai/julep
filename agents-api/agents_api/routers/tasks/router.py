@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Callable
 
 import yaml
 from fastapi import APIRouter, Request, Response

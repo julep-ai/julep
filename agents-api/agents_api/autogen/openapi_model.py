@@ -36,13 +36,13 @@ CreateToolRequest = UpdateToolRequest
 CreateOrUpdateAgentRequest = UpdateAgentRequest
 CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
-CreateOrUpdateTaskRequest = CreateTaskRequest
 ChatResponse = ChunkChatResponse | MessageChatResponse
-ChatMLTextContentPart = Content
-InputChatMLMessage = Message
 
 # TODO: Figure out wtf... 🤷‍♂️
 MapReduceStep = Main
+ChatMLTextContentPart = Content
+ChatMLImageContentPart = ContentModel
+InputChatMLMessage = Message
 
 
 # Custom types (not generated correctly)
@@ -223,6 +223,8 @@ class CreateTaskRequest(_CreateTaskRequest):
         }
     )
 
+
+CreateOrUpdateTaskRequest = CreateTaskRequest
 
 _PatchTaskRequest = PatchTaskRequest
 

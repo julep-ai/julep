@@ -97,9 +97,8 @@ async def create_task_execution(
 ) -> ResourceCreatedResponse:
     try:
         task = get_task_query(task_id=task_id, developer_id=x_developer_id)
-        task_data = task.model_dump()
+        validate(data.input, task.input_schema)
 
-        validate(data.input, task_data["input_schema"])
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,13 +1,14 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
+from jsonschema import validate
+from jsonschema.exceptions import SchemaError, ValidationError
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED
 
 from agents_api.autogen.openapi_model import (
     CreateTaskRequest,
     ResourceCreatedResponse,
-    Task,
 )
 from agents_api.dependencies.developer_id import get_developer_id
 from agents_api.models.task.create_task import create_task as create_task_query
@@ -23,7 +24,18 @@ async def create_task(
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the task spec
 
-    task: Task = create_task_query(
+    # Validate the input schema
+    try:
+        if data.input_schema is not None:
+            validate(None, data.input_schema)
+
+    except SchemaError:
+        raise HTTPException(detail="Invalid input schema", status_code=400)
+
+    except ValidationError:
+        pass
+
+    task = create_task_query(
         developer_id=x_developer_id,
         agent_id=agent_id,
         data=data,

@@ -47,7 +47,7 @@ async def patch_testing_temporal():
 
 @asynccontextmanager
 async def patch_http_client_with_temporal(*, cozo_client, developer_id):
-    async with patch_testing_temporal():
+    async with patch_testing_temporal() as (worker, mock_get_client):
         from agents_api.env import api_key, api_key_header_name
         from agents_api.web import app
 
@@ -64,7 +64,8 @@ async def patch_http_client_with_temporal(*, cozo_client, developer_id):
 
             return client.request(method, url, headers=headers, **kwargs)
 
-        yield make_request, client
+        temporal_client = await mock_get_client()
+        yield make_request, temporal_client
 
 
 @contextmanager

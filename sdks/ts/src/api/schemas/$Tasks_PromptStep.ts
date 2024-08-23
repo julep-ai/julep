@@ -39,7 +39,6 @@ export const $Tasks_PromptStep = {
               type: "Chat_ChatSettings",
             },
           ],
-          isRequired: true,
         },
       },
     },

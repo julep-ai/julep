@@ -39,6 +39,10 @@ input_schema:
       items:
         type: string
 
+  # Shortcut to require all props
+  additionalProperties: false
+  minProperties: 3
+
 main:
   - map:
       prompt:
@@ -66,16 +70,17 @@ main:
         yaml.safe_load(_["choices"][0]["message"]["content"].trim())
       ]
 
-  - evaluate: >-
-      [
-        {"value": result["value"], "network_request": request}
-        for request in execution.input.network_requests
-        if result["value"] in nr.response.body
-        for result in _
-        if result["found"]
-      ]
+  - evaluate:
+      result: >-
+        [
+          {"value": result["value"], "network_request": request}
+          for request in execution.input.network_requests
+          if result["value"] in nr.response.body
+          for result in _
+          if result["found"]
+        ]
 
-  - if: len(_) > 0
+  - if: len(_["result"]) > 0
     then:
       workflow: find_selectors
       arguments:
