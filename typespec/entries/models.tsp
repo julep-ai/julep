@@ -30,10 +30,9 @@ enum ChatMLRole {
     auto,
 }
 
-model ImageURL {
+model ImageURL<T extends string = string> {
     /** Image URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`) */
-    @format("uri")
-    url: string;
+    url: T;
 
     /** The detail level of the image */
     detail: ImageDetail = ImageDetail.auto;
@@ -46,7 +45,7 @@ model ChatMLTextContentPart<T extends string = string> {
     type: "text" = "text";
 }
 
-model ChatMLImageContentPart {
+model ChatMLImageContentPart<T extends string = string> {
     /** The image URL */
     image_url: ImageURL;
 
@@ -54,7 +53,7 @@ model ChatMLImageContentPart {
     type: "image_url" = "image_url";
 }
 
-alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart;
+alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T>;
 
 model ChatMLMessage<T extends string = string> {
     /** The role of the message */

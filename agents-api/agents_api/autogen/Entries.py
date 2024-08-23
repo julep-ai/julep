@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 from .Tools import ChosenToolCall, Tool, ToolResponse
 
@@ -29,17 +29,13 @@ class BaseEntry(BaseModel):
     """
     name: str | None = None
     content: (
-        list[Content | ChatMLImageContentPart]
+        list[Content | ContentModel]
         | Tool
         | ChosenToolCall
         | str
         | ToolResponse
         | list[
-            list[Content | ChatMLImageContentPart]
-            | Tool
-            | ChosenToolCall
-            | str
-            | ToolResponse
+            list[Content | ContentModel] | Tool | ChosenToolCall | str | ToolResponse
         ]
     )
     source: Literal[
@@ -50,20 +46,6 @@ class BaseEntry(BaseModel):
     timestamp: Annotated[float, Field(ge=0.0)]
     """
     This is the time that this event refers to.
-    """
-
-
-class ChatMLImageContentPart(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    image_url: ImageURL
-    """
-    The image URL
-    """
-    type: Literal["image_url"] = "image_url"
-    """
-    The type (fixed to 'image_url')
     """
 
 
@@ -108,6 +90,20 @@ class Content(BaseModel):
     """
 
 
+class ContentModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    image_url: ImageUrl
+    """
+    The image URL
+    """
+    type: Literal["image_url"] = "image_url"
+    """
+    The type (fixed to 'image_url')
+    """
+
+
 class Entry(BaseEntry):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -132,11 +128,25 @@ class History(BaseModel):
     """
 
 
-class ImageURL(BaseModel):
+class ImageDetail(RootModel[Literal["low", "high", "auto"]]):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    url: AnyUrl
+    root: Literal["low", "high", "auto"]
+    """
+    Image detail level
+    """
+
+
+class ImageUrl(BaseModel):
+    """
+    The image URL
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    url: str
     """
     Image URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)
     """

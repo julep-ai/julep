@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 
 from fastapi import APIRouter
 from pydantic import UUID4
@@ -7,7 +7,7 @@ from temporalio.client import WorkflowExecutionStatus
 from agents_api.autogen.openapi_model import JobStatus
 from agents_api.clients.temporal import get_client
 
-router: Any = APIRouter()
+router: APIRouter = APIRouter()
 
 
 def map_job_status(

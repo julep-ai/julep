@@ -18,5 +18,5 @@ export type Tasks_PromptStep = {
   /**
    * Settings for the prompt
    */
-  settings: Chat_ChatSettings;
+  settings?: Chat_ChatSettings;
 };

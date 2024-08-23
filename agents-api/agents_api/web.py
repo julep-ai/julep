@@ -21,7 +21,6 @@ from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
 from .env import sentry_dsn
 from .exceptions import PromptTooBigError
-from .middleware import YamlMiddleware
 from .routers import (
     agents,
     docs,
@@ -98,9 +97,6 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
-
-# Add yaml middleware
-app.middleware("http")(YamlMiddleware(path_regex=r"/agents/.+/tasks.*"))
 
 register_exceptions(app)
 

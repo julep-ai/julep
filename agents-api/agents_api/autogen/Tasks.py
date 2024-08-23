@@ -15,7 +15,6 @@ from .Docs import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from .Entries import ChatMLImageContentPart
 from .Tools import CreateToolRequest
 
 
@@ -58,6 +57,20 @@ class Content(BaseModel):
     type: Literal["text"] = "text"
     """
     The type (fixed to 'text')
+    """
+
+
+class ContentModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    image_url: ImageUrl
+    """
+    The image URL
+    """
+    type: Literal["image_url"] = "image_url"
+    """
+    The type (fixed to 'image_url')
     """
 
 
@@ -264,6 +277,24 @@ class IfElseWorkflowStep(BaseModel):
     """
 
 
+class ImageUrl(BaseModel):
+    """
+    The image URL
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    url: str
+    """
+    Image URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)
+    """
+    detail: Literal["low", "high", "auto"] = "auto"
+    """
+    The detail level of the image
+    """
+
+
 class LogStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -442,7 +473,7 @@ class PromptItem(BaseModel):
     """
     The role of the message
     """
-    content: list[str] | list[Content | ChatMLImageContentPart] | str
+    content: list[str] | list[Content | ContentModel] | str
     """
     The content parts of the message
     """
@@ -470,7 +501,7 @@ class PromptStep(BaseModel):
     """
     The prompt to run
     """
-    settings: ChatSettings
+    settings: ChatSettings | None = None
     """
     Settings for the prompt
     """

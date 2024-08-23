@@ -704,7 +704,7 @@ export class DefaultService {
   }
   /**
    * Create or update a task
-   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @returns Common_ResourceUpdatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public tasksCreateOrUpdateRouteCreateOrUpdate({
@@ -718,7 +718,7 @@ export class DefaultService {
     parentId: Common_uuid;
     id: Common_uuid;
     requestBody: Tasks_CreateTaskRequest;
-  }): CancelablePromise<Common_ResourceCreatedResponse> {
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents/{parent_id}/tasks/{id}",

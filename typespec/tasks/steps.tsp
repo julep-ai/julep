@@ -94,7 +94,7 @@ model PromptStepDef {
     prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
     /** Settings for the prompt */
-    settings: ChatSettings;
+    settings?: ChatSettings;
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {

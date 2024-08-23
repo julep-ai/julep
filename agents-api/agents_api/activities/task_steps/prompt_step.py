@@ -3,7 +3,7 @@ import asyncio
 from beartype import beartype
 from temporalio import activity
 
-from ...autogen.openapi_model import InputChatMLMessage
+from ...autogen.openapi_model import ChatSettings, InputChatMLMessage
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
@@ -41,11 +41,13 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         for m in messages
     ]
 
-    settings: dict = context.current_step.settings.model_dump()
     # Get settings and run llm
+    settings: ChatSettings = context.current_step.settings or ChatSettings()
+    settings_data: dict = settings.model_dump()
+
     response = await litellm.acompletion(
         messages=messages,
-        **settings,
+        **settings_data,
     )
 
     return StepOutcome(
