@@ -3,6 +3,7 @@
 import asyncio
 from unittest.mock import patch
 
+import yaml
 from google.protobuf.json_format import MessageToDict
 from litellm.types.utils import Choices, ModelResponse
 from ward import raises, test
@@ -688,6 +689,52 @@ async def _(
                     ],
                 }
             ),
+            client=client,
+        )
+
+        async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
+
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
+
+            mock_run_task_execution_workflow.assert_called_once()
+
+            result = await handle.result()
+            assert result["content"] == "Hello, world!"
+            assert result["role"] == "assistant"
+
+
+@test("workflow: execute yaml task")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    mock_model_response = ModelResponse(
+        id="fake_id",
+        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
+        created=0,
+        object="text_completion",
+    )
+
+    with patch("agents_api.clients.litellm.acompletion") as acompletion, open(
+        "./tests/sample_tasks/find_selector.yaml", "r"
+    ) as task_file:
+        task_definition = yaml.safe_load(task_file)
+        acompletion.return_value = mock_model_response
+        data = CreateExecutionRequest(input={"test": "input"})
+
+        task = create_task(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            data=CreateTaskRequest(**task_definition),
             client=client,
         )
 
