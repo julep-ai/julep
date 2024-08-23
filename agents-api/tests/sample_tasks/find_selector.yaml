@@ -40,46 +40,46 @@ input_schema:
         type: string
 
 main:
-- map:
-  over: _.parameters
+  - map:
+      prompt:
+        - role: system
+          content: |-
+            From the screenshot below, can you identify if the page has {{_}} for the user?
+            Write your answer in the following yaml format:
 
-  prompt:
-  - role: system
-    content: |-
-    From the screenshot below, can you identify if the page has {{_}} for the user?
-    Write your answer in the following yaml format:
+            found: true|false
+            value: <value>|null
 
-    found: true|false
-    value: <value>|null
+            Make sure to end your answer in the above format only.
+            Please do not include any other information or explanation after it.
 
-    Just write your answer in the above format only.
-    Please do not include any other information or explanation in the response.
+        - role: user
+          content:
+            - type: image_url
+              image_url:
+                url: "inputs[0].screenshot_base64"
 
-  - role: user
-    content:
-    - type: image
-      image_url: 'inputs[0].screenshot_base64'
+    over: _.parameters
+    reduce: >-
+      results
+      + [
+        yaml.safe_load(_["choices"][0]["message"]["content"].trim())
+      ]
 
-  reduce: >-
-  results
-  + [
-    yaml.safe_load(_["choices"][0]["message"]["content"].trim())
-  ]
+  - evaluate: >-
+      [
+        {"value": result["value"], "network_request": request}
+        for request in execution.input.network_requests
+        if result["value"] in nr.response.body
+        for result in _
+        if result["found"]
+      ]
 
-- evaluate: >-
-  [
-    {"value": result["value"], "network_request": request}
-    for request in execution.input.network_requests
-    if result["value"] in nr.response.body
-    for result in _
-    if result["found"]
-  ]
-
-- if: len(_) > 0
-  then:
-    workflow: find_selectors
-    arguments:
-      results: list(zip(_, execution.input.network_requests))
-      parameters: execution.input.parameters
-  else:
-    error: 'Could not find the selector in any of the network requests'
+  - if: len(_) > 0
+    then:
+      workflow: find_selectors
+      arguments:
+        results: list(zip(_, execution.input.network_requests))
+        parameters: execution.input.parameters
+    else:
+      error: "Could not find the selector in any of the network requests"

@@ -1,9 +1,7 @@
-from unittest.mock import patch
 from uuid import uuid4
 
 from cozo_migrate.api import apply, init
 from fastapi.testclient import TestClient
-from litellm.types.utils import Choices, ModelResponse
 from pycozo import Client as CozoClient
 from temporalio.client import WorkflowHandle
 from ward import fixture
@@ -38,6 +36,8 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
+
+from .utils import patch_embed_acompletion as patch_embed_acompletion_ctx
 
 EMBEDDING_SIZE: int = 1024
 
@@ -85,19 +85,9 @@ def test_developer(cozo_client=cozo_client, developer_id=test_developer_id):
 
 @fixture(scope="test")
 def patch_embed_acompletion():
-    mock_model_response = ModelResponse(
-        id="fake_id",
-        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
-        created=0,
-        object="text_completion",
-    )
+    output = {"role": "assistant", "content": "Hello, world!"}
 
-    with patch("agents_api.clients.embed.embed") as embed, patch(
-        "agents_api.clients.litellm.acompletion"
-    ) as acompletion:
-        embed.return_value = [[1.0] * EMBEDDING_SIZE]
-        acompletion.return_value = mock_model_response
-
+    with patch_embed_acompletion_ctx(output) as (embed, acompletion):
         yield embed, acompletion
 
 
