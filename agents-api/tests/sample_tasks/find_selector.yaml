@@ -41,39 +41,38 @@ input_schema:
 
 main:
 - map:
+    prompt:
+    - role: system
+      content: |-
+        From the screenshot below, can you identify if the page has {{_}} for the user?
+        Write your answer in the following yaml format:
+
+        found: true|false
+        value: <value>|null
+
+        Just write your answer in the above format only.
+        Please do not include any other information or explanation in the response.
+
+    - role: user
+      content:
+      - type: image
+        image_url: 'inputs[0].screenshot_base64'
+
   over: _.parameters
-
-  prompt:
-  - role: system
-    content: |-
-    From the screenshot below, can you identify if the page has {{_}} for the user?
-    Write your answer in the following yaml format:
-
-    found: true|false
-    value: <value>|null
-
-    Just write your answer in the above format only.
-    Please do not include any other information or explanation in the response.
-
-  - role: user
-    content:
-    - type: image
-      image_url: 'inputs[0].screenshot_base64'
-
   reduce: >-
-  results
-  + [
-    yaml.safe_load(_["choices"][0]["message"]["content"].trim())
-  ]
+    results
+    + [
+      yaml.safe_load(_["choices"][0]["message"]["content"].trim())
+    ]
 
 - evaluate: >-
-  [
-    {"value": result["value"], "network_request": request}
-    for request in execution.input.network_requests
-    if result["value"] in nr.response.body
-    for result in _
-    if result["found"]
-  ]
+    [
+      {"value": result["value"], "network_request": request}
+      for request in execution.input.network_requests
+      if result["value"] in nr.response.body
+      for result in _
+      if result["found"]
+    ]
 
 - if: len(_) > 0
   then:
