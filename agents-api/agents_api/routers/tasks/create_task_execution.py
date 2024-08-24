@@ -59,7 +59,7 @@ async def start_execution(
         client=client,
     )
 
-    job_id=uuid4()
+    job_id = uuid4()
 
     try:
         handle = await run_task_execution_workflow(

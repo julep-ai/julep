@@ -70,7 +70,11 @@ async def render_template_parts(
     # Parse template
     # FIXME: should template_strings contain a list of ChatMLTextContentPart? Should we handle it somehow?
     templates = [
-        (jinja_env.from_string(msg["text"]) if msg["type"] == "text" else None)
+        (
+            jinja_env.from_string(msg["content"]["text"])
+            if msg["content"]["type"] == "text"
+            else None
+        )
         for msg in template_strings
     ]
 

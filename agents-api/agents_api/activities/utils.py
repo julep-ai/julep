@@ -15,6 +15,7 @@ ALLOWED_FUNCTIONS = {
     "load_json": json.loads,
 }
 
+
 @beartype
 def get_evaluator(names: dict[str, Any]) -> SimpleEval:
     evaluator = EvalWithCompoundTypes(names=names, functions=ALLOWED_FUNCTIONS)

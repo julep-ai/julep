@@ -85,7 +85,6 @@ async def _(
     agent_id = str(agent.id)
     task_id = str(uuid4())
 
-
     with patch_embed_acompletion(), open(
         f"{this_dir}/find_selector.yaml", "r"
     ) as sample_file:
@@ -106,12 +105,7 @@ async def _(
 
             input = dict(
                 screenshot_base64="iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
-                network_requests=[{
-                    "request": {},
-                    "response": {
-                        "body": "Lady Gaga"
-                    }
-                }],
+                network_requests=[{"request": {}, "response": {"body": "Lady Gaga"}}],
                 parameters=["name"],
             )
             execution_data = dict(input=input)
@@ -122,8 +116,6 @@ async def _(
                 json=execution_data,
             ).json()
 
-            handle = temporal_client.get_workflow_handle(
-                execution_created["jobs"][0]
-            )
+            handle = temporal_client.get_workflow_handle(execution_created["jobs"][0])
 
             await handle.result()

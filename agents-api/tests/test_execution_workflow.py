@@ -729,7 +729,7 @@ async def _(
     ) as task_file:
         task_definition = yaml.safe_load(task_file)
         acompletion.return_value = mock_model_response
-        data = CreateExecutionRequest(input={"test": "input"})
+        data = CreateExecutionRequest(input={"parameters": ["param1", "param2"]})
 
         task = create_task(
             developer_id=developer_id,
