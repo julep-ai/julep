@@ -300,6 +300,9 @@ class TaskExecutionWorkflow:
                         args=map_reduce_args,
                     )
 
+                    if hasattr(output, "model_dump"):
+                        output = output.model_dump()
+
                     initial = await execute_activity(
                         task_steps.base_evaluate,
                         args=[

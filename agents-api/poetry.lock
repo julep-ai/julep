@@ -1117,6 +1117,66 @@ files = [
 ]
 
 [[package]]
+name = "google-re2"
+version = "1.1.20240702"
+description = "RE2 Python bindings"
+optional = false
+python-versions = "~=3.8"
+files = [
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:46e7ed614ffaafccae017542d68e9bbf664c8c1e5ca37046adee640bbee4846e"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:3c8d2c0a03e9fd24f78b624cf7e40ac32aaf4837fda7339e2c22ca42e3dca512"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:7fee39772aa2e1fe91b7694acc48888ac6fa0ca51f8805464272a2089b362c96"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:b2bcf1a43853cee5a088f40c75fe48a6e3ec7addae1d3f3d47ce679e2bb8936b"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:69f9b156de6f93ea00844f6cd4f2ed5124f9f01692da7ae0fe9a9516df6c63c2"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-macosx_14_0_x86_64.whl", hash = "sha256:f70db559ad768ad68a4d9897cb19fd13f7761e60208f475eb8a69b8aa4b6df20"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7bc4fa65ecec3d63ea6048ecaf8784560bbfb31191c02ffaa87771e4a2f813e1"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7480309b133c39f2afb19ff28bc30d27b364cbc56b5d46918d1b4f1fb2e13183"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-win32.whl", hash = "sha256:1950f499b277789267afee1755394cd959898d0b192b7052bb3186000aff27de"},
+    {file = "google_re2-1.1.20240702-1-cp310-cp310-win_amd64.whl", hash = "sha256:2269ff8c2e1de0ee77736bd9f65b5c9f7cd43544eff825dc7b4ab2bf1f1901e4"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:9802a5a5ec585048300d5a8ec522b15057b8f758fe9f8b0ec65ac2927a36a1aa"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:757cbefbe9f998c274c94afd8bf2a4789b983287f33d4f975389c1027ed686c6"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:7e1d36bd20ce04c1198fe482b6f3ce7dd699e1276946a9a2cf31b2e53026a370"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:bb6b2e456cd0002700ad58c3474fc9e342853ff2ef9f95a1f6606c819ffaf3d9"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:71a71d7f9e616d3067e913a1432111593ee41aab2e0ed21ecbcf039451b9d899"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-macosx_14_0_x86_64.whl", hash = "sha256:16bd5389baeb98936fb05926e6a38826c473206c13f1f789f7643a29dcccccc3"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4b920c1b0356f0359b35a0e6d0b5ff12fba9067d3c455a9811952fbc9a213268"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:42c2c39b7378e928d197e4fdf4a23c9338f29cad6d4c5c5c06a2ad7c8c2a3ebc"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-win32.whl", hash = "sha256:d7fd6b6be4f86d4b6503689b492970920f4b50a8ac02427bc975c73bcedda374"},
+    {file = "google_re2-1.1.20240702-1-cp311-cp311-win_amd64.whl", hash = "sha256:22217d7c8f57bb6c5e74e171a510b12cdde4eddc2528f89aa0f50e3fc10fe17e"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:00dcb09b15f92b490ae52f328cca229de2a157c8748f10df94dfea7637d32617"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:2ffc6fbe70ccf9fb66d0ab16ccad0f661031ceb0eec3d73d170cd782a93d62d5"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:652e517b6db6cbf7403bab370940718208b15e811fefe7635d4e78a8037f096b"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:449ae8286d644d24af8a6eb81eeba6995388581739920b80d9e4b063eefe0322"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:40568559b0a10240c10377fb5cdd46c9115da8a627c567db68c4dc29103a2ce9"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-macosx_14_0_x86_64.whl", hash = "sha256:8139df33d61aac335726b6f32108e763ba2932569c63d2b3ebf6e36a40449223"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7e4a2b88516b4140891a014c6e5b774f57db90c8bd0ccf0554e9f9b99ee1e942"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d95b1e06298299b28e23288a6bfd3c6f13e0f7a01c1f2e86e74073928676cf88"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-win32.whl", hash = "sha256:fb025d4bcd1a3032546da048a6dcb39359967f4df6b3514e76e983256235f694"},
+    {file = "google_re2-1.1.20240702-1-cp312-cp312-win_amd64.whl", hash = "sha256:a7e3129d31e12d51397d603adf45bd696135a5d9d61bc33643bc5d2e4366070b"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-macosx_12_0_arm64.whl", hash = "sha256:bc2f853ace690fb475f68b82b61e3b0ffe2a8603f052853eb21587ac7dcca537"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:974ac711ade3171004e9552d9e069cbe1a8de02c5e45a56101f8396f69a3e3c2"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-macosx_13_0_arm64.whl", hash = "sha256:ad3dc0084cad59a298ffa52c9def2f1b5332d396d76f3828237ac7141b6e7e7d"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-macosx_13_0_x86_64.whl", hash = "sha256:4e13241b8df4096d840f98993f39c62cff0cdab9d06c86b156d2944cfb3f0814"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-macosx_14_0_arm64.whl", hash = "sha256:6887fe9c291ad42003ad84e11c0a6fac0169adbda9cbc898b8657610512e4ce5"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-macosx_14_0_x86_64.whl", hash = "sha256:82824fa71f51a269cd9bad653d53e6ba5bee9095da059455ee1c6cc7e4ba014b"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cde1453681c2ab1648b9e7aed3861ccedce52c85b24873edd1ec1e92b4b3d7d4"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7388c5aadcc5489291d2804ecc384c2e3bb64832e1b46afd44d7bca6c948b615"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-win32.whl", hash = "sha256:cb20853af1104b5180eb2daea66a481723553aa66bf5a5c4c58420c7369364cb"},
+    {file = "google_re2-1.1.20240702-1-cp38-cp38-win_amd64.whl", hash = "sha256:a7f0d950ba9508ac1b2d89837f4a4c74092ae3af015a9797b80570ee87b7d7d5"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:56c2a97d3d38345939fb3ff02d154f5c6ec929e0765723cfd390720f581d2581"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:dfe657979ab96da72f55b03ecdede5467a7193266ce7a0b85013819f052d231f"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-macosx_13_0_arm64.whl", hash = "sha256:c6e218b831dfc89f5004c1bb7ae9182ec5ddc4d46e6035f636ba96344d5b7478"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-macosx_13_0_x86_64.whl", hash = "sha256:304ed3f740541742e7ef5c162b36619efdac7345f1429ab6d70aefaae9a5658d"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-macosx_14_0_arm64.whl", hash = "sha256:05f5683e1bcfac8adcc0dbfe3ecb0866cec6eea2c7d419271dfd72930b368ce4"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-macosx_14_0_x86_64.whl", hash = "sha256:39c642041428efaa48f35adf4475a014ce272f87a453c6dff68f2b05793d516f"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:7d3d1e58f374510101273cda1b6c2b45c178eb94f4c1bd17f7f750cea8d1c85a"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:386d2a8c4b10daaeda03adc7f65c457f67ee8cb18b4f9b4178a44ed62ab291df"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-win32.whl", hash = "sha256:f853c3c68bed0d127e6ef8b29ee85461d9d0a4fa407e3f97e41ecd6803d24d88"},
+    {file = "google_re2-1.1.20240702-1-cp39-cp39-win_amd64.whl", hash = "sha256:5e35c8db1bf58ddf1ac28782d6dca5894a0331fc0d33b2a2ce6eb59234d74312"},
+    {file = "google_re2-1.1.20240702.tar.gz", hash = "sha256:8788db69f6c93cb229df62c74b2d9aa8e64bf754e9495700f85812afa32efd2b"},
+]
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -4484,4 +4544,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "f0057b059c1db08b485252ae5e4139f89126a1f82873ee56604c94a9b9d2142a"
+content-hash = "f2e6680de8e96b10ec7a9e5edf15223fd4842342db950778ff1d4bb1940e7ae0"

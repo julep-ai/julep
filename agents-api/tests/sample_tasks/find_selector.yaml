@@ -61,7 +61,7 @@ main:
           content:
             - type: image_url
               image_url:
-                url: "inputs[0].screenshot_base64"
+                url: "{{inputs[0].screenshot_base64}}"
 
     over: _.parameters
     reduce: >-
@@ -74,8 +74,8 @@ main:
       result: >-
         [
           {"value": result["value"], "network_request": request}
-          for request in execution.input.network_requests
-          if result["value"] in nr.response.body
+          for request in inputs[0]["network_requests"]
+          if result["value"] in nr["response"]["body"]
           for result in _
           if result["found"]
         ]

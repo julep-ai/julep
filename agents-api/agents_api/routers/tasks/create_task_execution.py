@@ -59,10 +59,12 @@ async def start_execution(
         client=client,
     )
 
+    job_id=uuid4()
+
     try:
         handle = await run_task_execution_workflow(
             execution_input=execution_input,
-            job_id=uuid4(),
+            job_id=job_id,
         )
 
     except Exception as e:
@@ -130,5 +132,5 @@ async def create_task_execution(
     return ResourceCreatedResponse(
         id=execution.id,
         created_at=execution.created_at,
-        jobs=[],
+        jobs=[handle.id],
     )
