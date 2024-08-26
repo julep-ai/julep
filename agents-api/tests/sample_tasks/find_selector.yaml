@@ -63,11 +63,11 @@ main:
               image_url:
                 url: "{{inputs[0].screenshot_base64}}"
 
-    over: _.parameters
+    over: _["parameters"]
     reduce: >-
       results
       + [
-        yaml.safe_load(_["choices"][0]["message"]["content"].trim())
+        load_yaml(_["choices"][0]["message"].content.strip())
       ]
 
   - evaluate:
@@ -75,16 +75,12 @@ main:
         [
           {"value": result["value"], "network_request": request}
           for request in inputs[0]["network_requests"]
-          if result["value"] in nr["response"]["body"]
           for result in _
-          if result["found"]
+          if result["found"] and result["value"] in request["response"]["body"]
         ]
 
   - if: len(_["result"]) > 0
     then:
-      workflow: find_selectors
-      arguments:
-        results: list(zip(_, execution.input.network_requests))
-        parameters: execution.input.parameters
+      log: list(zip(_, inputs[0]["network_requests"]))
     else:
       error: "Could not find the selector in any of the network requests"

@@ -294,14 +294,12 @@ class TaskExecutionWorkflow:
                         previous_inputs + [item],
                     ]
 
+                    # TODO: We should parallelize this
                     # Execute the chosen branch and come back here
                     output = await workflow.execute_child_workflow(
                         TaskExecutionWorkflow.run,
                         args=map_reduce_args,
                     )
-
-                    if hasattr(output, "model_dump"):
-                        output = output.model_dump()
 
                     initial = await execute_activity(
                         task_steps.base_evaluate,
@@ -365,7 +363,7 @@ class TaskExecutionWorkflow:
                 )
 
             case PromptStep(), StepOutcome(output=response):
-                state.output = response.get("choices", [{}])[0].get("message")
+                state.output = response
 
             case _:
                 raise ApplicationError("Not implemented")

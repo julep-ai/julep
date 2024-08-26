@@ -34,6 +34,7 @@ lz4 = "^4.3.3"
 
 pyyaml = "^6.0.2"
 google-re2 = "^1.1.20240702"
+python-box = "^7.2.0"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 ruff = "^0.5.5"
