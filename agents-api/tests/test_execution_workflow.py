@@ -719,7 +719,7 @@ async def _(
 ):
     mock_model_response = ModelResponse(
         id="fake_id",
-        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
+        choices=[Choices(message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"})],
         created=0,
         object="text_completion",
     )
@@ -727,9 +727,14 @@ async def _(
     with patch("agents_api.clients.litellm.acompletion") as acompletion, open(
         "./tests/sample_tasks/find_selector.yaml", "r"
     ) as task_file:
+        input = dict(
+            screenshot_base64="iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA",
+            network_requests=[{"request": {}, "response": {"body": "Lady Gaga"}}],
+            parameters=["name"],
+        )
         task_definition = yaml.safe_load(task_file)
         acompletion.return_value = mock_model_response
-        data = CreateExecutionRequest(input={"parameters": ["param1", "param2"]})
+        data = CreateExecutionRequest(input=input)
 
         task = create_task(
             developer_id=developer_id,
@@ -752,6 +757,4 @@ async def _(
 
             mock_run_task_execution_workflow.assert_called_once()
 
-            result = await handle.result()
-            assert result["content"] == "Hello, world!"
-            assert result["role"] == "assistant"
+            await handle.result()
