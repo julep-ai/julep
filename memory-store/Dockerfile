@@ -4,7 +4,7 @@
 # Then copy the run.sh script to the ./run.sh file
 
 # First stage: Build the Rust project
-FROM rust:1.80.1-bookworm as builder
+FROM rust:1.80.1-bookworm AS builder
 
 # Install liburing-dev
 RUN apt-get update && apt-get install -y liburing-dev
@@ -32,26 +32,25 @@ FROM debian:bookworm-slim
 # Install dependencies
 RUN \
     apt-get update -yqq && \
-    apt-get install -y ca-certificates tini nfs-common nfs-kernel-server procps netbase && \
+    apt-get install -y liburing-dev curl ca-certificates tini nfs-common nfs-kernel-server procps netbase && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set fallback mount directory
-ENV MNT_DIR /data
-
-ENV APP_HOME /app
+ENV MNT_DIR=/data APP_HOME=/app BACKUP_DIR=/backup
 WORKDIR $APP_HOME
 
 # Copy the cozo binary
-COPY --from=builder /usr/local/bin/cozo $APP_HOME/bin/cozo-bin
+COPY --from=builder /usr/local/bin/cozo $APP_HOME/bin/cozo
 
 # Copy local code to the container image.
 COPY ./run.sh ./run.sh
+COPY ./backup.sh ./backup.sh
 
 # Ensure the script is executable
 RUN \
-    mkdir -p $MNT_DIR && \
-    chmod +x $APP_HOME/bin/cozo-bin && \
+    mkdir -p $MNT_DIR $BACKUP_DIR && \
+    chmod +x $APP_HOME/bin/cozo && \
     chmod +x $APP_HOME/run.sh
 
 # Use tini to manage zombie processes and signal forwarding
