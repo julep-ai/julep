@@ -44,11 +44,17 @@ export const $Agents_PatchAgentRequest = {
       ],
     },
     default_settings: {
-      type: "all-of",
+      type: "any-of",
       description: `Default settings for all sessions created by this agent`,
       contains: [
         {
-          type: "Chat_DefaultChatSettings",
+          type: "Chat_GenerationPresetSettings",
+        },
+        {
+          type: "Chat_OpenAISettings",
+        },
+        {
+          type: "Chat_vLLMSettings",
         },
       ],
     },

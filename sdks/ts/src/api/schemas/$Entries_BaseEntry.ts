@@ -37,11 +37,9 @@ export const $Entries_BaseEntry = {
     },
     tokenizer: {
       type: "string",
-      isRequired: true,
     },
     token_count: {
       type: "number",
-      isRequired: true,
       format: "uint16",
     },
     timestamp: {

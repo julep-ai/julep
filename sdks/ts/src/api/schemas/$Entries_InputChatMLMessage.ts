@@ -2,28 +2,21 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Docs_CreateDocRequest = {
-  description: `Payload for creating a doc`,
+export const $Entries_InputChatMLMessage = {
   properties: {
-    metadata: {
-      type: "dictionary",
-      contains: {
-        properties: {},
-      },
-    },
-    title: {
+    role: {
       type: "all-of",
-      description: `Title describing what this document contains`,
+      description: `The role of the message`,
       contains: [
         {
-          type: "Common_identifierSafeUnicode",
+          type: "Entries_ChatMLRole",
         },
       ],
       isRequired: true,
     },
     content: {
       type: "any-of",
-      description: `Contents of the document`,
+      description: `The content parts of the message`,
       contains: [
         {
           type: "string",
@@ -36,6 +29,14 @@ export const $Docs_CreateDocRequest = {
         },
       ],
       isRequired: true,
+    },
+    name: {
+      type: "string",
+      description: `Name`,
+    },
+    continue: {
+      type: "boolean",
+      description: `Whether to continue this message or return a new one`,
     },
   },
 } as const;

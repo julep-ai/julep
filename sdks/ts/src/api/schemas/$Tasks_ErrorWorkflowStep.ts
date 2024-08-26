@@ -6,19 +6,12 @@ export const $Tasks_ErrorWorkflowStep = {
   type: "all-of",
   contains: [
     {
-      properties: {
-        kind_: {
-          type: "Enum",
-          isReadOnly: true,
-          isRequired: true,
-        },
-      },
+      type: "Tasks_BaseWorkflowStep",
     },
     {
       properties: {
         kind_: {
           type: "Enum",
-          isReadOnly: true,
           isRequired: true,
         },
         error: {

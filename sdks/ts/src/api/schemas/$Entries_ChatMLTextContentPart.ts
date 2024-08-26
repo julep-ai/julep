@@ -2,16 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Executions_TransitionTarget = {
+export const $Entries_ChatMLTextContentPart = {
   properties: {
-    workflow: {
-      type: "Common_identifierSafeUnicode",
+    text: {
+      type: "string",
       isRequired: true,
     },
-    step: {
-      type: "number",
+    type: {
+      type: "Enum",
       isRequired: true,
-      format: "uint16",
     },
   },
 } as const;

@@ -2,15 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Tasks_GetStep = {
+export type Tasks_BaseWorkflowStep = {
   /**
    * The kind of step
    */
-  readonly kind_: "get";
-} & {
-  readonly kind_: "get";
-  /**
-   * The key to get
-   */
-  get: string;
+  kind_:
+    | "tool_call"
+    | "yield"
+    | "prompt"
+    | "evaluate"
+    | "if_else"
+    | "wait_for_input"
+    | "error";
 };

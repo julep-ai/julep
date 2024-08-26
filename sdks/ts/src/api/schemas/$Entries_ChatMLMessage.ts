@@ -2,31 +2,44 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Chat_BaseChatResponse = {
+export const $Entries_ChatMLMessage = {
   properties: {
-    usage: {
+    role: {
       type: "all-of",
-      description: `Usage statistics for the completion request`,
+      description: `The role of the message`,
       contains: [
         {
-          type: "Chat_CompetionUsage",
+          type: "Entries_ChatMLRole",
         },
       ],
       isRequired: true,
-      isNullable: true,
     },
-    jobs: {
-      type: "array",
-      contains: {
-        type: "Common_uuid",
-      },
+    content: {
+      type: "any-of",
+      description: `The content parts of the message`,
+      contains: [
+        {
+          type: "string",
+        },
+        {
+          type: "array",
+          contains: {
+            type: "string",
+          },
+        },
+      ],
       isRequired: true,
     },
-    docs: {
+    name: {
+      type: "string",
+      description: `Name`,
+    },
+    tool_calls: {
       type: "array",
       contains: {
-        type: "Docs_DocReference",
+        type: "Tools_ChosenToolCall",
       },
+      isReadOnly: true,
       isRequired: true,
     },
     created_at: {

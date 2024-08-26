@@ -6,19 +6,12 @@ export const $Tasks_ToolCallStep = {
   type: "all-of",
   contains: [
     {
-      properties: {
-        kind_: {
-          type: "Enum",
-          isReadOnly: true,
-          isRequired: true,
-        },
-      },
+      type: "Tasks_BaseWorkflowStep",
     },
     {
       properties: {
         kind_: {
           type: "Enum",
-          isReadOnly: true,
           isRequired: true,
         },
         tool: {
@@ -32,19 +25,10 @@ export const $Tasks_ToolCallStep = {
           isRequired: true,
         },
         arguments: {
-          type: "any-of",
-          description: `The input parameters for the tool (defaults to last step output)`,
-          contains: [
-            {
-              type: "dictionary",
-              contains: {
-                type: "Common_PyExpression",
-              },
-            },
-            {
-              type: "Enum",
-            },
-          ],
+          type: "dictionary",
+          contains: {
+            properties: {},
+          },
           isRequired: true,
         },
       },

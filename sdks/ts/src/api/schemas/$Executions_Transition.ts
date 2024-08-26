@@ -20,27 +20,26 @@ export const $Executions_Transition = {
       isRequired: true,
     },
     output: {
-      properties: {},
+      type: "dictionary",
+      contains: {
+        properties: {},
+      },
       isReadOnly: true,
       isRequired: true,
     },
     current: {
-      type: "all-of",
-      contains: [
-        {
-          type: "Executions_TransitionTarget",
-        },
-      ],
+      type: "array",
+      contains: {
+        properties: {},
+      },
       isReadOnly: true,
       isRequired: true,
     },
     next: {
-      type: "all-of",
-      contains: [
-        {
-          type: "Executions_TransitionTarget",
-        },
-      ],
+      type: "array",
+      contains: {
+        properties: {},
+      },
       isReadOnly: true,
       isRequired: true,
       isNullable: true,

@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Common_JinjaTemplate = {
-  type: "string",
-  description: `A valid jinja template.`,
+export const $Chat_GenerationPreset = {
+  type: "Enum",
 } as const;

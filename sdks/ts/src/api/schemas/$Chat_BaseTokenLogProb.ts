@@ -20,6 +20,8 @@ export const $Chat_BaseTokenLogProb = {
         type: "number",
         format: "uint16",
       },
+      isRequired: true,
+      isNullable: true,
     },
   },
 } as const;

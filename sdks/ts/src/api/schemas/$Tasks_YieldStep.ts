@@ -6,41 +6,24 @@ export const $Tasks_YieldStep = {
   type: "all-of",
   contains: [
     {
-      properties: {
-        kind_: {
-          type: "Enum",
-          isReadOnly: true,
-          isRequired: true,
-        },
-      },
+      type: "Tasks_BaseWorkflowStep",
     },
     {
       properties: {
         kind_: {
           type: "Enum",
-          isReadOnly: true,
           isRequired: true,
         },
         workflow: {
           type: "string",
-          description: `The subworkflow to run.
-        VALIDATION: Should resolve to a defined subworkflow.`,
+          description: `The subworkflow to run`,
           isRequired: true,
         },
         arguments: {
-          type: "any-of",
-          description: `The input parameters for the subworkflow (defaults to last step output)`,
-          contains: [
-            {
-              type: "dictionary",
-              contains: {
-                type: "Common_PyExpression",
-              },
-            },
-            {
-              type: "Enum",
-            },
-          ],
+          type: "dictionary",
+          contains: {
+            type: "Common_PyExpression",
+          },
           isRequired: true,
         },
       },

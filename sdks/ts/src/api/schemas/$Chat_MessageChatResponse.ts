@@ -13,15 +13,7 @@ export const $Chat_MessageChatResponse = {
         choices: {
           type: "array",
           contains: {
-            type: "any-of",
-            contains: [
-              {
-                type: "Chat_SingleChatOutput",
-              },
-              {
-                type: "Chat_MultipleChatOutput",
-              },
-            ],
+            type: "Chat_ChatOutputChunk",
           },
           isRequired: true,
         },

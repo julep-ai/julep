@@ -2,19 +2,20 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Tasks_SetKey = {
+export const $Entries_ImageURL = {
   properties: {
-    key: {
+    url: {
       type: "string",
-      description: `The key to set`,
+      description: `Image URL or base64 data url (e.g. \`data:image/jpeg;base64,<the base64 encoded image>\`)`,
       isRequired: true,
+      format: "uri",
     },
-    value: {
+    detail: {
       type: "all-of",
-      description: `The value to set`,
+      description: `The detail level of the image`,
       contains: [
         {
-          type: "Common_PyExpression",
+          type: "Entries_ImageDetail",
         },
       ],
       isRequired: true,

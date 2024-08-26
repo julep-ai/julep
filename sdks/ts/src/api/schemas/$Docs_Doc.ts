@@ -28,10 +28,14 @@ export const $Docs_Doc = {
       format: "date-time",
     },
     title: {
-      type: "string",
+      type: "all-of",
       description: `Title describing what this document contains`,
+      contains: [
+        {
+          type: "Common_identifierSafeUnicode",
+        },
+      ],
       isRequired: true,
-      maxLength: 800,
     },
     content: {
       type: "any-of",

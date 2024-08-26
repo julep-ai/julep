@@ -2,13 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Tasks_WaitForInputInfo = {
+export const $Tasks_BaseWorkflowStep = {
   properties: {
-    info: {
-      type: "dictionary",
-      contains: {
-        type: "Common_PyExpression",
-      },
+    kind_: {
+      type: "Enum",
       isRequired: true,
     },
   },

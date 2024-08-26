@@ -2,13 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Tasks_ErrorWorkflowStep = {
-  /**
-   * The kind of step
-   */
-  readonly kind_: "error";
-} & {
-  readonly kind_: "error";
+import type { Tasks_BaseWorkflowStep } from "./Tasks_BaseWorkflowStep";
+export type Tasks_ErrorWorkflowStep = Tasks_BaseWorkflowStep & {
+  kind_: "error";
   /**
    * The error message
    */

@@ -7,7 +7,7 @@
  */
 export type Entries_ChatMLRole =
   | "user"
-  | "assistant"
+  | "agent"
   | "system"
   | "function"
   | "function_response"

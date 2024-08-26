@@ -6,27 +6,26 @@ export const $Tasks_WaitForInputStep = {
   type: "all-of",
   contains: [
     {
-      properties: {
-        kind_: {
-          type: "Enum",
-          isReadOnly: true,
-          isRequired: true,
-        },
-      },
+      type: "Tasks_BaseWorkflowStep",
     },
     {
       properties: {
         kind_: {
           type: "Enum",
-          isReadOnly: true,
           isRequired: true,
         },
-        wait_for_input: {
-          type: "all-of",
+        info: {
+          type: "any-of",
           description: `Any additional info or data`,
           contains: [
             {
-              type: "Tasks_WaitForInputInfo",
+              type: "string",
+            },
+            {
+              type: "dictionary",
+              contains: {
+                properties: {},
+              },
             },
           ],
           isRequired: true,

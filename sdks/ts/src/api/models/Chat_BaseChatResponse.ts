@@ -9,7 +9,7 @@ export type Chat_BaseChatResponse = {
   /**
    * Usage statistics for the completion request
    */
-  usage?: Chat_CompetionUsage;
+  usage: Chat_CompetionUsage | null;
   /**
    * Background job IDs that may have been spawned from this interaction.
    */

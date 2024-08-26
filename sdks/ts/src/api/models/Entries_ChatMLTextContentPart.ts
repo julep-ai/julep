@@ -2,6 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Users_CreateOrUpdateUserRequest = {
-  type: "Common_uuid",
-} as const;
+export type Entries_ChatMLTextContentPart = {
+  text: string;
+  /**
+   * The type (fixed to 'text')
+   */
+  type: "text";
+};

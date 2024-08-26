@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-/**
- * A valid jinja template.
- */
-export type Common_JinjaTemplate = string;
+export const $Users_CreateOrUpdateUserRequest_id = {
+  type: "Common_uuid",
+} as const;
