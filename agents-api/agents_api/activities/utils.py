@@ -8,6 +8,7 @@ from simpleeval import EvalWithCompoundTypes, SimpleEval
 from yaml import CSafeLoader
 
 ALLOWED_FUNCTIONS = {
+    "zip": zip,
     "len": len,
     "load_yaml": lambda string: yaml.load(string, Loader=CSafeLoader),
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),

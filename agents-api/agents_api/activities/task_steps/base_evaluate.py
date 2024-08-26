@@ -1,6 +1,8 @@
 from typing import Any
 
 from beartype import beartype
+from box import Box
+from openai import BaseModel
 from temporalio import activity
 
 from ...env import testing
@@ -14,6 +16,15 @@ async def base_evaluate(
 ) -> Any | list[Any] | dict[str, Any]:
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
+
+    # Turn the nested dict values from pydantic to dicts where possible
+    values = {
+        k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()
+    }
+
+    # TODO: We should make this frozen_box=True, but we need to make sure that
+    # we don't break anything
+    values = Box(values, frozen_box=False, conversion_box=False)
 
     evaluator = get_evaluator(names=values)
 
