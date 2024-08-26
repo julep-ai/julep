@@ -22,6 +22,7 @@ class CreateUserRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -47,6 +48,7 @@ class PatchUserRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -72,6 +74,7 @@ class UpdateUserRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -102,6 +105,7 @@ class User(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -112,3 +116,10 @@ class User(BaseModel):
     """
     About the user
     """
+
+
+class CreateOrUpdateUserRequest(CreateUserRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID

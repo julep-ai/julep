@@ -22,7 +22,7 @@ enum ImageDetail {
 /** ChatML role (system|assistant|user|function_call|function|function_response|auto) */
 enum ChatMLRole {
     user,
-    agent,
+    assistant,
     system,
     function,
     function_response,
@@ -30,23 +30,22 @@ enum ChatMLRole {
     auto,
 }
 
-model ImageURL {
+model ImageURL<T extends string = string> {
     /** Image URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`) */
-    @format("uri")
-    url: string;
+    url: T;
 
     /** The detail level of the image */
     detail: ImageDetail = ImageDetail.auto;
 }
 
-model ChatMLTextContentPart {
-    text: string;
+model ChatMLTextContentPart<T extends string = string> {
+    text: T;
 
     /** The type (fixed to 'text') */
     type: "text" = "text";
 }
 
-model ChatMLImageContentPart {
+model ChatMLImageContentPart<T extends string = string> {
     /** The image URL */
     image_url: ImageURL;
 
@@ -54,14 +53,14 @@ model ChatMLImageContentPart {
     type: "image_url" = "image_url";
 }
 
-alias ChatMLContentPart = ChatMLTextContentPart | ChatMLImageContentPart;
+alias ChatMLContentPart<T extends string = string> = ChatMLTextContentPart<T> | ChatMLImageContentPart<T>;
 
-model ChatMLMessage {
+model ChatMLMessage<T extends string = string> {
     /** The role of the message */
     role: ChatMLRole;
 
     /** The content parts of the message */
-    content: string | string[] | ChatMLContentPart[];
+    content: T | T[] | ChatMLContentPart<T>[];
 
     /** Name */
     name?: string;
@@ -79,11 +78,11 @@ model ChatMLMessage {
 }
 
 @withVisibility("create")
-model InputChatMLMessage {
-    ...ChatMLMessage;
+model InputChatMLMessage<T extends string = string> {
+    ...ChatMLMessage<T>;
 }
 
-alias EntryContent = ChatMLContentPart[] | Tool | ChosenToolCall | string | ToolResponse;
+alias EntryContent = ChatMLContentPart<string>[] | Tool | ChosenToolCall | string | ToolResponse;
 
 model BaseEntry {
     role: ChatMLRole;
@@ -91,8 +90,8 @@ model BaseEntry {
     content: EntryContent | EntryContent[];
     source: entrySource;
 
-    tokenizer?: string;
-    token_count?: uint16;
+    tokenizer: string;
+    token_count: uint16;
 
     /** This is the time that this event refers to. */
     @minValue(0)
@@ -112,7 +111,7 @@ model Relation {
 }
 
 model History {
-    entries: BaseEntry[];
+    entries: Entry[];
     relations: Relation[];
     session_id: Session.id;
 

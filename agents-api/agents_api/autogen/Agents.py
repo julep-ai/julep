@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from .Chat import GenerationPresetSettings, OpenAISettings, VLLMSettings
+from .Chat import DefaultChatSettings
 
 
 class Agent(BaseModel):
@@ -29,6 +29,7 @@ class Agent(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -47,9 +48,7 @@ class Agent(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -68,6 +67,7 @@ class CreateAgentRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -86,9 +86,42 @@ class CreateAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
+    """
+    Default settings for all sessions created by this agent
+    """
+
+
+class CreateOrUpdateAgentRequest(CreateAgentRequest):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID
+    metadata: dict[str, Any] | None = None
+    name: Annotated[
+        str,
+        Field(
+            "",
+            max_length=120,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    Name of the agent
+    """
+    about: str = ""
+    """
+    About the agent
+    """
+    model: str = ""
+    """
+    Model name to use (gpt-4-turbo, gemini-nano etc)
+    """
+    instructions: str | list[str] = ""
+    """
+    Instructions for the agent
+    """
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -107,6 +140,7 @@ class PatchAgentRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -125,9 +159,7 @@ class PatchAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """
@@ -146,6 +178,7 @@ class UpdateAgentRequest(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -164,9 +197,7 @@ class UpdateAgentRequest(BaseModel):
     """
     Instructions for the agent
     """
-    default_settings: (
-        GenerationPresetSettings | OpenAISettings | VLLMSettings | None
-    ) = None
+    default_settings: DefaultChatSettings | None = None
     """
     Default settings for all sessions created by this agent
     """

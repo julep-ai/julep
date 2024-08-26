@@ -36,6 +36,16 @@ class Offset(RootModel[int]):
     """
 
 
+class PyExpression(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: str
+    """
+    A simple python expression compatible with SimpleEval.
+    """
+
+
 class ResourceCreatedResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,

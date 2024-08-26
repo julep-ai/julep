@@ -20,8 +20,7 @@ model Agent {
     ...HasTimestamps;
 
     /** Name of the agent */
-    @maxLength(120)
-    name: identifierSafeUnicode = "";
+    name: identifierSafeUnicode = identifierSafeUnicode("");
 
     /** About the agent */
     about: string = "";
@@ -46,11 +45,12 @@ model UpdateAgentRequest {
 model PatchAgentRequest is UpdateAgentRequest {}
 
 /** Payload for creating a agent (and associated documents) */
+@withVisibility("create")
 model CreateAgentRequest {
     ...UpdateAgentRequest;
 }
 
-model CreateOrUpdateAgentRequest {
+model CreateOrUpdateAgentRequest extends CreateAgentRequest {
     @path
     id: uuid;
     ...UpdateAgentRequest;

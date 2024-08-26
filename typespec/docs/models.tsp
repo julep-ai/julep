@@ -19,7 +19,7 @@ model Doc {
 
     /** Title describing what this document contains */
     @maxLength(800)
-    title: identifierSafeUnicode;
+    title: string;
 
     /** Contents of the document */
     content: string | string[];
@@ -36,6 +36,11 @@ model DocOwner {
     role: "user" | "agent";
 }
 
+model Snippet {
+    index: uint16;
+    content: string;
+}
+
 model DocReference {
     /** The owner of this document. */
     owner: DocOwner;
@@ -43,11 +48,11 @@ model DocReference {
     /** ID of the document */
     id: Doc.id;
 
-    /** Snippets referred to of the document */
-    snippet_index: uint16[];
-
     title?: string;
-    snippet?: string;
+    
+    @minItems(1)
+    snippets: Snippet[];
+    distance: float | null = null;
 }
 
 model EmbedQueryRequest {
@@ -61,6 +66,34 @@ model EmbedQueryResponse {
 }
 
 model BaseDocSearchRequest {
+    @minValue(1)
+    @maxValue(100)
+    limit: uint16 = 10;
+
+    /** The language to be used for text-only search. Support for other languages coming soon. */
+    lang: "en-US" = "en-US";
+}
+
+model VectorDocSearchRequest extends BaseDocSearchRequest {
+    /** The confidence cutoff level */
+    @minValue(0)
+    @maxValue(1)
+    confidence: float = 0.5;
+
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
+
+    text?: never;
+}
+
+model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
+    /** Text to use in the search. */
+    text: string;
+
+    vector?: never;
+}
+
+model HybridDocSearchRequest extends BaseDocSearchRequest {
     /** The confidence cutoff level */
     @minValue(0)
     @maxValue(1)
@@ -71,33 +104,20 @@ model BaseDocSearchRequest {
     @maxValue(1)
     alpha: float = 0.75;
 
-    /** Whether to include the MMR algorithm in the search. Optimizes for diversity in search results. */
-    mmr: boolean = false;
+    /** Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
+    text: string;
 
-    /** The language to be used for text-only search. Support for other languages coming soon. */
-    lang: "en-US" = "en-US";
-}
-
-model VectorDocSearchRequest extends BaseDocSearchRequest {
-    /** Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[] | float[][];
-
-    text?: never;
-}
-
-model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
-    /** Text or texts to use in the search. */
-    text: string | string[];
-
-    vector?: never;
-}
-
-model HybridDocSearchRequest extends BaseDocSearchRequest {
-    /** Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required. */
-    text: string | string[];
-
-    /** Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
-    vector: float[] | float[][];
+    /** Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown. */
+    vector: float[];
 }
 
 alias DocSearchRequest = VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest;
+
+model DocSearchResponse {
+    /** The documents that were found */
+    docs: DocReference[];
+
+    /** The time taken to search in seconds */
+    @minValueExclusive(0)
+    time: float;
+}

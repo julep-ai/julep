@@ -3,9 +3,9 @@ version: "3"
 
 include:
   - ./memory-store/docker-compose.yml
-  - ./model-serving/docker-compose.yml
   - ./gateway/docker-compose.yml
   - ./agents-api/docker-compose.yml
+  - ./llm-proxy/docker-compose.yml
 
   # TODO: Enable after testing
   # - ./monitoring/docker-compose.yml

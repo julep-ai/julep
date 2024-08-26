@@ -1,11 +1,13 @@
-from typing import Annotated, Any, List, Tuple
+from typing import Annotated, Any, Type
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+from pydantic_partial import create_partial_model
 
 from ...autogen.openapi_model import (
     Agent,
     CreateTaskRequest,
+    CreateTransitionRequest,
     Execution,
     PartialTaskSpecDef,
     PatchTaskRequest,
@@ -15,42 +17,103 @@ from ...autogen.openapi_model import (
     TaskSpecDef,
     TaskToolDef,
     Tool,
+    TransitionTarget,
+    TransitionType,
     UpdateTaskRequest,
     User,
     Workflow,
     WorkflowStep,
 )
 
+### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
+valid_transitions = {
+    # Start state
+    "init": ["wait", "error", "step", "cancelled"],
+    # End states
+    "finish": [],
+    "error": [],
+    "cancelled": [],
+    # Intermediate states
+    "wait": ["resume", "error", "cancelled"],
+    "resume": ["wait", "error", "step", "finish", "cancelled"],
+    "step": ["wait", "error", "step", "finish", "cancelled"],
+}
+
+valid_previous_statuses = {
+    "running": ["queued", "starting", "awaiting_input"],
+    "cancelled": ["queued", "starting", "awaiting_input", "running"],
+}
+
+transition_to_execution_status = {
+    "init": "queued",
+    "wait": "awaiting_input",
+    "resume": "running",
+    "step": "running",
+    "finish": "succeeded",
+    "error": "failed",
+    "cancelled": "cancelled",
+}
+
+
+PendingTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+
 
 class ExecutionInput(BaseModel):
     developer_id: UUID
     execution: Execution
-    task: TaskSpec
+    task: TaskSpecDef
     agent: Agent
     tools: list[Tool]
     arguments: dict[str, Any]
+
+    # Not used at the moment
     user: User | None = None
     session: Session | None = None
 
 
-class StepContext(ExecutionInput):
-    definition: WorkflowStep
-    inputs: list[dict[str, Any]]
+class StepContext(BaseModel):
+    execution_input: ExecutionInput
+    inputs: list[Any]
+    cursor: TransitionTarget
+
+    @computed_field
+    @property
+    def outputs(self) -> Annotated[list[dict[str, Any]], Field(exclude=True)]:
+        return self.inputs[1:]
+
+    @computed_field
+    @property
+    def current_input(self) -> Annotated[dict[str, Any], Field(exclude=True)]:
+        return self.inputs[-1]
+
+    @computed_field
+    @property
+    def current_workflow(self) -> Annotated[Workflow, Field(exclude=True)]:
+        workflows: list[Workflow] = self.execution_input.task.workflows
+        return next(wf for wf in workflows if wf.name == self.cursor.workflow)
+
+    @computed_field
+    @property
+    def current_step(self) -> Annotated[WorkflowStep, Field(exclude=True)]:
+        step = self.current_workflow.steps[self.cursor.step]
+        return step
+
+    @computed_field
+    @property
+    def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
+        return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
-
-        dump["_"] = self.inputs[-1]
-        dump["outputs"] = self.inputs[1:]
+        dump["_"] = self.current_input
 
         return dump
 
 
-class TransitionInfo(BaseModel):
-    from_: Tuple[str, int]
-    to: List[str | int] | None = None
-    type: Annotated[str, Field(pattern="^(finish|wait|error|step)$")]
-    outputs: dict[str, Any] | None = None
+class StepOutcome(BaseModel):
+    error: str | None = None
+    output: Any = None
+    transition_to: tuple[TransitionType, TransitionTarget] | None = None
 
 
 def task_to_spec(

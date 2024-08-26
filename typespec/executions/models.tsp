@@ -1,5 +1,9 @@
+import "@typespec/http";
+
 import "../common";
 import "../tasks";
+
+using TypeSpec.Http;
 
 using Common;
 using Tasks;
@@ -71,7 +75,7 @@ model StopExecutionRequest extends UpdateExecutionRequest {
 
 model ResumeExecutionRequest extends UpdateExecutionRequest {
     status: "running" = "running";
-    
+
     /** The input to resume the execution with */
     input?: Record<unknown>;
 }
@@ -80,6 +84,7 @@ model TaskTokenResumeExecutionRequest {
     status: "running" = "running";
 
     /** A Task Token is a unique identifier for a specific Task Execution. */
+    @query
     task_token: string;
 
     /** The input to resume the execution with */
@@ -103,7 +108,10 @@ alias TransitionType = (
     | "cancelled"
 );
 
-alias TransitionTarget = [validPythonIdentifier, uint16];
+model TransitionTarget {
+    workflow: identifierSafeUnicode;
+    step: uint16;
+}
 
 model Transition {
     @visibility("read")
@@ -113,7 +121,7 @@ model Transition {
     execution_id: Execution.id;
 
     @visibility("read")
-    output: Record<unknown>;
+    output: unknown;
 
     @visibility("read")
     current: TransitionTarget;

@@ -13,21 +13,29 @@ class BaseDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
-    """
-    The confidence cutoff level
-    """
-    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
-    """
-    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
-    """
-    mmr: bool = False
-    """
-    Whether to include the MMR algorithm in the search. Optimizes for diversity in search results.
-    """
+    limit: Annotated[int, Field(10, ge=1, le=100)]
     lang: Literal["en-US"] = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
+    """
+
+
+class CreateDocRequest(BaseModel):
+    """
+    Payload for creating a doc
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    metadata: dict[str, Any] | None = None
+    title: Annotated[str, Field(max_length=800)]
+    """
+    Title describing what this document contains
+    """
+    content: str | list[str]
+    """
+    Contents of the document
     """
 
 
@@ -41,12 +49,7 @@ class Doc(BaseModel):
     """
     When this resource was created as UTC date-time
     """
-    title: Annotated[
-        str,
-        Field(
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$"
-        ),
-    ]
+    title: Annotated[str, Field(max_length=800)]
     """
     Title describing what this document contains
     """
@@ -76,12 +79,23 @@ class DocReference(BaseModel):
     """
     ID of the document
     """
-    snippet_index: list[int]
-    """
-    Snippets referred to of the document
-    """
     title: str | None = None
-    snippet: str | None = None
+    snippets: Annotated[list[Snippet], Field(min_length=1)]
+    distance: float | None = None
+
+
+class DocSearchResponse(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    docs: list[DocReference]
+    """
+    The documents that were found
+    """
+    time: Annotated[float, Field(gt=0.0)]
+    """
+    The time taken to search in seconds
+    """
 
 
 class EmbedQueryRequest(BaseModel):
@@ -108,23 +122,39 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    text: str | list[str]
+    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
     """
-    Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    The confidence cutoff level
     """
-    vector: list[float] | list[list[float]]
+    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
     """
-    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
+    text: str
+    """
+    Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+    """
+    vector: list[float]
+    """
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+
+
+class Snippet(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    index: int
+    content: str
 
 
 class TextOnlyDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    text: str | list[str]
+    text: str
     """
-    Text or texts to use in the search.
+    Text to use in the search.
     """
 
 
@@ -132,7 +162,11 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    vector: list[float] | list[list[float]]
+    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
     """
-    Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    The confidence cutoff level
+    """
+    vector: list[float]
+    """
+    Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
     """

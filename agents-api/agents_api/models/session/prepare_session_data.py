@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -5,8 +6,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import make_session
-from ...common.protocol.sessions import SessionData
+from ...common.protocol.sessions import SessionData, make_session
 from ..utils import (
     cozo_query,
     partialclass,
@@ -15,6 +15,9 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

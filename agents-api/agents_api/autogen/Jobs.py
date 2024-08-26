@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 
 class JobStatus(BaseModel):
@@ -26,6 +26,7 @@ class JobStatus(BaseModel):
         str,
         Field(
             "",
+            max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
     ]
@@ -36,7 +37,7 @@ class JobStatus(BaseModel):
     """
     Reason for the current state of the job
     """
-    has_progress: bool = False
+    has_progress: StrictBool = False
     """
     Whether this Job supports progress updates
     """

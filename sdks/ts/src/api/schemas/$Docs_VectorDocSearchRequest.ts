@@ -10,26 +10,17 @@ export const $Docs_VectorDocSearchRequest = {
     },
     {
       properties: {
+        confidence: {
+          type: "number",
+          description: `The confidence cutoff level`,
+          isRequired: true,
+          maximum: 1,
+        },
         vector: {
-          type: "any-of",
-          description: `Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.`,
-          contains: [
-            {
-              type: "array",
-              contains: {
-                type: "number",
-              },
-            },
-            {
-              type: "array",
-              contains: {
-                type: "array",
-                contains: {
-                  type: "number",
-                },
-              },
-            },
-          ],
+          type: "array",
+          contains: {
+            type: "number",
+          },
           isRequired: true,
         },
       },

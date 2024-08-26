@@ -200,7 +200,7 @@ client.agents_route_create(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsCreateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -394,7 +394,7 @@ client.agents_route_create_or_update(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsUpdateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -517,7 +517,7 @@ client.agents_route_update(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsUpdateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -707,7 +707,7 @@ client.agents_route_patch(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsPatchAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -843,6 +843,183 @@ client.agent_docs_route_list(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">agent_docs_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a Doc for this Agent
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_docs_route_create(
+    id="id",
+    title="title",
+    content="content",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**title:** `CommonIdentifierSafeUnicode` — Title describing what this document contains
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**content:** `DocsCreateDocRequestContent` — Contents of the document
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">agent_docs_route_delete</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Delete a Doc for this Agent
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.agent_docs_route_delete(
+    id="id",
+    child_id="child_id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be deleted
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">agents_docs_search_route_search</a>(...)</code></summary>
 <dl>
 <dd>
@@ -879,15 +1056,9 @@ client = JulepApi(
 )
 client.agents_docs_search_route_search(
     id="id",
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
     body=DocsVectorDocSearchRequest(
+        limit=1,
         confidence=1.1,
-        alpha=1.1,
-        mmr=True,
         vector=[1.1],
     ),
 )
@@ -907,46 +1078,6 @@ client.agents_docs_search_route_search(
 <dd>
 
 **id:** `CommonUuid` — ID of the parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `AgentsDocsSearchRouteSearchRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `AgentsDocsSearchRouteSearchRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>
@@ -1793,7 +1924,7 @@ client.agent_tools_route_create(
 <dl>
 <dd>
 
-**default_settings:** `typing.Optional[AgentsCreateAgentRequestDefaultSettings]` — Default settings for all sessions created by this agent
+**default_settings:** `typing.Optional[ChatDefaultChatSettings]` — Default settings for all sessions created by this agent
     
 </dd>
 </dl>
@@ -2107,7 +2238,7 @@ client.agent_tools_route_patch(
 <dl>
 <dd>
 
-**function:** `typing.Optional[ToolsFunctionDefUpdate]` 
+**function:** `typing.Optional[ToolsFunctionDef]` 
     
 </dd>
 </dl>
@@ -2214,7 +2345,7 @@ client.tasks_create_or_update_route_create_or_update(
 <dl>
 <dd>
 
-**parent_id:** `CommonUuid` — ID of parent resource
+**parent_id:** `CommonUuid` — ID of the agent
     
 </dd>
 </dl>
@@ -2369,77 +2500,6 @@ client.individual_docs_route_get(
 </dl>
 </details>
 
-<details><summary><code>client.<a href="src/julep/client.py">individual_docs_route_delete</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Delete an existing Doc by id
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.individual_docs_route_delete(
-    id="id",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of the resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
 <details><summary><code>client.<a href="src/julep/client.py">embed_route_embed</a>(...)</code></summary>
 <dl>
 <dd>
@@ -2514,6 +2574,85 @@ client.embed_route_embed(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">executions_route_resume_with_task_token</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Resume an execution with a task token
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.executions_route_resume_with_task_token(
+    task_token="task_token",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**task_token:** `str` — A Task Token is a unique identifier for a specific Task Execution.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**input:** `typing.Optional[typing.Dict[str, typing.Any]]` — The input to resume the execution with
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">executions_route_get</a>(...)</code></summary>
 <dl>
 <dd>
@@ -2566,6 +2705,89 @@ client.executions_route_get(
 <dd>
 
 **id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">executions_route_update</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Update an existing Execution
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep import ExecutionsUpdateExecutionRequest_Cancelled
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.executions_route_update(
+    id="string",
+    request=ExecutionsUpdateExecutionRequest_Cancelled(
+        reason="string",
+    ),
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of the resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request:** `ExecutionsUpdateExecutionRequest` 
     
 </dd>
 </dl>
@@ -3553,7 +3775,7 @@ Generate a response from the model
 <dd>
 
 ```python
-from julep import ChatRouteGenerateRequestPreset, EntriesInputChatMlMessage
+from julep import EntriesInputChatMlMessage
 from julep.client import JulepApi
 
 client = JulepApi(
@@ -3562,18 +3784,16 @@ client = JulepApi(
 )
 client.chat_route_generate(
     id="id",
-    request=ChatRouteGenerateRequestPreset(
-        messages=[
-            EntriesInputChatMlMessage(
-                role="user",
-                content="content",
-            )
-        ],
-        recall=True,
-        remember=True,
-        save=True,
-        stream=True,
-    ),
+    messages=[
+        EntriesInputChatMlMessage(
+            role="user",
+            content="content",
+        )
+    ],
+    remember=True,
+    recall=True,
+    save=True,
+    stream=True,
 )
 
 ```
@@ -3598,7 +3818,167 @@ client.chat_route_generate(
 <dl>
 <dd>
 
-**request:** `ChatRouteGenerateRequest` 
+**remember:** `bool` — DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**recall:** `bool` — Whether previous memories and docs should be recalled or not
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**save:** `bool` — Whether this interaction should be stored in the session history or not
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**stream:** `bool` — Indicates if the server should stream the response as it's generated
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**messages:** `typing.Sequence[EntriesInputChatMlMessage]` — A list of new input messages comprising the conversation so far.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**model:** `typing.Optional[CommonIdentifierSafeUnicode]` — Identifier of the model to be used
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**stop:** `typing.Optional[typing.Sequence[str]]` — Up to 4 sequences where the API will stop generating further tokens.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**seed:** `typing.Optional[int]` — If specified, the system will make a best effort to sample deterministically for that particular seed value
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**max_tokens:** `typing.Optional[int]` — The maximum number of tokens to generate in the chat completion
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**logit_bias:** `typing.Optional[typing.Dict[str, CommonLogitBias]]` — Modify the likelihood of specified tokens appearing in the completion
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**response_format:** `typing.Optional[ChatCompletionResponseFormat]` — Response format (set to `json_object` to restrict output to JSON)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**agent:** `typing.Optional[CommonUuid]` — Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**repetition_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**length_penalty:** `typing.Optional[float]` — Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**min_p:** `typing.Optional[float]` — Minimum probability compared to leading token to be considered
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**frequency_penalty:** `typing.Optional[float]` — Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**presence_penalty:** `typing.Optional[float]` — Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**temperature:** `typing.Optional[float]` — What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**top_p:** `typing.Optional[float]` — Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tools:** `typing.Optional[typing.Sequence[ToolsFunctionTool]]` — (Advanced) List of tools that are provided in addition to agent's default set of tools.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**tool_choice:** `typing.Optional[ChatChatInputDataToolChoice]` — Can be one of existing tools given to the agent earlier or the ones provided in this request.
     
 </dd>
 </dl>
@@ -3653,7 +4033,6 @@ client = JulepApi(
 )
 client.history_route_history(
     id="id",
-    limit=1,
 )
 
 ```
@@ -3671,14 +4050,6 @@ client.history_route_history(
 <dd>
 
 **id:** `CommonUuid` — ID of parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
     
 </dd>
 </dl>
@@ -3954,186 +4325,6 @@ client.task_executions_route_create(
 <dd>
 
 **metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">task_executions_route_resume_with_task_token</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Resume an execution with a task token
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.task_executions_route_resume_with_task_token(
-    id="id",
-    task_token="task_token",
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of parent Task
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**task_token:** `str` — A Task Token is a unique identifier for a specific Task Execution.
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**input:** `typing.Optional[typing.Dict[str, typing.Any]]` — The input to resume the execution with
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
-    
-</dd>
-</dl>
-</dd>
-</dl>
-
-
-</dd>
-</dl>
-</details>
-
-<details><summary><code>client.<a href="src/julep/client.py">task_executions_route_update</a>(...)</code></summary>
-<dl>
-<dd>
-
-#### 📝 Description
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-Update an existing Execution
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### 🔌 Usage
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-```python
-from julep import ExecutionsUpdateExecutionRequest_Cancelled
-from julep.client import JulepApi
-
-client = JulepApi(
-    auth_key="YOUR_AUTH_KEY",
-    api_key="YOUR_API_KEY",
-)
-client.task_executions_route_update(
-    id="string",
-    child_id="string",
-    request=ExecutionsUpdateExecutionRequest_Cancelled(
-        reason="string",
-    ),
-)
-
-```
-</dd>
-</dl>
-</dd>
-</dl>
-
-#### ⚙️ Parameters
-
-<dl>
-<dd>
-
-<dl>
-<dd>
-
-**id:** `CommonUuid` — ID of parent resource
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**child_id:** `CommonUuid` — ID of the resource to be updated
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**request:** `ExecutionsUpdateExecutionRequest` 
     
 </dd>
 </dl>
@@ -4895,6 +5086,183 @@ client.user_docs_route_list(
 </dl>
 </details>
 
+<details><summary><code>client.<a href="src/julep/client.py">user_docs_route_create</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a Doc for this User
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.user_docs_route_create(
+    id="id",
+    title="title",
+    content="content",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**title:** `CommonIdentifierSafeUnicode` — Title describing what this document contains
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**content:** `DocsCreateDocRequestContent` — Contents of the document
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `typing.Optional[typing.Dict[str, typing.Any]]` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.<a href="src/julep/client.py">user_docs_route_delete</a>(...)</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Delete a Doc for this User
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```python
+from julep.client import JulepApi
+
+client = JulepApi(
+    auth_key="YOUR_AUTH_KEY",
+    api_key="YOUR_API_KEY",
+)
+client.user_docs_route_delete(
+    id="id",
+    child_id="child_id",
+)
+
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `CommonUuid` — ID of parent resource
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**child_id:** `CommonUuid` — ID of the resource to be deleted
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**request_options:** `typing.Optional[RequestOptions]` — Request-specific configuration.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.<a href="src/julep/client.py">user_docs_search_route_search</a>(...)</code></summary>
 <dl>
 <dd>
@@ -4931,15 +5299,9 @@ client = JulepApi(
 )
 client.user_docs_search_route_search(
     id="id",
-    limit=1,
-    offset=1,
-    sort_by="created_at",
-    direction="asc",
-    metadata_filter="metadata_filter",
     body=DocsVectorDocSearchRequest(
+        limit=1,
         confidence=1.1,
-        alpha=1.1,
-        mmr=True,
         vector=[1.1],
     ),
 )
@@ -4959,46 +5321,6 @@ client.user_docs_search_route_search(
 <dd>
 
 **id:** `CommonUuid` — ID of the parent
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**limit:** `CommonLimit` — Limit the number of items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**offset:** `CommonOffset` — Offset the items returned
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**sort_by:** `UserDocsSearchRouteSearchRequestSortBy` — Sort by a field
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**direction:** `UserDocsSearchRouteSearchRequestDirection` — Sort direction
-    
-</dd>
-</dl>
-
-<dl>
-<dd>
-
-**metadata_filter:** `str` — JSON string of object that should be used to filter objects by metadata
     
 </dd>
 </dl>

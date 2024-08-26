@@ -7,7 +7,7 @@ export const $Entries_History = {
     entries: {
       type: "array",
       contains: {
-        type: "Entries_BaseEntry",
+        type: "Entries_Entry",
       },
       isRequired: true,
     },

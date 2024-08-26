@@ -1,29 +1,73 @@
 #!/usr/bin/env python3
 
 
+import asyncio
 from datetime import timedelta
+from typing import Any
 
+from pydantic import RootModel
 from temporalio import workflow
+from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
-    from ..activities.task_steps import (
-        evaluate_step,
-        if_else_step,
-        prompt_step,
-        tool_call_step,
-        transition_step,
-    )
-    from ..common.protocol.tasks import (
+    from ..activities import task_steps
+    from ..autogen.openapi_model import (
+        CreateTransitionRequest,
+        ErrorWorkflowStep,
         EvaluateStep,
-        ExecutionInput,
-        # ErrorWorkflowStep,
+        ForeachDo,
+        ForeachStep,
         IfElseWorkflowStep,
+        LogStep,
+        MapReduceStep,
         PromptStep,
-        StepContext,
-        ToolCallStep,
-        TransitionInfo,
+        ReturnStep,
+        SleepFor,
+        SleepStep,
+        SwitchStep,
+        # ToolCallStep,
+        TransitionTarget,
+        WaitForInputStep,
+        Workflow,
+        WorkflowStep,
         YieldStep,
     )
+    from ..common.protocol.tasks import (
+        ExecutionInput,
+        PendingTransition,
+        StepContext,
+        StepOutcome,
+    )
+    from ..env import testing
+
+
+STEP_TO_ACTIVITY = {
+    PromptStep: task_steps.prompt_step,
+    # ToolCallStep: tool_call_step,
+    WaitForInputStep: task_steps.wait_for_input_step,
+    SwitchStep: task_steps.switch_step,
+    # FIXME: These should be moved to local activities
+    #        once temporal has fixed error handling for local activities
+    LogStep: task_steps.log_step,
+    EvaluateStep: task_steps.evaluate_step,
+    ReturnStep: task_steps.return_step,
+    YieldStep: task_steps.yield_step,
+    IfElseWorkflowStep: task_steps.if_else_step,
+    ForeachStep: task_steps.for_each_step,
+    MapReduceStep: task_steps.map_reduce_step,
+}
+
+# TODO: Avoid local activities for now (currently experimental)
+STEP_TO_LOCAL_ACTIVITY = {
+    # # NOTE: local activities are directly called in the workflow executor
+    # #       They MUST NOT FAIL, otherwise they will crash the workflow
+    # EvaluateStep: task_steps.evaluate_step,
+    # ReturnStep: task_steps.return_step,
+    # YieldStep: task_steps.yield_step,
+    # IfElseWorkflowStep: task_steps.if_else_step,
+}
+
+GenericStep = RootModel[WorkflowStep]
 
 
 @workflow.defn
@@ -32,113 +76,308 @@ class TaskExecutionWorkflow:
     async def run(
         self,
         execution_input: ExecutionInput,
-        start: tuple[str, int] = ("main", 0),
-        previous_inputs: list[dict] = [],
-    ) -> None:
-        wf_name, step_idx = start
-        spec = execution_input.task.spec
-        workflow_map = {wf.name: wf.steps for wf in spec.workflows}
-        current_workflow = workflow_map[wf_name]
+        start: TransitionTarget = TransitionTarget(workflow="main", step=0),
+        previous_inputs: list[Any] = [],
+    ) -> Any:
+        # 0. Prepare context
         previous_inputs = previous_inputs or [execution_input.arguments]
-        step = current_workflow[step_idx]
 
         context = StepContext(
-            developer_id=execution_input.developer_id,
-            execution=execution_input.execution,
-            task=execution_input.task,
-            agent=execution_input.agent,
-            user=execution_input.user,
-            session=execution_input.session,
-            tools=execution_input.tools,
-            arguments=execution_input.arguments,
-            definition=step,
+            execution_input=execution_input,
             inputs=previous_inputs,
+            cursor=start,
         )
 
-        should_wait = False
-        # Run the step
-        match step:
-            case PromptStep():
-                outputs = await workflow.execute_activity(
-                    prompt_step,
-                    context,
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
+        step_type = type(context.current_step)
 
-                # TODO: ChatCompletion does not have tool_calls
-                # if outputs.tool_calls is not None:
-                #     should_wait = True
+        # ---
 
-            case EvaluateStep():
-                outputs = await workflow.execute_activity(
-                    evaluate_step,
-                    context,
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
-            case YieldStep():
-                outputs = await workflow.execute_child_workflow(
-                    TaskExecutionWorkflow.run,
-                    args=[execution_input, (step.workflow, 0), previous_inputs],
-                )
-            case ToolCallStep():
-                outputs = await workflow.execute_activity(
-                    tool_call_step,
-                    context,
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
-            # case ErrorWorkflowStep():
-            #     result = await workflow.execute_activity(
-            #         error_step,
-            #         context,
-            #         schedule_to_close_timeout=timedelta(seconds=600),
-            #     )
-            case IfElseWorkflowStep():
-                outputs = await workflow.execute_activity(
-                    if_else_step,
-                    context,
-                    schedule_to_close_timeout=timedelta(seconds=600),
-                )
-                workflow_step = YieldStep(**outputs["goto_workflow"])
-
-                outputs = await workflow.execute_child_workflow(
-                    TaskExecutionWorkflow.run,
-                    args=[
-                        execution_input,
-                        (workflow_step.workflow, 0),
-                        previous_inputs,
-                    ],
-                )
-
-        is_last = step_idx + 1 == len(current_workflow)
-        # Transition type
-        transition_type = (
-            "awaiting_input" if should_wait else ("finish" if is_last else "step")
+        # 1a. Set global state
+        #     (By default, exit if last otherwise transition 'step' to the next step)
+        state = PendingTransition(
+            type="finish" if context.is_last_step else "step",
+            next=None
+            if context.is_last_step
+            else TransitionTarget(workflow=start.workflow, step=start.step + 1),
+            metadata={"__meta__": {"step_type": step_type.__name__}},
         )
 
-        # Transition to the next step
-        transition_info = TransitionInfo(
-            from_=(wf_name, step_idx),
-            to=None if (is_last or should_wait) else (wf_name, step_idx + 1),
-            type=transition_type,
-        )
+        # 1b. Prep a transition request
+        async def transition(**kwargs) -> None:
+            # NOTE: The state variable is closured from the outer scope
+            transition_request = CreateTransitionRequest(
+                current=context.cursor,
+                **{
+                    **state.model_dump(exclude_unset=True),
+                    **kwargs,  # Override with any additional kwargs
+                },
+            )
 
-        await workflow.execute_activity(
-            transition_step,
-            args=[
+            await workflow.execute_activity(
+                task_steps.transition_step,
+                args=[context, transition_request],
+                schedule_to_close_timeout=timedelta(seconds=600),
+            )
+
+        # ---
+
+        # 2. Execute the current step's activity if applicable
+        if activity := STEP_TO_ACTIVITY.get(step_type):
+            execute_activity = workflow.execute_activity
+        elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
+            execute_activity = workflow.execute_local_activity
+        else:
+            execute_activity = None
+
+        outcome = None
+        if execute_activity:
+            outcome = await execute_activity(
+                activity,
                 context,
-                transition_info,
-            ],
-            schedule_to_close_timeout=timedelta(seconds=600),
-        )
+                #
+                # TODO: This should be a configurable timeout everywhere based on the task
+                schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
+            )
 
-        # FIXME: this is just a demo, we should handle the end of the workflow properly
-        # -----
+        # ---
 
+        # 3. Then, based on the outcome and step type, decide what to do next
+        match context.current_step, outcome:
+            # Handle errors (activity returns None)
+            case step, StepOutcome(error=error) if error is not None:
+                raise ApplicationError(
+                    f"{type(step).__name__} step threw error: {error}"
+                )
+
+            case LogStep(), StepOutcome(output=output):
+                # Add the logged message to transition history
+                await transition(output=dict(logged=output))
+
+                # Set the output to the current input
+                state.output = context.current_input
+
+            case ReturnStep(), StepOutcome(output=output):
+                await transition(output=output, type="finish", next=None)
+                return output  # <--- Byeeee!
+
+            case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
+                chosen_branch = switch[index]
+
+                # Create a faux workflow
+                case_wf_name = (
+                    f"`{context.cursor.workflow}`[{context.cursor.step}].case"
+                )
+
+                case_task = execution_input.task.model_copy()
+                case_task.workflows = [
+                    Workflow(name=case_wf_name, steps=[chosen_branch.then])
+                ]
+
+                # Create a new execution input
+                case_execution_input = execution_input.model_copy()
+                case_execution_input.task = case_task
+
+                # Set the next target to the chosen branch
+                case_next_target = TransitionTarget(workflow=case_wf_name, step=0)
+
+                case_args = [
+                    case_execution_input,
+                    case_next_target,
+                    previous_inputs,
+                ]
+
+                # Execute the chosen branch and come back here
+                state.output = await workflow.execute_child_workflow(
+                    TaskExecutionWorkflow.run,
+                    args=case_args,
+                )
+
+            case SwitchStep(), StepOutcome(output=index) if index < 0:
+                # If no case matched, then the output will be -1
+                raise ApplicationError("Negative indices not allowed")
+
+            case IfElseWorkflowStep(then=then_branch, else_=else_branch), StepOutcome(
+                output=condition
+            ):
+                # Choose the branch based on the condition
+                chosen_branch = then_branch if condition else else_branch
+
+                # Create a faux workflow
+                if_else_wf_name = (
+                    f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
+                )
+                if_else_wf_name += ".then" if condition else ".else"
+
+                if_else_task = execution_input.task.model_copy()
+                if_else_task.workflows = [
+                    Workflow(name=if_else_wf_name, steps=[chosen_branch])
+                ]
+
+                # Create a new execution input
+                if_else_execution_input = execution_input.model_copy()
+                if_else_execution_input.task = if_else_task
+
+                # Set the next target to the chosen branch
+                if_else_next_target = TransitionTarget(workflow=if_else_wf_name, step=0)
+
+                if_else_args = [
+                    if_else_execution_input,
+                    if_else_next_target,
+                    previous_inputs,
+                ]
+
+                # Execute the chosen branch and come back here
+                state.output = await workflow.execute_child_workflow(
+                    TaskExecutionWorkflow.run,
+                    args=if_else_args,
+                )
+
+            case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(output=items):
+                for i, item in enumerate(items):
+                    # Create a faux workflow
+                    foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
+
+                    foreach_task = execution_input.task.model_copy()
+                    foreach_task.workflows = [
+                        Workflow(name=foreach_wf_name, steps=[do_step])
+                    ]
+
+                    # Create a new execution input
+                    foreach_execution_input = execution_input.model_copy()
+                    foreach_execution_input.task = foreach_task
+
+                    # Set the next target to the chosen branch
+                    foreach_next_target = TransitionTarget(
+                        workflow=foreach_wf_name, step=0
+                    )
+
+                    foreach_args = [
+                        foreach_execution_input,
+                        foreach_next_target,
+                        previous_inputs + [{"item": item}],
+                    ]
+
+                    # Execute the chosen branch and come back here
+                    state.output = await workflow.execute_child_workflow(
+                        TaskExecutionWorkflow.run,
+                        args=foreach_args,
+                    )
+
+            case MapReduceStep(
+                map=map_defn, reduce=reduce, initial=initial
+            ), StepOutcome(output=items):
+                initial = initial or []
+                reduce = reduce or "results + [_]"
+
+                for i, item in enumerate(items):
+                    workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
+                    map_reduce_task = execution_input.task.model_copy()
+
+                    defn_dict = map_defn.model_dump()
+                    step_defn = GenericStep(**defn_dict).root
+                    map_reduce_task.workflows = [
+                        Workflow(name=workflow_name, steps=[step_defn])
+                    ]
+
+                    # Create a new execution input
+                    map_reduce_execution_input = execution_input.model_copy()
+                    map_reduce_execution_input.task = map_reduce_task
+
+                    # Set the next target to the chosen branch
+                    map_reduce_next_target = TransitionTarget(
+                        workflow=workflow_name, step=0
+                    )
+
+                    map_reduce_args = [
+                        map_reduce_execution_input,
+                        map_reduce_next_target,
+                        previous_inputs + [item],
+                    ]
+
+                    # TODO: We should parallelize this
+                    # Execute the chosen branch and come back here
+                    output = await workflow.execute_child_workflow(
+                        TaskExecutionWorkflow.run,
+                        args=map_reduce_args,
+                    )
+
+                    initial = await execute_activity(
+                        task_steps.base_evaluate,
+                        args=[
+                            reduce,
+                            {"results": initial, "_": output},
+                        ],
+                        schedule_to_close_timeout=timedelta(seconds=2),
+                    )
+
+                state.output = initial
+                await transition()
+
+            case SleepStep(
+                sleep=SleepFor(
+                    seconds=seconds,
+                    minutes=minutes,
+                    hours=hours,
+                    days=days,
+                )
+            ), _:
+                seconds = seconds + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
+                assert seconds > 0, "Sleep duration must be greater than 0"
+
+                state.output = await asyncio.sleep(
+                    seconds, result=context.current_input
+                )
+
+                await transition()
+
+            case EvaluateStep(), StepOutcome(output=output):
+                state.output = output
+                await transition()
+
+            case ErrorWorkflowStep(error=error), _:
+                state.output = dict(error=error)
+                state.type = "error"
+                await transition()
+
+                raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
+
+            case YieldStep(), StepOutcome(
+                output=output, transition_to=(yield_transition_type, yield_next_target)
+            ):
+                await transition(
+                    output=output, type=yield_transition_type, next=yield_next_target
+                )
+
+                state.output = await workflow.execute_child_workflow(
+                    TaskExecutionWorkflow.run,
+                    args=[execution_input, yield_next_target, [output]],
+                )
+
+            case WaitForInputStep(), StepOutcome(output=output):
+                await transition(output=output, type="wait", next=None)
+
+                state.type = "resume"
+                state.output = await execute_activity(
+                    task_steps.raise_complete_async,
+                    schedule_to_close_timeout=timedelta(days=31),
+                )
+
+            case PromptStep(), StepOutcome(output=response):
+                state.output = response
+
+            case _:
+                raise ApplicationError("Not implemented")
+
+        # ---
+
+        # 4. Closing
         # End if the last step
-        if is_last:
-            return outputs
+        if state.type in ("finish", "cancelled"):
+            return state.output
 
         # Otherwise, recurse to the next step
+        # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
+        #       Otherwise, we should just call the next step as a child workflow
         workflow.continue_as_new(
-            execution_input, (wf_name, step_idx + 1), previous_inputs + [outputs]
+            args=[execution_input, state.next, previous_inputs + [state.output]]
         )

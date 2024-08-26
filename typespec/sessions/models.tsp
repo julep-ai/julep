@@ -54,7 +54,7 @@ model Session {
     summary: string | null = null;
 
     /** Render system and assistant message content as jinja templates */
-    render_templates: boolean = false;
+    render_templates: boolean = true;
 
     /** Threshold value for the adaptive context functionality */
     token_budget: uint16 | null = null;
@@ -150,7 +150,7 @@ model CreateSessionRequest {
 }
 
 @withVisibility("create", "update")
-model CreateOrUpdateSessionRequest {
+model CreateOrUpdateSessionRequest extends CreateSessionRequest {
     @path
     id: uuid;
 

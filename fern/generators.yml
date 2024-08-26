@@ -11,8 +11,3 @@ groups:
         output:
           location: local-file-system
           path: ../sdks/python/julep/api
-      - name: fernapi/fern-postman
-        version: 0.1.1
-        output:
-          location: local-file-system
-          path: ../sdks/postman

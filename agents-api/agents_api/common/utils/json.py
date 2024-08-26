@@ -10,7 +10,7 @@ from pydantic import BaseModel
 class CustomJSONEncoder(json.JSONEncoder):
     """A custom JSON encoder subclass that handles None values and UUIDs for JSON serialization. It allows specifying a default value for None objects during initialization."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Initializes the custom JSON encoder.
         Parameters:
         *args: Variable length argument list.
@@ -19,7 +19,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         self._default_empty_value = kwargs.pop("default_empty_value")
         super().__init__(*args, **kwargs)
 
-    def encode(self, o):
+    def encode(self, o) -> str:
         """Encodes the given object into a JSON formatted string.
         Parameters:
         o: The object to encode.
@@ -27,7 +27,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         # Use the overridden default method for serialization before encoding
         return super().encode(self.default(o))
 
-    def default(self, obj):
+    def default(self, obj) -> Any:
         """Provides a default serialization for objects that the standard JSON encoder cannot serialize.
         Parameters:
         obj: The object to serialize.

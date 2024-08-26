@@ -3,24 +3,27 @@ This module initializes the FastAPI application, registers routes, sets up middl
 """
 
 import logging
+from typing import Any, Callable
 
 import fire
 import sentry_sdk
 import uvicorn
 from fastapi import Depends, FastAPI, Request, status
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from pycozo.client import QueryException
 from temporalio.service import RPCError
 
-from agents_api.common.exceptions import BaseCommonException
-from agents_api.dependencies.auth import get_api_key
-from agents_api.env import sentry_dsn
-from agents_api.exceptions import PromptTooBigError
-from agents_api.routers import (
+from .common.exceptions import BaseCommonException
+from .dependencies.auth import get_api_key
+from .env import sentry_dsn
+from .exceptions import PromptTooBigError
+from .routers import (
     agents,
+    docs,
     jobs,
     sessions,
     tasks,
@@ -36,10 +39,10 @@ else:
     )
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def make_exception_handler(status: int):
+def make_exception_handler(status: int) -> Callable[[Any, Any], Any]:
     """
     Creates a custom exception handler for the application.
 
@@ -59,7 +62,7 @@ def make_exception_handler(status: int):
     return _handler
 
 
-def register_exceptions(app: FastAPI):
+def register_exceptions(app: FastAPI) -> None:
     """
     Registers custom exception handlers for the FastAPI application.
 
@@ -76,8 +79,14 @@ def register_exceptions(app: FastAPI):
     )
 
 
-app = FastAPI(dependencies=[Depends(get_api_key)])
+# TODO: Auth logic should be moved into global middleware _per router_
+#       Because some routes don't require auth
+# See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
+#
+app: Any = FastAPI(dependencies=[Depends(get_api_key)])
 
+# TODO: CORS should be enabled only for JWT auth
+#
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -87,13 +96,24 @@ app.add_middleware(
     max_age=3600,
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
+
 register_exceptions(app)
 
 app.include_router(agents.router)
-# app.include_router(sessions.router)
-# app.include_router(users.router)
-# app.include_router(jobs.router)
+app.include_router(sessions.router)
+app.include_router(users.router)
+app.include_router(jobs.router)
+app.include_router(docs.router)
 app.include_router(tasks.router)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):  # pylint: disable=unused-argument
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": {"message": str(exc)}},
+    )
 
 
 @app.exception_handler(RPCError)
@@ -137,7 +157,7 @@ def main(
     timeout_keep_alive=30,
     workers=None,
     log_level="info",
-):
+) -> None:
     uvicorn.run(
         app,
         host=host,

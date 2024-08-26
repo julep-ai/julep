@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -15,6 +15,9 @@ from ..utils import (
     wrap_in_class,
 )
 from .create_task import spec_to_task
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

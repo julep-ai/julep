@@ -1,6 +1,6 @@
 """This module contains functions for querying session data from the 'cozodb' database."""
 
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import make_session
+from ...common.protocol.sessions import make_session
 from ...common.utils import json
 from ..utils import (
     cozo_query,
@@ -17,6 +17,9 @@ from ..utils import (
     verify_developer_id_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(

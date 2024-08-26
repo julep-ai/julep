@@ -19,8 +19,6 @@ interface Endpoints {
     @post
     @doc("Generate a response from the model")
     generate(
-        @header contentType: yaml | json;
-
         @path
         @doc("The session ID")
         id: uuid;

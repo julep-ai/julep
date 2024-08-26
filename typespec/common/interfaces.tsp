@@ -18,7 +18,7 @@ interface LimitOffsetPagination<
     @get
     @doc(DocString)
     list(...PaginationOptions): {
-        results: Type[];
+        items: Type[];
     };
 }
 
@@ -28,7 +28,7 @@ interface CreateEndpoint<
 > {
     @post
     @doc(DocString)
-    create(@header contentType: yaml | json, ...CreateType): {
+    create(...CreateType): {
         @statusCode _: "201";
 
         @body
@@ -43,7 +43,7 @@ interface CreateOrUpdateEndpoint<
 > {
     @post
     @doc(DocString)
-    createOrUpdate(@header contentType: yaml | json, ...CreateOrUpdateType): {
+    createOrUpdate(...CreateOrUpdateType): {
         @statusCode _: "200";
 
         @body
@@ -59,8 +59,6 @@ interface UpdateEndpoint<
     @put
     @doc(DocString)
     update(
-        @header contentType: yaml | json,
-
         @path
         @doc("ID of the resource")
         id: uuid,
@@ -82,8 +80,6 @@ interface PatchEndpoint<
     @patch
     @doc(DocString)
     patch(
-        @header contentType: yaml | json,
-
         @path
         @doc("ID of the resource")
         id: uuid,
@@ -151,8 +147,6 @@ interface ChildCreateEndpoint<
     @post
     @doc(DocString)
     create(
-        @header contentType: yaml | json,
-
         @path
         @doc("ID of parent resource")
         id: uuid,
@@ -174,8 +168,6 @@ interface ChildCreateOrUpdateEndpoint<
     @post
     @doc(DocString)
     createOrUpdate(
-        @header contentType: yaml | json,
-
         @path
         @doc("ID of parent resource")
         parent_id: uuid,

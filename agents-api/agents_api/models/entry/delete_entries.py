@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -9,12 +10,16 @@ from ...autogen.openapi_model import ResourceDeletedResponse
 from ...common.utils.datetime import utcnow
 from ..utils import (
     cozo_query,
+    mark_session_updated_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
@@ -33,11 +38,12 @@ from ..utils import (
         "deleted_at": utcnow(),
         "jobs": [],
     },
+    _kind="deleted",
 )
 @cozo_query
 @beartype
 def delete_entries_for_session(
-    *, developer_id: UUID, session_id: UUID
+    *, developer_id: UUID, session_id: UUID, mark_session_as_updated: bool = True
 ) -> tuple[list[str], dict]:
     """
     Constructs and returns a datalog query for deleting entries associated with a given session ID from the 'cozodb' database.
@@ -79,6 +85,9 @@ def delete_entries_for_session(
         verify_developer_owns_resource_query(
             developer_id, "sessions", session_id=session_id
         ),
+        mark_session_updated_query(developer_id, session_id)
+        if mark_session_as_updated
+        else "",
         delete_query,
     ]
 

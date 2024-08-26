@@ -1,0 +1,36 @@
+import logging
+
+from beartype import beartype
+from temporalio import activity
+
+from ...autogen.openapi_model import ForeachStep
+from ...common.protocol.tasks import (
+    StepContext,
+    StepOutcome,
+)
+from ...env import testing
+from .base_evaluate import base_evaluate
+
+
+@beartype
+async def for_each_step(context: StepContext) -> StepOutcome:
+    try:
+        assert isinstance(context.current_step, ForeachStep)
+
+        output = await base_evaluate(
+            context.current_step.foreach.in_, context.model_dump()
+        )
+        return StepOutcome(output=output)
+
+    except BaseException as e:
+        logging.error(f"Error in for_each_step: {e}")
+        return StepOutcome(error=str(e))
+
+
+# Note: This is here just for clarity. We could have just imported if_else_step directly
+# They do the same thing, so we dont need to mock the if_else_step function
+mock_if_else_step = for_each_step
+
+for_each_step = activity.defn(name="for_each_step")(
+    for_each_step if not testing else mock_if_else_step
+)

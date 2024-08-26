@@ -25,19 +25,20 @@ export const $Docs_DocReference = {
       isReadOnly: true,
       isRequired: true,
     },
-    snippet_index: {
-      type: "array",
-      contains: {
-        type: "number",
-        format: "uint16",
-      },
-      isRequired: true,
-    },
     title: {
       type: "string",
     },
-    snippet: {
-      type: "string",
+    snippets: {
+      type: "array",
+      contains: {
+        type: "Docs_Snippet",
+      },
+      isRequired: true,
+    },
+    distance: {
+      type: "number",
+      isRequired: true,
+      isNullable: true,
     },
   },
 } as const;

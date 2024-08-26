@@ -7,14 +7,17 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.mem_mgmt import mem_mgmt
-    from ..activities.types import ChatML
+    from ..autogen.openapi_model import InputChatMLMessage
 
 
 @workflow.defn
 class MemMgmtWorkflow:
     @workflow.run
     async def run(
-        self, dialog: list[ChatML], session_id: str, previous_memories: list[str]
+        self,
+        dialog: list[InputChatMLMessage],
+        session_id: str,
+        previous_memories: list[str],
     ) -> None:
         return await workflow.execute_activity(
             mem_mgmt,

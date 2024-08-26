@@ -5,7 +5,12 @@ from fastapi import HTTPException
 from pycozo.client import QueryException
 from pydantic import ValidationError
 
-from ...autogen.openapi_model import CreateTransitionRequest, Transition
+from ...autogen.openapi_model import (
+    CreateTransitionRequest,
+    Transition,
+    UpdateExecutionRequest,
+)
+from ...common.protocol.tasks import transition_to_execution_status, valid_transitions
 from ...common.utils.cozo import cozo_process_mutate_data
 from ..utils import (
     cozo_query,
@@ -15,19 +20,24 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+from .update_execution import update_execution
 
-valid_transitions = {
-    # Start state
-    "init": ["wait", "error", "step", "cancelled"],
-    # End states
-    "finish": [],
-    "error": [],
-    "cancelled": [],
-    # Intermediate states
-    "wait": ["resume", "error", "cancelled"],
-    "resume": ["wait", "error", "step", "finish", "cancelled"],
-    "step": ["wait", "error", "step", "finish", "cancelled"],
-}
+
+def validate_transition_targets(data: CreateTransitionRequest) -> None:
+    # Make sure the current/next targets are valid
+    if data.type in ("finish", "error", "cancelled"):
+        assert data.next is None, "Next target must be None for finish/error/cancelled"
+
+    if data.type in ("wait", "init"):
+        assert data.next is None, "Next target must be None for wait/init"
+
+    if data.type in ("resume", "step"):
+        assert data.next is not None, "Next target must be provided for resume/step"
+
+        if data.next.workflow == data.current.workflow:
+            assert (
+                data.next.step > data.current.step
+            ), "Next step must be greater than current"
 
 
 @rewrap_exceptions(
@@ -37,24 +47,51 @@ valid_transitions = {
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Transition, transform=lambda d: {"id": d["transition_id"], **d})
+@wrap_in_class(
+    Transition,
+    transform=lambda d: {
+        **d,
+        "id": d["transition_id"],
+        "current": {"workflow": d["current"][0], "step": d["current"][1]},
+        "next": d["next"] and {"workflow": d["next"][0], "step": d["next"][1]},
+    },
+    one=True,
+    _kind="inserted",
+)
 @cozo_query
 @beartype
 def create_execution_transition(
     *,
     developer_id: UUID,
     execution_id: UUID,
-    transition_id: UUID | None = None,
     data: CreateTransitionRequest,
+    # Only one of these needed
+    transition_id: UUID | None = None,
     task_token: str | None = None,
+    # Only required for updating the execution status as well
+    update_execution_status: bool = False,
+    task_id: UUID | None = None,
 ) -> tuple[list[str], dict]:
     transition_id = transition_id or uuid4()
 
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
 
-    transition_data = data.model_dump(exclude_unset=True)
-    columns, values = cozo_process_mutate_data(
+    # Prepare the transition data
+    transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
+
+    # Parse the current and next targets
+    validate_transition_targets(data)
+    current_target = transition_data.pop("current")
+    next_target = transition_data.pop("next")
+
+    transition_data["current"] = (current_target["workflow"], current_target["step"])
+    transition_data["next"] = next_target and (
+        next_target["workflow"],
+        next_target["step"],
+    )
+
+    columns, transition_values = cozo_process_mutate_data(
         {
             **transition_data,
             "task_token": task_token,
@@ -76,17 +113,21 @@ def create_execution_transition(
         }},
         type_created_at = [type, -created_at]
 
-    ?[last_type] :=
+    matched[collect(last_type)] :=
         last_transition_type[data],
         last_type_data = first(data),
         last_type = if(is_null(last_type_data), "init", last_type_data),
         valid_transition[last_type, $next_type]
 
-    :assert some
+    ?[valid] :=
+        matched[prev_transitions],
+        found = length(prev_transitions),
+        valid = assert(found > 0, "Invalid transition"),
     """
 
+    # Prepare the insert query
     insert_query = f"""
-    ?[{columns}] <- $values
+    ?[{columns}] <- $transition_values
 
     :insert transitions {{
         {columns}
@@ -94,6 +135,29 @@ def create_execution_transition(
     
     :returning
     """
+
+    validate_status_query, update_execution_query, update_execution_params = (
+        "",
+        "",
+        {},
+    )
+
+    if update_execution_status:
+        assert (
+            task_id is not None
+        ), "task_id is required for updating the execution status"
+
+        # Prepare the execution update query
+        [*_, validate_status_query, update_execution_query], update_execution_params = (
+            update_execution.__wrapped__(
+                developer_id=developer_id,
+                task_id=task_id,
+                execution_id=execution_id,
+                data=UpdateExecutionRequest(
+                    status=transition_to_execution_status[data.type]
+                ),
+            )
+        )
 
     queries = [
         verify_developer_id_query(developer_id),
@@ -103,6 +167,8 @@ def create_execution_transition(
             execution_id=execution_id,
             parents=[("agents", "agent_id"), ("tasks", "task_id")],
         ),
+        validate_status_query,
+        update_execution_query,
         check_last_transition_query,
         insert_query,
     ]
@@ -110,8 +176,9 @@ def create_execution_transition(
     return (
         queries,
         {
-            "values": values,
+            "transition_values": transition_values,
             "next_type": data.type,
             "valid_transitions": valid_transitions,
+            **update_execution_params,
         },
     )

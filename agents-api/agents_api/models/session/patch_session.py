@@ -1,5 +1,6 @@
 """This module contains functions for patching session data in the 'cozodb' database using datalog queries."""
 
+from typing import Any, List, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -18,7 +19,10 @@ from ..utils import (
     wrap_in_class,
 )
 
-_fields = [
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
+_fields: List[str] = [
     "situation",
     "summary",
     "created_at",
@@ -46,6 +50,7 @@ _fields = [
         "jobs": [],
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -92,7 +97,7 @@ def patch_session(
             *sessions{{
                 {rest_fields}, metadata: md, @ "NOW"
             }},
-            updated_at = [floor(now()), true],
+            updated_at = 'ASSERT',
             metadata = concat(md, $metadata),
 
         :put sessions {{

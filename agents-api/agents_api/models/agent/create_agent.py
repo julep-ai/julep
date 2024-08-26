@@ -3,6 +3,7 @@ This module contains the functionality for creating agents in the CozoDB databas
 It includes functions to construct and execute datalog queries for inserting new agent records.
 """
 
+from typing import Any, TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -20,16 +21,27 @@ from ..utils import (
     wrap_in_class,
 )
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
+        lambda e: isinstance(e, QueryException)
+        and "asserted to return some results, but returned none"
+        in str(e): lambda *_: HTTPException(
+            detail="developer not found", status_code=403
+        ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
 @wrap_in_class(
-    Agent, one=True, transform=lambda d: {"id": UUID(d.pop("agent_id")), **d}
+    Agent,
+    one=True,
+    transform=lambda d: {"id": UUID(d.pop("agent_id")), **d},
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -43,32 +55,27 @@ def create_agent(
     Constructs and executes a datalog query to create a new agent in the database.
 
     Parameters:
-    - agent_id (UUID): The unique identifier for the agent.
+    - agent_id (UUID | None): The unique identifier for the agent.
     - developer_id (UUID): The unique identifier for the developer creating the agent.
-    - name (str): The name of the agent.
-    - about (str): A description of the agent.
-    - instructions (list[str], optional): A list of instructions for using the agent. Defaults to an empty list.
-    - model (str, optional): The model identifier for the agent. Defaults to "julep-ai/samantha-1-turbo".
-    - metadata (dict, optional): A dictionary of metadata for the agent. Defaults to an empty dict.
-    - default_settings (dict, optional): A dictionary of default settings for the agent. Defaults to an empty dict.
-    - client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.
+    - data (CreateAgentRequest): The data for the new agent.
 
     Returns:
-    Agent: The newly created agent record.
+    - Agent: The newly created agent record.
     """
 
     agent_id = agent_id or uuid4()
 
     # Extract the agent data from the payload
     data.metadata = data.metadata or {}
+    data.default_settings = data.default_settings or {}
+
     data.instructions = (
         data.instructions
         if isinstance(data.instructions, list)
         else [data.instructions]
     )
-    data.default_settings = data.default_settings or {}
 
-    agent_data = data.model_dump()
+    agent_data = data.model_dump(exclude_unset=True)
     default_settings = agent_data.pop("default_settings")
 
     settings_cols, settings_vals = cozo_process_mutate_data(

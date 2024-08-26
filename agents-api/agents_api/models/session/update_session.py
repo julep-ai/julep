@@ -1,3 +1,4 @@
+from typing import Any, List, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -16,7 +17,10 @@ from ..utils import (
     wrap_in_class,
 )
 
-_fields = [
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
+_fields: List[str] = [
     "situation",
     "summary",
     "metadata",
@@ -44,6 +48,7 @@ _fields = [
         "jobs": [],
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -81,7 +86,7 @@ def update_session(
             *sessions{{
                 {rest_fields}, @ "NOW"
             }},
-            updated_at = [floor(now()), true]
+            updated_at = 'ASSERT'
 
         :put sessions {{
             {all_fields}, updated_at

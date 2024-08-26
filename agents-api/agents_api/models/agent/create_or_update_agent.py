@@ -3,6 +3,7 @@ This module contains the functionality for creating agents in the CozoDB databas
 It includes functions to construct and execute datalog queries for inserting new agent records.
 """
 
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -19,6 +20,9 @@ from ..utils import (
     verify_developer_id_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
@@ -38,7 +42,7 @@ def create_or_update_agent(
     developer_id: UUID,
     agent_id: UUID,
     data: CreateOrUpdateAgentRequest,
-) -> tuple[list[str], dict]:
+) -> tuple[list[str | None], dict]:
     """
     Constructs and executes a datalog query to create a new agent in the database.
 
@@ -48,7 +52,7 @@ def create_or_update_agent(
     - name (str): The name of the agent.
     - about (str): A description of the agent.
     - instructions (list[str], optional): A list of instructions for using the agent. Defaults to an empty list.
-    - model (str, optional): The model identifier for the agent. Defaults to "julep-ai/samantha-1-turbo".
+    - model (str, optional): The model identifier for the agent. Defaults to "gpt-4o".
     - metadata (dict, optional): A dictionary of metadata for the agent. Defaults to an empty dict.
     - default_settings (dict, optional): A dictionary of default settings for the agent. Defaults to an empty dict.
     - client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.
@@ -123,7 +127,7 @@ def create_or_update_agent(
 
     queries = [
         verify_developer_id_query(developer_id),
-        default_settings and default_settings_query,
+        default_settings_query if default_settings else None,
         agent_query,
     ]
 

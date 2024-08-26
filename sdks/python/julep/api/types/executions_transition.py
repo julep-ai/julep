@@ -6,6 +6,7 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_uuid import CommonUuid
+from .executions_transition_target import ExecutionsTransitionTarget
 from .executions_transition_type import ExecutionsTransitionType
 
 
@@ -13,8 +14,8 @@ class ExecutionsTransition(pydantic_v1.BaseModel):
     type: ExecutionsTransitionType
     execution_id: CommonUuid
     output: typing.Dict[str, typing.Any]
-    current: typing.List[typing.Any]
-    next: typing.Optional[typing.List[typing.Any]] = None
+    current: ExecutionsTransitionTarget
+    next: typing.Optional[ExecutionsTransitionTarget] = None
     id: CommonUuid
     metadata: typing.Optional[typing.Dict[str, typing.Any]] = None
     created_at: dt.datetime = pydantic_v1.Field()

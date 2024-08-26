@@ -18,19 +18,6 @@ namespace Chat;
 // CHAT MODELS
 //
 
-/** Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual) */
-enum GenerationPreset {
-    problem_solving,
-    conversational,
-    fun,
-    prose,
-    creative,
-    business,
-    deterministic,
-    code,
-    multilingual,
-}
-
 /**
  * The reason the model stopped generating tokens. This will be `stop`
  * if the model hit a natural stop point or a provided stop sequence,
@@ -47,13 +34,12 @@ enum FinishReason {
 
 /** Determines how the session accesses history and memories */
 model MemoryAccessOptions {
-    /** Whether previous memories should be recalled or not (will be enabled in a future release) */
-    @visibility("read") // DISABLED
-    recall: boolean = false;
-
-    /** Whether this interaction should form new memories or not (will be enabled in a future release) */
+    /** DISABLED: Whether this interaction should form new memories or not (will be enabled in a future release) */
     @visibility("read") // DISABLED
     remember: boolean = false;
+
+    /** Whether previous memories and docs should be recalled or not */
+    recall: boolean = true;
 
     /** Whether this interaction should be stored in the session history or not */
     save: boolean = true;
@@ -95,11 +81,6 @@ model CommonChatSettings {
     agent?: uuid;
 }
 
-model GenerationPresetSettings {
-    /** Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual) */
-    preset?: GenerationPreset;
-}
-
 model OpenAISettings {
     /** Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. */
     @minValue(-2)
@@ -133,16 +114,6 @@ model vLLMSettings {
     @maxValue(2)
     length_penalty?: float32;
 
-    /** What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. */
-    @minValue(0)
-    @maxValue(5)
-    temperature?: float32;
-
-    /** Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both. */
-    @minValue(0)
-    @maxValue(1)
-    top_p?: float32;
-
     /** Minimum probability compared to leading token to be considered */
     @minValue(0)
     @maxValue(1)
@@ -150,29 +121,27 @@ model vLLMSettings {
 }
 
 /** Default settings for the chat session (also used by the agent) */
-alias DefaultChatSettings = GenerationPresetSettings | OpenAISettings | vLLMSettings;
+model DefaultChatSettings extends OpenAISettings {
+    ...vLLMSettings;
+}
 
-alias ChatSettings = (
-    CommonChatSettings & GenerationPresetSettings
-) | (
-    CommonChatSettings & OpenAISettings
-) | (
-    CommonChatSettings & vLLMSettings
-);
+model ChatSettings extends DefaultChatSettings {
+    ...CommonChatSettings;
+}
 
 /** Usage statistics for the completion request */
 model CompetionUsage {
     /** Number of tokens in the generated completion */
     @visibility("read")
-    completion_tokens: uint32;
+    completion_tokens?: uint32;
 
     /** Number of tokens in the prompt */
     @visibility("read")
-    prompt_tokens: uint32;
+    prompt_tokens?: uint32;
 
     /** Total number of tokens used in the request (prompt + completion) */
     @visibility("read")
-    total_tokens: uint32;
+    total_tokens?: uint32;
 }
 
 model ChatInputData {
@@ -188,13 +157,10 @@ model ChatInputData {
     tool_choice?: ToolChoiceOption;
 }
 
-alias ChatInput = (
-    ChatInputData & MemoryAccessOptions & CommonChatSettings & GenerationPresetSettings
-) | (
-    ChatInputData & MemoryAccessOptions & CommonChatSettings & OpenAISettings
-) | (
-    ChatInputData & MemoryAccessOptions & CommonChatSettings & vLLMSettings
-);
+model ChatInput extends ChatInputData {
+    ...MemoryAccessOptions;
+    ...ChatSettings;
+}
 
 model BaseTokenLogProb {
     token: string;
@@ -202,7 +168,7 @@ model BaseTokenLogProb {
     /** The log probability of the token */
     logprob: float32;
 
-    bytes: uint16[] | null;
+    bytes?: uint16[];
 }
 
 model TokenLogProb extends BaseTokenLogProb {
@@ -221,17 +187,17 @@ model BaseChatOutput {
     finish_reason: FinishReason;
 
     /** The log probabilities of tokens */
-    logprobs: LogProbResponse | null;
+    logprobs?: LogProbResponse;
 }
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
 model SingleChatOutput extends BaseChatOutput {
-    message: ChatMLMessage;
+    message: InputChatMLMessage;
 }
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
 model MultipleChatOutput extends BaseChatOutput {
-    messages: ChatMLMessage[];
+    messages: InputChatMLMessage[];
 }
 
 alias ChatOutput = SingleChatOutput | MultipleChatOutput;
@@ -239,12 +205,12 @@ alias ChatOutput = SingleChatOutput | MultipleChatOutput;
 /** Streaming chat completion output */
 model ChatOutputChunk extends BaseChatOutput {
     /** The message generated by the model */
-    delta: ChatMLMessage;
+    delta: InputChatMLMessage;
 }
 
 model BaseChatResponse {
     /** Usage statistics for the completion request */
-    usage: CompetionUsage | null;
+    usage?: CompetionUsage;
 
     /** Background job IDs that may have been spawned from this interaction. */
     jobs: uuid[];
@@ -267,7 +233,7 @@ model MessageChatResponse extends BaseChatResponse {
     @header contentType: json;
 
     /** The deltas generated by the model */
-    choices: ChatOutputChunk[];
+    choices: ChatOutput[];
 }
 
 alias ChatResponse = ChunkChatResponse | MessageChatResponse;

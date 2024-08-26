@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -20,6 +21,9 @@ from ..utils import (
 )
 from .get_execution import get_execution
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
@@ -29,7 +33,7 @@ from .get_execution import get_execution
     }
 )
 @wrap_in_class(ExecutionInput, one=True)
-@cozo_query(debug=True)
+@cozo_query
 @beartype
 def prepare_execution_input(
     *,
@@ -65,7 +69,7 @@ def prepare_execution_input(
     )
 
     # Remove the outer curly braces
-    task_query = task_query.strip()[1:-1]
+    task_query = task_query[-1].strip()
 
     task_fields = (
         "id",
@@ -156,7 +160,7 @@ def prepare_execution_input(
       *_execution {{ {', '.join(execution_fields)} }},
       execution = {{ {make_cozo_json_query(execution_fields)} }}
 
-    ?[developer_id, execution, task, agent, user, session, tools] :=
+    ?[developer_id, execution, task, agent, user, session, tools, arguments] :=
       developer_id = to_uuid($developer_id),
 
       agent_json[agent],
@@ -167,6 +171,7 @@ def prepare_execution_input(
       # TODO: Enable these later
       user = null,
       session = null,
+      arguments = execution->"input"
     """
 
     queries = [

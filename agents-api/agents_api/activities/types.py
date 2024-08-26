@@ -1,111 +1,36 @@
-from typing import Any, Callable, Literal, Optional, Protocol, TypedDict
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
 
-
-class PromptModule(Protocol):
-    stop: list[str]
-    temperature: float
-    parser: Callable[[str], str]
-    make_prompt: Callable[..., str]
+from ..autogen.openapi_model import InputChatMLMessage
 
 
-class ChatML(BaseModel):
-    role: Literal["system", "user", "assistant"]
-    content: str
-
-    name: Optional[str] = None
-    entry_id: Optional[UUID] = None
-
-    processed: bool = False
-    parent_id: Optional[UUID] = None
-    session_id: Optional[UUID] = None
-    timestamp: Optional[float] = None
-    token_count: Optional[int] = None
-
-
-class BaseTask(BaseModel): ...
-
-
-class BaseTaskArgs(BaseModel): ...
-
-
-class AddPrinciplesTaskArgs(BaseTaskArgs):
-    scores: dict[str, Any]
-    full: bool = False
-    name: Optional[str] = None
-    user_id: Optional[UUID] = None
-    character_id: Optional[UUID] = None
-
-
-class AddPrinciplesTask(BaseTask):
-    name: Literal["add_principles.v1"]
-    args: AddPrinciplesTaskArgs
-
-
-class MemoryManagementTaskArgs(BaseTaskArgs):
+class MemoryManagementTaskArgs(BaseModel):
     session_id: UUID
     model: str
-    dialog: list[ChatML]
+    dialog: list[InputChatMLMessage]
     previous_memories: list[str] = []
 
 
-class MemoryManagementTask(BaseTask):
+class MemoryManagementTask(BaseModel):
     name: Literal["memory_management.v1"]
     args: MemoryManagementTaskArgs
 
 
-class MemoryDensityTaskArgs(BaseTaskArgs):
+class MemoryRatingTaskArgs(BaseModel):
     memory: str
 
 
-class MemoryDensityTask(BaseTask):
-    name: Literal["memory_density.v1"]
-    args: MemoryDensityTaskArgs
-
-
-class MemoryRatingTaskArgs(BaseTaskArgs):
-    memory: str
-
-
-class MemoryRatingTask(BaseTask):
+class MemoryRatingTask(BaseModel):
     name: Literal["memory_rating.v1"]
     args: MemoryRatingTaskArgs
 
 
-class DialogInsightsTaskArgs(BaseTaskArgs):
-    dialog: list[ChatML]
-    person1: str
-    person2: str
-
-
-class DialogInsightsTask(BaseTask):
-    name: Literal["dialog_insights.v1"]
-    args: DialogInsightsTaskArgs
-
-
-class RelationshipSummaryTaskArgs(BaseTaskArgs):
-    statements: list[str]
-    person1: str
-    person2: str
-
-
-class RelationshipSummaryTask(BaseTask):
-    name: Literal["relationship_summary.v1"]
-    args: RelationshipSummaryTaskArgs
-
-
-class SalientQuestionsTaskArgs(BaseTaskArgs):
-    statements: list[str]
-    num: int = 3
-
-
-class SalientQuestionsTask(BaseTask):
-    name: Literal["salient_questions.v1"]
-    args: SalientQuestionsTaskArgs
-
-
-class CombinedTask(TypedDict):
-    name: str
-    args: dict[Any, Any]
+class EmbedDocsPayload(BaseModel):
+    developer_id: UUID
+    doc_id: UUID
+    content: list[str]
+    embed_instruction: str | None
+    title: str | None = None
+    include_title: bool = False  # Need to be a separate parameter for the activity

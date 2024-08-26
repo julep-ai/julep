@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_validPythonIdentifier } from "./Common_validPythonIdentifier";
-import type { Tools_FunctionDefUpdate } from "./Tools_FunctionDefUpdate";
+import type { Tools_FunctionDef } from "./Tools_FunctionDef";
 import type { Tools_ToolType } from "./Tools_ToolType";
 /**
  * Payload for patching a tool
@@ -17,7 +17,7 @@ export type Tools_PatchToolRequest = {
    * Name of the tool (must be unique for this agent and a valid python identifier string )
    */
   name?: Common_validPythonIdentifier;
-  function?: Tools_FunctionDefUpdate;
+  function?: Tools_FunctionDef;
   integration?: any;
   system?: any;
   api_call?: any;

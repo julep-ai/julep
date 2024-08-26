@@ -6,7 +6,6 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .common_identifier_safe_unicode import CommonIdentifierSafeUnicode
-from .common_valid_python_identifier import CommonValidPythonIdentifier
 
 
 class ToolsFunctionDef(pydantic_v1.BaseModel):
@@ -14,11 +13,7 @@ class ToolsFunctionDef(pydantic_v1.BaseModel):
     Function definition
     """
 
-    name: typing.Optional[CommonValidPythonIdentifier] = pydantic_v1.Field(default=None)
-    """
-    DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
-    """
-
+    name: typing.Optional[typing.Any] = None
     description: typing.Optional[CommonIdentifierSafeUnicode] = pydantic_v1.Field(
         default=None
     )
@@ -26,7 +21,9 @@ class ToolsFunctionDef(pydantic_v1.BaseModel):
     Description of the function
     """
 
-    parameters: typing.Dict[str, typing.Any] = pydantic_v1.Field()
+    parameters: typing.Optional[typing.Dict[str, typing.Any]] = pydantic_v1.Field(
+        default=None
+    )
     """
     The parameters the function accepts
     """

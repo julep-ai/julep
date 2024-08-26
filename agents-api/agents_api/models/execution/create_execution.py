@@ -1,3 +1,4 @@
+from typing import Annotated, Any, TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -7,6 +8,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import CreateExecutionRequest, Execution
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...common.utils.types import dict_like
 from ..utils import (
     cozo_query,
     partialclass,
@@ -15,6 +17,9 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
@@ -28,6 +33,7 @@ from ..utils import (
     Execution,
     one=True,
     transform=lambda d: {"id": d["execution_id"], **d},
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -36,7 +42,7 @@ def create_execution(
     developer_id: UUID,
     task_id: UUID,
     execution_id: UUID | None = None,
-    data: CreateExecutionRequest,
+    data: Annotated[CreateExecutionRequest | dict, dict_like(CreateExecutionRequest)],
 ) -> tuple[list[str], dict]:
     execution_id = execution_id or uuid4()
 
@@ -44,8 +50,12 @@ def create_execution(
     task_id = str(task_id)
     execution_id = str(execution_id)
 
-    data.metadata = data.metadata or {}
-    execution_data = data.model_dump()
+    if isinstance(data, CreateExecutionRequest):
+        data.metadata = data.metadata or {}
+        execution_data = data.model_dump()
+    else:
+        data["metadata"] = data.get("metadata", {})
+        execution_data = data
 
     columns, values = cozo_process_mutate_data(
         {

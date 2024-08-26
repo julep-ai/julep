@@ -68,10 +68,6 @@ class TaskTokenResumeExecutionRequest(BaseModel):
         populate_by_name=True,
     )
     status: Literal["running"] = "running"
-    task_token: str
-    """
-    A Task Token is a unique identifier for a specific Task Execution.
-    """
     input: dict[str, Any] | None = None
     """
     The input to resume the execution with
@@ -87,9 +83,11 @@ class Transition(BaseModel):
         Field(json_schema_extra={"readOnly": True}),
     ]
     execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
-    output: Annotated[dict[str, Any], Field(json_schema_extra={"readOnly": True})]
-    current: Annotated[list, Field(json_schema_extra={"readOnly": True})]
-    next: Annotated[list | None, Field(json_schema_extra={"readOnly": True})]
+    output: Annotated[Any, Field(json_schema_extra={"readOnly": True})]
+    current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
+    next: Annotated[
+        TransitionTarget | None, Field(json_schema_extra={"readOnly": True})
+    ]
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -100,6 +98,25 @@ class Transition(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
+
+
+class TransitionTarget(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    workflow: Annotated[
+        str,
+        Field(
+            max_length=120,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    For Unicode character safety
+    See: https://unicode.org/reports/tr31/
+    See: https://www.unicode.org/reports/tr39/#Identifier_Characters
+    """
+    step: int
 
 
 class UpdateExecutionRequest(BaseModel):

@@ -6,27 +6,24 @@ import type { Agents_Agent } from "../models/Agents_Agent";
 import type { Agents_CreateAgentRequest } from "../models/Agents_CreateAgentRequest";
 import type { Agents_PatchAgentRequest } from "../models/Agents_PatchAgentRequest";
 import type { Agents_UpdateAgentRequest } from "../models/Agents_UpdateAgentRequest";
+import type { Chat_ChatInput } from "../models/Chat_ChatInput";
 import type { Chat_ChunkChatResponse } from "../models/Chat_ChunkChatResponse";
-import type { Chat_CompletionResponseFormat } from "../models/Chat_CompletionResponseFormat";
-import type { Chat_GenerationPreset } from "../models/Chat_GenerationPreset";
 import type { Chat_MessageChatResponse } from "../models/Chat_MessageChatResponse";
-import type { Common_identifierSafeUnicode } from "../models/Common_identifierSafeUnicode";
 import type { Common_limit } from "../models/Common_limit";
-import type { Common_logit_bias } from "../models/Common_logit_bias";
 import type { Common_offset } from "../models/Common_offset";
 import type { Common_ResourceCreatedResponse } from "../models/Common_ResourceCreatedResponse";
 import type { Common_ResourceDeletedResponse } from "../models/Common_ResourceDeletedResponse";
 import type { Common_ResourceUpdatedResponse } from "../models/Common_ResourceUpdatedResponse";
 import type { Common_uuid } from "../models/Common_uuid";
+import type { Docs_CreateDocRequest } from "../models/Docs_CreateDocRequest";
 import type { Docs_Doc } from "../models/Docs_Doc";
-import type { Docs_DocReference } from "../models/Docs_DocReference";
+import type { Docs_DocSearchResponse } from "../models/Docs_DocSearchResponse";
 import type { Docs_EmbedQueryRequest } from "../models/Docs_EmbedQueryRequest";
 import type { Docs_EmbedQueryResponse } from "../models/Docs_EmbedQueryResponse";
 import type { Docs_HybridDocSearchRequest } from "../models/Docs_HybridDocSearchRequest";
 import type { Docs_TextOnlyDocSearchRequest } from "../models/Docs_TextOnlyDocSearchRequest";
 import type { Docs_VectorDocSearchRequest } from "../models/Docs_VectorDocSearchRequest";
 import type { Entries_History } from "../models/Entries_History";
-import type { Entries_InputChatMLMessage } from "../models/Entries_InputChatMLMessage";
 import type { Executions_CreateExecutionRequest } from "../models/Executions_CreateExecutionRequest";
 import type { Executions_Execution } from "../models/Executions_Execution";
 import type { Executions_TaskTokenResumeExecutionRequest } from "../models/Executions_TaskTokenResumeExecutionRequest";
@@ -41,8 +38,6 @@ import type { Tasks_CreateTaskRequest } from "../models/Tasks_CreateTaskRequest"
 import type { Tasks_PatchTaskRequest } from "../models/Tasks_PatchTaskRequest";
 import type { Tasks_Task } from "../models/Tasks_Task";
 import type { Tasks_UpdateTaskRequest } from "../models/Tasks_UpdateTaskRequest";
-import type { Tools_FunctionTool } from "../models/Tools_FunctionTool";
-import type { Tools_NamedToolChoice } from "../models/Tools_NamedToolChoice";
 import type { Tools_PatchToolRequest } from "../models/Tools_PatchToolRequest";
 import type { Tools_Tool } from "../models/Tools_Tool";
 import type { Tools_UpdateToolRequest } from "../models/Tools_UpdateToolRequest";
@@ -87,7 +82,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Agents_Agent>;
+    items: Array<Agents_Agent>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -288,18 +283,65 @@ export class DefaultService {
     });
   }
   /**
+   * Create a Doc for this Agent
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public agentDocsRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Docs_CreateDocRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/agents/{id}/docs",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Delete a Doc for this Agent
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public agentDocsRouteDelete({
+    id,
+    childId,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be deleted
+     */
+    childId: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/agents/{id}/docs/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+    });
+  }
+  /**
    * Search Docs owned by an Agent
-   * @returns any The request has succeeded.
+   * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
    */
   public agentsDocsSearchRouteSearch({
     id,
     requestBody,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
   }: {
     /**
      * ID of the parent
@@ -311,41 +353,12 @@ export class DefaultService {
         | Docs_TextOnlyDocSearchRequest
         | Docs_HybridDocSearchRequest;
     };
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Docs_DocReference>;
-  }> {
+  }): CancelablePromise<Docs_DocSearchResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/agents/{id}/search",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -408,7 +421,7 @@ export class DefaultService {
   }
   /**
    * Create a new task
-   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @returns Common_ResourceCreatedResponse The request has succeeded.
    * @throws ApiError
    */
   public tasksRouteCreate({
@@ -691,7 +704,7 @@ export class DefaultService {
   }
   /**
    * Create or update a task
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @returns Common_ResourceUpdatedResponse The request has succeeded and a new resource has been created as a result.
    * @throws ApiError
    */
   public tasksCreateOrUpdateRouteCreateOrUpdate({
@@ -700,7 +713,7 @@ export class DefaultService {
     requestBody,
   }: {
     /**
-     * ID of parent resource
+     * ID of the agent
      */
     parentId: Common_uuid;
     id: Common_uuid;
@@ -739,27 +752,6 @@ export class DefaultService {
     });
   }
   /**
-   * Delete an existing Doc by id
-   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
-   * @throws ApiError
-   */
-  public individualDocsRouteDelete({
-    id,
-  }: {
-    /**
-     * ID of the resource
-     */
-    id: Common_uuid;
-  }): CancelablePromise<Common_ResourceDeletedResponse> {
-    return this.httpRequest.request({
-      method: "DELETE",
-      url: "/docs/{id}",
-      path: {
-        id: id,
-      },
-    });
-  }
-  /**
    * Embed a query for search
    * @returns Docs_EmbedQueryResponse The request has succeeded.
    * @throws ApiError
@@ -774,6 +766,34 @@ export class DefaultService {
     return this.httpRequest.request({
       method: "POST",
       url: "/embed",
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Resume an execution with a task token
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public executionsRouteResumeWithTaskToken({
+    taskToken,
+    requestBody,
+  }: {
+    /**
+     * A Task Token is a unique identifier for a specific Task Execution.
+     */
+    taskToken: string;
+    /**
+     * Request to resume an execution with a task token
+     */
+    requestBody: Executions_TaskTokenResumeExecutionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/executions",
+      query: {
+        task_token: taskToken,
+      },
       body: requestBody,
       mediaType: "application/json",
     });
@@ -797,6 +817,31 @@ export class DefaultService {
       path: {
         id: id,
       },
+    });
+  }
+  /**
+   * Update an existing Execution
+   * @returns Common_ResourceUpdatedResponse The request has succeeded.
+   * @throws ApiError
+   */
+  public executionsRouteUpdate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of the resource
+     */
+    id: Common_uuid;
+    requestBody: Executions_UpdateExecutionRequest;
+  }): CancelablePromise<Common_ResourceUpdatedResponse> {
+    return this.httpRequest.request({
+      method: "PUT",
+      url: "/executions/{id}",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
   /**
@@ -910,7 +955,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Sessions_Session>;
+    items: Array<Sessions_Session>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1071,221 +1116,7 @@ export class DefaultService {
     /**
      * Request to generate a response from the model
      */
-    requestBody:
-      | {
-          /**
-           * A list of new input messages comprising the conversation so far.
-           */
-          messages: Array<Entries_InputChatMLMessage>;
-          /**
-           * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-           */
-          tools?: Array<Tools_FunctionTool>;
-          /**
-           * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-           */
-          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-          /**
-           * Whether previous memories should be recalled or not (will be enabled in a future release)
-           */
-          readonly recall: boolean;
-          /**
-           * Whether this interaction should form new memories or not (will be enabled in a future release)
-           */
-          readonly remember: boolean;
-          /**
-           * Whether this interaction should be stored in the session history or not
-           */
-          save: boolean;
-          /**
-           * Identifier of the model to be used
-           */
-          model?: Common_identifierSafeUnicode;
-          /**
-           * Indicates if the server should stream the response as it's generated
-           */
-          stream: boolean;
-          /**
-           * Up to 4 sequences where the API will stop generating further tokens.
-           */
-          stop?: Array<string>;
-          /**
-           * If specified, the system will make a best effort to sample deterministically for that particular seed value
-           */
-          seed?: number;
-          /**
-           * The maximum number of tokens to generate in the chat completion
-           */
-          max_tokens?: number;
-          /**
-           * Modify the likelihood of specified tokens appearing in the completion
-           */
-          logit_bias?: Record<string, Common_logit_bias>;
-          /**
-           * Response format (set to `json_object` to restrict output to JSON)
-           */
-          response_format?: Chat_CompletionResponseFormat;
-          /**
-           * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-           */
-          agent?: Common_uuid;
-          /**
-           * Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
-           */
-          preset?: Chat_GenerationPreset;
-        }
-      | {
-          /**
-           * A list of new input messages comprising the conversation so far.
-           */
-          messages: Array<Entries_InputChatMLMessage>;
-          /**
-           * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-           */
-          tools?: Array<Tools_FunctionTool>;
-          /**
-           * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-           */
-          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-          /**
-           * Whether previous memories should be recalled or not (will be enabled in a future release)
-           */
-          readonly recall: boolean;
-          /**
-           * Whether this interaction should form new memories or not (will be enabled in a future release)
-           */
-          readonly remember: boolean;
-          /**
-           * Whether this interaction should be stored in the session history or not
-           */
-          save: boolean;
-          /**
-           * Identifier of the model to be used
-           */
-          model?: Common_identifierSafeUnicode;
-          /**
-           * Indicates if the server should stream the response as it's generated
-           */
-          stream: boolean;
-          /**
-           * Up to 4 sequences where the API will stop generating further tokens.
-           */
-          stop?: Array<string>;
-          /**
-           * If specified, the system will make a best effort to sample deterministically for that particular seed value
-           */
-          seed?: number;
-          /**
-           * The maximum number of tokens to generate in the chat completion
-           */
-          max_tokens?: number;
-          /**
-           * Modify the likelihood of specified tokens appearing in the completion
-           */
-          logit_bias?: Record<string, Common_logit_bias>;
-          /**
-           * Response format (set to `json_object` to restrict output to JSON)
-           */
-          response_format?: Chat_CompletionResponseFormat;
-          /**
-           * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-           */
-          agent?: Common_uuid;
-          /**
-           * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-           */
-          frequency_penalty?: number;
-          /**
-           * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-           */
-          presence_penalty?: number;
-          /**
-           * What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-           */
-          temperature?: number;
-          /**
-           * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-           */
-          top_p?: number;
-        }
-      | {
-          /**
-           * A list of new input messages comprising the conversation so far.
-           */
-          messages: Array<Entries_InputChatMLMessage>;
-          /**
-           * (Advanced) List of tools that are provided in addition to agent's default set of tools.
-           */
-          tools?: Array<Tools_FunctionTool>;
-          /**
-           * Can be one of existing tools given to the agent earlier or the ones provided in this request.
-           */
-          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-          /**
-           * Whether previous memories should be recalled or not (will be enabled in a future release)
-           */
-          readonly recall: boolean;
-          /**
-           * Whether this interaction should form new memories or not (will be enabled in a future release)
-           */
-          readonly remember: boolean;
-          /**
-           * Whether this interaction should be stored in the session history or not
-           */
-          save: boolean;
-          /**
-           * Identifier of the model to be used
-           */
-          model?: Common_identifierSafeUnicode;
-          /**
-           * Indicates if the server should stream the response as it's generated
-           */
-          stream: boolean;
-          /**
-           * Up to 4 sequences where the API will stop generating further tokens.
-           */
-          stop?: Array<string>;
-          /**
-           * If specified, the system will make a best effort to sample deterministically for that particular seed value
-           */
-          seed?: number;
-          /**
-           * The maximum number of tokens to generate in the chat completion
-           */
-          max_tokens?: number;
-          /**
-           * Modify the likelihood of specified tokens appearing in the completion
-           */
-          logit_bias?: Record<string, Common_logit_bias>;
-          /**
-           * Response format (set to `json_object` to restrict output to JSON)
-           */
-          response_format?: Chat_CompletionResponseFormat;
-          /**
-           * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-           */
-          agent?: Common_uuid;
-          /**
-           * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-           */
-          repetition_penalty?: number;
-          /**
-           * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-           */
-          length_penalty?: number;
-          /**
-           * What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-           */
-          temperature?: number;
-          /**
-           * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-           */
-          top_p?: number;
-          /**
-           * Minimum probability compared to leading token to be considered
-           */
-          min_p?: number;
-        };
+    requestBody: Chat_ChatInput;
   }): CancelablePromise<Chat_ChunkChatResponse | Chat_MessageChatResponse> {
     return this.httpRequest.request({
       method: "POST",
@@ -1325,25 +1156,17 @@ export class DefaultService {
    */
   public historyRouteHistory({
     id,
-    limit = 100,
   }: {
     /**
      * ID of parent
      */
     id: Common_uuid;
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
   }): CancelablePromise<Entries_History> {
     return this.httpRequest.request({
       method: "GET",
       url: "/sessions/{id}/history",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
       },
     });
   }
@@ -1428,65 +1251,6 @@ export class DefaultService {
     });
   }
   /**
-   * Resume an execution with a task token
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public taskExecutionsRouteResumeWithTaskToken({
-    id,
-    requestBody,
-  }: {
-    /**
-     * ID of parent Task
-     */
-    id: Common_uuid;
-    /**
-     * Request to resume an execution with a task token
-     */
-    requestBody: Executions_TaskTokenResumeExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}/executions",
-      path: {
-        id: id,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
-   * Update an existing Execution
-   * @returns Common_ResourceUpdatedResponse The request has succeeded.
-   * @throws ApiError
-   */
-  public taskExecutionsRouteUpdate({
-    id,
-    childId,
-    requestBody,
-  }: {
-    /**
-     * ID of parent resource
-     */
-    id: Common_uuid;
-    /**
-     * ID of the resource to be updated
-     */
-    childId: Common_uuid;
-    requestBody: Executions_UpdateExecutionRequest;
-  }): CancelablePromise<Common_ResourceUpdatedResponse> {
-    return this.httpRequest.request({
-      method: "PUT",
-      url: "/tasks/{id}/executions/{child_id}",
-      path: {
-        id: id,
-        child_id: childId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-  /**
    * List users (paginated)
    * @returns any The request has succeeded.
    * @throws ApiError
@@ -1519,7 +1283,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Users_User>;
+    items: Array<Users_User>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1560,7 +1324,7 @@ export class DefaultService {
     requestBody,
   }: {
     id: Common_uuid;
-    requestBody: Users_UpdateUserRequest;
+    requestBody: Users_CreateUserRequest;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "POST",
@@ -1720,18 +1484,65 @@ export class DefaultService {
     });
   }
   /**
+   * Create a Doc for this User
+   * @returns Common_ResourceCreatedResponse The request has succeeded and a new resource has been created as a result.
+   * @throws ApiError
+   */
+  public userDocsRouteCreate({
+    id,
+    requestBody,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    requestBody: Docs_CreateDocRequest;
+  }): CancelablePromise<Common_ResourceCreatedResponse> {
+    return this.httpRequest.request({
+      method: "POST",
+      url: "/users/{id}/docs",
+      path: {
+        id: id,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+  /**
+   * Delete a Doc for this User
+   * @returns Common_ResourceDeletedResponse The request has been accepted for processing, but processing has not yet completed.
+   * @throws ApiError
+   */
+  public userDocsRouteDelete({
+    id,
+    childId,
+  }: {
+    /**
+     * ID of parent resource
+     */
+    id: Common_uuid;
+    /**
+     * ID of the resource to be deleted
+     */
+    childId: Common_uuid;
+  }): CancelablePromise<Common_ResourceDeletedResponse> {
+    return this.httpRequest.request({
+      method: "DELETE",
+      url: "/users/{id}/docs/{child_id}",
+      path: {
+        id: id,
+        child_id: childId,
+      },
+    });
+  }
+  /**
    * Search Docs owned by a User
-   * @returns any The request has succeeded.
+   * @returns Docs_DocSearchResponse The request has succeeded.
    * @throws ApiError
    */
   public userDocsSearchRouteSearch({
     id,
     requestBody,
-    limit = 100,
-    offset,
-    sortBy = "created_at",
-    direction = "asc",
-    metadataFilter = "{}",
   }: {
     /**
      * ID of the parent
@@ -1743,41 +1554,12 @@ export class DefaultService {
         | Docs_TextOnlyDocSearchRequest
         | Docs_HybridDocSearchRequest;
     };
-    /**
-     * Limit the number of items returned
-     */
-    limit?: Common_limit;
-    /**
-     * Offset the items returned
-     */
-    offset: Common_offset;
-    /**
-     * Sort by a field
-     */
-    sortBy?: "created_at" | "updated_at";
-    /**
-     * Sort direction
-     */
-    direction?: "asc" | "desc";
-    /**
-     * JSON string of object that should be used to filter objects by metadata
-     */
-    metadataFilter?: string;
-  }): CancelablePromise<{
-    results: Array<Docs_DocReference>;
-  }> {
+  }): CancelablePromise<Docs_DocSearchResponse> {
     return this.httpRequest.request({
       method: "POST",
       url: "/users/{id}/search",
       path: {
         id: id,
-      },
-      query: {
-        limit: limit,
-        offset: offset,
-        sort_by: sortBy,
-        direction: direction,
-        metadata_filter: metadataFilter,
       },
       body: requestBody,
       mediaType: "application/json",

@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        directory: [agents-api, model-serving, sdks/python]
+        directory: [agents-api, sdks/python]
 
     steps:
       - uses: actions/checkout@v4

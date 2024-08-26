@@ -3,6 +3,7 @@ This module contains the functionality for creating a new user in the CozoDB dat
 It defines a query for inserting user data into the 'users' relation.
 """
 
+from typing import Any, TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -19,15 +20,28 @@ from ..utils import (
     wrap_in_class,
 )
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
+        lambda e: isinstance(e, QueryException)
+        and "asserted to return some results, but returned none"
+        in str(e): lambda *_: HTTPException(
+            detail="developer not found", status_code=403
+        ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
+@wrap_in_class(
+    User,
+    one=True,
+    transform=lambda d: {"id": UUID(d.pop("user_id")), **d},
+    _kind="inserted",
+)
 @cozo_query
 @beartype
 def create_user(

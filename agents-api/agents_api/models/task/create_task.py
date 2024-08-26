@@ -3,6 +3,7 @@ This module contains the functionality for creating a new Task in the 'cozodb` d
 It constructs and executes a datalog query to insert Task data.
 """
 
+from typing import Any, TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -24,6 +25,9 @@ from ..utils import (
     wrap_in_class,
 )
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
@@ -32,7 +36,7 @@ from ..utils import (
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(spec_to_task, one=True)
+@wrap_in_class(spec_to_task, one=True, _kind="inserted")
 @cozo_query
 @beartype
 def create_task(

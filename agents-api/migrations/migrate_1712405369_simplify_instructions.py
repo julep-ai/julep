@@ -24,7 +24,7 @@ update_agents_relation_query = dict(
         name: String,
         about: String,
         instructions: [String] default [],
-        model: String default 'julep-ai/samantha-1-turbo',
+        model: String default 'gpt-4o',
         created_at: Float default now(),
         updated_at: Float default now(),
         metadata: Json default {},
@@ -47,7 +47,7 @@ update_agents_relation_query = dict(
         =>
         name: String,
         about: String,
-        model: String default 'julep-ai/samantha-1-turbo',
+        model: String default 'gpt-4o',
         created_at: Float default now(),
         updated_at: Float default now(),
         metadata: Json default {},

@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -11,12 +12,16 @@ from ...common.utils.datetime import utcnow
 from ...common.utils.messages import content_to_json
 from ..utils import (
     cozo_query,
+    mark_session_updated_query,
     partialclass,
     rewrap_exceptions,
     verify_developer_id_query,
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
@@ -32,6 +37,7 @@ from ..utils import (
         "id": UUID(d.pop("entry_id")),
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype
@@ -40,11 +46,12 @@ def create_entries(
     developer_id: UUID,
     session_id: UUID,
     data: list[CreateEntryRequest],
+    mark_session_as_updated: bool = True,
 ) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     session_id = str(session_id)
 
-    data_dicts = [item.model_dump() for item in data]
+    data_dicts = [item.model_dump(exclude_unset=True) for item in data]
 
     for item in data_dicts:
         item["content"] = content_to_json(item["content"])
@@ -71,6 +78,9 @@ def create_entries(
         verify_developer_owns_resource_query(
             developer_id, "sessions", session_id=session_id
         ),
+        mark_session_updated_query(developer_id, session_id)
+        if mark_session_as_updated
+        else "",
         create_query,
     ]
 
@@ -84,7 +94,7 @@ def create_entries(
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Relation)
+@wrap_in_class(Relation, _kind="inserted")
 @cozo_query
 @beartype
 def add_entry_relations(

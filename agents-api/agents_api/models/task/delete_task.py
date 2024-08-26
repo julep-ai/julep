@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -16,6 +17,9 @@ from ..utils import (
     wrap_in_class,
 )
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
@@ -33,6 +37,7 @@ from ..utils import (
         "deleted_at": utcnow(),
         **d,
     },
+    _kind="deleted",
 )
 @cozo_query
 @beartype

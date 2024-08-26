@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -17,6 +18,9 @@ from ..utils import (
     wrap_in_class,
 )
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
@@ -29,6 +33,7 @@ from ..utils import (
     ResourceUpdatedResponse,
     one=True,
     transform=lambda d: {"id": d["agent_id"], "jobs": [], **d},
+    _kind="inserted",
 )
 @cozo_query
 @beartype

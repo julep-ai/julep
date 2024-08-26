@@ -10,42 +10,28 @@ export const $Docs_HybridDocSearchRequest = {
     },
     {
       properties: {
+        confidence: {
+          type: "number",
+          description: `The confidence cutoff level`,
+          isRequired: true,
+          maximum: 1,
+        },
+        alpha: {
+          type: "number",
+          description: `The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;`,
+          isRequired: true,
+          maximum: 1,
+        },
         text: {
-          type: "any-of",
-          description: `Text or texts to use in the search. In \`hybrid\` search mode, either \`text\` or both \`text\` and \`vector\` fields are required.`,
-          contains: [
-            {
-              type: "string",
-            },
-            {
-              type: "array",
-              contains: {
-                type: "string",
-              },
-            },
-          ],
+          type: "string",
+          description: `Text to use in the search. In \`hybrid\` search mode, either \`text\` or both \`text\` and \`vector\` fields are required.`,
           isRequired: true,
         },
         vector: {
-          type: "any-of",
-          description: `Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.`,
-          contains: [
-            {
-              type: "array",
-              contains: {
-                type: "number",
-              },
-            },
-            {
-              type: "array",
-              contains: {
-                type: "array",
-                contains: {
-                  type: "number",
-                },
-              },
-            },
-          ],
+          type: "array",
+          contains: {
+            type: "number",
+          },
           isRequired: true,
         },
       },

@@ -27,8 +27,6 @@ export const $Chat_BaseChatOutput = {
           type: "Chat_LogProbResponse",
         },
       ],
-      isRequired: true,
-      isNullable: true,
     },
   },
 } as const;

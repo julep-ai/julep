@@ -1,16 +1,17 @@
 import inspect
 import re
 from functools import partialmethod, wraps
-from typing import Any, Callable, ParamSpec, Type
+from typing import Any, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
 import pandas as pd
 from pydantic import BaseModel
 
-from ..clients.cozo import client as cozo_client
 from ..common.utils.cozo import uuid_int_list_to_uuid4
 
 P = ParamSpec("P")
+T = TypeVar("T")
+ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 def fix_uuid(
@@ -63,14 +64,65 @@ def partialclass(cls, *args, **kwargs):
     return NewCls
 
 
+def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str) -> str:
+    return f"""
+    input[developer_id, session_id] <- [[
+        to_uuid("{str(developer_id)}"),
+        to_uuid("{str(session_id)}"),
+    ]]
+
+    ?[
+        developer_id, 
+        session_id,
+        situation,
+        summary,
+        created_at,
+        metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
+        updated_at,
+    ] :=
+        input[developer_id, session_id],
+        *sessions {{
+            session_id,
+            situation,
+            summary,
+            created_at,
+            metadata,
+            render_templates,
+            token_budget,
+            context_overflow,
+            @ 'NOW'
+        }},
+        updated_at = [floor(now()), true]
+
+    :put sessions {{
+        developer_id,
+        session_id,
+        situation,
+        summary,
+        created_at,
+        metadata,
+        render_templates,
+        token_budget,
+        context_overflow,
+        updated_at,
+    }}
+    """
+
+
 def verify_developer_id_query(developer_id: UUID | str) -> str:
     return f"""
-    ?[developer_id] :=
+    matched[count(developer_id)] :=
         *developers{{
             developer_id,
         }}, developer_id = to_uuid("{str(developer_id)}")
         
-    :assert some
+    ?[exists] :=
+        matched[num],
+        exists = num > 0,
+        assert(exists, "Developer does not exist")
     """
 
 
@@ -113,7 +165,7 @@ def cozo_query(
     func: Callable[P, tuple[str | list[str], dict]] | None = None,
     debug: bool | None = None,
 ):
-    def cozo_query_dec(func: Callable[P, tuple[str | list[str], dict]]):
+    def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """
         Decorator that wraps a function that takes arbitrary arguments, and
         returns a (query string, variables) tuple.
@@ -122,28 +174,36 @@ def cozo_query(
         and then run the query using the client, returning a DataFrame.
         """
 
-        if debug:
-            from pprint import pprint
+        from pprint import pprint
 
         @wraps(func)
-        def wrapper(*args, client=cozo_client, **kwargs) -> pd.DataFrame:
+        def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
             queries, variables = func(*args, **kwargs)
 
             if isinstance(queries, str):
                 query = queries
             else:
-                queries = [query for query in queries if query]
+                queries = [str(query) for query in queries if query]
                 query = "}\n\n{\n".join(queries)
                 query = f"{{ {query} }}"
 
+            debug and print(query)
             debug and pprint(
                 dict(
-                    query=query,
                     variables=variables,
                 )
             )
 
-            result = client.run(query, variables)
+            # Run the query
+            from ..clients import cozo
+
+            try:
+                client = client or cozo.get_cozo_client()
+                result = client.run(query, variables)
+
+            except Exception as e:
+                debug and print(repr(getattr(e, "__cause__", None) or e))
+                raise
 
             # Need to fix the UUIDs in the result
             result = result.map(fix_uuid_if_present)
@@ -169,24 +229,32 @@ def cozo_query(
 
 
 def wrap_in_class(
-    cls: Type[BaseModel] | Callable[..., BaseModel],
+    cls: Type[ModelT] | Callable[..., ModelT],
     one: bool = False,
     transform: Callable[[dict], dict] | None = None,
+    _kind: str | None = None,
 ):
-    def decorator(func: Callable[..., pd.DataFrame]):
+    def decorator(func: Callable[P, pd.DataFrame]):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> ModelT | list[ModelT]:
             df = func(*args, **kwargs)
 
             # Convert df to list of dicts
+            if _kind:
+                df = df[df["_kind"] == _kind]
+
             data = df.to_dict(orient="records")
 
             nonlocal transform
             transform = transform or (lambda x: x)
-            if one:
-                return cls(**transform(data[0]))
 
-            return [cls(**item) for item in map(transform, data)]
+            if one:
+                assert len(data) >= 1, "Expected one result, got none"
+                obj: ModelT = cls(**transform(data[0]))
+                return obj
+
+            objs: list[ModelT] = [cls(**item) for item in map(transform, data)]
+            return objs
 
         # Set the wrapped function as an attribute of the wrapper,
         # forwards the __wrapped__ attribute if it exists.
@@ -204,13 +272,13 @@ def rewrap_exceptions(
     ],
     /,
 ):
-    def decorator(func: Callable[..., Any]):
+    def decorator(func: Callable[P, T]):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             nonlocal mapping
 
             try:
-                result = func(*args, **kwargs)
+                result: T = func(*args, **kwargs)
 
             except BaseException as error:
                 for check, transform in mapping.items():
@@ -227,7 +295,9 @@ def rewrap_exceptions(
                             else transform(error)
                         )
 
-                        raise transform(new_error) from error
+                        setattr(new_error, "__cause__", error)
+
+                        raise new_error from error
 
                 raise
 

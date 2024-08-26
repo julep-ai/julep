@@ -1,3 +1,4 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
@@ -15,6 +16,9 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
 @rewrap_exceptions(
@@ -62,6 +66,7 @@ def get_history(
                 content,
                 source,
                 token_count,
+                tokenizer,
                 created_at,
                 timestamp,
             },
@@ -75,6 +80,7 @@ def get_history(
                 "content":     content,
                 "source":      source,
                 "token_count": token_count,
+                "tokenizer":   tokenizer,
                 "created_at":  created_at,
                 "timestamp":   timestamp
             }

@@ -6,7 +6,7 @@ import typing
 from ..core.datetime_utils import serialize_datetime
 from ..core.pydantic_utilities import deep_union_pydantic_dicts, pydantic_v1
 from .chat_base_chat_output import ChatBaseChatOutput
-from .entries_chat_ml_message import EntriesChatMlMessage
+from .entries_input_chat_ml_message import EntriesInputChatMlMessage
 
 
 class ChatMultipleChatOutput(ChatBaseChatOutput):
@@ -14,7 +14,7 @@ class ChatMultipleChatOutput(ChatBaseChatOutput):
     The output returned by the model. Note that, depending on the model provider, they might return more than one message.
     """
 
-    messages: typing.List[EntriesChatMlMessage]
+    messages: typing.List[EntriesInputChatMlMessage]
 
     def json(self, **kwargs: typing.Any) -> str:
         kwargs_with_defaults: typing.Any = {

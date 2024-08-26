@@ -6,23 +6,71 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
-from .Chat import CompletionResponseFormat
-from .Common import LogitBias
-from .Entries import InputChatMLMessage
-from .Tools import FunctionDef
+from .Chat import ChatSettings
+from .Docs import (
+    EmbedQueryRequest,
+    HybridDocSearchRequest,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
+from .Tools import CreateToolRequest
 
 
-class BaseWorkflowStep(BaseModel):
+class CaseThen(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal[
-        "tool_call", "yield", "prompt", "evaluate", "if_else", "wait_for_input", "error"
-    ]
+    case: Literal["_"] | str
     """
-    The kind of step
+    The condition to evaluate
+    """
+    then: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
+        | WaitForInputStep
+    )
+    """
+    The steps to run if the condition is true
+    """
+
+
+class Content(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: str
+    """
+    A valid jinja template.
+    """
+    type: Literal["text"] = "text"
+    """
+    The type (fixed to 'text')
+    """
+
+
+class ContentModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    image_url: ImageUrl
+    """
+    The image URL
+    """
+    type: Literal["image_url"] = "image_url"
+    """
+    The type (fixed to 'image_url')
     """
 
 
@@ -39,11 +87,22 @@ class CreateTaskRequest(BaseModel):
     main: list[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
         | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
         | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | Main
     ]
     """
     The entrypoint of the task.
@@ -56,66 +115,295 @@ class CreateTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
 
 
-class ErrorWorkflowStep(BaseWorkflowStep):
+class EmbedStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["error"] = "error"
+    kind_: Annotated[
+        Literal["embed"], Field("embed", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    embed: EmbedQueryRequest
+    """
+    The text to embed
+    """
+
+
+class ErrorWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["error"], Field("error", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     error: str
     """
     The error message
     """
 
 
-class EvaluateStep(BaseWorkflowStep):
+class EvaluateStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["evaluate"] = "evaluate"
+    kind_: Annotated[
+        Literal["evaluate"], Field("evaluate", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     evaluate: dict[str, str]
     """
     The expression to evaluate
     """
 
 
-class IfElseWorkflowStep(BaseWorkflowStep):
+class ForeachDo(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["if_else"] = "if_else"
+    in_: Annotated[str, Field(alias="in")]
+    """
+    The variable to iterate over.
+    VALIDATION: Should NOT return more than 1000 elements.
+    """
+    do: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+    )
+    """
+    The steps to run for each iteration
+    """
+
+
+class ForeachStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["foreach"], Field("foreach", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    foreach: ForeachDo
+    """
+    The steps to run for each iteration
+    """
+
+
+class GetStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[Literal["get"], Field("get", json_schema_extra={"readOnly": True})]
+    """
+    The kind of step
+    """
+    get: str
+    """
+    The key to get
+    """
+
+
+class IfElseWorkflowStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["if_else"], Field("if_else", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     if_: Annotated[str, Field(alias="if")]
     """
     The condition to evaluate
     """
     then: (
-        Any
+        EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
         | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
     )
     """
     The steps to run if the condition is true
     """
     else_: Annotated[
-        Any
+        EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
         | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep,
         Field(alias="else"),
     ]
     """
     The steps to run if the condition is false
+    """
+
+
+class ImageUrl(BaseModel):
+    """
+    The image URL
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    url: str
+    """
+    Image URL or base64 data url (e.g. `data:image/jpeg;base64,<the base64 encoded image>`)
+    """
+    detail: Literal["low", "high", "auto"] = "auto"
+    """
+    The detail level of the image
+    """
+
+
+class LogStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[Literal["log"], Field("log", json_schema_extra={"readOnly": True})]
+    """
+    The kind of step
+    """
+    log: str
+    """
+    The value to log
+    """
+
+
+class Main(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["map_reduce"], Field("map_reduce", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    over: str
+    """
+    The variable to iterate over
+    """
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+    )
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: Any = []
+
+
+class MainModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    over: str
+    """
+    The variable to iterate over
+    """
+    map: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+    )
+    """
+    The steps to run for each iteration
+    """
+    reduce: str | None = None
+    """
+    The expression to reduce the results.
+    If not provided, the results are collected and returned as a list.
+    A special parameter named `results` is the accumulator and `_` is the current value.
+    """
+    initial: Any = []
+
+
+class ParallelStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["parallel"], Field("parallel", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    parallel: Annotated[
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+        ],
+        Field(max_length=100),
+    ]
+    """
+    The steps to run in parallel. Max concurrency will depend on the platform.
     """
 
 
@@ -132,11 +420,22 @@ class PatchTaskRequest(BaseModel):
         list[
             EvaluateStep
             | ToolCallStep
-            | YieldStep
             | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+            | ReturnStep
+            | SleepStep
             | ErrorWorkflowStep
+            | YieldStep
             | WaitForInputStep
             | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | MainModel
         ]
         | None
     ) = None
@@ -151,222 +450,174 @@ class PatchTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
 
 
-class PromptStep(BaseWorkflowStep):
+class PromptItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["prompt"] = "prompt"
-    prompt: str | list[InputChatMLMessage]
+    role: Literal[
+        "user",
+        "assistant",
+        "system",
+        "function",
+        "function_response",
+        "function_call",
+        "auto",
+    ]
+    """
+    The role of the message
+    """
+    content: list[str] | list[Content | ContentModel] | str
+    """
+    The content parts of the message
+    """
+    name: str | None = None
+    """
+    Name
+    """
+    continue_: Annotated[StrictBool | None, Field(None, alias="continue")]
+    """
+    Whether to continue this message or return a new one
+    """
+
+
+class PromptStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["prompt"], Field("prompt", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
+    prompt: list[PromptItem] | str
     """
     The prompt to run
     """
-    settings: Settings | SettingsModel | SettingsModel1
+    settings: ChatSettings | None = None
     """
     Settings for the prompt
     """
 
 
-class Settings(BaseModel):
-    """
-    Settings for the prompt
-    """
-
+class ReturnStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    model: Annotated[
-        str | None,
-        Field(
-            None,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
+    kind_: Annotated[
+        Literal["return"], Field("return", json_schema_extra={"readOnly": True})
     ]
     """
-    Identifier of the model to be used
+    The kind of step
     """
-    stream: bool = False
+    return_: Annotated[dict[str, str], Field(alias="return")]
     """
-    Indicates if the server should stream the response as it's generated
-    """
-    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
-    """
-    Up to 4 sequences where the API will stop generating further tokens.
-    """
-    seed: Annotated[int | None, Field(None, ge=-1, le=1000)]
-    """
-    If specified, the system will make a best effort to sample deterministically for that particular seed value
-    """
-    max_tokens: Annotated[int | None, Field(None, ge=1)]
-    """
-    The maximum number of tokens to generate in the chat completion
-    """
-    logit_bias: dict[str, LogitBias] | None = None
-    """
-    Modify the likelihood of specified tokens appearing in the completion
-    """
-    response_format: CompletionResponseFormat | None = None
-    """
-    Response format (set to `json_object` to restrict output to JSON)
-    """
-    agent: UUID | None = None
-    """
-    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-    """
-    preset: (
-        Literal[
-            "problem_solving",
-            "conversational",
-            "fun",
-            "prose",
-            "creative",
-            "business",
-            "deterministic",
-            "code",
-            "multilingual",
-        ]
-        | None
-    ) = None
-    """
-    Generation preset (one of: problem_solving, conversational, fun, prose, creative, business, deterministic, code, multilingual)
+    The value to return
     """
 
 
-class SettingsModel(BaseModel):
-    """
-    Settings for the prompt
-    """
-
+class SearchStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    model: Annotated[
-        str | None,
-        Field(
-            None,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
+    kind_: Annotated[
+        Literal["search"], Field("search", json_schema_extra={"readOnly": True})
     ]
     """
-    Identifier of the model to be used
+    The kind of step
     """
-    stream: bool = False
+    search: VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
     """
-    Indicates if the server should stream the response as it's generated
-    """
-    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
-    """
-    Up to 4 sequences where the API will stop generating further tokens.
-    """
-    seed: Annotated[int | None, Field(None, ge=-1, le=1000)]
-    """
-    If specified, the system will make a best effort to sample deterministically for that particular seed value
-    """
-    max_tokens: Annotated[int | None, Field(None, ge=1)]
-    """
-    The maximum number of tokens to generate in the chat completion
-    """
-    logit_bias: dict[str, LogitBias] | None = None
-    """
-    Modify the likelihood of specified tokens appearing in the completion
-    """
-    response_format: CompletionResponseFormat | None = None
-    """
-    Response format (set to `json_object` to restrict output to JSON)
-    """
-    agent: UUID | None = None
-    """
-    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-    """
-    frequency_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
-    """
-    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    presence_penalty: Annotated[float | None, Field(None, ge=-2.0, le=2.0)]
-    """
-    Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    temperature: Annotated[float | None, Field(None, ge=0.0, le=5.0)]
-    """
-    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-    """
-    top_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
-    """
-    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+    The search query
     """
 
 
-class SettingsModel1(BaseModel):
-    """
-    Settings for the prompt
-    """
-
+class SetKey(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    model: Annotated[
-        str | None,
-        Field(
-            None,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
+    key: str
+    """
+    The key to set
+    """
+    value: str
+    """
+    The value to set
+    """
+
+
+class SetStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[Literal["set"], Field("set", json_schema_extra={"readOnly": True})]
+    """
+    The kind of step
+    """
+    set: SetKey
+    """
+    The value to set
+    """
+
+
+class SleepFor(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    seconds: Annotated[int, Field(0, ge=0, le=60)]
+    """
+    The number of seconds to sleep for
+    """
+    minutes: Annotated[int, Field(0, ge=0, le=60)]
+    """
+    The number of minutes to sleep for
+    """
+    hours: Annotated[int, Field(0, ge=0, le=24)]
+    """
+    The number of hours to sleep for
+    """
+    days: Annotated[int, Field(0, ge=0, le=30)]
+    """
+    The number of days to sleep for
+    """
+
+
+class SleepStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["sleep"], Field("sleep", json_schema_extra={"readOnly": True})
     ]
     """
-    Identifier of the model to be used
+    The kind of step
     """
-    stream: bool = False
+    sleep: SleepFor
     """
-    Indicates if the server should stream the response as it's generated
+    The duration to sleep for (max 31 days)
     """
-    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
+
+
+class SwitchStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["switch"], Field("switch", json_schema_extra={"readOnly": True})
+    ]
     """
-    Up to 4 sequences where the API will stop generating further tokens.
+    The kind of step
     """
-    seed: Annotated[int | None, Field(None, ge=-1, le=1000)]
+    switch: Annotated[list[CaseThen], Field(min_length=1)]
     """
-    If specified, the system will make a best effort to sample deterministically for that particular seed value
-    """
-    max_tokens: Annotated[int | None, Field(None, ge=1)]
-    """
-    The maximum number of tokens to generate in the chat completion
-    """
-    logit_bias: dict[str, LogitBias] | None = None
-    """
-    Modify the likelihood of specified tokens appearing in the completion
-    """
-    response_format: CompletionResponseFormat | None = None
-    """
-    Response format (set to `json_object` to restrict output to JSON)
-    """
-    agent: UUID | None = None
-    """
-    Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
-    """
-    repetition_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
-    """
-    length_penalty: Annotated[float | None, Field(None, ge=0.0, le=2.0)]
-    """
-    Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
-    """
-    temperature: Annotated[float | None, Field(None, ge=0.0, le=5.0)]
-    """
-    What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-    """
-    top_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
-    """
-    Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
-    """
-    min_p: Annotated[float | None, Field(None, ge=0.0, le=1.0)]
-    """
-    Minimum probability compared to leading token to be considered
+    The cond tree
     """
 
 
@@ -383,11 +634,22 @@ class Task(BaseModel):
     main: list[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
         | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
         | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | Main
     ]
     """
     The entrypoint of the task.
@@ -400,7 +662,7 @@ class Task(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
@@ -416,42 +678,35 @@ class Task(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class TaskTool(BaseModel):
+class TaskTool(CreateToolRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    inherited: Annotated[bool, Field(False, json_schema_extra={"readOnly": True})]
+    inherited: Annotated[StrictBool, Field(False, json_schema_extra={"readOnly": True})]
     """
     Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
-    name: Annotated[str, Field(pattern="^[^\\W0-9]\\w*$")]
-    """
-    Name of the tool (must be unique for this agent and a valid python identifier string )
-    """
-    function: FunctionDef | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
 
 
-class ToolCallStep(BaseWorkflowStep):
+class ToolCallStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["tool_call"] = "tool_call"
+    kind_: Annotated[
+        Literal["tool_call"], Field("tool_call", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     tool: Annotated[
         str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
     ]
     """
     The tool to run
     """
-    arguments: dict[str, Any]
+    arguments: dict[str, str] | Literal["_"] = "_"
     """
-    The input parameters for the tool
+    The input parameters for the tool (defaults to last step output)
     """
 
 
@@ -467,11 +722,22 @@ class UpdateTaskRequest(BaseModel):
     main: list[
         EvaluateStep
         | ToolCallStep
-        | YieldStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
         | ErrorWorkflowStep
+        | YieldStep
         | WaitForInputStep
         | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | Main
     ]
     """
     The entrypoint of the task.
@@ -484,34 +750,56 @@ class UpdateTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: bool = True
+    inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
 
 
-class WaitForInputStep(BaseWorkflowStep):
+class WaitForInputInfo(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["wait_for_input"] = "wait_for_input"
-    info: str | dict[str, Any]
+    info: dict[str, str]
     """
     Any additional info or data
     """
 
 
-class YieldStep(BaseWorkflowStep):
+class WaitForInputStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    kind_: Literal["yield"] = "yield"
+    kind_: Annotated[
+        Literal["wait_for_input"],
+        Field("wait_for_input", json_schema_extra={"readOnly": True}),
+    ]
+    """
+    The kind of step
+    """
+    wait_for_input: WaitForInputInfo
+    """
+    Any additional info or data
+    """
+
+
+class YieldStep(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: Annotated[
+        Literal["yield"], Field("yield", json_schema_extra={"readOnly": True})
+    ]
+    """
+    The kind of step
+    """
     workflow: str
     """
-    The subworkflow to run
+    The subworkflow to run.
+    VALIDATION: Should resolve to a defined subworkflow.
     """
-    arguments: dict[str, str]
+    arguments: dict[str, str] | Literal["_"] = "_"
     """
-    The input parameters for the subworkflow
+    The input parameters for the subworkflow (defaults to last step output)
     """

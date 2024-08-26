@@ -3,11 +3,14 @@
 # Turn on echo command
 set -x
 
+# Exit on error
+set -e
+
 cd typespec/ && \
     tsp compile .
 cd -
 
-fern generate --local
+# fern generate
 
 cd sdks/python && \
     poetry update && \

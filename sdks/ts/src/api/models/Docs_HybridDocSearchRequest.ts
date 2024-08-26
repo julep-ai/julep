@@ -5,11 +5,19 @@
 import type { Docs_BaseDocSearchRequest } from "./Docs_BaseDocSearchRequest";
 export type Docs_HybridDocSearchRequest = Docs_BaseDocSearchRequest & {
   /**
-   * Text or texts to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+   * The confidence cutoff level
    */
-  text: string | Array<string>;
+  confidence: number;
   /**
-   * Vector or vectors to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+   * The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
    */
-  vector: Array<number> | Array<Array<number>>;
+  alpha: number;
+  /**
+   * Text to use in the search. In `hybrid` search mode, either `text` or both `text` and `vector` fields are required.
+   */
+  text: string;
+  /**
+   * Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+   */
+  vector: Array<number>;
 };

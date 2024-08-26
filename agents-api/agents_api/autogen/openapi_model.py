@@ -1,9 +1,10 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated
+from typing import Annotated, Any, Generic, Literal, Self, Type, TypeVar
 from uuid import UUID
 
+from litellm.utils import _select_tokenizer as select_tokenizer
+from litellm.utils import token_counter
 from pydantic import AwareDatetime, Field
-from pydantic_partial import create_partial_model
 
 from ..common.utils.datetime import utcnow
 from .Agents import *
@@ -18,23 +19,97 @@ from .Tasks import *
 from .Tools import *
 from .Users import *
 
+# Generic models
+# --------------
+
+DataT = TypeVar("DataT", bound=BaseModel)
+
+
+class ListResponse(BaseModel, Generic[DataT]):
+    items: list[DataT]
+
+
+# Aliases
+# -------
+
 CreateToolRequest = UpdateToolRequest
 CreateOrUpdateAgentRequest = UpdateAgentRequest
 CreateOrUpdateUserRequest = UpdateUserRequest
 CreateOrUpdateSessionRequest = CreateSessionRequest
-CreateOrUpdateTaskRequest = CreateTaskRequest
+ChatResponse = ChunkChatResponse | MessageChatResponse
 
-CreateTransitionRequest = create_partial_model(
-    Transition,
-    # The following fields are optional
-    "id",
-    "execution_id",
-    "created_at",
-    "updated_at",
-    "metadata",
+# TODO: Figure out wtf... 🤷‍♂️
+MapReduceStep = Main
+ChatMLTextContentPart = Content
+ChatMLImageContentPart = ContentModel
+InputChatMLMessage = Message
+
+
+# Custom types (not generated correctly)
+# --------------------------------------
+
+# TODO: Remove these when auto-population is fixed
+
+ChatMLContent = (
+    list[ChatMLTextContentPart | ChatMLImageContentPart]
+    | Tool
+    | ChosenToolCall
+    | str
+    | ToolResponse
+    | list[
+        list[ChatMLTextContentPart | ChatMLImageContentPart]
+        | Tool
+        | ChosenToolCall
+        | str
+        | ToolResponse
+    ]
 )
 
-ChatMLRole = BaseEntry.model_fields["role"].annotation
+ChatMLRole = Literal[
+    "user",
+    "assistant",
+    "system",
+    "function",
+    "function_response",
+    "function_call",
+    "auto",
+]
+assert BaseEntry.model_fields["role"].annotation == ChatMLRole
+
+ChatMLSource = Literal[
+    "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
+]
+assert BaseEntry.model_fields["source"].annotation == ChatMLSource
+
+
+ExecutionStatus = Literal[
+    "queued",
+    "starting",
+    "running",
+    "awaiting_input",
+    "succeeded",
+    "failed",
+    "cancelled",
+]
+assert Execution.model_fields["status"].annotation == ExecutionStatus
+
+
+TransitionType = Literal["finish", "wait", "resume", "error", "step", "cancelled"]
+assert Transition.model_fields["type"].annotation == TransitionType
+
+
+# Create models
+# -------------
+
+
+class CreateTransitionRequest(Transition):
+    # The following fields are optional in this
+
+    id: UUID | None = None
+    execution_id: UUID | None = None
+    created_at: AwareDatetime | None = None
+    updated_at: AwareDatetime | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class CreateEntryRequest(BaseEntry):
@@ -42,36 +117,35 @@ class CreateEntryRequest(BaseEntry):
         float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())
     ]
 
+    @classmethod
+    def from_model_input(
+        cls: Type[Self],
+        model: str,
+        *,
+        role: ChatMLRole,
+        content: ChatMLContent,
+        name: str | None = None,
+        source: ChatMLSource,
+        **kwargs: dict,
+    ) -> Self:
+        tokenizer: dict = select_tokenizer(model=model)
+        token_count = token_counter(
+            model=model, messages=[{"role": role, "content": content, "name": name}]
+        )
 
-def make_session(
-    *,
-    agents: list[UUID],
-    users: list[UUID],
-    **data: dict,
-) -> Session:
-    """
-    Create a new session object.
-    """
-    cls, participants = None, {}
+        return cls(
+            role=role,
+            content=content,
+            name=name,
+            source=source,
+            tokenizer=tokenizer["type"],
+            token_count=token_count,
+            **kwargs,
+        )
 
-    match (len(agents), len(users)):
-        case (0, _):
-            raise ValueError("At least one agent must be provided.")
-        case (1, 0):
-            cls = SingleAgentNoUserSession
-            participants = {"agent": agents[0]}
-        case (1, 1):
-            cls = SingleAgentSingleUserSession
-            participants = {"agent": agents[0], "user": users[0]}
-        case (1, u) if u > 1:
-            cls = SingleAgentMultiUserSession
-            participants = {"agent": agents[0], "users": users}
-        case _:
-            cls = MultiAgentMultiUserSession
-            participants = {"agents": agents, "users": users}
 
-    return cls(**{**data, **participants})
-
+# Task related models
+# -------------------
 
 WorkflowStep = (
     PromptStep
@@ -80,6 +154,18 @@ WorkflowStep = (
     | ToolCallStep
     | ErrorWorkflowStep
     | IfElseWorkflowStep
+    | ReturnStep
+    | SleepStep
+    | WaitForInputStep
+    | LogStep
+    | EmbedStep
+    | SearchStep
+    | SetStep
+    | GetStep
+    | ForeachStep
+    | ParallelStep
+    | SwitchStep
+    | MapReduceStep
 )
 
 
@@ -102,7 +188,9 @@ class TaskSpec(_Task):
     model_config = ConfigDict(extra="ignore")
 
     workflows: list[Workflow]
-    main: list[WorkflowStep] | None = None
+
+    # Remove main field from the model
+    main: None = None
 
 
 class TaskSpecDef(TaskSpec):
@@ -135,6 +223,8 @@ class CreateTaskRequest(_CreateTaskRequest):
         }
     )
 
+
+CreateOrUpdateTaskRequest = CreateTaskRequest
 
 _PatchTaskRequest = PatchTaskRequest
 

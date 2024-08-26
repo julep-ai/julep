@@ -3,6 +3,7 @@ This module contains the functionality for creating a new session in the 'cozodb
 It constructs and executes a datalog query to insert session data.
 """
 
+from typing import Any, TypeVar
 from uuid import UUID, uuid4
 
 from beartype import beartype
@@ -20,6 +21,9 @@ from ..utils import (
     wrap_in_class,
 )
 
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
+
 
 @rewrap_exceptions(
     {
@@ -36,6 +40,7 @@ from ..utils import (
         "updated_at": (d.pop("updated_at")[0]),
         **d,
     },
+    _kind="inserted",
 )
 @cozo_query
 @beartype

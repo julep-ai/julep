@@ -12,8 +12,6 @@ export const $Chat_BaseChatResponse = {
           type: "Chat_CompetionUsage",
         },
       ],
-      isRequired: true,
-      isNullable: true,
     },
     jobs: {
       type: "array",

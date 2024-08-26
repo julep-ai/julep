@@ -5,7 +5,7 @@
 import type { Docs_BaseDocSearchRequest } from "./Docs_BaseDocSearchRequest";
 export type Docs_TextOnlyDocSearchRequest = Docs_BaseDocSearchRequest & {
   /**
-   * Text or texts to use in the search.
+   * Text to use in the search.
    */
-  text: string | Array<string>;
+  text: string;
 };

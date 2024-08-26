@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
-import type { Common_validPythonIdentifier } from "./Common_validPythonIdentifier";
 /**
  * Function definition
  */
@@ -11,7 +10,7 @@ export type Tools_FunctionDef = {
   /**
    * DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
    */
-  name?: Common_validPythonIdentifier;
+  name?: any;
   /**
    * Description of the function
    */
@@ -19,5 +18,5 @@ export type Tools_FunctionDef = {
   /**
    * The parameters the function accepts
    */
-  parameters: Record<string, any>;
+  parameters?: Record<string, any>;
 };

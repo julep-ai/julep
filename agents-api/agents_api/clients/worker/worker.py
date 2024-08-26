@@ -1,6 +1,6 @@
 import httpx
 
-from agents_api.env import worker_url
+from agents_api.env import temporal_worker_url
 
 from .types import (
     MemoryManagementTask,
@@ -16,7 +16,7 @@ async def add_summarization_task(data: MemoryManagementTaskArgs):
         )
 
         await client.post(
-            f"{worker_url}/task",
+            f"{temporal_worker_url}/task",
             headers={"Content-Type": "json"},
             data=data.model_dump_json(),
         )
