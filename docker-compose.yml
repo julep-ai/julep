@@ -1,5 +1,4 @@
 name: julep
-version: "3"
 
 include:
   - ./memory-store/docker-compose.yml

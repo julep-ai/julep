@@ -1,5 +1,4 @@
 name: julep-monitoring
-version: "3"
 
 services:
   portainer:

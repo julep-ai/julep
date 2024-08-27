@@ -1,5 +1,4 @@
 name: julep-scheduler
-version: "3"
 
 services:
   temporal:

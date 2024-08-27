@@ -1,9 +1,8 @@
 name: julep-agents-api
-version: "3"
 
 services:
   agents-api:
-    image: julepai/agents-api:dev
+    image: julepai/agents-api:${TAG:-dev}
     env_file:
       - ../.env
     container_name: agents-api
@@ -31,7 +30,7 @@ services:
           path: Dockerfile
 
   worker:
-    image: julepai/worker:dev
+    image: julepai/worker:${TAG:-dev}
     env_file:
       - ../.env
 
@@ -78,7 +77,7 @@ services:
 
 
   cozo-migrate:
-    image: julepai/cozo-migrate:dev
+    image: julepai/cozo-migrate:${TAG:-dev}
     env_file:
       - ../.env
 

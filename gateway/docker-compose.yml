@@ -1,9 +1,8 @@
 name: julep-gateway
-version: "3"
 
 services:
   gateway:
-    image: julepai/gateway:dev
+    image: julepai/gateway:${TAG:-dev}
     env_file: "../.env"
     environment:
       - GATEWAY_PORT=80

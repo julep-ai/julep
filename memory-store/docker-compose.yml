@@ -1,9 +1,8 @@
 name: julep-memory-store
-version: "3"
 
 services:
   memory-store:
-    image: julepai/memory-store:dev
+    image: julepai/memory-store:${TAG:-dev}
     env_file: "../.env"
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}

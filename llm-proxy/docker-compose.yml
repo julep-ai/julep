@@ -1,3 +1,5 @@
+name: julep-llm-proxy
+
 services:
   litellm:
     image: ghcr.io/berriai/litellm:main-stable

@@ -2,7 +2,7 @@ name: julep-api
 
 services:
   memory-store:
-    image: julepai/memory-store:dev
+    image: julepai/memory-store:${TAG:-dev}
     platform: linux/x86_64
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
@@ -17,7 +17,7 @@ services:
       - "9070:9070"
 
   agents-api:
-    image: julepai/agents-api:dev
+    image: julepai/agents-api:${TAG:-dev}
     platform: linux/x86_64
     container_name: julep-agents-api
     depends_on:
@@ -31,7 +31,7 @@ services:
       - .env
 
   worker:
-    image: julepai/worker:dev
+    image: julepai/worker:${TAG:-dev}
     platform: linux/x86_64
     container_name: julep-worker
     depends_on:
@@ -74,7 +74,7 @@ services:
       - .env
 
   temporal:
-    image: julepai/temporal:dev
+    image: julepai/temporal:${TAG:-dev}
     platform: linux/x86_64
     container_name: julep-temporal
     ports:
@@ -93,7 +93,7 @@ services:
       - COZO_HOST=http://memory-store:9070
     env_file:
       - .env
-    image: julepai/cozo-migrate:dev
+    image: julepai/cozo-migrate:${TAG:-dev}
     platform: linux/x86_64
     container_name: julep-cozo-migrate
     depends_on:
