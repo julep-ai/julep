@@ -4,8 +4,8 @@ version: "3"
 services:
   agents-api:
     image: julepai/agents-api:dev
-    env_file: "../.env"
-
+    env_file:
+      - ../.env
     container_name: agents-api
     depends_on:
       memory-store:
@@ -32,7 +32,8 @@ services:
 
   worker:
     image: julepai/worker:dev
-    env_file: "../.env"
+    env_file:
+      - ../.env
 
     build:
       context: .
@@ -76,27 +77,10 @@ services:
               capabilities: [gpu]
 
 
-  temporal:
-    image: julepai/temporal:dev
-    container_name: temporal
-    env_file: "../.env"
-
-    build:
-      context: .
-      dockerfile: Dockerfile.temporal
-    ports:
-      - 7233:7233
-    volumes:
-      - temporal_data:/home/temporal
-
-    develop:
-      watch:
-        - action: rebuild
-          path: Dockerfile.temporal
-
   cozo-migrate:
     image: julepai/cozo-migrate:dev
-    env_file: "../.env"
+    env_file:
+      - ../.env
 
     container_name: cozo-migrate
     depends_on:

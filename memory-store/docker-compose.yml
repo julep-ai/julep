@@ -10,7 +10,6 @@ services:
       - COZO_PORT=${COZO_PORT}
       - MNT_DIR=/data
       - COZO_BACKUP_DIR=/backup
-    container_name: memory-store
     volumes:
       - cozo_data:/data
     build:

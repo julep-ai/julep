@@ -25,16 +25,22 @@ services:
       - litellm-redis
 
   litellm-db:
-    image: postgres
+    image: postgres:16
     restart: always
     volumes:
       - litellm-db-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "15432:5432"
+    
+    # FIXME: This combination of env_file and environment is not working
     env_file:
       - ../.env
+    environment:
+      - POSTGRES_DB=${LITELLM_POSTGRES_DB}
+      - POSTGRES_USER=${LITELLM_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d litellm -U llmproxy" ]
+      test: [ "CMD-SHELL", "pg_isready -d ${LITELLM_POSTGRES_DB} -U ${LITELLM_POSTGRES_USER}" ]
       interval: 1s
       timeout: 5s
       retries: 10
@@ -45,7 +51,7 @@ services:
     volumes:
       - litellm-redis-data:/data
     ports:
-      - "6379:6379"
+      - "16379:6379"
     env_file:
       - ../.env
 

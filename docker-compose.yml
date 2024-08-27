@@ -5,6 +5,7 @@ include:
   - ./memory-store/docker-compose.yml
   - ./gateway/docker-compose.yml
   - ./agents-api/docker-compose.yml
+  - ./scheduler/docker-compose.yml
   - ./llm-proxy/docker-compose.yml
 
   # TODO: Enable after testing
