@@ -16,4 +16,4 @@ COPY . ./
 
 RUN poetry install --no-dev
 
-ENTRYPOINT ["python", "agents_api/web.py", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT ["python", "-m", "agents_api.web", "--host", "0.0.0.0", "--port", "8080"]
