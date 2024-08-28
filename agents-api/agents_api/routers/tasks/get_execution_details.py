@@ -15,7 +15,11 @@ from .router import router
 async def get_execution_details(execution_id: UUID4) -> Execution:
     try:
         return get_execution_query(execution_id=execution_id)
-    except AssertionError:
+    except AssertionError as e:
+        print("-" * 100)
+        print(e)
+        print("-" * 100)
+
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Execution not found"
-        )
+        ) from e

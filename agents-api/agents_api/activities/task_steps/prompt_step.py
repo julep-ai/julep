@@ -1,13 +1,11 @@
-import asyncio
 
 from beartype import beartype
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from ...autogen.openapi_model import (
-    ChatSettings,
     Content,
     ContentModel,
-    InputChatMLMessage,
 )
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
@@ -46,57 +44,44 @@ def _content_to_dict(
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data
+    prompt: str | list[dict] = context.current_step.model_dump()["prompt"]
     context_data: dict = context.model_dump()
 
     # Render template messages
-    prompt = (
-        [InputChatMLMessage(content=context.current_step.prompt)]
-        if isinstance(context.current_step.prompt, str)
-        else context.current_step.prompt
+    prompt = await render_template(
+        prompt,
+        context_data,
+        skip_vars=["developer_id"],
     )
-
-    template_messages: list[InputChatMLMessage] = prompt
-    messages = await asyncio.gather(
-        *[
-            render_template(
-                _content_to_dict(msg.content, msg.role),
-                context_data,
-                skip_vars=["developer_id"],
-            )
-            for msg in template_messages
-        ]
-    )
-
-    result_messages = []
-    for m in messages:
-        if isinstance(m, str):
-            msg = InputChatMLMessage(role="user", content=m)
-        else:
-            msg = []
-            for d in m:
-                role = d["content"].get("role")
-                d["content"] = [d["content"]]
-                d["role"] = role
-                msg.append(InputChatMLMessage(**d))
-
-        result_messages.append(msg)
-
-    # messages = [
-    #     (
-    #         InputChatMLMessage(role="user", content=m)
-    #         if isinstance(m, str)
-    #         else [InputChatMLMessage(**d) for d in m]
-    #     )
-    #     for m in messages
-    # ]
 
     # Get settings and run llm
-    settings: ChatSettings = context.current_step.settings or ChatSettings()
-    settings_data: dict = settings.model_dump()
+    agent_default_settings: dict = (
+        context.execution_input.agent.default_settings.model_dump()
+        if context.execution_input.agent.default_settings
+        else {}
+    )
+    agent_model: str = (
+        context.execution_input.agent.model
+        if context.execution_input.agent.model
+        else "gpt-4o"
+    )
+
+    if context.current_step.settings:
+        passed_settings: dict = context.current_step.settings.model_dump(
+            exclude_unset=True
+        )
+    else:
+        passed_settings: dict = {}
+
+    completion_data: dict = {
+        "model": agent_model,
+        ("messages" if isinstance(prompt, list) else "prompt"): prompt,
+        **agent_default_settings,
+        **passed_settings,
+    }
 
     response = await litellm.acompletion(
-        messages=result_messages,
-        **settings_data,
+        **completion_data,
     )
 
     return StepOutcome(
