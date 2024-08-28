@@ -114,13 +114,11 @@ http:
           PayloadFields:
             - exp
             - iat
-            - email
           Required: true
           Keys:
             - $JWT_SHARED_KEY
           JwtHeaders:
             X-Developer-Id: sub
-            X-Developer-Email: email
           OpaHttpStatusField: allow_status_code
 
   services:

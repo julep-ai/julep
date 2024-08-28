@@ -33,3 +33,4 @@ services:
 volumes:
   cozo_data:
   cozo_backup:
+    external: true
