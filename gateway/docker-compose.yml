@@ -3,7 +3,6 @@ name: julep-gateway
 services:
   gateway:
     image: julepai/gateway:${TAG:-dev}
-    env_file: "../.env"
     environment:
       - GATEWAY_PORT=80
       - JWT_SHARED_KEY=${JWT_SHARED_KEY}
@@ -14,7 +13,6 @@ services:
       - AGENTS_API_KEY=${AGENTS_API_KEY}
       - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME}
       - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
-
     container_name: gateway
     depends_on:
       agents-api:

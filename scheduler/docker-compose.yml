@@ -4,8 +4,6 @@ services:
   temporal:
     depends_on:
       - temporal-db
-    env_file:
-      - ../.env
     environment:
       - DB=postgres12
       - DB_PORT=5432
@@ -32,8 +30,6 @@ services:
 
   temporal-db:
     image: postgres:16
-    env_file:
-      - ../.env
     environment:
       - POSTGRES_DB=${TEMPORAL_POSTGRES_DB}
       - POSTGRES_USER=${TEMPORAL_POSTGRES_USER}

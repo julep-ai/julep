@@ -8,8 +8,24 @@ services:
       - .keys:/app/.keys
     ports:
       - "4000:4000"
-    env_file:
-      - ../.env
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - LITELLM_POSTGRES_DB=${LITELLM_POSTGRES_DB}
+      - LITELLM_POSTGRES_USER=${LITELLM_POSTGRES_USER}
+      - LITELLM_POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD}
+      - LITELLM_REDIS_HOST=${LITELLM_REDIS_HOST}
+      - LITELLM_REDIS_PORT=${LITELLM_REDIS_PORT}
+      - LITELLM_REDIS_PASSWORD=${LITELLM_REDIS_PASSWORD}
+      - LITELLM_DATABASE_URL=postgresql://${LITELLM_POSTGRES_USER}:${LITELLM_POSTGRES_PASSWORD}@litellm-db:5432/${LITELLM_POSTGRES_DB}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+      - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY}
+      - GITHUB_API_KEY=${GITHUB_API_KEY}
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
     command:
       [
         "--config",
@@ -21,7 +37,6 @@ services:
         "--telemetry",
         "False"
       ]
-
     depends_on:
       - litellm-db
       - litellm-redis
@@ -33,10 +48,6 @@ services:
       - litellm-db-data:/var/lib/postgresql/data
     ports:
       - "15432:5432"
-    
-    # FIXME: This combination of env_file and environment is not working
-    env_file:
-      - ../.env
     environment:
       - POSTGRES_DB=${LITELLM_POSTGRES_DB}
       - POSTGRES_USER=${LITELLM_POSTGRES_USER}
@@ -50,12 +61,12 @@ services:
   litellm-redis:
     image: redis/redis-stack-server
     restart: always
+    environment:
+      REDIS_ARGS: --requirepass ${LITELLM_REDIS_PASSWORD}
     volumes:
       - litellm-redis-data:/data
     ports:
       - "16379:6379"
-    env_file:
-      - ../.env
 
 volumes:
   litellm-db-data:

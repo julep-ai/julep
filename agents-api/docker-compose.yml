@@ -1,16 +1,49 @@
 name: julep-agents-api
 
+# Base for embedding service
+x--text-embeddings-inference: &text-embeddings-inference
+  container_name: text-embeddings-inference
+  environment:
+    - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+
+  image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+  ports:
+    - "8082:80"
+  volumes:
+    - ~/.cache/huggingface/hub:/data
+
+# Shared environment variables
+x-shared-environment: &shared-environment
+  AGENTS_API_KEY: ${AGENTS_API_KEY}
+  LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+  COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+  SKIP_CHECK_DEVELOPER_HEADERS: ${SKIP_CHECK_DEVELOPER_HEADERS:-True}
+  AGENTS_API_KEY_HEADER_NAME: ${AGENTS_API_KEY_HEADER_NAME:-Authorization}
+  AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
+  TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-False}
+  WORKER_URL: ${WORKER_URL:-temporal:7233}
+  DEBUG: ${AGENTS_API_DEBUG:-False}
+  EMBEDDING_SERVICE_BASE: ${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference}
+  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+  LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
+  COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
+  SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
+  TEMPORAL_WORKER_URL: ${TEMPORAL_WORKER_URL:-temporal:7233}
+  TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+  TEMPORAL_ENDPOINT: ${TEMPORAL_ENDPOINT:-temporal:7233}
+  TEMPORAL_TASK_QUEUE: ${TEMPORAL_TASK_QUEUE:-julep-task-queue}
+
 services:
   agents-api:
     image: julepai/agents-api:${TAG:-dev}
-    env_file:
-      - ../.env
     container_name: agents-api
     depends_on:
       memory-store:
         condition: service_started
       worker:
         condition: service_started
+    environment:
+      <<: *shared-environment
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,15 +64,12 @@ services:
 
   worker:
     image: julepai/worker:${TAG:-dev}
-    env_file:
-      - ../.env
-
+    environment:
+      <<: *shared-environment
     build:
       context: .
       dockerfile: Dockerfile.worker
     depends_on:
-      text-embeddings-inference:
-        condition: service_started
       temporal:
         condition: service_started
 
@@ -55,32 +85,32 @@ services:
         - action: rebuild
           path: Dockerfile.worker
 
-  text-embeddings-inference:
-    container_name: text-embeddings-inference
+  text-embeddings-inference-cpu:
+    <<: *text-embeddings-inference
+    profiles:
+      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
+
+  text-embeddings-inference-gpu:
+    <<: *text-embeddings-inference
+    profiles:
+      - gpu
+    image: ghcr.io/huggingface/text-embeddings-inference:1.5
     environment:
       - DTYPE=float16
-      - MODEL_ID=Alibaba-NLP/gte-large-en-v1.5
+      - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+      - NVIDIA_VISIBLE_DEVICES=all
 
-    image: ghcr.io/huggingface/text-embeddings-inference:1.5
-    ports:
-      - "8082:80"
-    volumes:
-      - ~/.cache/huggingface/hub:/data
     shm_size: "2gb"
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              count: ${NUM_GPUS:-1}
               capabilities: [gpu]
-
 
   cozo-migrate:
     image: julepai/cozo-migrate:${TAG:-dev}
-    env_file:
-      - ../.env
-
     container_name: cozo-migrate
     depends_on:
       memory-store:
@@ -89,6 +119,9 @@ services:
       context: .
       dockerfile: Dockerfile.migration
     restart: "no" # Make sure to double quote this
+    environment:
+      - COZO_HOST=${COZO_HOST:-http://cozo:9070}
+      - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN:-myauthkey}
 
     develop:
       watch:
