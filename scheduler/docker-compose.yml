@@ -3,7 +3,8 @@ name: julep-scheduler
 services:
   temporal:
     depends_on:
-      - temporal-db
+      temporal-db:
+        condition: service_started
     environment:
       - DB=postgres12
       - DB_PORT=5432

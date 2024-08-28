@@ -44,10 +44,6 @@ if api_key == _random_generated_key:
     print(f"Generated API key since not set in the environment: {api_key}")
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
-skip_check_developer_headers: bool = env.bool(
-    "SKIP_CHECK_DEVELOPER_HEADERS", default=multi_tenant_mode
-)
-
 
 # Litellm API
 # -----------
@@ -80,7 +76,6 @@ temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-qu
 environment: Dict[str, Any] = dict(
     debug=debug,
     multi_tenant_mode=multi_tenant_mode,
-    skip_check_developer_headers=skip_check_developer_headers,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,
     sentry_dsn=sentry_dsn,

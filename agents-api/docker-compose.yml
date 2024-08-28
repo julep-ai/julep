@@ -13,11 +13,10 @@ x--text-embeddings-inference: &text-embeddings-inference
     - ~/.cache/huggingface/hub:/data
 
 # Shared environment variables
-x-shared-environment: &shared-environment
+x--shared-environment: &shared-environment
   AGENTS_API_KEY: ${AGENTS_API_KEY}
   AGENTS_API_KEY_HEADER_NAME: ${AGENTS_API_KEY_HEADER_NAME:-Authorization}
   AGENTS_API_HOSTNAME: ${AGENTS_API_HOSTNAME:-localhost}
-  AGENTS_API_PREFIX: ${AGENTS_API_PREFIX:-}
   AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
   COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
   COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
@@ -26,7 +25,6 @@ x-shared-environment: &shared-environment
   EMBEDDING_SERVICE_BASE: ${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
-  SKIP_CHECK_DEVELOPER_HEADERS: ${SKIP_CHECK_DEVELOPER_HEADERS:-True}
   SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
   TEMPORAL_ENDPOINT: ${TEMPORAL_ENDPOINT:-temporal:7233}
   TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
@@ -35,34 +33,49 @@ x-shared-environment: &shared-environment
   TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
   WORKER_URL: ${WORKER_URL:-temporal:7233}
 
+x--base-agents-api: &base-agents-api
+  image: julepai/agents-api:${TAG}
+  depends_on:
+    memory-store:
+      condition: service_started
+    worker:
+      condition: service_started
+  environment:
+    <<: *shared-environment
+  build:
+    context: .
+    dockerfile: Dockerfile
+  ports:
+    - "8080:8080"
+
+  develop:
+    watch:
+      - action: sync+restart
+        path: ./agents_api
+        target: /app/agents_api
+        ignore:
+          - ./**/*.pyc
+      - action: rebuild
+        path: poetry.lock
+      - action: rebuild
+        path: Dockerfile
+
+
 services:
   agents-api:
-    image: julepai/agents-api:${TAG}
-    container_name: agents-api
-    depends_on:
-      memory-store:
-        condition: service_started
-      worker:
-        condition: service_started
+    <<: *base-agents-api
+    profiles:
+      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
+      - single-tenant
+
+  agents-api-multi-tenant:
+    <<: *base-agents-api
+    profiles:
+      - multi-tenant
     environment:
       <<: *shared-environment
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./agents_api
-          target: /app/agents_api
-          ignore:
-            - ./**/*.pyc
-        - action: rebuild
-          path: poetry.lock
-        - action: rebuild
-          path: Dockerfile
+      AGENTS_API_MULTI_TENANT_MODE: true
+      AGENTS_API_PREFIX: "/api"
 
   worker:
     image: julepai/worker:${TAG}
