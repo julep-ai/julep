@@ -2,7 +2,7 @@ name: julep-agents-api
 
 # Base for embedding service
 x--text-embeddings-inference: &text-embeddings-inference
-  container_name: text-embeddings-inference
+  container_name: text-embeddings-inference-cpu
   environment:
     - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
 
@@ -92,6 +92,7 @@ services:
 
   text-embeddings-inference-gpu:
     <<: *text-embeddings-inference
+    container_name: text-embeddings-inference-gpu
     profiles:
       - gpu
     image: ghcr.io/huggingface/text-embeddings-inference:1.5
