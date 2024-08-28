@@ -2,7 +2,7 @@ name: julep-memory-store
 
 services:
   memory-store:
-    image: julepai/memory-store:${TAG:-dev}
+    image: julepai/memory-store:${TAG}
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
       - COZO_PORT=${COZO_PORT:-9070}
