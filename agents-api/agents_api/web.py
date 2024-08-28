@@ -20,7 +20,7 @@ from temporalio.service import RPCError
 
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import sentry_dsn
+from .env import api_prefix, hostname, sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,
@@ -84,22 +84,37 @@ def register_exceptions(app: FastAPI) -> None:
 #       Because some routes don't require auth
 # See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
 #
-app: Any = FastAPI(docs_url="/swagger")
+app: Any = FastAPI(
+    docs_url="/swagger",
+    openapi_prefix=api_prefix,
+    redoc_url=None,
+    title="Julep Agents API",
+    description="API for Julep Agents",
+    version="0.4.0",
+    terms_of_service="https://www.julep.ai/terms",
+    contact={
+        "name": "Julep",
+        "url": "https://www.julep.ai",
+        "email": "team@julep.ai",
+    },
+    root_path=api_prefix,
+)
 
 # Create a new router for the docs
-docs_router = APIRouter()
+scalar_router = APIRouter()
 
 
-@docs_router.get("/docs", include_in_schema=False)
+@scalar_router.get("/docs", include_in_schema=False)
 async def scalar_html():
     return get_scalar_api_reference(
         openapi_url=app.openapi_url[1:],  # Remove leading '/'
         title=app.title,
+        servers=[{"url": f"http://{hostname}{api_prefix}"}],
     )
 
 
 # Add the docs_router without dependencies
-app.include_router(docs_router)
+app.include_router(scalar_router)
 
 # Add other routers with the get_api_key dependency
 app.include_router(agents.router, dependencies=[Depends(get_api_key)])

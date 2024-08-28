@@ -10,7 +10,7 @@ from .exceptions import InvalidHeaderFormat
 
 
 async def get_developer_id(
-    x_developer_id: Annotated[UUID | None, Header()] = None,
+    x_developer_id: Annotated[UUID | None, Header(include_in_schema=False)] = None,
 ) -> UUID:
     if skip_check_developer_headers:
         return x_developer_id or UUID("00000000-0000-0000-0000-000000000000")
@@ -30,7 +30,7 @@ async def get_developer_id(
 
 
 async def get_developer_data(
-    x_developer_id: Annotated[UUID | None, Header()] = None,
+    x_developer_id: Annotated[UUID | None, Header(include_in_schema=False)] = None,
 ) -> Developer:
     if skip_check_developer_headers:
         x_developer_id = x_developer_id or UUID("00000000-0000-0000-0000-000000000000")

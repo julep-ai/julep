@@ -9,10 +9,10 @@ services:
       # - MODEL_API_URL=${MODEL_API_URL}
       # - MODEL_API_KEY=${MODEL_API_KEY}
       # - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}
-      - AGENTS_API_URL=${AGENTS_API_URL}
+      - AGENTS_API_URL=${AGENTS_API_URL:-http://agents-api:8080}
       - AGENTS_API_KEY=${AGENTS_API_KEY}
-      - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME}
-      - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
+      - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME:-Authorization}
+      - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL:-INFO}
     container_name: gateway
     depends_on:
       agents-api:

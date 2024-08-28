@@ -12,6 +12,12 @@ from environs import Env
 # Initialize the Env object for environment variable parsing.
 env: Any = Env()
 
+# App
+# ---
+multi_tenant_mode: bool = env.bool("AGENTS_API_MULTI_TENANT_MODE", default=False)
+hostname: str = env.str("AGENTS_API_HOSTNAME", default="localhost")
+api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
+
 
 # Debug
 # -----
@@ -39,7 +45,7 @@ if api_key == _random_generated_key:
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 skip_check_developer_headers: bool = env.bool(
-    "SKIP_CHECK_DEVELOPER_HEADERS", default=False
+    "SKIP_CHECK_DEVELOPER_HEADERS", default=multi_tenant_mode
 )
 
 
@@ -57,7 +63,7 @@ embedding_service_base: str = env.str(
 embedding_model_id: str = env.str(
     "EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5"
 )
-truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=False)
+truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=True)
 
 
 # Temporal
@@ -73,6 +79,8 @@ temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-qu
 # Consolidate environment variables
 environment: Dict[str, Any] = dict(
     debug=debug,
+    multi_tenant_mode=multi_tenant_mode,
+    skip_check_developer_headers=skip_check_developer_headers,
     cozo_host=cozo_host,
     cozo_auth=cozo_auth,
     sentry_dsn=sentry_dsn,
@@ -80,7 +88,8 @@ environment: Dict[str, Any] = dict(
     temporal_task_queue=temporal_task_queue,
     api_key=api_key,
     api_key_header_name=api_key_header_name,
-    skip_check_developer_headers=skip_check_developer_headers,
+    hostname=hostname,
+    api_prefix=api_prefix,
     embedding_service_base=embedding_service_base,
     truncate_embed_text=truncate_embed_text,
     temporal_worker_url=temporal_worker_url,
@@ -89,15 +98,15 @@ environment: Dict[str, Any] = dict(
     testing=testing,
 )
 
-if debug or testing:
-    # Print the loaded environment variables for debugging purposes.
-    print("Environment variables:")
-    pprint(environment)
-    print()
+# if debug or testing:
+# Print the loaded environment variables for debugging purposes.
+print("Environment variables:")
+pprint(environment)
+print()
 
-    # Yell if testing is enabled
-    print("@" * 80)
-    print(
-        f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@"
-    )
-    print("@" * 80)
+# Yell if testing is enabled
+print("@" * 80)
+print(
+    f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@"
+)
+print("@" * 80)

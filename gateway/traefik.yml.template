@@ -32,7 +32,7 @@ http:
     agents-api-docs:
       entryPoints:
         - web
-      rule: Path(`/api/{path:docs|openapi.json}`)
+      rule: Path(`/api/{path:swagger|redoc|docs|scalar|openapi.json}`)
       middlewares:
         - agents-api-strip-prefix-api
       service: service-agents-api
