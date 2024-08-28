@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { InputChatMLMessage } from "../src/api";
+import { Entries_InputChatMLMessage as InputChatMLMessage } from "../src/api";
 
 const { TEST_MODEL } = process.env;
 

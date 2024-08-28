@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 
 import { setupClient } from "./fixtures"; // Adjust path if necessary
-import { Agent, User } from "../src/api";
+import { Agents_Agent as Agent, Users_User as User } from "../src/api";
 import { Client } from "../src";
 
 const { TEST_MODEL } = process.env;

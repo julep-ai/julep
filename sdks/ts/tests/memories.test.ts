@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { Agent, User } from "../src/api";
+import { Agents_Agent as Agent, Users_User as User } from "../src/api";
 
 describe("Julep Client Tests", () => {
   let client: Client;

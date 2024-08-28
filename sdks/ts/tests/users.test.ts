@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { User } from "../src/api";
+import { Users_User as User } from "../src/api";
 
 const mockUser = {
   name: "test user",

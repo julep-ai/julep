@@ -1,7 +1,7 @@
 // agents.test.ts
 
 import { describe, expect, test } from "@jest/globals";
-import { Agent } from "../src/api";
+import { Agents_Agent as Agent } from "../src/api";
 
 import { setupClient } from "./fixtures";
 
@@ -25,7 +25,10 @@ describe("Julep Client Tests", () => {
   let testAgent: Partial<Agent> & { id: string };
 
   test("agents.create", async () => {
-    const response = await client.agents.create(mockAgent);
+    const response = await client.apiClient.default.createAgent({
+      mockAgent
+    });
+    // const response = await client.agents.create(mockAgent);
 
     testAgent = response;
 

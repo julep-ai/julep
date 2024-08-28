@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures"; // Adjust the path as necessary
 import { Client } from "../src";
-import { Agent, Tool } from "../src/api";
+import { Agents_Agent as Agent, Tools_Tool as Tool } from "../src/api";
 
 describe("Tools API", () => {
   let client: Client;

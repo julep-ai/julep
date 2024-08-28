@@ -2,15 +2,17 @@ import { OpenAI } from "openai";
 import { Chat, Completions } from "openai/resources/index";
 import typia, { tags } from "typia";
 
-import { AgentsManager } from "./managers/agent";
-import { UsersManager } from "./managers/user";
-import { DocsManager } from "./managers/doc";
-import { MemoriesManager } from "./managers/memory";
-import { SessionsManager } from "./managers/session";
-import { ToolsManager } from "./managers/tool";
+// import { AgentsManager } from "./managers/agent";
+// import { UsersManager } from "./managers/user";
+// import { DocsManager } from "./managers/doc";
+// import { MemoriesManager } from "./managers/memory";
+// import { SessionsManager } from "./managers/session";
+// import { ToolsManager } from "./managers/tool";
+import { AgentsRoutes } from "./agents";
 import { JulepApiClient } from "./api";
 import { JULEP_API_KEY, JULEP_API_URL } from "./env";
 import { patchCreate } from "./utils/openaiPatch";
+import { UsersRoutes } from "./users";
 
 interface ClientOptions {
   apiKey?: string;
@@ -57,53 +59,59 @@ export class Client {
       dangerouslyAllowBrowser: true,
     });
 
-    this.agents = new AgentsManager(this._apiClient);
-    this.users = new UsersManager(this._apiClient);
-    this.sessions = new SessionsManager(this._apiClient);
-    this.docs = new DocsManager(this._apiClient);
-    this.memories = new MemoriesManager(this._apiClient);
-    this.tools = new ToolsManager(this._apiClient);
+    // this.agents = new AgentsManager(this._apiClient);
+    // this.users = new UsersManager(this._apiClient);
+    // this.sessions = new SessionsManager(this._apiClient);
+    // this.docs = new DocsManager(this._apiClient);
+    // this.memories = new MemoriesManager(this._apiClient);
+    // this.tools = new ToolsManager(this._apiClient);
+    this.agents = new AgentsRoutes(this._apiClient)
+    this.users = new UsersRoutes(this._apiClient)
     this.chat = this._openaiClient.chat;
     patchCreate(this.chat.completions, this.chat);
     this.completions = this._openaiClient.completions;
     patchCreate(this.completions);
   }
 
+  get apiClient() {
+    return this._apiClient
+  }
+
   /**
    * Manager for interacting with agents.
    * Provides methods to manage and interact with agents within the Julep API.
    */
-  agents: AgentsManager;
+  agents: AgentsRoutes;
 
   /**
    * Manager for interacting with users.
    * Offers functionalities to handle user accounts and their data.
    */
-  users: UsersManager;
+  users: UsersRoutes;
 
   /**
    * Manager for interacting with sessions.
    * Facilitates the creation, management, and retrieval of user sessions.
    */
-  sessions: SessionsManager;
+  // sessions: SessionsManager;
 
   /**
    * Manager for interacting with documents.
    * Enables document management including creation, update, and deletion.
    */
-  docs: DocsManager;
+  // docs: DocsManager;
 
   /**
    * Manager for interacting with memories.
    * Allows for storing and retrieving user-specific data and preferences.
    */
-  memories: MemoriesManager;
+  // memories: MemoriesManager;
 
   /**
    * Manager for interacting with tools.
    * Provides access to various utility tools and functionalities.
    */
-  tools: ToolsManager;
+  // tools: ToolsManager;
 
   /**
    * OpenAI Chat API.
