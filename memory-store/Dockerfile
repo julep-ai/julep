@@ -32,12 +32,14 @@ FROM debian:bookworm-slim
 # Install dependencies
 RUN \
     apt-get update -yqq && \
-    apt-get install -y liburing-dev curl ca-certificates tini nfs-common nfs-kernel-server procps netbase && \
+    apt-get install -y \
+        ca-certificates tini nfs-common nfs-kernel-server procps netbase \
+        liburing-dev curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set fallback mount directory
-ENV MNT_DIR=/data APP_HOME=/app BACKUP_DIR=/backup
+ENV COZO_MNT_DIR=/data COZO_BACKUP_DIR=/backup APP_HOME=/app 
 WORKDIR $APP_HOME
 
 # Copy the cozo binary
@@ -49,7 +51,7 @@ COPY ./backup.sh ./backup.sh
 
 # Ensure the script is executable
 RUN \
-    mkdir -p $MNT_DIR $BACKUP_DIR && \
+    mkdir -p $COZO_MNT_DIR $COZO_BACKUP_DIR && \
     chmod +x $APP_HOME/bin/cozo && \
     chmod +x $APP_HOME/run.sh
 

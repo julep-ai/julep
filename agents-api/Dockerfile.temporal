@@ -1,4 +1,0 @@
-FROM temporalio/admin-tools:1.23.1
-
-RUN mkdir -p /home/temporal
-ENTRYPOINT ["temporal", "server", "start-dev", "--db-filename", "/home/temporal/temporal.db", "--ip", "0.0.0.0"]

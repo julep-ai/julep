@@ -1,25 +1,18 @@
 name: julep-gateway
-version: "3"
-
-include:
-  - ../agents-api/docker-compose.yml
 
 services:
   gateway:
-    image: julepai/gateway:dev
-    env_file: "../.env"
-
+    image: julepai/gateway:${TAG:-dev}
     environment:
       - GATEWAY_PORT=80
       - JWT_SHARED_KEY=${JWT_SHARED_KEY}
-      - MODEL_API_URL=${MODEL_API_URL}
-      - MODEL_API_KEY=${MODEL_API_KEY}
-      - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}
+      # - MODEL_API_URL=${MODEL_API_URL}
+      # - MODEL_API_KEY=${MODEL_API_KEY}
+      # - MODEL_API_KEY_HEADER_NAME=${MODEL_API_KEY_HEADER_NAME}
       - AGENTS_API_URL=${AGENTS_API_URL}
       - AGENTS_API_KEY=${AGENTS_API_KEY}
       - AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME}
       - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
-
     container_name: gateway
     depends_on:
       agents-api:

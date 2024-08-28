@@ -1,20 +1,12 @@
 name: julep-monitoring
-version: "3"
 
 services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: false
-
     ports:
       - "9000:8000"
       - "9443:9443"
-
     volumes:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -22,11 +14,6 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: false
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     ports:
@@ -39,11 +26,6 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
-    env_file:
-      - path: .env
-        required: false
-      - path: ../.env
-        required: false
     ports:
       - 3000:3000
     restart: unless-stopped

@@ -1,18 +1,16 @@
 name: julep-memory-store
-version: "3"
 
 services:
   memory-store:
-    image: julepai/memory-store:dev
-    env_file: "../.env"
+    image: julepai/memory-store:${TAG:-dev}
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
-      - COZO_PORT=${COZO_PORT}
-      - MNT_DIR=/data
-      - COZO_BACKUP_DIR=/backup
-    container_name: memory-store
+      - COZO_PORT=${COZO_PORT:-9070}
+      - COZO_MNT_DIR=${MNT_DIR:-/data}
+      - COZO_BACKUP_DIR=${COZO_BACKUP_DIR:-/backup}
     volumes:
       - cozo_data:/data
+      - cozo_backup:/backup
     build:
       context: .
     ports:
@@ -34,3 +32,5 @@ services:
 
 volumes:
   cozo_data:
+  cozo_backup:
+    external: true

@@ -1,0 +1,48 @@
+name: julep-scheduler
+
+services:
+  temporal:
+    depends_on:
+      - temporal-db
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - DB_HOST=temporal-db
+      - POSTGRES_USER=${TEMPORAL_POSTGRES_USER}
+      - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
+      - POSTGRES_SEEDS=temporal-db
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    image: temporalio/auto-setup:1.24
+    ports:
+      - 7233:7233
+    volumes:
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+
+  temporal-admin-tools:
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.24
+    stdin_open: true
+    tty: true
+
+  temporal-db:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=${TEMPORAL_POSTGRES_DB}
+      - POSTGRES_USER=${TEMPORAL_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${TEMPORAL_POSTGRES_PASSWORD}
+    ports:
+      - 25432:5432
+    volumes:
+      - temporal-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${TEMPORAL_POSTGRES_DB} -U ${TEMPORAL_POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  temporal-db-data:
