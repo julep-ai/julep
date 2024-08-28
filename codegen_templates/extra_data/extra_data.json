@@ -1,7 +1,0 @@
-{
-    "IfElseWorkflowStep": {
-        "config": {
-            "populate_by_name": true
-        }
-    }
-}
