@@ -719,7 +719,11 @@ async def _(
 ):
     mock_model_response = ModelResponse(
         id="fake_id",
-        choices=[Choices(message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"})],
+        choices=[
+            Choices(
+                message={"role": "assistant", "content": "found: true\nvalue: 'Gaga'"}
+            )
+        ],
         created=0,
         object="text_completion",
     )

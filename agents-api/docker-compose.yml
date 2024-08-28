@@ -35,7 +35,7 @@ x-shared-environment: &shared-environment
 
 services:
   agents-api:
-    image: julepai/agents-api:${TAG:-dev}
+    image: julepai/agents-api:${TAG}
     container_name: agents-api
     depends_on:
       memory-store:
@@ -63,7 +63,7 @@ services:
           path: Dockerfile
 
   worker:
-    image: julepai/worker:${TAG:-dev}
+    image: julepai/worker:${TAG}
     environment:
       <<: *shared-environment
     build:
@@ -111,7 +111,7 @@ services:
               capabilities: [gpu]
 
   cozo-migrate:
-    image: julepai/cozo-migrate:${TAG:-dev}
+    image: julepai/cozo-migrate:${TAG}
     container_name: cozo-migrate
     depends_on:
       memory-store:

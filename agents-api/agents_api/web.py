@@ -8,13 +8,14 @@ from typing import Any, Callable
 import fire
 import sentry_sdk
 import uvicorn
-from fastapi import Depends, FastAPI, Request, status
+from fastapi import APIRouter, Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
 from pycozo.client import QueryException
+from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
 
 from .common.exceptions import BaseCommonException
@@ -83,7 +84,30 @@ def register_exceptions(app: FastAPI) -> None:
 #       Because some routes don't require auth
 # See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
 #
-app: Any = FastAPI(dependencies=[Depends(get_api_key)])
+app: Any = FastAPI(docs_url="/swagger")
+
+# Create a new router for the docs
+docs_router = APIRouter()
+
+
+@docs_router.get("/docs", include_in_schema=False)
+async def scalar_html():
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url[1:],  # Remove leading '/'
+        title=app.title,
+    )
+
+
+# Add the docs_router without dependencies
+app.include_router(docs_router)
+
+# Add other routers with the get_api_key dependency
+app.include_router(agents.router, dependencies=[Depends(get_api_key)])
+app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
+app.include_router(users.router, dependencies=[Depends(get_api_key)])
+app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
+app.include_router(docs.router, dependencies=[Depends(get_api_key)])
+app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
 
 # TODO: CORS should be enabled only for JWT auth
 #
@@ -99,13 +123,6 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
 
 register_exceptions(app)
-
-app.include_router(agents.router)
-app.include_router(sessions.router)
-app.include_router(users.router)
-app.include_router(jobs.router)
-app.include_router(docs.router)
-app.include_router(tasks.router)
 
 
 @app.exception_handler(HTTPException)
