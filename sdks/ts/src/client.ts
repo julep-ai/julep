@@ -73,16 +73,16 @@ export class Client {
     // this.docs = new DocsManager(this._apiClient);
     // this.memories = new MemoriesManager(this._apiClient);
     // this.tools = new ToolsManager(this._apiClient);
-    this.agents = new AgentsRoutes(this._apiClient)
-    this.tasks = new TasksRoutes(this._apiClient)
-    this.executions = new ExecutionsRoutes(this._apiClient)
-    this.docs = new DocsRoutes(this._apiClient)
-    this.sessions = new SessionsRoutes(this._apiClient)
-    this.users = new UsersRoutes(this._apiClient)
-    this.history = new HistoryRoutes(this._apiClient)
-    this.embed = new EmbedRoutes(this._apiClient)
-    this.jobs = new JobsRoutes(this._apiClient)
-    this.chats = new ChatsRoutes(this._apiClient)
+    this.agents = new AgentsRoutes(this._apiClient);
+    this.tasks = new TasksRoutes(this._apiClient);
+    this.executions = new ExecutionsRoutes(this._apiClient);
+    this.docs = new DocsRoutes(this._apiClient);
+    this.sessions = new SessionsRoutes(this._apiClient);
+    this.users = new UsersRoutes(this._apiClient);
+    this.history = new HistoryRoutes(this._apiClient);
+    this.embed = new EmbedRoutes(this._apiClient);
+    this.jobs = new JobsRoutes(this._apiClient);
+    this.chats = new ChatsRoutes(this._apiClient);
 
     this.chat = this._openaiClient.chat;
     patchCreate(this.chat.completions, this.chat);

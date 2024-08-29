@@ -26,7 +26,7 @@ describe("Julep Client Tests", () => {
 
   test("agents.create", async () => {
     const response = await client.apiClient.default.createAgent({
-      mockAgent
+      mockAgent,
     });
     // const response = await client.agents.create(mockAgent);
 
