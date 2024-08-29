@@ -39,7 +39,7 @@ with workflow.unsafe.imports_passed_through():
         StepContext,
         StepOutcome,
     )
-    from ..env import testing
+    from ..env import debug, testing
 
 
 STEP_TO_ACTIVITY = {
@@ -71,6 +71,26 @@ STEP_TO_LOCAL_ACTIVITY = {
 GenericStep = RootModel[WorkflowStep]
 
 
+# TODO: find a way to transition to error if workflow or activity times out.
+
+
+async def transition(state, context, **kwargs) -> None:
+    # NOTE: The state variable is closured from the outer scope
+    transition_request = CreateTransitionRequest(
+        current=context.cursor,
+        **{
+            **state.model_dump(exclude_unset=True),
+            **kwargs,  # Override with any additional kwargs
+        },
+    )
+
+    await workflow.execute_activity(
+        task_steps.transition_step,
+        args=[context, transition_request],
+        schedule_to_close_timeout=timedelta(seconds=2),
+    )
+
+
 @workflow.defn
 class TaskExecutionWorkflow:
     @workflow.run
@@ -93,7 +113,7 @@ class TaskExecutionWorkflow:
 
         # ---
 
-        # 1a. Set global state
+        # 1. Set global state
         #     (By default, exit if last otherwise transition 'step' to the next step)
         state = PendingTransition(
             type="finish" if context.is_last_step else "step",
@@ -102,23 +122,6 @@ class TaskExecutionWorkflow:
             else TransitionTarget(workflow=start.workflow, step=start.step + 1),
             metadata={"__meta__": {"step_type": step_type.__name__}},
         )
-
-        # 1b. Prep a transition request
-        async def transition(**kwargs) -> None:
-            # NOTE: The state variable is closured from the outer scope
-            transition_request = CreateTransitionRequest(
-                current=context.cursor,
-                **{
-                    **state.model_dump(exclude_unset=True),
-                    **kwargs,  # Override with any additional kwargs
-                },
-            )
-
-            await workflow.execute_activity(
-                task_steps.transition_step,
-                args=[context, transition_request],
-                schedule_to_close_timeout=timedelta(seconds=600),
-            )
 
         # ---
 
@@ -142,27 +145,30 @@ class TaskExecutionWorkflow:
 
         # 3. Execute the current step's activity if applicable
 
-        try:
-            if activity := STEP_TO_ACTIVITY.get(step_type):
-                execute_activity = workflow.execute_activity
-            elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
-                execute_activity = workflow.execute_local_activity
-            else:
-                execute_activity = None
+        if activity := STEP_TO_ACTIVITY.get(step_type):
+            execute_activity = workflow.execute_activity
+        elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
+            execute_activity = workflow.execute_local_activity
+        else:
+            execute_activity = None
 
-            outcome = None
-            if execute_activity:
+        outcome = None
+
+        if execute_activity:
+            try:
                 outcome = await execute_activity(
                     activity,
                     context,
                     #
                     # TODO: This should be a configurable timeout everywhere based on the task
-                    schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
+                    schedule_to_close_timeout=timedelta(
+                        seconds=3 if debug or testing else 600
+                    ),
                 )
 
-        except Exception as e:
-            await transition(type="error", output=dict(error=e))
-            raise ApplicationError(f"Activity {activity} threw error: {e}") from e
+            except Exception as e:
+                await transition(state, context, type="error", output=dict(error=e))
+                raise ApplicationError(f"Activity {activity} threw error: {e}") from e
 
         # ---
 
@@ -170,20 +176,22 @@ class TaskExecutionWorkflow:
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
-                await transition(type="error", output=dict(error=error))
+                await transition(state, context, type="error", output=dict(error=error))
                 raise ApplicationError(
                     f"step {type(step).__name__} threw error: {error}"
                 )
 
             case LogStep(), StepOutcome(output=output):
                 # Add the logged message to transition history
-                await transition(output=dict(logged=output))
+                await transition(state, context, output=dict(logged=output))
 
                 # Set the output to the current input
                 state.output = context.current_input
 
             case ReturnStep(), StepOutcome(output=output):
-                await transition(output=output, type="finish", next=None)
+                await transition(
+                    state, context, output=output, type="finish", next=None
+                )
                 return output  # <--- Byeeee!
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
@@ -359,7 +367,7 @@ class TaskExecutionWorkflow:
             case ErrorWorkflowStep(error=error), _:
                 state.output = dict(error=error)
                 state.type = "error"
-                await transition()
+                await transition(state, context)
 
                 raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
 
@@ -367,7 +375,10 @@ class TaskExecutionWorkflow:
                 output=output, transition_to=(yield_transition_type, yield_next_target)
             ):
                 await transition(
-                    output=output, type=yield_transition_type, next=yield_next_target
+                    state,
+                    output=output,
+                    type=yield_transition_type,
+                    next=yield_next_target,
                 )
 
                 state.output = await workflow.execute_child_workflow(
@@ -376,7 +387,7 @@ class TaskExecutionWorkflow:
                 )
 
             case WaitForInputStep(), StepOutcome(output=output):
-                await transition(output=output, type="wait", next=None)
+                await transition(state, context, output=output, type="wait", next=None)
 
                 state.type = "resume"
                 state.output = await execute_activity(
@@ -391,7 +402,7 @@ class TaskExecutionWorkflow:
                 raise ApplicationError("Not implemented")
 
         # 5. Create transition for completed step
-        await transition()
+        await transition(state, context)
 
         # ---
 
@@ -400,9 +411,10 @@ class TaskExecutionWorkflow:
         if state.type in ("finish", "cancelled"):
             return state.output
 
-        # Otherwise, recurse to the next step
-        # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
-        #       Otherwise, we should just call the next step as a child workflow
-        workflow.continue_as_new(
-            args=[execution_input, state.next, previous_inputs + [state.output]]
-        )
+        else:
+            # Otherwise, recurse to the next step
+            # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
+            #       Otherwise, we should just call the next step as a child workflow
+            return workflow.continue_as_new(
+                args=[execution_input, state.next, previous_inputs + [state.output]]
+            )

@@ -5,6 +5,7 @@
 from types import SimpleNamespace
 from uuid import UUID
 
+from beartype import beartype
 from pycozo import Client
 
 # Define a mock client for testing purposes, simulating Cozo API client behavior.
@@ -20,5 +21,6 @@ cozo_process_mutate_data = _fake_client._process_mutate_data = lambda data: (
 )
 
 
-def uuid_int_list_to_uuid4(data) -> UUID:
+@beartype
+def uuid_int_list_to_uuid4(data: list[int]) -> UUID:
     return UUID(bytes=b"".join([i.to_bytes(1, "big") for i in data]))
