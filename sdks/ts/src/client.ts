@@ -13,6 +13,8 @@ import { JulepApiClient } from "./api";
 import { JULEP_API_KEY, JULEP_API_URL } from "./env";
 import { patchCreate } from "./utils/openaiPatch";
 import { UsersRoutes } from "./users";
+import { SessionsRoutes } from "./sessions";
+import { TasksRoutes } from "./tasks";
 
 interface ClientOptions {
   apiKey?: string;
@@ -67,6 +69,8 @@ export class Client {
     // this.tools = new ToolsManager(this._apiClient);
     this.agents = new AgentsRoutes(this._apiClient)
     this.users = new UsersRoutes(this._apiClient)
+    this.sessions = new SessionsRoutes(this._apiClient)
+    this.tasks = new TasksRoutes(this._apiClient)
     this.chat = this._openaiClient.chat;
     patchCreate(this.chat.completions, this.chat);
     this.completions = this._openaiClient.completions;
@@ -93,7 +97,7 @@ export class Client {
    * Manager for interacting with sessions.
    * Facilitates the creation, management, and retrieval of user sessions.
    */
-  // sessions: SessionsManager;
+  sessions: SessionsRoutes;
 
   /**
    * Manager for interacting with documents.
@@ -124,4 +128,5 @@ export class Client {
    * Enhanced with custom patches for improved integration and usage within Julep.
    */
   completions: Completions;
+  tasks: TasksRoutes;
 }
