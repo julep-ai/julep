@@ -707,6 +707,7 @@ async def _(
             mock_run_task_execution_workflow.assert_called_once()
 
             result = await handle.result()
+            result = result["choices"][0]["message"]
             assert result["content"] == "Hello, world!"
             assert result["role"] == "assistant"
 

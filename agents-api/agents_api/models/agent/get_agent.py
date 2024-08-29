@@ -24,12 +24,12 @@ T = TypeVar("T")
     {
         lambda e: isinstance(e, QueryException)
         and "Developer not found" in str(e): lambda *_: HTTPException(
-            detail="developer does not exist", status_code=403
+            detail="Developer does not exist", status_code=403
         ),
         lambda e: isinstance(e, QueryException)
-        and "asserted to return some results, but returned none"
-        in str(e): lambda *_: HTTPException(
-            detail="developer doesnt own resource", status_code=404
+        and "Developer does not own resource"
+        in e.resp["display"]: lambda *_: HTTPException(
+            detail="Developer does not own resource", status_code=404
         ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),

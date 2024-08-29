@@ -99,5 +99,5 @@ datamodel-codegen \
   --disable-timestamp"""
 
 [tool.poe.tasks.test]
-env = { AGENTS_API_TESTING = "true" }
+env = { AGENTS_API_TESTING = "true", PYTHONPATH = "{PYTHONPATH}:." }
 cmd = "ward test"

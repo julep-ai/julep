@@ -1,4 +1,4 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from cozo_migrate.api import apply, init
 from fastapi.testclient import TestClient
@@ -16,7 +16,7 @@ from agents_api.autogen.openapi_model import (
     CreateTransitionRequest,
     CreateUserRequest,
 )
-from agents_api.env import api_key, api_key_header_name
+from agents_api.env import api_key, api_key_header_name, multi_tenant_mode
 from agents_api.models.agent.create_agent import create_agent
 from agents_api.models.agent.delete_agent import delete_agent
 from agents_api.models.developer.get_developer import get_developer
@@ -56,6 +56,10 @@ def cozo_client(migrations_dir: str = "./migrations"):
 
 @fixture(scope="global")
 def test_developer_id(cozo_client=cozo_client):
+    if not multi_tenant_mode:
+        yield UUID(int=0)
+        return
+
     developer_id = uuid4()
 
     cozo_client.run(
@@ -347,9 +351,11 @@ def make_request(client=client, developer_id=test_developer_id):
         headers = kwargs.pop("headers", {})
         headers = {
             **headers,
-            "X-Developer-Id": str(developer_id),
             api_key_header_name: api_key,
         }
+
+        if multi_tenant_mode:
+            headers["X-Developer-Id"] = str(developer_id)
 
         return client.request(method, url, headers=headers, **kwargs)
 

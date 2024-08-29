@@ -4,7 +4,6 @@
 ###       The codec is used to serialize/deserialize the data
 ###       But this code is quite brittle. Be careful when changing it
 
-
 import dataclasses
 import logging
 import pickle
@@ -82,12 +81,16 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
     b_encoding = encoding.encode()
 
     def to_payload(self, value: Any) -> Optional[Payload]:
-        return Payload(
-            metadata={
-                "encoding": self.b_encoding,
-            },
-            data=serialize(value),
-        )
+        try:
+            return Payload(
+                metadata={
+                    "encoding": self.b_encoding,
+                },
+                data=serialize(value),
+            )
+        except Exception as e:
+            logging.warning(f"WARNING: Could not encode {value}: {e}")
+            return None
 
     def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
         assert payload.metadata["encoding"] == self.b_encoding
