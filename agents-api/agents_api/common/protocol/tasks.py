@@ -28,7 +28,7 @@ from ...autogen.openapi_model import (
 ### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
 valid_transitions = {
     # Start state
-    "init": ["wait", "error", "step", "cancelled"],
+    "init": ["wait", "error", "step", "cancelled", "finish"],
     # End states
     "finish": [],
     "error": [],

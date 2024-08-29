@@ -23,9 +23,9 @@ async def transition_step(
 
     # Create transition
     create_execution_transition_query(
-        developer_id=context.developer_id,
-        execution_id=context.execution.id,
-        task_id=context.task.id,
+        developer_id=context.execution_input.developer_id,
+        execution_id=context.execution_input.execution.id,
+        task_id=context.execution_input.task.id,
         data=transition_info,
         update_execution_status=True,
     )

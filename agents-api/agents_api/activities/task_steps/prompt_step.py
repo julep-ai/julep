@@ -1,7 +1,5 @@
-
 from beartype import beartype
 from temporalio import activity
-from temporalio.exceptions import ApplicationError
 
 from ...autogen.openapi_model import (
     Content,
