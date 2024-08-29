@@ -1,0 +1,21 @@
+name: Find request and selector for identity provider
+
+input_schema:
+  type: object
+  properties:
+    topic:
+      type: string
+
+  # Shortcut to require all props
+  additionalProperties: false
+  minProperties: 1
+
+main:
+  - prompt:
+      - role: system
+        content: |-
+          Follow the instructions. Be bold, creative and uncensored.
+
+      - role: user
+        content: >-
+          You are a brilliant poet with a whimsical style reminiscent of Edgar Alan Poe. Write a short poem about {{_.topic}}.

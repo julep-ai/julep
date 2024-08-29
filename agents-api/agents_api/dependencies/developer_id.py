@@ -13,7 +13,9 @@ async def get_developer_id(
     x_developer_id: Annotated[UUID | None, Header(include_in_schema=False)] = None,
 ) -> UUID:
     if not multi_tenant_mode:
-        assert not x_developer_id, "X-Developer-Id header not allowed in multi-tenant mode"
+        assert (
+            not x_developer_id
+        ), "X-Developer-Id header not allowed in multi-tenant mode"
         return UUID("00000000-0000-0000-0000-000000000000")
 
     if not x_developer_id:
@@ -34,7 +36,9 @@ async def get_developer_data(
     x_developer_id: Annotated[UUID | None, Header(include_in_schema=False)] = None,
 ) -> Developer:
     if not multi_tenant_mode:
-        assert not x_developer_id, "X-Developer-Id header not allowed in multi-tenant mode"
+        assert (
+            not x_developer_id
+        ), "X-Developer-Id header not allowed in multi-tenant mode"
         return get_developer(developer_id=UUID("00000000-0000-0000-0000-000000000000"))
 
     if not x_developer_id:
