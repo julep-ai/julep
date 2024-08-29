@@ -17,6 +17,10 @@ import { SessionsRoutes } from "./sessions";
 import { TasksRoutes } from "./tasks";
 import { DocsRoutes } from "./docs";
 import { ExecutionsRoutes } from "./executions";
+import { HistoryRoutes } from "./history";
+import { EmbedRoutes } from "./embed";
+import { JobsRoutes } from "./jobs";
+import { ChatsRoutes } from "./chats";
 
 interface ClientOptions {
   apiKey?: string;
@@ -75,7 +79,11 @@ export class Client {
     this.docs = new DocsRoutes(this._apiClient)
     this.sessions = new SessionsRoutes(this._apiClient)
     this.users = new UsersRoutes(this._apiClient)
-    
+    this.history = new HistoryRoutes(this._apiClient)
+    this.embed = new EmbedRoutes(this._apiClient)
+    this.jobs = new JobsRoutes(this._apiClient)
+    this.chats = new ChatsRoutes(this._apiClient)
+
     this.chat = this._openaiClient.chat;
     patchCreate(this.chat.completions, this.chat);
     this.completions = this._openaiClient.completions;
@@ -131,4 +139,8 @@ export class Client {
   completions: Completions;
   tasks: TasksRoutes;
   executions: ExecutionsRoutes;
+  history: HistoryRoutes;
+  embed: EmbedRoutes;
+  jobs: JobsRoutes;
+  chats: ChatsRoutes;
 }
