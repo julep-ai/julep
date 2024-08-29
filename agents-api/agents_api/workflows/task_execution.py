@@ -167,7 +167,9 @@ class TaskExecutionWorkflow:
                 )
 
             except Exception as e:
-                await transition(state, context, type="error", output=dict(error=e))
+                await transition(
+                    state, context, type="error", output=dict(error=str(e))
+                )
                 raise ApplicationError(f"Activity {activity} threw error: {e}") from e
 
         # ---
@@ -376,6 +378,7 @@ class TaskExecutionWorkflow:
             ):
                 await transition(
                     state,
+                    context,
                     output=output,
                     type=yield_transition_type,
                     next=yield_next_target,

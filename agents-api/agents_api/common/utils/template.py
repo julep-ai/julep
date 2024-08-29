@@ -1,6 +1,10 @@
-from typing import List
+import json
+from typing import List, TypeVar
 
 import arrow
+import re2
+import yaml
+from beartype import beartype
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2schema import infer, to_json_schema
 from jsonschema import validate
@@ -20,10 +24,18 @@ jinja_env: ImmutableSandboxedEnvironment = ImmutableSandboxedEnvironment(
 )
 
 # Add arrow to jinja
+
+jinja_env.globals["dump_yaml"] = yaml.dump
+jinja_env.globals["match_regex"] = lambda pattern, string: bool(
+    re2.fullmatch(pattern, string)
+)
+jinja_env.globals["search_regex"] = lambda pattern, string: re2.search(pattern, string)
+jinja_env.globals["dump_json"] = json.dumps
 jinja_env.globals["arrow"] = arrow
 
 
 # Funcs
+@beartype
 async def render_template_string(
     template_string: str,
     variables: dict,
@@ -42,64 +54,42 @@ async def render_template_string(
     return rendered
 
 
-async def render_template_chatml(
-    messages: list[dict], variables: dict, check: bool = False
-) -> list[dict]:
-    # Parse template
-    # FIXME: should template_strings contain a list of ChatMLTextContentPart? Should we handle it somehow?
-    templates = [jinja_env.from_string(msg["content"]) for msg in messages]
-
-    # If check is required, get required vars from template and validate variables
-    if check:
-        for template in templates:
-            schema = to_json_schema(infer(template))
-            validate(instance=variables, schema=schema)
-
-    # Render
-    rendered = [
-        ({**msg, "content": await template.render_async(**variables)})
-        for template, msg in zip(templates, messages)
-    ]
-
-    return rendered
+# A render function that can render arbitrarily nested lists of dicts
+# only render keys: content, text, image_url
+# and only render values that are strings
+T = TypeVar("T", str, dict, list[dict | list[dict]])
 
 
-async def render_template_parts(
-    template_strings: list[dict], variables: dict, check: bool = False
-) -> list[dict]:
-    # Parse template
-    # FIXME: should template_strings contain a list of ChatMLTextContentPart? Should we handle it somehow?
-    templates = [
-        (
-            jinja_env.from_string(msg["content"]["text"])
-            if msg["content"]["type"] == "text"
-            else None
-        )
-        for msg in template_strings
-    ]
+@beartype
+async def render_template_nested(
+    input: T,
+    variables: dict,
+    check: bool = False,
+    whitelist: list[str] = ["content", "text", "image_url"],
+) -> T:
+    match input:
+        case str():
+            return await render_template_string(input, variables, check)
 
-    # If check is required, get required vars from template and validate variables
-    if check:
-        for template in templates:
-            if template is None:
-                continue
-
-            schema = to_json_schema(infer(template))
-            validate(instance=variables, schema=schema)
-
-    # Render
-    rendered = [
-        (
-            {"type": "text", "text": await template.render_async(**variables)}
-            if template is not None
-            else msg
-        )
-        for template, msg in zip(templates, template_strings)
-    ]
-
-    return rendered
+        case dict():
+            return {
+                k: (
+                    await render_template_nested(v, variables, check, whitelist)
+                    if k in whitelist
+                    else v
+                )
+                for k, v in input.items()
+            }
+        case list():
+            return [
+                await render_template_nested(v, variables, check, whitelist)
+                for v in input
+            ]
+        case _:
+            raise ValueError(f"Invalid input type: {type(input)}")
 
 
+@beartype
 async def render_template(
     input: str | list[dict],
     variables: dict,
@@ -112,14 +102,4 @@ async def render_template(
         if not (skip_vars is not None and isinstance(name, str) and name in skip_vars)
     }
 
-    match input:
-        case str():
-            future = render_template_string(input, variables, check)
-
-        case [{"content": str()}, *_]:
-            future = render_template_chatml(input, variables, check)
-
-        case _:
-            future = render_template_parts(input, variables, check)
-
-    return await future
+    return await render_template_nested(input, variables, check)

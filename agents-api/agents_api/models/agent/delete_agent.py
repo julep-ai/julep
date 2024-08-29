@@ -28,8 +28,8 @@ T = TypeVar("T")
 @rewrap_exceptions(
     {
         lambda e: isinstance(e, QueryException)
-        and "asserted to return some results, but returned none"
-        in str(e): lambda *_: HTTPException(
+        and "Developer does not own resource"
+        in e.resp["display"]: lambda *_: HTTPException(
             detail="developer not found or doesnt own resource", status_code=404
         ),
         QueryException: partialclass(HTTPException, status_code=400),
