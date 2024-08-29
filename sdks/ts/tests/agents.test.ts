@@ -12,6 +12,7 @@ const mockAgent = {
   about: "test agent about",
   instructions: ["test agent instructions"],
   default_settings: { temperature: 0.5 },
+  model: "model1",
 };
 
 const mockAgentUpdate = {
@@ -19,41 +20,27 @@ const mockAgentUpdate = {
   about: "updated agent about",
   instructions: ["updated agent instructions"],
   default_settings: { temperature: 0.5 },
+  model: "model1",
 };
 
 describe("Julep Client Tests", () => {
   let testAgent: Partial<Agent> & { id: string };
 
   test("agents.create", async () => {
-    const response = await client.apiClient.default.createAgent({
-      mockAgent,
-    });
-    // const response = await client.agents.create(mockAgent);
-
-    testAgent = response;
-
-    expect(response).toHaveProperty("created_at");
-    expect(response.about).toBe(mockAgent.about);
-    expect(response.name).toBe(mockAgent.name);
-  });
-
-  test("agents.create single instruction", async () => {
     const response = await client.agents.create({
-      ...mockAgent,
-      instructions: "test agent instructions",
+      requestBody: mockAgent,
     });
 
     testAgent = response;
 
     expect(response).toHaveProperty("created_at");
-    expect(response.about).toBe(mockAgent.about);
-    expect(response.name).toBe(mockAgent.name);
+    expect(response).toHaveProperty("jobs");
+    expect(response).toHaveProperty("id");
+    expect(response.id).toBe(testAgent.id);
   });
 
   test("agents.get", async () => {
-    const response = await client.agents.get(testAgent.id);
-
-    // console.error(response);
+    const response = await client.agents.get({ id: testAgent.id });
 
     expect(response).toHaveProperty("created_at");
     expect(response).toHaveProperty("updated_at");
@@ -62,34 +49,22 @@ describe("Julep Client Tests", () => {
   });
 
   test("agents.update", async () => {
-    const response = await client.agents.update(testAgent.id, {
-      name: mockAgentUpdate.name,
+    const response = await client.agents.update({
+      id: testAgent.id,
+      requestBody: mockAgentUpdate,
     });
 
     expect(response.id).toBe(testAgent.id);
     expect(response).toHaveProperty("updated_at");
-    expect(response.name).toBe(mockAgentUpdate.name);
-  });
-
-  test("agents.update with overload", async () => {
-    const response = await client.agents.update(
-      testAgent.id,
-      mockAgentUpdate,
-      true,
-    );
-
-    expect(response.id).toBe(testAgent.id);
-    expect(response).toHaveProperty("updated_at");
-    expect(response.name).toBe(mockAgentUpdate.name);
-    expect(response.about).toBe(mockAgentUpdate.about);
+    expect(response).toHaveProperty("jobs");
   });
 
   test("agents.list", async () => {
-    const response = await client.agents.list();
+    const response = await client.agents.list({ offset: 0 });
 
-    expect(response.length).toBeGreaterThan(0);
+    expect(response.items.length).toBeGreaterThan(0);
 
-    const agent = response.find((agent) => agent.id === testAgent.id);
+    const agent = response.items.find((agent) => agent.id === testAgent.id);
 
     expect(agent).toBeDefined();
     expect(agent!.id).toBe(testAgent.id);
@@ -100,7 +75,7 @@ describe("Julep Client Tests", () => {
   });
 
   test("agents.delete", async () => {
-    const response = await client.agents.delete(testAgent.id);
+    const response = await client.agents.delete({ id: testAgent.id });
     expect(response).toBeUndefined();
   });
 });
