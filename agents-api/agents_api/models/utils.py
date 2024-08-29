@@ -139,7 +139,7 @@ def verify_developer_owns_resource_query(
     parent_keys = ["developer_id", *map(lambda x: x[1], parents)]
 
     rule_head = f"""
-    ?[{resource_id_key}] :=
+    found[count({resource_id_key})] :=
         developer_id = to_uuid("{str(developer_id)}"),
         {resource_id_key} = to_uuid("{str(resource_id_value)}"),
     """
@@ -153,7 +153,14 @@ def verify_developer_owns_resource_query(
         }},
         """
 
-    rule = rule_head + rule_body + "\n:assert some"
+    assertion = f"""
+    ?[exists] :=
+        found[num],
+        exists = num > 0,
+        assert(exists, "Developer does not own resource {resource} with {resource_id_key} {resource_id_value}")
+    """
+
+    rule = rule_head + rule_body + assertion
     return rule
 
 

@@ -27,6 +27,7 @@ with workflow.unsafe.imports_passed_through():
         SwitchStep,
         # ToolCallStep,
         TransitionTarget,
+        UpdateExecutionRequest,
         WaitForInputStep,
         Workflow,
         WorkflowStep,
@@ -121,32 +122,57 @@ class TaskExecutionWorkflow:
 
         # ---
 
-        # 2. Execute the current step's activity if applicable
-        if activity := STEP_TO_ACTIVITY.get(step_type):
-            execute_activity = workflow.execute_activity
-        elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
-            execute_activity = workflow.execute_local_activity
-        else:
-            execute_activity = None
-
-        outcome = None
-        if execute_activity:
-            outcome = await execute_activity(
-                activity,
-                context,
-                #
-                # TODO: This should be a configurable timeout everywhere based on the task
-                schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
+        # 2. Transition to starting if not done yet
+        if start.workflow == "main" and start.step == 0:
+            await workflow.execute_activity(
+                task_steps.cozo_query_step,
+                args=(
+                    "execution.update_execution",
+                    dict(
+                        developer_id=execution_input.developer_id,
+                        task_id=execution_input.task.id,
+                        execution_id=execution_input.execution.id,
+                        data=UpdateExecutionRequest(status="running"),
+                    ),
+                ),
+                schedule_to_close_timeout=timedelta(seconds=2),
             )
 
         # ---
 
-        # 3. Then, based on the outcome and step type, decide what to do next
+        # 3. Execute the current step's activity if applicable
+
+        try:
+            if activity := STEP_TO_ACTIVITY.get(step_type):
+                execute_activity = workflow.execute_activity
+            elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
+                execute_activity = workflow.execute_local_activity
+            else:
+                execute_activity = None
+
+            outcome = None
+            if execute_activity:
+                outcome = await execute_activity(
+                    activity,
+                    context,
+                    #
+                    # TODO: This should be a configurable timeout everywhere based on the task
+                    schedule_to_close_timeout=timedelta(seconds=3 if testing else 600),
+                )
+
+        except Exception as e:
+            await transition(type="error", output=dict(error=e))
+            raise ApplicationError(f"Activity {activity} threw error: {e}") from e
+
+        # ---
+
+        # 4. Then, based on the outcome and step type, decide what to do next
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
+                await transition(type="error", output=dict(error=error))
                 raise ApplicationError(
-                    f"{type(step).__name__} step threw error: {error}"
+                    f"step {type(step).__name__} threw error: {error}"
                 )
 
             case LogStep(), StepOutcome(output=output):
@@ -311,7 +337,6 @@ class TaskExecutionWorkflow:
                     )
 
                 state.output = initial
-                await transition()
 
             case SleepStep(
                 sleep=SleepFor(
@@ -328,11 +353,8 @@ class TaskExecutionWorkflow:
                     seconds, result=context.current_input
                 )
 
-                await transition()
-
             case EvaluateStep(), StepOutcome(output=output):
                 state.output = output
-                await transition()
 
             case ErrorWorkflowStep(error=error), _:
                 state.output = dict(error=error)
@@ -368,9 +390,12 @@ class TaskExecutionWorkflow:
             case _:
                 raise ApplicationError("Not implemented")
 
+        # 5. Create transition for completed step
+        await transition()
+
         # ---
 
-        # 4. Closing
+        # 6. Closing
         # End if the last step
         if state.type in ("finish", "cancelled"):
             return state.output

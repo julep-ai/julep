@@ -108,6 +108,7 @@ def create_execution_transition(
 
     last_transition_type[min_cost(type_created_at)] :=
         *transitions {{
+            execution_id: to_uuid("{str(execution_id)}"),
             type,
             created_at,
         }},
