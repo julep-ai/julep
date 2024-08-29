@@ -1,4 +1,3 @@
-from fastapi import HTTPException, status
 from pydantic import UUID4
 
 from agents_api.autogen.openapi_model import (
@@ -13,13 +12,4 @@ from .router import router
 
 @router.get("/executions/{execution_id}", tags=["executions"])
 async def get_execution_details(execution_id: UUID4) -> Execution:
-    try:
-        return get_execution_query(execution_id=execution_id)
-    except AssertionError as e:
-        print("-" * 100)
-        print(e)
-        print("-" * 100)
-
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Execution not found"
-        ) from e
+    return get_execution_query(execution_id=execution_id)

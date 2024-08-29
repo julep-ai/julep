@@ -27,7 +27,11 @@ def fix_uuid(
 
     fixed = {
         **item,
-        **{attr: uuid_int_list_to_uuid4(item[attr]) for attr in id_attrs},
+        **{
+            attr: uuid_int_list_to_uuid4(item[attr])
+            for attr in id_attrs
+            if isinstance(item[attr], list)
+        },
     }
 
     return fixed
