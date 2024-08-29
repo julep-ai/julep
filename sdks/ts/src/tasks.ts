@@ -1,4 +1,4 @@
-import { Common_limit, Common_offset, Common_uuid, Executions_CreateExecutionRequest, Executions_TaskTokenResumeExecutionRequest, Tasks_CreateTaskRequest, Tasks_PatchTaskRequest, Tasks_UpdateTaskRequest } from "./api";
+import { Common_limit, Common_offset, Common_uuid, Executions_CreateExecutionRequest, Tasks_CreateTaskRequest, Tasks_PatchTaskRequest, Tasks_UpdateTaskRequest } from "./api";
 import { BaseRoutes } from "./baseRoutes";
 
 export class TasksRoutes extends BaseRoutes {
@@ -104,15 +104,5 @@ export class TasksRoutes extends BaseRoutes {
         metadataFilter?: string;
     }) {
         return await this.apiClient.default.taskExecutionsRouteList({ id, limit, offset, sortBy, direction, metadataFilter })
-    }
-
-    async resumeExecution({
-        taskToken,
-        requestBody,
-    }: {
-        taskToken: string;
-        requestBody: Executions_TaskTokenResumeExecutionRequest;
-    }) {
-        return await this.apiClient.default.executionsRouteResumeWithTaskToken({ taskToken, requestBody })
     }
 }

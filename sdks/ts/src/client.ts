@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-// import { Chat, Completions } from "openai/resources/index";
+import { Chat, Completions } from "openai/resources/index";
 import typia, { tags } from "typia";
 
 // import { AgentsManager } from "./managers/agent";
@@ -11,11 +11,12 @@ import typia, { tags } from "typia";
 import { AgentsRoutes } from "./agents";
 import { JulepApiClient } from "./api";
 import { JULEP_API_KEY, JULEP_API_URL } from "./env";
-// import { patchCreate } from "./utils/openaiPatch";
+import { patchCreate } from "./utils/openaiPatch";
 import { UsersRoutes } from "./users";
 import { SessionsRoutes } from "./sessions";
 import { TasksRoutes } from "./tasks";
 import { DocsRoutes } from "./docs";
+import { ExecutionsRoutes } from "./executions";
 
 interface ClientOptions {
   apiKey?: string;
@@ -69,18 +70,16 @@ export class Client {
     // this.memories = new MemoriesManager(this._apiClient);
     // this.tools = new ToolsManager(this._apiClient);
     this.agents = new AgentsRoutes(this._apiClient)
-    this.users = new UsersRoutes(this._apiClient)
-    this.sessions = new SessionsRoutes(this._apiClient)
     this.tasks = new TasksRoutes(this._apiClient)
+    this.executions = new ExecutionsRoutes(this._apiClient)
     this.docs = new DocsRoutes(this._apiClient)
-    // this.chat = this._openaiClient.chat;
-    // patchCreate(this.chat.completions, this.chat);
-    // this.completions = this._openaiClient.completions;
-    // patchCreate(this.completions);
-  }
-
-  get apiClient() {
-    return this._apiClient
+    this.sessions = new SessionsRoutes(this._apiClient)
+    this.users = new UsersRoutes(this._apiClient)
+    
+    this.chat = this._openaiClient.chat;
+    patchCreate(this.chat.completions, this.chat);
+    this.completions = this._openaiClient.completions;
+    patchCreate(this.completions);
   }
 
   /**
@@ -105,7 +104,7 @@ export class Client {
    * Manager for interacting with documents.
    * Enables document management including creation, update, and deletion.
    */
-  // docs: DocsManager;
+  docs: DocsRoutes;
 
   /**
    * Manager for interacting with memories.
@@ -123,13 +122,13 @@ export class Client {
    * OpenAI Chat API.
    * This is patched to enhance functionality and ensure compatibility with Julep API.
    */
-  // chat: Chat;
+  chat: Chat;
 
   /**
    * OpenAI Completions API.
    * Enhanced with custom patches for improved integration and usage within Julep.
    */
-  // completions: Completions;
+  completions: Completions;
   tasks: TasksRoutes;
-  docs: DocsRoutes;
+  executions: ExecutionsRoutes;
 }
