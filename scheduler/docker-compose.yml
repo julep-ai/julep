@@ -46,5 +46,18 @@ services:
       timeout: 5s
       retries: 10
 
+  temporal-ui:
+    image: temporalio/ui:latest
+    profiles:
+      - temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    ports:
+      - 9000:8080  # Since 8080 is already used by agents-api
+
+
 volumes:
   temporal-db-data:

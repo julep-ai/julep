@@ -41,6 +41,7 @@ jinja_env.globals["null"] = None
 simple_jinja_regex = re.compile(r"{{|{%.+}}|%}", re.DOTALL)
 
 
+# FIXME: This does not work for some reason
 def is_simple_jinja(template_string: str) -> bool:
     return simple_jinja_regex.search(template_string) is None
 
@@ -53,6 +54,7 @@ async def render_template_string(
     check: bool = False,
 ) -> str:
     # Parse template
+    # TODO: Check that the string is indeed a jinjd template
     template = jinja_env.from_string(template_string)
 
     # If check is required, get required vars from template and validate variables
