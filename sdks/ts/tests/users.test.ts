@@ -4,11 +4,13 @@ import { beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { Users_User as User } from "../src/api";
+import { Common_ResourceCreatedResponse, Users_User as User } from "../src/api";
 
 const mockUser = {
-  name: "test user",
-  about: "test user about",
+  requestBody: {
+    name: "test user",
+    about: "test user about",
+  },
 };
 
 const mockUserUpdate = {
@@ -18,7 +20,7 @@ const mockUserUpdate = {
 
 describe("User API", () => {
   let client: Client;
-  let testUser: User;
+  let testUser: Common_ResourceCreatedResponse;
 
   beforeAll(() => {
     client = setupClient();
@@ -30,49 +32,37 @@ describe("User API", () => {
     testUser = response;
 
     expect(response).toHaveProperty("created_at");
-    expect(response.about).toBe(mockUser.about);
-    expect(response.name).toBe(mockUser.name);
+    expect(response).toHaveProperty("id");
+    expect(response).toHaveProperty("jobs");
   });
 
   test("users.get", async () => {
-    const response = await client.users.get(testUser.id);
+    const response = await client.users.get({ id: testUser.id });
 
-    expect(response.about).toBe(mockUser.about);
-    expect(response.name).toBe(mockUser.name);
+    expect(response.about).toBe(mockUser.requestBody.about);
+    expect(response.name).toBe(mockUser.requestBody.name);
     expect(response).toHaveProperty("created_at");
   });
 
   test("users.update", async () => {
-    const response = await client.users.update(testUser.id, {
-      name: mockUserUpdate.name,
+    const response = await client.users.update({
+      id: testUser.id, requestBody: {
+        name: mockUserUpdate.name,
+        about: mockUserUpdate.about,
+      }
     });
 
     expect(response.id).toBe(testUser.id);
     expect(response).toHaveProperty("updated_at");
-    expect(response.name).toBe(mockUserUpdate.name);
-  });
-
-  test("users.update with overwrite", async () => {
-    const response = await client.users.update(
-      testUser.id,
-      {
-        ...mockUserUpdate,
-      },
-      true,
-    );
-
-    expect(response.id).toBe(testUser.id);
-    expect(response).toHaveProperty("updated_at");
-    expect(response.name).toBe(mockUserUpdate.name);
-    expect(response.about).toBe(mockUserUpdate.about);
+    expect(response).toHaveProperty("jobs");
   });
 
   test("users.list", async () => {
-    const response = await client.users.list();
+    const response = await client.users.list({ offset: 0 });
 
-    expect(response.length).toBeGreaterThan(0);
+    expect(response.items.length).toBeGreaterThan(0);
 
-    const user = response.find((user) => user.id === testUser.id);
+    const user = response.items.find((user) => user.id === testUser.id);
 
     expect(user).toBeDefined();
     expect(user!.id).toBe(testUser.id);
@@ -81,7 +71,7 @@ describe("User API", () => {
   });
 
   test("users.delete", async () => {
-    const response = await client.users.delete(testUser.id);
+    const response = await client.users.delete({ id: testUser.id });
 
     expect(response).toBeUndefined();
   });
