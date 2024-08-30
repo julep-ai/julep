@@ -102,6 +102,7 @@ services:
 
   text-embeddings-inference-cpu:
     <<: *text-embeddings-inference
+    platform: linux/amd64 # Temp fix for Mac M-series chips
     profiles:
       - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
 
