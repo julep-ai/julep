@@ -101,6 +101,7 @@ model TaskTokenResumeExecutionRequest {
 
 alias TransitionType = (
     | "finish"
+    | "branch_finish"
     | "wait"
     | "resume"
     | "error"
@@ -113,15 +114,19 @@ model TransitionTarget {
     step: uint16;
 }
 
-model Transition {
+model TransitionEvent {
     @visibility("read")
     type: TransitionType;
 
     @visibility("read")
-    execution_id: Execution.id;
-
-    @visibility("read")
     output: unknown;
+
+    ...HasTimestamps;
+}
+
+model Transition extends TransitionEvent {
+    @visibility("read")
+    execution_id: Execution.id;
 
     @visibility("read")
     current: TransitionTarget;
@@ -131,5 +136,4 @@ model Transition {
 
     ...HasId;
     ...HasMetadata;
-    ...HasTimestamps;
 }

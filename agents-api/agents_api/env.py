@@ -16,6 +16,7 @@ env: Any = Env()
 # ---
 multi_tenant_mode: bool = env.bool("AGENTS_API_MULTI_TENANT_MODE", default=False)
 hostname: str = env.str("AGENTS_API_HOSTNAME", default="localhost")
+public_port: int = env.int("AGENTS_API_PUBLIC_PORT", default=80)
 api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 
 

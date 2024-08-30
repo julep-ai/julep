@@ -28,6 +28,7 @@ import type { Executions_CreateExecutionRequest } from "../models/Executions_Cre
 import type { Executions_Execution } from "../models/Executions_Execution";
 import type { Executions_TaskTokenResumeExecutionRequest } from "../models/Executions_TaskTokenResumeExecutionRequest";
 import type { Executions_Transition } from "../models/Executions_Transition";
+import type { Executions_TransitionEvent } from "../models/Executions_TransitionEvent";
 import type { Executions_UpdateExecutionRequest } from "../models/Executions_UpdateExecutionRequest";
 import type { Jobs_JobStatus } from "../models/Jobs_JobStatus";
 import type { Sessions_CreateSessionRequest } from "../models/Sessions_CreateSessionRequest";
@@ -898,6 +899,35 @@ export class DefaultService {
         sort_by: sortBy,
         direction: direction,
         metadata_filter: metadataFilter,
+      },
+    });
+  }
+  /**
+   * Stream events emitted by the given execution
+   * @returns Executions_TransitionEvent The request has succeeded.
+   * @throws ApiError
+   */
+  public executionTransitionsStreamRouteStream({
+    id,
+    nextToken = null,
+  }: {
+    /**
+     * ID of parent
+     */
+    id: Common_uuid;
+    /**
+     * Next page token
+     */
+    nextToken?: string | null;
+  }): CancelablePromise<Executions_TransitionEvent> {
+    return this.httpRequest.request({
+      method: "GET",
+      url: "/executions/{id}/transitions.stream",
+      path: {
+        id: id,
+      },
+      query: {
+        next_token: nextToken,
       },
     });
   }

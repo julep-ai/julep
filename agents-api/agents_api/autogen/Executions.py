@@ -74,22 +74,17 @@ class TaskTokenResumeExecutionRequest(BaseModel):
     """
 
 
-class Transition(BaseModel):
+class TransitionEvent(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
     type: Annotated[
-        Literal["finish", "wait", "resume", "error", "step", "cancelled"],
+        Literal[
+            "finish", "branch_finish", "wait", "resume", "error", "step", "cancelled"
+        ],
         Field(json_schema_extra={"readOnly": True}),
     ]
-    execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     output: Annotated[Any, Field(json_schema_extra={"readOnly": True})]
-    current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
-    next: Annotated[
-        TransitionTarget | None, Field(json_schema_extra={"readOnly": True})
-    ]
-    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
-    metadata: dict[str, Any] | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -154,3 +149,16 @@ class StopExecutionRequest(UpdateExecutionRequest):
     """
     The reason for stopping the execution
     """
+
+
+class Transition(TransitionEvent):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
+    current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
+    next: Annotated[
+        TransitionTarget | None, Field(json_schema_extra={"readOnly": True})
+    ]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
+    metadata: dict[str, Any] | None = None

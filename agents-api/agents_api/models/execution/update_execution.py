@@ -68,13 +68,16 @@ def update_execution(
     )
 
     validate_status_query = """
-    ?[status, execution_id] :=
+    valid_status[count(status)] :=
         *executions {
             status,
-            execution_id,
-        }, status in $valid_previous_statuses
+            execution_id: to_uuid($execution_id),
+        }, 
+        status in $valid_previous_statuses
 
-    :assert some
+    ?[num] :=
+        valid_status[num],
+        assert(num > 0, 'Invalid status')
     """
 
     update_query = f"""
@@ -105,5 +108,9 @@ def update_execution(
 
     return (
         queries,
-        {"values": values, "valid_previous_statuses": valid_previous_statuses},
+        {
+            "values": values,
+            "valid_previous_statuses": valid_previous_statuses,
+            "execution_id": str(execution_id),
+        },
     )
