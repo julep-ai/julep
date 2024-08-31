@@ -100,6 +100,7 @@ async def chat(
         raise NotImplementedError("Adaptive context is not yet implemented")
 
     # Return the response
+    # TODO: Implement streaming
     chat_response_class = (
         ChunkChatResponse if chat_input.stream else MessageChatResponse
     )

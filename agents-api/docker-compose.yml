@@ -1,17 +1,5 @@
 name: julep-agents-api
 
-# Base for embedding service
-x--text-embeddings-inference: &text-embeddings-inference
-  container_name: text-embeddings-inference-cpu
-  environment:
-    - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
-
-  image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
-  ports:
-    - "8082:80"
-  volumes:
-    - ~/.cache/huggingface/hub:/data
-
 # Shared environment variables
 x--shared-environment: &shared-environment
   AGENTS_API_KEY: ${AGENTS_API_KEY}
@@ -100,31 +88,6 @@ services:
         - action: rebuild
           path: Dockerfile.worker
 
-  text-embeddings-inference-cpu:
-    <<: *text-embeddings-inference
-    profiles:
-      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
-
-  text-embeddings-inference-gpu:
-    <<: *text-embeddings-inference
-    container_name: text-embeddings-inference-gpu
-    profiles:
-      - gpu
-    image: ghcr.io/huggingface/text-embeddings-inference:1.5
-    environment:
-      - DTYPE=float16
-      - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
-      - NVIDIA_VISIBLE_DEVICES=all
-
-    shm_size: "2gb"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: ${NUM_GPUS:-1}
-              capabilities: [gpu]
-
   cozo-migrate:
     image: julepai/cozo-migrate:${TAG}
     container_name: cozo-migrate
@@ -145,6 +108,3 @@ services:
           target: /app/migrations
         - action: rebuild
           path: Dockerfile.migration
-
-volumes:
-  temporal_data:

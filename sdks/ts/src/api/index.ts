@@ -75,6 +75,7 @@ export type { Executions_ResumeExecutionRequest } from "./models/Executions_Resu
 export type { Executions_StopExecutionRequest } from "./models/Executions_StopExecutionRequest";
 export type { Executions_TaskTokenResumeExecutionRequest } from "./models/Executions_TaskTokenResumeExecutionRequest";
 export type { Executions_Transition } from "./models/Executions_Transition";
+export type { Executions_TransitionEvent } from "./models/Executions_TransitionEvent";
 export type { Executions_TransitionTarget } from "./models/Executions_TransitionTarget";
 export type { Executions_UpdateExecutionRequest } from "./models/Executions_UpdateExecutionRequest";
 export type { Jobs_JobState } from "./models/Jobs_JobState";
@@ -205,6 +206,7 @@ export { $Executions_ResumeExecutionRequest } from "./schemas/$Executions_Resume
 export { $Executions_StopExecutionRequest } from "./schemas/$Executions_StopExecutionRequest";
 export { $Executions_TaskTokenResumeExecutionRequest } from "./schemas/$Executions_TaskTokenResumeExecutionRequest";
 export { $Executions_Transition } from "./schemas/$Executions_Transition";
+export { $Executions_TransitionEvent } from "./schemas/$Executions_TransitionEvent";
 export { $Executions_TransitionTarget } from "./schemas/$Executions_TransitionTarget";
 export { $Executions_UpdateExecutionRequest } from "./schemas/$Executions_UpdateExecutionRequest";
 export { $Jobs_JobState } from "./schemas/$Jobs_JobState";

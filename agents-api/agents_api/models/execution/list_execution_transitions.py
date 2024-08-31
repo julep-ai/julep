@@ -46,11 +46,11 @@ def list_execution_transitions(
                 updated_at,
                 created_at,
             }},
-            current = {{"state": current_tuple->0, "step": current_tuple->1}},
+            current = {{"workflow": current_tuple->0, "step": current_tuple->1}},
             next = if(
-                isnull(next_tuple),
+                is_null(next_tuple),
                 null,
-                {{"state": next_tuple->0, "step": next_tuple->1}},
+                {{"workflow": next_tuple->0, "step": next_tuple->1}},
             ),
             execution_id = to_uuid($execution_id)
 

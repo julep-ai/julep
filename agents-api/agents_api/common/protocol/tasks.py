@@ -28,15 +28,16 @@ from ...autogen.openapi_model import (
 ### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
 valid_transitions = {
     # Start state
-    "init": ["wait", "error", "step", "cancelled", "finish"],
+    "init": ["wait", "error", "step", "cancelled", "finish", "branch_finish"],
     # End states
     "finish": [],
     "error": [],
     "cancelled": [],
     # Intermediate states
     "wait": ["resume", "error", "cancelled"],
-    "resume": ["wait", "error", "step", "finish", "cancelled"],
-    "step": ["wait", "error", "step", "finish", "cancelled"],
+    "resume": ["wait", "error", "step", "finish", "cancelled", "branch_finish"],
+    "step": ["wait", "error", "step", "finish", "cancelled", "branch_finish"],
+    "branch_finish": ["wait", "error", "step", "finish", "cancelled"],
 }
 
 valid_previous_statuses = {
@@ -50,6 +51,7 @@ transition_to_execution_status = {
     "resume": "running",
     "step": "running",
     "finish": "succeeded",
+    "branch_finish": "running",
     "error": "failed",
     "cancelled": "cancelled",
 }

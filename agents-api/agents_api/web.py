@@ -20,7 +20,7 @@ from temporalio.service import RPCError
 
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import api_prefix, hostname, sentry_dsn
+from .env import api_prefix, hostname, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,
@@ -84,7 +84,7 @@ def register_exceptions(app: FastAPI) -> None:
 #       Because some routes don't require auth
 # See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
 #
-app: Any = FastAPI(
+app: FastAPI = FastAPI(
     docs_url="/swagger",
     openapi_prefix=api_prefix,
     redoc_url=None,
@@ -109,7 +109,7 @@ async def scalar_html():
     return get_scalar_api_reference(
         openapi_url=app.openapi_url[1:],  # Remove leading '/'
         title=app.title,
-        servers=[{"url": f"http://{hostname}{api_prefix}"}],
+        servers=[{"url": f"http://{hostname}:{public_port}{api_prefix}"}],
     )
 
 
@@ -135,7 +135,8 @@ app.add_middleware(
     max_age=3600,
 )
 
-app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
+# TODO: GZipMiddleware should be enabled only for non-streaming routes
+# app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
 
 register_exceptions(app)
 
