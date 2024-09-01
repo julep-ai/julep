@@ -51,6 +51,7 @@ export const $Chat_ChatInputData = {
       contains: {
         type: "Tools_FunctionTool",
       },
+      isRequired: true,
     },
     tool_choice: {
       type: "any-of",

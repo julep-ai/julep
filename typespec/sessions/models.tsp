@@ -97,6 +97,8 @@ model SingleAgentMultiUserSession extends Session {
     agents?: never;
 
     agent: uuid;
+
+    @minItems(2)
     users: uuid[];
 }
 
@@ -108,6 +110,7 @@ model MultiAgentNoUserSession extends Session {
     users?: never;
     agent?: never;
 
+    @minItems(2)
     agents: uuid[];
 }
 
@@ -118,6 +121,7 @@ model MultiAgentSingleUserSession extends Session {
     users?: never;
     agent?: never;
 
+    @minItems(2)
     agents: uuid[];
     user: uuid;
 }
@@ -129,7 +133,10 @@ model MultiAgentMultiUserSession extends Session {
     user?: never;
     agent?: never;
 
+    @minItems(2)
     agents: uuid[];
+
+    @minItems(2)
     users: uuid[];
 }
 

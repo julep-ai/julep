@@ -29,7 +29,7 @@ model Agent {
     "model": string = "";
 
     /** Instructions for the agent */
-    instructions: string | string[] = "";
+    instructions: string | string[] = #[];
 
     /** Default settings for all sessions created by this agent */
     default_settings?: DefaultChatSettings;

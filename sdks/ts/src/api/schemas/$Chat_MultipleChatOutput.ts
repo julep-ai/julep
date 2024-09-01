@@ -51,6 +51,7 @@ export const $Chat_MultipleChatOutput = {
               },
             },
           },
+          isReadOnly: true,
           isRequired: true,
         },
       },

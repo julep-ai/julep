@@ -118,7 +118,7 @@ class SingleAgentMultiUserSession(Session):
         populate_by_name=True,
     )
     agent: UUID
-    users: list[UUID]
+    users: Annotated[list[UUID], Field(min_length=2)]
 
 
 class SingleAgentNoUserSession(Session):
@@ -201,20 +201,20 @@ class MultiAgentMultiUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    agents: list[UUID]
-    users: list[UUID]
+    agents: Annotated[list[UUID], Field(min_length=2)]
+    users: Annotated[list[UUID], Field(min_length=2)]
 
 
 class MultiAgentNoUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    agents: list[UUID]
+    agents: Annotated[list[UUID], Field(min_length=2)]
 
 
 class MultiAgentSingleUserSession(Session):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    agents: list[UUID]
+    agents: Annotated[list[UUID], Field(min_length=2)]
     user: UUID

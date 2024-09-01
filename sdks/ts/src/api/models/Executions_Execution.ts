@@ -24,6 +24,10 @@ export type Executions_Execution = {
    */
   input: Record<string, any>;
   /**
+   * The output of the execution
+   */
+  output?: any;
+  /**
    * When this resource was created as UTC date-time
    */
   readonly created_at: string;

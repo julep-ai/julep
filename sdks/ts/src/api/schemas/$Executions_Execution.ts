@@ -27,6 +27,10 @@ export const $Executions_Execution = {
       },
       isRequired: true,
     },
+    output: {
+      description: `The output of the execution`,
+      properties: {},
+    },
     created_at: {
       type: "string",
       description: `When this resource was created as UTC date-time`,

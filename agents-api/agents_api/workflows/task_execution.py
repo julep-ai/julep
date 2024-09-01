@@ -205,7 +205,7 @@ class TaskExecutionWorkflow:
                 workflow.logger.error(f"Error in step {context.cursor.step}: {error}")
                 await transition(state, context, type="error", output=dict(error=error))
                 raise ApplicationError(
-                    f"step {type(step).__name__} threw error: {error}"
+                    f"Step {type(step).__name__} threw error: {error}"
                 )
 
             case LogStep(), StepOutcome(output=output):
@@ -468,7 +468,9 @@ class TaskExecutionWorkflow:
             return state.output
 
         else:
-            workflow.logger.info(f"Continuing to next step: {state.next and state.next.step}")
+            workflow.logger.info(
+                f"Continuing to next step: {state.next and state.next.step}"
+            )
             # Otherwise, recurse to the next step
             # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
             #       Otherwise, we should just call the next step as a child workflow

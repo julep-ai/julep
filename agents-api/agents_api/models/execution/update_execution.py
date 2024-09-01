@@ -37,7 +37,7 @@ T = TypeVar("T")
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
-    transform=lambda d: {"id": d["execution_id"], "jobs": [], **d},
+    transform=lambda d: {"id": d["execution_id"], **d},
     _kind="inserted",
 )
 @cozo_query

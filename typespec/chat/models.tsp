@@ -45,10 +45,20 @@ model MemoryAccessOptions {
     save: boolean = true;
 }
 
-model CompletionResponseFormat {
+model SimpleCompletionResponseFormat {
     /** The format of the response */
     type: "text" | "json_object" = "text";
 }
+
+model SchemaCompletionResponseFormat {
+    /** The format of the response */
+    type: "json_schema" = "json_schema";
+
+    /** The schema of the response */
+    json_schema: Record<unknown>;
+}
+
+alias CompletionResponseFormat = SimpleCompletionResponseFormat | SchemaCompletionResponseFormat;
 
 model CommonChatSettings {
     /** Identifier of the model to be used */
@@ -58,9 +68,8 @@ model CommonChatSettings {
     stream: boolean = false;
 
     /** Up to 4 sequences where the API will stop generating further tokens. */
-    @minItems(1)
     @maxItems(4)
-    stop?: string[];
+    stop: string[] = #[];
 
     /** If specified, the system will make a best effort to sample deterministically for that particular seed value */
     @minValue(-1)
@@ -150,8 +159,7 @@ model ChatInputData {
     messages: InputChatMLMessage[];
 
     /** (Advanced) List of tools that are provided in addition to agent's default set of tools. */
-    @minItems(1)
-    tools?: FunctionTool[];
+    tools: FunctionTool[] = #[];
 
     /** Can be one of existing tools given to the agent earlier or the ones provided in this request. */
     tool_choice?: ToolChoiceOption;
@@ -172,6 +180,9 @@ model BaseTokenLogProb {
 }
 
 model TokenLogProb extends BaseTokenLogProb {
+    /** The log probabilities of the tokens */
+    @visibility("read")
+    @minItems(1)
     top_logprobs: BaseTokenLogProb[];
 }
 
@@ -197,6 +208,8 @@ model SingleChatOutput extends BaseChatOutput {
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
 model MultipleChatOutput extends BaseChatOutput {
+    @visibility("read")
+    @minItems(1)
     messages: InputChatMLMessage[];
 }
 
@@ -213,10 +226,12 @@ model BaseChatResponse {
     usage?: CompetionUsage;
 
     /** Background job IDs that may have been spawned from this interaction. */
-    jobs: uuid[];
+    @visibility("read")
+    jobs: uuid[] = #[];
 
     /** Documents referenced for this request (for citation purposes). */
-    docs: DocReference[];
+    @visibility("read")
+    docs: DocReference[] = #[];
 
     ...HasCreatedAt;
     ...HasId;

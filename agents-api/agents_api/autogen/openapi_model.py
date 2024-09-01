@@ -151,23 +151,23 @@ class CreateEntryRequest(BaseEntry):
 # -------------------
 
 WorkflowStep = (
-    PromptStep
-    | EvaluateStep
-    | YieldStep
+    EvaluateStep
     | ToolCallStep
-    | ErrorWorkflowStep
-    | IfElseWorkflowStep
-    | ReturnStep
-    | SleepStep
-    | WaitForInputStep
+    | PromptStep
+    | GetStep
+    | SetStep
     | LogStep
     | EmbedStep
     | SearchStep
-    | SetStep
-    | GetStep
+    | ReturnStep
+    | SleepStep
+    | ErrorWorkflowStep
+    | YieldStep
+    | WaitForInputStep
+    | IfElseWorkflowStep
+    | SwitchStep
     | ForeachStep
     | ParallelStep
-    | SwitchStep
     | MapReduceStep
 )
 

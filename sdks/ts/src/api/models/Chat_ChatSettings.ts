@@ -2,8 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Chat_CompletionResponseFormat } from "./Chat_CompletionResponseFormat";
 import type { Chat_DefaultChatSettings } from "./Chat_DefaultChatSettings";
+import type { Chat_SchemaCompletionResponseFormat } from "./Chat_SchemaCompletionResponseFormat";
+import type { Chat_SimpleCompletionResponseFormat } from "./Chat_SimpleCompletionResponseFormat";
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_logit_bias } from "./Common_logit_bias";
 import type { Common_uuid } from "./Common_uuid";
@@ -19,7 +20,7 @@ export type Chat_ChatSettings = Chat_DefaultChatSettings & {
   /**
    * Up to 4 sequences where the API will stop generating further tokens.
    */
-  stop?: Array<string>;
+  stop: Array<string>;
   /**
    * If specified, the system will make a best effort to sample deterministically for that particular seed value
    */
@@ -35,7 +36,9 @@ export type Chat_ChatSettings = Chat_DefaultChatSettings & {
   /**
    * Response format (set to `json_object` to restrict output to JSON)
    */
-  response_format?: Chat_CompletionResponseFormat;
+  response_format?:
+    | Chat_SimpleCompletionResponseFormat
+    | Chat_SchemaCompletionResponseFormat;
   /**
    * Agent ID of the agent to use for this interaction. (Only applicable for multi-agent sessions)
    */

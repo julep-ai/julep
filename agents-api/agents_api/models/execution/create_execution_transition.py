@@ -26,7 +26,9 @@ from .update_execution import update_execution
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
     if data.type in ("finish", "branch_finish", "error", "cancelled"):
-        assert data.next is None, "Next target must be None for finish/branch_finish/error/cancelled"
+        assert (
+            data.next is None
+        ), "Next target must be None for finish/branch_finish/error/cancelled"
 
     if data.type in ("wait", "init"):
         assert data.next is None, "Next target must be None for wait/init"

@@ -122,7 +122,9 @@ def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
 ) -> TaskSpecDef | PartialTaskSpecDef:
     task_data = task.model_dump(**model_opts)
-    workflows = [Workflow(name="main", steps=task_data.pop("main"))]
+    main = task_data.pop("main")
+
+    workflows = [Workflow(name="main", steps=main)]
 
     for k in list(task_data.keys()):
         if k in TaskSpec.model_fields.keys():
@@ -135,6 +137,7 @@ def task_to_spec(
     tools = [TaskToolDef(spec=tool.pop(tool["type"]), **tool) for tool in tools]
 
     cls = PartialTaskSpecDef if isinstance(task, PatchTaskRequest) else TaskSpecDef
+
     return cls(
         workflows=workflows,
         tools=tools,

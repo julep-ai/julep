@@ -12,6 +12,10 @@ export const $Executions_CreateExecutionRequest = {
       },
       isRequired: true,
     },
+    output: {
+      description: `The output of the execution`,
+      properties: {},
+    },
     metadata: {
       type: "dictionary",
       contains: {

@@ -39,6 +39,11 @@ services:
     <<: *text-embeddings-inference
     profiles:
       - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
+      - cpu
+      #
+      # Note: Adding these for convenience so this runs when `docker compose up` is run
+      - multi-tenant
+      - temporal-ui
 
   text-embeddings-inference-gpu:
     <<: *text-embeddings-inference
