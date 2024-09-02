@@ -50,8 +50,11 @@ model Execution {
     /** The input to the execution */
     input: Record<unknown>;
 
-    /** The output of the execution */
+    /** The output of the execution if it succeeded */
     output?: unknown;
+
+    /** The error of the execution if it failed */
+    error?: string;
 
     ...HasTimestamps;
     ...HasMetadata;
@@ -106,7 +109,7 @@ alias TransitionType = (
     | "init"
     | "branch_init"
     | "finish"
-    | "branch_finish"
+    | "finish_branch"
     | "wait"
     | "resume"
     | "error"

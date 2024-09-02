@@ -28,8 +28,12 @@ export const $Executions_Execution = {
       isRequired: true,
     },
     output: {
-      description: `The output of the execution`,
+      description: `The output of the execution if it succeeded`,
       properties: {},
+    },
+    error: {
+      type: "string",
+      description: `The error of the execution if it failed`,
     },
     created_at: {
       type: "string",

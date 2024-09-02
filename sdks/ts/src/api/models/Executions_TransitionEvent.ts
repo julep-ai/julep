@@ -7,7 +7,7 @@ export type Executions_TransitionEvent = {
     | "init"
     | "branch_init"
     | "finish"
-    | "branch_finish"
+    | "finish_branch"
     | "wait"
     | "resume"
     | "error"

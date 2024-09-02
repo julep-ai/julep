@@ -9,8 +9,8 @@ from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
-    from ..activities import task_steps
-    from ..autogen.openapi_model import (
+    from ...activities import task_steps
+    from ...autogen.openapi_model import (
         CreateTransitionRequest,
         ErrorWorkflowStep,
         EvaluateStep,
@@ -32,13 +32,13 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
         YieldStep,
     )
-    from ..common.protocol.tasks import (
+    from ...common.protocol.tasks import (
         ExecutionInput,
-        PendingTransition,
+        PartialTransition,
         StepContext,
         StepOutcome,
     )
-    from ..env import debug, testing
+    from ...env import debug, testing
 
 
 STEP_TO_ACTIVITY = {
@@ -90,6 +90,14 @@ async def transition(state, context, **kwargs) -> None:
     )
 
 
+# init
+# init_branch
+# run
+# finish_branch
+# finish
+
+# 
+
 @workflow.defn
 class TaskExecutionWorkflow:
     @workflow.run
@@ -123,16 +131,16 @@ class TaskExecutionWorkflow:
             case (True, TransitionTarget(workflow="main")):
                 state_type = "finish"
             case (True, _):
-                state_type = "branch_finish"
+                state_type = "finish_branch"
             case _, _:
                 state_type = "step"
 
-        state = PendingTransition(
+        state = PartialTransition(
             type=state_type,
             next=None
             if context.is_last_step
             else TransitionTarget(workflow=start.workflow, step=start.step + 1),
-            metadata={"__meta__": {"step_type": step_type.__name__}},
+            metadata={"workflow_step_type": step_type.__name__},
         )
 
         # ---
@@ -463,7 +471,7 @@ class TaskExecutionWorkflow:
 
         # 6. Closing
         # End if the last step
-        if state.type in ("finish", "branch_finish", "cancelled"):
+        if state.type in ("finish", "finish_branch", "cancelled"):
             workflow.logger.info(f"Workflow finished with state: {state.type}")
             return state.output
 

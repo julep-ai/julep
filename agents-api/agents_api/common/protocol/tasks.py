@@ -9,6 +9,7 @@ from ...autogen.openapi_model import (
     CreateTaskRequest,
     CreateTransitionRequest,
     Execution,
+    ExecutionStatus,
     PartialTaskSpecDef,
     PatchTaskRequest,
     Session,
@@ -26,38 +27,40 @@ from ...autogen.openapi_model import (
 )
 
 ### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
-valid_transitions = {
+valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
-    "init": ["wait", "error", "step", "cancelled", "finish", "branch_finish"],
+    "init": ["wait", "error", "step", "cancelled", "init_branch"],
+    "init_branch": ["wait", "error", "step", "cancelled"],
     # End states
     "finish": [],
     "error": [],
     "cancelled": [],
     # Intermediate states
     "wait": ["resume", "error", "cancelled"],
-    "resume": ["wait", "error", "step", "finish", "cancelled", "branch_finish"],
-    "step": ["wait", "error", "step", "finish", "cancelled", "branch_finish"],
-    "branch_finish": ["wait", "error", "step", "finish", "cancelled"],
+    "resume": ["wait", "error", "cancelled", "step", "finish", "finish_branch", "init_branch"],
+    "step": ["wait", "error", "cancelled", "step", "finish", "finish_branch", "init_branch"],
+    "finish_branch": ["wait", "error", "cancelled", "step", "finish", "init_branch"],
 }
 
-valid_previous_statuses = {
+valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
     "running": ["queued", "starting", "awaiting_input"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
 }
 
-transition_to_execution_status = {
+transition_to_execution_status: dict[TransitionType, ExecutionStatus] = {
     "init": "queued",
+    "init_branch": "running",
     "wait": "awaiting_input",
     "resume": "running",
     "step": "running",
     "finish": "succeeded",
-    "branch_finish": "running",
+    "finish_branch": "running",
     "error": "failed",
     "cancelled": "cancelled",
 }
 
 
-PendingTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+PartialTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
 
 
 class ExecutionInput(BaseModel):
@@ -104,6 +107,11 @@ class StepContext(BaseModel):
     @property
     def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
         return (self.cursor.step + 1) == len(self.current_workflow.steps)
+
+    @computed_field
+    @property
+    def is_first_step(self) -> Annotated[bool, Field(exclude=True)]:
+        return self.cursor.step == 0
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)

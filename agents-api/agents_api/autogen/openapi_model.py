@@ -95,7 +95,15 @@ assert Execution.model_fields["status"].annotation == ExecutionStatus
 
 
 TransitionType = Literal[
-    "finish", "branch_finish", "wait", "resume", "error", "step", "cancelled"
+    "init",
+    "branch_init",
+    "finish",
+    "finish_branch",
+    "wait",
+    "resume",
+    "error",
+    "step",
+    "cancelled",
 ]
 
 assert Transition.model_fields["type"].annotation == TransitionType

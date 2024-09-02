@@ -24,9 +24,13 @@ export type Executions_Execution = {
    */
   input: Record<string, any>;
   /**
-   * The output of the execution
+   * The output of the execution if it succeeded
    */
   output?: any;
+  /**
+   * The error of the execution if it failed
+   */
+  error?: string;
   /**
    * When this resource was created as UTC date-time
    */

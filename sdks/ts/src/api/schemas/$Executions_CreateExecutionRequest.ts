@@ -13,8 +13,12 @@ export const $Executions_CreateExecutionRequest = {
       isRequired: true,
     },
     output: {
-      description: `The output of the execution`,
+      description: `The output of the execution if it succeeded`,
       properties: {},
+    },
+    error: {
+      type: "string",
+      description: `The error of the execution if it failed`,
     },
     metadata: {
       type: "dictionary",

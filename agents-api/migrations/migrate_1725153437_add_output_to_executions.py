@@ -23,6 +23,7 @@ add_output_to_executions_query = dict(
         created_at,
         updated_at,
         output,
+        error,
         metadata,
     ] :=
         *executions {
@@ -35,6 +36,7 @@ add_output_to_executions_query = dict(
             updated_at,
         },
         output = null,
+        error = null,
         metadata = {}
 
     :replace executions {
@@ -46,6 +48,7 @@ add_output_to_executions_query = dict(
 
         input: Json,
         output: Json? default null,
+        error: String? default null,
         session_id: Uuid? default null,
         metadata: Json default {},
         created_at: Float default now(),
