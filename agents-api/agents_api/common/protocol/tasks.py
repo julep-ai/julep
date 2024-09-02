@@ -26,11 +26,12 @@ from ...autogen.openapi_model import (
     WorkflowStep,
 )
 
+# TODO: figure out how to type this
 ### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
 valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
-    "init": ["wait", "error", "step", "cancelled", "init_branch"],
-    "init_branch": ["wait", "error", "step", "cancelled"],
+    "init": ["wait", "error", "step", "cancelled", "init_branch", "finish"],
+    "init_branch": ["wait", "error", "step", "cancelled", "finish_branch"],
     # End states
     "finish": [],
     "error": [],
@@ -59,7 +60,7 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
 }  # type: ignore
 
 valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
-    "running": ["queued", "starting", "awaiting_input"],
+    "running": ["queued", "starting", "awaiting_input", "running"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
 }  # type: ignore
 

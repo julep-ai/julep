@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 
 from pycozo.client import Client
 
@@ -10,7 +10,7 @@ if cozo_auth:
     options.update({"auth": cozo_auth})
 
 
-def get_cozo_client() -> Any:
+def get_cozo_client() -> Client:
     client = getattr(app.state, "cozo_client", Client("http", options=options))
     if not hasattr(app.state, "cozo_client"):
         app.state.cozo_client = client

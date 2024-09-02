@@ -25,6 +25,7 @@ with workflow.unsafe.imports_passed_through():
         SleepStep,
         SwitchStep,
         # ToolCallStep,
+        Transition,
         TransitionTarget,
         UpdateExecutionRequest,
         WaitForInputStep,
@@ -73,17 +74,36 @@ GenericStep = RootModel[WorkflowStep]
 # TODO: find a way to transition to error if workflow or activity times out.
 
 
-async def transition(state, context, **kwargs) -> None:
-    # NOTE: The state variable is closured from the outer scope
+async def transition(
+    context: StepContext, state: PartialTransition | None = None, **kwargs
+) -> Transition:
+    if state is None:
+        state = PartialTransition()
+
+    match context.is_last_step, context.cursor:
+        case (True, TransitionTarget(workflow="main")):
+            state.type = "finish"
+        case (True, _):
+            state.type = "finish_branch"
+        case _, _:
+            state.type = "step"
+
     transition_request = CreateTransitionRequest(
         current=context.cursor,
         **{
+            "output": None,
+            "next": None
+            if context.is_last_step
+            else TransitionTarget(
+                workflow=context.cursor.workflow, step=context.cursor.step + 1
+            ),
+            "metadata": {"step_type": type(context.current_step).__name__},
             **state.model_dump(exclude_unset=True),
             **kwargs,  # Override with any additional kwargs
         },
     )
 
-    await workflow.execute_activity(
+    return await workflow.execute_activity(
         task_steps.transition_step,
         args=[context, transition_request],
         schedule_to_close_timeout=timedelta(seconds=2),
@@ -96,7 +116,8 @@ async def transition(state, context, **kwargs) -> None:
 # finish_branch
 # finish
 
-# 
+#
+
 
 @workflow.defn
 class TaskExecutionWorkflow:
@@ -125,64 +146,29 @@ class TaskExecutionWorkflow:
 
         # ---
 
-        # 1. Set global state
-        #     (By default, exit if last otherwise transition 'step' to the next step)
-        match context.is_last_step, start:
-            case (True, TransitionTarget(workflow="main")):
-                state_type = "finish"
-            case (True, _):
-                state_type = "finish_branch"
-            case _, _:
-                state_type = "step"
-
-        state = PartialTransition(
-            type=state_type,
-            next=None
-            if context.is_last_step
-            else TransitionTarget(workflow=start.workflow, step=start.step + 1),
-            metadata={"workflow_step_type": step_type.__name__},
-        )
-
-        # ---
-
-        # 2. Transition to starting if not done yet
-        if start.workflow == "main" and start.step == 0:
-            workflow.logger.info(
-                f"Transitioning to 'running' state for execution {execution_input.execution.id}"
-            )
-            await workflow.execute_activity(
-                task_steps.cozo_query_step,
-                args=(
-                    "execution.update_execution",
-                    dict(
-                        developer_id=execution_input.developer_id,
-                        task_id=execution_input.task.id,
-                        execution_id=execution_input.execution.id,
-                        data=UpdateExecutionRequest(status="running"),
-                    ),
-                ),
-                schedule_to_close_timeout=timedelta(seconds=2),
+        # 1. Transition to starting if not done yet
+        if context.is_first_step:
+            await transition(
+                context,
+                type="init" if context.cursor.workflow == "main" else "init_branch",
+                output=context.current_input,
+                next=context.cursor,
             )
 
         # ---
 
-        # 3. Execute the current step's activity if applicable
+        # 2. Execute the current step's activity if applicable
         workflow.logger.info(
             f"Executing step {context.cursor.step} of type {step_type.__name__}"
         )
 
-        if activity := STEP_TO_ACTIVITY.get(step_type):
-            execute_activity = workflow.execute_activity
-        elif activity := STEP_TO_LOCAL_ACTIVITY.get(step_type):
-            execute_activity = workflow.execute_local_activity
-        else:
-            execute_activity = None
+        activity = STEP_TO_ACTIVITY.get(step_type)
 
         outcome = None
 
-        if execute_activity:
+        if activity:
             try:
-                outcome = await execute_activity(
+                outcome = await workflow.execute_activity(
                     activity,
                     context,
                     #
@@ -197,21 +183,19 @@ class TaskExecutionWorkflow:
 
             except Exception as e:
                 workflow.logger.error(f"Error in step {context.cursor.step}: {str(e)}")
-                await transition(
-                    state, context, type="error", output=dict(error=str(e))
-                )
+                await transition(context, type="error", output=str(e))
                 raise ApplicationError(f"Activity {activity} threw error: {e}") from e
 
         # ---
 
-        # 4. Then, based on the outcome and step type, decide what to do next
+        # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
 
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
                 workflow.logger.error(f"Error in step {context.cursor.step}: {error}")
-                await transition(state, context, type="error", output=dict(error=error))
+                await transition(context, type="error", output=error)
                 raise ApplicationError(
                     f"Step {type(step).__name__} threw error: {error}"
                 )
@@ -219,17 +203,15 @@ class TaskExecutionWorkflow:
             case LogStep(), StepOutcome(output=output):
                 workflow.logger.info(f"Log step: {output}")
                 # Add the logged message to transition history
-                await transition(state, context, output=dict(logged=output))
+                await transition(context, output=output)
 
                 # Set the output to the current input
-                state.output = context.current_input
+                state = PartialTransition(output=context.current_input)
 
             case ReturnStep(), StepOutcome(output=output):
                 workflow.logger.info("Return step: Finishing workflow with output")
                 workflow.logger.debug(f"Return step: {output}")
-                await transition(
-                    state, context, output=output, type="finish", next=None
-                )
+                await transition(context, output=output, type="finish", next=None)
                 return output  # <--- Byeeee!
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
@@ -260,10 +242,12 @@ class TaskExecutionWorkflow:
                 ]
 
                 # Execute the chosen branch and come back here
-                state.output = await workflow.execute_child_workflow(
+                result = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
                     args=case_args,
                 )
+
+                state = PartialTransition(output=result)
 
             case SwitchStep(), StepOutcome(output=index) if index < 0:
                 workflow.logger.error("Switch step: Invalid negative index")
@@ -303,10 +287,12 @@ class TaskExecutionWorkflow:
                 ]
 
                 # Execute the chosen branch and come back here
-                state.output = await workflow.execute_child_workflow(
+                result = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
                     args=if_else_args,
                 )
+
+                state = PartialTransition(output=result)
 
             case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(output=items):
                 workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
@@ -335,16 +321,18 @@ class TaskExecutionWorkflow:
                     ]
 
                     # Execute the chosen branch and come back here
-                    state.output = await workflow.execute_child_workflow(
+                    result = await workflow.execute_child_workflow(
                         TaskExecutionWorkflow.run,
                         args=foreach_args,
                     )
+
+                state = PartialTransition(output=result)
 
             case MapReduceStep(
                 map=map_defn, reduce=reduce, initial=initial
             ), StepOutcome(output=items):
                 workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
-                initial = initial or []
+                result = initial or []
                 reduce = reduce or "results + [_]"
 
                 for i, item in enumerate(items):
@@ -379,16 +367,17 @@ class TaskExecutionWorkflow:
                         args=map_reduce_args,
                     )
 
-                    initial = await execute_activity(
+                    # Reduce the result with the initial value
+                    result = await workflow.execute_activity(
                         task_steps.base_evaluate,
                         args=[
                             reduce,
-                            {"results": initial, "_": output},
+                            {"results": result, "_": output},
                         ],
                         schedule_to_close_timeout=timedelta(seconds=2),
                     )
 
-                state.output = initial
+                state = PartialTransition(output=result)
 
             case SleepStep(
                 sleep=SleepFor(
@@ -406,21 +395,23 @@ class TaskExecutionWorkflow:
                 )
                 assert total_seconds > 0, "Sleep duration must be greater than 0"
 
-                state.output = await asyncio.sleep(
+                result = await asyncio.sleep(
                     total_seconds, result=context.current_input
                 )
+
+                state = PartialTransition(output=result)
 
             case EvaluateStep(), StepOutcome(output=output):
                 workflow.logger.debug(
                     f"Evaluate step: Completed evaluation with output: {output}"
                 )
-                state.output = output
+                state = PartialTransition(output=output)
 
             case ErrorWorkflowStep(error=error), _:
                 workflow.logger.error(f"Error step: {error}")
-                state.output = dict(error=error)
-                state.type = "error"
-                await transition(state, context)
+
+                state = PartialTransition(type="error", output=error)
+                await transition(context, state)
 
                 raise ApplicationError(f"Error raised by ErrorWorkflowStep: {error}")
 
@@ -431,31 +422,33 @@ class TaskExecutionWorkflow:
                     f"Yield step: Transitioning to {yield_transition_type}"
                 )
                 await transition(
-                    state,
                     context,
                     output=output,
                     type=yield_transition_type,
                     next=yield_next_target,
                 )
 
-                state.output = await workflow.execute_child_workflow(
+                result = await workflow.execute_child_workflow(
                     TaskExecutionWorkflow.run,
                     args=[execution_input, yield_next_target, [output]],
                 )
 
+                state = PartialTransition(output=result)
+
             case WaitForInputStep(), StepOutcome(output=output):
                 workflow.logger.info("Wait for input step: Waiting for external input")
-                await transition(state, context, output=output, type="wait", next=None)
+                await transition(context, output=output, type="wait", next=None)
 
-                state.type = "resume"
-                state.output = await execute_activity(
+                result = await workflow.execute_activity(
                     task_steps.raise_complete_async,
                     schedule_to_close_timeout=timedelta(days=31),
                 )
 
+                state = PartialTransition(type="resume", output=result)
+
             case PromptStep(), StepOutcome(output=response):
                 workflow.logger.debug("Prompt step: Received response")
-                state.output = response
+                state = PartialTransition(output=response)
 
             case _:
                 workflow.logger.error(
@@ -463,25 +456,29 @@ class TaskExecutionWorkflow:
                 )
                 raise ApplicationError("Not implemented")
 
-        # 5. Create transition for completed step
+        # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
-        await transition(state, context)
+
+        # The returned value is the transition finally created
+        final_state = await transition(context, state)
 
         # ---
 
-        # 6. Closing
+        # 5. Closing
         # End if the last step
-        if state.type in ("finish", "finish_branch", "cancelled"):
-            workflow.logger.info(f"Workflow finished with state: {state.type}")
-            return state.output
+        if final_state.type in ("finish", "finish_branch", "cancelled"):
+            workflow.logger.info(f"Workflow finished with state: {final_state.type}")
+            return final_state.output
 
         else:
             workflow.logger.info(
-                f"Continuing to next step: {state.next and state.next.step}"
+                f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
             )
+
             # Otherwise, recurse to the next step
             # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
             #       Otherwise, we should just call the next step as a child workflow
-            return workflow.continue_as_new(
-                args=[execution_input, state.next, previous_inputs + [state.output]]
+            return await workflow.execute_child_workflow(
+                TaskExecutionWorkflow.run,
+                args=[execution_input, final_state.next, previous_inputs + [final_state.output]],
             )

@@ -275,6 +275,56 @@ def test_execution(
     )
 
 
+
+@fixture(scope="test")
+def test_execution_started(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    task=test_task,
+):
+    workflow_handle = WorkflowHandle(
+        client=None,
+        id="blah",
+    )
+
+    execution = create_execution(
+        developer_id=developer_id,
+        task_id=task.id,
+        data=CreateExecutionRequest(input={"test": "test"}),
+        client=client,
+    )
+    create_temporal_lookup(
+        developer_id=developer_id,
+        task_id=task.id,
+        workflow_handle=workflow_handle,
+        client=client,
+    )
+
+    # Start the execution
+    create_execution_transition(
+        developer_id=developer_id,
+        task_id=task.id,
+        execution_id=execution.id,
+        data=CreateTransitionRequest(
+            type="init",
+            output={},
+            current={"workflow": "main", "step": 0},
+            next={"workflow": "main", "step": 0},
+        ),
+        update_execution_status=True,
+        client=client,
+    )
+
+    yield execution
+
+    client.run(
+        f"""
+    ?[execution_id, task_id] <- [[to_uuid("{str(execution.id)}"), to_uuid("{str(task.id)}")]]
+    :delete executions {{ execution_id, task_id }}
+    """
+    )
+
+
 @fixture(scope="global")
 def test_transition(
     client=cozo_client,
