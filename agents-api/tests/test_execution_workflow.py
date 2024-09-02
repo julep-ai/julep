@@ -287,7 +287,6 @@ async def _(
         assert result["value"] == data.input["test"]
 
 
-
 @test("workflow: return step nested")
 async def _(
     client=cozo_client,
@@ -358,7 +357,7 @@ async def _(
                 "other_workflow": [
                     # Testing that we can access the input
                     {"evaluate": {"hello": '_["test"]'}},
-                    {"log": '{{_.hello}}'},
+                    {"log": "{{_.hello}}"},
                 ],
                 "main": [
                     # Testing that we can access the input

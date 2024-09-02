@@ -15,7 +15,13 @@ from agents_api.models.execution.create_temporal_lookup import create_temporal_l
 from agents_api.models.execution.get_execution import get_execution
 from agents_api.models.execution.list_executions import list_executions
 
-from .fixtures import cozo_client, test_developer_id, test_execution, test_execution_started, test_task
+from .fixtures import (
+    cozo_client,
+    test_developer_id,
+    test_execution,
+    test_execution_started,
+    test_task,
+)
 
 MODEL = "gpt-4o-mini"
 

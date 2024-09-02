@@ -38,7 +38,7 @@ def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:
 
     decoded_type = type(decoded)
 
-    # FIXME: Enable this check when temporal's codec stuff is fixed
+    # TODO: Enable this check when temporal's codec stuff is fixed
     #
     # # Otherwise, check if the decoded value is bearable to the type hint
     # if not is_bearable(
@@ -52,7 +52,7 @@ def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:
     #         f"WARNING: Decoded value {decoded_type} is not bearable to {type_hint}"
     #     )
 
-    # FIXME: Enable this check when temporal's codec stuff is fixed
+    # TODO: Enable this check when temporal's codec stuff is fixed
     #
     # If the decoded value is a BaseModel and the type hint is a subclass of BaseModel
     # and the decoded value's class is a subclass of the type hint, then promote the decoded value
@@ -62,7 +62,7 @@ def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:
         and hasattr(type_hint, "model_construct")
         and hasattr(decoded, "model_dump")
         #
-        # FIXME: Enable this check when temporal's codec stuff is fixed
+        # TODO: Enable this check when temporal's codec stuff is fixed
         #
         # and is_subhint(type_hint, decoded_type)
     ):
@@ -76,6 +76,10 @@ def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:
     return decoded
 
 
+# TODO: Create a codec server for temporal to use for debugging
+#       This will allow us to see the data in the workflow history
+#       See: https://github.com/temporalio/samples-python/blob/main/encryption/codec_server.py
+#            https://docs.temporal.io/production-deployment/data-encryption#web-ui
 class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
     encoding = "text/pickle+lz4"
     b_encoding = encoding.encode()

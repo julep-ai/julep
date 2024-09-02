@@ -26,6 +26,8 @@ from ...autogen.openapi_model import (
     WorkflowStep,
 )
 
+# TODO: Maybe we should use a library for this
+
 # State Machine
 #
 # init -> wait | error | step | cancelled | init_branch | finish
@@ -139,12 +141,12 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
-    def outputs(self) -> Annotated[list[dict[str, Any]], Field(exclude=True)]:
+    def outputs(self) -> list[dict[str, Any]]:  # included in dump
         return self.inputs[1:]
 
     @computed_field
     @property
-    def current_input(self) -> Annotated[dict[str, Any], Field(exclude=True)]:
+    def current_input(self) -> dict[str, Any]:  # included in dump
         return self.inputs[-1]
 
     @computed_field
@@ -176,7 +178,15 @@ class StepContext(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
-        dump["_"] = self.current_input
+
+        # Merge execution inputs into the dump dict
+        execution_input: dict = dump.pop("execution_input")
+        current_input: Any = dump.pop("current_input")
+        dump = {
+            **dump,
+            **execution_input,
+            "_": current_input,
+        }
 
         return dump
 

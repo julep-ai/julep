@@ -10,7 +10,6 @@ from .fixtures import (
     test_agent,
     test_execution,
     test_task,
-    test_transition,
 )
 from .utils import patch_testing_temporal
 
@@ -166,6 +165,7 @@ def _(make_request=make_request, agent=test_agent):
 
     assert isinstance(tasks, list)
     assert len(tasks) > 0
+
 
 # FIXME: This test is failing
 

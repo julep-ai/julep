@@ -1,10 +1,7 @@
-from uuid import uuid4
-
 from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
-from ...clients.cozo import get_cozo_client
 from ...common.protocol.tasks import StepContext
 from ...env import testing
 from ...models.execution.create_execution_transition import create_execution_transition
@@ -23,21 +20,13 @@ async def transition_step(
         transition_info.task_token = task_token
 
     # Create transition
-    try:
-        transition = create_execution_transition(
-            developer_id=context.execution_input.developer_id,
-            execution_id=context.execution_input.execution.id,
-            task_id=context.execution_input.task.id,
-            data=transition_info,
-            update_execution_status=True,
-        )
-
-    except Exception as exc:
-        client = get_cozo_client()
-        print(client)
-        # breakpoint()
-
-        raise exc
+    transition = create_execution_transition(
+        developer_id=context.execution_input.developer_id,
+        execution_id=context.execution_input.execution.id,
+        task_id=context.execution_input.task.id,
+        data=transition_info,
+        update_execution_status=True,
+    )
 
     return transition
 

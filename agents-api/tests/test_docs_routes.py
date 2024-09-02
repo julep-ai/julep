@@ -145,7 +145,7 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
         url=f"/agents/{agent.id}/search",
         json=search_params,
     )
-    
+
     assert response.status_code == 200
     response = response.json()
     docs = response["docs"]

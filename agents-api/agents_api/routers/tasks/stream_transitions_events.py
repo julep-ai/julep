@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Annotated, Literal
+from typing import Annotated
 
 import anyio
 from anyio.streams.memory import MemoryObjectSendStream
@@ -8,9 +8,7 @@ from pydantic import UUID4
 from sse_starlette.sse import EventSourceResponse
 from starlette.requests import Request
 
-from ...autogen.openapi_model import TransitionEvent
 from ...dependencies.developer_id import get_developer_id
-from ...models.execution.get_execution import get_execution
 from .router import router
 
 
@@ -19,7 +17,7 @@ async def stream_transitions_events(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     execution_id: UUID4,
     req: Request,
-    # TODO: add support for page token
+    # FIXME: add support for page token
 ):
     # Create a channel to send events to the client
     send_chan, recv_chan = anyio.create_memory_object_stream(10)

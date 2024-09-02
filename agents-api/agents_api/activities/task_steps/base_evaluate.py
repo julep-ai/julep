@@ -22,9 +22,8 @@ async def base_evaluate(
         k: v.model_dump() if isinstance(v, BaseModel) else v for k, v in values.items()
     }
 
-    # TODO: We should make this frozen_box=True, but we need to make sure that
-    # we don't break anything
-    values = Box(values, frozen_box=False, conversion_box=False)
+    # frozen_box doesn't work coz we need some mutability in the values
+    values = Box(values, frozen_box=False, conversion_box=True)
 
     evaluator = get_evaluator(names=values)
 

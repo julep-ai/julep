@@ -275,7 +275,6 @@ def test_execution(
     )
 
 
-
 @fixture(scope="test")
 def test_execution_started(
     client=cozo_client,

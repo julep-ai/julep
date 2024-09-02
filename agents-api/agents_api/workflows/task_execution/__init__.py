@@ -27,7 +27,6 @@ with workflow.unsafe.imports_passed_through():
         # ToolCallStep,
         Transition,
         TransitionTarget,
-        UpdateExecutionRequest,
         WaitForInputStep,
         Workflow,
         WorkflowStep,
@@ -47,8 +46,8 @@ STEP_TO_ACTIVITY = {
     # ToolCallStep: tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
     SwitchStep: task_steps.switch_step,
-    # FIXME: These should be moved to local activities
-    #        once temporal has fixed error handling for local activities
+    # TODO: These should be moved to local activities
+    #       once temporal has fixed error handling for local activities
     LogStep: task_steps.log_step,
     EvaluateStep: task_steps.evaluate_step,
     ReturnStep: task_steps.return_step,
@@ -74,6 +73,7 @@ GenericStep = RootModel[WorkflowStep]
 # TODO: find a way to transition to error if workflow or activity times out.
 
 
+# FIXME: Output not being set on finish correctly
 async def transition(
     context: StepContext, state: PartialTransition | None = None, **kwargs
 ) -> Transition:
@@ -91,7 +91,6 @@ async def transition(
     transition_request = CreateTransitionRequest(
         current=context.cursor,
         **{
-            "output": None,
             "next": None
             if context.is_last_step
             else TransitionTarget(
@@ -103,20 +102,16 @@ async def transition(
         },
     )
 
-    return await workflow.execute_activity(
-        task_steps.transition_step,
-        args=[context, transition_request],
-        schedule_to_close_timeout=timedelta(seconds=2),
-    )
+    try:
+        return await workflow.execute_activity(
+            task_steps.transition_step,
+            args=[context, transition_request],
+            schedule_to_close_timeout=timedelta(seconds=2),
+        )
 
-
-# init
-# init_branch
-# run
-# finish_branch
-# finish
-
-#
+    except Exception as e:
+        workflow.logger.error(f"Error in transition: {str(e)}")
+        raise ApplicationError(f"Error in transition: {e}") from e
 
 
 @workflow.defn
@@ -201,20 +196,28 @@ class TaskExecutionWorkflow:
                     f"Step {type(step).__name__} threw error: {error}"
                 )
 
-            case LogStep(), StepOutcome(output=output):
-                workflow.logger.info(f"Log step: {output}")
-
-                # Add the logged message to transition history
-                # FIXME: Need to figure this out. Re-enable this
-                ## await transition(context, type="step", output={"log": output}, next=context.cursor)
+            case LogStep(), StepOutcome(output=log):
+                workflow.logger.info(f"Log step: {log}")
 
                 # Set the output to the current input
-                state = PartialTransition(output=context.current_input)
+                # Add the logged message to metadata
+                state = PartialTransition(
+                    output=context.current_input,
+                    metadata={
+                        "step_type": type(context.current_step).__name__,
+                        "log": log,
+                    },
+                )
 
             case ReturnStep(), StepOutcome(output=output):
                 workflow.logger.info("Return step: Finishing workflow with output")
                 workflow.logger.debug(f"Return step: {output}")
-                await transition(context, output=output, type="finish" if context.is_main else "finish_branch", next=None)
+                await transition(
+                    context,
+                    output=output,
+                    type="finish" if context.is_main else "finish_branch",
+                    next=None,
+                )
                 return output  # <--- Byeeee!
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
@@ -467,21 +470,27 @@ class TaskExecutionWorkflow:
 
         # ---
 
-        # 5. Closing
-        # End if the last step
+        # 5a. End if the last step
         if final_state.type in ("finish", "finish_branch", "cancelled"):
             workflow.logger.info(f"Workflow finished with state: {final_state.type}")
             return final_state.output
 
-        else:
-            workflow.logger.info(
-                f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
-            )
+        # ---
 
-            # Otherwise, recurse to the next step
-            # TODO: Should use a continue_as_new workflow ONLY if the next step is a conditional or loop
-            #       Otherwise, we should just call the next step as a child workflow
-            return await workflow.execute_child_workflow(
-                TaskExecutionWorkflow.run,
-                args=[execution_input, final_state.next, previous_inputs + [final_state.output]],
-            )
+        # 5b. Recurse to the next step
+        if not final_state.next:
+            raise ApplicationError("No next step")
+
+        workflow.logger.info(
+            f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
+        )
+
+        # TODO: Should use a continue_as_new workflow if history grows too large
+        return await workflow.execute_child_workflow(
+            TaskExecutionWorkflow.run,
+            args=[
+                execution_input,
+                final_state.next,
+                previous_inputs + [final_state.output],
+            ],
+        )
