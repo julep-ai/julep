@@ -44,6 +44,7 @@ services:
       # Note: Adding these for convenience so this runs when `docker compose up` is run
       - multi-tenant
       - temporal-ui
+    platform: linux/amd64 # Temp fix for Mac M-series chips
 
   text-embeddings-inference-gpu:
     <<: *text-embeddings-inference
