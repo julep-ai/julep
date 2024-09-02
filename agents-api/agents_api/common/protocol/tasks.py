@@ -26,8 +26,41 @@ from ...autogen.openapi_model import (
     WorkflowStep,
 )
 
+# State Machine
+#
+# init -> wait | error | step | cancelled | init_branch | finish
+# init_branch -> wait | error | step | cancelled | finish_branch
+# wait -> resume | error | cancelled
+# resume -> wait | error | cancelled | step | finish | finish_branch | init_branch
+# step -> wait | error | cancelled | step | finish | finish_branch | init_branch
+# finish_branch -> wait | error | cancelled | step | finish | init_branch
+# error ->
+
+## Mermaid Diagram
+# ```mermaid
+# ---
+# title: Execution state machine
+# ---
+# stateDiagram-v2
+#     [*] --> queued
+#     queued --> starting
+#     queued --> cancelled
+#     starting --> cancelled
+#     starting --> failed
+#     starting --> running
+#     running --> running
+#     running --> awaiting_input
+#     running --> cancelled
+#     running --> failed
+#     running --> succeeded
+#     awaiting_input --> running
+#     awaiting_input --> cancelled
+#     cancelled --> [*]
+#     succeeded --> [*]
+#     failed --> [*]
+
+# ```
 # TODO: figure out how to type this
-### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
 valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
     "init": ["wait", "error", "step", "cancelled", "init_branch", "finish"],
@@ -37,7 +70,7 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
     "error": [],
     "cancelled": [],
     # Intermediate states
-    "wait": ["resume", "error", "cancelled"],
+    "wait": ["resume", "cancelled"],
     "resume": [
         "wait",
         "error",
@@ -60,8 +93,13 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
 }  # type: ignore
 
 valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
-    "running": ["queued", "starting", "awaiting_input", "running"],
+    "running": ["starting", "awaiting_input", "running"],
+    "starting": ["queued"],
+    "queued": [],
+    "awaiting_input": ["starting", "running"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
+    "succeeded": ["starting", "running"],
+    "failed": ["starting", "running"],
 }  # type: ignore
 
 transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
@@ -130,6 +168,11 @@ class StepContext(BaseModel):
     @property
     def is_first_step(self) -> Annotated[bool, Field(exclude=True)]:
         return self.cursor.step == 0
+
+    @computed_field
+    @property
+    def is_main(self) -> Annotated[bool, Field(exclude=True)]:
+        return self.cursor.workflow == "main"
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)

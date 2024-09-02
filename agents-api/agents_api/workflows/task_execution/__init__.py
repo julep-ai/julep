@@ -150,9 +150,10 @@ class TaskExecutionWorkflow:
         if context.is_first_step:
             await transition(
                 context,
-                type="init" if context.cursor.workflow == "main" else "init_branch",
+                type="init" if context.is_main else "init_branch",
                 output=context.current_input,
                 next=context.cursor,
+                metadata={},
             )
 
         # ---
@@ -202,8 +203,10 @@ class TaskExecutionWorkflow:
 
             case LogStep(), StepOutcome(output=output):
                 workflow.logger.info(f"Log step: {output}")
+
                 # Add the logged message to transition history
-                await transition(context, output=output)
+                # FIXME: Need to figure this out. Re-enable this
+                ## await transition(context, type="step", output={"log": output}, next=context.cursor)
 
                 # Set the output to the current input
                 state = PartialTransition(output=context.current_input)
@@ -211,7 +214,7 @@ class TaskExecutionWorkflow:
             case ReturnStep(), StepOutcome(output=output):
                 workflow.logger.info("Return step: Finishing workflow with output")
                 workflow.logger.debug(f"Return step: {output}")
-                await transition(context, output=output, type="finish", next=None)
+                await transition(context, output=output, type="finish" if context.is_main else "finish_branch", next=None)
                 return output  # <--- Byeeee!
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:

@@ -132,8 +132,9 @@ def _(make_request=make_request, agent=test_agent):
     assert isinstance(docs, list)
 
 
+# TODO: Fix this test. It fails sometimes and sometimes not.
 @test("route: search agent docs")
-def _(make_request=make_request, agent=test_agent, doc=test_doc):
+async def _(make_request=make_request, agent=test_agent, doc=test_doc):
     search_params = dict(
         text=doc.content[0],
         limit=1,
@@ -144,7 +145,7 @@ def _(make_request=make_request, agent=test_agent, doc=test_doc):
         url=f"/agents/{agent.id}/search",
         json=search_params,
     )
-
+    
     assert response.status_code == 200
     response = response.json()
     docs = response["docs"]

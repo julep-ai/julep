@@ -23,13 +23,21 @@ async def transition_step(
         transition_info.task_token = task_token
 
     # Create transition
-    transition = create_execution_transition(
-        developer_id=context.execution_input.developer_id,
-        execution_id=context.execution_input.execution.id,
-        task_id=context.execution_input.task.id,
-        data=transition_info,
-        update_execution_status=True,
-    )
+    try:
+        transition = create_execution_transition(
+            developer_id=context.execution_input.developer_id,
+            execution_id=context.execution_input.execution.id,
+            task_id=context.execution_input.task.id,
+            data=transition_info,
+            update_execution_status=True,
+        )
+
+    except Exception as exc:
+        client = get_cozo_client()
+        print(client)
+        # breakpoint()
+
+        raise exc
 
     return transition
 
