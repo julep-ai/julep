@@ -15,13 +15,16 @@ namespace Executions;
 
 interface Endpoints
     extends GetEndpoint<Execution, "Get an Execution by id">,
-        UpdateEndpoint<UpdateExecutionRequest, "Update an existing Execution"> {}
-    
+        UpdateEndpoint<
+            UpdateExecutionRequest,
+            "Update an existing Execution"
+        > {}
+
 interface PublicEndpoints {
     @post
     @useAuth([])
     @doc("Resume an execution with a task token")
-    op resumeWithTaskToken(
+    resumeWithTaskToken(
         @header contentType: json,
 
         // Uses a query parameter `task_token` to get the task token
@@ -55,4 +58,10 @@ interface TransitionEndpoints
                 transitions: Transition[],
             },
             "List the Transitions of an Execution by id"
+        > {}
+
+interface TransitionStreamEndpoints
+    extends ChildStreamEndpoint<
+            TransitionEvent,
+            "Stream events emitted by the given execution"
         > {}

@@ -32,7 +32,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
                 "name": "test task",
                 "description": "test task about",
                 "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [],
+                "main": [{"evaluate": {"hi": "_"}}],
             }
         ),
         client=client,
@@ -52,7 +52,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
                 "name": "test task",
                 "description": "test task about",
                 "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [],
+                "main": [{"evaluate": {"hi": "_"}}],
             }
         ),
         client=client,
@@ -97,7 +97,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
                 "name": "test task",
                 "description": "test task about",
                 "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [],
+                "main": [{"evaluate": {"hi": "_"}}],
             }
         ),
         client=client,
@@ -136,7 +136,7 @@ def _(
                 "name": "updated task",
                 "description": "updated task about",
                 "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [],
+                "main": [{"evaluate": {"hi": "_"}}],
             }
         ),
         client=client,

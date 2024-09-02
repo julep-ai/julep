@@ -13,11 +13,11 @@ export type Chat_BaseChatResponse = {
   /**
    * Background job IDs that may have been spawned from this interaction.
    */
-  jobs: Array<Common_uuid>;
+  readonly jobs: Array<Common_uuid>;
   /**
    * Documents referenced for this request (for citation purposes).
    */
-  docs: Array<Docs_DocReference>;
+  readonly docs: Array<Docs_DocReference>;
   /**
    * When this resource was created as UTC date-time
    */

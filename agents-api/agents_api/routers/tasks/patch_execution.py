@@ -15,7 +15,6 @@ from agents_api.models.execution.update_execution import (
 from .router import router
 
 
-# TODO: write PATCH query
 @router.patch("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
 async def patch_execution(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],

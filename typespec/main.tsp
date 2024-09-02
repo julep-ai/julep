@@ -110,6 +110,9 @@ namespace Api {
     @route("/executions/{id}/transitions")
     interface ExecutionTransitionsRoute extends Executions.TransitionEndpoints {}
 
+    @route("/executions/{id}/transitions.stream")
+    interface ExecutionTransitionsStreamRoute extends Executions.TransitionStreamEndpoints {}
+
     @route("/jobs")
     interface JobRoute extends Jobs.Endpoints {}
 }

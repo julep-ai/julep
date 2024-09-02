@@ -29,6 +29,7 @@ export const $Chat_ChatSettings = {
           contains: {
             type: "string",
           },
+          isRequired: true,
         },
         seed: {
           type: "number",
@@ -50,11 +51,14 @@ export const $Chat_ChatSettings = {
           },
         },
         response_format: {
-          type: "all-of",
+          type: "any-of",
           description: `Response format (set to \`json_object\` to restrict output to JSON)`,
           contains: [
             {
-              type: "Chat_CompletionResponseFormat",
+              type: "Chat_SimpleCompletionResponseFormat",
+            },
+            {
+              type: "Chat_SchemaCompletionResponseFormat",
             },
           ],
         },

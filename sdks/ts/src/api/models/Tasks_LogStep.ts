@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Common_PyExpression } from "./Common_PyExpression";
+import type { Common_JinjaTemplate } from "./Common_JinjaTemplate";
 export type Tasks_LogStep = {
   /**
    * The kind of step
@@ -13,5 +13,5 @@ export type Tasks_LogStep = {
   /**
    * The value to log
    */
-  log: Common_PyExpression;
+  log: Common_JinjaTemplate;
 };

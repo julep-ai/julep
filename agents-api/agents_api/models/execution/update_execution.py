@@ -37,7 +37,7 @@ T = TypeVar("T")
 @wrap_in_class(
     ResourceUpdatedResponse,
     one=True,
-    transform=lambda d: {"id": d["execution_id"], "jobs": [], **d},
+    transform=lambda d: {"id": d["execution_id"], **d},
     _kind="inserted",
 )
 @cozo_query
@@ -48,6 +48,8 @@ def update_execution(
     task_id: UUID,
     execution_id: UUID,
     data: UpdateExecutionRequest,
+    output: dict | None = None,
+    error: str | None = None,
 ) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
     task_id = str(task_id)
@@ -64,17 +66,22 @@ def update_execution(
             **execution_data,
             "task_id": task_id,
             "execution_id": execution_id,
+            "output": output,
+            "error": error,
         }
     )
 
     validate_status_query = """
-    ?[status, execution_id] :=
+    valid_status[count(status)] :=
         *executions {
             status,
-            execution_id,
-        }, status in $valid_previous_statuses
+            execution_id: to_uuid($execution_id),
+        }, 
+        status in $valid_previous_statuses
 
-    :assert some
+    ?[num] :=
+        valid_status[num],
+        assert(num > 0, 'Invalid status')
     """
 
     update_query = f"""
@@ -95,9 +102,9 @@ def update_execution(
         verify_developer_id_query(developer_id),
         verify_developer_owns_resource_query(
             developer_id,
-            "tasks",
-            task_id=task_id,
-            parents=[("agents", "agent_id")],
+            "executions",
+            execution_id=execution_id,
+            parents=[("agents", "agent_id"), ("tasks", "task_id")],
         ),
         validate_status_query if valid_previous_statuses is not None else "",
         update_query,
@@ -105,5 +112,9 @@ def update_execution(
 
     return (
         queries,
-        {"values": values, "valid_previous_statuses": valid_previous_statuses},
+        {
+            "values": values,
+            "valid_previous_statuses": valid_previous_statuses,
+            "execution_id": str(execution_id),
+        },
     )

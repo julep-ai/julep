@@ -135,7 +135,7 @@ model LogStep extends BaseWorkflowStep<"log"> {
 
 model LogStepDef {
     /** The value to log */
-    log: TypedExpression<string>;
+    log: JinjaTemplate;
 }
 
 ////////////////////////
@@ -277,7 +277,7 @@ model IfElseWorkflowStepDef {
     then: NonConditionalWorkflowStep;
 
     /** The steps to run if the condition is false */
-    `else`: NonConditionalWorkflowStep;
+    `else`: NonConditionalWorkflowStep | null = null;
 }
 
 model CaseThen {

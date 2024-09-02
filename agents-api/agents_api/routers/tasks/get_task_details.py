@@ -4,12 +4,11 @@ from fastapi import Depends, HTTPException, status
 from pycozo.client import QueryException
 from pydantic import UUID4
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     Task,
 )
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.task.get_task import get_task as get_task_query
-
+from ...dependencies.developer_id import get_developer_id
+from ...models.task.get_task import get_task as get_task_query
 from .router import router
 
 

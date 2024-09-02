@@ -3,6 +3,7 @@ name: julep
 include:
   - ./memory-store/docker-compose.yml
   - ./gateway/docker-compose.yml
+  - ./embedding-service/docker-compose.yml
   - ./agents-api/docker-compose.yml
   - ./scheduler/docker-compose.yml
   - ./llm-proxy/docker-compose.yml

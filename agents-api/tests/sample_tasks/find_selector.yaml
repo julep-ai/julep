@@ -61,7 +61,8 @@ main:
           content:
             - type: image_url
               image_url:
-                url: "{{inputs[0].screenshot_base64}}"
+                url: "data:image/png;base64,{{inputs[0].screenshot_base64}}"
+                detail: high
 
     over: _["parameters"]
     reduce: >-

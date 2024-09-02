@@ -58,7 +58,7 @@ class ResourceCreatedResponse(BaseModel):
     """
     When this resource was created as UTC date-time
     """
-    jobs: list[UUID]
+    jobs: Annotated[list[UUID], Field([], json_schema_extra={"readOnly": True})]
     """
     IDs (if any) of jobs created as part of this request
     """
@@ -76,7 +76,7 @@ class ResourceDeletedResponse(BaseModel):
     """
     When this resource was deleted as UTC date-time
     """
-    jobs: list[UUID]
+    jobs: Annotated[list[UUID], Field([], json_schema_extra={"readOnly": True})]
     """
     IDs (if any) of jobs created as part of this request
     """
@@ -94,7 +94,7 @@ class ResourceUpdatedResponse(BaseModel):
     """
     When this resource was updated as UTC date-time
     """
-    jobs: list[UUID]
+    jobs: Annotated[list[UUID], Field([], json_schema_extra={"readOnly": True})]
     """
     IDs (if any) of jobs created as part of this request
     """

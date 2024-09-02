@@ -50,6 +50,12 @@ model Execution {
     /** The input to the execution */
     input: Record<unknown>;
 
+    /** The output of the execution if it succeeded */
+    output?: unknown;
+
+    /** The error of the execution if it failed */
+    error?: string;
+
     ...HasTimestamps;
     ...HasMetadata;
     ...HasId;
@@ -100,7 +106,10 @@ model TaskTokenResumeExecutionRequest {
 */
 
 alias TransitionType = (
+    | "init"
+    | "init_branch"
     | "finish"
+    | "finish_branch"
     | "wait"
     | "resume"
     | "error"
@@ -113,15 +122,19 @@ model TransitionTarget {
     step: uint16;
 }
 
-model Transition {
+model TransitionEvent {
     @visibility("read")
     type: TransitionType;
 
     @visibility("read")
-    execution_id: Execution.id;
-
-    @visibility("read")
     output: unknown;
+
+    ...HasTimestamps;
+}
+
+model Transition extends TransitionEvent {
+    @visibility("read")
+    execution_id: Execution.id;
 
     @visibility("read")
     current: TransitionTarget;
@@ -131,5 +144,4 @@ model Transition {
 
     ...HasId;
     ...HasMetadata;
-    ...HasTimestamps;
 }

@@ -82,12 +82,14 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
 
     def to_payload(self, value: Any) -> Optional[Payload]:
         try:
+            data = serialize(value)
             return Payload(
                 metadata={
                     "encoding": self.b_encoding,
                 },
-                data=serialize(value),
+                data=data,
             )
+
         except Exception as e:
             logging.warning(f"WARNING: Could not encode {value}: {e}")
             return None

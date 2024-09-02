@@ -2,16 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Common_ResourceCreatedResponse = {
+export const $Executions_TransitionEvent = {
   properties: {
-    id: {
-      type: "all-of",
-      description: `ID of created resource`,
-      contains: [
-        {
-          type: "Common_uuid",
-        },
-      ],
+    type: {
+      type: "Enum",
+      isReadOnly: true,
+      isRequired: true,
+    },
+    output: {
+      properties: {},
+      isReadOnly: true,
       isRequired: true,
     },
     created_at: {
@@ -21,13 +21,12 @@ export const $Common_ResourceCreatedResponse = {
       isRequired: true,
       format: "date-time",
     },
-    jobs: {
-      type: "array",
-      contains: {
-        type: "Common_uuid",
-      },
+    updated_at: {
+      type: "string",
+      description: `When this resource was updated as UTC date-time`,
       isReadOnly: true,
       isRequired: true,
+      format: "date-time",
     },
   },
 } as const;

@@ -9,6 +9,7 @@ from ...autogen.openapi_model import (
     CreateTaskRequest,
     CreateTransitionRequest,
     Execution,
+    ExecutionStatus,
     PartialTaskSpecDef,
     PatchTaskRequest,
     Session,
@@ -26,36 +27,57 @@ from ...autogen.openapi_model import (
 )
 
 ### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
-valid_transitions = {
+valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
-    "init": ["wait", "error", "step", "cancelled", "finish"],
+    "init": ["wait", "error", "step", "cancelled", "init_branch"],
+    "init_branch": ["wait", "error", "step", "cancelled"],
     # End states
     "finish": [],
     "error": [],
     "cancelled": [],
     # Intermediate states
     "wait": ["resume", "error", "cancelled"],
-    "resume": ["wait", "error", "step", "finish", "cancelled"],
-    "step": ["wait", "error", "step", "finish", "cancelled"],
-}
+    "resume": [
+        "wait",
+        "error",
+        "cancelled",
+        "step",
+        "finish",
+        "finish_branch",
+        "init_branch",
+    ],
+    "step": [
+        "wait",
+        "error",
+        "cancelled",
+        "step",
+        "finish",
+        "finish_branch",
+        "init_branch",
+    ],
+    "finish_branch": ["wait", "error", "cancelled", "step", "finish", "init_branch"],
+}  # type: ignore
 
-valid_previous_statuses = {
+valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
     "running": ["queued", "starting", "awaiting_input"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
-}
+}  # type: ignore
 
-transition_to_execution_status = {
-    "init": "queued",
+transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
+    None: "queued",
+    "init": "starting",
+    "init_branch": "running",
     "wait": "awaiting_input",
     "resume": "running",
     "step": "running",
     "finish": "succeeded",
+    "finish_branch": "running",
     "error": "failed",
     "cancelled": "cancelled",
-}
+}  # type: ignore
 
 
-PendingTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+PartialTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
 
 
 class ExecutionInput(BaseModel):
@@ -103,6 +125,11 @@ class StepContext(BaseModel):
     def is_last_step(self) -> Annotated[bool, Field(exclude=True)]:
         return (self.cursor.step + 1) == len(self.current_workflow.steps)
 
+    @computed_field
+    @property
+    def is_first_step(self) -> Annotated[bool, Field(exclude=True)]:
+        return self.cursor.step == 0
+
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
         dump["_"] = self.current_input
@@ -120,7 +147,9 @@ def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
 ) -> TaskSpecDef | PartialTaskSpecDef:
     task_data = task.model_dump(**model_opts)
-    workflows = [Workflow(name="main", steps=task_data.pop("main"))]
+    main = task_data.pop("main")
+
+    workflows = [Workflow(name="main", steps=main)]
 
     for k in list(task_data.keys()):
         if k in TaskSpec.model_fields.keys():
@@ -133,6 +162,7 @@ def task_to_spec(
     tools = [TaskToolDef(spec=tool.pop(tool["type"]), **tool) for tool in tools]
 
     cls = PartialTaskSpecDef if isinstance(task, PatchTaskRequest) else TaskSpecDef
+
     return cls(
         workflows=workflows,
         tools=tools,

@@ -25,19 +25,30 @@ from .update_execution import update_execution
 
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
-    if data.type in ("finish", "error", "cancelled"):
-        assert data.next is None, "Next target must be None for finish/error/cancelled"
-
-    if data.type in ("wait", "init"):
-        assert data.next is None, "Next target must be None for wait/init"
-
-    if data.type in ("resume", "step"):
-        assert data.next is not None, "Next target must be provided for resume/step"
-
-        if data.next.workflow == data.current.workflow:
+    match data.type:
+        case "finish" | "finish_branch" | "error" | "cancelled":
             assert (
-                data.next.step > data.current.step
-            ), "Next step must be greater than current"
+                data.next is None
+            ), "Next target must be None for finish/finish_branch/error/cancelled"
+
+        case "init_branch" | "init":
+            assert (
+                data.next and data.current.step == data.next.step == 0
+            ), "Next target must be same as current for init_branch/init and step 0"
+
+        case "wait":
+            assert data.next is None, "Next target must be None for wait"
+
+        case "resume" | "step":
+            assert data.next is not None, "Next target must be provided for resume/step"
+
+            if data.next.workflow == data.current.workflow:
+                assert (
+                    data.next.step > data.current.step
+                ), "Next step must be greater than current"
+
+        case _:
+            raise ValueError(f"Invalid transition type: {data.type}")
 
 
 @rewrap_exceptions(
@@ -157,6 +168,10 @@ def create_execution_transition(
                 data=UpdateExecutionRequest(
                     status=transition_to_execution_status[data.type]
                 ),
+                output=data.output if data.type == "finish" else None,
+                error=str(data.output)
+                if data.type == "error" and data.output
+                else None,
             )
         )
 

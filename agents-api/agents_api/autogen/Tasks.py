@@ -84,25 +84,28 @@ class CreateTaskRequest(BaseModel):
     )
     name: str
     description: str = ""
-    main: list[
-        EvaluateStep
-        | ToolCallStep
-        | PromptStep
-        | GetStep
-        | SetStep
-        | LogStep
-        | EmbedStep
-        | SearchStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | YieldStep
-        | WaitForInputStep
-        | IfElseWorkflowStep
-        | SwitchStep
-        | ForeachStep
-        | ParallelStep
-        | Main
+    main: Annotated[
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+            | ReturnStep
+            | SleepStep
+            | ErrorWorkflowStep
+            | YieldStep
+            | WaitForInputStep
+            | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | Main
+        ],
+        Field(min_length=1),
     ]
     """
     The entrypoint of the task.
@@ -269,8 +272,9 @@ class IfElseWorkflowStep(BaseModel):
         | SleepStep
         | ErrorWorkflowStep
         | YieldStep
-        | WaitForInputStep,
-        Field(alias="else"),
+        | WaitForInputStep
+        | None,
+        Field(None, alias="else"),
     ]
     """
     The steps to run if the condition is false
@@ -416,7 +420,7 @@ class PatchTaskRequest(BaseModel):
         populate_by_name=True,
     )
     description: str = ""
-    main: (
+    main: Annotated[
         list[
             EvaluateStep
             | ToolCallStep
@@ -437,8 +441,9 @@ class PatchTaskRequest(BaseModel):
             | ParallelStep
             | MainModel
         ]
-        | None
-    ) = None
+        | None,
+        Field(None, min_length=1),
+    ]
     """
     The entrypoint of the task.
     """
@@ -631,25 +636,28 @@ class Task(BaseModel):
     )
     name: str
     description: str = ""
-    main: list[
-        EvaluateStep
-        | ToolCallStep
-        | PromptStep
-        | GetStep
-        | SetStep
-        | LogStep
-        | EmbedStep
-        | SearchStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | YieldStep
-        | WaitForInputStep
-        | IfElseWorkflowStep
-        | SwitchStep
-        | ForeachStep
-        | ParallelStep
-        | Main
+    main: Annotated[
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+            | ReturnStep
+            | SleepStep
+            | ErrorWorkflowStep
+            | YieldStep
+            | WaitForInputStep
+            | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | Main
+        ],
+        Field(min_length=1),
     ]
     """
     The entrypoint of the task.
@@ -719,25 +727,28 @@ class UpdateTaskRequest(BaseModel):
         populate_by_name=True,
     )
     description: str = ""
-    main: list[
-        EvaluateStep
-        | ToolCallStep
-        | PromptStep
-        | GetStep
-        | SetStep
-        | LogStep
-        | EmbedStep
-        | SearchStep
-        | ReturnStep
-        | SleepStep
-        | ErrorWorkflowStep
-        | YieldStep
-        | WaitForInputStep
-        | IfElseWorkflowStep
-        | SwitchStep
-        | ForeachStep
-        | ParallelStep
-        | Main
+    main: Annotated[
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | PromptStep
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+            | ReturnStep
+            | SleepStep
+            | ErrorWorkflowStep
+            | YieldStep
+            | WaitForInputStep
+            | IfElseWorkflowStep
+            | SwitchStep
+            | ForeachStep
+            | ParallelStep
+            | Main
+        ],
+        Field(min_length=1),
     ]
     """
     The entrypoint of the task.

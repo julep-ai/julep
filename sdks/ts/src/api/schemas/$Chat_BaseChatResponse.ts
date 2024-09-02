@@ -18,6 +18,7 @@ export const $Chat_BaseChatResponse = {
       contains: {
         type: "Common_uuid",
       },
+      isReadOnly: true,
       isRequired: true,
     },
     docs: {
@@ -25,6 +26,7 @@ export const $Chat_BaseChatResponse = {
       contains: {
         type: "Docs_DocReference",
       },
+      isReadOnly: true,
       isRequired: true,
     },
     created_at: {

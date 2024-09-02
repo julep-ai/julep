@@ -48,17 +48,20 @@ export type Tasks_IfElseWorkflowStep = {
    * The steps to run if the condition is false
    */
   else:
-    | Tasks_EvaluateStep
-    | Tasks_ToolCallStep
-    | Tasks_PromptStep
-    | Tasks_GetStep
-    | Tasks_SetStep
-    | Tasks_LogStep
-    | Tasks_EmbedStep
-    | Tasks_SearchStep
-    | Tasks_ReturnStep
-    | Tasks_SleepStep
-    | Tasks_ErrorWorkflowStep
-    | Tasks_YieldStep
-    | Tasks_WaitForInputStep;
+    | (
+        | Tasks_EvaluateStep
+        | Tasks_ToolCallStep
+        | Tasks_PromptStep
+        | Tasks_GetStep
+        | Tasks_SetStep
+        | Tasks_LogStep
+        | Tasks_EmbedStep
+        | Tasks_SearchStep
+        | Tasks_ReturnStep
+        | Tasks_SleepStep
+        | Tasks_ErrorWorkflowStep
+        | Tasks_YieldStep
+        | Tasks_WaitForInputStep
+      )
+    | null;
 };

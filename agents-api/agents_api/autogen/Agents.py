@@ -44,7 +44,7 @@ class Agent(BaseModel):
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: str | list[str] = ""
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -82,7 +82,7 @@ class CreateAgentRequest(BaseModel):
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: str | list[str] = ""
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -117,7 +117,7 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: str | list[str] = ""
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -155,7 +155,7 @@ class PatchAgentRequest(BaseModel):
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: str | list[str] = ""
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """
@@ -193,7 +193,7 @@ class UpdateAgentRequest(BaseModel):
     """
     Model name to use (gpt-4-turbo, gemini-nano etc)
     """
-    instructions: str | list[str] = ""
+    instructions: str | list[str] = []
     """
     Instructions for the agent
     """

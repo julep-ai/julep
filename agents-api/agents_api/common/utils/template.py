@@ -1,4 +1,5 @@
 import json
+import re
 from typing import List, TypeVar
 
 import arrow
@@ -32,6 +33,17 @@ jinja_env.globals["match_regex"] = lambda pattern, string: bool(
 jinja_env.globals["search_regex"] = lambda pattern, string: re2.search(pattern, string)
 jinja_env.globals["dump_json"] = json.dumps
 jinja_env.globals["arrow"] = arrow
+jinja_env.globals["true"] = True
+jinja_env.globals["false"] = False
+jinja_env.globals["null"] = None
+
+
+simple_jinja_regex = re.compile(r"{{|{%.+}}|%}", re.DOTALL)
+
+
+# FIXME: This does not work for some reason
+def is_simple_jinja(template_string: str) -> bool:
+    return simple_jinja_regex.search(template_string) is None
 
 
 # Funcs
@@ -42,6 +54,7 @@ async def render_template_string(
     check: bool = False,
 ) -> str:
     # Parse template
+    # TODO: Check that the string is indeed a jinjd template
     template = jinja_env.from_string(template_string)
 
     # If check is required, get required vars from template and validate variables
@@ -57,7 +70,7 @@ async def render_template_string(
 # A render function that can render arbitrarily nested lists of dicts
 # only render keys: content, text, image_url
 # and only render values that are strings
-T = TypeVar("T", str, dict, list[dict | list[dict]])
+T = TypeVar("T", str, dict, list[dict | list[dict]], None)
 
 
 @beartype
@@ -65,28 +78,19 @@ async def render_template_nested(
     input: T,
     variables: dict,
     check: bool = False,
-    whitelist: list[str] = ["content", "text", "image_url"],
 ) -> T:
     match input:
         case str():
             return await render_template_string(input, variables, check)
-
         case dict():
             return {
-                k: (
-                    await render_template_nested(v, variables, check, whitelist)
-                    if k in whitelist
-                    else v
-                )
+                k: await render_template_nested(v, variables, check)
                 for k, v in input.items()
             }
         case list():
-            return [
-                await render_template_nested(v, variables, check, whitelist)
-                for v in input
-            ]
+            return [await render_template_nested(v, variables, check) for v in input]
         case _:
-            raise ValueError(f"Invalid input type: {type(input)}")
+            return input
 
 
 @beartype

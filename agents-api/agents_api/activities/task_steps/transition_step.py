@@ -1,7 +1,9 @@
+from uuid import uuid4
+
 from beartype import beartype
 from temporalio import activity
 
-from ...autogen.openapi_model import CreateTransitionRequest
+from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...common.protocol.tasks import StepContext
 from ...env import testing
 from ...models.execution.create_execution_transition import (
@@ -13,7 +15,7 @@ from ...models.execution.create_execution_transition import (
 async def transition_step(
     context: StepContext,
     transition_info: CreateTransitionRequest,
-) -> None:
+) -> Transition:
     need_to_wait = transition_info.type == "wait"
 
     # Get task token if it's a waiting step
@@ -22,7 +24,7 @@ async def transition_step(
         transition_info.task_token = task_token
 
     # Create transition
-    create_execution_transition_query(
+    transition = create_execution_transition_query(
         developer_id=context.execution_input.developer_id,
         execution_id=context.execution_input.execution.id,
         task_id=context.execution_input.task.id,
@@ -30,6 +32,7 @@ async def transition_step(
         update_execution_status=True,
     )
 
+    return transition
 
 async def mock_transition_step(
     context: StepContext,

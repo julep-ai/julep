@@ -20,6 +20,7 @@ model Workflow {
     @key name: validPythonIdentifier;
 
     /** The steps in the workflow */
+    @minItems(1)
     steps: WorkflowStep[];
 }
 
@@ -37,6 +38,7 @@ model Task {
     description: string = "";
 
     /** The entrypoint of the task. */
+    @minItems(1)
     main: WorkflowStep[];
 
     /** The schema for the input to the task. `null` means all inputs are valid. */
