@@ -50,6 +50,12 @@ model Execution {
     /** The input to the execution */
     input: Record<unknown>;
 
+    /** The output of the execution if it succeeded */
+    output?: unknown;
+
+    /** The error of the execution if it failed */
+    error?: string;
+
     ...HasTimestamps;
     ...HasMetadata;
     ...HasId;
@@ -100,8 +106,10 @@ model TaskTokenResumeExecutionRequest {
 */
 
 alias TransitionType = (
+    | "init"
+    | "init_branch"
     | "finish"
-    | "branch_finish"
+    | "finish_branch"
     | "wait"
     | "resume"
     | "error"

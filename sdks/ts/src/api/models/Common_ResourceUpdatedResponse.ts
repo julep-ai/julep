@@ -15,5 +15,5 @@ export type Common_ResourceUpdatedResponse = {
   /**
    * IDs (if any) of jobs created as part of this request
    */
-  jobs: Array<Common_uuid>;
+  readonly jobs: Array<Common_uuid>;
 };

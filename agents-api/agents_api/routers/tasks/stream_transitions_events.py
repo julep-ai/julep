@@ -11,7 +11,6 @@ from starlette.requests import Request
 from ...autogen.openapi_model import TransitionEvent
 from ...dependencies.developer_id import get_developer_id
 from ...models.execution.get_execution import get_execution
-
 from .router import router
 
 

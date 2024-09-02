@@ -41,9 +41,8 @@ model HasMetadata {
     metadata?: Metadata;
 }
 
-const emptyMetadata: Metadata = #{ a: 1 };
-
 model HasJobs {
     /** IDs (if any) of jobs created as part of this request */
-    jobs: uuid[];
+    @visibility("read")
+    jobs: uuid[] = #[];
 }

@@ -462,23 +462,25 @@ async def _(
 ):
     data = CreateExecutionRequest(input={"test": "input"})
 
+    task_def = CreateTaskRequest(
+        **{
+            "name": "test task",
+            "description": "test task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+            "main": [
+                {
+                    "if": "True",
+                    "then": {"evaluate": {"hello": '"world"'}},
+                    "else": {"evaluate": {"hello": '"nope"'}},
+                },
+            ],
+        }
+    )
+
     task = create_task(
         developer_id=developer_id,
         agent_id=agent.id,
-        data=CreateTaskRequest(
-            **{
-                "name": "test task",
-                "description": "test task about",
-                "input_schema": {"type": "object", "additionalProperties": True},
-                "main": [
-                    {
-                        "if": "True",
-                        "then": {"evaluate": {"hello": '"world"'}},
-                        "else": {"evaluate": {"hello": '"nope"'}},
-                    },
-                ],
-            }
-        ),
+        data=task_def,
         client=client,
     )
 

@@ -4,8 +4,10 @@
 /* eslint-disable */
 export type Executions_TransitionEvent = {
   readonly type:
+    | "init"
+    | "init_branch"
     | "finish"
-    | "branch_finish"
+    | "finish_branch"
     | "wait"
     | "resume"
     | "error"

@@ -15,6 +15,7 @@ export const $Chat_TokenLogProb = {
           contains: {
             type: "Chat_BaseTokenLogProb",
           },
+          isReadOnly: true,
           isRequired: true,
         },
       },

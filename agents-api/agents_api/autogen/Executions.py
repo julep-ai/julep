@@ -21,6 +21,14 @@ class CreateExecutionRequest(BaseModel):
     """
     The input to the execution
     """
+    output: Any | None = None
+    """
+    The output of the execution if it succeeded
+    """
+    error: str | None = None
+    """
+    The error of the execution if it failed
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -51,6 +59,14 @@ class Execution(BaseModel):
     """
     The input to the execution
     """
+    output: Any | None = None
+    """
+    The output of the execution if it succeeded
+    """
+    error: str | None = None
+    """
+    The error of the execution if it failed
+    """
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -80,7 +96,15 @@ class TransitionEvent(BaseModel):
     )
     type: Annotated[
         Literal[
-            "finish", "branch_finish", "wait", "resume", "error", "step", "cancelled"
+            "init",
+            "init_branch",
+            "finish",
+            "finish_branch",
+            "wait",
+            "resume",
+            "error",
+            "step",
+            "cancelled",
         ],
         Field(json_schema_extra={"readOnly": True}),
     ]

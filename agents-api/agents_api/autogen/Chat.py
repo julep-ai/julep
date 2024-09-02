@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
@@ -36,11 +36,11 @@ class BaseChatResponse(BaseModel):
     """
     Usage statistics for the completion request
     """
-    jobs: list[UUID]
+    jobs: Annotated[list[UUID], Field([], json_schema_extra={"readOnly": True})]
     """
     Background job IDs that may have been spawned from this interaction.
     """
-    docs: list[DocReference]
+    docs: Annotated[list[DocReference], Field([], json_schema_extra={"readOnly": True})]
     """
     Documents referenced for this request (for citation purposes).
     """
@@ -71,7 +71,7 @@ class ChatInputData(BaseModel):
     """
     A list of new input messages comprising the conversation so far.
     """
-    tools: Annotated[list[FunctionTool] | None, Field(None, min_length=1)]
+    tools: list[FunctionTool] = []
     """
     (Advanced) List of tools that are provided in addition to agent's default set of tools.
     """
@@ -130,16 +130,6 @@ class CompetionUsage(BaseModel):
     ]
     """
     Total number of tokens used in the request (prompt + completion)
-    """
-
-
-class CompletionResponseFormat(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["text", "json_object"] = "text"
-    """
-    The format of the response
     """
 
 
@@ -278,7 +268,9 @@ class MultipleChatOutput(BaseChatOutput):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    messages: list[Message]
+    messages: Annotated[
+        list[Message], Field(json_schema_extra={"readOnly": True}, min_length=1)
+    ]
 
 
 class OpenAISettings(BaseModel):
@@ -303,6 +295,30 @@ class OpenAISettings(BaseModel):
     """
 
 
+class SchemaCompletionResponseFormat(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["json_schema"] = "json_schema"
+    """
+    The format of the response
+    """
+    json_schema: dict[str, Any]
+    """
+    The schema of the response
+    """
+
+
+class SimpleCompletionResponseFormat(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Literal["text", "json_object"] = "text"
+    """
+    The format of the response
+    """
+
+
 class SingleChatOutput(BaseChatOutput):
     """
     The output returned by the model. Note that, depending on the model provider, they might return more than one message.
@@ -318,7 +334,13 @@ class TokenLogProb(BaseTokenLogProb):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    top_logprobs: list[BaseTokenLogProb]
+    top_logprobs: Annotated[
+        list[BaseTokenLogProb],
+        Field(json_schema_extra={"readOnly": True}, min_length=1),
+    ]
+    """
+    The log probabilities of the tokens
+    """
 
 
 class ChatInput(ChatInputData):
@@ -352,7 +374,7 @@ class ChatInput(ChatInputData):
     """
     Indicates if the server should stream the response as it's generated
     """
-    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
+    stop: Annotated[list[str], Field([], max_length=4)]
     """
     Up to 4 sequences where the API will stop generating further tokens.
     """
@@ -368,7 +390,9 @@ class ChatInput(ChatInputData):
     """
     Modify the likelihood of specified tokens appearing in the completion
     """
-    response_format: CompletionResponseFormat | None = None
+    response_format: (
+        SimpleCompletionResponseFormat | SchemaCompletionResponseFormat | None
+    ) = None
     """
     Response format (set to `json_object` to restrict output to JSON)
     """
@@ -447,7 +471,7 @@ class ChatSettings(DefaultChatSettings):
     """
     Indicates if the server should stream the response as it's generated
     """
-    stop: Annotated[list[str] | None, Field(None, max_length=4, min_length=1)]
+    stop: Annotated[list[str], Field([], max_length=4)]
     """
     Up to 4 sequences where the API will stop generating further tokens.
     """
@@ -463,7 +487,9 @@ class ChatSettings(DefaultChatSettings):
     """
     Modify the likelihood of specified tokens appearing in the completion
     """
-    response_format: CompletionResponseFormat | None = None
+    response_format: (
+        SimpleCompletionResponseFormat | SchemaCompletionResponseFormat | None
+    ) = None
     """
     Response format (set to `json_object` to restrict output to JSON)
     """

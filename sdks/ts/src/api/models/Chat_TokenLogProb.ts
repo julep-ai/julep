@@ -4,5 +4,8 @@
 /* eslint-disable */
 import type { Chat_BaseTokenLogProb } from "./Chat_BaseTokenLogProb";
 export type Chat_TokenLogProb = Chat_BaseTokenLogProb & {
-  top_logprobs: Array<Chat_BaseTokenLogProb>;
+  /**
+   * The log probabilities of the tokens
+   */
+  readonly top_logprobs: Array<Chat_BaseTokenLogProb>;
 };

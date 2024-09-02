@@ -8,7 +8,7 @@ import type { Entries_ChatMLRole } from "./Entries_ChatMLRole";
  * The output returned by the model. Note that, depending on the model provider, they might return more than one message.
  */
 export type Chat_MultipleChatOutput = Chat_BaseChatOutput & {
-  messages: Array<{
+  readonly messages: Array<{
     /**
      * The role of the message
      */

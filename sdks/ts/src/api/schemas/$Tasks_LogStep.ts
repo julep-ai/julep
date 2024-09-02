@@ -26,7 +26,7 @@ export const $Tasks_LogStep = {
           description: `The value to log`,
           contains: [
             {
-              type: "Common_PyExpression",
+              type: "Common_JinjaTemplate",
             },
           ],
           isRequired: true,

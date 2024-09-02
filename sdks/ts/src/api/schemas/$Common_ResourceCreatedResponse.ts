@@ -26,6 +26,7 @@ export const $Common_ResourceCreatedResponse = {
       contains: {
         type: "Common_uuid",
       },
+      isReadOnly: true,
       isRequired: true,
     },
   },

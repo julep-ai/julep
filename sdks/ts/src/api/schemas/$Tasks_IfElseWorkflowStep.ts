@@ -122,6 +122,7 @@ export const $Tasks_IfElseWorkflowStep = {
             },
           ],
           isRequired: true,
+          isNullable: true,
         },
       },
     },
