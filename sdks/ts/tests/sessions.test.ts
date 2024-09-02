@@ -2,7 +2,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 
 import { setupClient } from "./fixtures"; // Adjust path if necessary
-import { Agents_Agent as Agent, Common_ResourceCreatedResponse, Users_User as User } from "../src/api";
+import {
+  Agents_Agent as Agent,
+  Common_ResourceCreatedResponse,
+  Users_User as User,
+} from "../src/api";
 import { Client } from "../src";
 
 const { TEST_MODEL } = process.env;
@@ -26,7 +30,7 @@ const mockSession = {
   situation: "test situation",
   render_templates: true,
   token_budget: 200,
-  context_overflow: null
+  context_overflow: null,
 };
 
 const mockSessionWithTemplate = {
@@ -35,14 +39,14 @@ const mockSessionWithTemplate = {
   renderTemplates: true,
   render_templates: true,
   token_budget: 200,
-  context_overflow: null
+  context_overflow: null,
 };
 
 const mockSessionUpdate = {
   situation: "updated situation",
   render_templates: true,
   token_budget: 200,
-  context_overflow: null
+  context_overflow: null,
 };
 
 describe("Sessions API", () => {
@@ -68,7 +72,7 @@ describe("Sessions API", () => {
         user: testUser.id,
         agent: testAgent.id,
         ...mockSession,
-      }
+      },
     });
 
     testSessionId = response.id;
@@ -107,14 +111,17 @@ describe("Sessions API", () => {
 
     expect(response.items.length).toBeGreaterThan(0);
 
-    const session = response.items.find((session) => session.id === testSessionId);
+    const session = response.items.find(
+      (session) => session.id === testSessionId,
+    );
 
     expect(session?.situation).toBe(mockSessionUpdate.situation);
   });
 
   it("sessions.chat", async () => {
     const response = await client.sessions.chat({
-      id: testSessionId, requestBody: {
+      id: testSessionId,
+      requestBody: {
         messages: [
           {
             role: "user",
@@ -131,21 +138,24 @@ describe("Sessions API", () => {
         remember: false,
         save: false,
         stream: false,
-      }
+      },
     });
 
     expect(response.choices).toBeDefined();
   }, 5000);
 
   it("sessions.chat with template", async () => {
-    const session = await client.sessions.create({requestBody: {
-      user: testUser.id,
-      agent: testAgent.id,
-      ...mockSessionWithTemplate,
-    }});
+    const session = await client.sessions.create({
+      requestBody: {
+        user: testUser.id,
+        agent: testAgent.id,
+        ...mockSessionWithTemplate,
+      },
+    });
 
     const response = await client.sessions.chat({
-      id: session.id, requestBody: {
+      id: session.id,
+      requestBody: {
         messages: [
           {
             role: "user",
@@ -157,7 +167,7 @@ describe("Sessions API", () => {
         remember: false,
         save: false,
         stream: false,
-      }
+      },
     });
 
     expect(response.choices).toBeDefined();

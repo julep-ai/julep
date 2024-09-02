@@ -97,81 +97,73 @@ export class SessionsRoutes extends BaseRoutes {
   }: {
     id: Common_uuid;
     requestBody:
-    | {
-      messages: Array<Entries_InputChatMLMessage>;
-      tools?: Array<Tools_FunctionTool>;
-      tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-      readonly recall: boolean;
-      readonly remember: boolean;
-      save: boolean;
-      model?: Common_identifierSafeUnicode;
-      stream: boolean;
-      stop?: Array<string>;
-      seed?: number;
-      max_tokens?: number;
-      logit_bias?: Record<string, Common_logit_bias>;
-      response_format?: Chat_CompletionResponseFormat;
-      agent?: Common_uuid;
-      preset?: Chat_GenerationPreset;
-    }
-    | {
-      messages: Array<Entries_InputChatMLMessage>;
-      tools?: Array<Tools_FunctionTool>;
-      tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-      readonly recall: boolean;
-      readonly remember: boolean;
-      save: boolean;
-      model?: Common_identifierSafeUnicode;
-      stream: boolean;
-      stop?: Array<string>;
-      seed?: number;
-      max_tokens?: number;
-      logit_bias?: Record<string, Common_logit_bias>;
-      response_format?: Chat_CompletionResponseFormat;
-      agent?: Common_uuid;
-      frequency_penalty?: number;
-      presence_penalty?: number;
-      temperature?: number;
-      top_p?: number;
-    }
-    | {
-      messages: Array<Entries_InputChatMLMessage>;
-      tools?: Array<Tools_FunctionTool>;
-      tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
-      readonly recall: boolean;
-      readonly remember: boolean;
-      save: boolean;
-      model?: Common_identifierSafeUnicode;
-      stream: boolean;
-      stop?: Array<string>;
-      seed?: number;
-      max_tokens?: number;
-      logit_bias?: Record<string, Common_logit_bias>;
-      response_format?: Chat_CompletionResponseFormat;
-      agent?: Common_uuid;
-      repetition_penalty?: number;
-      length_penalty?: number;
-      temperature?: number;
-      top_p?: number;
-      min_p?: number;
-    };
+      | {
+          messages: Array<Entries_InputChatMLMessage>;
+          tools?: Array<Tools_FunctionTool>;
+          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
+          readonly recall: boolean;
+          readonly remember: boolean;
+          save: boolean;
+          model?: Common_identifierSafeUnicode;
+          stream: boolean;
+          stop?: Array<string>;
+          seed?: number;
+          max_tokens?: number;
+          logit_bias?: Record<string, Common_logit_bias>;
+          response_format?: Chat_CompletionResponseFormat;
+          agent?: Common_uuid;
+          preset?: Chat_GenerationPreset;
+        }
+      | {
+          messages: Array<Entries_InputChatMLMessage>;
+          tools?: Array<Tools_FunctionTool>;
+          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
+          readonly recall: boolean;
+          readonly remember: boolean;
+          save: boolean;
+          model?: Common_identifierSafeUnicode;
+          stream: boolean;
+          stop?: Array<string>;
+          seed?: number;
+          max_tokens?: number;
+          logit_bias?: Record<string, Common_logit_bias>;
+          response_format?: Chat_CompletionResponseFormat;
+          agent?: Common_uuid;
+          frequency_penalty?: number;
+          presence_penalty?: number;
+          temperature?: number;
+          top_p?: number;
+        }
+      | {
+          messages: Array<Entries_InputChatMLMessage>;
+          tools?: Array<Tools_FunctionTool>;
+          tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
+          readonly recall: boolean;
+          readonly remember: boolean;
+          save: boolean;
+          model?: Common_identifierSafeUnicode;
+          stream: boolean;
+          stop?: Array<string>;
+          seed?: number;
+          max_tokens?: number;
+          logit_bias?: Record<string, Common_logit_bias>;
+          response_format?: Chat_CompletionResponseFormat;
+          agent?: Common_uuid;
+          repetition_penalty?: number;
+          length_penalty?: number;
+          temperature?: number;
+          top_p?: number;
+          min_p?: number;
+        };
   }) {
     return await this.apiClient.default.chatRouteGenerate({ id, requestBody });
   }
 
-  async history({
-    id,
-  }: {
-    id: Common_uuid;
-  }) {
-    return await this.apiClient.default.historyRouteHistory({ id })
+  async history({ id }: { id: Common_uuid }) {
+    return await this.apiClient.default.historyRouteHistory({ id });
   }
 
-  async deleteHistory({
-    id,
-  }: {
-    id: Common_uuid;
-  }) {
-    return await this.apiClient.default.historyRouteDelete({ id })
+  async deleteHistory({ id }: { id: Common_uuid }) {
+    return await this.apiClient.default.historyRouteDelete({ id });
   }
 }

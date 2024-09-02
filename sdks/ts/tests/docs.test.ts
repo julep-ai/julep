@@ -4,7 +4,11 @@ import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { Agents_Agent as Agent, Common_ResourceCreatedResponse, Users_User as User } from "../src/api";
+import {
+  Agents_Agent as Agent,
+  Common_ResourceCreatedResponse,
+  Users_User as User,
+} from "../src/api";
 
 describe("Julep Client Tests", () => {
   let client: Client;
@@ -22,14 +26,14 @@ describe("Julep Client Tests", () => {
         name: "test agent",
         about: "test about",
         instructions: [],
-        model: "model1"
-      }
+        model: "model1",
+      },
     });
     testUser = await client.users.create({
       requestBody: {
         name: "test user",
         about: "test about",
-      }
+      },
     });
   });
 
@@ -40,7 +44,8 @@ describe("Julep Client Tests", () => {
 
   test("agent docs.create", async () => {
     const response = await client.agents.createDoc({
-      id: testAgent.id, requestBody: mockDoc
+      id: testAgent.id,
+      requestBody: mockDoc,
     });
 
     testAgentDocId = response.id;
@@ -51,7 +56,10 @@ describe("Julep Client Tests", () => {
   });
 
   test("user docs.create", async () => {
-    const response = await client.users.createDoc({id: testUser.id, requestBody: mockDoc});
+    const response = await client.users.createDoc({
+      id: testUser.id,
+      requestBody: mockDoc,
+    });
 
     testUserDocId = response.id;
 
@@ -61,7 +69,10 @@ describe("Julep Client Tests", () => {
   });
 
   test("agent list docs", async () => {
-    const response = await client.agents.listDocs({ id: testAgent.id, offset: 0 });
+    const response = await client.agents.listDocs({
+      id: testAgent.id,
+      offset: 0,
+    });
 
     expect(response.results.length).toBeGreaterThan(0);
     expect(response.results[0].content).toBe(mockDoc.content);
@@ -69,7 +80,10 @@ describe("Julep Client Tests", () => {
   });
 
   test("user list docs", async () => {
-    const response = await client.users.listDocs({ id: testUser.id, offset: 0 });
+    const response = await client.users.listDocs({
+      id: testUser.id,
+      offset: 0,
+    });
 
     expect(response.results.length).toBeGreaterThan(0);
     expect(response.results[0].content).toBe(mockDoc.content);

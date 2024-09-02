@@ -46,10 +46,11 @@ describe("User API", () => {
 
   test("users.update", async () => {
     const response = await client.users.update({
-      id: testUser.id, requestBody: {
+      id: testUser.id,
+      requestBody: {
         name: mockUserUpdate.name,
         about: mockUserUpdate.about,
-      }
+      },
     });
 
     expect(response.id).toBe(testUser.id);
