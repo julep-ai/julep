@@ -4,12 +4,12 @@ import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { Agents_Agent as Agent, Users_User as User } from "../src/api";
+import { Agents_Agent as Agent, Common_ResourceCreatedResponse, Users_User as User } from "../src/api";
 
 describe("Julep Client Tests", () => {
   let client: Client;
   let testAgent: Partial<Agent> & { id: string };
-  let testUser: User;
+  let testUser: Common_ResourceCreatedResponse;
   let testAgentDocId: string;
   let testUserDocId: string;
 
@@ -18,67 +18,67 @@ describe("Julep Client Tests", () => {
   beforeAll(async () => {
     client = setupClient();
     testAgent = await client.agents.create({
-      name: "test agent",
-      about: "test about",
-      instructions: [],
+      requestBody: {
+        name: "test agent",
+        about: "test about",
+        instructions: [],
+        model: "model1"
+      }
     });
     testUser = await client.users.create({
-      name: "test user",
-      about: "test about",
+      requestBody: {
+        name: "test user",
+        about: "test about",
+      }
     });
   });
 
   afterAll(async () => {
-    await client.agents.delete(testAgent.id);
-    await client.users.delete(testUser.id);
+    await client.agents.delete({ id: testAgent.id });
+    await client.users.delete({ id: testUser.id });
   });
 
   test("agent docs.create", async () => {
-    const response = await client.docs.create({
-      agentId: testAgent.id,
-      doc: mockDoc,
+    const response = await client.agents.createDoc({
+      id: testAgent.id, requestBody: mockDoc
     });
 
     testAgentDocId = response.id;
 
     expect(response).toHaveProperty("created_at");
-    expect(response.content).toBe(mockDoc.content);
-    expect(response.title).toBe(mockDoc.title);
+    expect(response).toHaveProperty("id");
+    expect(response).toHaveProperty("jobs");
   });
 
   test("user docs.create", async () => {
-    const response = await client.docs.create({
-      userId: testUser.id,
-      doc: mockDoc,
-    });
+    const response = await client.users.createDoc({id: testUser.id, requestBody: mockDoc});
 
     testUserDocId = response.id;
 
     expect(response).toHaveProperty("created_at");
-    expect(response.content).toBe(mockDoc.content);
-    expect(response.title).toBe(mockDoc.title);
+    expect(response).toHaveProperty("id");
+    expect(response).toHaveProperty("jobs");
   });
 
-  test("agent docs.get", async () => {
-    const response = await client.docs.get({ agentId: testAgent.id });
+  test("agent list docs", async () => {
+    const response = await client.agents.listDocs({ id: testAgent.id, offset: 0 });
 
-    expect(response?.items!.length).toBeGreaterThan(0);
-    expect(response?.items![0].content).toBe(mockDoc.content);
-    expect(response?.items![0].title).toBe(mockDoc.title);
+    expect(response.results.length).toBeGreaterThan(0);
+    expect(response.results[0].content).toBe(mockDoc.content);
+    expect(response.results[0].title).toBe(mockDoc.title);
   });
 
-  test("user docs.get", async () => {
-    const response = await client.docs.get({ userId: testUser.id });
+  test("user list docs", async () => {
+    const response = await client.users.listDocs({ id: testUser.id, offset: 0 });
 
-    expect(response?.items!.length).toBeGreaterThan(0);
-    expect(response?.items![0].content).toBe(mockDoc.content);
-    expect(response?.items![0].title).toBe(mockDoc.title);
+    expect(response.results.length).toBeGreaterThan(0);
+    expect(response.results[0].content).toBe(mockDoc.content);
+    expect(response.results[0].title).toBe(mockDoc.title);
   });
 
   test("agent docs.delete", async () => {
     const response = await client.docs.delete({
-      agentId: testAgent.id,
-      docId: testAgentDocId,
+      id: testAgent.id,
     });
 
     expect(response).toBeUndefined();
@@ -86,8 +86,7 @@ describe("Julep Client Tests", () => {
 
   test("user docs.delete", async () => {
     const response = await client.docs.delete({
-      userId: testUser.id,
-      docId: testUserDocId,
+      id: testUser.id,
     });
 
     expect(response).toBeUndefined();
