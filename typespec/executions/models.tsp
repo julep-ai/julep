@@ -107,7 +107,7 @@ model TaskTokenResumeExecutionRequest {
 
 alias TransitionType = (
     | "init"
-    | "branch_init"
+    | "init_branch"
     | "finish"
     | "finish_branch"
     | "wait"

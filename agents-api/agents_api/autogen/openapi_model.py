@@ -96,7 +96,7 @@ assert Execution.model_fields["status"].annotation == ExecutionStatus
 
 TransitionType = Literal[
     "init",
-    "branch_init",
+    "init_branch",
     "finish",
     "finish_branch",
     "wait",

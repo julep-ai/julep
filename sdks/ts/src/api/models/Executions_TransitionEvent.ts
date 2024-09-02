@@ -5,7 +5,7 @@
 export type Executions_TransitionEvent = {
   readonly type:
     | "init"
-    | "branch_init"
+    | "init_branch"
     | "finish"
     | "finish_branch"
     | "wait"

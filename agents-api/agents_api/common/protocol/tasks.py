@@ -37,18 +37,35 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
     "cancelled": [],
     # Intermediate states
     "wait": ["resume", "error", "cancelled"],
-    "resume": ["wait", "error", "cancelled", "step", "finish", "finish_branch", "init_branch"],
-    "step": ["wait", "error", "cancelled", "step", "finish", "finish_branch", "init_branch"],
+    "resume": [
+        "wait",
+        "error",
+        "cancelled",
+        "step",
+        "finish",
+        "finish_branch",
+        "init_branch",
+    ],
+    "step": [
+        "wait",
+        "error",
+        "cancelled",
+        "step",
+        "finish",
+        "finish_branch",
+        "init_branch",
+    ],
     "finish_branch": ["wait", "error", "cancelled", "step", "finish", "init_branch"],
-}
+}  # type: ignore
 
 valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
     "running": ["queued", "starting", "awaiting_input"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
-}
+}  # type: ignore
 
-transition_to_execution_status: dict[TransitionType, ExecutionStatus] = {
-    "init": "queued",
+transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
+    None: "queued",
+    "init": "starting",
     "init_branch": "running",
     "wait": "awaiting_input",
     "resume": "running",
@@ -57,7 +74,7 @@ transition_to_execution_status: dict[TransitionType, ExecutionStatus] = {
     "finish_branch": "running",
     "error": "failed",
     "cancelled": "cancelled",
-}
+}  # type: ignore
 
 
 PartialTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)

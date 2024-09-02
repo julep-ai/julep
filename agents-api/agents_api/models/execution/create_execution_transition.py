@@ -169,7 +169,9 @@ def create_execution_transition(
                     status=transition_to_execution_status[data.type]
                 ),
                 output=data.output if data.type == "finish" else None,
-                error=str(data.output) if data.type == "error" and data.output else None,
+                error=str(data.output)
+                if data.type == "error" and data.output
+                else None,
             )
         )
 

@@ -97,7 +97,7 @@ class TransitionEvent(BaseModel):
     type: Annotated[
         Literal[
             "init",
-            "branch_init",
+            "init_branch",
             "finish",
             "finish_branch",
             "wait",
