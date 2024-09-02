@@ -1,0 +1,34 @@
+# Test with this screenshot url: https://i.ibb.co/1GHwH9J/CFRating-before.png
+
+name: Extract data from screenshot url
+description: A task to extract data from a screenshot url
+input_schema:
+  type: object
+  properties:
+    screenshot_url:
+      type: string
+main:
+  - prompt:
+      - role: system
+        content: >
+          You are a data extraction bot. Extract the data for the following provider from the screenshot that the user is going to send you. Here are the provider details: 
+          "provider": {
+            "name": "CFRating",
+            "description": "Gives you your rating",
+            "proofCardText": "\"You, as the end user, have ownership of the data with a {Rating} rating.\""
+          }
+          return the result as a JSON object that has the following structure:
+          {
+            parameter: "value"
+          }
+          If there's no data to extract, return an empty JSON object. Don't return any other text.
+          
+      - role: user
+        content:
+          type: image_url
+          image_url:
+            url: "{{_.screenshot_url}}"
+          detail: high
+  
+  - evaluate:
+    result: '_["choices"][0]["message"].content.strip()'
