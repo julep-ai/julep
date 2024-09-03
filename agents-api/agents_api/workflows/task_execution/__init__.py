@@ -8,7 +8,6 @@ from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
@@ -84,7 +83,7 @@ STEP_TO_ACTIVITY = {
     ForeachStep: task_steps.for_each_step,
     MapReduceStep: task_steps.map_reduce_step,
     SetStep: task_steps.set_value_step,
-    GetStep: task_steps.get_value_step,
+    # GetStep: task_steps.get_value_step,
 }
 
 

@@ -10,6 +10,7 @@ from agents_api.autogen.openapi_model import Entry
 # TODO: Reimplement truncation queries
 # SCRUM-5
 
+
 def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[UUID]:
     raise NotImplementedError()
 
@@ -28,6 +29,7 @@ def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list
     #         result.append(m.id)
 
     # return result
+
 
 # TODO: Reimplement truncation activities
 # SCRUM-6

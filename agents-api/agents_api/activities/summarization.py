@@ -24,6 +24,7 @@ def get_toplevel_entries_query(*args, **kwargs) -> pd.DataFrame:
 # TODO: Implement entry summarization activities
 # SCRUM-4
 
+
 @activity.defn
 @beartype
 async def summarization(session_id: str) -> None:

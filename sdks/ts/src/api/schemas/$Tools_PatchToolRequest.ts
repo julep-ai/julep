@@ -23,9 +23,6 @@ export const $Tools_PatchToolRequest = {
         },
       ],
     },
-    background: {
-      type: "boolean",
-    },
     function: {
       type: "all-of",
       description: `The function to call`,

@@ -7,6 +7,7 @@
 import dataclasses
 import logging
 import pickle
+import sys
 from typing import Any, Optional, Type
 
 import temporalio.converter
@@ -23,7 +24,7 @@ from temporalio.converter import (
 
 
 def serialize(x: Any) -> bytes:
-    return compress(pickle.dumps(x))
+    return compress(pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL))
 
 
 def deserialize(b: bytes) -> Any:
@@ -86,11 +87,14 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
     b_encoding = encoding.encode()
 
     def to_payload(self, value: Any) -> Optional[Payload]:
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}".encode()
+
         try:
             data = serialize(value)
             return Payload(
                 metadata={
                     "encoding": self.b_encoding,
+                    "python_version": python_version,
                 },
                 data=data,
             )
@@ -100,7 +104,13 @@ class PydanticEncodingPayloadConverter(EncodingPayloadConverter):
             return None
 
     def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
+        current_python_version = (
+            f"{sys.version_info.major}.{sys.version_info.minor}".encode()
+        )
+
         assert payload.metadata["encoding"] == self.b_encoding
+        assert payload.metadata["python_version"] == current_python_version
+
         return from_payload_data(payload.data, type_hint)
 
 

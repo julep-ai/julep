@@ -24,10 +24,6 @@ export const $Tools_Tool = {
       ],
       isRequired: true,
     },
-    background: {
-      type: "boolean",
-      isRequired: true,
-    },
     function: {
       type: "all-of",
       description: `The function to call`,

@@ -44,7 +44,6 @@ class CreateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    background: Literal[False] = False
     function: FunctionDef
     """
     The function to call
@@ -123,7 +122,6 @@ class PatchToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    background: Literal[False] = False
     function: FunctionDef | None = None
     """
     The function to call
@@ -145,7 +143,6 @@ class Tool(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    background: Literal[False] = False
     function: FunctionDef
     """
     The function to call
@@ -191,7 +188,6 @@ class UpdateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    background: Literal[False] = False
     function: FunctionDef
     """
     The function to call

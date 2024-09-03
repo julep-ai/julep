@@ -40,7 +40,16 @@ T = TypeVar("T")
             **d["session"],
         ),
         "toolsets": [
-            {**ts, "tools": [*map(fix_uuid_if_present, ts["tools"])]}
+            {
+                **ts,
+                "tools": [
+                    {
+                        tool["type"]: tool.pop("spec"),
+                        **tool,
+                    }
+                    for tool in map(fix_uuid_if_present, ts["tools"])
+                ],
+            }
             for ts in d["toolsets"]
         ],
     },
