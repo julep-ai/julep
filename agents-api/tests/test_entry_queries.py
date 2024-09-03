@@ -57,7 +57,7 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         content="test entry content",
     )
 
-    # FIXME: We should make sessions.updated_at also a updated_at_ms field to avoid this sleep
+    # TODO: We should make sessions.updated_at also a updated_at_ms field to avoid this sleep
     time.sleep(1)
 
     create_entries(
