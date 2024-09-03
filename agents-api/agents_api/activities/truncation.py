@@ -7,6 +7,8 @@ from agents_api.autogen.openapi_model import Entry
 
 # from agents_api.models.entry.entries_summarization import get_toplevel_entries_query
 
+# TODO: Reimplement truncation queries
+# SCRUM-5
 
 def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list[UUID]:
     raise NotImplementedError()
@@ -27,7 +29,8 @@ def get_extra_entries(messages: list[Entry], token_count_threshold: int) -> list
 
     # return result
 
-
+# TODO: Reimplement truncation activities
+# SCRUM-6
 @activity.defn
 @beartype
 async def truncation(session_id: str, token_count_threshold: int) -> None:

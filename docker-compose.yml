@@ -1,3 +1,7 @@
+
+# TODO: Make docker compose setup production ready
+# SCRUM-30
+
 name: julep
 
 include:

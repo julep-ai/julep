@@ -1,3 +1,9 @@
+# TODO: Add coming soon announcement to README
+# SCRUM-32
+
+# TODO: Update README for v0.4
+# SCRUM-31
+
 <sup>English | [中文翻译](/README-CN.md)</sup>
 
 <div align="center">

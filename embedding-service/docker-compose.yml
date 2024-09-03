@@ -33,7 +33,8 @@ x--shared-environment: &shared-environment
   TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
   WORKER_URL: ${WORKER_URL:-temporal:7233}
 
-# TODO: We should switch to Alibaba-NLP/gte-Qwen2-1.5B-instruct instead of gte-large-en-v1.5
+# TODO: Switch to Alibaba-NLP/gte-Qwen2-1.5B-instruct instead of gte-large-en-v1.5
+# SCRUM-23
 
 services:
   text-embeddings-inference-cpu:

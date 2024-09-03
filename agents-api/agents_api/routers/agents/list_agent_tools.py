@@ -19,6 +19,9 @@ async def list_agent_tools(
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Tool]:
+
+    # FIXME: list agent tools is returning an empty list
+    # SCRUM-22
     tools = list_tools_query(
         agent_id=agent_id,
         developer_id=x_developer_id,

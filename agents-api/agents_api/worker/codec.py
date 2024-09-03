@@ -77,6 +77,7 @@ def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:
 
 
 # TODO: Create a codec server for temporal to use for debugging
+# SCRUM-12
 #       This will allow us to see the data in the workflow history
 #       See: https://github.com/temporalio/samples-python/blob/main/encryption/codec_server.py
 #            https://docs.temporal.io/production-deployment/data-encryption#web-ui

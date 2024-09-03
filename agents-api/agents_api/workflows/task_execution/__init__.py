@@ -48,10 +48,12 @@ with workflow.unsafe.imports_passed_through():
 # Supported steps
 # ---------------
 
+# TODO: Implement the rest of the steps
+
 # WorkflowStep = (
 #     EvaluateStep  # ✅
-#     | ToolCallStep  # ❌
-#     | PromptStep  # 🟡
+#     | ToolCallStep  # ❌  <--- high priority
+#     | PromptStep  # 🟡    <--- high priority
 #     | GetStep  # ✅
 #     | SetStep  # ✅
 #     | LogStep  # ✅
@@ -74,8 +76,6 @@ STEP_TO_ACTIVITY = {
     # ToolCallStep: tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
     SwitchStep: task_steps.switch_step,
-    # TODO: These should be moved to local activities
-    #       once temporal has fixed error handling for local activities
     LogStep: task_steps.log_step,
     EvaluateStep: task_steps.evaluate_step,
     ReturnStep: task_steps.return_step,
@@ -84,23 +84,19 @@ STEP_TO_ACTIVITY = {
     ForeachStep: task_steps.for_each_step,
     MapReduceStep: task_steps.map_reduce_step,
     SetStep: task_steps.set_value_step,
+    GetStep: task_steps.get_value_step,
 }
 
-# TODO: Avoid local activities for now (currently experimental)
-STEP_TO_LOCAL_ACTIVITY = {
-    # # NOTE: local activities are directly called in the workflow executor
-    # #       They MUST NOT FAIL, otherwise they will crash the workflow
-    # EvaluateStep: task_steps.evaluate_step,
-    # ReturnStep: task_steps.return_step,
-    # YieldStep: task_steps.yield_step,
-    # IfElseWorkflowStep: task_steps.if_else_step,
-}
 
 GenericStep = RootModel[WorkflowStep]
 
 
 # TODO: find a way to transition to error if workflow or activity times out.
 
+# TODO: Implement reasonable timeouts for steps, activities and workflows
+# SCRUM-13
+
+# TODO: The timeouts should be configurable per task
 
 
 async def continue_as_child(
@@ -203,7 +199,6 @@ class TaskExecutionWorkflow:
                     activity,
                     context,
                     #
-                    # TODO: This should be a configurable timeout everywhere based on the task
                     schedule_to_close_timeout=timedelta(
                         seconds=3 if debug or testing else 600
                     ),
@@ -401,7 +396,9 @@ class TaskExecutionWorkflow:
                         previous_inputs + [item],
                     ]
 
-                    # TODO: We should parallelize this
+                    # TODO: Parallelize map-reduce step
+                    # SCRUM-14
+
                     # Execute the chosen branch and come back here
                     output = await continue_as_child(
                         *map_reduce_args,
@@ -492,10 +489,10 @@ class TaskExecutionWorkflow:
             case PromptStep(), StepOutcome(
                 output=response
             ):  # FIXME: if not response.choices[0].tool_calls:
+                # SCRUM-15
                 workflow.logger.debug("Prompt step: Received response")
                 state = PartialTransition(output=response)
 
-            # FIXME: This is not working as expected
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
                 self.update_user_state(evaluated_output)
@@ -512,26 +509,29 @@ class TaskExecutionWorkflow:
 
             case EmbedStep(), _:
                 # FIXME: Implement EmbedStep
+                # SCRUM-19
                 workflow.logger.error("EmbedStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
             case SearchStep(), _:
                 # FIXME: Implement SearchStep
+                # SCRUM-18
                 workflow.logger.error("SearchStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
             case ParallelStep(), _:
                 # FIXME: Implement ParallelStep
+                # SCRUM-17
                 workflow.logger.error("ParallelStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
             case ToolCallStep(), _:
                 # FIXME: Implement ToolCallStep
+                # SCRUM-16
                 workflow.logger.error("ToolCallStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
             case _:
-                # TODO: Add steps that are not yet supported
                 workflow.logger.error(
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )

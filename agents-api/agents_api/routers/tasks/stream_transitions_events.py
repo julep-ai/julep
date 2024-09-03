@@ -93,6 +93,7 @@ async def stream_transitions_events(
     )
 
     # TODO: Need to get all the events for child workflows too. Maybe try the `run_id` or something?
+    # SCRUM-11
     workflow_handle = await get_workflow_handle(
         handle_id=temporal_data["id"],
     )

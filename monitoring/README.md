@@ -1,4 +1,7 @@
-## Compose sample
+# TODO: Fix monitoring services
+# SCRUM-25
+
+# Compose sample
 ### Prometheus & Grafana
 
 Project structure:

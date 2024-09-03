@@ -12,6 +12,9 @@ Each sub-module defines its own set of API endpoints and is responsible for hand
 
 # ruff: noqa: F401
 
+# TODO: Create a router for developers
+# SCRUM-21
+
 from .agents import router as agents_router
 from .docs import router as docs_router
 from .jobs import router as jobs_router

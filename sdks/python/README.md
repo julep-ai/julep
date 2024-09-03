@@ -1,3 +1,6 @@
+# TODO: Fix the python sdk
+# SCRUM-27
+
 # julep-ai sdk
 
 

@@ -34,6 +34,9 @@ async def chat(
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
 ) -> ChatResponse:
+    if chat_input.stream:
+        raise NotImplementedError("Streaming is not yet implemented")
+
     # First get the chat context
     chat_context: ChatContext = prepare_chat_context(
         developer_id=developer.id,
@@ -61,7 +64,8 @@ async def chat(
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
 
-    # FIXME: Truncate the messages if necessary
+    # FIXME: Truncate chat messages in the chat context
+    # SCRUM-7
     if chat_context.session.context_overflow == "truncate":
         # messages = messages[-settings["max_tokens"] :]
         raise NotImplementedError("Truncation is not yet implemented")
@@ -96,11 +100,13 @@ async def chat(
     jobs = []
     if chat_context.session.context_overflow == "adaptive":
         # FIXME: Start the adaptive context workflow
+        # SCRUM-8
+
         # jobs = [await start_adaptive_context_workflow]
         raise NotImplementedError("Adaptive context is not yet implemented")
 
     # Return the response
-    # FIXME: Implement streaming
+    # FIXME: Implement streaming for chat
     chat_response_class = (
         ChunkChatResponse if chat_input.stream else MessageChatResponse
     )

@@ -1,3 +1,6 @@
+# TODO: Update changelog
+# SCRUM-29
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

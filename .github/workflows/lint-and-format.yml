@@ -1,7 +1,9 @@
 name: Lint and typecheck APIs and SDKs
 run-name: ${{ github.actor }} is linting and typechecking the code
 
-# TODO: This is currently not working. Need to fix it
+# TODO: Fix CI github actions
+# SCRUM-26
+
 on: [pull_request]
 
 jobs:

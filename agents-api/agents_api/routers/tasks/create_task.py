@@ -22,6 +22,7 @@ async def create_task(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the task spec
+    # SCRUM-10
     # TODO: Validate the jinja templates
 
     # Validate the input schema

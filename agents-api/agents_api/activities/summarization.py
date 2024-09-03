@@ -11,7 +11,8 @@ from temporalio import activity
 # )
 
 
-# TODO: remove stubs
+# TODO: Implement entry summarization queries
+# SCRUM-3
 def entries_summarization_query(*args, **kwargs) -> pd.DataFrame:
     return pd.DataFrame()
 
@@ -20,10 +21,14 @@ def get_toplevel_entries_query(*args, **kwargs) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+# TODO: Implement entry summarization activities
+# SCRUM-4
+
 @activity.defn
 @beartype
 async def summarization(session_id: str) -> None:
     raise NotImplementedError()
+
     # session_id = UUID(session_id)
     # entries = []
     # entities_entry_ids = []

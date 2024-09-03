@@ -1,3 +1,7 @@
+
+# FIXME: Find a replacement for fern
+# SCRUM-20
+
 default-group: local
 groups:
   local:
