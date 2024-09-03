@@ -1,14 +1,15 @@
 from datetime import timedelta
+
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
+from ...activities import task_steps
 from ...autogen.openapi_model import (
     CreateTransitionRequest,
-    TransitionTarget,
     Transition,
+    TransitionTarget,
 )
-from ...common.protocol.tasks import StepContext, PartialTransition
-from ...activities import task_steps
+from ...common.protocol.tasks import PartialTransition, StepContext
 
 
 async def transition(

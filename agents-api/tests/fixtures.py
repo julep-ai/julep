@@ -260,7 +260,7 @@ def test_execution(
     )
     create_temporal_lookup(
         developer_id=developer_id,
-        task_id=task.id,
+        execution_id=execution.id,
         workflow_handle=workflow_handle,
         client=client,
     )
@@ -294,7 +294,7 @@ def test_execution_started(
     )
     create_temporal_lookup(
         developer_id=developer_id,
-        task_id=task.id,
+        execution_id=execution.id,
         workflow_handle=workflow_handle,
         client=client,
     )
