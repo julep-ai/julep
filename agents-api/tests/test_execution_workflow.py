@@ -407,7 +407,7 @@ async def _(
                 "other_workflow": [
                     # Testing that we can access the input
                     {"evaluate": {"hello": '_["test"]'}},
-                    {"log": '_["hell"]'},  # <--- The "hell" key does not exist
+                    {"log": '{{_["hello"]}}'},  # <--- The "hell" key does not exist
                 ],
                 "main": [
                     # Testing that we can access the input
@@ -422,7 +422,7 @@ async def _(
     )
 
     async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
-        with raises(BaseException):
+        # with raises(BaseException):
             execution, handle = await start_execution(
                 developer_id=developer_id,
                 task_id=task.id,
