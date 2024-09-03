@@ -6,13 +6,12 @@ from jsonschema.exceptions import SchemaError, ValidationError
 from pydantic import UUID4
 from starlette.status import HTTP_201_CREATED
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     CreateTaskRequest,
     ResourceCreatedResponse,
 )
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.task.create_task import create_task as create_task_query
-
+from ...dependencies.developer_id import get_developer_id
+from ...models.task.create_task import create_task as create_task_query
 from .router import router
 
 
@@ -23,6 +22,7 @@ async def create_task(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the task spec
+    # TODO: Validate the jinja templates
 
     # Validate the input schema
     try:

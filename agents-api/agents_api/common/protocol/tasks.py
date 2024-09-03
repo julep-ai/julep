@@ -26,17 +26,53 @@ from ...autogen.openapi_model import (
     WorkflowStep,
 )
 
-### NOTE: Here, "init" is NOT a real state, but a placeholder for the start state of the state machine
+# TODO: Maybe we should use a library for this
+
+# State Machine
+#
+# init -> wait | error | step | cancelled | init_branch | finish
+# init_branch -> wait | error | step | cancelled | finish_branch
+# wait -> resume | error | cancelled
+# resume -> wait | error | cancelled | step | finish | finish_branch | init_branch
+# step -> wait | error | cancelled | step | finish | finish_branch | init_branch
+# finish_branch -> wait | error | cancelled | step | finish | init_branch
+# error ->
+
+## Mermaid Diagram
+# ```mermaid
+# ---
+# title: Execution state machine
+# ---
+# stateDiagram-v2
+#     [*] --> queued
+#     queued --> starting
+#     queued --> cancelled
+#     starting --> cancelled
+#     starting --> failed
+#     starting --> running
+#     running --> running
+#     running --> awaiting_input
+#     running --> cancelled
+#     running --> failed
+#     running --> succeeded
+#     awaiting_input --> running
+#     awaiting_input --> cancelled
+#     cancelled --> [*]
+#     succeeded --> [*]
+#     failed --> [*]
+
+# ```
+# TODO: figure out how to type this
 valid_transitions: dict[TransitionType, list[TransitionType]] = {
     # Start state
-    "init": ["wait", "error", "step", "cancelled", "init_branch"],
-    "init_branch": ["wait", "error", "step", "cancelled"],
+    "init": ["wait", "error", "step", "cancelled", "init_branch", "finish"],
+    "init_branch": ["wait", "error", "step", "cancelled", "finish_branch"],
     # End states
     "finish": [],
     "error": [],
     "cancelled": [],
     # Intermediate states
-    "wait": ["resume", "error", "cancelled"],
+    "wait": ["resume", "cancelled"],
     "resume": [
         "wait",
         "error",
@@ -59,8 +95,13 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
 }  # type: ignore
 
 valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
-    "running": ["queued", "starting", "awaiting_input"],
+    "running": ["starting", "awaiting_input", "running"],
+    "starting": ["queued"],
+    "queued": [],
+    "awaiting_input": ["starting", "running"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
+    "succeeded": ["starting", "running"],
+    "failed": ["starting", "running"],
 }  # type: ignore
 
 transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
@@ -100,12 +141,12 @@ class StepContext(BaseModel):
 
     @computed_field
     @property
-    def outputs(self) -> Annotated[list[dict[str, Any]], Field(exclude=True)]:
+    def outputs(self) -> list[dict[str, Any]]:  # included in dump
         return self.inputs[1:]
 
     @computed_field
     @property
-    def current_input(self) -> Annotated[dict[str, Any], Field(exclude=True)]:
+    def current_input(self) -> dict[str, Any]:  # included in dump
         return self.inputs[-1]
 
     @computed_field
@@ -130,9 +171,22 @@ class StepContext(BaseModel):
     def is_first_step(self) -> Annotated[bool, Field(exclude=True)]:
         return self.cursor.step == 0
 
+    @computed_field
+    @property
+    def is_main(self) -> Annotated[bool, Field(exclude=True)]:
+        return self.cursor.workflow == "main"
+
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         dump = super().model_dump(*args, **kwargs)
-        dump["_"] = self.current_input
+
+        # Merge execution inputs into the dump dict
+        execution_input: dict = dump.pop("execution_input")
+        current_input: Any = dump.pop("current_input")
+        dump = {
+            **dump,
+            **execution_input,
+            "_": current_input,
+        }
 
         return dump
 

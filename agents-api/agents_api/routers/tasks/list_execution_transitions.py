@@ -28,9 +28,11 @@ async def list_execution_transitions(
         sort_by=sort_by,
         direction=direction,
     )
+
     return ListResponse[Transition](items=transitions)
 
 
+# TODO: Do we need this?
 # @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
 # async def get_execution_transition(
 #     execution_id: UUID4,
@@ -44,30 +46,6 @@ async def list_execution_transitions(
 #             ).iterrows()
 #         ][0]
 #         return Transition(**res)
-#     except (IndexError, KeyError):
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Transition not found",
-#         )
-
-
-# TODO: Later; for resuming waiting transitions
-# TODO: Ask for a task token to resume a waiting transition
-# @router.put("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
-# async def update_execution_transition(
-#     execution_id: UUID4,
-#     transition_id: UUID4,
-#     request: Transition,
-# ) -> ResourceUpdatedResponse:
-#     try:
-#         resp = update_execution_transition_query(
-#             execution_id, transition_id, **request.model_dump()
-#         )
-
-#         return ResourceUpdatedResponse(
-#             id=resp["transition_id"][0],
-#             updated_at=resp["updated_at"][0][0],
-#         )
 #     except (IndexError, KeyError):
 #         raise HTTPException(
 #             status_code=status.HTTP_404_NOT_FOUND,

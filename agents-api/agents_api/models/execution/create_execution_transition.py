@@ -134,7 +134,8 @@ def create_execution_transition(
     ?[valid] :=
         matched[prev_transitions],
         found = length(prev_transitions),
-        valid = assert(found > 0, "Invalid transition"),
+        valid = if($next_type == "init", found == 0, found > 0),
+        assert(valid, "Invalid transition"),
     """
 
     # Prepare the insert query

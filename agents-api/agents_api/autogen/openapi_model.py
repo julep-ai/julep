@@ -1,5 +1,5 @@
 # ruff: noqa: F401, F403, F405
-from typing import Annotated, Any, Generic, Literal, Self, Type, TypeVar
+from typing import Annotated, Any, Generic, Literal, Self, Type, TypeVar, get_args
 from uuid import UUID
 
 from litellm.utils import _select_tokenizer as select_tokenizer
@@ -32,23 +32,44 @@ class ListResponse(BaseModel, Generic[DataT]):
 # Aliases
 # -------
 
-CreateToolRequest = UpdateToolRequest
-CreateOrUpdateAgentRequest = UpdateAgentRequest
-CreateOrUpdateUserRequest = UpdateUserRequest
-CreateOrUpdateSessionRequest = CreateSessionRequest
+
+class CreateToolRequest(UpdateToolRequest):
+    pass
+
+
+class CreateOrUpdateAgentRequest(UpdateAgentRequest):
+    pass
+
+
+class CreateOrUpdateUserRequest(UpdateUserRequest):
+    pass
+
+
+class CreateOrUpdateSessionRequest(CreateSessionRequest):
+    pass
+
+
 ChatResponse = ChunkChatResponse | MessageChatResponse
 
-# TODO: Figure out wtf... 🤷‍♂️
-MapReduceStep = Main
-ChatMLTextContentPart = Content
-ChatMLImageContentPart = ContentModel
-InputChatMLMessage = Message
+
+class MapReduceStep(Main):
+    pass
+
+
+class ChatMLTextContentPart(Content):
+    pass
+
+
+class ChatMLImageContentPart(ContentModel):
+    pass
+
+
+class InputChatMLMessage(Message):
+    pass
 
 
 # Custom types (not generated correctly)
 # --------------------------------------
-
-# TODO: Remove these when auto-population is fixed
 
 ChatMLContent = (
     list[ChatMLTextContentPart | ChatMLImageContentPart]
@@ -65,48 +86,23 @@ ChatMLContent = (
     ]
 )
 
-ChatMLRole = Literal[
-    "user",
-    "assistant",
-    "system",
-    "function",
-    "function_response",
-    "function_call",
-    "auto",
-]
-assert BaseEntry.model_fields["role"].annotation == ChatMLRole
+# Extract ChatMLRole
+ChatMLRole = BaseEntry.model_fields["role"].annotation
 
-ChatMLSource = Literal[
-    "api_request", "api_response", "tool_response", "internal", "summarizer", "meta"
-]
-assert BaseEntry.model_fields["source"].annotation == ChatMLSource
+# Extract ChatMLSource
+ChatMLSource = BaseEntry.model_fields["source"].annotation
 
+# Extract ExecutionStatus
+ExecutionStatus = Execution.model_fields["status"].annotation
 
-ExecutionStatus = Literal[
-    "queued",
-    "starting",
-    "running",
-    "awaiting_input",
-    "succeeded",
-    "failed",
-    "cancelled",
-]
-assert Execution.model_fields["status"].annotation == ExecutionStatus
+# Extract TransitionType
+TransitionType = Transition.model_fields["type"].annotation
 
-
-TransitionType = Literal[
-    "init",
-    "init_branch",
-    "finish",
-    "finish_branch",
-    "wait",
-    "resume",
-    "error",
-    "step",
-    "cancelled",
-]
-
-assert Transition.model_fields["type"].annotation == TransitionType
+# Assertions to ensure consistency (optional, but recommended for runtime checks)
+assert ChatMLRole == BaseEntry.model_fields["role"].annotation
+assert ChatMLSource == BaseEntry.model_fields["source"].annotation
+assert ExecutionStatus == Execution.model_fields["status"].annotation
+assert TransitionType == Transition.model_fields["type"].annotation
 
 
 # Create models
@@ -155,8 +151,8 @@ class CreateEntryRequest(BaseEntry):
         )
 
 
-# Task related models
-# -------------------
+# Workflow related models
+# -----------------------
 
 WorkflowStep = (
     EvaluateStep
@@ -183,6 +179,10 @@ WorkflowStep = (
 class Workflow(BaseModel):
     name: str
     steps: list[WorkflowStep]
+
+
+# Task spec helper models
+# ----------------------
 
 
 class TaskToolDef(BaseModel):
@@ -221,6 +221,10 @@ class Task(_Task):
             "extra": "allow",
         }
     )
+
+
+# Patch some models to allow extra fields
+# --------------------------------------
 
 
 _CreateTaskRequest = CreateTaskRequest

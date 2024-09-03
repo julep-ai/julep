@@ -1,14 +1,10 @@
-from uuid import uuid4
-
 from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest, Transition
 from ...common.protocol.tasks import StepContext
 from ...env import testing
-from ...models.execution.create_execution_transition import (
-    create_execution_transition as create_execution_transition_query,
-)
+from ...models.execution.create_execution_transition import create_execution_transition
 
 
 @beartype
@@ -24,7 +20,7 @@ async def transition_step(
         transition_info.task_token = task_token
 
     # Create transition
-    transition = create_execution_transition_query(
+    transition = create_execution_transition(
         developer_id=context.execution_input.developer_id,
         execution_id=context.execution_input.execution.id,
         task_id=context.execution_input.task.id,
@@ -34,13 +30,8 @@ async def transition_step(
 
     return transition
 
-async def mock_transition_step(
-    context: StepContext,
-    transition_info: CreateTransitionRequest,
-) -> None:
-    # Does nothing
-    return None
 
+mock_transition_step = transition_step
 
 transition_step = activity.defn(name="transition_step")(
     transition_step if not testing else mock_transition_step
