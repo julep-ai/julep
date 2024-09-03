@@ -8,7 +8,6 @@ from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
@@ -100,7 +99,6 @@ GenericStep = RootModel[WorkflowStep]
 
 
 # TODO: find a way to transition to error if workflow or activity times out.
-
 
 
 async def continue_as_child(
