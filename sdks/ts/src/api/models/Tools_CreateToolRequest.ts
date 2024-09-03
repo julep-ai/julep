@@ -17,7 +17,11 @@ export type Tools_CreateToolRequest = {
    * Name of the tool (must be unique for this agent and a valid python identifier string )
    */
   name: Common_validPythonIdentifier;
-  function?: Tools_FunctionDef;
+  background: boolean;
+  /**
+   * The function to call
+   */
+  function: Tools_FunctionDef;
   integration?: any;
   system?: any;
   api_call?: any;

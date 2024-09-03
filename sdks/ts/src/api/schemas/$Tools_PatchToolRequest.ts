@@ -23,8 +23,17 @@ export const $Tools_PatchToolRequest = {
         },
       ],
     },
+    background: {
+      type: "boolean",
+    },
     function: {
-      type: "Tools_FunctionDef",
+      type: "all-of",
+      description: `The function to call`,
+      contains: [
+        {
+          type: "Tools_FunctionDef",
+        },
+      ],
     },
     integration: {
       properties: {},

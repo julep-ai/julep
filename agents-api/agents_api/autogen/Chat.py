@@ -10,7 +10,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Common import LogitBias
 from .Docs import DocReference
-from .Tools import FunctionTool, NamedToolChoice
+from .Tools import NamedToolChoice, Tool
 
 
 class BaseChatOutput(BaseModel):
@@ -71,7 +71,7 @@ class ChatInputData(BaseModel):
     """
     A list of new input messages comprising the conversation so far.
     """
-    tools: list[FunctionTool] = []
+    tools: list[Tool] = []
     """
     (Advanced) List of tools that are provided in addition to agent's default set of tools.
     """

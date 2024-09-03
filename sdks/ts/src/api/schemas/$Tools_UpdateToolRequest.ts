@@ -25,8 +25,19 @@ export const $Tools_UpdateToolRequest = {
       ],
       isRequired: true,
     },
+    background: {
+      type: "boolean",
+      isRequired: true,
+    },
     function: {
-      type: "Tools_FunctionDef",
+      type: "all-of",
+      description: `The function to call`,
+      contains: [
+        {
+          type: "Tools_FunctionDef",
+        },
+      ],
+      isRequired: true,
     },
     integration: {
       properties: {},

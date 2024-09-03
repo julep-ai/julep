@@ -8,6 +8,7 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
 
 
+# TODO: We should use this step to signal to the parent workflow and set the value on the workflow context
 @beartype
 async def set_value_step(
     context: StepContext,

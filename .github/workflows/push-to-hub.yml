@@ -1,6 +1,7 @@
 name: Build and push images to docker hub on merge to dev
 run-name: ${{ github.actor }} is building and pushing images to docker hub
 
+# TODO: This is currently not working. Need to fix it
 on:
   push:
     branches:

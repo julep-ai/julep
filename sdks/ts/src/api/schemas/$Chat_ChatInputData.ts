@@ -49,7 +49,7 @@ export const $Chat_ChatInputData = {
     tools: {
       type: "array",
       contains: {
-        type: "Tools_FunctionTool",
+        type: "Tools_Tool",
       },
       isRequired: true,
     },

@@ -36,7 +36,7 @@ class CreateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"]
+    type: Literal["function", "integration", "system", "api_call"] = "function"
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -44,7 +44,11 @@ class CreateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef | None = None
+    background: Literal[False] = False
+    function: FunctionDef
+    """
+    The function to call
+    """
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None
@@ -111,7 +115,7 @@ class PatchToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] | None = None
+    type: Literal["function", "integration", "system", "api_call"] = "function"
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -119,7 +123,11 @@ class PatchToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    background: Literal[False] = False
     function: FunctionDef | None = None
+    """
+    The function to call
+    """
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None
@@ -129,7 +137,7 @@ class Tool(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"]
+    type: Literal["function", "integration", "system", "api_call"] = "function"
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -137,7 +145,11 @@ class Tool(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef | None = None
+    background: Literal[False] = False
+    function: FunctionDef
+    """
+    The function to call
+    """
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None
@@ -171,7 +183,7 @@ class UpdateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"]
+    type: Literal["function", "integration", "system", "api_call"] = "function"
     """
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
@@ -179,7 +191,11 @@ class UpdateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef | None = None
+    background: Literal[False] = False
+    function: FunctionDef
+    """
+    The function to call
+    """
     integration: Any | None = None
     system: Any | None = None
     api_call: Any | None = None
@@ -191,18 +207,6 @@ class ChosenFunctionCall(ChosenToolCall):
     )
     type: Literal["function"] = "function"
     function: FunctionCallOption
-    """
-    The function to call
-    """
-
-
-class FunctionTool(Tool):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function"] = "function"
-    background: Literal[False] = False
-    function: FunctionDef
     """
     The function to call
     """

@@ -34,6 +34,7 @@ async def event_publisher(
     async with inner_send_chan:
         try:
             async for event in history_events:
+                # TODO: We should get the workflow-completed event as well and use that to close the stream
                 if event.event_type == EventType.EVENT_TYPE_ACTIVITY_TASK_COMPLETED:
                     payloads = (
                         event.activity_task_completed_event_attributes.result.payloads
@@ -51,7 +52,6 @@ async def event_publisher(
                             continue
 
                         # FIXME: This does NOT return the last event (and maybe other events)
-                        #        Need to fix this. I think we need to grab events from child workflows too
                         transition_event_dict = dict(
                             type=data_item.type,
                             output=data_item.output,
@@ -92,6 +92,7 @@ async def stream_transitions_events(
         execution_id=execution_id,
     )
 
+    # TODO: Need to get all the events for child workflows too. Maybe try the `run_id` or something?
     workflow_handle = await get_workflow_handle(
         handle_id=temporal_data["id"],
     )

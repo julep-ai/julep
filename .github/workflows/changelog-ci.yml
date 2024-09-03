@@ -1,5 +1,6 @@
 name: Changelog CI
 
+# TODO: This is currently not working. Need to fix it
 on:
   pull_request:
     types: [ opened, synchronize ]

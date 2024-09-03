@@ -1,6 +1,7 @@
 name: Generate docs on merge to dev
 run-name: ${{ github.actor }} is generating documentation
 
+# TODO: This is currently not working. Need to fix it
 on:
   push:
     branches:

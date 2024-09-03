@@ -3,8 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Entries_ChatMLRole } from "./Entries_ChatMLRole";
-import type { Tools_FunctionTool } from "./Tools_FunctionTool";
 import type { Tools_NamedToolChoice } from "./Tools_NamedToolChoice";
+import type { Tools_Tool } from "./Tools_Tool";
 export type Chat_ChatInputData = {
   /**
    * A list of new input messages comprising the conversation so far.
@@ -30,7 +30,7 @@ export type Chat_ChatInputData = {
   /**
    * (Advanced) List of tools that are provided in addition to agent's default set of tools.
    */
-  tools: Array<Tools_FunctionTool>;
+  tools: Array<Tools_Tool>;
   /**
    * Can be one of existing tools given to the agent earlier or the ones provided in this request.
    */

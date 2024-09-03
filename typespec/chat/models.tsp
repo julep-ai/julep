@@ -159,7 +159,7 @@ model ChatInputData {
     messages: InputChatMLMessage[];
 
     /** (Advanced) List of tools that are provided in addition to agent's default set of tools. */
-    tools: FunctionTool[] = #[];
+    tools: Tool[] = #[];
 
     /** Can be one of existing tools given to the agent earlier or the ones provided in this request. */
     tool_choice?: ToolChoiceOption;
