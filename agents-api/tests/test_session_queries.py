@@ -18,7 +18,7 @@ from tests.fixtures import (
     test_user,
 )
 
-MODEL = "gpt-4o"
+MODEL = "gpt-4o-mini"
 
 
 @test("model: create session")

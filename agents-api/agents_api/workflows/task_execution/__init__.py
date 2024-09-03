@@ -83,6 +83,7 @@ STEP_TO_ACTIVITY = {
     IfElseWorkflowStep: task_steps.if_else_step,
     ForeachStep: task_steps.for_each_step,
     MapReduceStep: task_steps.map_reduce_step,
+    SetStep: task_steps.set_value_step,
 }
 
 # TODO: Avoid local activities for now (currently experimental)
@@ -143,6 +144,27 @@ async def transition(
 
 @workflow.defn
 class TaskExecutionWorkflow:
+    user_state: dict[str, Any] = {}
+
+    def __init__(self) -> None:
+        self.user_state = {}
+
+    @workflow.query
+    def get_user_state(self) -> dict[str, Any]:
+        return self.user_state
+
+    @workflow.query
+    def get_user_state_by_key(self, key: str) -> Any:
+        return self.user_state.get(key)
+
+    @workflow.signal
+    def set_user_state(self, key: str, value: Any) -> None:
+        self.user_state[key] = value
+
+    @workflow.signal
+    def update_user_state(self, values: dict[str, Any]) -> None:
+        self.user_state.update(values)
+
     @workflow.run
     async def run(
         self,
@@ -485,15 +507,32 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug("Prompt step: Received response")
                 state = PartialTransition(output=response)
 
-            case GetStep(), _:
-                # FIXME: Implement GetStep
-                workflow.logger.error("GetStep not yet implemented")
-                raise ApplicationError("Not implemented")
+            # FIXME: This is not working as expected
+            case SetStep(), StepOutcome(output=evaluated_output):
+                workflow.logger.info("Set step: Updating user state")
+                self.update_user_state(evaluated_output)
 
-            case SetStep(), _:
-                # FIXME: Implement SetStep
-                workflow.logger.error("SetStep not yet implemented")
-                raise ApplicationError("Not implemented")
+                print("-" * 100)
+                print("user_state", self.user_state)
+                print()
+                print("-" * 100)
+                print()
+                print("evaluated_output", evaluated_output)
+                print("-" * 100)
+
+                # Pass along the previous output unchanged
+                state = PartialTransition(output=context.current_input)
+
+            case GetStep(get=key), _:
+                workflow.logger.info(f"Get step: Fetching '{key}' from user state")
+                value = self.get_user_state_by_key(key)
+                workflow.logger.debug(f"Retrieved value: {value}")
+
+                print("-" * 100)
+                print("user_state", self.user_state)
+                print("-" * 100)
+
+                state = PartialTransition(output=value)
 
             case EmbedStep(), _:
                 # FIXME: Implement EmbedStep

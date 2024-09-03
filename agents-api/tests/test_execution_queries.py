@@ -23,7 +23,7 @@ from .fixtures import (
     test_task,
 )
 
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-4o-mini-mini"
 
 
 @test("model: create execution")

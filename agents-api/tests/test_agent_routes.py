@@ -11,7 +11,7 @@ def _(client=client):
     data = dict(
         name="test agent",
         about="test agent about",
-        model="gpt-4o",
+        model="gpt-4o-mini",
     )
 
     response = client.request(
@@ -28,7 +28,7 @@ def _(make_request=make_request):
     data = dict(
         name="test agent",
         about="test agent about",
-        model="gpt-4o",
+        model="gpt-4o-mini",
     )
 
     response = make_request(
@@ -45,7 +45,7 @@ def _(make_request=make_request):
     data = dict(
         name="test agent",
         about="test agent about",
-        model="gpt-4o",
+        model="gpt-4o-mini",
         instructions=["test instruction"],
     )
 
@@ -65,7 +65,7 @@ def _(make_request=make_request):
     data = dict(
         name="test agent",
         about="test agent about",
-        model="gpt-4o",
+        model="gpt-4o-mini",
         instructions=["test instruction"],
     )
 
@@ -107,7 +107,7 @@ def _(make_request=make_request):
     data = dict(
         name="test agent",
         about="test agent about",
-        model="gpt-4o",
+        model="gpt-4o-mini",
         instructions=["test instruction"],
     )
 
@@ -139,7 +139,7 @@ def _(make_request=make_request, agent=test_agent):
         name="updated agent",
         about="updated agent about",
         default_settings={"temperature": 1.0},
-        model="gpt-4o",
+        model="gpt-4o-mini",
         metadata={"hello": "world"},
     )
 

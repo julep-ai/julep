@@ -182,14 +182,6 @@ model GetStepDef {
     get: string;
 }
 
-model SetKey {
-    /** The key to set */
-    key: string;
-
-    /** The value to set */
-    value: TypedExpression<unknown>;
-}
-
 model SetStep extends BaseWorkflowStep<"set"> {
     @visibility("read")
     kind_: "set" = "set";
@@ -199,7 +191,7 @@ model SetStep extends BaseWorkflowStep<"set"> {
 
 model SetStepDef {
     /** The value to set */
-    set: SetKey;
+    set: Record<TypedExpression<unknown>>;
 }
 
 ///////////////////////

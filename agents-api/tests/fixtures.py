@@ -100,7 +100,7 @@ def test_agent(cozo_client=cozo_client, developer_id=test_developer_id):
     agent = create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             name="test agent",
             about="test agent about",
             metadata={"test": "test"},

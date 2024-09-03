@@ -25,7 +25,7 @@ from tests.fixtures import (
 async def _(
     _=patch_embed_acompletion,
 ):
-    assert (await litellm.acompletion(model="gpt-4o", messages=[])).id == "fake_id"
+    assert (await litellm.acompletion(model="gpt-4o-mini", messages=[])).id == "fake_id"
     assert (await embed.embed())[0][0] == 1.0  # pytype: disable=missing-parameter
 
 

@@ -544,20 +544,6 @@ class SearchStep(BaseModel):
     """
 
 
-class SetKey(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    key: str
-    """
-    The key to set
-    """
-    value: str
-    """
-    The value to set
-    """
-
-
 class SetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -566,7 +552,7 @@ class SetStep(BaseModel):
     """
     The kind of step
     """
-    set: SetKey
+    set: dict[str, str]
     """
     The value to set
     """
