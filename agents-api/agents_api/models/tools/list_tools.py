@@ -30,7 +30,7 @@ T = TypeVar("T")
 @wrap_in_class(
     Tool,
     transform=lambda d: {
-        d["type"]: d.pop("spec"),
+        d["type"]: {**d.pop("spec"), "name": d["name"]},
         **d,
     },
 )
