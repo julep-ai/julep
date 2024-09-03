@@ -12,7 +12,6 @@ from ...autogen.openapi_model import (
 )
 from ...dependencies.developer_id import get_developer_id
 from ...models.task.create_task import create_task as create_task_query
-
 from .router import router
 
 

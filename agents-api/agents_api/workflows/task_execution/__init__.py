@@ -12,19 +12,24 @@ with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
         CreateTransitionRequest,
+        EmbedStep,
         ErrorWorkflowStep,
         EvaluateStep,
         ForeachDo,
         ForeachStep,
+        GetStep,
         IfElseWorkflowStep,
         LogStep,
         MapReduceStep,
+        ParallelStep,
         PromptStep,
         ReturnStep,
+        SearchStep,
+        SetStep,
         SleepFor,
         SleepStep,
         SwitchStep,
-        # ToolCallStep,
+        ToolCallStep,
         Transition,
         TransitionTarget,
         WaitForInputStep,
@@ -40,6 +45,29 @@ with workflow.unsafe.imports_passed_through():
     )
     from ...env import debug, testing
 
+# Supported steps
+# ---------------
+
+# WorkflowStep = (
+#     EvaluateStep  # ✅
+#     | ToolCallStep  # ❌
+#     | PromptStep  # 🟡
+#     | GetStep  # ❌
+#     | SetStep  # ❌
+#     | LogStep  # ✅
+#     | EmbedStep  # ❌
+#     | SearchStep  # ❌
+#     | ReturnStep  # ✅
+#     | SleepStep  # ✅
+#     | ErrorWorkflowStep  # ✅
+#     | YieldStep  # ✅
+#     | WaitForInputStep  # ✅
+#     | IfElseWorkflowStep  # ✅
+#     | SwitchStep  # ✅
+#     | ForeachStep  # ✅
+#     | ParallelStep  # ❌
+#     | MapReduceStep  # ✅
+# )
 
 STEP_TO_ACTIVITY = {
     PromptStep: task_steps.prompt_step,
@@ -73,7 +101,6 @@ GenericStep = RootModel[WorkflowStep]
 # TODO: find a way to transition to error if workflow or activity times out.
 
 
-# FIXME: Output not being set on finish correctly
 async def transition(
     context: StepContext, state: PartialTransition | None = None, **kwargs
 ) -> Transition:
@@ -452,11 +479,44 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(), StepOutcome(output=response):
+            case PromptStep(), StepOutcome(
+                output=response
+            ):  # FIXME: if not response.choices[0].tool_calls:
                 workflow.logger.debug("Prompt step: Received response")
                 state = PartialTransition(output=response)
 
+            case GetStep(), _:
+                # FIXME: Implement GetStep
+                workflow.logger.error("GetStep not yet implemented")
+                raise ApplicationError("Not implemented")
+
+            case SetStep(), _:
+                # FIXME: Implement SetStep
+                workflow.logger.error("SetStep not yet implemented")
+                raise ApplicationError("Not implemented")
+
+            case EmbedStep(), _:
+                # FIXME: Implement EmbedStep
+                workflow.logger.error("EmbedStep not yet implemented")
+                raise ApplicationError("Not implemented")
+
+            case SearchStep(), _:
+                # FIXME: Implement SearchStep
+                workflow.logger.error("SearchStep not yet implemented")
+                raise ApplicationError("Not implemented")
+
+            case ParallelStep(), _:
+                # FIXME: Implement ParallelStep
+                workflow.logger.error("ParallelStep not yet implemented")
+                raise ApplicationError("Not implemented")
+
+            case ToolCallStep(), _:
+                # FIXME: Implement ToolCallStep
+                workflow.logger.error("ToolCallStep not yet implemented")
+                raise ApplicationError("Not implemented")
+
             case _:
+                # FIXME: Add steps that are not yet supported
                 workflow.logger.error(
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )

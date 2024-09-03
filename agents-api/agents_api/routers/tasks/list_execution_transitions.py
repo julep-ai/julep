@@ -31,6 +31,7 @@ async def list_execution_transitions(
 
     return ListResponse[Transition](items=transitions)
 
+
 # TODO: Do we need this?
 # @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
 # async def get_execution_transition(

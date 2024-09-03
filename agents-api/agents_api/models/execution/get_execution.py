@@ -40,13 +40,15 @@ def get_execution(
     {
       input[execution_id] <- [[to_uuid($execution_id)]]
 
-      ?[id, task_id, status, input, session_id, metadata, created_at, updated_at] := 
+      ?[id, task_id, status, input, output, error, session_id, metadata, created_at, updated_at] := 
           input[execution_id],
           *executions {
               task_id,
               execution_id,
               status,
               input,
+              output,
+              error,
               session_id,
               metadata,
               created_at,
