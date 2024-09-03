@@ -8,6 +8,7 @@ from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
+
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
@@ -99,6 +100,7 @@ GenericStep = RootModel[WorkflowStep]
 
 
 # TODO: find a way to transition to error if workflow or activity times out.
+
 
 
 async def continue_as_child(
@@ -498,14 +500,6 @@ class TaskExecutionWorkflow:
                 workflow.logger.info("Set step: Updating user state")
                 self.update_user_state(evaluated_output)
 
-                print("-" * 100)
-                print("user_state", self.user_state)
-                print()
-                print("-" * 100)
-                print()
-                print("evaluated_output", evaluated_output)
-                print("-" * 100)
-
                 # Pass along the previous output unchanged
                 state = PartialTransition(output=context.current_input)
 
@@ -513,10 +507,6 @@ class TaskExecutionWorkflow:
                 workflow.logger.info(f"Get step: Fetching '{key}' from user state")
                 value = self.get_user_state_by_key(key)
                 workflow.logger.debug(f"Retrieved value: {value}")
-
-                print("-" * 100)
-                print("user_state", self.user_state)
-                print("-" * 100)
 
                 state = PartialTransition(output=value)
 
