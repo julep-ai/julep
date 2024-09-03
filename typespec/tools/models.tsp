@@ -49,7 +49,6 @@ model Tool {
 
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
-    background: false = false;
 
     /** The function to call */
     function: FunctionDef;

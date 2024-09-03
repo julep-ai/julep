@@ -12,6 +12,7 @@ from ..task.get_task import get_task
 from ..tools.list_tools import list_tools
 from ..utils import (
     cozo_query,
+    fix_uuid_if_present,
     make_cozo_json_query,
     partialclass,
     rewrap_exceptions,
@@ -32,7 +33,24 @@ T = TypeVar("T")
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(ExecutionInput, one=True)
+@wrap_in_class(
+    ExecutionInput,
+    one=True,
+    transform=lambda d: {
+        **d,
+        "task": {
+            "tools": [
+                {tool["type"]: tool.pop("spec"), **tool}
+                for tool in map(fix_uuid_if_present, d["task"].pop("tools"))
+            ],
+            **d["task"],
+        },
+        "tools": [
+            {tool["type"]: tool.pop("spec"), **tool}
+            for tool in map(fix_uuid_if_present, d["tools"])
+        ],
+    },
+)
 @cozo_query
 @beartype
 def prepare_execution_input(

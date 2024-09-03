@@ -17,7 +17,6 @@ export type Tools_PatchToolRequest = {
    * Name of the tool (must be unique for this agent and a valid python identifier string )
    */
   name?: Common_validPythonIdentifier;
-  background?: boolean;
   /**
    * The function to call
    */

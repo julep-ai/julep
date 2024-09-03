@@ -27,7 +27,13 @@ T = TypeVar("T")
         TypeError: partialclass(HTTPException, status_code=400),
     }
 )
-@wrap_in_class(Tool)
+@wrap_in_class(
+    Tool,
+    transform=lambda d: {
+        d["type"]: d.pop("spec"),
+        **d,
+    },
+)
 @cozo_query
 @beartype
 def list_tools(

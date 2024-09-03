@@ -1,9 +1,7 @@
-from typing import Any
 
 from beartype import beartype
 from temporalio import activity
 
-from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...env import testing
 
@@ -13,8 +11,8 @@ from ...env import testing
 @beartype
 async def get_value_step(
     context: StepContext,
-    key: str,
 ) -> StepOutcome:
+    key: str = context.current_step.get
     raise NotImplementedError("Not implemented yet")
 
 
