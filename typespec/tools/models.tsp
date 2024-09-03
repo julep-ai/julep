@@ -42,29 +42,23 @@ model FunctionDef {
 
 }
 
-@discriminator("type")
+// TODO: We should use this model for all tools, not just functions and discriminate on the type
 model Tool {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
-    type: ToolType;
+    type: ToolType = ToolType.function;
 
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
+    background: false = false;
 
-    function?: FunctionDef;
+    /** The function to call */
+    function: FunctionDef;
     integration?: unknown;
     system?: unknown;
     api_call?: unknown;
 
     ...HasTimestamps;
     ...HasId;
-}
-
-model FunctionTool extends Tool {
-    type: ToolType.function;
-    background: false = false;
-
-    /** The function to call */
-    function: FunctionDef;
 }
 
 model FunctionCallOption {
