@@ -11,7 +11,6 @@ from temporalio.exceptions import ApplicationError
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
-        CreateTransitionRequest,
         EmbedStep,
         ErrorWorkflowStep,
         EvaluateStep,
@@ -30,7 +29,6 @@ with workflow.unsafe.imports_passed_through():
         SleepStep,
         SwitchStep,
         ToolCallStep,
-        Transition,
         TransitionTarget,
         WaitForInputStep,
         Workflow,
@@ -44,6 +42,7 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...env import debug, testing
+    from .transition import transition
 
 # Supported steps
 # ---------------
@@ -52,8 +51,8 @@ with workflow.unsafe.imports_passed_through():
 #     EvaluateStep  # ✅
 #     | ToolCallStep  # ❌
 #     | PromptStep  # 🟡
-#     | GetStep  # ❌
-#     | SetStep  # ❌
+#     | GetStep  # ✅
+#     | SetStep  # ✅
 #     | LogStep  # ✅
 #     | EmbedStep  # ❌
 #     | SearchStep  # ❌
@@ -83,6 +82,7 @@ STEP_TO_ACTIVITY = {
     IfElseWorkflowStep: task_steps.if_else_step,
     ForeachStep: task_steps.for_each_step,
     MapReduceStep: task_steps.map_reduce_step,
+    SetStep: task_steps.set_value_step,
 }
 
 # TODO: Avoid local activities for now (currently experimental)
@@ -101,55 +101,61 @@ GenericStep = RootModel[WorkflowStep]
 # TODO: find a way to transition to error if workflow or activity times out.
 
 
-async def transition(
-    context: StepContext, state: PartialTransition | None = None, **kwargs
-) -> Transition:
-    if state is None:
-        state = PartialTransition()
-
-    match context.is_last_step, context.cursor:
-        case (True, TransitionTarget(workflow="main")):
-            state.type = "finish"
-        case (True, _):
-            state.type = "finish_branch"
-        case _, _:
-            state.type = "step"
-
-    transition_request = CreateTransitionRequest(
-        current=context.cursor,
-        **{
-            "next": None
-            if context.is_last_step
-            else TransitionTarget(
-                workflow=context.cursor.workflow, step=context.cursor.step + 1
-            ),
-            "metadata": {"step_type": type(context.current_step).__name__},
-            **state.model_dump(exclude_unset=True),
-            **kwargs,  # Override with any additional kwargs
-        },
+async def continue_as_child(
+    execution_input: ExecutionInput,
+    start: TransitionTarget,
+    previous_inputs: list[Any],
+    user_state: dict[str, Any] = {},
+) -> Any:
+    return await workflow.execute_child_workflow(
+        TaskExecutionWorkflow.run,
+        args=[
+            execution_input,
+            start,
+            previous_inputs,
+            user_state,
+        ],
+        # TODO: Should add search_attributes for queryability
     )
 
-    try:
-        return await workflow.execute_activity(
-            task_steps.transition_step,
-            args=[context, transition_request],
-            schedule_to_close_timeout=timedelta(seconds=2),
-        )
 
-    except Exception as e:
-        workflow.logger.error(f"Error in transition: {str(e)}")
-        raise ApplicationError(f"Error in transition: {e}") from e
-
-
+# TODO: Review the current user state storage method
+#       Probably can be implemented much more efficiently
 @workflow.defn
 class TaskExecutionWorkflow:
+    user_state: dict[str, Any] = {}
+
+    def __init__(self) -> None:
+        self.user_state = {}
+
+    # TODO: Add endpoints for getting and setting user state for an execution
+    @workflow.query
+    def get_user_state(self) -> dict[str, Any]:
+        return self.user_state
+
+    @workflow.query
+    def get_user_state_by_key(self, key: str) -> Any:
+        return self.user_state.get(key)
+
+    @workflow.signal
+    def set_user_state(self, key: str, value: Any) -> None:
+        self.user_state[key] = value
+
+    @workflow.signal
+    def update_user_state(self, values: dict[str, Any]) -> None:
+        self.user_state.update(values)
+
     @workflow.run
     async def run(
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
         previous_inputs: list[Any] = [],
+        user_state: dict[str, Any] = {},
     ) -> Any:
+        # Set the initial user state
+        self.user_state = user_state
+
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
@@ -275,9 +281,9 @@ class TaskExecutionWorkflow:
                 ]
 
                 # Execute the chosen branch and come back here
-                result = await workflow.execute_child_workflow(
-                    TaskExecutionWorkflow.run,
-                    args=case_args,
+                result = await continue_as_child(
+                    *case_args,
+                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -320,9 +326,9 @@ class TaskExecutionWorkflow:
                 ]
 
                 # Execute the chosen branch and come back here
-                result = await workflow.execute_child_workflow(
-                    TaskExecutionWorkflow.run,
-                    args=if_else_args,
+                result = await continue_as_child(
+                    *if_else_args,
+                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -354,9 +360,9 @@ class TaskExecutionWorkflow:
                     ]
 
                     # Execute the chosen branch and come back here
-                    result = await workflow.execute_child_workflow(
-                        TaskExecutionWorkflow.run,
-                        args=foreach_args,
+                    result = await continue_as_child(
+                        *foreach_args,
+                        user_state=self.user_state,
                     )
 
                 state = PartialTransition(output=result)
@@ -395,9 +401,9 @@ class TaskExecutionWorkflow:
 
                     # TODO: We should parallelize this
                     # Execute the chosen branch and come back here
-                    output = await workflow.execute_child_workflow(
-                        TaskExecutionWorkflow.run,
-                        args=map_reduce_args,
+                    output = await continue_as_child(
+                        *map_reduce_args,
+                        user_state=self.user_state,
                     )
 
                     # Reduce the result with the initial value
@@ -461,9 +467,11 @@ class TaskExecutionWorkflow:
                     next=yield_next_target,
                 )
 
-                result = await workflow.execute_child_workflow(
-                    TaskExecutionWorkflow.run,
-                    args=[execution_input, yield_next_target, [output]],
+                result = await continue_as_child(
+                    execution_input=execution_input,
+                    start=yield_next_target,
+                    previous_inputs=[output],
+                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -485,15 +493,32 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug("Prompt step: Received response")
                 state = PartialTransition(output=response)
 
-            case GetStep(), _:
-                # FIXME: Implement GetStep
-                workflow.logger.error("GetStep not yet implemented")
-                raise ApplicationError("Not implemented")
+            # FIXME: This is not working as expected
+            case SetStep(), StepOutcome(output=evaluated_output):
+                workflow.logger.info("Set step: Updating user state")
+                self.update_user_state(evaluated_output)
 
-            case SetStep(), _:
-                # FIXME: Implement SetStep
-                workflow.logger.error("SetStep not yet implemented")
-                raise ApplicationError("Not implemented")
+                print("-" * 100)
+                print("user_state", self.user_state)
+                print()
+                print("-" * 100)
+                print()
+                print("evaluated_output", evaluated_output)
+                print("-" * 100)
+
+                # Pass along the previous output unchanged
+                state = PartialTransition(output=context.current_input)
+
+            case GetStep(get=key), _:
+                workflow.logger.info(f"Get step: Fetching '{key}' from user state")
+                value = self.get_user_state_by_key(key)
+                workflow.logger.debug(f"Retrieved value: {value}")
+
+                print("-" * 100)
+                print("user_state", self.user_state)
+                print("-" * 100)
+
+                state = PartialTransition(output=value)
 
             case EmbedStep(), _:
                 # FIXME: Implement EmbedStep
@@ -516,7 +541,7 @@ class TaskExecutionWorkflow:
                 raise ApplicationError("Not implemented")
 
             case _:
-                # FIXME: Add steps that are not yet supported
+                # TODO: Add steps that are not yet supported
                 workflow.logger.error(
                     f"Unhandled step type: {type(context.current_step).__name__}"
                 )
@@ -546,11 +571,9 @@ class TaskExecutionWorkflow:
         )
 
         # TODO: Should use a continue_as_new workflow if history grows too large
-        return await workflow.execute_child_workflow(
-            TaskExecutionWorkflow.run,
-            args=[
-                execution_input,
-                final_state.next,
-                previous_inputs + [final_state.output],
-            ],
+        return await continue_as_child(
+            execution_input=execution_input,
+            start=final_state.next,
+            previous_inputs=previous_inputs + [final_state.output],
+            user_state=self.user_state,
         )

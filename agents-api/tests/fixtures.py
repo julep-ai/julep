@@ -100,7 +100,7 @@ def test_agent(cozo_client=cozo_client, developer_id=test_developer_id):
     agent = create_agent(
         developer_id=developer_id,
         data=CreateAgentRequest(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             name="test agent",
             about="test agent about",
             metadata={"test": "test"},
@@ -260,7 +260,7 @@ def test_execution(
     )
     create_temporal_lookup(
         developer_id=developer_id,
-        task_id=task.id,
+        execution_id=execution.id,
         workflow_handle=workflow_handle,
         client=client,
     )
@@ -294,7 +294,7 @@ def test_execution_started(
     )
     create_temporal_lookup(
         developer_id=developer_id,
-        task_id=task.id,
+        execution_id=execution.id,
         workflow_handle=workflow_handle,
         client=client,
     )

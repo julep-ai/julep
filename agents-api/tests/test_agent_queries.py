@@ -28,7 +28,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
         data=CreateAgentRequest(
             name="test agent",
             about="test agent about",
-            model="gpt-4o",
+            model="gpt-4o-mini",
         ),
         client=client,
     )
@@ -41,7 +41,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
         data=CreateAgentRequest(
             name="test agent",
             about="test agent about",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             instructions=["test instruction"],
         ),
         client=client,
@@ -56,7 +56,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
         data=CreateOrUpdateAgentRequest(
             name="test agent",
             about="test agent about",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             instructions=["test instruction"],
         ),
         client=client,
@@ -86,7 +86,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
         data=CreateAgentRequest(
             name="test agent",
             about="test agent about",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             instructions=["test instruction"],
         ),
         client=client,
@@ -108,7 +108,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
         data=UpdateAgentRequest(
             name="updated agent",
             about="updated agent about",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             default_settings={"temperature": 1.0},
             metadata={"hello": "world"},
         ),

@@ -14,6 +14,7 @@ from agents_api.models.execution.create_execution_transition import (
 from agents_api.models.execution.create_temporal_lookup import create_temporal_lookup
 from agents_api.models.execution.get_execution import get_execution
 from agents_api.models.execution.list_executions import list_executions
+from agents_api.models.execution.lookup_temporal_data import lookup_temporal_data
 
 from .fixtures import (
     cozo_client,
@@ -23,7 +24,7 @@ from .fixtures import (
     test_task,
 )
 
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-4o-mini-mini"
 
 
 @test("model: create execution")
@@ -33,15 +34,16 @@ def _(client=cozo_client, developer_id=test_developer_id, task=test_task):
         id="blah",
     )
 
-    create_execution(
+    execution = create_execution(
         developer_id=developer_id,
         task_id=task.id,
         data=CreateExecutionRequest(input={"test": "test"}),
         client=client,
     )
+
     create_temporal_lookup(
         developer_id=developer_id,
-        task_id=task.id,
+        execution_id=execution.id,
         workflow_handle=workflow_handle,
         client=client,
     )
@@ -57,6 +59,18 @@ def _(client=cozo_client, developer_id=test_developer_id, execution=test_executi
     assert result is not None
     assert isinstance(result, Execution)
     assert result.status == "queued"
+
+
+@test("model: lookup temporal id")
+def _(client=cozo_client, developer_id=test_developer_id, execution=test_execution):
+    result = lookup_temporal_data(
+        execution_id=execution.id,
+        developer_id=developer_id,
+        client=client,
+    )
+
+    assert result is not None
+    assert result["id"]
 
 
 @test("model: list executions")

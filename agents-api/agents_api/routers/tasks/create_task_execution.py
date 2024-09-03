@@ -124,7 +124,6 @@ async def create_task_execution(
         create_temporal_lookup,
         #
         developer_id=x_developer_id,
-        task_id=task_id,
         execution_id=execution.id,
         workflow_handle=handle,
     )

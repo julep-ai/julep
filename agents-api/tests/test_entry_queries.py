@@ -17,7 +17,7 @@ from agents_api.models.entry.list_entries import list_entries
 from agents_api.models.session.get_session import get_session
 from tests.fixtures import cozo_client, test_developer_id, test_session
 
-MODEL = "gpt-4o"
+MODEL = "gpt-4o-mini"
 
 
 @test("model: create entry")
@@ -57,7 +57,7 @@ def _(client=cozo_client, developer_id=test_developer_id, session=test_session):
         content="test entry content",
     )
 
-    # FIXME: We should make sessions.updated_at also a updated_at_ms field to avoid this sleep
+    # TODO: We should make sessions.updated_at also a updated_at_ms field to avoid this sleep
     time.sleep(1)
 
     create_entries(

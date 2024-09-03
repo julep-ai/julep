@@ -41,7 +41,7 @@ jinja_env.globals["null"] = None
 simple_jinja_regex = re.compile(r"{{|{%.+}}|%}", re.DOTALL)
 
 
-# FIXME: This does not work for some reason
+# TODO: This does not work for some reason
 def is_simple_jinja(template_string: str) -> bool:
     return simple_jinja_regex.search(template_string) is None
 

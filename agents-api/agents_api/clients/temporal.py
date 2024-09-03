@@ -54,4 +54,19 @@ async def run_task_execution_workflow(
         task_queue=temporal_task_queue,
         id=str(job_id),
         run_timeout=timedelta(days=31),
+        # TODO: Should add search_attributes for queryability
     )
+
+
+async def get_workflow_handle(
+    *,
+    handle_id: str,
+    client: Client | None = None,
+):
+    client = client or (await get_client())
+
+    handle = client.get_workflow_handle(
+        handle_id,
+    )
+
+    return handle

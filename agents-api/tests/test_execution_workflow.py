@@ -758,6 +758,49 @@ async def _(
             assert result["role"] == "assistant"
 
 
+@test("workflow: set and get steps")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [
+                    {"set": {"test_key": '"test_value"'}},
+                    {"get": "test_key"},
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert result == "test_value"
+
+
 @test("workflow: execute yaml task")
 async def _(
     client=cozo_client,

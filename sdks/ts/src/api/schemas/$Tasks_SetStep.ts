@@ -22,13 +22,10 @@ export const $Tasks_SetStep = {
           isRequired: true,
         },
         set: {
-          type: "all-of",
-          description: `The value to set`,
-          contains: [
-            {
-              type: "Tasks_SetKey",
-            },
-          ],
+          type: "dictionary",
+          contains: {
+            type: "Common_PyExpression",
+          },
           isRequired: true,
         },
       },

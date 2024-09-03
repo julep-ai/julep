@@ -1,41 +1,11 @@
 from beartype import beartype
 from temporalio import activity
 
-from ...autogen.openapi_model import (
-    Content,
-    ContentModel,
-)
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.utils.template import render_template
-
-
-def _content_to_dict(
-    content: str | list[str] | list[Content | ContentModel], role: str
-) -> str | list[dict]:
-    if isinstance(content, str):
-        return content
-
-    result = []
-    for s in content:
-        if isinstance(s, str):
-            result.append({"content": {"type": "text", "text": s, "role": role}})
-        elif isinstance(s, Content):
-            result.append({"content": {"type": s.type, "text": s.text, "role": role}})
-        elif isinstance(s, ContentModel):
-            result.append(
-                {
-                    "content": {
-                        "type": s.type,
-                        "image_url": {"url": s.image_url.url},
-                        "role": role,
-                    }
-                }
-            )
-
-    return result
 
 
 @activity.defn

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Tasks_SetKey } from "./Tasks_SetKey";
+import type { Common_PyExpression } from "./Common_PyExpression";
 export type Tasks_SetStep = {
   /**
    * The kind of step
@@ -13,5 +13,5 @@ export type Tasks_SetStep = {
   /**
    * The value to set
    */
-  set: Tasks_SetKey;
+  set: Record<string, Common_PyExpression>;
 };
