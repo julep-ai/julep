@@ -6,8 +6,8 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.utils.template import render_template
 from ...env import testing
-from .base_evaluate import base_evaluate
 
 
 @beartype
@@ -17,8 +17,10 @@ async def log_step(context: StepContext) -> StepOutcome:
     try:
         assert isinstance(context.current_step, LogStep)
 
-        expr: str = context.current_step.log
-        output = await base_evaluate(expr, context.model_dump())
+        template: str = context.current_step.log
+        output = await render_template(
+            template, context.model_dump(), skip_vars=["developer_id"]
+        )
 
         result = StepOutcome(output=output)
         return result

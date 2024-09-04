@@ -407,7 +407,9 @@ async def _(
                 "other_workflow": [
                     # Testing that we can access the input
                     {"evaluate": {"hello": '_["test"]'}},
-                    {"log": '_["hell"]'},  # <--- The "hell" key does not exist
+                    {
+                        "log": '{{_["hell"].strip()}}'
+                    },  # <--- The "hell" key does not exist
                 ],
                 "main": [
                     # Testing that we can access the input
