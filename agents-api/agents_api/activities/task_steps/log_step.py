@@ -18,7 +18,9 @@ async def log_step(context: StepContext) -> StepOutcome:
         assert isinstance(context.current_step, LogStep)
 
         template: str = context.current_step.log
-        output = await render_template(template, context.model_dump(), skip_vars=["developer_id"])
+        output = await render_template(
+            template, context.model_dump(), skip_vars=["developer_id"]
+        )
 
         result = StepOutcome(output=output)
         return result
