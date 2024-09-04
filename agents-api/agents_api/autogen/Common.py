@@ -98,3 +98,10 @@ class ResourceUpdatedResponse(BaseModel):
     """
     IDs (if any) of jobs created as part of this request
     """
+
+
+class Uuid(RootModel[UUID]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: UUID

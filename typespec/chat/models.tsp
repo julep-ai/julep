@@ -195,22 +195,23 @@ model BaseChatOutput {
     index: uint32;
 
     /** The reason the model stopped generating tokens */
-    finish_reason: FinishReason;
+    finish_reason: FinishReason = FinishReason.stop;
 
     /** The log probabilities of tokens */
     logprobs?: LogProbResponse;
 }
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
+// TODO: Need to add support for tool calls
 model SingleChatOutput extends BaseChatOutput {
-    message: InputChatMLMessage;
+    message: ChatMLMessage;
 }
 
 /** The output returned by the model. Note that, depending on the model provider, they might return more than one message. */
 model MultipleChatOutput extends BaseChatOutput {
     @visibility("read")
     @minItems(1)
-    messages: InputChatMLMessage[];
+    messages: ChatMLMessage[];
 }
 
 alias ChatOutput = SingleChatOutput | MultipleChatOutput;

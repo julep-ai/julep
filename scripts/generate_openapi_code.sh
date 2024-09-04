@@ -13,12 +13,12 @@ cd -
 # fern generate
 
 cd sdks/python && \
-    poetry update && \
+    # poetry update && \
     poetry run poe format
 cd -
 
 cd agents-api && \
-    poetry update && \
+    # poetry update && \
     poetry run poe codegen && \
     poetry run poe format
 cd -

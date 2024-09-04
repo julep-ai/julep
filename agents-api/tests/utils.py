@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager, contextmanager
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from litellm.types.utils import Choices, ModelResponse
+from litellm.types.utils import ModelResponse
 from temporalio.testing import WorkflowEnvironment
 
 from agents_api.worker.codec import pydantic_data_converter
@@ -72,7 +72,14 @@ async def patch_http_client_with_temporal(*, cozo_client, developer_id):
 def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, world!"}):
     mock_model_response = ModelResponse(
         id="fake_id",
-        choices=[Choices(message=output)],
+        choices=[
+            dict(
+                message=output,
+                tool_calls=[],
+                created_at=1,
+                # finish_reason="stop",
+            )
+        ],
         created=0,
         object="text_completion",
     )

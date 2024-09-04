@@ -43,9 +43,28 @@ export const $Chat_SingleChatOutput = {
               type: "string",
               description: `Name`,
             },
-            continue: {
-              type: "boolean",
-              description: `Whether to continue this message or return a new one`,
+            tool_calls: {
+              type: "array",
+              contains: {
+                type: "Tools_ChosenToolCall",
+              },
+              isReadOnly: true,
+              isNullable: true,
+            },
+            created_at: {
+              type: "string",
+              description: `When this resource was created as UTC date-time`,
+              isReadOnly: true,
+              format: "date-time",
+            },
+            id: {
+              type: "all-of",
+              contains: [
+                {
+                  type: "Common_uuid",
+                },
+              ],
+              isReadOnly: true,
             },
           },
           isRequired: true,
