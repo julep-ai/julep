@@ -1,4 +1,3 @@
-
 from beartype import beartype
 from temporalio import activity
 

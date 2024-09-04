@@ -7,6 +7,12 @@ namespace Common;
 // COMMON MIXINS
 //
 
+model HasCreatedAtOptional {
+    /** When this resource was created as UTC date-time */
+    @visibility("read")
+    created_at?: utcDateTime;
+}
+
 model HasCreatedAt {
     /** When this resource was created as UTC date-time */
     @visibility("read")
@@ -28,6 +34,11 @@ model HasDeletedAt {
 model HasTimestamps {
     ...HasCreatedAt;
     ...HasUpdatedAt;
+}
+
+model HasIdOptional {
+    @visibility("read")
+    id?: uuid;
 }
 
 model HasId {
