@@ -14,7 +14,6 @@ describe("Julep Client Tests", () => {
   let testAgent: Partial<Agent> & { id: string };
   let testUser: Common_ResourceCreatedResponse;
   let testAgentDocId: string;
-  let testUserDocId: string;
 
   const mockDoc = { title: "test title", content: "test content" };
 
@@ -59,8 +58,6 @@ describe("Julep Client Tests", () => {
       id: testUser.id,
       requestBody: mockDoc,
     });
-
-    testUserDocId = response.id;
 
     expect(response).toHaveProperty("created_at");
     expect(response).toHaveProperty("id");

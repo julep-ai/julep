@@ -4,7 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 import { setupClient } from "./fixtures"; // Adjust path if necessary
 import {
   Agents_Agent as Agent,
-  Chat_MessageChatResponse,
+  Chat_ChatOutputChunk,
+  Chat_MultipleChatOutput,
+  Chat_SingleChatOutput,
   Common_ResourceCreatedResponse,
 } from "../src/api";
 import { Client } from "../src";
@@ -172,10 +174,23 @@ describe("Sessions API", () => {
 
     expect(response.choices).toBeDefined();
 
+    const result = response.choices[0];
+
+    if (isChat_ChatOutputChunk(result)) {
+      expect(result.delta.content).toContain(
+        mockSessionWithTemplate.metadata.arg,
+      );
+    } else if (isChat_MultipleChatOutput(result)) {
+      expect(result.messages[0].content).toContain(
+        mockSessionWithTemplate.metadata.arg,
+      );
+    } else if (isChat_SingleChatOutput(result)) {
+      expect(result.message.content).toContain(
+        mockSessionWithTemplate.metadata.arg,
+      );
+    }
+
     // Check that the template was filled in
-    expect(response.choices[0][0].content).toContain(
-      mockSessionWithTemplate.metadata.arg,
-    );
   }, 5000);
 
   //   it("sessions.suggestions", async () => {
@@ -201,3 +216,21 @@ describe("Sessions API", () => {
     expect(response).toBeUndefined();
   });
 });
+
+function isChat_ChatOutputChunk(
+  x: Chat_ChatOutputChunk | Chat_SingleChatOutput | Chat_MultipleChatOutput,
+): x is Chat_ChatOutputChunk {
+  return (x as Chat_ChatOutputChunk).delta !== undefined;
+}
+
+function isChat_SingleChatOutput(
+  x: Chat_ChatOutputChunk | Chat_SingleChatOutput | Chat_MultipleChatOutput,
+): x is Chat_SingleChatOutput {
+  return (x as Chat_SingleChatOutput).message !== undefined;
+}
+
+function isChat_MultipleChatOutput(
+  x: Chat_ChatOutputChunk | Chat_SingleChatOutput | Chat_MultipleChatOutput,
+): x is Chat_MultipleChatOutput {
+  return (x as Chat_MultipleChatOutput).messages !== undefined;
+}
