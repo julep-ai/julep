@@ -69,19 +69,12 @@ model FunctionCallOption {
 @discriminator("type")
 model NamedToolChoice {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
-    type: ToolType;
+    type: ToolType = ToolType.function;
 
     function?: FunctionCallOption;
     integration?: unknown;
     system?: unknown;
     api_call?: unknown;
-}
-
-model NamedFunctionChoice extends NamedToolChoice {
-    type: ToolType.function;
-
-    /** The function to call */
-    function: FunctionCallOption;
 }
 
 model ToolResponse {
@@ -110,7 +103,7 @@ model PatchToolRequest is UpdateToolRequest {}
 @discriminator("type")
 model ChosenToolCall {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
-    type: ToolType;
+    type: ToolType = ToolType.function;
 
     function?: FunctionCallOption;
     integration?: unknown;
@@ -118,11 +111,4 @@ model ChosenToolCall {
     api_call?: unknown;
 
     ...HasId;
-}
-
-model ChosenFunctionCall extends ChosenToolCall {
-    type: ToolType.function;
-
-    /** The function to call */
-    function: FunctionCallOption;
 }

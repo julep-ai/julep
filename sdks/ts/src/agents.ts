@@ -211,4 +211,8 @@ export class AgentsRoutes extends BaseRoutes {
       requestBody,
     });
   }
+
+  async deleteDoc({ id, childId }: { id: Common_uuid; childId: Common_uuid }) {
+    return await this.apiClient.default.agentDocsRouteDelete({ id, childId });
+  }
 }

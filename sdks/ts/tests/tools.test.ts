@@ -29,6 +29,8 @@ describe("Tools API", () => {
     description: "changed description",
     name: "changed name",
     parameters: { test_arg: "test val" },
+    background: false,
+    function: { name: "func1" },
   };
 
   beforeAll(async () => {

@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, test } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { Common_ResourceCreatedResponse, Users_User as User } from "../src/api";
+import { Common_ResourceCreatedResponse } from "../src/api";
 
 const mockUser = {
   requestBody: {

@@ -4,8 +4,8 @@ import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 import { setupClient } from "./fixtures"; // Adjust path if necessary
 import {
   Agents_Agent as Agent,
+  Chat_MessageChatResponse,
   Common_ResourceCreatedResponse,
-  Users_User as User,
 } from "../src/api";
 import { Client } from "../src";
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 
 import { setupClient } from "./fixtures";
 import { Client } from "../src";
-import { Entries_InputChatMLMessage as InputChatMLMessage } from "../src/api";
+import { Entries_ChatMLRole } from "../src/api";
 
 const { TEST_MODEL } = process.env;
 
@@ -36,46 +36,60 @@ describe("Simple Agents Example", () => {
     };
 
     const agent = await client.agents.create({
-      model,
-      name,
-      about,
-      instructions,
-      default_settings: defaultSettings,
+      requestBody: {
+        model,
+        name,
+        about,
+        instructions,
+        default_settings: defaultSettings,
+      },
     });
 
     const user = await client.users.create({
-      name: "John Wick",
-      about: "Baba Yaga",
-      metadata: { age: 40 },
+      requestBody: {
+        name: "John Wick",
+        about: "Baba Yaga",
+        metadata: { age: 40 },
+      },
     });
 
     // ensure that the user is created
     await client.users.list({
-      metadataFilter: { age: 40 },
+      metadataFilter: "{ age: 40 }",
+      offset: 0,
     });
 
     const situation =
       "You are chatting with a random stranger from the Internet.";
 
     const session = await client.sessions.create({
-      agentId: agent.id,
-      userId: user.id,
-      situation: situation,
+      requestBody: {
+        agent: agent.id,
+        user: user.id,
+        situation: situation,
+        render_templates: true,
+        context_overflow: "truncate",
+        token_budget: 200,
+      },
     });
 
     const userInput = "hi!";
 
-    const message = { role: "user", content: userInput } as InputChatMLMessage;
+    const message = { role: "user" as Entries_ChatMLRole, content: userInput };
 
-    const result = await client.sessions.chat(session.id, {
-      messages: [message],
-      max_tokens: 200,
-      stream: false,
-      remember: true,
-      recall: true,
+    const result = await client.sessions.chat({
+      id: session.id,
+      requestBody: {
+        messages: [message],
+        max_tokens: 200,
+        stream: false,
+        remember: true,
+        recall: true,
+        save: true,
+      },
     });
 
-    const [responseMsg, ..._] = result.response[0];
+    const responseMsg = result.choices[0];
     expect(responseMsg).toHaveProperty("role");
     expect(responseMsg).toHaveProperty("content");
   }, 10000);

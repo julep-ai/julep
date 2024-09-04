@@ -14,7 +14,42 @@ export const $Chat_MultipleChatOutput = {
         messages: {
           type: "array",
           contains: {
-            type: "Entries_ChatMLMessage",
+            properties: {
+              role: {
+                type: "all-of",
+                description: `The role of the message`,
+                contains: [
+                  {
+                    type: "Entries_ChatMLRole",
+                  },
+                ],
+                isRequired: true,
+              },
+              content: {
+                type: "any-of",
+                description: `The content parts of the message`,
+                contains: [
+                  {
+                    type: "string",
+                  },
+                  {
+                    type: "array",
+                    contains: {
+                      type: "string",
+                    },
+                  },
+                ],
+                isRequired: true,
+              },
+              name: {
+                type: "string",
+                description: `Name`,
+              },
+              continue: {
+                type: "boolean",
+                description: `Whether to continue this message or return a new one`,
+              },
+            },
           },
           isRequired: true,
         },

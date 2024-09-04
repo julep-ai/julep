@@ -7,7 +7,6 @@ import { Client } from "../src";
 import {
   Agents_Agent as Agent,
   Common_ResourceCreatedResponse,
-  Users_User as User,
 } from "../src/api";
 
 describe("Julep Client Tests", () => {
@@ -91,16 +90,18 @@ describe("Julep Client Tests", () => {
   });
 
   test("agent docs.delete", async () => {
-    const response = await client.docs.delete({
+    const response = await client.agents.deleteDoc({
       id: testAgent.id,
+      childId: testAgentDocId,
     });
 
     expect(response).toBeUndefined();
   });
 
   test("user docs.delete", async () => {
-    const response = await client.docs.delete({
+    const response = await client.agents.deleteDoc({
       id: testUser.id,
+      childId: testAgentDocId,
     });
 
     expect(response).toBeUndefined();
