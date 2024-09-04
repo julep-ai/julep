@@ -492,6 +492,19 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug("Prompt step: Received response")
                 state = PartialTransition(output=response)
 
+            # case PromptStep(), StepOutcome(
+            #     output=response
+            # ):  # FIXME: if response.choices[0].tool_calls:
+            #     # SCRUM-15
+            #     workflow.logger.debug("Prompt step: Received response")
+            #
+            #     ## First, enter a wait-for-input step and ask developer to run the tool calls
+            #     ## Then, continue the workflow with the input received from the developer
+            #     ## This will be a dict with the tool call name as key and the tool call arguments as value
+            #     ## The prompt is run again with the tool call arguments as input
+            #     ## And the result is returned
+            #     ## If model asks for more tool calls, repeat the process
+
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
                 self.update_user_state(evaluated_output)
