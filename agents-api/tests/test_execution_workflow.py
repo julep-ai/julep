@@ -700,6 +700,7 @@ async def _(
 
 
 for p in [1, 3, 5]:
+
     @test(f"workflow: map reduce step parallel (parallelism={p})")
     async def _(
         client=cozo_client,
