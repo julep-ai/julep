@@ -1,3 +1,4 @@
+import ast
 from typing import Any
 
 from beartype import beartype
@@ -22,7 +23,7 @@ async def base_evaluate(
     if extra_lambda_strs:
         for k, v in extra_lambda_strs.items():
             assert v.startswith("lambda "), "All extra lambdas must start with 'lambda'"
-            extra_lambdas[k] = eval(v)
+            extra_lambdas[k] = ast.literal_eval(v)
 
     # Turn the nested dict values from pydantic to dicts where possible
     values = {

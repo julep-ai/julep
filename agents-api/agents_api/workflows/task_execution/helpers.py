@@ -210,7 +210,9 @@ async def execute_map_reduce_step_parallel(
         batch_pending = []
 
         for j, item in enumerate(batch):
-            workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
+            # Parallel batch workflow name
+            # Note: Added PAR: prefix to easily identify parallel batches in logs
+            workflow_name = f"PAR:`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}][{j}]"
             map_reduce_task = execution_input.task.model_copy()
             map_reduce_task.workflows = [Workflow(name=workflow_name, steps=[map_defn])]
 
@@ -219,11 +221,13 @@ async def execute_map_reduce_step_parallel(
             map_reduce_next_target = TransitionTarget(workflow=workflow_name, step=0)
 
             batch_pending.append(
-                continue_as_child(
-                    map_reduce_execution_input,
-                    map_reduce_next_target,
-                    previous_inputs + [item],
-                    user_state=user_state,
+                asyncio.create_task(
+                    continue_as_child(
+                        map_reduce_execution_input,
+                        map_reduce_next_target,
+                        previous_inputs + [item],
+                        user_state=user_state,
+                    )
                 )
             )
 
@@ -239,7 +243,7 @@ async def execute_map_reduce_step_parallel(
                     {"results": results, "_": batch_results},
                     extra_lambda_strs,
                 ],
-                schedule_to_close_timeout=timedelta(seconds=2),
+                schedule_to_close_timeout=timedelta(seconds=5),
             )
 
         except BaseException as e:

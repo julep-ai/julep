@@ -173,7 +173,7 @@ def make_cozo_json_query(fields):
 
 
 def cozo_query(
-    func: Callable[P, tuple[str | list[str], dict]] | None = None,
+    func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
     debug: bool | None = None,
 ):
     def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
