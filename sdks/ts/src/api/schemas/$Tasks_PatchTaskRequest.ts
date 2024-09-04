@@ -129,9 +129,10 @@ export const $Tasks_PatchTaskRequest = {
                   description: `The initial value of the reduce expression`,
                   properties: {},
                 },
-                parallel: {
-                  type: "boolean",
-                  description: `Whether to run the reduce expression in parallel`,
+                parallelism: {
+                  type: "number",
+                  description: `Whether to run the reduce expression in parallel and how many items to run in each batch`,
+                  format: "uint16",
                 },
               },
             },

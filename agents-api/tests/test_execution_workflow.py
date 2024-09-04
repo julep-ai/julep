@@ -697,6 +697,54 @@ async def _(
         assert [r["res"] for r in result] == ["a", "b", "c"]
 
 
+@test("workflow: map reduce step parallel (basic)")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    map_step = {
+        "over": "'a b c d e f'.split()",
+        "map": {
+            "evaluate": {"res": "_"},
+        },
+        "parallelism": 2,
+    }
+
+    task_def = {
+        "name": "test task",
+        "description": "test task about",
+        "input_schema": {"type": "object", "additionalProperties": True},
+        "main": [map_step],
+    }
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(**task_def),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert [r["res"] for r in result] == ["a", "b", "c", "d", "e", "f"]
+
+
 @test("workflow: prompt step")
 async def _(
     client=cozo_client,

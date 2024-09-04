@@ -250,8 +250,8 @@ model MapReduceStep<Value = unknown, Accumulator = Array<Value>> extends BaseWor
     /** The initial value of the reduce expression */
     initial?: unknown = #[];
 
-    /** Whether to run the reduce expression in parallel */
-    parallel?: boolean = false;
+    /** Whether to run the reduce expression in parallel and how many items to run in each batch */
+    parallelism?: uint16;
 }
 
 /////////////////////////

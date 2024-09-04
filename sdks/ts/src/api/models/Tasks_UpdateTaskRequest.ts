@@ -77,9 +77,9 @@ export type Tasks_UpdateTaskRequest = Record<
          */
         initial?: any;
         /**
-         * Whether to run the reduce expression in parallel
+         * Whether to run the reduce expression in parallel and how many items to run in each batch
          */
-        parallel?: boolean;
+        parallelism?: number;
       })
   >
 >;

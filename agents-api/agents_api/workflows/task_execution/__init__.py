@@ -42,14 +42,15 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...env import debug, testing
-    from .transition import transition
     from .helpers import (
         continue_as_child,
-        execute_switch_branch,
-        execute_if_else_branch,
         execute_foreach_step,
+        execute_if_else_branch,
         execute_map_reduce_step,
+        execute_map_reduce_step_parallel,
+        execute_switch_branch,
     )
+    from .transition import transition
 
 # Supported steps
 # ---------------
@@ -247,12 +248,12 @@ class TaskExecutionWorkflow:
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
                 result = await execute_switch_branch(
-                    context,
-                    execution_input,
-                    switch,
-                    index,
-                    previous_inputs,
-                    self.user_state,
+                    context=context,
+                    execution_input=execution_input,
+                    switch=switch,
+                    index=index,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -264,40 +265,56 @@ class TaskExecutionWorkflow:
                 output=condition
             ):
                 result = await execute_if_else_branch(
-                    context,
-                    execution_input,
-                    then_branch,
-                    else_branch,
-                    condition,
-                    previous_inputs,
-                    self.user_state,
+                    context=context,
+                    execution_input=execution_input,
+                    then_branch=then_branch,
+                    else_branch=else_branch,
+                    condition=condition,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
 
             case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(output=items):
                 result = await execute_foreach_step(
-                    context,
-                    execution_input,
-                    do_step,
-                    items,
-                    previous_inputs,
-                    self.user_state,
+                    context=context,
+                    execution_input=execution_input,
+                    do_step=do_step,
+                    items=items,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
             case MapReduceStep(
-                map=map_defn, reduce=reduce, initial=initial
-            ), StepOutcome(output=items):
+                map=map_defn, reduce=reduce, initial=initial, parallelism=parallelism
+            ), StepOutcome(output=items) if parallelism is None or parallelism == 1:
                 result = await execute_map_reduce_step(
-                    context,
-                    execution_input,
-                    map_defn,
-                    reduce,
-                    initial,
-                    items,
-                    previous_inputs,
-                    self.user_state,
+                    context=context,
+                    execution_input=execution_input,
+                    map_defn=map_defn,
+                    items=items,
+                    reduce=reduce,
+                    initial=initial,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
+                )
+                state = PartialTransition(output=result)
+
+            case MapReduceStep(
+                map=map_defn, reduce=reduce, initial=initial, parallelism=parallelism
+            ), StepOutcome(output=items):
+                result = await execute_map_reduce_step_parallel(
+                    context=context,
+                    execution_input=execution_input,
+                    map_defn=map_defn,
+                    items=items,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
+                    initial=initial,
+                    reduce=reduce,
+                    parallelism=parallelism,
                 )
                 state = PartialTransition(output=result)
 
@@ -351,7 +368,7 @@ class TaskExecutionWorkflow:
                 )
 
                 result = await continue_as_child(
-                    execution_input=execution_input,
+                    context,
                     start=yield_next_target,
                     previous_inputs=[output],
                     user_state=self.user_state,
@@ -459,7 +476,7 @@ class TaskExecutionWorkflow:
 
         # Continue as a child workflow
         return await continue_as_child(
-            execution_input=execution_input,
+            context,
             start=final_state.next,
             previous_inputs=previous_inputs + [final_state.output],
             user_state=self.user_state,

@@ -350,9 +350,9 @@ class Main(BaseModel):
     """
     The initial value of the reduce expression
     """
-    parallel: StrictBool = False
+    parallelism: int | None = None
     """
-    Whether to run the reduce expression in parallel
+    Whether to run the reduce expression in parallel and how many items to run in each batch
     """
 
 
@@ -391,9 +391,9 @@ class MainModel(BaseModel):
     """
     The initial value of the reduce expression
     """
-    parallel: StrictBool = False
+    parallelism: int | None = None
     """
-    Whether to run the reduce expression in parallel
+    Whether to run the reduce expression in parallel and how many items to run in each batch
     """
 
 
