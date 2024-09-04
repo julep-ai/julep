@@ -347,6 +347,13 @@ class Main(BaseModel):
     A special parameter named `results` is the accumulator and `_` is the current value.
     """
     initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallel: StrictBool = False
+    """
+    Whether to run the reduce expression in parallel
+    """
 
 
 class MainModel(BaseModel):
@@ -381,6 +388,13 @@ class MainModel(BaseModel):
     A special parameter named `results` is the accumulator and `_` is the current value.
     """
     initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallel: StrictBool = False
+    """
+    Whether to run the reduce expression in parallel
+    """
 
 
 class ParallelStep(BaseModel):

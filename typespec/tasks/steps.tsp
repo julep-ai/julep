@@ -247,7 +247,11 @@ model MapReduceStep<Value = unknown, Accumulator = Array<Value>> extends BaseWor
      * A special parameter named `results` is the accumulator and `_` is the current value. */
     reduce?: ReduceExpression<Value, Accumulator>;
 
+    /** The initial value of the reduce expression */
     initial?: unknown = #[];
+
+    /** Whether to run the reduce expression in parallel */
+    parallel?: boolean = false;
 }
 
 /////////////////////////

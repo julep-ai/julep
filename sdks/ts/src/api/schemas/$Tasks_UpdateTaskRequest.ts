@@ -132,7 +132,12 @@ export const $Tasks_UpdateTaskRequest = {
                   ],
                 },
                 initial: {
+                  description: `The initial value of the reduce expression`,
                   properties: {},
+                },
+                parallel: {
+                  type: "boolean",
+                  description: `Whether to run the reduce expression in parallel`,
                 },
               },
             },
