@@ -647,7 +647,7 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         result = await handle.result()
-        assert result["hello"] == "world"
+        assert result[0]["hello"] == "world"
 
 
 @test("workflow: map reduce step")
