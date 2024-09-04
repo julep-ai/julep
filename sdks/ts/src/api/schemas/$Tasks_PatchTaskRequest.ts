@@ -133,6 +133,7 @@ export const $Tasks_PatchTaskRequest = {
                   type: "number",
                   description: `Whether to run the reduce expression in parallel and how many items to run in each batch`,
                   format: "uint16",
+                  minimum: 1,
                 },
               },
             },

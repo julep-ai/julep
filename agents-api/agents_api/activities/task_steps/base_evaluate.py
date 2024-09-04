@@ -22,8 +22,18 @@ async def base_evaluate(
     extra_lambdas = {}
     if extra_lambda_strs:
         for k, v in extra_lambda_strs.items():
+            v = v.strip()
+
+            # Check that all extra lambdas are valid
             assert v.startswith("lambda "), "All extra lambdas must start with 'lambda'"
-            extra_lambdas[k] = ast.literal_eval(v)
+
+            try:
+                ast.parse(v)
+            except Exception as e:
+                raise ValueError(f"Invalid lambda: {v}") from e
+
+            # Eval the lambda and add it to the extra lambdas
+            extra_lambdas[k] = eval(v)
 
     # Turn the nested dict values from pydantic to dicts where possible
     values = {

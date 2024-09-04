@@ -350,7 +350,7 @@ class Main(BaseModel):
     """
     The initial value of the reduce expression
     """
-    parallelism: int | None = None
+    parallelism: Annotated[int | None, Field(None, ge=1)]
     """
     Whether to run the reduce expression in parallel and how many items to run in each batch
     """
@@ -391,7 +391,7 @@ class MainModel(BaseModel):
     """
     The initial value of the reduce expression
     """
-    parallelism: int | None = None
+    parallelism: Annotated[int | None, Field(None, ge=1)]
     """
     Whether to run the reduce expression in parallel and how many items to run in each batch
     """
