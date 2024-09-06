@@ -6,6 +6,7 @@ from ...clients import (
 )
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.utils.template import render_template
+from ...models.tools.list_tools import list_tools
 
 
 @activity.defn
@@ -34,6 +35,15 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         else "gpt-4o"
     )
 
+    agent_tools = await list_tools(
+        x_developer_id=context.execution_input.developer_id,
+        agent_id=context.execution_input.agent.id,
+        limit=100,  # Not sure what limit to use here
+        offset=0,
+        sort_by="created_at",
+        direction="desc",
+    )
+
     if context.current_step.settings:
         passed_settings: dict = context.current_step.settings.model_dump(
             exclude_unset=True
@@ -43,6 +53,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
     completion_data: dict = {
         "model": agent_model,
+        "tools": agent_tools,
         ("messages" if isinstance(prompt, list) else "prompt"): prompt,
         **agent_default_settings,
         **passed_settings,
