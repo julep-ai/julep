@@ -82,11 +82,15 @@ def create_execution_transition(
     # Only required for updating the execution status as well
     update_execution_status: bool = False,
     task_id: UUID | None = None,
-) -> tuple[list[str], dict]:
+) -> tuple[list[str | None], dict]:
     transition_id = transition_id or uuid4()
 
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
+
+    # TODO: This is a hack to make sure the transition is valid
+    #       (parallel transitions are whack, we should do something better)
+    is_parallel = data.current.workflow.startswith("PAR:")
 
     # Prepare the transition data
     transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
@@ -184,9 +188,9 @@ def create_execution_transition(
             execution_id=execution_id,
             parents=[("agents", "agent_id"), ("tasks", "task_id")],
         ),
-        validate_status_query,
-        update_execution_query,
-        check_last_transition_query,
+        validate_status_query if not is_parallel else None,
+        update_execution_query if not is_parallel else None,
+        check_last_transition_query if not is_parallel else None,
         insert_query,
     ]
 

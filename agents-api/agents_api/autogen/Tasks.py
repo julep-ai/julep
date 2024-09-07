@@ -347,6 +347,13 @@ class Main(BaseModel):
     A special parameter named `results` is the accumulator and `_` is the current value.
     """
     initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallelism: Annotated[int | None, Field(None, ge=1, le=100)]
+    """
+    Whether to run the reduce expression in parallel and how many items to run in each batch
+    """
 
 
 class MainModel(BaseModel):
@@ -381,6 +388,13 @@ class MainModel(BaseModel):
     A special parameter named `results` is the accumulator and `_` is the current value.
     """
     initial: Any = []
+    """
+    The initial value of the reduce expression
+    """
+    parallelism: Annotated[int | None, Field(None, ge=1, le=100)]
+    """
+    Whether to run the reduce expression in parallel and how many items to run in each batch
+    """
 
 
 class ParallelStep(BaseModel):

@@ -84,7 +84,7 @@ def update_session(
             input[{session_update_cols}],
             ids[session_id, developer_id],
             *sessions{{
-                {rest_fields}, @ "NOW"
+                {rest_fields}, @ "END"
             }},
             updated_at = 'ASSERT'
 

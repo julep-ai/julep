@@ -94,7 +94,7 @@ def get_session(
             render_templates,
             token_budget,
             context_overflow,
-            @ "NOW"
+            @ "END"
         }, updated_at = to_int(validity)
     """
 

@@ -4,11 +4,12 @@ set -eo pipefail  # Exit on error
 set -u  # Exit on undefined variable
 
 # Ensure environment variables are set
-if [ -z "$COZO_PORT" ] || [ -z "$COZO_AUTH_TOKEN" ]; then
-    echo "COZO_PORT or COZO_AUTH_TOKEN is not set"
+if [ -z "$COZO_AUTH_TOKEN" ]; then
+    echo "COZO_AUTH_TOKEN is not set"
     exit 1
 fi
 
+COZO_PORT=${COZO_PORT:-9070}
 COZO_BACKUP_DIR=${COZO_BACKUP_DIR:-/backup}
 TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
 MAX_BACKUPS=${MAX_BACKUPS:-10}
