@@ -97,7 +97,7 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
             render_templates,
             token_budget,
             context_overflow,
-            @ 'NOW'
+            @ 'END'
         }},
         updated_at = [floor(now()), true]
 

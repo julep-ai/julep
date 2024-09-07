@@ -1,6 +1,8 @@
 import json
 from functools import reduce
 from itertools import accumulate
+from random import random
+from time import time
 from typing import Any, Callable
 
 import re2
@@ -29,6 +31,7 @@ ALLOWED_FUNCTIONS = {
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "max": max,
     "min": min,
+    "random": random,
     "range": range,
     "reduce": reduce,
     "round": round,
@@ -36,6 +39,7 @@ ALLOWED_FUNCTIONS = {
     "set": set,
     "str": str,
     "sum": sum,
+    "time": time,
     "tuple": tuple,
     "zip": zip,
 }

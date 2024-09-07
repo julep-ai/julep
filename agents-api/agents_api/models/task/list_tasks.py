@@ -70,7 +70,7 @@ def list_tasks(
             workflows,
             created_at,
             metadata,
-            @ 'NOW'
+            @ 'END'
         }},
         updated_at = to_int(updated_at_ms) / 1000
 

@@ -101,7 +101,7 @@ def list_sessions(
                 metadata,
                 token_budget,
                 context_overflow,
-                @ "NOW"
+                @ "END"
             }},
             users_p[users, id],
             participants[agents, "agent", id],
