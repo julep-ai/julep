@@ -66,7 +66,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
     completion_data: dict = {
         "model": agent_model,
-        "tools": formatted_agent_tools,
+        "tools": formatted_agent_tools or None,
         ("messages" if isinstance(prompt, list) else "prompt"): prompt,
         **agent_default_settings,
         **passed_settings,
