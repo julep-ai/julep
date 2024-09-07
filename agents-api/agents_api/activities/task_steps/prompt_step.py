@@ -35,14 +35,27 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         else "gpt-4o"
     )
 
-    agent_tools = await list_tools(
-        x_developer_id=context.execution_input.developer_id,
+    agent_tools = list_tools(
+        developer_id=context.execution_input.developer_id,
         agent_id=context.execution_input.agent.id,
-        limit=100,  # Not sure what limit to use here
+        limit=128,  # Max number of supported functions in OpenAI. See https://platform.openai.com/docs/api-reference/chat/create
         offset=0,
         sort_by="created_at",
         direction="desc",
     )
+    
+    # Format agent_tools for litellm
+    formatted_agent_tools = [
+        {
+            "type": tool.type,
+            "function": {
+                "name": tool.function.name,
+                "description": tool.function.description,
+                "parameters": tool.function.parameters,
+            },
+        }
+        for tool in agent_tools
+    ]
 
     if context.current_step.settings:
         passed_settings: dict = context.current_step.settings.model_dump(
@@ -53,7 +66,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
     completion_data: dict = {
         "model": agent_model,
-        "tools": agent_tools,
+        "tools": formatted_agent_tools,
         ("messages" if isinstance(prompt, list) else "prompt"): prompt,
         **agent_default_settings,
         **passed_settings,
