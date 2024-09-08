@@ -7,7 +7,7 @@ export const $Tools_PatchToolRequest = {
   properties: {
     type: {
       type: "all-of",
-      description: `Whether this tool is a \`function\`, \`api_call\`, \`system\` etc. (Only \`function\` tool supported right now)`,
+      description: `Whether this tool is a \`function\`, \`api_call\`, \`system\` etc. (Only \`function\` tool supported right now)The type of the tool`,
       contains: [
         {
           type: "Tools_ToolType",

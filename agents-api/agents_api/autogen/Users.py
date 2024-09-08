@@ -116,10 +116,3 @@ class User(BaseModel):
     """
     About the user
     """
-
-
-class CreateOrUpdateUserRequest(CreateUserRequest):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: UUID

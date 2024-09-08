@@ -6,16 +6,7 @@ import type { Chat_DefaultChatSettings } from "./Chat_DefaultChatSettings";
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_uuid } from "./Common_uuid";
 export type Agents_Agent = {
-  readonly id: Common_uuid;
   metadata?: Record<string, any>;
-  /**
-   * When this resource was created as UTC date-time
-   */
-  readonly created_at: string;
-  /**
-   * When this resource was updated as UTC date-time
-   */
-  readonly updated_at: string;
   /**
    * Name of the agent
    */
@@ -36,4 +27,13 @@ export type Agents_Agent = {
    * Default settings for all sessions created by this agent
    */
   default_settings?: Chat_DefaultChatSettings;
+  readonly id: Common_uuid;
+  /**
+   * When this resource was created as UTC date-time
+   */
+  readonly created_at: string;
+  /**
+   * When this resource was updated as UTC date-time
+   */
+  readonly updated_at: string;
 };

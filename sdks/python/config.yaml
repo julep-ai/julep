@@ -1,0 +1,908 @@
+# See: https://github.com/openapi-generators/openapi-python-client#configuration
+
+
+package_name_override: sdk
+post_hooks:
+  - "ruff check . --select I --fix --unsafe-fixes"
+  - "ruff format ."
+
+use_path_prefixes_for_title_model_names: true
+
+content_type_overrides:
+  application/zip: application/octet-stream
+  application/yaml: text/plain
+  text/x-yaml: text/plain
+  text/yaml: text/plain
+
+
+class_overrides:
+  # This is to fix: models/agents_agent.py
+  AgentsAgent:
+    class_name: Agent
+    module_name: agent
+
+  # Fix for models/docs_doc.py
+  DocsDoc:
+    class_name: Doc
+    module_name: doc
+
+  # Fix for models/executions_execution.py
+  ExecutionsExecution:
+    class_name: Execution
+    module_name: execution
+
+  # Fix for models/sessions_session.py
+  SessionsSession:
+    class_name: Session
+    module_name: session
+
+  # Fix for models/task_executions_task_execution.py
+  TaskExecutionsTaskExecution:
+    class_name: TaskExecution
+    module_name: task_execution
+
+  # Fix for models/tasks_task.py
+  TasksTask:
+    class_name: Task
+    module_name: task
+
+  # Fix for models/tools_tool.py
+  ToolsTool:
+    class_name: Tool
+    module_name: tool
+
+  # Fix for models/users_user.py
+  UsersUser:
+    class_name: User
+    module_name: user
+
+  # Fix for models/users_user_metadata.py
+  UsersUserMetadata:
+    class_name: UserMetadata
+    module_name: user_metadata
+
+  # Fix for models/tasks_wait_for_input_step.py
+  TasksWaitForInputStep:
+    class_name: WaitForInputStep
+    module_name: wait_for_input_step
+
+  # Fix for models/tasks_wait_for_input_step_kind.py
+  TasksWaitForInputStepKind:
+    class_name: WaitForInputStepKind
+    module_name: wait_for_input_step_kind
+
+  # Fix for models/tasks_yield_step.py
+  TasksYieldStep:
+    class_name: YieldStep
+    module_name: yield_step
+
+  # Fix for models/tasks_yield_step_arguments_type_0.py
+  TasksYieldStepArgumentsType0:
+    class_name: YieldStepArgumentsType0
+    module_name: yield_step_arguments_type_0
+
+  # Fix for models/tasks_yield_step_arguments_type_1.py
+  TasksYieldStepArgumentsType1:
+    class_name: YieldStepArgumentsType1
+    module_name: yield_step_arguments_type_1
+
+  # Fix for models/tools_chosen_tool_call.py
+  ToolsChosenToolCall:
+    class_name: ChosenToolCall
+    module_name: chosen_tool_call
+
+  # Fix for models/tools_create_tool_request.py
+  ToolsCreateToolRequest:
+    class_name: CreateToolRequest
+    module_name: create_tool_request
+
+  # Fix for models/tools_function_call_option.py
+  ToolsFunctionCallOption:
+    class_name: FunctionCallOption
+    module_name: function_call_option
+
+  # Fix for models/tools_function_def.py
+  ToolsFunctionDef:
+    class_name: FunctionDef
+    module_name: function_def
+
+  # Fix for models/tools_function_def_parameters.py
+  ToolsFunctionDefParameters:
+    class_name: FunctionDefParameters
+    module_name: function_def_parameters
+
+  # Fix for models/tools_named_tool_choice.py
+  ToolsNamedToolChoice:
+    class_name: NamedToolChoice
+    module_name: named_tool_choice
+
+  # Fix for models/tools_patch_tool_request.py
+  ToolsPatchToolRequest:
+    class_name: PatchToolRequest
+    module_name: patch_tool_request
+
+  # Fix for models/tools_tool_response.py
+  ToolsToolResponse:
+    class_name: ToolResponse
+    module_name: tool_response
+
+  # Fix for models/tools_tool_response_output.py
+  ToolsToolResponseOutput:
+    class_name: ToolResponseOutput
+    module_name: tool_response_output
+
+  # Fix for models/tools_tool_type.py
+  ToolsToolType:
+    class_name: ToolType
+    module_name: tool_type
+
+  # Fix for models/tools_update_tool_request.py
+  ToolsUpdateToolRequest:
+    class_name: UpdateToolRequest
+    module_name: update_tool_request
+
+  # Fix for models/users_patch_user_request.py
+  UsersPatchUserRequest:
+    class_name: PatchUserRequest
+    module_name: patch_user_request
+
+  # Fix for models/users_patch_user_request_metadata.py
+  UsersPatchUserRequestMetadata:
+    class_name: PatchUserRequestMetadata
+    module_name: patch_user_request_metadata
+
+  # Fix for models/users_route_list_direction.py
+  UsersRouteListDirection:
+    class_name: RouteListDirection
+    module_name: route_list_direction
+
+  # Fix for models/users_route_list_response_200.py
+  UsersRouteListResponse200:
+    class_name: RouteListResponse200
+    module_name: route_list_response_200
+
+  # Fix for models/users_update_user_request.py
+  UsersUpdateUserRequest:
+    class_name: UpdateUserRequest
+    module_name: update_user_request
+
+  # Fix for models/users_update_user_request_metadata.py
+  UsersUpdateUserRequestMetadata:
+    class_name: UpdateUserRequestMetadata
+    module_name: update_user_request_metadata
+
+  # Fix for models/agents_update_agent_request.py
+  AgentsUpdateAgentRequest:
+    class_name: UpdateAgentRequest
+    module_name: update_agent_request
+
+  # Fix for models/tasks_update_task_request.py
+  TasksUpdateTaskRequest:
+    class_name: UpdateTaskRequest
+    module_name: update_task_request
+
+  # Fix for models/tasks_update_task_request_metadata.py
+  TasksUpdateTaskRequestMetadata:
+    class_name: UpdateTaskRequestMetadata
+    module_name: update_task_request_metadata
+
+  # Fix for models/tasks_wait_for_input_info.py
+  TasksWaitForInputInfo:
+    class_name: WaitForInputInfo
+    module_name: wait_for_input_info
+
+  # Fix for models/tasks_wait_for_input_info_info.py
+  TasksWaitForInputInfoInfo:
+    class_name: WaitForInputInfoInfo
+    module_name: wait_for_input_info_info
+
+  # Fix for models/agents_update_agent_request_metadata.py
+  AgentsUpdateAgentRequestMetadata:
+    class_name: UpdateAgentRequestMetadata
+    module_name: update_agent_request_metadata
+
+  # Fix for models/docs_create_doc_request.py
+  DocsCreateDocRequest:
+    class_name: CreateDocRequest
+    module_name: create_doc_request
+
+  # Fix for models/docs_create_doc_request_metadata.py
+  DocsCreateDocRequestMetadata:
+    class_name: CreateDocRequestMetadata
+    module_name: create_doc_request_metadata
+
+  # Fix for models/docs_doc_metadata.py
+  DocsDocMetadata:
+    class_name: DocMetadata
+    module_name: doc_metadata
+
+  # Fix for models/docs_doc_owner.py
+  DocsDocOwner:
+    class_name: DocOwner
+    module_name: doc_owner
+
+  # Fix for models/docs_doc_owner_role.py
+  DocsDocOwnerRole:
+    class_name: DocOwnerRole
+    module_name: doc_owner_role
+
+  # Fix for models/docs_doc_reference.py
+  DocsDocReference:
+    class_name: DocReference
+    module_name: doc_reference
+
+  # Fix for models/docs_doc_reference_type.py
+  DocsDocReferenceType:
+    class_name: DocReferenceType
+    module_name: doc_reference_type
+
+  # Fix for models/docs_embed_query_request.py
+  DocsEmbedQueryRequest:
+    class_name: EmbedQueryRequest
+    module_name: embed_query_request
+
+  # Fix for models/docs_embed_query_response.py
+  DocsEmbedQueryResponse:
+    class_name: EmbedQueryResponse
+    module_name: embed_query_response
+
+  # Fix for models/docs_snippet.py
+  DocsSnippet:
+    class_name: Snippet
+    module_name: snippet
+
+  # Fix for models/embed_route_embed_body.py
+  EmbedRouteEmbedBody:
+    class_name: RouteEmbedBody
+    module_name: route_embed_body
+
+  # Fix for models/tasks_embed_step.py
+  TasksEmbedStep:
+    class_name: EmbedStep
+    module_name: embed_step
+
+  # Fix for models/tasks_embed_step_kind.py
+  TasksEmbedStepKind:
+    class_name: EmbedStepKind
+    module_name: embed_step_kind
+
+  # Fix for models/tasks_error_workflow_step.py
+  TasksErrorWorkflowStep:
+    class_name: ErrorWorkflowStep
+    module_name: error_workflow_step
+
+  # Fix for models/tasks_error_workflow_step_kind.py
+  TasksErrorWorkflowStepKind:
+    class_name: ErrorWorkflowStepKind
+    module_name: error_workflow_step_kind
+
+  # Fix for models/tasks_evaluate_step.py
+  TasksEvaluateStep:
+    class_name: EvaluateStep
+    module_name: evaluate_step
+
+  # Fix for models/tasks_evaluate_step_evaluate.py
+  TasksEvaluateStepEvaluate:
+    class_name: EvaluateStepEvaluate
+    module_name: evaluate_step_evaluate
+
+  # Fix for models/tasks_evaluate_step_kind.py
+  TasksEvaluateStepKind:
+    class_name: EvaluateStepKind
+    module_name: evaluate_step_kind
+
+  # Fix for models/tasks_foreach_do.py
+  TasksForeachDo:
+    class_name: ForeachDo
+    module_name: foreach_do
+
+  # Fix for models/tasks_foreach_step.py
+  TasksForeachStep:
+    class_name: ForeachStep
+    module_name: foreach_step
+
+  # Fix for models/tasks_foreach_step_kind.py
+  TasksForeachStepKind:
+    class_name: ForeachStepKind
+    module_name: foreach_step_kind
+
+  # Fix for models/tasks_get_step.py
+  TasksGetStep:
+    class_name: GetStep
+    module_name: get_step
+
+  # Fix for models/tasks_get_step_kind.py
+  TasksGetStepKind:
+    class_name: GetStepKind
+    module_name: get_step_kind
+
+  # Fix for models/tasks_if_else_workflow_step.py
+  TasksIfElseWorkflowStep:
+    class_name: IfElseWorkflowStep
+    module_name: if_else_workflow_step
+
+  # Fix for models/tasks_if_else_workflow_step_kind.py
+  TasksIfElseWorkflowStepKind:
+    class_name: IfElseWorkflowStepKind
+    module_name: if_else_workflow_step_kind
+
+  # Fix for models/tasks_log_step.py
+  TasksLogStep:
+    class_name: LogStep
+    module_name: log_step
+
+  # Fix for models/tasks_log_step_kind.py
+  TasksLogStepKind:
+    class_name: LogStepKind
+    module_name: log_step_kind
+
+  # Fix for models/tasks_parallel_step.py
+  TasksParallelStep:
+    class_name: ParallelStep
+    module_name: parallel_step
+
+  # Fix for models/tasks_parallel_step_kind.py
+  TasksParallelStepKind:
+    class_name: ParallelStepKind
+    module_name: parallel_step_kind
+
+  # Fix for models/tasks_patch_task_request.py
+  TasksPatchTaskRequest:
+    class_name: PatchTaskRequest
+    module_name: patch_task_request
+
+  # Fix for models/tasks_patch_task_request_additional_property_item_type_17.py
+  TasksPatchTaskRequestAdditionalPropertyItemType17:
+    class_name: PatchTaskRequestAdditionalPropertyItemType17
+    module_name: patch_task_request_additional_property_item_type_17
+
+  # Fix for models/tasks_patch_task_request_input_schema_type_0.py
+  TasksPatchTaskRequestInputSchemaType0:
+    class_name: PatchTaskRequestInputSchemaType0
+    module_name: patch_task_request_input_schema_type_0
+
+  # Fix for models/tasks_patch_task_request_main_item_type_17.py
+  TasksPatchTaskRequestMainItemType17:
+    class_name: PatchTaskRequestMainItemType17
+    module_name: patch_task_request_main_item_type_17
+
+  # Fix for models/tasks_patch_task_request_metadata.py
+  TasksPatchTaskRequestMetadata:
+    class_name: PatchTaskRequestMetadata
+    module_name: patch_task_request_metadata
+
+  # Fix for models/tasks_prompt_step.py
+  TasksPromptStep:
+    class_name: PromptStep
+    module_name: prompt_step
+
+  # Fix for models/tasks_prompt_step_kind.py
+  TasksPromptStepKind:
+    class_name: PromptStepKind
+    module_name: prompt_step_kind
+
+  # Fix for models/tasks_prompt_step_prompt_type_1_item.py
+  TasksPromptStepPromptType1Item:
+    class_name: PromptStepPromptType1Item
+    module_name: prompt_step_prompt_type_1_item
+
+  # Fix for models/tasks_prompt_step_prompt_type_1_item_content_type_2_item_type_0.py
+  TasksPromptStepPromptType1ItemContentType2ItemType0:
+    class_name: PromptStepPromptType1ItemContentType2ItemType0
+    module_name: prompt_step_prompt_type_1_item_content_type_2_item_type_0
+
+  # Fix for models/tasks_prompt_step_prompt_type_1_item_content_type_2_item_type_0_type.py
+  TasksPromptStepPromptType1ItemContentType2ItemType0Type:
+    class_name: PromptStepPromptType1ItemContentType2ItemType0Type
+    module_name: prompt_step_prompt_type_1_item_content_type_2_item_type_0_type
+
+  # Fix for models/tasks_prompt_step_prompt_type_1_item_content_type_2_item_type_1.py
+  TasksPromptStepPromptType1ItemContentType2ItemType1:
+    class_name: PromptStepPromptType1ItemContentType2ItemType1
+    module_name: prompt_step_prompt_type_1_item_content_type_2_item_type_1
+
+  # Fix for models/tasks_prompt_step_prompt_type_1_item_content_type_2_item_type_1_image_url.py
+  TasksPromptStepPromptType1ItemContentType2ItemType1ImageUrl:
+    class_name: PromptStepPromptType1ItemContentType2ItemType1ImageUrl
+    module_name: prompt_step_prompt_type_1_item_content_type_2_item_type_1_image_url
+
+  # Fix for models/tasks_prompt_step_prompt_type_1_item_content_type_2_item_type_1_type.py
+  TasksPromptStepPromptType1ItemContentType2ItemType1Type:
+    class_name: PromptStepPromptType1ItemContentType2ItemType1Type
+    module_name: prompt_step_prompt_type_1_item_content_type_2_item_type_1_type
+
+  # Fix for models/tasks_return_step.py
+  TasksReturnStep:
+    class_name: ReturnStep
+    module_name: return_step
+
+  # Fix for models/tasks_return_step_kind.py
+  TasksReturnStepKind:
+    class_name: ReturnStepKind
+    module_name: return_step_kind
+
+  # Fix for models/tasks_return_step_return.py
+  TasksReturnStepReturn:
+    class_name: ReturnStepReturn
+    module_name: return_step_return
+
+  # Fix for models/tasks_route_list_direction.py
+  TasksRouteListDirection:
+    class_name: RouteListDirection
+    module_name: route_list_direction
+
+  # Fix for models/tasks_route_list_response_200.py
+  TasksRouteListResponse200:
+    class_name: RouteListResponse200
+    module_name: route_list_response_200
+
+  # Fix for models/tasks_route_list_sort_by.py
+  TasksRouteListSortBy:
+    class_name: RouteListSortBy
+    module_name: route_list_sort_by
+
+  # Fix for models/tasks_search_step.py
+  TasksSearchStep:
+    class_name: SearchStep
+    module_name: search_step
+
+  # Fix for models/tasks_search_step_kind.py
+  TasksSearchStepKind:
+    class_name: SearchStepKind
+    module_name: search_step_kind
+
+  # Fix for models/tasks_set_step.py
+  TasksSetStep:
+    class_name: SetStep
+    module_name: set_step
+
+  # Fix for models/tasks_set_step_kind.py
+  TasksSetStepKind:
+    class_name: SetStepKind
+    module_name: set_step_kind
+
+  # Fix for models/tasks_set_step_set.py
+  TasksSetStepSet:
+    class_name: SetStepSet
+    module_name: set_step_set
+
+  # Fix for models/tasks_sleep_step.py
+  TasksSleepStep:
+    class_name: SleepStep
+    module_name: sleep_step
+
+  # Fix for models/tasks_sleep_step_kind.py
+  TasksSleepStepKind:
+    class_name: SleepStepKind
+    module_name: sleep_step_kind
+
+  # Fix for models/tasks_case_then.py
+  TasksCaseThen:
+    class_name: CaseThen
+    module_name: case_then
+
+  # Fix for models/tasks_case_then_case_type_1.py
+  TasksCaseThenCaseType1:
+    class_name: CaseThenCaseType1
+    module_name: case_then_case_type_1
+
+  # Fix for models/tasks_create_task_request.py
+  TasksCreateTaskRequest:
+    class_name: CreateTaskRequest
+    module_name: create_task_request
+
+  # Fix for models/tasks_create_task_request_additional_property_item_type_17.py
+  TasksCreateTaskRequestAdditionalPropertyItemType17:
+    class_name: CreateTaskRequestAdditionalPropertyItemType17
+    module_name: create_task_request_additional_property_item_type_17
+
+  # Fix for models/tasks_create_task_request_additional_property_item_type_17_kind.py
+  TasksCreateTaskRequestAdditionalPropertyItemType17Kind:
+    class_name: CreateTaskRequestAdditionalPropertyItemType17Kind
+    module_name: create_task_request_additional_property_item_type_17_kind
+
+  # Fix for models/tasks_create_task_request_input_schema_type_0.py
+  TasksCreateTaskRequestInputSchemaType0:
+    class_name: CreateTaskRequestInputSchemaType0
+    module_name: create_task_request_input_schema_type_0
+
+  # Fix for models/tasks_create_task_request_main_item_type_17.py
+  TasksCreateTaskRequestMainItemType17:
+    class_name: CreateTaskRequestMainItemType17
+    module_name: create_task_request_main_item_type_17
+
+  # Fix for models/tasks_create_task_request_main_item_type_17_kind.py
+  TasksCreateTaskRequestMainItemType17Kind:
+    class_name: CreateTaskRequestMainItemType17Kind
+    module_name: create_task_request_main_item_type_17_kind
+
+  # Fix for models/tasks_create_task_request_metadata.py
+  TasksCreateTaskRequestMetadata:
+    class_name: CreateTaskRequestMetadata
+    module_name: create_task_request_metadata
+
+  # Fix for models/tasks_sleep_for.py
+  TasksSleepFor:
+    class_name: SleepFor
+    module_name: sleep_for
+
+  # Fix for models/tasks_switch_step.py
+  TasksSwitchStep:
+    class_name: SwitchStep
+    module_name: switch_step
+
+  # Fix for models/tasks_switch_step_kind.py
+  TasksSwitchStepKind:
+    class_name: SwitchStepKind
+    module_name: switch_step_kind
+
+  # Fix for models/tasks_tool_call_step.py
+  TasksToolCallStep:
+    class_name: ToolCallStep
+    module_name: tool_call_step
+
+  # Fix for models/tasks_tool_call_step_arguments_type_0.py
+  TasksToolCallStepArgumentsType0:
+    class_name: ToolCallStepArgumentsType0
+    module_name: tool_call_step_arguments_type_0
+
+  # Fix for models/tasks_tool_call_step_arguments_type_1.py
+  TasksToolCallStepArgumentsType1:
+    class_name: ToolCallStepArgumentsType1
+    module_name: tool_call_step_arguments_type_1
+
+  # Fix for models/tasks_tool_call_step_kind.py
+  TasksToolCallStepKind:
+    class_name: ToolCallStepKind
+    module_name: tool_call_step_kind
+
+  # Fix for models/sessions_context_overflow_type.py
+  SessionsContextOverflowType:
+    class_name: ContextOverflowType
+    module_name: context_overflow_type
+
+  # Fix for models/sessions_patch_session_request.py
+  SessionsPatchSessionRequest:
+    class_name: PatchSessionRequest
+    module_name: patch_session_request
+
+  # Fix for models/sessions_patch_session_request_metadata.py
+  SessionsPatchSessionRequestMetadata:
+    class_name: PatchSessionRequestMetadata
+    module_name: patch_session_request_metadata
+
+  # Fix for models/sessions_route_list_direction.py
+  SessionsRouteListDirection:
+    class_name: RouteListDirection
+    module_name: route_list_direction
+
+  # Fix for models/sessions_route_list_sort_by.py
+  SessionsRouteListSortBy:
+    class_name: RouteListSortBy
+    module_name: route_list_sort_by
+
+  # Fix for models/sessions_update_session_request.py
+  SessionsUpdateSessionRequest:
+    class_name: UpdateSessionRequest
+    module_name: update_session_request
+
+  # Fix for models/sessions_update_session_request_metadata.py
+  SessionsUpdateSessionRequestMetadata:
+    class_name: UpdateSessionRequestMetadata
+    module_name: update_session_request_metadata
+
+  # Fix for models/execution_transitions_route_list_direction.py
+  ExecutionTransitionsRouteListDirection:
+    class_name: RouteListDirection
+    module_name: route_list_direction
+
+  # Fix for models/execution_transitions_route_list_response_200.py
+  ExecutionTransitionsRouteListResponse200:
+    class_name: RouteListResponse200
+    module_name: route_list_response_200
+
+  # Fix for models/execution_transitions_route_list_response_200_results_item.py
+  ExecutionTransitionsRouteListResponse200ResultsItem:
+    class_name: RouteListResponse200ResultsItem
+    module_name: route_list_response_200_results_item
+
+  # Fix for models/execution_transitions_route_list_sort_by.py
+  ExecutionTransitionsRouteListSortBy:
+    class_name: RouteListSortBy
+    module_name: route_list_sort_by
+
+  # Fix for models/executions_create_execution_request.py
+  ExecutionsCreateExecutionRequest:
+    class_name: CreateExecutionRequest
+    module_name: create_execution_request
+
+  # Fix for models/executions_create_execution_request_input.py
+  ExecutionsCreateExecutionRequestInput:
+    class_name: CreateExecutionRequestInput
+    module_name: create_execution_request_input
+
+  # Fix for models/executions_create_execution_request_metadata.py
+  ExecutionsCreateExecutionRequestMetadata:
+    class_name: CreateExecutionRequestMetadata
+    module_name: create_execution_request_metadata
+
+  # Fix for models/executions_task_token_resume_execution_request.py
+  ExecutionsTaskTokenResumeExecutionRequest:
+    class_name: TaskTokenResumeExecutionRequest
+    module_name: task_token_resume_execution_request
+
+  # Fix for models/executions_task_token_resume_execution_request_input.py
+  ExecutionsTaskTokenResumeExecutionRequestInput:
+    class_name: TaskTokenResumeExecutionRequestInput
+    module_name: task_token_resume_execution_request_input
+
+  # Fix for models/executions_task_token_resume_execution_request_status.py
+  ExecutionsTaskTokenResumeExecutionRequestStatus:
+    class_name: TaskTokenResumeExecutionRequestStatus
+    module_name: task_token_resume_execution_request_status
+
+  # Fix for models/executions_transition_event.py
+  ExecutionsTransitionEvent:
+    class_name: TransitionEvent
+    module_name: transition_event
+
+  # Fix for models/executions_transition_event_type.py
+  ExecutionsTransitionEventType:
+    class_name: TransitionEventType
+    module_name: transition_event_type
+
+  # Fix for models/executions_transition_target.py
+  ExecutionsTransitionTarget:
+    class_name: TransitionTarget
+    module_name: transition_target
+
+  # Fix for models/executions_update_execution_request.py
+  ExecutionsUpdateExecutionRequest:
+    class_name: UpdateExecutionRequest
+    module_name: update_execution_request
+
+  # Fix for models/executions_update_execution_request_status.py
+  ExecutionsUpdateExecutionRequestStatus:
+    class_name: UpdateExecutionRequestStatus
+    module_name: update_execution_request_status
+
+  # Fix for models/agents_docs_search_route_search_body.py
+  AgentsDocsSearchRouteSearchBody:
+    class_name: DocsSearchRouteSearchBody
+    module_name: docs_search_route_search_body
+
+  # Fix for models/agents_patch_agent_request.py
+  AgentsPatchAgentRequest:
+    class_name: PatchAgentRequest
+    module_name: patch_agent_request
+
+  # Fix for models/agents_patch_agent_request_metadata.py
+  AgentsPatchAgentRequestMetadata:
+    class_name: PatchAgentRequestMetadata
+    module_name: patch_agent_request_metadata
+
+  # Fix for models/agents_route_list_direction.py
+  AgentsRouteListDirection:
+    class_name: RouteListDirection
+    module_name: route_list_direction
+
+  # Fix for models/agents_route_list_response_200.py
+  AgentsRouteListResponse200:
+    class_name: RouteListResponse200
+    module_name: route_list_response_200
+
+  # Fix for models/agents_route_list_sort_by.py
+  AgentsRouteListSortBy:
+    class_name: RouteListSortBy
+    module_name: route_list_sort_by
+
+  # Fix for models/chat_base_chat_output.py
+  ChatBaseChatOutput:
+    class_name: BaseChatOutput
+    module_name: base_chat_output
+
+  # Fix for models/chat_base_chat_response.py
+  ChatBaseChatResponse:
+    class_name: BaseChatResponse
+    module_name: base_chat_response
+
+  # Fix for models/chat_base_token_log_prob.py
+  ChatBaseTokenLogProb:
+    class_name: BaseTokenLogProb
+    module_name: base_token_log_prob
+
+  # Fix for models/chat_chat_input_data_messages_item_content_type_2_item_type_0.py
+  ChatChatInputDataMessagesItemContentType2ItemType0:
+    class_name: ChatInputDataMessagesItemContentType2ItemType0
+    module_name: chat_input_data_messages_item_content_type_2_item_type_0
+
+  # Fix for models/chat_chat_input_data_messages_item_content_type_2_item_type_0_type.py
+  ChatChatInputDataMessagesItemContentType2ItemType0Type:
+    class_name: ChatInputDataMessagesItemContentType2ItemType0Type
+    module_name: chat_input_data_messages_item_content_type_2_item_type_0_type
+
+  # Fix for models/chat_chat_input_data_messages_item_content_type_2_item_type_1.py
+  ChatChatInputDataMessagesItemContentType2ItemType1:
+    class_name: ChatInputDataMessagesItemContentType2ItemType1
+    module_name: chat_input_data_messages_item_content_type_2_item_type_1
+
+  # Fix for models/chat_chat_input_data_messages_item_content_type_2_item_type_1_image_url.py
+  ChatChatInputDataMessagesItemContentType2ItemType1ImageUrl:
+    class_name: ChatInputDataMessagesItemContentType2ItemType1ImageUrl
+    module_name: chat_input_data_messages_item_content_type_2_item_type_1_image_url
+
+  # Fix for models/chat_chat_input_data_messages_item_content_type_2_item_type_1_type.py
+  ChatChatInputDataMessagesItemContentType2ItemType1Type:
+    class_name: ChatInputDataMessagesItemContentType2ItemType1Type
+    module_name: chat_input_data_messages_item_content_type_2_item_type_1_type
+
+  # Fix for models/chat_chat_input_data_tool_choice_type_0.py
+  ChatChatInputDataToolChoiceType0:
+    class_name: ChatInputDataToolChoiceType0
+    module_name: chat_input_data_tool_choice_type_0
+
+  # Fix for models/common_resource_created_response.py
+  CommonResourceCreatedResponse:
+    class_name: ResourceCreatedResponse
+    module_name: resource_created_response
+
+  # Fix for models/common_resource_deleted_response.py
+  CommonResourceDeletedResponse:
+    class_name: ResourceDeletedResponse
+    module_name: resource_deleted_response
+
+  # Fix for models/common_resource_updated_response.py
+  CommonResourceUpdatedResponse:
+    class_name: ResourceUpdatedResponse
+    module_name: resource_updated_response
+
+  # Fix for models/entries_base_entry_content_type_0_item_type_0.py
+  EntriesBaseEntryContentType0ItemType0:
+    class_name: BaseEntryContentType0ItemType0
+    module_name: base_entry_content_type_0_item_type_0
+
+  # Fix for models/entries_base_entry_content_type_0_item_type_0_type.py
+  EntriesBaseEntryContentType0ItemType0Type:
+    class_name: BaseEntryContentType0ItemType0Type
+    module_name: base_entry_content_type_0_item_type_0_type
+
+  # Fix for models/entries_base_entry_content_type_0_item_type_1.py
+  EntriesBaseEntryContentType0ItemType1:
+    class_name: BaseEntryContentType0ItemType1
+    module_name: base_entry_content_type_0_item_type_1
+
+  # Fix for models/entries_base_entry_content_type_0_item_type_1_type.py
+  EntriesBaseEntryContentType0ItemType1Type:
+    class_name: BaseEntryContentType0ItemType1Type
+    module_name: base_entry_content_type_0_item_type_1_type
+
+  # Fix for models/entries_base_entry_content_type_5_item_type_0_item_type_0.py
+  EntriesBaseEntryContentType5ItemType0ItemType0:
+    class_name: BaseEntryContentType5ItemType0ItemType0
+    module_name: base_entry_content_type_5_item_type_0_item_type_0
+
+  # Fix for models/entries_base_entry_content_type_5_item_type_0_item_type_1_image_url.py
+  EntriesBaseEntryContentType5ItemType0ItemType1ImageUrl:
+    class_name: BaseEntryContentType5ItemType0ItemType1ImageUrl
+    module_name: base_entry_content_type_5_item_type_0_item_type_1_image_url
+
+  # Fix for models/entries_base_entry_content_type_5_item_type_0_item_type_1_type.py
+  EntriesBaseEntryContentType5ItemType0ItemType1Type:
+    class_name: BaseEntryContentType5ItemType0ItemType1Type
+    module_name: base_entry_content_type_5_item_type_0_item_type_1_type
+
+  # Fix for models/entries_base_entry_source.py
+  EntriesBaseEntrySource:
+    class_name: BaseEntrySource
+    module_name: base_entry_source
+
+  # Fix for models/entries_chat_ml_role.py
+  EntriesChatMlRole:
+    class_name: ChatMlRole
+    module_name: chat_ml_role
+
+  # Fix for models/jobs_job_state.py
+  JobsJobState:
+    class_name: JobState
+    module_name: job_state
+
+  # Fix for models/jobs_job_status.py
+  JobsJobStatus:
+    class_name: JobStatus
+    module_name: job_status
+
+  AgentsBaseAgent:
+    class_name: BaseAgent
+    module_name: base_agent
+
+  AgentsBaseAgentMetadata:
+    class_name: BaseAgentMetadata
+    module_name: base_agent_metadata
+
+  AgentsCreateAgentRequest:
+    class_name: CreateAgentRequest
+    module_name: create_agent_request
+
+  AgentsCreateAgentRequestMetadata:
+    class_name: CreateAgentRequestMetadata
+    module_name: create_agent_request_metadata
+
+  EntriesBaseEntryContentType5ItemType0ItemType1:
+    class_name: BaseEntryContentType5ItemType0ItemType1
+    module_name: base_entry_content_type_5_item_type_0_item_type_1
+
+  DocsBaseDocSearchRequest:
+    class_name: BaseDocSearchRequest
+    module_name: base_doc_search_request
+
+  DocsBaseDocSearchRequestLang:
+    class_name: BaseDocSearchRequestLang
+    module_name: base_doc_search_request_lang
+
+  DocsDocSearchResponse:
+    class_name: DocSearchResponse
+    module_name: doc_search_response
+
+  DocsSearchRouteSearchBody:
+    class_name: SearchRouteSearchBody
+    module_name: search_route_search_body 
+
+  SessionsCreateSessionRequest:
+    class_name: CreateSessionRequest
+    module_name: create_session_request
+
+  SessionsCreateSessionRequestMetadata:
+    class_name: CreateSessionRequestMetadata
+    module_name: create_session_request_metadata
+
+  # tools_named_api_call_choice.py
+  ToolsNamedApiCallChoice:
+    class_name: NamedApiCallChoice
+    module_name: named_api_call_choice
+
+  # tools_named_function_choice.py
+  ToolsNamedFunctionChoice:
+    class_name: NamedFunctionChoice
+    module_name: named_function_choice
+
+  # tools_named_integration_choice.py
+  ToolsNamedIntegrationChoice:
+    class_name: NamedIntegrationChoice
+    module_name: named_integration_choice
+
+  # tools_named_system_choice.py
+  ToolsNamedSystemChoice:
+    class_name: NamedSystemChoice
+    module_name: named_system_choice
+
+  UsersCreateUserRequest:
+    class_name: CreateUserRequest
+    module_name: create_user_request
+
+  UsersCreateUserRequestMetadata:
+    class_name: CreateUserRequestMetadata
+    module_name: create_user_request_metadata
+
+  UsersRouteListSortBy:
+    class_name: RouteListSortBy
+    module_name: route_list_sort_by
+
+  ChatSchemaCompletionResponseFormat:
+    class_name: SchemaCompletionResponseFormat
+    module_name: schema_completion_response_format
+
+  ChatSchemaCompletionResponseFormatJsonSchema:
+    class_name: SchemaCompletionResponseFormatJsonSchema
+    module_name: schema_completion_response_format_json_schema
+
+  ChatSchemaCompletionResponseFormatType:
+    class_name: SchemaCompletionResponseFormatType
+    module_name: schema_completion_response_format_type
+
+  ChatSimpleCompletionResponseFormat:
+    class_name: SimpleCompletionResponseFormat
+    module_name: simple_completion_response_format
+
+  ChatSimpleCompletionResponseFormatType:
+    class_name: SimpleCompletionResponseFormatType
+    module_name: simple_completion_response_format_type

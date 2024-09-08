@@ -38,7 +38,7 @@ class CreateToolRequest(BaseModel):
     )
     type: Literal["function", "integration", "system", "api_call"] = "function"
     """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)The type of the tool
     """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
@@ -92,18 +92,35 @@ class FunctionDef(BaseModel):
     """
 
 
-class NamedToolChoice(BaseModel):
+class NamedApiCallChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
-    function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
     api_call: Any | None = None
+
+
+class NamedFunctionChoice(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    function: FunctionCallOption
+    """
+    The function to call
+    """
+
+
+class NamedIntegrationChoice(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    integration: Any | None = None
+
+
+class NamedSystemChoice(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    system: Any | None = None
 
 
 class PatchToolRequest(BaseModel):
@@ -116,7 +133,7 @@ class PatchToolRequest(BaseModel):
     )
     type: Literal["function", "integration", "system", "api_call"] = "function"
     """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)The type of the tool
     """
     name: Annotated[str | None, Field(None, max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
@@ -137,7 +154,7 @@ class Tool(BaseModel):
     )
     type: Literal["function", "integration", "system", "api_call"] = "function"
     """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)The type of the tool
     """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
@@ -182,7 +199,7 @@ class UpdateToolRequest(BaseModel):
     )
     type: Literal["function", "integration", "system", "api_call"] = "function"
     """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)The type of the tool
     """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
@@ -198,17 +215,6 @@ class UpdateToolRequest(BaseModel):
 
 
 class ChosenFunctionCall(ChosenToolCall):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function"] = "function"
-    function: FunctionCallOption
-    """
-    The function to call
-    """
-
-
-class NamedFunctionChoice(NamedToolChoice):
     model_config = ConfigDict(
         populate_by_name=True,
     )

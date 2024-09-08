@@ -4,35 +4,11 @@
 /* eslint-disable */
 export const $Agents_Agent = {
   properties: {
-    id: {
-      type: "all-of",
-      contains: [
-        {
-          type: "Common_uuid",
-        },
-      ],
-      isReadOnly: true,
-      isRequired: true,
-    },
     metadata: {
       type: "dictionary",
       contains: {
         properties: {},
       },
-    },
-    created_at: {
-      type: "string",
-      description: `When this resource was created as UTC date-time`,
-      isReadOnly: true,
-      isRequired: true,
-      format: "date-time",
-    },
-    updated_at: {
-      type: "string",
-      description: `When this resource was updated as UTC date-time`,
-      isReadOnly: true,
-      isRequired: true,
-      format: "date-time",
     },
     name: {
       type: "all-of",
@@ -78,6 +54,30 @@ export const $Agents_Agent = {
           type: "Chat_DefaultChatSettings",
         },
       ],
+    },
+    id: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Common_uuid",
+        },
+      ],
+      isReadOnly: true,
+      isRequired: true,
+    },
+    created_at: {
+      type: "string",
+      description: `When this resource was created as UTC date-time`,
+      isReadOnly: true,
+      isRequired: true,
+      format: "date-time",
+    },
+    updated_at: {
+      type: "string",
+      description: `When this resource was updated as UTC date-time`,
+      isReadOnly: true,
+      isRequired: true,
+      format: "date-time",
     },
   },
 } as const;

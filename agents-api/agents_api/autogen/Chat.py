@@ -10,7 +10,14 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Common import LogitBias
 from .Docs import DocReference
-from .Tools import ChosenToolCall, NamedToolChoice, Tool
+from .Tools import (
+    ChosenToolCall,
+    NamedApiCallChoice,
+    NamedFunctionChoice,
+    NamedIntegrationChoice,
+    NamedSystemChoice,
+    Tool,
+)
 
 
 class BaseChatOutput(BaseModel):
@@ -75,7 +82,14 @@ class ChatInputData(BaseModel):
     """
     (Advanced) List of tools that are provided in addition to agent's default set of tools.
     """
-    tool_choice: Literal["auto", "none"] | NamedToolChoice | None = None
+    tool_choice: (
+        Literal["auto", "none"]
+        | NamedFunctionChoice
+        | NamedIntegrationChoice
+        | NamedSystemChoice
+        | NamedApiCallChoice
+        | None
+    ) = None
     """
     Can be one of existing tools given to the agent earlier or the ones provided in this request.
     """

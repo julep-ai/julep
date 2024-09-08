@@ -3,7 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Entries_ChatMLRole } from "./Entries_ChatMLRole";
-import type { Tools_NamedToolChoice } from "./Tools_NamedToolChoice";
+import type { Tools_NamedApiCallChoice } from "./Tools_NamedApiCallChoice";
+import type { Tools_NamedFunctionChoice } from "./Tools_NamedFunctionChoice";
+import type { Tools_NamedIntegrationChoice } from "./Tools_NamedIntegrationChoice";
+import type { Tools_NamedSystemChoice } from "./Tools_NamedSystemChoice";
 import type { Tools_Tool } from "./Tools_Tool";
 export type Chat_ChatInputData = {
   /**
@@ -34,5 +37,11 @@ export type Chat_ChatInputData = {
   /**
    * Can be one of existing tools given to the agent earlier or the ones provided in this request.
    */
-  tool_choice?: "auto" | "none" | Tools_NamedToolChoice;
+  tool_choice?:
+    | "auto"
+    | "none"
+    | Tools_NamedFunctionChoice
+    | Tools_NamedIntegrationChoice
+    | Tools_NamedSystemChoice
+    | Tools_NamedApiCallChoice;
 };

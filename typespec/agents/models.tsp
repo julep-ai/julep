@@ -14,10 +14,8 @@ namespace Agents;
 // AGENT MODELS
 //
 
-model Agent {
-    ...HasId;
+model BaseAgent {
     ...HasMetadata;
-    ...HasTimestamps;
 
     /** Name of the agent */
     name: identifierSafeUnicode = identifierSafeUnicode("");
@@ -35,6 +33,12 @@ model Agent {
     default_settings?: DefaultChatSettings;
 }
 
+
+model Agent is BaseAgent {
+    ...HasId;
+    ...HasTimestamps;
+}
+
 /** Payload for updating a agent */
 @withVisibility("create", "update")
 model UpdateAgentRequest {
@@ -50,8 +54,11 @@ model CreateAgentRequest {
     ...UpdateAgentRequest;
 }
 
-model CreateOrUpdateAgentRequest extends CreateAgentRequest {
+/** Payload for creating or updating a agent (and associated documents) */
+@withVisibility("create", "update")
+model CreateOrUpdateAgentRequest {
     @path
     id: uuid;
-    ...UpdateAgentRequest;
+
+    ...BaseAgent;
 }

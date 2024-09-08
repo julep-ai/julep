@@ -8,7 +8,7 @@ import type { Tools_FunctionDef } from "./Tools_FunctionDef";
 import type { Tools_ToolType } from "./Tools_ToolType";
 export type Tools_Tool = {
   /**
-   * Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+   * Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)The type of the tool
    */
   type: Tools_ToolType;
   /**

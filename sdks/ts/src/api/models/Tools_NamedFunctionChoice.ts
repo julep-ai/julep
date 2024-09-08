@@ -3,10 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Tools_FunctionCallOption } from "./Tools_FunctionCallOption";
-import type { Tools_NamedToolChoice } from "./Tools_NamedToolChoice";
-export type Tools_NamedFunctionChoice = Tools_NamedToolChoice & {
-  function: Tools_FunctionCallOption;
-  type: "function";
+export type Tools_NamedFunctionChoice = {
   /**
    * The function to call
    */

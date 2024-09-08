@@ -61,7 +61,16 @@ export const $Chat_ChatInputData = {
           type: "Enum",
         },
         {
-          type: "Tools_NamedToolChoice",
+          type: "Tools_NamedFunctionChoice",
+        },
+        {
+          type: "Tools_NamedIntegrationChoice",
+        },
+        {
+          type: "Tools_NamedSystemChoice",
+        },
+        {
+          type: "Tools_NamedApiCallChoice",
         },
       ],
     },

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Agents_Agent } from "../models/Agents_Agent";
+import type { Agents_BaseAgent } from "../models/Agents_BaseAgent";
 import type { Agents_CreateAgentRequest } from "../models/Agents_CreateAgentRequest";
 import type { Agents_PatchAgentRequest } from "../models/Agents_PatchAgentRequest";
 import type { Agents_UpdateAgentRequest } from "../models/Agents_UpdateAgentRequest";
@@ -124,7 +125,7 @@ export class DefaultService {
     requestBody,
   }: {
     id: Common_uuid;
-    requestBody: Agents_UpdateAgentRequest;
+    requestBody: Agents_BaseAgent;
   }): CancelablePromise<Common_ResourceUpdatedResponse> {
     return this.httpRequest.request({
       method: "POST",
@@ -426,9 +427,15 @@ export class DefaultService {
    * @throws ApiError
    */
   public tasksRouteCreate({
+    accept,
     id,
     requestBody,
   }: {
+    accept:
+      | "application/yaml"
+      | "text/x-yaml"
+      | "text/yaml"
+      | "application/json";
     /**
      * ID of parent resource
      */
@@ -440,6 +447,9 @@ export class DefaultService {
       url: "/agents/{id}/tasks",
       path: {
         id: id,
+      },
+      headers: {
+        accept: accept,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -709,10 +719,16 @@ export class DefaultService {
    * @throws ApiError
    */
   public tasksCreateOrUpdateRouteCreateOrUpdate({
+    accept,
     parentId,
     id,
     requestBody,
   }: {
+    accept:
+      | "application/yaml"
+      | "text/x-yaml"
+      | "text/yaml"
+      | "application/json";
     /**
      * ID of the agent
      */
@@ -726,6 +742,9 @@ export class DefaultService {
       path: {
         parent_id: parentId,
         id: id,
+      },
+      headers: {
+        accept: accept,
       },
       body: requestBody,
       mediaType: "application/json",

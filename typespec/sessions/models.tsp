@@ -157,7 +157,7 @@ model CreateSessionRequest {
 }
 
 @withVisibility("create", "update")
-model CreateOrUpdateSessionRequest extends CreateSessionRequest {
+model CreateOrUpdateSessionRequest {
     @path
     id: uuid;
 
