@@ -90,6 +90,42 @@ class TaskTokenResumeExecutionRequest(BaseModel):
     """
 
 
+class Transition(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    type: Annotated[
+        Literal[
+            "init",
+            "init_branch",
+            "finish",
+            "finish_branch",
+            "wait",
+            "resume",
+            "error",
+            "step",
+            "cancelled",
+        ],
+        Field(json_schema_extra={"readOnly": True}),
+    ]
+    output: Annotated[Any, Field(json_schema_extra={"readOnly": True})]
+    created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
+    """
+    When this resource was created as UTC date-time
+    """
+    updated_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
+    """
+    When this resource was updated as UTC date-time
+    """
+    execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
+    current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
+    next: Annotated[
+        TransitionTarget | None, Field(json_schema_extra={"readOnly": True})
+    ]
+    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
+    metadata: dict[str, Any] | None = None
+
+
 class TransitionEvent(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -173,16 +209,3 @@ class StopExecutionRequest(UpdateExecutionRequest):
     """
     The reason for stopping the execution
     """
-
-
-class Transition(TransitionEvent):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    execution_id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
-    current: Annotated[TransitionTarget, Field(json_schema_extra={"readOnly": True})]
-    next: Annotated[
-        TransitionTarget | None, Field(json_schema_extra={"readOnly": True})
-    ]
-    id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
-    metadata: dict[str, Any] | None = None

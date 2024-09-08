@@ -132,7 +132,9 @@ model TransitionEvent {
     ...HasTimestamps;
 }
 
-model Transition extends TransitionEvent {
+model Transition {
+    ...TransitionEvent;
+
     @visibility("read")
     execution_id: Execution.id;
 

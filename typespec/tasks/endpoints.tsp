@@ -19,8 +19,8 @@ interface CreateOrUpdateEndpoints {
     @post
     @doc("Create or update a task")
     createOrUpdate(
-        @header contentType: json,
-        @header accept: yaml | json,
+        @header contentType: yaml | json,
+        @header accept: json,
 
         @path
         @doc("ID of the agent")
@@ -50,8 +50,8 @@ interface Endpoints
     @post
     @doc("Create a new task")
     create(
-        @header contentType: json,
-        @header accept: yaml | json,
+        @header contentType: yaml | json,
+        @header accept: json,
 
         @path
         @doc("ID of parent resource")

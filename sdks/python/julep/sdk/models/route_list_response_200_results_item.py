@@ -18,7 +18,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.transition_event import TransitionEvent
+    from ..models.transition import Transition
 
 
 T = TypeVar("T", bound="RouteListResponse200ResultsItem")
@@ -28,14 +28,14 @@ T = TypeVar("T", bound="RouteListResponse200ResultsItem")
 class RouteListResponse200ResultsItem:
     """
     Attributes:
-        transitions (List['TransitionEvent']):
+        transitions (List['Transition']):
     """
 
-    transitions: List["TransitionEvent"]
+    transitions: List["Transition"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.transition_event import TransitionEvent
+        from ..models.transition import Transition
 
         transitions = []
         for transitions_item_data in self.transitions:
@@ -54,13 +54,13 @@ class RouteListResponse200ResultsItem:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.transition_event import TransitionEvent
+        from ..models.transition import Transition
 
         d = src_dict.copy()
         transitions = []
         _transitions = d.pop("transitions")
         for transitions_item_data in _transitions:
-            transitions_item = TransitionEvent.from_dict(transitions_item_data)
+            transitions_item = Transition.from_dict(transitions_item_data)
 
             transitions.append(transitions_item)
 

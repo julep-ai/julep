@@ -46,7 +46,21 @@ export const $Chat_SingleChatOutput = {
             tool_calls: {
               type: "array",
               contains: {
-                type: "Tools_ChosenToolCall",
+                type: "any-of",
+                contains: [
+                  {
+                    type: "Tools_ChosenFunctionCall",
+                  },
+                  {
+                    type: "Tools_ChosenIntegrationCall",
+                  },
+                  {
+                    type: "Tools_ChosenSystemCall",
+                  },
+                  {
+                    type: "Tools_ChosenApiCall",
+                  },
+                ],
               },
               isReadOnly: true,
               isNullable: true,

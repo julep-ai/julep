@@ -74,7 +74,9 @@ model BaseDocSearchRequest {
     lang: "en-US" = "en-US";
 }
 
-model VectorDocSearchRequest extends BaseDocSearchRequest {
+model VectorDocSearchRequest {
+    ...BaseDocSearchRequest;
+
     /** The confidence cutoff level */
     @minValue(0)
     @maxValue(1)
@@ -86,14 +88,18 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
     text?: never;
 }
 
-model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
+model TextOnlyDocSearchRequest {
+    ...BaseDocSearchRequest;
+
     /** Text to use in the search. */
     text: string;
 
     vector?: never;
 }
 
-model HybridDocSearchRequest extends BaseDocSearchRequest {
+model HybridDocSearchRequest {
+    ...BaseDocSearchRequest;
+
     /** The confidence cutoff level */
     @minValue(0)
     @maxValue(1)

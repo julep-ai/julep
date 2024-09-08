@@ -3,61 +3,77 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Executions_Transition = {
-  type: "all-of",
-  contains: [
-    {
-      type: "Executions_TransitionEvent",
+  properties: {
+    type: {
+      type: "Enum",
+      isReadOnly: true,
+      isRequired: true,
     },
-    {
-      properties: {
-        execution_id: {
-          type: "all-of",
-          contains: [
-            {
-              type: "Common_uuid",
-            },
-          ],
-          isReadOnly: true,
-          isRequired: true,
+    output: {
+      properties: {},
+      isReadOnly: true,
+      isRequired: true,
+    },
+    created_at: {
+      type: "string",
+      description: `When this resource was created as UTC date-time`,
+      isReadOnly: true,
+      isRequired: true,
+      format: "date-time",
+    },
+    updated_at: {
+      type: "string",
+      description: `When this resource was updated as UTC date-time`,
+      isReadOnly: true,
+      isRequired: true,
+      format: "date-time",
+    },
+    execution_id: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Common_uuid",
         },
-        current: {
-          type: "all-of",
-          contains: [
-            {
-              type: "Executions_TransitionTarget",
-            },
-          ],
-          isReadOnly: true,
-          isRequired: true,
+      ],
+      isReadOnly: true,
+      isRequired: true,
+    },
+    current: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Executions_TransitionTarget",
         },
-        next: {
-          type: "all-of",
-          contains: [
-            {
-              type: "Executions_TransitionTarget",
-            },
-          ],
-          isReadOnly: true,
-          isRequired: true,
-          isNullable: true,
+      ],
+      isReadOnly: true,
+      isRequired: true,
+    },
+    next: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Executions_TransitionTarget",
         },
-        id: {
-          type: "all-of",
-          contains: [
-            {
-              type: "Common_uuid",
-            },
-          ],
-          isReadOnly: true,
-          isRequired: true,
+      ],
+      isReadOnly: true,
+      isRequired: true,
+      isNullable: true,
+    },
+    id: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Common_uuid",
         },
-        metadata: {
-          type: "dictionary",
-          contains: {
-            properties: {},
-          },
-        },
+      ],
+      isReadOnly: true,
+      isRequired: true,
+    },
+    metadata: {
+      type: "dictionary",
+      contains: {
+        properties: {},
       },
     },
-  ],
+  },
 } as const;

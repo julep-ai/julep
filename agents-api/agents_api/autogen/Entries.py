@@ -8,7 +8,14 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
-from .Tools import ChosenToolCall, Tool, ToolResponse
+from .Tools import (
+    ChosenApiCall,
+    ChosenFunctionCall,
+    ChosenIntegrationCall,
+    ChosenSystemCall,
+    Tool,
+    ToolResponse,
+)
 
 
 class BaseEntry(BaseModel):
@@ -31,11 +38,21 @@ class BaseEntry(BaseModel):
     content: (
         list[Content | ContentModel]
         | Tool
-        | ChosenToolCall
+        | ChosenFunctionCall
+        | ChosenIntegrationCall
+        | ChosenSystemCall
+        | ChosenApiCall
         | str
         | ToolResponse
         | list[
-            list[Content | ContentModel] | Tool | ChosenToolCall | str | ToolResponse
+            list[Content | ContentModel]
+            | Tool
+            | ChosenFunctionCall
+            | ChosenIntegrationCall
+            | ChosenSystemCall
+            | ChosenApiCall
+            | str
+            | ToolResponse
         ]
     )
     source: Literal[

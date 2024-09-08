@@ -11,9 +11,6 @@ from .agent_tools_route_list_sort_by import AgentToolsRouteListSortBy
 from .base_agent import BaseAgent
 from .base_agent_metadata import BaseAgentMetadata
 from .base_chat_output import BaseChatOutput
-from .base_chat_response import BaseChatResponse
-from .base_doc_search_request import BaseDocSearchRequest
-from .base_doc_search_request_lang import BaseDocSearchRequestLang
 from .base_entry_content_type_0_item_type_0 import BaseEntryContentType0ItemType0
 from .base_entry_content_type_0_item_type_0_type import (
     BaseEntryContentType0ItemType0Type,
@@ -25,46 +22,74 @@ from .base_entry_content_type_0_item_type_1_image_url import (
 from .base_entry_content_type_0_item_type_1_type import (
     BaseEntryContentType0ItemType1Type,
 )
-from .base_entry_content_type_5_item_type_0_item_type_0 import (
-    BaseEntryContentType5ItemType0ItemType0,
+from .base_entry_content_type_8_item_type_0_item_type_0 import (
+    BaseEntryContentType8ItemType0ItemType0,
 )
-from .base_entry_content_type_5_item_type_0_item_type_0_type import (
-    BaseEntryContentType5ItemType0ItemType0Type,
+from .base_entry_content_type_8_item_type_0_item_type_0_type import (
+    BaseEntryContentType8ItemType0ItemType0Type,
 )
-from .base_entry_content_type_5_item_type_0_item_type_1 import (
-    BaseEntryContentType5ItemType0ItemType1,
+from .base_entry_content_type_8_item_type_0_item_type_1 import (
+    BaseEntryContentType8ItemType0ItemType1,
 )
-from .base_entry_content_type_5_item_type_0_item_type_1_image_url import (
-    BaseEntryContentType5ItemType0ItemType1ImageUrl,
+from .base_entry_content_type_8_item_type_0_item_type_1_image_url import (
+    BaseEntryContentType8ItemType0ItemType1ImageUrl,
 )
-from .base_entry_content_type_5_item_type_0_item_type_1_type import (
-    BaseEntryContentType5ItemType0ItemType1Type,
+from .base_entry_content_type_8_item_type_0_item_type_1_type import (
+    BaseEntryContentType8ItemType0ItemType1Type,
 )
 from .base_entry_source import BaseEntrySource
 from .base_token_log_prob import BaseTokenLogProb
 from .case_then import CaseThen
 from .case_then_case_type_1 import CaseThenCaseType1
-from .chat_competion_usage import ChatCompetionUsage
-from .chat_finish_reason import ChatFinishReason
-from .chat_input_data_messages_item_content_type_2_item_type_0 import (
-    ChatInputDataMessagesItemContentType2ItemType0,
+from .chat_input import ChatInput
+from .chat_input_logit_bias import ChatInputLogitBias
+from .chat_input_messages_item import ChatInputMessagesItem
+from .chat_input_messages_item_content_type_2_item_type_0 import (
+    ChatInputMessagesItemContentType2ItemType0,
 )
-from .chat_input_data_messages_item_content_type_2_item_type_0_type import (
-    ChatInputDataMessagesItemContentType2ItemType0Type,
+from .chat_input_messages_item_content_type_2_item_type_0_type import (
+    ChatInputMessagesItemContentType2ItemType0Type,
 )
-from .chat_input_data_messages_item_content_type_2_item_type_1 import (
-    ChatInputDataMessagesItemContentType2ItemType1,
+from .chat_input_messages_item_content_type_2_item_type_1 import (
+    ChatInputMessagesItemContentType2ItemType1,
 )
-from .chat_input_data_messages_item_content_type_2_item_type_1_image_url import (
-    ChatInputDataMessagesItemContentType2ItemType1ImageUrl,
+from .chat_input_messages_item_content_type_2_item_type_1_image_url import (
+    ChatInputMessagesItemContentType2ItemType1ImageUrl,
 )
-from .chat_input_data_messages_item_content_type_2_item_type_1_type import (
-    ChatInputDataMessagesItemContentType2ItemType1Type,
+from .chat_input_messages_item_content_type_2_item_type_1_type import (
+    ChatInputMessagesItemContentType2ItemType1Type,
 )
-from .chat_input_data_tool_choice_type_0 import ChatInputDataToolChoiceType0
-from .chat_log_prob_response import ChatLogProbResponse
-from .chat_open_ai_settings import ChatOpenAISettings
-from .chosen_tool_call import ChosenToolCall
+from .chat_input_tool_choice_type_0 import ChatInputToolChoiceType0
+from .chat_output_chunk import ChatOutputChunk
+from .chat_output_chunk_delta import ChatOutputChunkDelta
+from .chat_output_chunk_delta_content_type_2_item_type_0 import (
+    ChatOutputChunkDeltaContentType2ItemType0,
+)
+from .chat_output_chunk_delta_content_type_2_item_type_0_type import (
+    ChatOutputChunkDeltaContentType2ItemType0Type,
+)
+from .chat_output_chunk_delta_content_type_2_item_type_1 import (
+    ChatOutputChunkDeltaContentType2ItemType1,
+)
+from .chat_output_chunk_delta_content_type_2_item_type_1_image_url import (
+    ChatOutputChunkDeltaContentType2ItemType1ImageUrl,
+)
+from .chat_output_chunk_delta_content_type_2_item_type_1_type import (
+    ChatOutputChunkDeltaContentType2ItemType1Type,
+)
+from .chat_settings import ChatSettings
+from .chat_settings_logit_bias import ChatSettingsLogitBias
+from .chat_token_log_prob import ChatTokenLogProb
+from .chosen_api_call import ChosenApiCall
+from .chosen_api_call_type import ChosenApiCallType
+from .chosen_function_call import ChosenFunctionCall
+from .chosen_function_call_type import ChosenFunctionCallType
+from .chosen_integration_call import ChosenIntegrationCall
+from .chosen_integration_call_type import ChosenIntegrationCallType
+from .chosen_system_call import ChosenSystemCall
+from .chosen_system_call_type import ChosenSystemCallType
+from .chunk_chat_response import ChunkChatResponse
+from .competion_usage import CompetionUsage
 from .context_overflow_type import ContextOverflowType
 from .create_agent_request import CreateAgentRequest
 from .create_agent_request_metadata import CreateAgentRequestMetadata
@@ -88,9 +113,9 @@ from .create_task_request_main_item_type_17_kind import (
     CreateTaskRequestMainItemType17Kind,
 )
 from .create_task_request_metadata import CreateTaskRequestMetadata
-from .create_tool_request import CreateToolRequest
 from .create_user_request import CreateUserRequest
 from .create_user_request_metadata import CreateUserRequestMetadata
+from .default_chat_settings import DefaultChatSettings
 from .doc import Doc
 from .doc_metadata import DocMetadata
 from .doc_owner import DocOwner
@@ -114,6 +139,7 @@ from .execution import Execution
 from .execution_input import ExecutionInput
 from .execution_metadata import ExecutionMetadata
 from .execution_status import ExecutionStatus
+from .finish_reason import FinishReason
 from .foreach_do import ForeachDo
 from .foreach_step import ForeachStep
 from .foreach_step_kind import ForeachStepKind
@@ -122,12 +148,16 @@ from .function_def import FunctionDef
 from .function_def_parameters import FunctionDefParameters
 from .get_step import GetStep
 from .get_step_kind import GetStepKind
+from .hybrid_doc_search_request import HybridDocSearchRequest
+from .hybrid_doc_search_request_lang import HybridDocSearchRequestLang
 from .if_else_workflow_step import IfElseWorkflowStep
 from .if_else_workflow_step_kind import IfElseWorkflowStepKind
 from .job_state import JobState
 from .job_status import JobStatus
+from .log_prob_response import LogProbResponse
 from .log_step import LogStep
 from .log_step_kind import LogStepKind
+from .message_chat_response import MessageChatResponse
 from .named_api_call_choice import NamedApiCallChoice
 from .named_function_choice import NamedFunctionChoice
 from .named_integration_choice import NamedIntegrationChoice
@@ -214,10 +244,13 @@ from .task_token_resume_execution_request_input import (
 from .task_token_resume_execution_request_status import (
     TaskTokenResumeExecutionRequestStatus,
 )
+from .task_tool import TaskTool
 from .tasks_create_or_update_route_create_or_update_accept import (
     TasksCreateOrUpdateRouteCreateOrUpdateAccept,
 )
 from .tasks_route_create_accept import TasksRouteCreateAccept
+from .text_only_doc_search_request import TextOnlyDocSearchRequest
+from .text_only_doc_search_request_lang import TextOnlyDocSearchRequestLang
 from .tool import Tool
 from .tool_call_step import ToolCallStep
 from .tool_call_step_arguments_type_0 import ToolCallStepArgumentsType0
@@ -226,9 +259,12 @@ from .tool_call_step_kind import ToolCallStepKind
 from .tool_response import ToolResponse
 from .tool_response_output import ToolResponseOutput
 from .tool_type import ToolType
+from .transition import Transition
 from .transition_event import TransitionEvent
 from .transition_event_type import TransitionEventType
+from .transition_metadata import TransitionMetadata
 from .transition_target import TransitionTarget
+from .transition_type import TransitionType
 from .update_agent_request import UpdateAgentRequest
 from .update_agent_request_metadata import UpdateAgentRequestMetadata
 from .update_execution_request import UpdateExecutionRequest
@@ -257,6 +293,8 @@ from .user_docs_route_list_response_200 import UserDocsRouteListResponse200
 from .user_docs_route_list_sort_by import UserDocsRouteListSortBy
 from .user_docs_search_route_search_body import UserDocsSearchRouteSearchBody
 from .user_metadata import UserMetadata
+from .vector_doc_search_request import VectorDocSearchRequest
+from .vector_doc_search_request_lang import VectorDocSearchRequestLang
 from .wait_for_input_info import WaitForInputInfo
 from .wait_for_input_info_info import WaitForInputInfoInfo
 from .wait_for_input_step import WaitForInputStep
@@ -278,34 +316,49 @@ __all__ = (
     "BaseAgent",
     "BaseAgentMetadata",
     "BaseChatOutput",
-    "BaseChatResponse",
-    "BaseDocSearchRequest",
-    "BaseDocSearchRequestLang",
     "BaseEntryContentType0ItemType0",
     "BaseEntryContentType0ItemType0Type",
     "BaseEntryContentType0ItemType1",
     "BaseEntryContentType0ItemType1ImageUrl",
     "BaseEntryContentType0ItemType1Type",
-    "BaseEntryContentType5ItemType0ItemType0",
-    "BaseEntryContentType5ItemType0ItemType0Type",
-    "BaseEntryContentType5ItemType0ItemType1",
-    "BaseEntryContentType5ItemType0ItemType1ImageUrl",
-    "BaseEntryContentType5ItemType0ItemType1Type",
+    "BaseEntryContentType8ItemType0ItemType0",
+    "BaseEntryContentType8ItemType0ItemType0Type",
+    "BaseEntryContentType8ItemType0ItemType1",
+    "BaseEntryContentType8ItemType0ItemType1ImageUrl",
+    "BaseEntryContentType8ItemType0ItemType1Type",
     "BaseEntrySource",
     "BaseTokenLogProb",
     "CaseThen",
     "CaseThenCaseType1",
-    "ChatCompetionUsage",
-    "ChatFinishReason",
-    "ChatInputDataMessagesItemContentType2ItemType0",
-    "ChatInputDataMessagesItemContentType2ItemType0Type",
-    "ChatInputDataMessagesItemContentType2ItemType1",
-    "ChatInputDataMessagesItemContentType2ItemType1ImageUrl",
-    "ChatInputDataMessagesItemContentType2ItemType1Type",
-    "ChatInputDataToolChoiceType0",
-    "ChatLogProbResponse",
-    "ChatOpenAISettings",
-    "ChosenToolCall",
+    "ChatInput",
+    "ChatInputLogitBias",
+    "ChatInputMessagesItem",
+    "ChatInputMessagesItemContentType2ItemType0",
+    "ChatInputMessagesItemContentType2ItemType0Type",
+    "ChatInputMessagesItemContentType2ItemType1",
+    "ChatInputMessagesItemContentType2ItemType1ImageUrl",
+    "ChatInputMessagesItemContentType2ItemType1Type",
+    "ChatInputToolChoiceType0",
+    "ChatOutputChunk",
+    "ChatOutputChunkDelta",
+    "ChatOutputChunkDeltaContentType2ItemType0",
+    "ChatOutputChunkDeltaContentType2ItemType0Type",
+    "ChatOutputChunkDeltaContentType2ItemType1",
+    "ChatOutputChunkDeltaContentType2ItemType1ImageUrl",
+    "ChatOutputChunkDeltaContentType2ItemType1Type",
+    "ChatSettings",
+    "ChatSettingsLogitBias",
+    "ChatTokenLogProb",
+    "ChosenApiCall",
+    "ChosenApiCallType",
+    "ChosenFunctionCall",
+    "ChosenFunctionCallType",
+    "ChosenIntegrationCall",
+    "ChosenIntegrationCallType",
+    "ChosenSystemCall",
+    "ChosenSystemCallType",
+    "ChunkChatResponse",
+    "CompetionUsage",
     "ContextOverflowType",
     "CreateAgentRequest",
     "CreateAgentRequestMetadata",
@@ -323,9 +376,9 @@ __all__ = (
     "CreateTaskRequestMainItemType17",
     "CreateTaskRequestMainItemType17Kind",
     "CreateTaskRequestMetadata",
-    "CreateToolRequest",
     "CreateUserRequest",
     "CreateUserRequestMetadata",
+    "DefaultChatSettings",
     "Doc",
     "DocMetadata",
     "DocOwner",
@@ -349,6 +402,7 @@ __all__ = (
     "ExecutionInput",
     "ExecutionMetadata",
     "ExecutionStatus",
+    "FinishReason",
     "ForeachDo",
     "ForeachStep",
     "ForeachStepKind",
@@ -357,12 +411,16 @@ __all__ = (
     "FunctionDefParameters",
     "GetStep",
     "GetStepKind",
+    "HybridDocSearchRequest",
+    "HybridDocSearchRequestLang",
     "IfElseWorkflowStep",
     "IfElseWorkflowStepKind",
     "JobState",
     "JobStatus",
+    "LogProbResponse",
     "LogStep",
     "LogStepKind",
+    "MessageChatResponse",
     "NamedApiCallChoice",
     "NamedFunctionChoice",
     "NamedIntegrationChoice",
@@ -431,6 +489,9 @@ __all__ = (
     "TaskTokenResumeExecutionRequest",
     "TaskTokenResumeExecutionRequestInput",
     "TaskTokenResumeExecutionRequestStatus",
+    "TaskTool",
+    "TextOnlyDocSearchRequest",
+    "TextOnlyDocSearchRequestLang",
     "Tool",
     "ToolCallStep",
     "ToolCallStepArgumentsType0",
@@ -439,9 +500,12 @@ __all__ = (
     "ToolResponse",
     "ToolResponseOutput",
     "ToolType",
+    "Transition",
     "TransitionEvent",
     "TransitionEventType",
+    "TransitionMetadata",
     "TransitionTarget",
+    "TransitionType",
     "UpdateAgentRequest",
     "UpdateAgentRequestMetadata",
     "UpdateExecutionRequest",
@@ -464,6 +528,8 @@ __all__ = (
     "UserDocsRouteListSortBy",
     "UserDocsSearchRouteSearchBody",
     "UserMetadata",
+    "VectorDocSearchRequest",
+    "VectorDocSearchRequestLang",
     "WaitForInputInfo",
     "WaitForInputInfoInfo",
     "WaitForInputStep",

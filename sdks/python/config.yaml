@@ -906,3 +906,192 @@ class_overrides:
   ChatSimpleCompletionResponseFormatType:
     class_name: SimpleCompletionResponseFormatType
     module_name: simple_completion_response_format_type
+
+  DocsHybridDocSearchRequest:
+    class_name: HybridDocSearchRequest
+    module_name: hybrid_doc_search_request
+
+  DocsHybridDocSearchRequestLang:
+    class_name: HybridDocSearchRequestLang
+    module_name: hybrid_doc_search_request_lang
+
+  DocsTextOnlyDocSearchRequest:
+    class_name: TextOnlyDocSearchRequest
+    module_name: text_only_doc_search_request
+
+  DocsTextOnlyDocSearchRequestLang:
+    class_name: TextOnlyDocSearchRequestLang
+    module_name: text_only_doc_search_request_lang
+
+  DocsVectorDocSearchRequest:
+    class_name: VectorDocSearchRequest
+    module_name: vector_doc_search_request
+
+  DocsVectorDocSearchRequestLang:
+    class_name: VectorDocSearchRequestLang
+    module_name: vector_doc_search_request_lang
+
+  EntriesBaseEntryContentType8ItemType0ItemType0:
+    class_name: BaseEntryContentType8ItemType0ItemType0
+    module_name: base_entry_content_type_8_item_type_0_item_type_0
+
+  EntriesBaseEntryContentType8ItemType0ItemType0Type:
+    class_name: BaseEntryContentType8ItemType0ItemType0Type
+    module_name: base_entry_content_type_8_item_type_0_item_type_0_type
+
+  EntriesBaseEntryContentType8ItemType0ItemType1:
+    class_name: BaseEntryContentType8ItemType0ItemType1
+    module_name: base_entry_content_type_8_item_type_0_item_type_1
+
+  EntriesBaseEntryContentType8ItemType0ItemType1ImageUrl:
+    class_name: BaseEntryContentType8ItemType0ItemType1ImageUrl
+    module_name: base_entry_content_type_8_item_type_0_item_type_1_image_url
+
+  EntriesBaseEntryContentType8ItemType0ItemType1Type:
+    class_name: BaseEntryContentType8ItemType0ItemType1Type
+    module_name: base_entry_content_type_8_item_type_0_item_type_1_type
+
+  ExecutionsTransition:
+    class_name: Transition
+    module_name: transition
+
+  ExecutionsTransitionMetadata:
+    class_name: TransitionMetadata
+    module_name: transition_metadata
+
+  ExecutionsTransitionType:
+    class_name: TransitionType
+    module_name: transition_type
+
+  # New overrides for TODO items
+  ChatChatInput:
+    class_name: ChatInput
+    module_name: chat_input
+
+  ChatChatInputLogitBias:
+    class_name: ChatInputLogitBias
+    module_name: chat_input_logit_bias
+
+  ChatChatInputMessagesItem:
+    class_name: ChatInputMessagesItem
+    module_name: chat_input_messages_item
+
+  ChatChatInputMessagesItemContentType2ItemType0:
+    class_name: ChatInputMessagesItemContentType2ItemType0
+    module_name: chat_input_messages_item_content_type_2_item_type_0
+
+  ChatChatInputMessagesItemContentType2ItemType0Type:
+    class_name: ChatInputMessagesItemContentType2ItemType0Type
+    module_name: chat_input_messages_item_content_type_2_item_type_0_type
+
+  ChatChatInputMessagesItemContentType2ItemType1:
+    class_name: ChatInputMessagesItemContentType2ItemType1
+    module_name: chat_input_messages_item_content_type_2_item_type_1
+
+  ChatChatInputMessagesItemContentType2ItemType1ImageUrl:
+    class_name: ChatInputMessagesItemContentType2ItemType1ImageUrl
+    module_name: chat_input_messages_item_content_type_2_item_type_1_image_url
+
+  ChatChatInputMessagesItemContentType2ItemType1Type:
+    class_name: ChatInputMessagesItemContentType2ItemType1Type
+    module_name: chat_input_messages_item_content_type_2_item_type_1_type
+
+  ChatChatInputToolChoiceType0:
+    class_name: ChatInputToolChoiceType0
+    module_name: chat_input_tool_choice_type_0
+
+  ChatChatOutputChunk:
+    class_name: ChatOutputChunk
+    module_name: chat_output_chunk
+
+  ChatChatOutputChunkDelta:
+    class_name: ChatOutputChunkDelta
+    module_name: chat_output_chunk_delta
+
+  ChatChatOutputChunkDeltaContentType2ItemType0:
+    class_name: ChatOutputChunkDeltaContentType2ItemType0
+    module_name: chat_output_chunk_delta_content_type_2_item_type_0
+
+  ChatChatOutputChunkDeltaContentType2ItemType0Type:
+    class_name: ChatOutputChunkDeltaContentType2ItemType0Type
+    module_name: chat_output_chunk_delta_content_type_2_item_type_0_type
+
+  ChatChatOutputChunkDeltaContentType2ItemType1:
+    class_name: ChatOutputChunkDeltaContentType2ItemType1
+    module_name: chat_output_chunk_delta_content_type_2_item_type_1
+
+  ChatChatOutputChunkDeltaContentType2ItemType1ImageUrl:
+    class_name: ChatOutputChunkDeltaContentType2ItemType1ImageUrl
+    module_name: chat_output_chunk_delta_content_type_2_item_type_1_image_url
+
+  ChatChatOutputChunkDeltaContentType2ItemType1Type:
+    class_name: ChatOutputChunkDeltaContentType2ItemType1Type
+    module_name: chat_output_chunk_delta_content_type_2_item_type_1_type
+
+  ChatChatSettings:
+    class_name: ChatSettings
+    module_name: chat_settings
+
+  ChatChatSettingsLogitBias:
+    class_name: ChatSettingsLogitBias
+    module_name: chat_settings_logit_bias
+
+  ChatChunkChatResponse:
+    class_name: ChunkChatResponse
+    module_name: chunk_chat_response
+
+  ChatCompetionUsage:
+    class_name: CompetionUsage
+    module_name: competion_usage
+
+  ChatDefaultChatSettings:
+    class_name: DefaultChatSettings
+    module_name: default_chat_settings
+
+  ChatFinishReason:
+    class_name: FinishReason
+    module_name: finish_reason
+
+  ChatLogProbResponse:
+    class_name: LogProbResponse
+    module_name: log_prob_response
+
+  ChatMessageChatResponse:
+    class_name: MessageChatResponse
+    module_name: message_chat_response
+
+  TasksTaskTool:
+    class_name: TaskTool
+    module_name: task_tool
+
+  ToolsChosenApiCall:
+    class_name: ChosenApiCall
+    module_name: chosen_api_call
+
+  ToolsChosenApiCallType:
+    class_name: ChosenApiCallType
+    module_name: chosen_api_call_type
+
+  ToolsChosenFunctionCall:
+    class_name: ChosenFunctionCall
+    module_name: chosen_function_call
+
+  ToolsChosenFunctionCallType:
+    class_name: ChosenFunctionCallType
+    module_name: chosen_function_call_type
+
+  ToolsChosenIntegrationCall:
+    class_name: ChosenIntegrationCall
+    module_name: chosen_integration_call
+
+  ToolsChosenIntegrationCallType:
+    class_name: ChosenIntegrationCallType
+    module_name: chosen_integration_call_type
+
+  ToolsChosenSystemCall:
+    class_name: ChosenSystemCall
+    module_name: chosen_system_call
+
+  ToolsChosenSystemCallType:
+    class_name: ChosenSystemCallType
+    module_name: chosen_system_call_type

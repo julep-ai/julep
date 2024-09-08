@@ -3,32 +3,30 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Tools_ChosenFunctionCall = {
-  type: "all-of",
-  contains: [
-    {
-      type: "Tools_ChosenToolCall",
+  properties: {
+    type: {
+      type: "Enum",
+      isRequired: true,
     },
-    {
-      properties: {
-        function: {
+    function: {
+      type: "all-of",
+      description: `The function to call`,
+      contains: [
+        {
           type: "Tools_FunctionCallOption",
-          isRequired: true,
         },
-        type: {
-          type: "Enum",
-          isRequired: true,
-        },
-        function: {
-          type: "all-of",
-          description: `The function to call`,
-          contains: [
-            {
-              type: "Tools_FunctionCallOption",
-            },
-          ],
-          isRequired: true,
-        },
-      },
+      ],
+      isRequired: true,
     },
-  ],
+    id: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Common_uuid",
+        },
+      ],
+      isReadOnly: true,
+      isRequired: true,
+    },
+  },
 } as const;

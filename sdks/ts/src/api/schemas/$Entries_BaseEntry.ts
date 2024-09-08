@@ -20,7 +20,16 @@ export const $Entries_BaseEntry = {
           type: "Tools_Tool",
         },
         {
-          type: "Tools_ChosenToolCall",
+          type: "Tools_ChosenFunctionCall",
+        },
+        {
+          type: "Tools_ChosenIntegrationCall",
+        },
+        {
+          type: "Tools_ChosenSystemCall",
+        },
+        {
+          type: "Tools_ChosenApiCall",
         },
         {
           type: "string",

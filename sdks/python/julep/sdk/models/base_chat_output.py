@@ -16,11 +16,11 @@ from typing import (
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.chat_finish_reason import ChatFinishReason
+from ..models.finish_reason import FinishReason
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.chat_log_prob_response import ChatLogProbResponse
+    from ..models.log_prob_response import LogProbResponse
 
 
 T = TypeVar("T", bound="BaseChatOutput")
@@ -31,21 +31,21 @@ class BaseChatOutput:
     """
     Attributes:
         index (int):
-        finish_reason (ChatFinishReason): The reason the model stopped generating tokens. This will be `stop`
+        finish_reason (FinishReason): The reason the model stopped generating tokens. This will be `stop`
             if the model hit a natural stop point or a provided stop sequence,
             `length` if the maximum number of tokens specified in the request
             was reached, `content_filter` if content was omitted due to a flag
-            from our content filters, `tool_calls` if the model called a tool. Default: ChatFinishReason.STOP.
-        logprobs (Union[Unset, ChatLogProbResponse]):
+            from our content filters, `tool_calls` if the model called a tool. Default: FinishReason.STOP.
+        logprobs (Union[Unset, LogProbResponse]):
     """
 
     index: int
-    finish_reason: ChatFinishReason = ChatFinishReason.STOP
-    logprobs: Union[Unset, "ChatLogProbResponse"] = UNSET
+    finish_reason: FinishReason = FinishReason.STOP
+    logprobs: Union[Unset, "LogProbResponse"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.chat_log_prob_response import ChatLogProbResponse
+        from ..models.log_prob_response import LogProbResponse
 
         index = self.index
 
@@ -70,19 +70,19 @@ class BaseChatOutput:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.chat_log_prob_response import ChatLogProbResponse
+        from ..models.log_prob_response import LogProbResponse
 
         d = src_dict.copy()
         index = d.pop("index")
 
-        finish_reason = ChatFinishReason(d.pop("finish_reason"))
+        finish_reason = FinishReason(d.pop("finish_reason"))
 
         _logprobs = d.pop("logprobs", UNSET)
-        logprobs: Union[Unset, ChatLogProbResponse]
+        logprobs: Union[Unset, LogProbResponse]
         if isinstance(_logprobs, Unset):
             logprobs = UNSET
         else:
-            logprobs = ChatLogProbResponse.from_dict(_logprobs)
+            logprobs = LogProbResponse.from_dict(_logprobs)
 
         base_chat_output = cls(
             index=index,

@@ -19,7 +19,6 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.create_tool_request import CreateToolRequest
     from ..models.embed_step import EmbedStep
     from ..models.error_workflow_step import ErrorWorkflowStep
     from ..models.evaluate_step import EvaluateStep
@@ -44,6 +43,7 @@ if TYPE_CHECKING:
     from ..models.set_step import SetStep
     from ..models.sleep_step import SleepStep
     from ..models.switch_step import SwitchStep
+    from ..models.task_tool import TaskTool
     from ..models.tool_call_step import ToolCallStep
     from ..models.wait_for_input_step import WaitForInputStep
     from ..models.yield_step import YieldStep
@@ -64,8 +64,8 @@ class PatchTaskRequest:
             entrypoint of the task.
         input_schema (Union['PatchTaskRequestInputSchemaType0', None, Unset]): The schema for the input to the task.
             `null` means all inputs are valid.
-        tools (Union[Unset, List['CreateToolRequest']]): Tools defined specifically for this task not included in the
-            Agent itself.
+        tools (Union[Unset, List['TaskTool']]): Tools defined specifically for this task not included in the Agent
+            itself.
         inherit_tools (Union[Unset, bool]): Whether to inherit tools from the parent agent or not. Defaults to true.
             Default: True.
         metadata (Union[Unset, PatchTaskRequestMetadata]):
@@ -98,7 +98,7 @@ class PatchTaskRequest:
         ],
     ] = UNSET
     input_schema: Union["PatchTaskRequestInputSchemaType0", None, Unset] = UNSET
-    tools: Union[Unset, List["CreateToolRequest"]] = UNSET
+    tools: Union[Unset, List["TaskTool"]] = UNSET
     inherit_tools: Union[Unset, bool] = True
     metadata: Union[Unset, "PatchTaskRequestMetadata"] = UNSET
     additional_properties: Dict[
@@ -128,7 +128,6 @@ class PatchTaskRequest:
     ] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.create_tool_request import CreateToolRequest
         from ..models.embed_step import EmbedStep
         from ..models.error_workflow_step import ErrorWorkflowStep
         from ..models.evaluate_step import EvaluateStep
@@ -153,6 +152,7 @@ class PatchTaskRequest:
         from ..models.set_step import SetStep
         from ..models.sleep_step import SleepStep
         from ..models.switch_step import SwitchStep
+        from ..models.task_tool import TaskTool
         from ..models.tool_call_step import ToolCallStep
         from ..models.wait_for_input_step import WaitForInputStep
         from ..models.yield_step import YieldStep
@@ -286,7 +286,6 @@ class PatchTaskRequest:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.create_tool_request import CreateToolRequest
         from ..models.embed_step import EmbedStep
         from ..models.error_workflow_step import ErrorWorkflowStep
         from ..models.evaluate_step import EvaluateStep
@@ -311,6 +310,7 @@ class PatchTaskRequest:
         from ..models.set_step import SetStep
         from ..models.sleep_step import SleepStep
         from ..models.switch_step import SwitchStep
+        from ..models.task_tool import TaskTool
         from ..models.tool_call_step import ToolCallStep
         from ..models.wait_for_input_step import WaitForInputStep
         from ..models.yield_step import YieldStep
@@ -512,7 +512,7 @@ class PatchTaskRequest:
         tools = []
         _tools = d.pop("tools", UNSET)
         for tools_item_data in _tools or []:
-            tools_item = CreateToolRequest.from_dict(tools_item_data)
+            tools_item = TaskTool.from_dict(tools_item_data)
 
             tools.append(tools_item)
 

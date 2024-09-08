@@ -2,8 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Docs_BaseDocSearchRequest } from "./Docs_BaseDocSearchRequest";
-export type Docs_VectorDocSearchRequest = Docs_BaseDocSearchRequest & {
+export type Docs_VectorDocSearchRequest = {
+  limit: number;
+  /**
+   * The language to be used for text-only search. Support for other languages coming soon.
+   */
+  lang: "en-US";
   /**
    * The confidence cutoff level
    */

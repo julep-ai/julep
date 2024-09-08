@@ -3,7 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Chat_BaseTokenLogProb } from "./Chat_BaseTokenLogProb";
-export type Chat_TokenLogProb = Chat_BaseTokenLogProb & {
+export type Chat_TokenLogProb = {
+  token: string;
+  /**
+   * The log probability of the token
+   */
+  logprob: number;
+  bytes?: Array<number>;
   /**
    * The log probabilities of the tokens
    */

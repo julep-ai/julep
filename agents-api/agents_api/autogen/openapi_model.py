@@ -68,6 +68,10 @@ class InputChatMLMessage(Message):
     pass
 
 
+ChosenToolCall = (
+    ChosenIntegrationCall | ChosenApiCall | ChosenFunctionCall | ChosenSystemCall
+)
+
 # Custom types (not generated correctly)
 # --------------------------------------
 

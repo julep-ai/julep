@@ -24,10 +24,12 @@ model Workflow {
     steps: WorkflowStep[];
 }
 
-model TaskTool extends CreateToolRequest {
+model TaskTool {
     /** Read-only: Whether the tool was inherited or not. Only applies within tasks. */
     @visibility("read")
     inherited?: boolean = false;
+
+    ...CreateToolRequest;
 }
 
 /** Object describing a Task */

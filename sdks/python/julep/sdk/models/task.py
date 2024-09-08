@@ -21,7 +21,6 @@ from dateutil.parser import isoparse
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.create_tool_request import CreateToolRequest
     from ..models.embed_step import EmbedStep
     from ..models.error_workflow_step import ErrorWorkflowStep
     from ..models.evaluate_step import EvaluateStep
@@ -42,6 +41,7 @@ if TYPE_CHECKING:
     from ..models.task_input_schema_type_0 import TaskInputSchemaType0
     from ..models.task_main_item_type_17 import TaskMainItemType17
     from ..models.task_metadata import TaskMetadata
+    from ..models.task_tool import TaskTool
     from ..models.tool_call_step import ToolCallStep
     from ..models.wait_for_input_step import WaitForInputStep
     from ..models.yield_step import YieldStep
@@ -63,7 +63,7 @@ class Task:
             entrypoint of the task.
         input_schema (Union['TaskInputSchemaType0', None]): The schema for the input to the task. `null` means all
             inputs are valid.
-        tools (List['CreateToolRequest']): Tools defined specifically for this task not included in the Agent itself.
+        tools (List['TaskTool']): Tools defined specifically for this task not included in the Agent itself.
         inherit_tools (bool): Whether to inherit tools from the parent agent or not. Defaults to true. Default: True.
         id (str):
         created_at (datetime.datetime): When this resource was created as UTC date-time
@@ -95,7 +95,7 @@ class Task:
         ]
     ]
     input_schema: Union["TaskInputSchemaType0", None]
-    tools: List["CreateToolRequest"]
+    tools: List["TaskTool"]
     id: str
     created_at: datetime.datetime
     updated_at: datetime.datetime
@@ -129,7 +129,6 @@ class Task:
     ] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.create_tool_request import CreateToolRequest
         from ..models.embed_step import EmbedStep
         from ..models.error_workflow_step import ErrorWorkflowStep
         from ..models.evaluate_step import EvaluateStep
@@ -150,6 +149,7 @@ class Task:
         from ..models.task_input_schema_type_0 import TaskInputSchemaType0
         from ..models.task_main_item_type_17 import TaskMainItemType17
         from ..models.task_metadata import TaskMetadata
+        from ..models.task_tool import TaskTool
         from ..models.tool_call_step import ToolCallStep
         from ..models.wait_for_input_step import WaitForInputStep
         from ..models.yield_step import YieldStep
@@ -287,7 +287,6 @@ class Task:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.create_tool_request import CreateToolRequest
         from ..models.embed_step import EmbedStep
         from ..models.error_workflow_step import ErrorWorkflowStep
         from ..models.evaluate_step import EvaluateStep
@@ -308,6 +307,7 @@ class Task:
         from ..models.task_input_schema_type_0 import TaskInputSchemaType0
         from ..models.task_main_item_type_17 import TaskMainItemType17
         from ..models.task_metadata import TaskMetadata
+        from ..models.task_tool import TaskTool
         from ..models.tool_call_step import ToolCallStep
         from ..models.wait_for_input_step import WaitForInputStep
         from ..models.yield_step import YieldStep
@@ -507,7 +507,7 @@ class Task:
         tools = []
         _tools = d.pop("tools")
         for tools_item_data in _tools:
-            tools_item = CreateToolRequest.from_dict(tools_item_data)
+            tools_item = TaskTool.from_dict(tools_item_data)
 
             tools.append(tools_item)
 

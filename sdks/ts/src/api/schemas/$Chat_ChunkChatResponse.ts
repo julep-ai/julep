@@ -3,21 +3,55 @@
 /* tslint:disable */
 /* eslint-disable */
 export const $Chat_ChunkChatResponse = {
-  type: "all-of",
-  contains: [
-    {
-      type: "Chat_BaseChatResponse",
-    },
-    {
-      properties: {
-        choices: {
-          type: "array",
-          contains: {
-            type: "Chat_ChatOutputChunk",
-          },
-          isRequired: true,
-        },
+  properties: {
+    choices: {
+      type: "array",
+      contains: {
+        type: "Chat_ChatOutputChunk",
       },
+      isRequired: true,
     },
-  ],
+    usage: {
+      type: "all-of",
+      description: `Usage statistics for the completion request`,
+      contains: [
+        {
+          type: "Chat_CompetionUsage",
+        },
+      ],
+    },
+    jobs: {
+      type: "array",
+      contains: {
+        type: "Common_uuid",
+      },
+      isReadOnly: true,
+      isRequired: true,
+    },
+    docs: {
+      type: "array",
+      contains: {
+        type: "Docs_DocReference",
+      },
+      isReadOnly: true,
+      isRequired: true,
+    },
+    created_at: {
+      type: "string",
+      description: `When this resource was created as UTC date-time`,
+      isReadOnly: true,
+      isRequired: true,
+      format: "date-time",
+    },
+    id: {
+      type: "all-of",
+      contains: [
+        {
+          type: "Common_uuid",
+        },
+      ],
+      isReadOnly: true,
+      isRequired: true,
+    },
+  },
 } as const;

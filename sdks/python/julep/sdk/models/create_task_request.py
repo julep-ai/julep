@@ -29,7 +29,6 @@ if TYPE_CHECKING:
         CreateTaskRequestMainItemType17,
     )
     from ..models.create_task_request_metadata import CreateTaskRequestMetadata
-    from ..models.create_tool_request import CreateToolRequest
     from ..models.embed_step import EmbedStep
     from ..models.error_workflow_step import ErrorWorkflowStep
     from ..models.evaluate_step import EvaluateStep
@@ -44,6 +43,7 @@ if TYPE_CHECKING:
     from ..models.set_step import SetStep
     from ..models.sleep_step import SleepStep
     from ..models.switch_step import SwitchStep
+    from ..models.task_tool import TaskTool
     from ..models.tool_call_step import ToolCallStep
     from ..models.wait_for_input_step import WaitForInputStep
     from ..models.yield_step import YieldStep
@@ -65,7 +65,7 @@ class CreateTaskRequest:
             entrypoint of the task.
         input_schema (Union['CreateTaskRequestInputSchemaType0', None]): The schema for the input to the task. `null`
             means all inputs are valid.
-        tools (List['CreateToolRequest']): Tools defined specifically for this task not included in the Agent itself.
+        tools (List['TaskTool']): Tools defined specifically for this task not included in the Agent itself.
         inherit_tools (bool): Whether to inherit tools from the parent agent or not. Defaults to true. Default: True.
         metadata (Union[Unset, CreateTaskRequestMetadata]):
     """
@@ -94,7 +94,7 @@ class CreateTaskRequest:
         ]
     ]
     input_schema: Union["CreateTaskRequestInputSchemaType0", None]
-    tools: List["CreateToolRequest"]
+    tools: List["TaskTool"]
     description: str = ""
     inherit_tools: bool = True
     metadata: Union[Unset, "CreateTaskRequestMetadata"] = UNSET
@@ -135,7 +135,6 @@ class CreateTaskRequest:
             CreateTaskRequestMainItemType17,
         )
         from ..models.create_task_request_metadata import CreateTaskRequestMetadata
-        from ..models.create_tool_request import CreateToolRequest
         from ..models.embed_step import EmbedStep
         from ..models.error_workflow_step import ErrorWorkflowStep
         from ..models.evaluate_step import EvaluateStep
@@ -150,6 +149,7 @@ class CreateTaskRequest:
         from ..models.set_step import SetStep
         from ..models.sleep_step import SleepStep
         from ..models.switch_step import SwitchStep
+        from ..models.task_tool import TaskTool
         from ..models.tool_call_step import ToolCallStep
         from ..models.wait_for_input_step import WaitForInputStep
         from ..models.yield_step import YieldStep
@@ -288,7 +288,6 @@ class CreateTaskRequest:
             CreateTaskRequestMainItemType17,
         )
         from ..models.create_task_request_metadata import CreateTaskRequestMetadata
-        from ..models.create_tool_request import CreateToolRequest
         from ..models.embed_step import EmbedStep
         from ..models.error_workflow_step import ErrorWorkflowStep
         from ..models.evaluate_step import EvaluateStep
@@ -303,6 +302,7 @@ class CreateTaskRequest:
         from ..models.set_step import SetStep
         from ..models.sleep_step import SleepStep
         from ..models.switch_step import SwitchStep
+        from ..models.task_tool import TaskTool
         from ..models.tool_call_step import ToolCallStep
         from ..models.wait_for_input_step import WaitForInputStep
         from ..models.yield_step import YieldStep
@@ -504,7 +504,7 @@ class CreateTaskRequest:
         tools = []
         _tools = d.pop("tools")
         for tools_item_data in _tools:
-            tools_item = CreateToolRequest.from_dict(tools_item_data)
+            tools_item = TaskTool.from_dict(tools_item_data)
 
             tools.append(tools_item)
 

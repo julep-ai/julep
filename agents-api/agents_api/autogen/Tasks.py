@@ -15,7 +15,7 @@ from .Docs import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from .Tools import CreateToolRequest
+from .Tools import FunctionDef
 
 
 class CaseThen(BaseModel):
@@ -686,7 +686,7 @@ class Task(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class TaskTool(CreateToolRequest):
+class TaskTool(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -694,6 +694,21 @@ class TaskTool(CreateToolRequest):
     """
     Read-only: Whether the tool was inherited or not. Only applies within tasks.
     """
+    type: Literal["function", "integration", "system", "api_call"] = "function"
+    """
+    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)The type of the tool
+    """
+    name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
+    """
+    Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    function: FunctionDef
+    """
+    The function to call
+    """
+    integration: Any | None = None
+    system: Any | None = None
+    api_call: Any | None = None
 
 
 class ToolCallStep(BaseModel):

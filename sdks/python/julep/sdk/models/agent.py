@@ -22,7 +22,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.agent_metadata import AgentMetadata
-    from ..models.chat_open_ai_settings import ChatOpenAISettings
+    from ..models.default_chat_settings import DefaultChatSettings
 
 
 T = TypeVar("T", bound="Agent")
@@ -42,7 +42,8 @@ class Agent:
         created_at (datetime.datetime): When this resource was created as UTC date-time
         updated_at (datetime.datetime): When this resource was updated as UTC date-time
         metadata (Union[Unset, AgentMetadata]):
-        default_settings (Union[Unset, ChatOpenAISettings]):
+        default_settings (Union[Unset, DefaultChatSettings]): Default settings for the chat session (also used by the
+            agent)
     """
 
     id: str
@@ -53,12 +54,12 @@ class Agent:
     model: str = ""
     instructions: Union[List[str], str] = "[]"
     metadata: Union[Unset, "AgentMetadata"] = UNSET
-    default_settings: Union[Unset, "ChatOpenAISettings"] = UNSET
+    default_settings: Union[Unset, "DefaultChatSettings"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         from ..models.agent_metadata import AgentMetadata
-        from ..models.chat_open_ai_settings import ChatOpenAISettings
+        from ..models.default_chat_settings import DefaultChatSettings
 
         name = self.name
 
@@ -110,7 +111,7 @@ class Agent:
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         from ..models.agent_metadata import AgentMetadata
-        from ..models.chat_open_ai_settings import ChatOpenAISettings
+        from ..models.default_chat_settings import DefaultChatSettings
 
         d = src_dict.copy()
         name = d.pop("name")
@@ -146,11 +147,11 @@ class Agent:
             metadata = AgentMetadata.from_dict(_metadata)
 
         _default_settings = d.pop("default_settings", UNSET)
-        default_settings: Union[Unset, ChatOpenAISettings]
+        default_settings: Union[Unset, DefaultChatSettings]
         if isinstance(_default_settings, Unset):
             default_settings = UNSET
         else:
-            default_settings = ChatOpenAISettings.from_dict(_default_settings)
+            default_settings = DefaultChatSettings.from_dict(_default_settings)
 
         agent = cls(
             name=name,

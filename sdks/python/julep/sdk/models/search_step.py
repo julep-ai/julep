@@ -20,7 +20,9 @@ from ..models.search_step_kind import SearchStepKind
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.base_doc_search_request import BaseDocSearchRequest
+    from ..models.hybrid_doc_search_request import HybridDocSearchRequest
+    from ..models.text_only_doc_search_request import TextOnlyDocSearchRequest
+    from ..models.vector_doc_search_request import VectorDocSearchRequest
 
 
 T = TypeVar("T", bound="SearchStep")
@@ -31,22 +33,26 @@ class SearchStep:
     """
     Attributes:
         kind (SearchStepKind): The kind of step
-        search ('BaseDocSearchRequest'): The search query
+        search (Union['HybridDocSearchRequest', 'TextOnlyDocSearchRequest', 'VectorDocSearchRequest']): The search query
     """
 
     kind: SearchStepKind
-    search: "BaseDocSearchRequest"
+    search: Union[
+        "HybridDocSearchRequest", "TextOnlyDocSearchRequest", "VectorDocSearchRequest"
+    ]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.base_doc_search_request import BaseDocSearchRequest
+        from ..models.hybrid_doc_search_request import HybridDocSearchRequest
+        from ..models.text_only_doc_search_request import TextOnlyDocSearchRequest
+        from ..models.vector_doc_search_request import VectorDocSearchRequest
 
         kind = self.kind.value
 
         search: Dict[str, Any]
-        if isinstance(self.search, BaseDocSearchRequest):
+        if isinstance(self.search, VectorDocSearchRequest):
             search = self.search.to_dict()
-        elif isinstance(self.search, BaseDocSearchRequest):
+        elif isinstance(self.search, TextOnlyDocSearchRequest):
             search = self.search.to_dict()
         else:
             search = self.search.to_dict()
@@ -64,16 +70,24 @@ class SearchStep:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.base_doc_search_request import BaseDocSearchRequest
+        from ..models.hybrid_doc_search_request import HybridDocSearchRequest
+        from ..models.text_only_doc_search_request import TextOnlyDocSearchRequest
+        from ..models.vector_doc_search_request import VectorDocSearchRequest
 
         d = src_dict.copy()
         kind = SearchStepKind(d.pop("kind_"))
 
-        def _parse_search(data: object) -> "BaseDocSearchRequest":
+        def _parse_search(
+            data: object,
+        ) -> Union[
+            "HybridDocSearchRequest",
+            "TextOnlyDocSearchRequest",
+            "VectorDocSearchRequest",
+        ]:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                search_type_0 = BaseDocSearchRequest.from_dict(data)
+                search_type_0 = VectorDocSearchRequest.from_dict(data)
 
                 return search_type_0
             except:  # noqa: E722
@@ -81,14 +95,14 @@ class SearchStep:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                search_type_1 = BaseDocSearchRequest.from_dict(data)
+                search_type_1 = TextOnlyDocSearchRequest.from_dict(data)
 
                 return search_type_1
             except:  # noqa: E722
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
-            search_type_2 = BaseDocSearchRequest.from_dict(data)
+            search_type_2 = HybridDocSearchRequest.from_dict(data)
 
             return search_type_2
 

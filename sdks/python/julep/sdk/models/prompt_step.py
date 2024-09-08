@@ -20,7 +20,7 @@ from ..models.prompt_step_kind import PromptStepKind
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.chat_open_ai_settings import ChatOpenAISettings
+    from ..models.chat_settings import ChatSettings
     from ..models.prompt_step_prompt_type_1_item import PromptStepPromptType1Item
 
 
@@ -33,16 +33,16 @@ class PromptStep:
     Attributes:
         kind (PromptStepKind): The kind of step
         prompt (Union[List['PromptStepPromptType1Item'], str]): The prompt to run
-        settings (Union[Unset, ChatOpenAISettings]):
+        settings (Union[Unset, ChatSettings]):
     """
 
     kind: PromptStepKind
     prompt: Union[List["PromptStepPromptType1Item"], str]
-    settings: Union[Unset, "ChatOpenAISettings"] = UNSET
+    settings: Union[Unset, "ChatSettings"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        from ..models.chat_open_ai_settings import ChatOpenAISettings
+        from ..models.chat_settings import ChatSettings
         from ..models.prompt_step_prompt_type_1_item import PromptStepPromptType1Item
 
         kind = self.kind.value
@@ -76,7 +76,7 @@ class PromptStep:
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
-        from ..models.chat_open_ai_settings import ChatOpenAISettings
+        from ..models.chat_settings import ChatSettings
         from ..models.prompt_step_prompt_type_1_item import PromptStepPromptType1Item
 
         d = src_dict.copy()
@@ -105,11 +105,11 @@ class PromptStep:
         prompt = _parse_prompt(d.pop("prompt"))
 
         _settings = d.pop("settings", UNSET)
-        settings: Union[Unset, ChatOpenAISettings]
+        settings: Union[Unset, ChatSettings]
         if isinstance(_settings, Unset):
             settings = UNSET
         else:
-            settings = ChatOpenAISettings.from_dict(_settings)
+            settings = ChatSettings.from_dict(_settings)
 
         prompt_step = cls(
             kind=kind,

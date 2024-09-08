@@ -2,13 +2,40 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Chat_DefaultChatSettings } from "./Chat_DefaultChatSettings";
 import type { Chat_SchemaCompletionResponseFormat } from "./Chat_SchemaCompletionResponseFormat";
 import type { Chat_SimpleCompletionResponseFormat } from "./Chat_SimpleCompletionResponseFormat";
 import type { Common_identifierSafeUnicode } from "./Common_identifierSafeUnicode";
 import type { Common_logit_bias } from "./Common_logit_bias";
 import type { Common_uuid } from "./Common_uuid";
-export type Chat_ChatSettings = Chat_DefaultChatSettings & {
+export type Chat_ChatSettings = {
+  /**
+   * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+   */
+  frequency_penalty?: number;
+  /**
+   * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+   */
+  presence_penalty?: number;
+  /**
+   * What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+   */
+  temperature?: number;
+  /**
+   * Defaults to 1 An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.  We generally recommend altering this or temperature but not both.
+   */
+  top_p?: number;
+  /**
+   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+   */
+  repetition_penalty?: number;
+  /**
+   * Number between 0 and 2.0. 1.0 is neutral and values larger than that penalize number of tokens generated.
+   */
+  length_penalty?: number;
+  /**
+   * Minimum probability compared to leading token to be considered
+   */
+  min_p?: number;
   /**
    * Identifier of the model to be used
    */

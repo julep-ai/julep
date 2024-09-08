@@ -431,11 +431,7 @@ export class DefaultService {
     id,
     requestBody,
   }: {
-    accept:
-      | "application/yaml"
-      | "text/x-yaml"
-      | "text/yaml"
-      | "application/json";
+    accept: "application/json";
     /**
      * ID of parent resource
      */
@@ -724,11 +720,7 @@ export class DefaultService {
     id,
     requestBody,
   }: {
-    accept:
-      | "application/yaml"
-      | "text/x-yaml"
-      | "text/yaml"
-      | "application/json";
+    accept: "application/json";
     /**
      * ID of the agent
      */

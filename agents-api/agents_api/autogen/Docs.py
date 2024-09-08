@@ -9,17 +9,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
-class BaseDocSearchRequest(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    limit: Annotated[int, Field(10, ge=1, le=100)]
-    lang: Literal["en-US"] = "en-US"
-    """
-    The language to be used for text-only search. Support for other languages coming soon.
-    """
-
-
 class CreateDocRequest(BaseModel):
     """
     Payload for creating a doc
@@ -118,10 +107,15 @@ class EmbedQueryResponse(BaseModel):
     """
 
 
-class HybridDocSearchRequest(BaseDocSearchRequest):
+class HybridDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    limit: Annotated[int, Field(10, ge=1, le=100)]
+    lang: Literal["en-US"] = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
     confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
     """
     The confidence cutoff level
@@ -148,20 +142,30 @@ class Snippet(BaseModel):
     content: str
 
 
-class TextOnlyDocSearchRequest(BaseDocSearchRequest):
+class TextOnlyDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    limit: Annotated[int, Field(10, ge=1, le=100)]
+    lang: Literal["en-US"] = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
     text: str
     """
     Text to use in the search.
     """
 
 
-class VectorDocSearchRequest(BaseDocSearchRequest):
+class VectorDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    limit: Annotated[int, Field(10, ge=1, le=100)]
+    lang: Literal["en-US"] = "en-US"
+    """
+    The language to be used for text-only search. Support for other languages coming soon.
+    """
     confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
     """
     The confidence cutoff level
