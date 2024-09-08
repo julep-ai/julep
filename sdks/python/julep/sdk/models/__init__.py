@@ -205,7 +205,6 @@ from .return_step_return import ReturnStepReturn
 from .route_embed_body import RouteEmbedBody
 from .route_list_direction import RouteListDirection
 from .route_list_response_200 import RouteListResponse200
-from .route_list_response_200_results_item import RouteListResponse200ResultsItem
 from .route_list_sort_by import RouteListSortBy
 from .schema_completion_response_format import SchemaCompletionResponseFormat
 from .schema_completion_response_format_json_schema import (
@@ -456,7 +455,6 @@ __all__ = (
     "RouteEmbedBody",
     "RouteListDirection",
     "RouteListResponse200",
-    "RouteListResponse200ResultsItem",
     "RouteListSortBy",
     "SchemaCompletionResponseFormat",
     "SchemaCompletionResponseFormatJsonSchema",

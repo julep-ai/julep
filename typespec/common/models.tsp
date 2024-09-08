@@ -51,3 +51,7 @@ model PaginationOptions {
     /** JSON string of object that should be used to filter objects by metadata */
     @query metadata_filter: string = "{}",
 }
+
+model ListResponse<T> {
+    items: T[];
+}

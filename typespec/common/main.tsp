@@ -1,8 +1,8 @@
 import "./constants.tsp";
 import "./interfaces.tsp";
 import "./mixins.tsp";
+import "./models.tsp";
 import "./scalars.tsp";
-import "./types.tsp";
 
 namespace Common;
 

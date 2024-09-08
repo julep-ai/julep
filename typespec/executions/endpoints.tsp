@@ -54,9 +54,7 @@ interface TaskEndpoints
 
 interface TransitionEndpoints
     extends ChildLimitOffsetPagination<
-            {
-                transitions: Transition[],
-            },
+            Transition,
             "List the Transitions of an Execution by id"
         > {}
 

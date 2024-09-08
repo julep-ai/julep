@@ -98,6 +98,8 @@ model BaseEntry {
     timestamp: float;
 }
 
+// Make sure to extend BaseEntry rather than inlining it with ...
+// Otherwise, the generated client will not keep the BaseEntry model
 model Entry extends BaseEntry {
     /** This is the time it was added to the database */
     ...HasCreatedAt;

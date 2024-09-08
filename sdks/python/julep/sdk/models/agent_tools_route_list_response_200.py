@@ -28,25 +28,25 @@ T = TypeVar("T", bound="AgentToolsRouteListResponse200")
 class AgentToolsRouteListResponse200:
     """
     Attributes:
-        results (List['Tool']):
+        items (List['Tool']):
     """
 
-    results: List["Tool"]
+    items: List["Tool"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         from ..models.tool import Tool
 
-        results = []
-        for results_item_data in self.results:
-            results_item = results_item_data.to_dict()
-            results.append(results_item)
+        items = []
+        for items_item_data in self.items:
+            items_item = items_item_data.to_dict()
+            items.append(items_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "results": results,
+                "items": items,
             }
         )
 
@@ -57,15 +57,15 @@ class AgentToolsRouteListResponse200:
         from ..models.tool import Tool
 
         d = src_dict.copy()
-        results = []
-        _results = d.pop("results")
-        for results_item_data in _results:
-            results_item = Tool.from_dict(results_item_data)
+        items = []
+        _items = d.pop("items")
+        for items_item_data in _items:
+            items_item = Tool.from_dict(items_item_data)
 
-            results.append(results_item)
+            items.append(items_item)
 
         agent_tools_route_list_response_200 = cls(
-            results=results,
+            items=items,
         )
 
         agent_tools_route_list_response_200.additional_properties = d

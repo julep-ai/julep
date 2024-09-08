@@ -1,7 +1,7 @@
 import "@typespec/http";
 
 import "./scalars.tsp";
-import "./types.tsp";
+import "./models.tsp";
 
 using TypeSpec.Http;
 
@@ -17,9 +17,7 @@ interface LimitOffsetPagination<
 > {
     @get
     @doc(DocString)
-    list(...PaginationOptions): {
-        items: Type[];
-    };
+    list(...PaginationOptions): ListResponse<Type>;
 }
 
 interface CreateEndpoint<
@@ -135,9 +133,7 @@ interface ChildLimitOffsetPagination<
         id: uuid,
 
         ...PaginationOptions,
-    ): {
-        results: T[];
-    };
+    ): ListResponse<T>;
 }
 
 interface ChildStreamEndpoint<

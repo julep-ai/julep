@@ -10,9 +10,9 @@ use_path_prefixes_for_title_model_names: true
 
 content_type_overrides:
   application/zip: application/octet-stream
-  application/yaml: text/plain
-  text/x-yaml: text/plain
-  text/yaml: text/plain
+  # application/yaml: text/plain
+  # text/x-yaml: text/plain
+  # text/yaml: text/plain
 
 
 class_overrides:

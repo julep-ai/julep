@@ -28,25 +28,25 @@ T = TypeVar("T", bound="AgentDocsRouteListResponse200")
 class AgentDocsRouteListResponse200:
     """
     Attributes:
-        results (List['Doc']):
+        items (List['Doc']):
     """
 
-    results: List["Doc"]
+    items: List["Doc"]
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         from ..models.doc import Doc
 
-        results = []
-        for results_item_data in self.results:
-            results_item = results_item_data.to_dict()
-            results.append(results_item)
+        items = []
+        for items_item_data in self.items:
+            items_item = items_item_data.to_dict()
+            items.append(items_item)
 
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "results": results,
+                "items": items,
             }
         )
 
@@ -57,15 +57,15 @@ class AgentDocsRouteListResponse200:
         from ..models.doc import Doc
 
         d = src_dict.copy()
-        results = []
-        _results = d.pop("results")
-        for results_item_data in _results:
-            results_item = Doc.from_dict(results_item_data)
+        items = []
+        _items = d.pop("items")
+        for items_item_data in _items:
+            items_item = Doc.from_dict(items_item_data)
 
-            results.append(results_item)
+            items.append(items_item)
 
         agent_docs_route_list_response_200 = cls(
-            results=results,
+            items=items,
         )
 
         agent_docs_route_list_response_200.additional_properties = d

@@ -267,7 +267,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Docs_Doc>;
+    items: Array<Docs_Doc>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -404,7 +404,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Tasks_Task>;
+    items: Array<Tasks_Task>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -578,7 +578,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Tools_Tool>;
+    items: Array<Tools_Tool>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -894,9 +894,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<{
-      transitions: Array<Executions_Transition>;
-    }>;
+    items: Array<Executions_Transition>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1274,7 +1272,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Executions_Execution>;
+    items: Array<Executions_Execution>;
   }> {
     return this.httpRequest.request({
       method: "GET",
@@ -1507,7 +1505,7 @@ export class DefaultService {
      */
     metadataFilter?: string;
   }): CancelablePromise<{
-    results: Array<Docs_Doc>;
+    items: Array<Docs_Doc>;
   }> {
     return this.httpRequest.request({
       method: "GET",

@@ -1,5 +1,5 @@
 import "./scalars.tsp";
-import "./types.tsp";
+import "./models.tsp";
 
 namespace Common;
 
