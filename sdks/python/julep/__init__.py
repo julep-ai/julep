@@ -35,15 +35,20 @@ T = TypeVar('T', bound=Callable[..., Any])
 P = ParamSpec('P')
 R = TypeVar('R')
 
-def parse_response(fn: Callable[P, R]) -> Callable[P, dict[str, Any]]:
+def parse_response(fn: Callable[P, R]) -> Callable[P, R | dict[str, Any]]:
     @wraps(fn)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> dict[str, Any]:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R | dict[str, Any]:
         response = fn(*args, **kwargs)
+
         if response.status_code.is_client_error or response.status_code.is_server_error:
             raise errors.UnexpectedStatus(response.status_code, response.content)
         else:
-            result = json.loads(response.content)
-            return result  # type: ignore
+            parsed = response.parsed
+
+            if parsed:
+                return parsed
+            else:
+                return json.loads(response.content)
 
     return wrapper
 
