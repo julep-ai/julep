@@ -1,4 +1,8 @@
 # Julep Concepts
+<details>
+  <summary>
+    <h4>Table of Contents</h4>
+  </summary>
 
 - [Agent](#agent)
   - [Agent Endpoints](#agent-endpoints)
@@ -45,6 +49,20 @@
   - [Execution Endpoints](#execution-endpoints)
   - [Execution Models](#execution-models)
   - [Execution State Transitions](#execution-state-transitions)
+</details>
+
+*****
+
+**New feature announced! _🌟Tasks🌟_**  
+
+<div>
+    <a href="https://www.loom.com/share/c5cda67936254465aaff4548245b3e13">
+      <p>Building Autonomous Agents with Julep - Watch Video</p>
+    </a>
+    <a href="https://www.loom.com/share/c5cda67936254465aaff4548245b3e13">
+      <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/c5cda67936254465aaff4548245b3e13-f0d897962b67af7d-full-play.gif">
+    </a>
+  </div>
 
 *****
 
