@@ -827,9 +827,11 @@ Remember to replace `YOUR_API_KEY` with your actual Julep API key, and `{user_id
 
 *****
 
-## Task
+## Tasks
 
 `Task`s in Julep are _Github Actions_ style workflows that define long-running, multi-step actions. You can use them to conduct complex actions by defining them step-by-step. They have access to all Julep integrations.
+
+See [loom video](https://www.loom.com/embed/c5cda67936254465aaff4548245b3e13?hideEmbedTopBar=true) explaining this with an example.
 
 A `Task` is a workflow owned by an `Agent`. It consists of the following fields:
 
