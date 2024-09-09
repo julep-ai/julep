@@ -45,7 +45,9 @@ Build powerful AI applications with stateful agents, complex workflows, and inte
 
 ## 🚀 Upcoming Release: v0.4 Alpha
 
-![Announcing v0.4 Alpha](.github/i-have-an-announcement.gif)
+<div align="center">
+  <img src=".github/i-have-an-announcement.gif" alt="Announcing v0.4 Alpha">
+</div>
 
 We're excited to announce that v0.4 is currently in alpha! This release brings significant improvements and new features. Stay tuned for the official release.
 

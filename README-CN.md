@@ -40,7 +40,9 @@
 
 ## 🚀 即将发布：v0.4 Alpha
 
-![宣布v0.4 Alpha](.github/i-have-an-announcement.gif)
+<div align="center">
+  <img src=".github/i-have-an-announcement.gif" alt="Announcing v0.4 Alpha">
+</div>
 
 我们很高兴地宣布v0.4目前处于alpha阶段！此版本带来了重大改进和新功能。敬请期待正式发布。
 
