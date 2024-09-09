@@ -1,6 +1,6 @@
 # Environment
 
-[Julep Python SDK Index](../../README.md#julep-python-sdk-index) / [Julep](../index.md#julep) / [Api](./index.md#api) / Environment
+[Julep Python SDK Index](../../README.md#julep-python-sdk-index) / [Julep](../index.md#julep) / [Julep Python Library](./index.md#julep-python-library) / Environment
 
 > Auto-generated documentation for [julep.api.environment](../../../../../../julep/api/environment.py) module.
 

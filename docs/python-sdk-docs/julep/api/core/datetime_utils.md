@@ -1,6 +1,6 @@
 # Datetime Utils
 
-[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Api](../index.md#api) / [Core](./index.md#core) / Datetime Utils
+[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Julep Python Library](../index.md#julep-python-library) / [Core](./index.md#core) / Datetime Utils
 
 > Auto-generated documentation for [julep.api.core.datetime_utils](../../../../../../../julep/api/core/datetime_utils.py) module.
 
