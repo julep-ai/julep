@@ -1,3 +1,4 @@
+import ast
 from typing import Any
 
 from beartype import beartype
@@ -13,9 +14,26 @@ from ..utils import get_evaluator
 async def base_evaluate(
     exprs: str | list[str] | dict[str, str],
     values: dict[str, Any] = {},
+    extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
     input_len = 1 if isinstance(exprs, str) else len(exprs)
     assert input_len > 0, "exprs must be a non-empty string, list or dict"
+
+    extra_lambdas = {}
+    if extra_lambda_strs:
+        for k, v in extra_lambda_strs.items():
+            v = v.strip()
+
+            # Check that all extra lambdas are valid
+            assert v.startswith("lambda "), "All extra lambdas must start with 'lambda'"
+
+            try:
+                ast.parse(v)
+            except Exception as e:
+                raise ValueError(f"Invalid lambda: {v}") from e
+
+            # Eval the lambda and add it to the extra lambdas
+            extra_lambdas[k] = eval(v)
 
     # Turn the nested dict values from pydantic to dicts where possible
     values = {
@@ -25,7 +43,7 @@ async def base_evaluate(
     # frozen_box doesn't work coz we need some mutability in the values
     values = Box(values, frozen_box=False, conversion_box=True)
 
-    evaluator = get_evaluator(names=values)
+    evaluator = get_evaluator(names=values, extra_functions=extra_lambdas)
 
     try:
         match exprs:

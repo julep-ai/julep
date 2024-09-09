@@ -1,6 +1,6 @@
 # Jsonable Encoder
 
-[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Api](../index.md#api) / [Core](./index.md#core) / Jsonable Encoder
+[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Julep Python Library](../index.md#julep-python-library) / [Core](./index.md#core) / Jsonable Encoder
 
 > Auto-generated documentation for [julep.api.core.jsonable_encoder](../../../../../../../julep/api/core/jsonable_encoder.py) module.
 
@@ -10,7 +10,7 @@
 
 ## generate_encoders_by_class_tuples
 
-[Show source in jsonable_encoder.py:30](../../../../../../../julep/api/core/jsonable_encoder.py#L30)
+[Show source in jsonable_encoder.py:26](../../../../../../../julep/api/core/jsonable_encoder.py#L26)
 
 #### Signature
 
@@ -24,7 +24,7 @@ def generate_encoders_by_class_tuples(
 
 ## jsonable_encoder
 
-[Show source in jsonable_encoder.py:46](../../../../../../../julep/api/core/jsonable_encoder.py#L46)
+[Show source in jsonable_encoder.py:42](../../../../../../../julep/api/core/jsonable_encoder.py#L42)
 
 #### Signature
 

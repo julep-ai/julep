@@ -39,7 +39,7 @@ RUN \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set fallback mount directory
-ENV COZO_MNT_DIR=/data COZO_BACKUP_DIR=/backup APP_HOME=/app 
+ENV COZO_MNT_DIR=/data COZO_BACKUP_DIR=/backup APP_HOME=/app COZO_PORT=9070
 WORKDIR $APP_HOME
 
 # Copy the cozo binary

@@ -95,7 +95,7 @@ def patch_session(
             input[{session_update_cols}],
             ids[session_id, developer_id],
             *sessions{{
-                {rest_fields}, metadata: md, @ "NOW"
+                {rest_fields}, metadata: md, @ "END"
             }},
             updated_at = 'ASSERT',
             metadata = concat(md, $metadata),

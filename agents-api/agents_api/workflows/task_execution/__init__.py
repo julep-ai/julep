@@ -8,6 +8,7 @@ from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
+# Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
@@ -31,7 +32,6 @@ with workflow.unsafe.imports_passed_through():
         ToolCallStep,
         TransitionTarget,
         WaitForInputStep,
-        Workflow,
         WorkflowStep,
         YieldStep,
     )
@@ -42,6 +42,14 @@ with workflow.unsafe.imports_passed_through():
         StepOutcome,
     )
     from ...env import debug, testing
+    from .helpers import (
+        continue_as_child,
+        execute_foreach_step,
+        execute_if_else_branch,
+        execute_map_reduce_step,
+        execute_map_reduce_step_parallel,
+        execute_switch_branch,
+    )
     from .transition import transition
 
 # Supported steps
@@ -70,6 +78,7 @@ with workflow.unsafe.imports_passed_through():
 #     | MapReduceStep  # ✅
 # )
 
+# Mapping of step types to their corresponding activities
 STEP_TO_ACTIVITY = {
     PromptStep: task_steps.prompt_step,
     # ToolCallStep: tool_call_step,
@@ -98,26 +107,11 @@ GenericStep = RootModel[WorkflowStep]
 # TODO: The timeouts should be configurable per task
 
 
-async def continue_as_child(
-    execution_input: ExecutionInput,
-    start: TransitionTarget,
-    previous_inputs: list[Any],
-    user_state: dict[str, Any] = {},
-) -> Any:
-    return await workflow.execute_child_workflow(
-        TaskExecutionWorkflow.run,
-        args=[
-            execution_input,
-            start,
-            previous_inputs,
-            user_state,
-        ],
-        # TODO: Should add search_attributes for queryability
-    )
-
-
 # TODO: Review the current user state storage method
 #       Probably can be implemented much more efficiently
+
+
+# Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
     user_state: dict[str, Any] = {}
@@ -126,6 +120,7 @@ class TaskExecutionWorkflow:
         self.user_state = {}
 
     # TODO: Add endpoints for getting and setting user state for an execution
+    # Query methods for user state
     @workflow.query
     def get_user_state(self) -> dict[str, Any]:
         return self.user_state
@@ -134,6 +129,7 @@ class TaskExecutionWorkflow:
     def get_user_state_by_key(self, key: str) -> Any:
         return self.user_state.get(key)
 
+    # Signal methods for updating user state
     @workflow.signal
     def set_user_state(self, key: str, value: Any) -> None:
         self.user_state[key] = value
@@ -142,6 +138,7 @@ class TaskExecutionWorkflow:
     def update_user_state(self, values: dict[str, Any]) -> None:
         self.user_state.update(values)
 
+    # Main workflow run method
     @workflow.run
     async def run(
         self,
@@ -250,38 +247,14 @@ class TaskExecutionWorkflow:
                 return output  # <--- Byeeee!
 
             case SwitchStep(switch=switch), StepOutcome(output=index) if index >= 0:
-                workflow.logger.info(f"Switch step: Chose branch {index}")
-                chosen_branch = switch[index]
-
-                # Create a faux workflow
-                case_wf_name = (
-                    f"`{context.cursor.workflow}`[{context.cursor.step}].case"
-                )
-
-                case_task = execution_input.task.model_copy()
-                case_task.workflows = [
-                    Workflow(name=case_wf_name, steps=[chosen_branch.then])
-                ]
-
-                # Create a new execution input
-                case_execution_input = execution_input.model_copy()
-                case_execution_input.task = case_task
-
-                # Set the next target to the chosen branch
-                case_next_target = TransitionTarget(workflow=case_wf_name, step=0)
-
-                case_args = [
-                    case_execution_input,
-                    case_next_target,
-                    previous_inputs,
-                ]
-
-                # Execute the chosen branch and come back here
-                result = await continue_as_child(
-                    *case_args,
+                result = await execute_switch_branch(
+                    context=context,
+                    execution_input=execution_input,
+                    switch=switch,
+                    index=index,
+                    previous_inputs=previous_inputs,
                     user_state=self.user_state,
                 )
-
                 state = PartialTransition(output=result)
 
             case SwitchStep(), StepOutcome(output=index) if index < 0:
@@ -291,129 +264,58 @@ class TaskExecutionWorkflow:
             case IfElseWorkflowStep(then=then_branch, else_=else_branch), StepOutcome(
                 output=condition
             ):
-                workflow.logger.info(
-                    f"If-Else step: Condition evaluated to {condition}"
-                )
-                # Choose the branch based on the condition
-                chosen_branch = then_branch if condition else else_branch
-
-                # Create a faux workflow
-                if_else_wf_name = (
-                    f"`{context.cursor.workflow}`[{context.cursor.step}].if_else"
-                )
-                if_else_wf_name += ".then" if condition else ".else"
-
-                if_else_task = execution_input.task.model_copy()
-                if_else_task.workflows = [
-                    Workflow(name=if_else_wf_name, steps=[chosen_branch])
-                ]
-
-                # Create a new execution input
-                if_else_execution_input = execution_input.model_copy()
-                if_else_execution_input.task = if_else_task
-
-                # Set the next target to the chosen branch
-                if_else_next_target = TransitionTarget(workflow=if_else_wf_name, step=0)
-
-                if_else_args = [
-                    if_else_execution_input,
-                    if_else_next_target,
-                    previous_inputs,
-                ]
-
-                # Execute the chosen branch and come back here
-                result = await continue_as_child(
-                    *if_else_args,
+                result = await execute_if_else_branch(
+                    context=context,
+                    execution_input=execution_input,
+                    then_branch=then_branch,
+                    else_branch=else_branch,
+                    condition=condition,
+                    previous_inputs=previous_inputs,
                     user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
 
             case ForeachStep(foreach=ForeachDo(do=do_step)), StepOutcome(output=items):
-                workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
-                for i, item in enumerate(items):
-                    # Create a faux workflow
-                    foreach_wf_name = f"`{context.cursor.workflow}`[{context.cursor.step}].foreach[{i}]"
-
-                    foreach_task = execution_input.task.model_copy()
-                    foreach_task.workflows = [
-                        Workflow(name=foreach_wf_name, steps=[do_step])
-                    ]
-
-                    # Create a new execution input
-                    foreach_execution_input = execution_input.model_copy()
-                    foreach_execution_input.task = foreach_task
-
-                    # Set the next target to the chosen branch
-                    foreach_next_target = TransitionTarget(
-                        workflow=foreach_wf_name, step=0
-                    )
-
-                    foreach_args = [
-                        foreach_execution_input,
-                        foreach_next_target,
-                        previous_inputs + [{"item": item}],
-                    ]
-
-                    # Execute the chosen branch and come back here
-                    result = await continue_as_child(
-                        *foreach_args,
-                        user_state=self.user_state,
-                    )
-
+                result = await execute_foreach_step(
+                    context=context,
+                    execution_input=execution_input,
+                    do_step=do_step,
+                    items=items,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
+                )
                 state = PartialTransition(output=result)
 
             case MapReduceStep(
-                map=map_defn, reduce=reduce, initial=initial
+                map=map_defn, reduce=reduce, initial=initial, parallelism=parallelism
+            ), StepOutcome(output=items) if parallelism is None or parallelism == 1:
+                result = await execute_map_reduce_step(
+                    context=context,
+                    execution_input=execution_input,
+                    map_defn=map_defn,
+                    items=items,
+                    reduce=reduce,
+                    initial=initial,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
+                )
+                state = PartialTransition(output=result)
+
+            case MapReduceStep(
+                map=map_defn, reduce=reduce, initial=initial, parallelism=parallelism
             ), StepOutcome(output=items):
-                workflow.logger.info(f"MapReduce step: Processing {len(items)} items")
-                result = initial or []
-                reduce = reduce or "results + [_]"
-
-                for i, item in enumerate(items):
-                    workflow_name = f"`{context.cursor.workflow}`[{context.cursor.step}].mapreduce[{i}]"
-                    map_reduce_task = execution_input.task.model_copy()
-
-                    defn_dict = map_defn.model_dump()
-                    step_defn = GenericStep(**defn_dict).root
-                    map_reduce_task.workflows = [
-                        Workflow(name=workflow_name, steps=[step_defn])
-                    ]
-
-                    # Create a new execution input
-                    map_reduce_execution_input = execution_input.model_copy()
-                    map_reduce_execution_input.task = map_reduce_task
-
-                    # Set the next target to the chosen branch
-                    map_reduce_next_target = TransitionTarget(
-                        workflow=workflow_name, step=0
-                    )
-
-                    map_reduce_args = [
-                        map_reduce_execution_input,
-                        map_reduce_next_target,
-                        previous_inputs + [item],
-                    ]
-
-                    # TODO: Parallelize map-reduce step
-                    # SCRUM-14
-
-                    # Execute the chosen branch and come back here
-                    output = await continue_as_child(
-                        *map_reduce_args,
-                        user_state=self.user_state,
-                    )
-
-                    # Reduce the result with the initial value
-                    result = await workflow.execute_activity(
-                        task_steps.base_evaluate,
-                        args=[
-                            reduce,
-                            {"results": result, "_": output},
-                        ],
-                        schedule_to_close_timeout=timedelta(seconds=2),
-                    )
-
+                result = await execute_map_reduce_step_parallel(
+                    context=context,
+                    execution_input=execution_input,
+                    map_defn=map_defn,
+                    items=items,
+                    previous_inputs=previous_inputs,
+                    user_state=self.user_state,
+                    initial=initial,
+                    reduce=reduce,
+                    parallelism=parallelism,
+                )
                 state = PartialTransition(output=result)
 
             case SleepStep(
@@ -466,7 +368,7 @@ class TaskExecutionWorkflow:
                 )
 
                 result = await continue_as_child(
-                    execution_input=execution_input,
+                    context,
                     start=yield_next_target,
                     previous_inputs=[output],
                     user_state=self.user_state,
@@ -572,9 +474,9 @@ class TaskExecutionWorkflow:
             f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
         )
 
-        # TODO: Should use a continue_as_new workflow if history grows too large
+        # Continue as a child workflow
         return await continue_as_child(
-            execution_input=execution_input,
+            context,
             start=final_state.next,
             previous_inputs=previous_inputs + [final_state.output],
             user_state=self.user_state,

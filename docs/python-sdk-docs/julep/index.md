@@ -9,7 +9,7 @@
 
 ## Modules
 
-- [Api](api/index.md)
+- [Julep Python Library](api/index.md)
 - [Client](./client.md)
 - [Env](./env.md)
 - [Managers](managers/index.md)

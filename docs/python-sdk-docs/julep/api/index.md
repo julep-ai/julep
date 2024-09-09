@@ -1,10 +1,10 @@
-# Api
+# Julep Python Library
 
-[Julep Python SDK Index](../../README.md#julep-python-sdk-index) / [Julep](../index.md#julep) / Api
+[Julep Python SDK Index](../../README.md#julep-python-sdk-index) / [Julep](../index.md#julep) / Julep Python Library
 
 > Auto-generated documentation for [julep.api](../../../../../../julep/api/__init__.py) module.
 
-- [Api](#api)
+- [Julep Python Library](#julep-python-library)
   - [Modules](#modules)
 
 ## Modules

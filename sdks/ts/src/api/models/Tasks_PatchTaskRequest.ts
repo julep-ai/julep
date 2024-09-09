@@ -71,7 +71,14 @@ export type Tasks_PatchTaskRequest = Record<
          * A special parameter named `results` is the accumulator and `_` is the current value.
          */
         reduce?: Common_PyExpression;
+        /**
+         * The initial value of the reduce expression
+         */
         initial?: any;
+        /**
+         * Whether to run the reduce expression in parallel and how many items to run in each batch
+         */
+        parallelism?: number;
       })
   >
 >;

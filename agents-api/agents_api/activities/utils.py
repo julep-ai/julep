@@ -1,5 +1,9 @@
 import json
-from typing import Any
+from functools import reduce
+from itertools import accumulate
+from random import random
+from time import time
+from typing import Any, Callable
 
 import re2
 import yaml
@@ -10,6 +14,7 @@ from yaml import CSafeLoader
 # TODO: We need to make sure that we dont expose any security issues
 ALLOWED_FUNCTIONS = {
     "abs": abs,
+    "accumulate": accumulate,
     "all": all,
     "any": any,
     "bool": bool,
@@ -22,22 +27,32 @@ ALLOWED_FUNCTIONS = {
     "list": list,
     "load_json": json.loads,
     "load_yaml": lambda string: yaml.load(string, Loader=CSafeLoader),
+    "map": map,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
     "max": max,
     "min": min,
+    "random": random,
+    "range": range,
+    "reduce": reduce,
     "round": round,
     "search_regex": lambda pattern, string: re2.search(pattern, string),
     "set": set,
     "str": str,
     "sum": sum,
+    "time": time,
     "tuple": tuple,
     "zip": zip,
 }
 
 
 @beartype
-def get_evaluator(names: dict[str, Any]) -> SimpleEval:
-    evaluator = EvalWithCompoundTypes(names=names, functions=ALLOWED_FUNCTIONS)
+def get_evaluator(
+    names: dict[str, Any], extra_functions: dict[str, Callable] | None = None
+) -> SimpleEval:
+    evaluator = EvalWithCompoundTypes(
+        names=names, functions=ALLOWED_FUNCTIONS | (extra_functions or {})
+    )
+
     return evaluator
 
 

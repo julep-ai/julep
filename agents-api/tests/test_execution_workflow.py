@@ -649,7 +649,7 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         result = await handle.result()
-        assert result["hello"] == "world"
+        assert result[0]["hello"] == "world"
 
 
 @test("workflow: map reduce step")
@@ -697,6 +697,61 @@ async def _(
 
         result = await handle.result()
         assert [r["res"] for r in result] == ["a", "b", "c"]
+
+
+for p in [1, 3, 5]:
+
+    @test(f"workflow: map reduce step parallel (parallelism={p})")
+    async def _(
+        client=cozo_client,
+        developer_id=test_developer_id,
+        agent=test_agent,
+    ):
+        data = CreateExecutionRequest(input={"test": "input"})
+
+        map_step = {
+            "over": "'a b c d'.split()",
+            "map": {
+                "evaluate": {"res": "_ + '!'"},
+            },
+            "parallelism": p,
+        }
+
+        task_def = {
+            "name": "test task",
+            "description": "test task about",
+            "input_schema": {"type": "object", "additionalProperties": True},
+            "main": [map_step],
+        }
+
+        task = create_task(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            data=CreateTaskRequest(**task_def),
+            client=client,
+        )
+
+        async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
+
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
+
+            mock_run_task_execution_workflow.assert_called_once()
+
+            result = await handle.result()
+            assert [r["res"] for r in result] == [
+                "a!",
+                "b!",
+                "c!",
+                "d!",
+            ]
 
 
 @test("workflow: prompt step")

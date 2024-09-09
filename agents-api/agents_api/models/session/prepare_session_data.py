@@ -159,7 +159,7 @@ def prepare_session_data(
             render_templates,
             token_budget,
             context_overflow,
-            @ "NOW"
+            @ "END"
         },
         updated_at = to_int(validity),
         record = {

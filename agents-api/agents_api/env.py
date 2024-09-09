@@ -20,6 +20,10 @@ public_port: int = env.int("AGENTS_API_PUBLIC_PORT", default=80)
 api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 
 
+# Tasks
+# -----
+task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
+
 # Debug
 # -----
 debug: bool = env.bool("AGENTS_API_DEBUG", default=False)

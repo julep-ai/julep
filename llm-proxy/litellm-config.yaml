@@ -38,6 +38,24 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/ANTHROPIC_API_KEY
 
+- model_name: "claude-3-opus"
+  litellm_params:
+    model: "claude-3-opus-20240229"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-3-sonnet"
+  litellm_params:
+    model: "claude-3-sonnet-20240229"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-3-haiku"
+  litellm_params:
+    model: "claude-3-haiku-20240307"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
 # Groq models
 - model_name: "llama-3.1-70b"
   litellm_params:
