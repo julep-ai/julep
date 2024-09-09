@@ -952,46 +952,26 @@ This example demonstrates a daily motivation task that:
 
 ### Types of workflow steps
 
-| **Step Type**   | 
-**Description**                                                                                                                                     |
-|:----------------|
-:----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Tool Call       | Runs a specified tool with given 
-arguments.                                                                                                          |
-| Prompt          | Runs a prompt using a model. You can override settings and interpolate variables using [jinja](https://jinja.palletsprojects.com/) 
-templates.       |
-| Evaluate        | Accepts an object with values that are valid python expressions. The step runs the expressions and the result becomes the output of this 
-step.      |
-| Wait for input  | Suspends the execution and waits for the caller to resume execution with an 
-input.                                                                   |
-| Log             | Logs information during the workflow 
-execution.                                                                                                      |
-| Embed           | Embeds text for semantic 
-operations.                                                                                                                 |
-| Search          | Searches for documents in the agent's doc 
-store.                                                                                                     |
-| Set             | Sets a value in the workflow's key-value 
-store.                                                                                                      |
-| Get             | Retrieves a value from the workflow's key-value 
-store.                                                                                               |
-| Foreach         | Runs a step for every value from a list in serial 
-order.                                                                                             |
-| Map-reduce      | Runs a step for every value of the input list in parallel. Requires a reduce expression to collect the 
-results.                                      |
-| Parallel        | Executes multiple steps in 
-parallel.                                                                                                                 |
-| Switch          | Executes different steps based on a condition, similar to a switch statement in 
-programming.                                                         |
-| If-else         | Conditional step where the `if` field expression is evaluated. If the output is truthy then the `then` branch is executed, otherwise 
-`else` branch. |
-| Sleep           | Pauses the workflow execution for a specified number of 
-seconds.                                                                                     |
-| Return          | Ends the current workflow and optionally returns a 
-value.                                                                                            |
-| Yield           | Switches to another named workflow. Can add custom inputs (Default: output of previous 
-steps).                                                       |
-| Error           | Throws an error with the provided message and exits the 
-workflow.                                                                                    |
+| **Step Type**   | **Description**                                                                                                                                     |
+|:----------------| :----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Tool Call       | Runs a specified tool with given arguments.                                                                                                          |
+| Prompt          | Runs a prompt using a model. You can override settings and interpolate variables using [jinja](https://jinja.palletsprojects.com/) templates.       |
+| Evaluate        | Accepts an object with values that are valid python expressions. The step runs the expressions and the result becomes the output of this step.      |
+| Wait for input  | Suspends the execution and waits for the caller to resume execution with an input.                                                                   |
+| Log             | Logs information during the workflow execution.                                                                                                      |
+| Embed           | Embeds text for semantic operations.                                                                                                                 |
+| Search          | Searches for documents in the agent's doc store.                                                                                                     |
+| Set             | Sets a value in the workflow's key-value store.                                                                                                      |
+| Get             | Retrieves a value from the workflow's key-value store.                                                                                               |
+| Foreach         | Runs a step for every value from a list in serial order.                                                                                             |
+| Map-reduce      | Runs a step for every value of the input list in parallel. Requires a reduce expression to collect the results.                                      |
+| Parallel        | Executes multiple steps in parallel.                                                                                                                 |
+| Switch          | Executes different steps based on a condition, similar to a switch statement in programming.                                                         |
+| If-else         | Conditional step where the `if` field expression is evaluated. If the output is truthy then the `then` branch is executed, otherwise `else` branch. |
+| Sleep           | Pauses the workflow execution for a specified number of seconds.                                                                                     |
+| Return          | Ends the current workflow and optionally returns a value.                                                                                            |
+| Yield           | Switches to another named workflow. Can add custom inputs (Default: output of previous steps).                                                       |
+| Error           | Throws an error with the provided message and exits the workflow.                                                                                    |
 
 #### Tool Call
 Runs a specified tool with given arguments.
