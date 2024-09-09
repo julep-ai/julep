@@ -1,6 +1,6 @@
 # ApiError
 
-[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Api](../index.md#api) / [Core](./index.md#core) / ApiError
+[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Julep Python Library](../index.md#julep-python-library) / [Core](./index.md#core) / ApiError
 
 > Auto-generated documentation for [julep.api.core.api_error](../../../../../../../julep/api/core/api_error.py) module.
 

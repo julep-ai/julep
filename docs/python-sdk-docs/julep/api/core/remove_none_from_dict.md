@@ -1,6 +1,6 @@
 # Remove None From Dict
 
-[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Api](../index.md#api) / [Core](./index.md#core) / Remove None From Dict
+[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Julep Python Library](../index.md#julep-python-library) / [Core](./index.md#core) / Remove None From Dict
 
 > Auto-generated documentation for [julep.api.core.remove_none_from_dict](../../../../../../../julep/api/core/remove_none_from_dict.py) module.
 
@@ -14,5 +14,5 @@
 #### Signature
 
 ```python
-def remove_none_from_dict(original: Dict[str, Optional[Any]]) -> Dict[str, Any]: ...
+def remove_none_from_dict(original: Mapping[str, Optional[Any]]) -> Dict[str, Any]: ...
 ```

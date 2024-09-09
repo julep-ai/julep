@@ -1,22 +1,19 @@
-<sup>[English](/) | 中文翻译</sup>
+<sup>[English](README.md) | 中文翻译</sup>
 
 <div align="center">
-    <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=%E7%94%A8%E4%BA%8E%E6%9E%84%E5%BB%BA%E6%9C%89%E7%8A%B6%E6%80%81%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E5%BA%94%E7%94%A8%E7%9A%84%E5%BC%80%E6%BA%90%E5%B9%B3%E5%8F%B0&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Dark" alt="julep" width="640" height="320" />
+    <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Open-source%20platform%20for%20building%20stateful%20AI%20apps&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
----
+<h2 align="center">
+使用有状态代理、复杂工作流和集成工具构建强大的AI应用程序
+</h2>
 
-💸🤑 **宣布我们的赏金计划：** 帮助 Julep 社区修复错误并发布功能，即可获得报酬。更多详情[点击这里](https://github.com/julep-ai/julep/discussions/categories/bounty-program)。
-
----
-## 在对话历史记录、支持任何LLM、代理式工作流、集成等方面开始您的项目。
-
-<p align="center">
+  <p align="center">
     <br />
     <a href="https://docs.julep.ai" rel="dofollow"><strong>探索文档 »</strong></a>
     <br />
   <br/>
-    <a href="https://github.com/julep-ai/julep/issues/new">报告错误</a>
+    <a href="https://github.com/julep-ai/julep/issues/new">报告Bug</a>
     ·
     <a href="https://github.com/julep-ai/julep/discussions/293">请求功能</a>
     ·
@@ -24,7 +21,8 @@
     ·
     <a href="https://x.com/julep_ai">X</a>
     ·
-    <a href="https://www.linkedin.com/company/julep-ai">领英</a>
+    <a href="https://www.linkedin.com/company/julep-ai">LinkedIn</a>
+
 </p>
 
 
@@ -40,60 +38,61 @@
 
 ---
 
-## 为什么选择 Julep？
-我们构建了许多人工智能应用程序，并且了解评估数百种工具、技术和模型，然后使它们良好地配合在一起有多么困难。
+## 🚀 即将发布：v0.4 Alpha
+
+<div align="center">
+  <img src=".github/i-have-an-announcement.gif" alt="Announcing v0.4 Alpha">
+</div>
+
+我们很高兴地宣布v0.4目前处于alpha阶段！此版本带来了重大改进和新功能。敬请期待正式发布。
+
+要全面了解Julep的核心概念和即将推出的功能，请查看我们的[详细概念指南](docs/julep-concepts.md)。
+
+寻找之前的版本？您可以在这里找到[v0.3 README](v0.3_README.md)。
+
+---
+
+## 为什么选择Julep？
+我们构建了许多AI应用程序，并深知创建具有多个代理和工作流的复杂、有状态应用程序的挑战。
 
 **问题**
-1. 具有记忆、知识和工具的LLM应用的门槛太高了。
-2. 通过多代理框架进行代理行为的控制很难。
+1. 构建具有记忆、知识和工具的AI应用程序复杂且耗时。
+2. 在AI应用程序中管理长时间运行的任务和复杂工作流具有挑战性。
+3. 将多个工具和服务集成到AI应用程序中需要大量开发工作。
 
 ---
-## 特性
-- **设计时状态性**: 默认情况下管理对话历史记录。使用简单的标志 `remember` 和 `recall` 来调整是否保存或检索对话历史记录。
-- **支持用户和代理**: 允许创建不同的用户 <-> 代理交互，如 `一个代理 <-> 多个用户`；`多个代理 <-> 一个用户`等。[了解更多](https://docs.julep.ai/concepts/)。
-- **内置RAG**: 添加、删除和更新文档，为LLM提供关于用户或代理的上下文，具体取决于您的用例。[在此处阅读更多](https://docs.julep.ai/guides/build-a-retrieval-augmented-generation-rag-agent)。
-- **内置90+工具**: 使用[Composio](https://docs.composio.dev/framework/julep/)本地连接您的AI应用到90+第三方应用程序。`toolset.handle_tool_calls(julep_client, session.id, response)` 将为您调用和处理工具！[查看示例](https://docs.julep.ai/guides/use-julep-with-composio)
-- **本地优先**: Julep 可以使用 Docker Compose 部署到生产环境。对于 k8s 的支持即将推出！
-- **动态切换LLM**: 更新代理以在OpenAI、Anthropic或Ollama之间切换LLM。同时保留状态。
-- **为代理分配任务**: 定义异步执行的代理工作流，一个或多个代理无需担心超时或幻觉增多。[正在进行中](https://github.com/julep-ai/julep/discussions/387)
-
-> (*) 即将推出！
-
----
-## 指南
-您可以在 [指南文档](https://docs.julep.ai/guides/) 中查看 Julep 的不同功能。
-1. [简单的对话机器人](https://deepnote.com/app/julep-ai-761c/Julep-Mixers-4dfff09a-84f2-4278-baa3-d1a00b88ba26)
-2. [搜索代理](https://docs.julep.ai/guides/)
-3. [RAG 代理](https://docs.julep.ai/guides/build-a-retrieval-augmented-generation-rag-agent)
-4. [使用 Composio 的 GitHub 代理](https://docs.julep.ai/guides/use-julep-with-composio)
-5. [用于视觉的 GPT 4o](https://docs.julep.ai/guides/image-+-text-with-gpt-4o)
+## 功能
+- **有状态代理**：创建和管理具有内置对话历史和记忆的代理。
+- **复杂工作流**：定义和执行具有分支、并行执行和错误处理的多步骤任务。
+- **集成工具**：轻松将各种工具和外部服务整合到您的AI应用程序中。
+- **灵活的会话管理**：支持代理和用户之间的各种交互模式，如一对多和多对一。
+- **内置RAG**：添加、删除和更新文档以为您的代理提供上下文。
+- **异步任务执行**：在后台运行长时间运行的任务，具有状态管理和可恢复性。
+- **多模型支持**：在保持状态的同时切换不同的语言模型（OpenAI、Anthropic、Ollama）。
+- **任务系统**：定义和执行具有并行处理和错误处理的复杂多步骤工作流。
 
 ---
+## 快速入门
+### 选项1：使用Julep云
+我们的托管平台目前处于Beta阶段！ 
 
+要获取访问权限：
+- 前往https://platform.julep.ai
+- 在`.env`中生成并添加您的`JULEP_API_KEY`
 
-## 快速开始
-### 选项1：使用 Julep 云
-我们的托管平台处于测试版！
-
-获取访问权限：
-- 前往 https://platform.julep.ai
-- 生成并添加您的 `JULEP_API_KEY` 到 `.env` 文件中
-
-### 选项2：在本地安装和运行 Julep
-前往 [自托管](https://docs.julep.ai/guides/self-hosting) 文档了解如何在本地运行 Julep！
+### 选项2：在本地安装并运行Julep
+前往[自托管](https://docs.julep.ai/guides/self-hosting)文档，了解如何在本地运行Julep！
 
 ### 安装
 
-```
+```bash
 pip install julep
 ```
 
-### 设置 `client`
+### 设置`client`
 
-```py
+```python
 from julep import Client
-from pprint import pprint
-import textwrap
 import os
 
 base_url = os.environ.get("JULEP_API_URL")
@@ -103,55 +102,54 @@ client = Client(api_key=api_key, base_url=base_url)
 ```
 
 ### 创建代理
-代理是 LLM 设置的对象，例如模型、温度以及工具。
+代理是将LLM设置（如模型、温度）以及工具范围的对象。
 
-```py
+```python
 agent = client.agents.create(
     name="Jessica",
     model="gpt-4",
-    tools=[]    # 在此处定义工具
+    tools=[],    # 在此处定义工具
+    about="A helpful AI assistant",
+    instructions=["Be polite", "Be concise"]
 )
 ```
 
 ### 创建用户
-用户是应用程序的用户对象。
+用户是应用程序用户的对象。
 
-为每个用户形成和保存记忆，许多用户可以与一个代理交谈。
+记忆是为每个用户形成并保存的，多个用户可以与一个代理交谈。
 
-```py
+```python
 user = client.users.create(
     name="Anon",
-    about="每天花8小时在笔记本电脑上的普通技术宅/女孩",
+    about="Average nerdy techbro/girl spending 8 hours a day on a laptop",
 )
 ```
-
----
 
 ### 创建会话
-一个 "用户" 和一个 "代理" 在一个 "会话" 中进行通信。系统提示在这里。
-会话历史记录和摘要存储在一个 "会话" 中，该会话保存了对话历史记录。
+"用户"和"代理"在"会话"中进行交互。系统提示在此处。
 
-会话范式允许许多用户与一个代理进行交互，并允许对话历史记录和记忆的分离。
-
-```py
-situation_prompt = """你是 Jessica。你是一个自命不凡的加州少年。 你基本上抱怨一切。 你住在洛杉矶的贝尔埃尔，必要时你会去科蒂斯高中上学。
-"""
+```python
+situation_prompt = """You are Jessica, a helpful AI assistant. 
+You're here to assist the user with any questions or tasks they might have."""
 session = client.sessions.create(
-    user_id=user.id, agent_id=agent.id, situation=situation_prompt
+    user_id=user.id,
+    agent_id=agent.id,
+    situation=situation_prompt
 )
 ```
 
-### 开始有状态的对话
-`session.chat` 控制 "代理" 和 "用户" 之间的通信。
+### 开始有状态对话
+`session.chat`控制"代理"和"用户"之间的通信。
 
-它有两个重要的参数;
-- `recall`: 检索之前的对话和记忆。
-- `remember`: 将当前的对话转换为内存存储。
+它有两个重要参数；
+- `recall`：检索先前的对话和记忆。
+- `remember`：将当前对话回合保存到记忆存储中。
 
-要保持会话有状态，两者都需要设置为 `True`
+要保持会话状态，两者都需要为`True`
 
-```py
-user_msg = "嗨，你觉得星巴克怎么样"
+```python
+user_msg = "Hey Jessica, can you help me with a task?"
 response = client.sessions.chat(
     session_id=session.id,
     messages=[
@@ -165,66 +163,86 @@ response = client.sessions.chat(
     remember=True,
 )
 
-print("\n".join(textwrap.wrap(response.response[0][0].content, width=100)))
+print(response.response[0][0].content)
 ```
 
 ---
 
-## API 和 SDK
-要直接使用 API 或查看请求和响应格式、认证、可用端点等信息，请参阅 [API 文档](https://docs.julep.ai/api-reference/agents-api/agents-api)。
+## 核心概念
 
-您也可以使用 [Postman 集合](https://god.gw.postman.com/run-collection/33213061-a0a1e3a9-9681-44ae-a5c2-703912b32336?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D33213061-a0a1e3a9-9681-44ae-a5c2-703912b32336%26entityType%3Dcollection%26workspaceId%3D183380b4-f2ac-44ef-b018-1f65dfc8256b) 进行参考。
+### 代理（Agent）
+Julep中的代理是应用程序的主要协调者。它由GPT-4或Claude等基础模型支持，可以使用工具、文档并执行复杂任务。
+
+### 用户（User）
+Julep中的用户代表应用程序的最终用户。他们可以与会话关联，并拥有自己的文档和元数据。
+
+### 会话（Session）
+会话管理用户和代理之间的交互。它们维护对话历史和上下文。
+
+### 工具（Tool）
+工具是代理可以用来执行特定操作或检索信息的函数。
+
+### 文档（Doc）
+文档是可以与代理或用户关联的文本片段集合，用于上下文检索。
+
+### 任务（Task）
+任务是可以由代理定义和执行的复杂多步骤工作流。
+
+### 执行（Execution）
+执行是已经以某些输入启动的任务实例。它在进行过程中经历各种状态。
+
+---
+
+## API和SDK
+
+要直接使用API或查看请求和响应格式、身份验证、可用端点等，请参阅[API文档](https://docs.julep.ai/api-reference/agents-api/agents-api)
 
 ### Python SDK
 
-要安装 Python SDK，请运行：
+要安装Python SDK，运行：
 
 ```bash
 pip install julep
 ```
 
-有关使用 Python SDK 的更多信息，请参阅 [Python SDK 文档](https://docs.julep.ai/api-reference/python-sdk-docs)。
-
+有关使用Python SDK的更多信息，请参阅[Python SDK文档](https://docs.julep.ai/api-reference/python-sdk-docs)。
 
 ### TypeScript SDK
-要使用 `npm` 安装 TypeScript SDK，请运行：
+要使用`npm`安装TypeScript SDK，运行：
 
 ```bash
 npm install @julep/sdk
 ```
 
-有关使用 TypeScript SDK 的更多信息，请参阅 [TypeScript SDK 文档](https://docs.julep.ai/api-reference/js-sdk-docs)。
+有关使用TypeScript SDK的更多信息，请参阅[TypeScript SDK文档](https://docs.julep.ai/api-reference/js-sdk-docs)。
 
 ---
 
 ## 部署
-查看 [自托管指南](https://docs.julep.ai/agents/self-hosting) 以自行托管平台。
+查看[自托管指南](https://docs.julep.ai/agents/self-hosting)以自行托管平台。
 
-如果您想将 Julep 部署到生产环境中，请 [与我们通话](https://cal.com/ishitaj/15min)！
+如果您想将Julep部署到生产环境，[让我们安排一次通话](https://cal.com/ishitaj/15min)！
 
-我们将帮助您自定义平台并帮助您设置：
+我们将帮助您定制平台并帮助您设置：
 - 多租户
-- 反向代理以及认证和授权
-- 自托管 LLMs
+- 反向代理以及身份验证和授权
+- 自托管LLMs
 - 等等
 
 ---
-
 ## 贡献
-我们欢迎社区的贡献，以帮助改进和扩展 Julep AI 平台。请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)。
+我们欢迎社区的贡献，以帮助改进和扩展Julep AI平台。请查看我们的[贡献指南](CONTRIBUTING.md)以获取更多关于如何开始的信息。
 
 ---
-
 ## 许可证
-Julep AI 使用 Apache 2.0 许可证发布。通过使用、贡献或分发 Julep AI 平台，您同意此许可证的条款和条件。
+Julep AI根据Apache 2.0许可证发布。有关更多详细信息，请参阅[LICENSE](LICENSE)文件。
 
 ---
-
 ## 联系和支持
-如果您有任何问题，需要帮助，或想要联系 Julep AI 团队，请使用以下渠道：
+如果您有任何问题、需要帮助或想与Julep AI团队联系，请使用以下渠道：
 
-- [Discord](https://discord.com/invite/JTSBGRZrzj)：加入我们的社区论坛，讨论想法，提出问题，并从其他 Julep AI 用户和开发团队中获取帮助。
-- GitHub Issues：对于技术问题、错误报告和功能请求，请在 Julep AI GitHub 存储库上开启一个 issue。
-- 电子邮件支持：如果您需要直接向我们的支持团队寻求帮助，请发送电子邮件至 hey@julep.ai，我们会尽快回复您。
-- 关注 [X](https://twitter.com/julep_ai) & [LinkedIn](https://www.linkedin.com/company/julep-ai/)
-- [与我们通话](https://cal.com/ishitaj/15min)：我们想了解您正在构建什么以及我们如何调整和优化 Julep 以帮助您构建下一个 AI 应用程序。
+- [Discord](https://discord.com/invite/JTSBGRZrzj)：加入我们的社区论坛，讨论想法、提问并从其他Julep AI用户和开发团队获得帮助。
+- GitHub Issues：对于技术问题、错误报告和功能请求，请在Julep AI GitHub仓库上提出issue。
+- 电子邮件支持：如果您需要我们支持团队的直接帮助，请发送电子邮件至hey@julep.ai，我们会尽快回复您。
+- 在[X](https://twitter.com/julep_ai)和[LinkedIn](https://www.linkedin.com/company/julep-ai/)上关注我们获取最新更新
+- [安排一次通话](https://cal.com/ishitaj/15min)：我们想了解您正在构建的内容，以及我们如何调整和优化Julep以帮助您构建下一个AI应用程序。

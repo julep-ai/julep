@@ -10,7 +10,7 @@
 
 ## AsyncClient
 
-[Show source in client.py:155](../../../../../julep/client.py#L155)
+[Show source in client.py:158](../../../../../julep/client.py#L158)
 
 A class representing an asynchronous client for interacting with various managers.
 
@@ -66,7 +66,7 @@ class AsyncClient:
 
 ## Client
 
-[Show source in client.py:39](../../../../../julep/client.py#L39)
+[Show source in client.py:40](../../../../../julep/client.py#L40)
 
 A class that encapsulates managers for different aspects of a system and provides an interface for interacting with an API.
 

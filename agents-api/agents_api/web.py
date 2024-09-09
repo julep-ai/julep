@@ -108,7 +108,7 @@ async def scalar_html():
     return get_scalar_api_reference(
         openapi_url=app.openapi_url[1:],  # Remove leading '/'
         title=app.title,
-        servers=[{"url": f"http://{hostname}:{public_port}{api_prefix}"}],
+        servers=[{"url": f"{protocol}://{hostname}:{public_port}{api_prefix}"}],
     )
 
 

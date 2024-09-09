@@ -1,6 +1,6 @@
 # Client Wrapper
 
-[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Api](../index.md#api) / [Core](./index.md#core) / Client Wrapper
+[Julep Python SDK Index](../../../README.md#julep-python-sdk-index) / [Julep](../../index.md#julep) / [Julep Python Library](../index.md#julep-python-library) / [Core](./index.md#core) / Client Wrapper
 
 > Auto-generated documentation for [julep.api.core.client_wrapper](../../../../../../../julep/api/core/client_wrapper.py) module.
 
@@ -11,13 +11,20 @@
 
 ## AsyncClientWrapper
 
-[Show source in client_wrapper.py:28](../../../../../../../julep/api/core/client_wrapper.py#L28)
+[Show source in client_wrapper.py:58](../../../../../../../julep/api/core/client_wrapper.py#L58)
 
 #### Signature
 
 ```python
 class AsyncClientWrapper(BaseClientWrapper):
-    def __init__(self, api_key: str, base_url: str, httpx_client: httpx.AsyncClient): ...
+    def __init__(
+        self,
+        auth_key: str,
+        api_key: str,
+        base_url: str,
+        timeout: typing.Optional[float] = None,
+        httpx_client: httpx.AsyncClient,
+    ): ...
 ```
 
 #### See also
@@ -28,18 +35,24 @@ class AsyncClientWrapper(BaseClientWrapper):
 
 ## BaseClientWrapper
 
-[Show source in client_wrapper.py:8](../../../../../../../julep/api/core/client_wrapper.py#L8)
+[Show source in client_wrapper.py:10](../../../../../../../julep/api/core/client_wrapper.py#L10)
 
 #### Signature
 
 ```python
 class BaseClientWrapper:
-    def __init__(self, api_key: str, base_url: str): ...
+    def __init__(
+        self,
+        auth_key: str,
+        api_key: str,
+        base_url: str,
+        timeout: typing.Optional[float] = None,
+    ): ...
 ```
 
 ### BaseClientWrapper().get_base_url
 
-[Show source in client_wrapper.py:18](../../../../../../../julep/api/core/client_wrapper.py#L18)
+[Show source in client_wrapper.py:30](../../../../../../../julep/api/core/client_wrapper.py#L30)
 
 #### Signature
 
@@ -49,7 +62,7 @@ def get_base_url(self) -> str: ...
 
 ### BaseClientWrapper().get_headers
 
-[Show source in client_wrapper.py:13](../../../../../../../julep/api/core/client_wrapper.py#L13)
+[Show source in client_wrapper.py:24](../../../../../../../julep/api/core/client_wrapper.py#L24)
 
 #### Signature
 
@@ -57,17 +70,34 @@ def get_base_url(self) -> str: ...
 def get_headers(self) -> typing.Dict[str, str]: ...
 ```
 
+### BaseClientWrapper().get_timeout
+
+[Show source in client_wrapper.py:33](../../../../../../../julep/api/core/client_wrapper.py#L33)
+
+#### Signature
+
+```python
+def get_timeout(self) -> typing.Optional[float]: ...
+```
+
 
 
 ## SyncClientWrapper
 
-[Show source in client_wrapper.py:22](../../../../../../../julep/api/core/client_wrapper.py#L22)
+[Show source in client_wrapper.py:37](../../../../../../../julep/api/core/client_wrapper.py#L37)
 
 #### Signature
 
 ```python
 class SyncClientWrapper(BaseClientWrapper):
-    def __init__(self, api_key: str, base_url: str, httpx_client: httpx.Client): ...
+    def __init__(
+        self,
+        auth_key: str,
+        api_key: str,
+        base_url: str,
+        timeout: typing.Optional[float] = None,
+        httpx_client: httpx.Client,
+    ): ...
 ```
 
 #### See also

@@ -14,6 +14,7 @@
 - [Doc](./doc.md)
 - [Memory](./memory.md)
 - [Session](./session.md)
+- [Task](./task.md)
 - [Tool](./tool.md)
 - [Types](./types.md)
 - [User](./user.md)
