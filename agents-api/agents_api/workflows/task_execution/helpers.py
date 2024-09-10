@@ -168,7 +168,7 @@ async def execute_map_reduce_step(
         result = await workflow.execute_activity(
             task_steps.base_evaluate,
             args=[reduce, {"results": result, "_": output}],
-            schedule_to_close_timeout=timedelta(seconds=2),
+            schedule_to_close_timeout=timedelta(seconds=30),
         )
 
     return result
@@ -243,7 +243,7 @@ async def execute_map_reduce_step_parallel(
                     {"results": results, "_": batch_results},
                     extra_lambda_strs,
                 ],
-                schedule_to_close_timeout=timedelta(seconds=5),
+                schedule_to_close_timeout=timedelta(seconds=30),
             )
 
         except BaseException as e:
