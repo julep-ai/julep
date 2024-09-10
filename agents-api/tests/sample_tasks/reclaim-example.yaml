@@ -66,17 +66,7 @@ main:
     results: "[result.choices[0].message.content for result in _]"
 
 - foreach:
-    in: _
+    in: _.results
     do:
       evaluate:
         parsed_result: load_json(_.split('```json')[1].split('```')[0])
-
-
-    # workflow: extract_workflow
-    # arguments:
-    #   parameter_name: _
-    #   screenshot_base64: _.screenshot_base64
-
-# extract_workflow:
-#   - evaluate:
-#       result: _.choices[0].message.content

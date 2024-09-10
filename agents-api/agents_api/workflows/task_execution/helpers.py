@@ -124,7 +124,7 @@ async def execute_foreach_step(
         result = await continue_as_child(
             foreach_execution_input,
             foreach_next_target,
-            previous_inputs + [{"item": item}],
+            previous_inputs + [item],
             user_state=user_state,
         )
         results.append(result)
