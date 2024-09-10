@@ -19,7 +19,7 @@ from temporalio.service import RPCError
 
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import api_prefix, hostname, public_port, sentry_dsn
+from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,
@@ -108,7 +108,7 @@ async def scalar_html():
     return get_scalar_api_reference(
         openapi_url=app.openapi_url[1:],  # Remove leading '/'
         title=app.title,
-        servers=[{"url": f"http://{hostname}:{public_port}{api_prefix}"}],
+        servers=[{"url": f"{protocol}://{hostname}:{public_port}{api_prefix}"}],
     )
 
 

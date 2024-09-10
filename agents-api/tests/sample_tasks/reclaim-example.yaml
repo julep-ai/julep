@@ -1,0 +1,72 @@
+name: Reclaim Example
+description: This is an example of a reclaim task.
+
+input_schema:
+  type: object
+  properties:
+    screenshot_base64:
+      type: string
+    parameter_names:
+      type: array
+      items:
+        type: string
+
+main:
+- over: _.parameter_names
+  parallelism: 10
+  map:
+    prompt:
+    - role: system
+      content: |-
+        You are "{{agent.name}}" -- {{agent.description}}.
+
+        # Instructions:
+        {% for instruction in agent.instructions %}
+        {{loop.index}}. {{instruction}}
+
+        {% endfor %}
+
+        # Task:
+        - The user will provide you with a screenshot that contains some data that needs to be extracted.
+        - The user will also provide you with the name of the parameter you need to extract from the screenshot.
+        - You should analyze the screenshot carefully and locate the target data (e.g., username, ID, rating) as described in the provider details.
+        - Pay attention to the format of the data you are extracting; for example, Steam IDs are 17-digit numbers.
+        - If you are looking for an ID, it will usually be near labels like 'ID:', or similar text within the screenshot.
+
+        # Guidelines:
+        - Think step by step before providing a response.
+        - Your final response should be a JSON object with the structure:
+        ```json
+        {
+          "<parameter_name>": "VALUE",
+          "additional_data": {"ADDITIONAL_INFO": "(IF NEEDED)"}
+        }
+        ```
+
+        - If the parameter is not found, respond with:
+        ```json
+        {
+          "<parameter_name>": null,
+          "error": "ERROR_MESSAGE"
+        }
+        ```
+
+        - The final json object you respond with should be within ```json {<json_object>}```
+
+    - role: user
+      content:
+        - type: text
+          text: |-
+            In the screenshot attached, find the parameter `{{_}}` and extract it according to the instructions.
+        - type: image_url
+          image_url:
+            url: 'data:image/png;base64,{{inputs[0].screenshot_base64}}'
+
+- evaluate:
+    results: "[result.choices[0].message.content for result in _]"
+
+- foreach:
+    in: _.results
+    do:
+      evaluate:
+        parsed_result: load_json(_.split('```json')[1].split('```')[0])
