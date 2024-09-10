@@ -26,10 +26,10 @@ from .update_execution import update_execution
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
     match data.type:
-        case "finish" | "finish_branch" | "error" | "cancelled":
-            assert (
-                data.next is None
-            ), "Next target must be None for finish/finish_branch/error/cancelled"
+        # case "finish" | "finish_branch" | "error" | "cancelled":
+        #     assert (
+        #         data.next is None
+        #     ), "Next target must be None for finish/finish_branch/error/cancelled"
 
         case "init_branch" | "init":
             assert (
@@ -47,8 +47,8 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
                     data.next.step > data.current.step
                 ), "Next step must be greater than current"
 
-        case _:
-            raise ValueError(f"Invalid transition type: {data.type}")
+        # case _:
+        #     raise ValueError(f"Invalid transition type: {data.type}")
 
 
 @rewrap_exceptions(

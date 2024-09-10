@@ -196,7 +196,7 @@ class TaskExecutionWorkflow:
                     context,
                     #
                     schedule_to_close_timeout=timedelta(
-                        seconds=3 if debug or testing else 600
+                        seconds=30 if debug or testing else 600
                     ),
                 )
                 workflow.logger.debug(
