@@ -378,10 +378,10 @@ class TaskExecutionWorkflow:
 
             case WaitForInputStep(), StepOutcome(output=output):
                 workflow.logger.info("Wait for input step: Waiting for external input")
-                await transition(context, output=output, type="wait", next=None)
 
                 result = await workflow.execute_activity(
                     task_steps.raise_complete_async,
+                    args=[context, output],
                     schedule_to_close_timeout=timedelta(days=31),
                 )
 
@@ -391,8 +391,49 @@ class TaskExecutionWorkflow:
                 output=response
             ):  # FIXME: if not response.choices[0].tool_calls:
                 # SCRUM-15
-                workflow.logger.debug("Prompt step: Received response")
-                state = PartialTransition(output=response)
+                workflow.logger.debug(
+                    f"Prompt step: Received response: {response}")
+                workflow.logger.info(
+                    f"Prompt step: Received response: {response}")
+                if response['choices'][0]['finish_reason'] != "tool_calls":
+                    workflow.logger.info("Didn't receive tool calls")
+                    workflow.logger.debug("Prompt step: Received response")
+                    state = PartialTransition(output=response)
+                    workflow.logger.info("STTATEE")
+                    workflow.logger.info(state)
+                else:
+                    workflow.logger.debug("Prompt step: Received tool call")
+                    workflow.logger.info("received tool calls")
+                    # workflow.logger.info(response.choices[0].tool_calls)
+                    
+                    tool_calls_input = response['choices'][0]['message']['tool_calls']
+                    
+                    # tool_calls_input = {}
+                    # for tool_call in response['choices'][0]['message']['tool_calls']:
+                    #     tool_call_type = tool_call['type']
+                    #     if tool_call_type == "function":
+                    #         tool_calls_input[tool_call['function']['name']] = tool_call['function']['arguments']
+                    #     else:
+                    #         raise ApplicationError(f"Unknown/unimplemented tool call type: {tool_call_type}")
+
+                    # Enter a wait-for-input step to ask the developer to run the tool calls
+                    tool_calls_results = await workflow.execute_activity(
+                        task_steps.raise_complete_async,
+                        args=[context, tool_calls_input],
+                        schedule_to_close_timeout=timedelta(days=31),
+                    )
+                    print("AFTER CALLING RAISE COMPLETE ASYNC")
+                    
+                    # Continue the workflow with the input received from the developer
+                    # result = await continue_as_child(
+                    #     execution_input=execution_input,
+                    #     start=context.current_step,
+                    #     previous_inputs=[tool_calls_results],
+                    #     user_state=self.user_state,
+                    # )
+
+                    state = PartialTransition(output=tool_calls_results)
+
 
             # case PromptStep(), StepOutcome(
             #     output=response

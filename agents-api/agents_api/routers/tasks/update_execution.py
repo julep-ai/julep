@@ -25,6 +25,8 @@ async def update_execution(
     execution_id: UUID4,
     data: ResumeExecutionRequest | StopExecutionRequest,
 ):
+    print("DATA")
+    print(data)
     temporal_client = await get_client()
 
     match data:
@@ -39,9 +41,9 @@ async def update_execution(
                 developer_id=x_developer_id, execution_id=execution_id
             )
             act_handle = temporal_client.get_async_activity_handle(
-                token_data["task_token"]
+                task_token=str.encode(token_data["task_token"])
             )
             await act_handle.complete(data.input)
-
+            print("Updated execution successfully")
         case _:
             raise HTTPException(status_code=400, detail="Invalid request data")

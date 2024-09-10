@@ -17,6 +17,8 @@ async def transition(
 ) -> Transition:
     if state is None:
         state = PartialTransition()
+    if kwargs.get("task_token"):
+        print("Transition called from raise_complete_async")
 
     match context.is_last_step, context.cursor:
         case (True, TransitionTarget(workflow="main")):
@@ -41,6 +43,7 @@ async def transition(
     )
 
     try:
+        print("transition_step being called...")
         return await workflow.execute_activity(
             task_steps.transition_step,
             args=[context, transition_request],
