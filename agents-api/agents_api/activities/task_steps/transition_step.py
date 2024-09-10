@@ -18,7 +18,7 @@ async def transition_step(
     # Get task token if it's a waiting step
     if need_to_wait:
         task_token = activity.info().task_token
-        transition_info.task_token = task_token
+        transition_info.task_token = task_token.decode("utf-8")
 
     # Create transition
     transition = create_execution_transition(
@@ -33,6 +33,7 @@ async def transition_step(
     return transition
 
 
+original_transition_step = transition_step
 mock_transition_step = transition_step
 
 transition_step = activity.defn(name="transition_step")(

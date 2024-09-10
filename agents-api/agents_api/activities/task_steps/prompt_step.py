@@ -43,7 +43,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         sort_by="created_at",
         direction="desc",
     )
-    
+
     # Format agent_tools for litellm
     formatted_agent_tools = [
         {

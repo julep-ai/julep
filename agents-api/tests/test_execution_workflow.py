@@ -479,7 +479,7 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         # Let it run for a bit
-        await asyncio.sleep(1)
+        await asyncio.sleep(3)
 
         # Get the history
         history = await handle.fetch_history()
@@ -496,6 +496,15 @@ async def _(
         activities_scheduled = [
             activity for activity in activities_scheduled if activity
         ]
+
+        try:
+            future = handle.result()
+            breakpoint()
+            await future
+        except BaseException as exc:
+            print("exc", exc)
+            breakpoint()
+            raise
 
         assert "wait_for_input_step" in activities_scheduled
 

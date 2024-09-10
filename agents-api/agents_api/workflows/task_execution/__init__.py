@@ -379,6 +379,8 @@ class TaskExecutionWorkflow:
             case WaitForInputStep(), StepOutcome(output=output):
                 workflow.logger.info("Wait for input step: Waiting for external input")
 
+                await transition(context, type="wait", output=output)
+
                 result = await workflow.execute_activity(
                     task_steps.raise_complete_async,
                     args=[context, output],
@@ -391,11 +393,9 @@ class TaskExecutionWorkflow:
                 output=response
             ):  # FIXME: if not response.choices[0].tool_calls:
                 # SCRUM-15
-                workflow.logger.debug(
-                    f"Prompt step: Received response: {response}")
-                workflow.logger.info(
-                    f"Prompt step: Received response: {response}")
-                if response['choices'][0]['finish_reason'] != "tool_calls":
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                workflow.logger.info(f"Prompt step: Received response: {response}")
+                if response["choices"][0]["finish_reason"] != "tool_calls":
                     workflow.logger.info("Didn't receive tool calls")
                     workflow.logger.debug("Prompt step: Received response")
                     state = PartialTransition(output=response)
@@ -405,9 +405,9 @@ class TaskExecutionWorkflow:
                     workflow.logger.debug("Prompt step: Received tool call")
                     workflow.logger.info("received tool calls")
                     # workflow.logger.info(response.choices[0].tool_calls)
-                    
-                    tool_calls_input = response['choices'][0]['message']['tool_calls']
-                    
+
+                    tool_calls_input = response["choices"][0]["message"]["tool_calls"]
+
                     # tool_calls_input = {}
                     # for tool_call in response['choices'][0]['message']['tool_calls']:
                     #     tool_call_type = tool_call['type']
@@ -423,7 +423,7 @@ class TaskExecutionWorkflow:
                         schedule_to_close_timeout=timedelta(days=31),
                     )
                     print("AFTER CALLING RAISE COMPLETE ASYNC")
-                    
+
                     # Continue the workflow with the input received from the developer
                     # result = await continue_as_child(
                     #     execution_input=execution_input,
@@ -433,7 +433,6 @@ class TaskExecutionWorkflow:
                     # )
 
                     state = PartialTransition(output=tool_calls_results)
-
 
             # case PromptStep(), StepOutcome(
             #     output=response

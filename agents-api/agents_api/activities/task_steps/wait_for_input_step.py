@@ -10,7 +10,7 @@ async def wait_for_input_step(context: StepContext) -> StepOutcome:
     try:
         assert isinstance(context.current_step, WaitForInputStep)
 
-        exprs = context.current_step.wait_for_input
+        exprs = context.current_step.wait_for_input.info
         output = await base_evaluate(exprs, context.model_dump())
 
         result = StepOutcome(output=output)
