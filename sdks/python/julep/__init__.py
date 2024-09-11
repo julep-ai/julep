@@ -1,7 +1,7 @@
 import json
 import os
 from functools import partial, wraps
-from typing import TypeVar, Callable, Any, ParamSpec
+from typing import Coroutine, TypeVar, Callable, Any, ParamSpec
 
 from .sdk.client import AuthenticatedClient
 import julep.sdk.api.default as ops
@@ -52,7 +52,22 @@ def parse_response(fn: Callable[P, R]) -> Callable[P, R | dict[str, Any]]:
 
     return wrapper
 
+def parse_response_async(fn: Callable[P, R]) -> Callable[P, Coroutine[Any, Any, R | dict[str, Any]]]:
+    @wraps(fn)
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R | dict[str, Any]:
+        response = await fn(*args, **kwargs)
 
+        if response.status_code.is_client_error or response.status_code.is_server_error:
+            raise errors.UnexpectedStatus(response.status_code, response.content)
+        else:
+            parsed = response.parsed
+
+            if parsed:
+                return parsed
+            else:
+                return json.loads(response.content)
+
+    return wrapper
 class JulepNamespace:
     def __init__(self, name: str, client: AuthenticatedClient):
         self.name = name
@@ -105,7 +120,7 @@ class Julep:
                 op = getattr(ops, f"{namespace}_route_{operation}")
                 op = getattr(op, async_op)
                 op = partial(op, client=self.client)
-                op = parse_response(op)
+                op = (parse_response_async if (prefix == "a") else parse_response)(op)
                 op_name = prefix + operation
 
                 namespace = namespace_aliases.get(namespace, namespace)

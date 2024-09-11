@@ -7,7 +7,7 @@ license = "ISC"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 httpx = "^0.27.2"
 python-dateutil = "^2.9.0.post0"
 attrs = "^24.2.0"
@@ -19,6 +19,8 @@ ruff = "^0.6.4"
 poethepoet = "^0.28.0"
 pytype = "^2024.4.11"
 ward = "^0.68.0b0"
+openapi-python-client = "^0.21.5"
+ipython = "^8.27.0"
 
 [tool.poe.tasks]
 codegen = """
