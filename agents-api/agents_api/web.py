@@ -19,7 +19,7 @@ from temporalio.service import RPCError
 
 from .common.exceptions import BaseCommonException
 from .dependencies.auth import get_api_key
-from .env import api_prefix, hostname, public_port, sentry_dsn
+from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
 from .exceptions import PromptTooBigError
 from .routers import (
     agents,

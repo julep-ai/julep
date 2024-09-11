@@ -44,7 +44,7 @@ async def transition(
         return await workflow.execute_activity(
             task_steps.transition_step,
             args=[context, transition_request],
-            schedule_to_close_timeout=timedelta(seconds=2),
+            schedule_to_close_timeout=timedelta(seconds=30),
         )
 
     except Exception as e:

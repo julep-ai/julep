@@ -89,7 +89,7 @@ async def start_execution(
 @router.post(
     "/tasks/{task_id}/executions",
     status_code=HTTP_201_CREATED,
-    tags=["tasks"],
+    tags=["executions"],
 )
 async def create_task_execution(
     task_id: UUID4,

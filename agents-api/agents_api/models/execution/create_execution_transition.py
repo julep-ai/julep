@@ -26,7 +26,9 @@ from .update_execution import update_execution
 def validate_transition_targets(data: CreateTransitionRequest) -> None:
     # Make sure the current/next targets are valid
     match data.type:
-        case "finish" | "finish_branch" | "error" | "cancelled":
+        case "finish_branch":
+            pass  # TODO: Implement
+        case "finish" | "error" | "cancelled":
             assert (
                 data.next is None
             ), "Next target must be None for finish/finish_branch/error/cancelled"
