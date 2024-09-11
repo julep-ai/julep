@@ -86,22 +86,23 @@ def create_execution_transition(
     task_id: UUID | None = None,
 ) -> tuple[list[str | None], dict]:
     transition_id = transition_id or uuid4()
-
+    print("INSIDE CREATE EXECUTION TRANSITION")
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
 
     # TODO: This is a hack to make sure the transition is valid
     #       (parallel transitions are whack, we should do something better)
     is_parallel = data.current.workflow.startswith("PAR:")
-
+    print("PREPARING TRANSITION DATA")
     # Prepare the transition data
     transition_data = data.model_dump(exclude_unset=True, exclude={"id"})
-
+    print("TRANSITION DATA PREPARED")
     # Parse the current and next targets
     validate_transition_targets(data)
+    print("VALIDATED TRANSITION TARGETS")
     current_target = transition_data.pop("current")
     next_target = transition_data.pop("next")
-
+    print("EXTRACTED CURRENT AND NEXT TARGETS")
     transition_data["current"] = (current_target["workflow"], current_target["step"])
     transition_data["next"] = next_target and (
         next_target["workflow"],
@@ -116,7 +117,7 @@ def create_execution_transition(
             "execution_id": str(execution_id),
         }
     )
-
+    print("PROCESSED MUTATE DATA")
     # Make sure the transition is valid
     check_last_transition_query = f"""
     valid_transition[start, end] <- [
@@ -181,7 +182,7 @@ def create_execution_transition(
                 else None,
             )
         )
-
+    print("PREPARED UPDATE EXECUTION QUERY")
     queries = [
         verify_developer_id_query(developer_id),
         verify_developer_owns_resource_query(
@@ -195,7 +196,7 @@ def create_execution_transition(
         check_last_transition_query if not is_parallel else None,
         insert_query,
     ]
-
+    print("PREPARED QUERIES")
     return (
         queries,
         {

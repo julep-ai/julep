@@ -61,6 +61,9 @@ def update_execution(
 
     execution_data: dict = data.model_dump(exclude_none=True)
 
+    print(f"Current execution status: {data.status}")
+    print(f"Valid previous statuses: {valid_previous_statuses}")
+
     columns, values = cozo_process_mutate_data(
         {
             **execution_data,
@@ -72,6 +75,11 @@ def update_execution(
     )
 
     validate_status_query = """
+    current_status[status] := *executions {
+        status,
+        execution_id: to_uuid($execution_id)
+    }
+
     valid_status[count(status)] :=
         *executions {
             status,
@@ -79,9 +87,11 @@ def update_execution(
         }, 
         status in $valid_previous_statuses
 
-    ?[num] :=
+    ?[num, current, valid_statuses] :=
         valid_status[num],
-        assert(num > 0, 'Invalid status')
+        current_status[current],
+        valid_statuses = $valid_previous_statuses,
+        assert(num > 0, 'Invalid status transition from ' + current + ' to ' + $status)
     """
 
     update_query = f"""

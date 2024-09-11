@@ -394,27 +394,13 @@ class TaskExecutionWorkflow:
             ):  # FIXME: if not response.choices[0].tool_calls:
                 # SCRUM-15
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
-                workflow.logger.info(f"Prompt step: Received response: {response}")
                 if response["choices"][0]["finish_reason"] != "tool_calls":
-                    workflow.logger.info("Didn't receive tool calls")
                     workflow.logger.debug("Prompt step: Received response")
                     state = PartialTransition(output=response)
-                    workflow.logger.info("STTATEE")
-                    workflow.logger.info(state)
                 else:
                     workflow.logger.debug("Prompt step: Received tool call")
-                    workflow.logger.info("received tool calls")
-                    # workflow.logger.info(response.choices[0].tool_calls)
-
-                    tool_calls_input = response["choices"][0]["message"]["tool_calls"]
-
-                    # tool_calls_input = {}
-                    # for tool_call in response['choices'][0]['message']['tool_calls']:
-                    #     tool_call_type = tool_call['type']
-                    #     if tool_call_type == "function":
-                    #         tool_calls_input[tool_call['function']['name']] = tool_call['function']['arguments']
-                    #     else:
-                    #         raise ApplicationError(f"Unknown/unimplemented tool call type: {tool_call_type}")
+                    message = response["choices"][0]["message"]
+                    tool_calls_input = message["tool_calls"]
 
                     # Enter a wait-for-input step to ask the developer to run the tool calls
                     tool_calls_results = await workflow.execute_activity(
@@ -422,17 +408,22 @@ class TaskExecutionWorkflow:
                         args=[context, tool_calls_input],
                         schedule_to_close_timeout=timedelta(days=31),
                     )
-                    print("AFTER CALLING RAISE COMPLETE ASYNC")
-
-                    # Continue the workflow with the input received from the developer
-                    # result = await continue_as_child(
-                    #     execution_input=execution_input,
-                    #     start=context.current_step,
-                    #     previous_inputs=[tool_calls_results],
-                    #     user_state=self.user_state,
-                    # )
-
-                    state = PartialTransition(output=tool_calls_results)
+                    # Feed the tool call results back to the model
+                    # context.inputs.append(tool_calls_results)
+                    context.current_step.prompt.append(message)
+                    context.current_step.prompt.append(tool_calls_results)
+                    print("CONTEXT")
+                    print(context.inputs)
+                    new_response = await workflow.execute_activity(
+                        task_steps.prompt_step,
+                        context,
+                        schedule_to_close_timeout=timedelta(
+                            seconds=30 if debug or testing else 600),
+                    )
+                    print("NEW RESPONSE")
+                    print(new_response)
+                    state = PartialTransition(
+                        output=new_response.output, type="resume")
 
             # case PromptStep(), StepOutcome(
             #     output=response
@@ -493,7 +484,9 @@ class TaskExecutionWorkflow:
 
         # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
-
+        print("STATE")
+        print(state)
+        print("CALLING TRANSITION")
         # The returned value is the transition finally created
         final_state = await transition(context, state)
 

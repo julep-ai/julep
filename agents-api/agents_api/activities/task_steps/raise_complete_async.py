@@ -12,18 +12,19 @@ from .transition_step import original_transition_step
 async def raise_complete_async(context: StepContext, output: StepOutcome) -> None:
     # TODO: Create a transtition to "wait" and save the captured_token to the transition
 
-    # captured_token = activity.info().task_token
-    # captured_token = str(captured_token)
-    # print("calling transition to wait...")
+    captured_token = activity.info().task_token
+    captured_token = captured_token.decode('latin-1')
+    print("Captured token:")
+    print(captured_token)
+    transition_info = CreateTransitionRequest(
+        current=context.cursor,
+        type="wait",
+        next=None,
+        output=output,
+        task_token=captured_token,
+    )
 
-    # transition_info = CreateTransitionRequest(
-    #     current=context.cursor,
-    #     type="wait",
-    #     next=None,
-    #     task_token=captured_token,
-    # )
-
-    # await original_transition_step(context, transition_info)
+    await original_transition_step(context, transition_info)
 
     # await transition(context, output=output, type="wait", next=None, task_token=captured_token)
 

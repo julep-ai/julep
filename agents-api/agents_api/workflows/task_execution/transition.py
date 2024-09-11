@@ -17,8 +17,6 @@ async def transition(
 ) -> Transition:
     if state is None:
         state = PartialTransition()
-    if kwargs.get("task_token"):
-        print("Transition called from raise_complete_async")
 
     match context.is_last_step, context.cursor:
         case (True, TransitionTarget(workflow="main")):
@@ -27,7 +25,8 @@ async def transition(
             state.type = "finish_branch"
         case _, _:
             state.type = "step"
-
+    print("STATE.TYPE")
+    print(state.type)
     transition_request = CreateTransitionRequest(
         current=context.cursor,
         **{

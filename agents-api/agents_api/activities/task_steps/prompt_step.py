@@ -71,7 +71,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         **agent_default_settings,
         **passed_settings,
     }
-
+    print("COMPLETION DATA")
+    print(completion_data)
     response = await litellm.acompletion(
         **completion_data,
     )
