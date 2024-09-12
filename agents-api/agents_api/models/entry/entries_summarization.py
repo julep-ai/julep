@@ -38,6 +38,7 @@ def get_toplevel_entries_query(session_id: UUID) -> tuple[str, dict]:
         token_count,
         created_at,
         timestamp,
+        tokenizer,
     ] :=
         input[session_id],
         *entries{
@@ -50,6 +51,7 @@ def get_toplevel_entries_query(session_id: UUID) -> tuple[str, dict]:
             token_count,
             created_at,
             timestamp,
+            tokenizer,
         },
         not *relations {
             relation: "summary_of",
