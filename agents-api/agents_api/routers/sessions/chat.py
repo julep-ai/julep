@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks, Depends
+from litellm.types.utils import ModelResponse
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
@@ -12,11 +13,13 @@ from ...autogen.openapi_model import (
     MessageChatResponse,
 )
 from ...clients import litellm
+from ...clients.temporal import run_summarization_task, run_truncation_task
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ...common.utils.datetime import utcnow
 from ...common.utils.template import render_template
 from ...dependencies.developer_id import get_developer_data
+from ...exceptions import PromptTooBigError
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
@@ -86,21 +89,6 @@ async def chat(
     # Get the tools
     tools = settings.get("tools") or chat_context.get_active_tools()
 
-    # FIXME: Truncate chat messages in the chat context
-    # SCRUM-7
-    if chat_context.session.context_overflow == "truncate":
-        # messages = messages[-settings["max_tokens"] :]
-        raise NotImplementedError("Truncation is not yet implemented")
-
-    # FIXME: Hotfix for datetime not serializable. Needs investigation
-    messages = [
-        msg.model_dump() if hasattr(msg, "model_dump") else msg for msg in messages
-    ]
-
-    messages = [
-        dict(role=m["role"], content=m["content"], user=m.get("user")) for m in messages
-    ]
-
     # Get the response from the model
     model_response = await litellm.acompletion(
         messages=messages,
@@ -136,13 +124,23 @@ async def chat(
         )
 
     # Adaptive context handling
-    jobs = []
+    job_id = uuid4()
     if chat_context.session.context_overflow == "adaptive":
-        # FIXME: Start the adaptive context workflow
-        # SCRUM-8
+        await run_summarization_task(session_id=session_id, job_id=job_id)
+    elif chat_context.session.context_overflow == "truncate":
+        await run_truncation_task(
+            token_count_threshold=chat_context.session.token_budget,
+            developer_id=developer.id,
+            session_id=session_id,
+            job_id=job_id,
+        )
+    else:
+        # TODO: set this valur for a streaming response
+        total_tokens = 0
+        if isinstance(model_response, ModelResponse):
+            total_tokens = model_response.usage.total_tokens
 
-        # jobs = [await start_adaptive_context_workflow]
-        raise NotImplementedError("Adaptive context is not yet implemented")
+        raise PromptTooBigError(total_tokens, chat_context.session.token_budget)
 
     # Return the response
     # FIXME: Implement streaming for chat
@@ -152,7 +150,7 @@ async def chat(
     chat_response: ChatResponse = chat_response_class(
         id=uuid4(),
         created_at=utcnow(),
-        jobs=jobs,
+        jobs=[job_id],
         docs=doc_references,
         usage=model_response.usage.model_dump(),
         choices=[choice.model_dump() for choice in model_response.choices],

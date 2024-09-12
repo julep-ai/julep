@@ -70,3 +70,27 @@ async def get_workflow_handle(
     )
 
     return handle
+
+
+async def run_truncation_task(
+    token_count_threshold: int, developer_id: UUID, session_id: UUID, job_id: UUID
+):
+    client = await get_client()
+
+    await client.execute_workflow(
+        "TruncationWorkflow",
+        args=[str(developer_id), str(session_id), token_count_threshold],
+        task_queue="memory-task-queue",
+        id=str(job_id),
+    )
+
+
+async def run_summarization_task(session_id: UUID, job_id: UUID):
+    client = await get_client()
+
+    await client.execute_workflow(
+        "SummarizationWorkflow",
+        args=[str(session_id)],
+        task_queue="memory-task-queue",
+        id=str(job_id),
+    )
