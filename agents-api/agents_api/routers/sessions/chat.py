@@ -124,23 +124,27 @@ async def chat(
         )
 
     # Adaptive context handling
-    job_id = uuid4()
-    if chat_context.session.context_overflow == "adaptive":
-        await run_summarization_task(session_id=session_id, job_id=job_id)
-    elif chat_context.session.context_overflow == "truncate":
-        await run_truncation_task(
-            token_count_threshold=chat_context.session.token_budget,
-            developer_id=developer.id,
-            session_id=session_id,
-            job_id=job_id,
-        )
-    else:
-        # TODO: set this valur for a streaming response
-        total_tokens = 0
-        if isinstance(model_response, ModelResponse):
-            total_tokens = model_response.usage.total_tokens
+    # TODO: set this value for a streaming response
+    total_tokens = 0
+    if isinstance(model_response, ModelResponse):
+        total_tokens = model_response.usage.total_tokens
 
-        raise PromptTooBigError(total_tokens, chat_context.session.token_budget)
+    if (
+        chat_context.session.token_budget is not None
+        and total_tokens >= chat_context.session.token_budget
+    ):
+        job_id = uuid4()
+        if chat_context.session.context_overflow == "adaptive":
+            await run_summarization_task(session_id=session_id, job_id=job_id)
+        elif chat_context.session.context_overflow == "truncate":
+            await run_truncation_task(
+                token_count_threshold=chat_context.session.token_budget,
+                developer_id=developer.id,
+                session_id=session_id,
+                job_id=job_id,
+            )
+        else:
+            raise PromptTooBigError(total_tokens, chat_context.session.token_budget)
 
     # Return the response
     # FIXME: Implement streaming for chat
