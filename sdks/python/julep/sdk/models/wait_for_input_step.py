@@ -29,12 +29,12 @@ T = TypeVar("T", bound="WaitForInputStep")
 class WaitForInputStep:
     """
     Attributes:
-        kind (WaitForInputStepKind): The kind of step
+        kind (WaitForInputStepKind): The kind of step Default: WaitForInputStepKind.WAIT_FOR_INPUT.
         wait_for_input (WaitForInputInfo):
     """
 
-    kind: WaitForInputStepKind
     wait_for_input: "WaitForInputInfo"
+    kind: WaitForInputStepKind = WaitForInputStepKind.WAIT_FOR_INPUT
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

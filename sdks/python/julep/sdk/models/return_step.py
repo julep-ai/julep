@@ -29,12 +29,12 @@ T = TypeVar("T", bound="ReturnStep")
 class ReturnStep:
     """
     Attributes:
-        kind (ReturnStepKind): The kind of step
+        kind (ReturnStepKind): The kind of step Default: ReturnStepKind.RETURN.
         return_ (ReturnStepReturn): The value to return
     """
 
-    kind: ReturnStepKind
     return_: "ReturnStepReturn"
+    kind: ReturnStepKind = ReturnStepKind.RETURN
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

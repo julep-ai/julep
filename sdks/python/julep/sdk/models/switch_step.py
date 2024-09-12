@@ -29,12 +29,12 @@ T = TypeVar("T", bound="SwitchStep")
 class SwitchStep:
     """
     Attributes:
-        kind (SwitchStepKind): The kind of step
+        kind (SwitchStepKind): The kind of step Default: SwitchStepKind.SWITCH.
         switch (List['CaseThen']): The cond tree
     """
 
-    kind: SwitchStepKind
     switch: List["CaseThen"]
+    kind: SwitchStepKind = SwitchStepKind.SWITCH
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

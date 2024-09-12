@@ -37,12 +37,11 @@ T = TypeVar("T", bound="ParallelStep")
 class ParallelStep:
     """
     Attributes:
-        kind (ParallelStepKind): The kind of step
+        kind (ParallelStepKind): The kind of step Default: ParallelStepKind.PARALLEL.
         parallel (List[Union['EmbedStep', 'EvaluateStep', 'GetStep', 'LogStep', 'PromptStep', 'SearchStep', 'SetStep',
             'ToolCallStep']]): The steps to run in parallel. Max concurrency will depend on the platform.
     """
 
-    kind: ParallelStepKind
     parallel: List[
         Union[
             "EmbedStep",
@@ -55,6 +54,7 @@ class ParallelStep:
             "ToolCallStep",
         ]
     ]
+    kind: ParallelStepKind = ParallelStepKind.PARALLEL
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

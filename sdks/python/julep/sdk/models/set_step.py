@@ -29,12 +29,12 @@ T = TypeVar("T", bound="SetStep")
 class SetStep:
     """
     Attributes:
-        kind (SetStepKind): The kind of step
+        kind (SetStepKind): The kind of step Default: SetStepKind.SET.
         set_ (SetStepSet): The value to set
     """
 
-    kind: SetStepKind
     set_: "SetStepSet"
+    kind: SetStepKind = SetStepKind.SET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

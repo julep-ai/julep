@@ -31,15 +31,15 @@ T = TypeVar("T", bound="ToolCallStep")
 class ToolCallStep:
     """
     Attributes:
-        kind (ToolCallStepKind): The kind of step
+        kind (ToolCallStepKind): The kind of step Default: ToolCallStepKind.TOOL_CALL.
         tool (str): Naming convention for tool references. Tools are resolved in order: `step-settings` -> `task` ->
             `agent`
         arguments (Union['ToolCallStepArgumentsType0', ToolCallStepArgumentsType1]): The input parameters for the tool
             (defaults to last step output) Default: ToolCallStepArgumentsType1.VALUE_0.
     """
 
-    kind: ToolCallStepKind
     tool: str
+    kind: ToolCallStepKind = ToolCallStepKind.TOOL_CALL
     arguments: Union["ToolCallStepArgumentsType0", ToolCallStepArgumentsType1] = (
         ToolCallStepArgumentsType1.VALUE_0
     )

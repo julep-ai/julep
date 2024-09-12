@@ -29,12 +29,12 @@ T = TypeVar("T", bound="SleepStep")
 class SleepStep:
     """
     Attributes:
-        kind (SleepStepKind): The kind of step
+        kind (SleepStepKind): The kind of step Default: SleepStepKind.SLEEP.
         sleep (SleepFor):
     """
 
-    kind: SleepStepKind
     sleep: "SleepFor"
+    kind: SleepStepKind = SleepStepKind.SLEEP
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

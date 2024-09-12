@@ -31,13 +31,13 @@ T = TypeVar("T", bound="PromptStep")
 class PromptStep:
     """
     Attributes:
-        kind (PromptStepKind): The kind of step
+        kind (PromptStepKind): The kind of step Default: PromptStepKind.PROMPT.
         prompt (Union[List['PromptStepPromptType1Item'], str]): The prompt to run
         settings (Union[Unset, ChatSettings]):
     """
 
-    kind: PromptStepKind
     prompt: Union[List["PromptStepPromptType1Item"], str]
+    kind: PromptStepKind = PromptStepKind.PROMPT
     settings: Union[Unset, "ChatSettings"] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

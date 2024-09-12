@@ -42,7 +42,7 @@ T = TypeVar("T", bound="IfElseWorkflowStep")
 class IfElseWorkflowStep:
     """
     Attributes:
-        kind (IfElseWorkflowStepKind): The kind of step
+        kind (IfElseWorkflowStepKind): The kind of step Default: IfElseWorkflowStepKind.IF_ELSE.
         if_ (str): A simple python expression compatible with SimpleEval.
         then (Union['EmbedStep', 'ErrorWorkflowStep', 'EvaluateStep', 'GetStep', 'LogStep', 'PromptStep', 'ReturnStep',
             'SearchStep', 'SetStep', 'SleepStep', 'ToolCallStep', 'WaitForInputStep', 'YieldStep']): The steps to run if the
@@ -52,7 +52,6 @@ class IfElseWorkflowStep:
             if the condition is false
     """
 
-    kind: IfElseWorkflowStepKind
     if_: str
     then: Union[
         "EmbedStep",
@@ -85,6 +84,7 @@ class IfElseWorkflowStep:
         "YieldStep",
         None,
     ]
+    kind: IfElseWorkflowStepKind = IfElseWorkflowStepKind.IF_ELSE
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

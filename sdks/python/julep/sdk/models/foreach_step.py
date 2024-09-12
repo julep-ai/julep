@@ -29,12 +29,12 @@ T = TypeVar("T", bound="ForeachStep")
 class ForeachStep:
     """
     Attributes:
-        kind (ForeachStepKind): The kind of step
+        kind (ForeachStepKind): The kind of step Default: ForeachStepKind.FOREACH.
         foreach (ForeachDo):
     """
 
-    kind: ForeachStepKind
     foreach: "ForeachDo"
+    kind: ForeachStepKind = ForeachStepKind.FOREACH
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

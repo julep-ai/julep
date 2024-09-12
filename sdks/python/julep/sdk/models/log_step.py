@@ -24,12 +24,12 @@ T = TypeVar("T", bound="LogStep")
 class LogStep:
     """
     Attributes:
-        kind (LogStepKind): The kind of step
+        kind (LogStepKind): The kind of step Default: LogStepKind.LOG.
         log (str): A valid jinja template.
     """
 
-    kind: LogStepKind
     log: str
+    kind: LogStepKind = LogStepKind.LOG
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

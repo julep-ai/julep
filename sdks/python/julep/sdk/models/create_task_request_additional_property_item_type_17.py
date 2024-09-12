@@ -39,17 +39,17 @@ T = TypeVar("T", bound="CreateTaskRequestAdditionalPropertyItemType17")
 class CreateTaskRequestAdditionalPropertyItemType17:
     """
     Attributes:
-        kind (CreateTaskRequestAdditionalPropertyItemType17Kind): The kind of step
+        kind (CreateTaskRequestAdditionalPropertyItemType17Kind): The kind of step Default:
+            CreateTaskRequestAdditionalPropertyItemType17Kind.MAP_REDUCE.
         over (str): A simple python expression compatible with SimpleEval.
         map_ (Union['EmbedStep', 'EvaluateStep', 'GetStep', 'LogStep', 'PromptStep', 'SearchStep', 'SetStep',
             'ToolCallStep']): The steps to run for each iteration
         reduce (Union[Unset, str]): A simple python expression compatible with SimpleEval.
-        initial (Union[Unset, Any]): The initial value of the reduce expression
+        initial (Union[Unset, Any]): The initial value of the reduce expression Default: [].
         parallelism (Union[Unset, int]): Whether to run the reduce expression in parallel and how many items to run in
             each batch
     """
 
-    kind: CreateTaskRequestAdditionalPropertyItemType17Kind
     over: str
     map_: Union[
         "EmbedStep",
@@ -61,8 +61,11 @@ class CreateTaskRequestAdditionalPropertyItemType17:
         "SetStep",
         "ToolCallStep",
     ]
+    kind: CreateTaskRequestAdditionalPropertyItemType17Kind = (
+        CreateTaskRequestAdditionalPropertyItemType17Kind.MAP_REDUCE
+    )
     reduce: Union[Unset, str] = UNSET
-    initial: Union[Unset, Any] = UNSET
+    initial: Union[Unset, Any] = []
     parallelism: Union[Unset, int] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 

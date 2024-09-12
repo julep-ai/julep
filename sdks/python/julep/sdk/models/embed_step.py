@@ -29,12 +29,12 @@ T = TypeVar("T", bound="EmbedStep")
 class EmbedStep:
     """
     Attributes:
-        kind (EmbedStepKind): The kind of step
+        kind (EmbedStepKind): The kind of step Default: EmbedStepKind.EMBED.
         embed (EmbedQueryRequest):
     """
 
-    kind: EmbedStepKind
     embed: "EmbedQueryRequest"
+    kind: EmbedStepKind = EmbedStepKind.EMBED
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

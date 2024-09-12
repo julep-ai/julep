@@ -24,12 +24,12 @@ T = TypeVar("T", bound="GetStep")
 class GetStep:
     """
     Attributes:
-        kind (GetStepKind): The kind of step
+        kind (GetStepKind): The kind of step Default: GetStepKind.GET.
         get (str): The key to get
     """
 
-    kind: GetStepKind
     get: str
+    kind: GetStepKind = GetStepKind.GET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

@@ -24,12 +24,12 @@ T = TypeVar("T", bound="ErrorWorkflowStep")
 class ErrorWorkflowStep:
     """
     Attributes:
-        kind (ErrorWorkflowStepKind): The kind of step
+        kind (ErrorWorkflowStepKind): The kind of step Default: ErrorWorkflowStepKind.ERROR.
         error (str): The error message
     """
 
-    kind: ErrorWorkflowStepKind
     error: str
+    kind: ErrorWorkflowStepKind = ErrorWorkflowStepKind.ERROR
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

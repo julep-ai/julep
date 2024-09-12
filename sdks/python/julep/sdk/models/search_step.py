@@ -32,14 +32,14 @@ T = TypeVar("T", bound="SearchStep")
 class SearchStep:
     """
     Attributes:
-        kind (SearchStepKind): The kind of step
+        kind (SearchStepKind): The kind of step Default: SearchStepKind.SEARCH.
         search (Union['HybridDocSearchRequest', 'TextOnlyDocSearchRequest', 'VectorDocSearchRequest']): The search query
     """
 
-    kind: SearchStepKind
     search: Union[
         "HybridDocSearchRequest", "TextOnlyDocSearchRequest", "VectorDocSearchRequest"
     ]
+    kind: SearchStepKind = SearchStepKind.SEARCH
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

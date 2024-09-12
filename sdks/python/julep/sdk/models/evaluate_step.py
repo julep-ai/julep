@@ -29,12 +29,12 @@ T = TypeVar("T", bound="EvaluateStep")
 class EvaluateStep:
     """
     Attributes:
-        kind (EvaluateStepKind): The kind of step
+        kind (EvaluateStepKind): The kind of step Default: EvaluateStepKind.EVALUATE.
         evaluate (EvaluateStepEvaluate): The expression to evaluate
     """
 
-    kind: EvaluateStepKind
     evaluate: "EvaluateStepEvaluate"
+    kind: EvaluateStepKind = EvaluateStepKind.EVALUATE
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

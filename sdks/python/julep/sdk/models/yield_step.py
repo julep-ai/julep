@@ -31,15 +31,15 @@ T = TypeVar("T", bound="YieldStep")
 class YieldStep:
     """
     Attributes:
-        kind (YieldStepKind): The kind of step
+        kind (YieldStepKind): The kind of step Default: YieldStepKind.YIELD.
         workflow (str): The subworkflow to run.
             VALIDATION: Should resolve to a defined subworkflow.
         arguments (Union['YieldStepArgumentsType0', YieldStepArgumentsType1]): The input parameters for the subworkflow
             (defaults to last step output) Default: YieldStepArgumentsType1.VALUE_0.
     """
 
-    kind: YieldStepKind
     workflow: str
+    kind: YieldStepKind = YieldStepKind.YIELD
     arguments: Union["YieldStepArgumentsType0", YieldStepArgumentsType1] = (
         YieldStepArgumentsType1.VALUE_0
     )
