@@ -129,11 +129,12 @@ async def chat(
     if isinstance(model_response, ModelResponse):
         total_tokens = model_response.usage.total_tokens
 
+    job_id = uuid4()
+
     if (
         chat_context.session.token_budget is not None
         and total_tokens >= chat_context.session.token_budget
     ):
-        job_id = uuid4()
         if chat_context.session.context_overflow == "adaptive":
             await run_summarization_task(session_id=session_id, job_id=job_id)
         elif chat_context.session.context_overflow == "truncate":
