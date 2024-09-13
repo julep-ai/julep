@@ -99,7 +99,9 @@ class ChatContext(SessionData):
         active_agent = self.get_active_agent()
         try:
             active_toolset = next(
-                toolset for toolset in self.toolsets if toolset.agent_id == active_agent.id
+                toolset
+                for toolset in self.toolsets
+                if toolset.agent_id == active_agent.id
             )
         except StopIteration:
             return []
