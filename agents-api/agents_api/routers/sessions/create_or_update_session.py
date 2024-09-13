@@ -22,10 +22,8 @@ async def create_or_update_session(
     session_id: UUID,
     data: CreateOrUpdateSessionRequest,
 ) -> ResourceUpdatedResponse:
-    session_updated = create_session_query(
+    return create_session_query(
         developer_id=x_developer_id,
         session_id=session_id,
         data=data,
     )
-
-    return session_updated
