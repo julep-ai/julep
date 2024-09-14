@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -51,6 +52,9 @@ async def chat(
     settings: dict = chat_context.settings.model_dump()
     settings["model"] = f"openai/{settings['model']}"  # litellm proxy idiosyncracy
 
+    # Render the messages
+    new_raw_messages = [msg.model_dump() for msg in chat_input.messages]
+
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
         developer=developer,
@@ -82,6 +86,12 @@ async def chat(
         new_messages = await render_template(new_raw_messages, variables=env)
     else:
         new_messages = new_raw_messages
+    
+    for m in past_messages:
+        with suppress(KeyError):
+            del m["created_at"]
+        with suppress(KeyError):
+            del m["id"]
 
     # Combine the past messages with the new messages
     messages = past_messages + new_messages
