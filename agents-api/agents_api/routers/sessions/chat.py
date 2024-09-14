@@ -47,9 +47,11 @@ async def chat(
     chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings.model_dump()
     env: dict = chat_context.get_chat_environment()
+    settings["model"] = f"openai/{settings['model']}"  # litellm proxy idiosyncracy
+    
+    # Render the messages
     new_raw_messages = [msg.model_dump() for msg in chat_input.messages]
 
-    # Render the messages
     past_messages, doc_references = await gather_messages(
         developer=developer,
         session_id=session_id,
@@ -73,7 +75,7 @@ async def chat(
     # Get the response from the model
     model_response = await litellm.acompletion(
         messages=messages,
-        tools=tools,
+        tools=tools or None,
         user=str(developer.id),  # For tracking usage
         tags=developer.tags,  # For filtering models in litellm
         **settings,
