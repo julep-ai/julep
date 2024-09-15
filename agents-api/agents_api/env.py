@@ -99,15 +99,15 @@ environment: Dict[str, Any] = dict(
     testing=testing,
 )
 
-# if debug or testing:
-# Print the loaded environment variables for debugging purposes.
-print("Environment variables:")
-pprint(environment)
-print()
+if debug or testing:
+    # Print the loaded environment variables for debugging purposes.
+    print("Environment variables:")
+    pprint(environment)
+    print()
 
-# Yell if testing is enabled
-print("@" * 80)
-print(
-    f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@"
-)
-print("@" * 80)
+    # Yell if testing is enabled
+    print("@" * 80)
+    print(
+        f"@@@ Running in {'testing' if testing else 'debug'} mode. This should not be enabled in production. @@@"
+    )
+    print("@" * 80)

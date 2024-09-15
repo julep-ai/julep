@@ -93,6 +93,9 @@ class ChatContext(SessionData):
         """
         Get the active toolset from the session data.
         """
+        if len(self.toolsets) == 0:
+            return []
+
         active_agent = self.get_active_agent()
         active_toolset = next(
             toolset for toolset in self.toolsets if toolset.agent_id == active_agent.id
