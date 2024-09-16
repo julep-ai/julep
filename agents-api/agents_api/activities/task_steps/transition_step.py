@@ -12,25 +12,19 @@ async def transition_step(
     context: StepContext,
     transition_info: CreateTransitionRequest,
 ) -> Transition:
-    need_to_wait = transition_info.type == "wait"
-
-    # Get task token if it's a waiting step
-    if need_to_wait:
-        task_token = activity.info().task_token
-        transition_info.task_token = task_token
-
     # Create transition
     transition = create_execution_transition(
         developer_id=context.execution_input.developer_id,
         execution_id=context.execution_input.execution.id,
         task_id=context.execution_input.task.id,
         data=transition_info,
+        task_token=transition_info.task_token,
         update_execution_status=True,
     )
-
     return transition
 
 
+original_transition_step = transition_step
 mock_transition_step = transition_step
 
 transition_step = activity.defn(name="transition_step")(

@@ -72,7 +72,7 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
     "error": [],
     "cancelled": [],
     # Intermediate states
-    "wait": ["resume", "cancelled"],
+    "wait": ["resume", "cancelled", "finish", "finish_branch"],
     "resume": [
         "wait",
         "error",
@@ -100,7 +100,7 @@ valid_previous_statuses: dict[ExecutionStatus, list[ExecutionStatus]] = {
     "queued": [],
     "awaiting_input": ["starting", "running"],
     "cancelled": ["queued", "starting", "awaiting_input", "running"],
-    "succeeded": ["starting", "running"],
+    "succeeded": ["starting", "awaiting_input", "running"],
     "failed": ["starting", "running"],
 }  # type: ignore
 

@@ -25,7 +25,6 @@ async def transition(
             state.type = "finish_branch"
         case _, _:
             state.type = "step"
-
     transition_request = CreateTransitionRequest(
         current=context.cursor,
         **{

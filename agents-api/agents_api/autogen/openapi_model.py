@@ -117,6 +117,7 @@ class CreateTransitionRequest(Transition):
     created_at: AwareDatetime | None = None
     updated_at: AwareDatetime | None = None
     metadata: dict[str, Any] | None = None
+    task_token: str | None = None
 
 
 class CreateEntryRequest(BaseEntry):

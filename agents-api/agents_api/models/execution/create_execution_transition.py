@@ -86,7 +86,6 @@ def create_execution_transition(
     task_id: UUID | None = None,
 ) -> tuple[list[str | None], dict]:
     transition_id = transition_id or uuid4()
-
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
 
@@ -111,7 +110,7 @@ def create_execution_transition(
     columns, transition_values = cozo_process_mutate_data(
         {
             **transition_data,
-            "task_token": task_token,
+            "task_token": str(task_token),  # Converting to str for JSON serialisation
             "transition_id": str(transition_id),
             "execution_id": str(execution_id),
         }

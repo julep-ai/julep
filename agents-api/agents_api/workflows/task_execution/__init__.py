@@ -378,10 +378,12 @@ class TaskExecutionWorkflow:
 
             case WaitForInputStep(), StepOutcome(output=output):
                 workflow.logger.info("Wait for input step: Waiting for external input")
-                await transition(context, output=output, type="wait", next=None)
+
+                await transition(context, type="wait", output=output)
 
                 result = await workflow.execute_activity(
                     task_steps.raise_complete_async,
+                    args=[context, output],
                     schedule_to_close_timeout=timedelta(days=31),
                 )
 
@@ -391,8 +393,33 @@ class TaskExecutionWorkflow:
                 output=response
             ):  # FIXME: if not response.choices[0].tool_calls:
                 # SCRUM-15
-                workflow.logger.debug("Prompt step: Received response")
-                state = PartialTransition(output=response)
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                if response["choices"][0]["finish_reason"] != "tool_calls":
+                    workflow.logger.debug("Prompt step: Received response")
+                    state = PartialTransition(output=response)
+                else:
+                    workflow.logger.debug("Prompt step: Received tool call")
+                    message = response["choices"][0]["message"]
+                    tool_calls_input = message["tool_calls"]
+
+                    # Enter a wait-for-input step to ask the developer to run the tool calls
+                    tool_calls_results = await workflow.execute_activity(
+                        task_steps.raise_complete_async,
+                        args=[context, tool_calls_input],
+                        schedule_to_close_timeout=timedelta(days=31),
+                    )
+                    # Feed the tool call results back to the model
+                    # context.inputs.append(tool_calls_results)
+                    context.current_step.prompt.append(message)
+                    context.current_step.prompt.append(tool_calls_results)
+                    new_response = await workflow.execute_activity(
+                        task_steps.prompt_step,
+                        context,
+                        schedule_to_close_timeout=timedelta(
+                            seconds=30 if debug or testing else 600),
+                    )
+                    state = PartialTransition(
+                        output=new_response.output, type="resume")
 
             # case PromptStep(), StepOutcome(
             #     output=response
@@ -453,7 +480,6 @@ class TaskExecutionWorkflow:
 
         # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
-
         # The returned value is the transition finally created
         final_state = await transition(context, state)
 
