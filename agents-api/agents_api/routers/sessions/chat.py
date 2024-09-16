@@ -101,6 +101,12 @@ async def chat(
             for msg in new_messages
         ]
 
+        # Add the response to the new entries
+        new_entries.append(
+            CreateEntryRequest.from_model_input(
+                model=settings["model"], **model_response.choices[0].model_dump()['message'], source="api_response"
+            )
+        )
         background_tasks.add_task(
             create_entries,
             developer_id=developer.id,

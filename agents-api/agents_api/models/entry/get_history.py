@@ -42,6 +42,9 @@ T = TypeVar("T")
             }
             for r in d.pop("relations")
         ],
+        # TODO: Remove this once we sort the entries in the cozo query
+        # Sort entries by created_at
+        "entries": sorted(d.pop("entries"), key=lambda entry: entry["created_at"]),
         **d,
     },
 )
