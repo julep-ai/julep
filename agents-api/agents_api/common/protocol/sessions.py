@@ -116,6 +116,7 @@ class ChatContext(SessionData):
             "session": self.session.model_dump(),
             "agents": [agent.model_dump() for agent in self.agents],
             "current_agent": current_agent.model_dump(),
+            "agent": current_agent.model_dump(),
             "users": [user.model_dump() for user in self.users],
             "settings": settings,
             "tools": [tool.model_dump() for tool in tools],
