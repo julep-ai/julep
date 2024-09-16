@@ -72,6 +72,17 @@ async def chat(
         # messages = messages[-settings["max_tokens"] :]
         raise NotImplementedError("Truncation is not yet implemented")
 
+    # FIXME: Hotfix for datetime not serializable. Needs investigation
+    messages = [
+        msg.model_dump() if hasattr(msg, "model_dump") else msg
+        for msg in messages
+    ]
+
+    messages = [
+        dict(role=m["role"], content=m["content"], user=m.get("user"))
+        for m in messages
+    ]
+
     # Get the response from the model
     model_response = await litellm.acompletion(
         messages=messages,
