@@ -12,10 +12,7 @@ async def transition_step(
     context: StepContext,
     transition_info: CreateTransitionRequest,
 ) -> Transition:
-    print("INSIDETRANSITIONSTEP, WITH TRANSITION INFO:")
-    print(transition_info)
     # Create transition
-
     transition = create_execution_transition(
         developer_id=context.execution_input.developer_id,
         execution_id=context.execution_input.execution.id,
@@ -24,7 +21,6 @@ async def transition_step(
         task_token=transition_info.task_token,
         update_execution_status=True,
     )
-    print("TRANSITION CREATED")
     return transition
 
 

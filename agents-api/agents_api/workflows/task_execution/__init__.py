@@ -412,16 +412,12 @@ class TaskExecutionWorkflow:
                     # context.inputs.append(tool_calls_results)
                     context.current_step.prompt.append(message)
                     context.current_step.prompt.append(tool_calls_results)
-                    print("CONTEXT")
-                    print(context.inputs)
                     new_response = await workflow.execute_activity(
                         task_steps.prompt_step,
                         context,
                         schedule_to_close_timeout=timedelta(
                             seconds=30 if debug or testing else 600),
                     )
-                    print("NEW RESPONSE")
-                    print(new_response)
                     state = PartialTransition(
                         output=new_response.output, type="resume")
 
@@ -484,9 +480,6 @@ class TaskExecutionWorkflow:
 
         # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
-        print("STATE")
-        print(state)
-        print("CALLING TRANSITION")
         # The returned value is the transition finally created
         final_state = await transition(context, state)
 

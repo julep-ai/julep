@@ -25,8 +25,6 @@ async def transition(
             state.type = "finish_branch"
         case _, _:
             state.type = "step"
-    print("STATE.TYPE")
-    print(state.type)
     transition_request = CreateTransitionRequest(
         current=context.cursor,
         **{
@@ -42,7 +40,6 @@ async def transition(
     )
 
     try:
-        print("transition_step being called...")
         return await workflow.execute_activity(
             task_steps.transition_step,
             args=[context, transition_request],

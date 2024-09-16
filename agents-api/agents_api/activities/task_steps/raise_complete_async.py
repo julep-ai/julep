@@ -14,8 +14,6 @@ async def raise_complete_async(context: StepContext, output: StepOutcome) -> Non
 
     captured_token = activity.info().task_token
     captured_token = captured_token.decode('latin-1')
-    print("Captured token:")
-    print(captured_token)
     transition_info = CreateTransitionRequest(
         current=context.cursor,
         type="wait",
