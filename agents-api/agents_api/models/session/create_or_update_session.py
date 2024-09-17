@@ -62,7 +62,6 @@ def create_or_update_session(
         raise ValueError("Only one of 'agent' or 'agents' should be provided.")
 
     agents = agents or ([agent] if agent else [])
-    assert len(agents) > 0, "At least one agent must be provided."
 
     # Users are zero or more, so we default to an empty list if not provided.
     if not (user or users):
