@@ -18,25 +18,6 @@ log:
 
 http:
   routers:
-    model-serving:
-      entryPoints:
-        - web
-      rule: Path(`/v1{path:.*}`)
-      middlewares:
-        - model-serving-chain
-        - corsHeaders
-      service: service-model-serving
-
-    model-serving-jwt:
-      entryPoints:
-        - web
-      rule: Path(`/jwt/v1{path:.*}`)
-      middlewares:
-        - model-serving-chain
-        - model-serving-strip-prefix-jwt
-        - corsHeaders
-      service: service-model-serving
-
     agents-api:
       entryPoints:
         - web
@@ -46,16 +27,16 @@ http:
         - agents-api-strip-prefix-api
         - corsHeaders
       service: service-agents-api
-
-    agents-api-jwt:
+      priority: 1
+    
+    agents-api-docs:
       entryPoints:
         - web
-      rule: Path(`/jwt/api{path:.*}`)
+      rule: Path(`/api/{path:swagger|redoc|docs|scalar|openapi.json}`)
       middlewares:
-        - agents-api-chain
-        - agents-api-strip-prefix-jwt-api
-        - corsHeaders
+        - agents-api-strip-prefix-api
       service: service-agents-api
+      priority: 2
 
   middlewares:
     corsHeaders:
@@ -65,33 +46,16 @@ http:
         accessControlAllowOriginList: "*"
         addVaryHeader: true
 
-    model-serving-chain:
-      chain:
-        middlewares:
-          - my-jwt
-          - model-serving-add-headers
-
     agents-api-add-headers:
       headers:
         customrequestheaders:
           $AGENTS_API_KEY_HEADER_NAME: $AGENTS_API_KEY
-    
-    model-serving-add-headers:
-      headers:
-        customrequestheaders:
-          $MODEL_API_KEY_HEADER_NAME: $MODEL_API_KEY
 
     agents-api-chain:
       chain:
         middlewares:
-          - my-jwt
+          - api-jwt-auth
           - agents-api-add-headers
-
-    model-serving-strip-prefix-jwt:
-      stripprefix:
-        prefixes:
-          - /jwt
-        forceSlash: false
 
     agents-api-strip-prefix-api:
       stripprefix:
@@ -99,13 +63,7 @@ http:
           - /api
         forceSlash: false
 
-    agents-api-strip-prefix-jwt-api:
-      stripprefix:
-        prefixes:
-          - /jwt/api
-        forceSlash: false
-
-    my-jwt:
+    api-jwt-auth:
       plugin:
         jwt:
           Alg: HS512
@@ -114,28 +72,20 @@ http:
           PayloadFields:
             - exp
             - iat
-            - email
           Required: true
           Keys:
             - $JWT_SHARED_KEY
           JwtHeaders:
             X-Developer-Id: sub
-            X-Developer-Email: email
           OpaHttpStatusField: allow_status_code
 
   services:
-    service-model-serving:
-      loadBalancer:
-        passHostHeader: false
-        servers:
-          - url: $MODEL_API_URL
-    
     service-agents-api:
       loadBalancer:
         passHostHeader: false
         servers:
           - url: $AGENTS_API_URL
-
+          
 experimental:
   localPlugins:
     jwt:

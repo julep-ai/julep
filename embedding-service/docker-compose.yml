@@ -1,0 +1,65 @@
+name: julep-embedding-service
+
+# Base for embedding service
+x--text-embeddings-inference: &text-embeddings-inference
+  container_name: text-embeddings-inference-cpu
+  environment:
+    - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+
+  image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+  ports:
+    - "8082:80"
+  volumes:
+    - ~/.cache/huggingface/hub:/data
+
+# Shared environment variables
+x--shared-environment: &shared-environment
+  AGENTS_API_KEY: ${AGENTS_API_KEY}
+  AGENTS_API_KEY_HEADER_NAME: ${AGENTS_API_KEY_HEADER_NAME:-Authorization}
+  AGENTS_API_HOSTNAME: ${AGENTS_API_HOSTNAME:-localhost}
+  AGENTS_API_URL: ${AGENTS_API_URL:-http://agents-api:8080}
+  COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+  COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
+  DEBUG: ${AGENTS_API_DEBUG:-False}
+  EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+  EMBEDDING_SERVICE_BASE: ${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference}
+  LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+  LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
+  SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
+  TEMPORAL_ENDPOINT: ${TEMPORAL_ENDPOINT:-temporal:7233}
+  TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-default}
+  TEMPORAL_TASK_QUEUE: ${TEMPORAL_TASK_QUEUE:-julep-task-queue}
+  TEMPORAL_WORKER_URL: ${TEMPORAL_WORKER_URL:-temporal:7233}
+  TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
+  WORKER_URL: ${WORKER_URL:-temporal:7233}
+
+# TODO: Switch to Alibaba-NLP/gte-Qwen2-1.5B-instruct instead of gte-large-en-v1.5
+# SCRUM-23
+
+services:
+  text-embeddings-inference-cpu:
+    <<: *text-embeddings-inference
+    profiles:
+      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
+      - cpu
+    platform: linux/amd64 # Temp fix for Mac M-series chips
+
+  text-embeddings-inference-gpu:
+    <<: *text-embeddings-inference
+    container_name: text-embeddings-inference-gpu
+    profiles:
+      - gpu
+    image: ghcr.io/huggingface/text-embeddings-inference:1.5
+    environment:
+      - DTYPE=float16
+      - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+      - NVIDIA_VISIBLE_DEVICES=all
+
+    shm_size: "2gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: ${NUM_GPUS:-1}
+              capabilities: [gpu]

@@ -13,7 +13,7 @@
 
 ## AsyncSessionsManager
 
-[Show source in session.py:788](../../../../../../julep/managers/session.py#L788)
+[Show source in session.py:800](../../../../../../julep/managers/session.py#L800)
 
 A class for managing asynchronous sessions.
 
@@ -71,7 +71,7 @@ class AsyncSessionsManager(BaseSessionsManager): ...
 
 ### AsyncSessionsManager().chat
 
-[Show source in session.py:963](../../../../../../julep/managers/session.py#L963)
+[Show source in session.py:975](../../../../../../julep/managers/session.py#L975)
 
 Sends a message in an asynchronous chat session and retrieves the response.
 
@@ -144,7 +144,7 @@ async def chat(
 
 ### AsyncSessionsManager().create
 
-[Show source in session.py:860](../../../../../../julep/managers/session.py#L860)
+[Show source in session.py:872](../../../../../../julep/managers/session.py#L872)
 
 Asynchronously create a resource with the specified user and agent identifiers.
 
@@ -179,7 +179,7 @@ async def create(self, **kwargs: SessionCreateArgs) -> Session: ...
 
 ### AsyncSessionsManager().delete
 
-[Show source in session.py:913](../../../../../../julep/managers/session.py#L913)
+[Show source in session.py:925](../../../../../../julep/managers/session.py#L925)
 
 Asynchronously delete a session given its ID.
 
@@ -207,7 +207,7 @@ async def delete(self, session_id: Union[str, UUID]): ...
 
 ### AsyncSessionsManager().delete_history
 
-[Show source in session.py:1108](../../../../../../julep/managers/session.py#L1108)
+[Show source in session.py:1120](../../../../../../julep/managers/session.py#L1120)
 
 Delete the history of a session asynchronously.
 
@@ -232,7 +232,7 @@ async def delete_history(self, session_id: Union[str, UUID]) -> None: ...
 
 ### AsyncSessionsManager().get
 
-[Show source in session.py:832](../../../../../../julep/managers/session.py#L832)
+[Show source in session.py:844](../../../../../../julep/managers/session.py#L844)
 
 Asynchronously get a Session object by its identifier.
 
@@ -270,7 +270,7 @@ async def get(self, id: Union[UUID, str]) -> Session: ...
 
 ### AsyncSessionsManager().history
 
-[Show source in session.py:1076](../../../../../../julep/managers/session.py#L1076)
+[Show source in session.py:1088](../../../../../../julep/managers/session.py#L1088)
 
 Retrieve a history of chat messages based on the session ID, with optional limit and offset.
 
@@ -304,7 +304,7 @@ async def history(
 
 ### AsyncSessionsManager().list
 
-[Show source in session.py:883](../../../../../../julep/managers/session.py#L883)
+[Show source in session.py:895](../../../../../../julep/managers/session.py#L895)
 
 Asynchronously retrieves a list of sessions with optional pagination.
 
@@ -333,7 +333,7 @@ async def list(
 
 ### AsyncSessionsManager().suggestions
 
-[Show source in session.py:1044](../../../../../../julep/managers/session.py#L1044)
+[Show source in session.py:1056](../../../../../../julep/managers/session.py#L1056)
 
 Retrieve a list of suggestions asynchronously.
 
@@ -367,7 +367,7 @@ async def suggestions(
 
 ### AsyncSessionsManager().update
 
-[Show source in session.py:932](../../../../../../julep/managers/session.py#L932)
+[Show source in session.py:944](../../../../../../julep/managers/session.py#L944)
 
 Asynchronously update a resource with the given situation.
 
@@ -410,7 +410,7 @@ async def update(self, **kwargs: SessionUpdateArgs) -> Session: ...
 
 ## BaseSessionsManager
 
-[Show source in session.py:53](../../../../../../julep/managers/session.py#L53)
+[Show source in session.py:57](../../../../../../julep/managers/session.py#L57)
 
 A class to manage sessions using base API client methods.
 
@@ -515,7 +515,7 @@ class BaseSessionsManager(BaseManager): ...
 
 ### BaseSessionsManager()._chat
 
-[Show source in session.py:298](../../../../../../julep/managers/session.py#L298)
+[Show source in session.py:310](../../../../../../julep/managers/session.py#L310)
 
 Conducts a chat conversation with an AI model using specific parameters.
 
@@ -582,7 +582,7 @@ def _chat(
 
 ### BaseSessionsManager()._create
 
-[Show source in session.py:178](../../../../../../julep/managers/session.py#L178)
+[Show source in session.py:182](../../../../../../julep/managers/session.py#L182)
 
 Creates a session for a specified user and agent.
 
@@ -614,12 +614,14 @@ def _create(
     situation: Optional[str] = None,
     metadata: Dict[str, Any] = {},
     render_templates: bool = False,
+    token_budget: Optional[int] = None,
+    context_overflow: Optional[str] = None,
 ) -> Union[ResourceCreatedResponse, Awaitable[ResourceCreatedResponse]]: ...
 ```
 
 ### BaseSessionsManager()._delete
 
-[Show source in session.py:243](../../../../../../julep/managers/session.py#L243)
+[Show source in session.py:251](../../../../../../julep/managers/session.py#L251)
 
 Delete a session given its session ID.
 
@@ -645,7 +647,7 @@ def _delete(self, session_id: Union[str, UUID]) -> Union[None, Awaitable[None]]:
 
 ### BaseSessionsManager()._delete_history
 
-[Show source in session.py:432](../../../../../../julep/managers/session.py#L432)
+[Show source in session.py:444](../../../../../../julep/managers/session.py#L444)
 
 Delete the history of a session.
 
@@ -673,7 +675,7 @@ def _delete_history(
 
 ### BaseSessionsManager()._get
 
-[Show source in session.py:162](../../../../../../julep/managers/session.py#L162)
+[Show source in session.py:166](../../../../../../julep/managers/session.py#L166)
 
 Get a session by its ID.
 
@@ -697,7 +699,7 @@ def _get(self, id: Union[str, UUID]) -> Union[Session, Awaitable[Session]]: ...
 
 ### BaseSessionsManager()._history
 
-[Show source in session.py:404](../../../../../../julep/managers/session.py#L404)
+[Show source in session.py:416](../../../../../../julep/managers/session.py#L416)
 
 Retrieve a session's history with optional pagination controls.
 
@@ -727,7 +729,7 @@ def _history(
 
 ### BaseSessionsManager()._list_items
 
-[Show source in session.py:218](../../../../../../julep/managers/session.py#L218)
+[Show source in session.py:226](../../../../../../julep/managers/session.py#L226)
 
 List items with optional pagination.
 
@@ -757,7 +759,7 @@ def _list_items(
 
 ### BaseSessionsManager()._suggestions
 
-[Show source in session.py:381](../../../../../../julep/managers/session.py#L381)
+[Show source in session.py:393](../../../../../../julep/managers/session.py#L393)
 
 Retrieve a list of suggestions for a given session.
 
@@ -782,7 +784,7 @@ def _suggestions(
 
 ### BaseSessionsManager()._update
 
-[Show source in session.py:264](../../../../../../julep/managers/session.py#L264)
+[Show source in session.py:272](../../../../../../julep/managers/session.py#L272)
 
 Update a session with a given situation.
 
@@ -809,6 +811,8 @@ def _update(
     situation: Optional[str] = None,
     metadata: Optional[Dict[str, Any]] = None,
     overwrite: bool = False,
+    token_budget: Optional[int] = None,
+    context_overflow: Optional[str] = None,
 ) -> Union[ResourceUpdatedResponse, Awaitable[ResourceUpdatedResponse]]: ...
 ```
 
@@ -828,7 +832,7 @@ class SessionCreateArgs(TypedDict): ...
 
 ## SessionUpdateArgs
 
-[Show source in session.py:45](../../../../../../julep/managers/session.py#L45)
+[Show source in session.py:47](../../../../../../julep/managers/session.py#L47)
 
 #### Signature
 
@@ -840,7 +844,7 @@ class SessionUpdateArgs(TypedDict): ...
 
 ## SessionsManager
 
-[Show source in session.py:454](../../../../../../julep/managers/session.py#L454)
+[Show source in session.py:466](../../../../../../julep/managers/session.py#L466)
 
 A class responsible for managing session interactions.
 
@@ -920,7 +924,7 @@ class SessionsManager(BaseSessionsManager): ...
 
 ### SessionsManager().chat
 
-[Show source in session.py:635](../../../../../../julep/managers/session.py#L635)
+[Show source in session.py:647](../../../../../../julep/managers/session.py#L647)
 
 Initiate a chat session with the provided inputs and configurations.
 
@@ -984,7 +988,7 @@ def chat(
 
 ### SessionsManager().create
 
-[Show source in session.py:539](../../../../../../julep/managers/session.py#L539)
+[Show source in session.py:551](../../../../../../julep/managers/session.py#L551)
 
 Create a new resource with a user ID and an agent ID, optionally including a situation description.
 
@@ -1017,7 +1021,7 @@ def create(self, **kwargs: SessionCreateArgs) -> Session: ...
 
 ### SessionsManager().delete
 
-[Show source in session.py:591](../../../../../../julep/managers/session.py#L591)
+[Show source in session.py:603](../../../../../../julep/managers/session.py#L603)
 
 Deletes a session based on its session ID.
 
@@ -1042,7 +1046,7 @@ def delete(self, session_id: Union[str, UUID]): ...
 
 ### SessionsManager().delete_history
 
-[Show source in session.py:771](../../../../../../julep/managers/session.py#L771)
+[Show source in session.py:783](../../../../../../julep/managers/session.py#L783)
 
 Delete the history of a session.
 
@@ -1067,7 +1071,7 @@ def delete_history(self, session_id: Union[str, UUID]) -> None: ...
 
 ### SessionsManager().get
 
-[Show source in session.py:522](../../../../../../julep/managers/session.py#L522)
+[Show source in session.py:534](../../../../../../julep/managers/session.py#L534)
 
 Retrieve a Session object based on a given identifier.
 
@@ -1090,7 +1094,7 @@ def get(self, id: Union[str, UUID]) -> Session: ...
 
 ### SessionsManager().history
 
-[Show source in session.py:744](../../../../../../julep/managers/session.py#L744)
+[Show source in session.py:756](../../../../../../julep/managers/session.py#L756)
 
 Retrieve a history of ChatMl messages for a given session.
 
@@ -1118,7 +1122,7 @@ def history(
 
 ### SessionsManager().list
 
-[Show source in session.py:560](../../../../../../julep/managers/session.py#L560)
+[Show source in session.py:572](../../../../../../julep/managers/session.py#L572)
 
 Retrieve a list of Session objects with optional pagination.
 
@@ -1148,7 +1152,7 @@ def list(
 
 ### SessionsManager().suggestions
 
-[Show source in session.py:710](../../../../../../julep/managers/session.py#L710)
+[Show source in session.py:722](../../../../../../julep/managers/session.py#L722)
 
 Provides a list of suggestion objects based on the given session ID.
 
@@ -1186,7 +1190,7 @@ def suggestions(
 
 ### SessionsManager().update
 
-[Show source in session.py:607](../../../../../../julep/managers/session.py#L607)
+[Show source in session.py:619](../../../../../../julep/managers/session.py#L619)
 
 Updates the state of a resource based on a given situation.
 

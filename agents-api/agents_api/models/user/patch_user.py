@@ -1,20 +1,50 @@
 """Module for generating datalog queries to update user information in the 'cozodb' database."""
 
-from beartype import beartype
-
+from typing import Any, TypeVar
 from uuid import UUID
 
+from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
+from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
-from ..utils import cozo_query
 from ...common.utils.datetime import utcnow
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {"id": d["user_id"], "jobs": [], **d},
+    _kind="inserted",
+)
 @cozo_query
 @beartype
-def patch_user_query(
-    developer_id: UUID, user_id: UUID, **update_data
-) -> tuple[str, dict]:
+def patch_user(
+    *,
+    developer_id: UUID,
+    user_id: UUID,
+    data: PatchUserRequest,
+) -> tuple[list[str], dict]:
     """
     Generates a datalog query for updating a user's information.
 
@@ -26,6 +56,8 @@ def patch_user_query(
     Returns:
     - tuple[str, dict]: A pandas DataFrame containing the results of the query execution.
     """
+
+    update_data = data.model_dump(exclude_unset=True)
 
     # Prepare data for mutation by filtering out None values and adding system-generated fields.
     metadata = update_data.pop("metadata", {}) or {}
@@ -39,7 +71,7 @@ def patch_user_query(
     )
 
     # Construct the datalog query for updating user information.
-    query = f"""
+    update_query = f"""
         # update the user
         input[{user_update_cols}] <- $user_update_vals
         
@@ -57,8 +89,14 @@ def patch_user_query(
         :returning
     """
 
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "users", user_id=user_id),
+        update_query,
+    ]
+
     return (
-        query,
+        queries,
         {
             "user_update_vals": user_update_vals,
             "metadata": metadata,

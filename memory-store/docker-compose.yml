@@ -1,21 +1,36 @@
 name: julep-memory-store
-version: "3"
 
 services:
   memory-store:
-    image: julepai/memory-store:dev
-    env_file: "../.env"
+    image: julepai/memory-store:${TAG}
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
-      - COZO_PORT=${COZO_PORT}
-      - MNT_DIR=/data
-    container_name: memory-store
+      - COZO_PORT=${COZO_PORT:-9070}
+      - COZO_MNT_DIR=${MNT_DIR:-/data}
+      - COZO_BACKUP_DIR=${COZO_BACKUP_DIR:-/backup}
     volumes:
       - cozo_data:/data
+      - cozo_backup:/backup
     build:
       context: .
     ports:
       - "9070:9070"
 
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.backupcron.schedule: "@every 1h"
+      ofelia.job-exec.backupcron.environment: '["COZO_PORT=${COZO_PORT}", "COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}", "COZO_BACKUP_DIR=${COZO_BACKUP_DIR}"]'
+      ofelia.job-exec.backupcron.command: bash /app/backup.sh
+
+  memory-store-backup-cron:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - memory-store
+    command: daemon --docker -f label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
 volumes:
   cozo_data:
+  cozo_backup:
+    external: true

@@ -3,23 +3,53 @@ This module contains the functionality for creating a new user in the CozoDB dat
 It defines a query for inserting user data into the 'users' relation.
 """
 
+from typing import Any, TypeVar
+from uuid import UUID, uuid4
+
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
-from uuid import UUID
+from ...autogen.openapi_model import CreateUserRequest, User
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    wrap_in_class,
+)
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
-from ..utils import cozo_query
-
-
+@rewrap_exceptions(
+    {
+        lambda e: isinstance(e, QueryException)
+        and "asserted to return some results, but returned none"
+        in str(e): lambda *_: HTTPException(
+            detail="developer not found", status_code=403
+        ),
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(
+    User,
+    one=True,
+    transform=lambda d: {"id": UUID(d.pop("user_id")), **d},
+    _kind="inserted",
+)
 @cozo_query
 @beartype
-def create_user_query(
-    user_id: UUID,
+def create_user(
+    *,
     developer_id: UUID,
-    name: str,
-    about: str,
-    metadata: dict = {},
-) -> tuple[str, dict]:
+    user_id: UUID | None = None,
+    data: CreateUserRequest,
+) -> tuple[list[str], dict]:
     """
     Constructs and executes a datalog query to create a new user in the CozoDB database.
 
@@ -35,8 +65,11 @@ def create_user_query(
         pd.DataFrame: A DataFrame containing the result of the query execution.
     """
 
-    query = """
-    {
+    user_id = user_id or uuid4()
+    data.metadata = data.metadata or {}
+    user_data = data.model_dump()
+
+    create_query = """
         # Then create the user
         ?[user_id, developer_id, name, about, metadata] <- [
             [to_uuid($user_id), to_uuid($developer_id), $name, $about, $metadata]
@@ -50,15 +83,18 @@ def create_user_query(
             metadata,
         }
         :returning
-    }"""
+    """
+
+    queries = [
+        verify_developer_id_query(developer_id),
+        create_query,
+    ]
 
     return (
-        query,
+        queries,
         {
             "user_id": str(user_id),
             "developer_id": str(developer_id),
-            "name": name,
-            "about": about,
-            "metadata": metadata,
+            **user_data,
         },
     )

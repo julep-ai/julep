@@ -1,17 +1,44 @@
+from typing import Any, TypeVar
 from uuid import UUID
 
 from beartype import beartype
+from fastapi import HTTPException
+from pycozo.client import QueryException
+from pydantic import ValidationError
 
-
-from ..utils import cozo_query
+from ...autogen.openapi_model import ResourceUpdatedResponse, UpdateUserRequest
 from ...common.utils.cozo import cozo_process_mutate_data
+from ..utils import (
+    cozo_query,
+    partialclass,
+    rewrap_exceptions,
+    verify_developer_id_query,
+    verify_developer_owns_resource_query,
+    wrap_in_class,
+)
+
+ModelT = TypeVar("ModelT", bound=Any)
+T = TypeVar("T")
 
 
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
+@wrap_in_class(
+    ResourceUpdatedResponse,
+    one=True,
+    transform=lambda d: {"id": d["user_id"], "jobs": [], **d},
+    _kind="inserted",
+)
 @cozo_query
 @beartype
-def update_user_query(
-    developer_id: UUID, user_id: UUID, **update_data
-) -> tuple[str, dict]:
+def update_user(
+    *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
+) -> tuple[list[str], dict]:
     """Updates user information in the 'cozodb' database.
 
     Parameters:
@@ -25,6 +52,8 @@ def update_user_query(
     """
     user_id = str(user_id)
     developer_id = str(developer_id)
+    update_data = data.model_dump()
+
     # Prepares the update data by filtering out None values and adding user_id and developer_id.
     user_update_cols, user_update_vals = cozo_process_mutate_data(
         {
@@ -34,21 +63,8 @@ def update_user_query(
         }
     )
 
-    assertion_query = """
-        ?[developer_id, user_id] :=
-            *users {
-                developer_id,
-                user_id,
-            },
-            developer_id = to_uuid($developer_id),
-            user_id = to_uuid($user_id),
-
-        # Assertion to ensure the user exists before updating.
-        :assert some
-    """
-
     # Constructs the update operation for the user, setting new values and updating 'updated_at'.
-    query = f"""
+    update_query = f"""
         # update the user
         # This line updates the user's information based on the provided columns and values.
         input[{user_update_cols}] <- $user_update_vals
@@ -71,11 +87,14 @@ def update_user_query(
         :returning
     """
 
-    query = "{" + assertion_query + "} {" + query + "}"
-    # Combines the assertion and update queries.
+    queries = [
+        verify_developer_id_query(developer_id),
+        verify_developer_owns_resource_query(developer_id, "users", user_id=user_id),
+        update_query,
+    ]
 
     return (
-        query,
+        queries,
         {
             "user_update_vals": user_update_vals,
             "developer_id": developer_id,

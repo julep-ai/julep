@@ -7,49 +7,50 @@ readme = "README.md"
 packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
-fastapi = "^0.110.1"
+python = ">=3.11,<3.12"
+fastapi = "^0.112.1"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
-uvicorn = "^0.23.2"
+uvicorn = "^0.30.6"
 fire = "^0.5.0"
 environs = "^10.3.0"
-google-cloud-aiplatform = "^1.33.0"
-pandas = "^2.1.0"
-openai = "^1.12.0"
-httpx = "^0.26.0"
-async-lru = "^2.0.4"
-sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
-temporalio = "^1.4.0"
-pydantic = "^2.5.3"
+pandas = "^2.2.2"
+openai = "^1.41.0"
+httpx = "^0.27.0"
+sentry-sdk = {extras = ["fastapi"], version = "^2.13.0"}
+temporalio = "^1.7.0"
+pydantic = {extras = ["email"], version = "^2.8.2"}
 arrow = "^1.3.0"
-jinja2 = "^3.1.3"
+jinja2 = "^3.1.4"
 jinja2schema = "^0.1.4"
 jsonschema = "^4.21.1"
-litellm = "^1.35.32"
-numpy = "^1.26.4"
-transformers = "^4.40.1"
-tiktoken = "^0.6.0"
-xxhash = "^3.4.1"
-tenacity = "^8.3.0"
-
-
+litellm = "^1.43.18"
+numpy = "^2.1.0"
+tiktoken = "^0.7.0"
+tenacity = "^9.0.0"
 beartype = "^0.18.5"
+pydantic-partial = "^0.5.5"
+simpleeval = "^0.9.13"
+lz4 = "^4.3.3"
+
+pyyaml = "^6.0.2"
+google-re2 = "^1.1.20240702"
+scalar-fastapi = "^1.0.3"
+sse-starlette = "^2.1.3"
+anyio = "^4.4.0"
+python-box = {extras = ["toml"], version = "^7.2.0"}
 [tool.poetry.group.dev.dependencies]
-ipython = "^8.18.1"
-black = "^24.4.0"
-ruff = "^0.1.9"
-datamodel-code-generator = "^0.25.3"
+ipython = "^8.26.0"
+ruff = "^0.5.5"
+datamodel-code-generator = "^0.25.9"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.25.1"
 pytype = ">=2024.4.11"
-julep = "^0.2.4"
 pyjwt = "^2.8.0"
 ward = "^0.68.0b0"
-jupyterlab = "^4.1.8"
-ipywidgets = "^8.1.2"
-jupyter-ai = "^2.14.1"
-langchain-openai = "^0.1.6"
+jupyterlab = "^4.2.4"
+ipywidgets = "^8.1.3"
 
+wat-inspector = "^0.2.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -58,13 +59,47 @@ build-backend = "poetry.core.masonry.api"
 agents-api = "scripts.agents_api:run"
 
 [tool.poe.tasks]
-format = "black ."
-lint = "ruff agents_api/**/*.py migrations/**/*.py tests/**/*.py --fix --unsafe-fixes"
+format = "ruff format"
+lint = "ruff check --select I --fix --unsafe-fixes agents_api/**/*.py migrations/**/*.py tests/**/*.py"
 typecheck = "pytype --config pytype.toml"
 check = [
-    "format",
     "lint",
+    "format",
     "typecheck",
 ]
-test = "ward"
-codegen = "datamodel-codegen --input ../openapi.yaml --input-file-type openapi --output agents_api/autogen/openapi_model.py --use-operation-id-as-name --use-double-quotes --use-schema-description --target-python-version 3.10 --reuse-model --collapse-root-models --use-field-description --field-include-all-keys --use-unique-items-as-set --use-subclass-enum --use-union-operator --use-one-literal-as-default --use-annotated --enum-field-as-literal one --output-model-type pydantic_v2.BaseModel"
+codegen = """
+datamodel-codegen \
+  --input ../openapi.yaml \
+  --input-file-type openapi \
+  --output agents_api/autogen/ \
+  --output-model-type pydantic_v2.BaseModel \
+  --strict-types bool \
+  --strict-nullable \
+  --allow-population-by-field-name \
+  --field-include-all-keys \
+  --reuse-model \
+  --snake-case-field \
+  --enum-field-as-literal all \
+  --field-constraints \
+  --use-operation-id-as-name \
+  --use-schema-description \
+  --use-field-description \
+  --use-annotated \
+  --use-default \
+  --use-unique-items-as-set \
+  --use-subclass-enum \
+  --use-union-operator \
+  --use-one-literal-as-default \
+  --use-double-quotes \
+  --use-exact-imports \
+  --use-standard-collections \
+  --use-non-positive-negative-number-constrained-types \
+  --target-python-version 3.11 \
+  --collapse-root-models \
+  --openapi-scopes schemas \
+  --keep-model-order \
+  --disable-timestamp"""
+
+[tool.poe.tasks.test]
+env = { AGENTS_API_TESTING = "true", PYTHONPATH = "{PYTHONPATH}:." }
+cmd = "ward test"

@@ -2,30 +2,33 @@
 This module initializes the FastAPI application, registers routes, sets up middleware, and configures exception handlers.
 """
 
-import fire
-import uvicorn
 import logging
+from typing import Any, Callable
+
+import fire
 import sentry_sdk
-from fastapi import FastAPI, Request, status, Depends
-from fastapi.responses import JSONResponse
+import uvicorn
+from fastapi import APIRouter, Depends, FastAPI, Request, status
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
-from agents_api.common.exceptions import BaseCommonException
-from agents_api.exceptions import PromptTooBigError
-from pycozo.client import QueryException
-from temporalio.service import RPCError
+from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
+from pycozo.client import QueryException
+from scalar_fastapi import get_scalar_api_reference
+from temporalio.service import RPCError
 
-from agents_api.dependencies.auth import get_api_key
-from agents_api.env import sentry_dsn
-
-from agents_api.routers import (
+from .common.exceptions import BaseCommonException
+from .dependencies.auth import get_api_key
+from .env import api_prefix, hostname, protocol, public_port, sentry_dsn
+from .exceptions import PromptTooBigError
+from .routers import (
     agents,
-    sessions,
-    users,
+    docs,
     jobs,
+    sessions,
+    tasks,
+    users,
 )
-
 
 if not sentry_dsn:
     print("Sentry DSN not found. Sentry will not be enabled.")
@@ -36,10 +39,10 @@ else:
     )
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-def make_exception_handler(status: int):
+def make_exception_handler(status: int) -> Callable[[Any, Any], Any]:
     """
     Creates a custom exception handler for the application.
 
@@ -59,7 +62,7 @@ def make_exception_handler(status: int):
     return _handler
 
 
-def register_exceptions(app: FastAPI):
+def register_exceptions(app: FastAPI) -> None:
     """
     Registers custom exception handlers for the FastAPI application.
 
@@ -76,8 +79,52 @@ def register_exceptions(app: FastAPI):
     )
 
 
-app = FastAPI(dependencies=[Depends(get_api_key)])
+# TODO: Auth logic should be moved into global middleware _per router_
+#       Because some routes don't require auth
+# See: https://fastapi.tiangolo.com/tutorial/bigger-applications/
+#
+app: FastAPI = FastAPI(
+    docs_url="/swagger",
+    openapi_prefix=api_prefix,
+    redoc_url=None,
+    title="Julep Agents API",
+    description="API for Julep Agents",
+    version="0.4.0",
+    terms_of_service="https://www.julep.ai/terms",
+    contact={
+        "name": "Julep",
+        "url": "https://www.julep.ai",
+        "email": "team@julep.ai",
+    },
+    root_path=api_prefix,
+)
 
+# Create a new router for the docs
+scalar_router = APIRouter()
+
+
+@scalar_router.get("/docs", include_in_schema=False)
+async def scalar_html():
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url[1:],  # Remove leading '/'
+        title=app.title,
+        servers=[{"url": f"{protocol}://{hostname}:{public_port}{api_prefix}"}],
+    )
+
+
+# Add the docs_router without dependencies
+app.include_router(scalar_router)
+
+# Add other routers with the get_api_key dependency
+app.include_router(agents.router, dependencies=[Depends(get_api_key)])
+app.include_router(sessions.router, dependencies=[Depends(get_api_key)])
+app.include_router(users.router, dependencies=[Depends(get_api_key)])
+app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
+app.include_router(docs.router, dependencies=[Depends(get_api_key)])
+app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
+
+# TODO: CORS should be enabled only for JWT auth
+#
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -87,12 +134,18 @@ app.add_middleware(
     max_age=3600,
 )
 
+# TODO: GZipMiddleware should be enabled only for non-streaming routes
+# app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=3)
+
 register_exceptions(app)
 
-app.include_router(agents.router)
-app.include_router(sessions.router)
-app.include_router(users.router)
-app.include_router(jobs.router)
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):  # pylint: disable=unused-argument
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": {"message": str(exc)}},
+    )
 
 
 @app.exception_handler(RPCError)
@@ -136,7 +189,7 @@ def main(
     timeout_keep_alive=30,
     workers=None,
     log_level="info",
-):
+) -> None:
     uvicorn.run(
         app,
         host=host,

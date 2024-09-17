@@ -1,11 +1,47 @@
+
+# TODO: Make docker compose setup production ready
+# SCRUM-30
+
 name: julep
-version: "3"
 
 include:
   - ./memory-store/docker-compose.yml
-  - ./model-serving/docker-compose.yml
   - ./gateway/docker-compose.yml
+  - ./embedding-service/docker-compose.yml
   - ./agents-api/docker-compose.yml
+  - ./scheduler/docker-compose.yml
+  - ./llm-proxy/docker-compose.yml
 
   # TODO: Enable after testing
   # - ./monitoring/docker-compose.yml
+
+### Notes on authentication
+
+# - agents-api runs under two modes:
+#   + single-tenant: `SKIP_CHECK_DEVELOPER_HEADERS=True` and `AGENTS_API_KEY` is required
+#     [user] --{Authorization: Bearer $api-key}--> [agents-api]
+#   + multi-tenant: 
+#     `SKIP_CHECK_DEVELOPER_HEADERS=False` and requests must have a valid `X-Developer-Id` header
+#     [user]
+#       --{Authorization: Bearer $JWT}--> [gateway]
+#       --{X-Developer-Id: $developer-id, Authorization: Bearer $internal-api-key}--> [agents-api]
+
+# in single-tenant mode, developer id is assumed to be uuid '00000000-0000-0000-0000-000000000000'
+# and this is the default value of `X-Developer-Id` header in this case
+# the `developers` table in cozo-db will have a row with `id` = '00000000-0000-0000-0000-000000000000' and `name` = 'Default Developer'
+
+# in multi-tenant mode, developer id is the id of the developer in the `developers` table in cozo-db
+# and this id is expected in `X-Developer-Id` header
+# the developer should have a valid JWT token issued by the gateway
+# the JWT token is expected in `Authorization` header
+
+# if the developer id is not found in the `developers` table in cozo-db, the request will be rejected
+
+# in order for agents-api to work correctly in multi-tenant mode, the api assumes that:
+# - the `gateway` is configured to forward `X-Developer-Id` header to agents-api
+
+# and the gateway does that by expecting JWT token in `Authorization` header with the following claims:
+# - `sub` claim is the developer ID
+# - `email` claim is the developer email
+# - `exp` claim is the expiration timestamp
+# - `iat` claim is the issue timestamp

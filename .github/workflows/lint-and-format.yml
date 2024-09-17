@@ -1,6 +1,9 @@
 name: Lint and typecheck APIs and SDKs
 run-name: ${{ github.actor }} is linting and typechecking the code
 
+# TODO: Fix CI github actions
+# SCRUM-26
+
 on: [pull_request]
 
 jobs:
@@ -9,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        directory: [agents-api, model-serving, sdks/python]
+        directory: [agents-api, sdks/python]
 
     steps:
       - uses: actions/checkout@v4

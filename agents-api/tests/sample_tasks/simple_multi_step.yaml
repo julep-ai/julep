@@ -1,0 +1,23 @@
+name: Simple multi step task
+
+input_schema:
+  type: object
+  properties:
+    topics:
+      type: array
+      items:
+        type: string
+
+main:
+  - foreach:
+      in: _["topics"]
+      do:
+        prompt:
+          - role: system
+            content: |-
+              Generate a list of 10 questions for the topic {{_}} as valid yaml.
+
+  - log: _
+
+  - evaluate:
+      result: _["choices"][0]["message"].content.strip()

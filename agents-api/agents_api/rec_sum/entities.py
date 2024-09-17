@@ -1,33 +1,32 @@
 import json
-import pandas as pd
-
 from typing import Any
+
+import pandas as pd
 from tenacity import retry, stop_after_attempt
 
 from .data import entities_example_chat
 from .generate import generate
 from .utils import chatml, get_names_from_session
 
-
 ##############
 ## Entities ##
 ##############
 
-entities_example_plan = """\
+entities_example_plan: str = """\
 Thinking step by step:
 - To add context for future entries, let's outline the main entities in the session above.
 - In this session, as mentioned in the first message metadata, the user's name is Camille and the assistant's name is JaneBot.
 - They talk about Elon Musk and the banana tattoo on Camille's arm briefly."""
 
 
-entities_example_result = """\
+entities_example_result: str = """\
 1. Camille (The user): Humorous, creative, and enjoys playful banter.
 2. JaneBot (The assistant): Engages in lighthearted conversation and tries to guess user's thoughts.
 3. Elon Musk: Camille and JaneBot discuss the polarizing tech and space industry figure.
 4. Banana Tattoo: Camille has a tattoo of a banana on their arm."""
 
 
-entities_instructions = """\
+entities_instructions: str = """\
 Your goal is to identify the main entities in the session. Entities should include:
 - Characters in the conversation: Assistant, User1, User2
 - People references or spoken about
@@ -58,7 +57,7 @@ def make_entities_prompt(
 @retry(stop=stop_after_attempt(2))
 async def get_entities(
     chat_session,
-    model="gpt-4-turbo",
+    model="gpt-4o",
     stop=["</ct:entities"],
     temperature=0.7,
     **kwargs,

@@ -3,21 +3,15 @@
 # Turn on echo command
 set -x
 
-fern generate --local
+# Exit on error
+set -e
 
-sed 's/  \//  \/api\//' openapi.yaml > mock_openapi.yaml
-
-cd sdks/python && \
-    poetry update && \
-    poetry run poe format && \
-    cd -
+cd typespec/ && \
+    tsp compile .
+cd -
 
 cd agents-api && \
-    poetry update && \
+    # poetry update && \
     poetry run poe codegen && \
-    poetry run poe format && \
-    cd -
-
-cd sdks/ts && \
-    npm i && npm run codegen && \
-    cd -
+    poetry run poe format
+cd -
