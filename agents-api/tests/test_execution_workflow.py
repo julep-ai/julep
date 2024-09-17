@@ -497,14 +497,8 @@ async def _(
             activity for activity in activities_scheduled if activity
         ]
 
-        try:
-            future = handle.result()
-            breakpoint()
-            await future
-        except BaseException as exc:
-            print("exc", exc)
-            breakpoint()
-            raise
+        future = handle.result()
+        await future
 
         assert "wait_for_input_step" in activities_scheduled
 

@@ -73,6 +73,7 @@ def list_agents(
             created_at,
             updated_at,
             metadata,
+            default_settings,
             instructions,
         ] := input[developer_id],
             *agents {{
@@ -85,6 +86,27 @@ def list_agents(
                 updated_at,
                 metadata,
                 instructions,
+            }},
+            *agent_default_settings {{
+                agent_id: id,
+                frequency_penalty,
+                presence_penalty,
+                length_penalty,
+                repetition_penalty,
+                top_p,
+                temperature,
+                min_p,
+                preset,
+            }},
+            default_settings = {{
+                "frequency_penalty": frequency_penalty,
+                "presence_penalty": presence_penalty,
+                "length_penalty": length_penalty,
+                "repetition_penalty": repetition_penalty,
+                "top_p": top_p,
+                "temperature": temperature,
+                "min_p": min_p,
+                "preset": preset,
             }},
             {metadata_filter_str}
         
