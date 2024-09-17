@@ -24,7 +24,7 @@
 
 #### Defined in
 
-[src/managers/session.ts:17](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L17)
+[src/managers/session.ts:17](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L17)
 
 ___
 
@@ -34,7 +34,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:24](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L24)
+[src/managers/session.ts:24](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L24)
 
 ___
 
@@ -44,7 +44,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:19](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L19)
+[src/managers/session.ts:19](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L19)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:20](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L20)
+[src/managers/session.ts:20](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L20)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:18](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L18)
+[src/managers/session.ts:18](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L18)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:21](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L21)
+[src/managers/session.ts:21](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L21)
 
 ___
 
@@ -84,4 +84,4 @@ ___
 
 #### Defined in
 
-[src/managers/session.ts:16](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/managers/session.ts#L16)
+[src/managers/session.ts:16](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/managers/session.ts#L16)

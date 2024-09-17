@@ -36,7 +36,7 @@
 
 #### Defined in
 
-[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
+[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
 
 ## Properties
 
@@ -46,7 +46,7 @@
 
 #### Defined in
 
-[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
+[src/api/core/BaseHttpRequest.ts:10](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/api/core/BaseHttpRequest.ts#L10)
 
 ## Methods
 
@@ -72,4 +72,4 @@
 
 #### Defined in
 
-[src/api/core/BaseHttpRequest.ts:12](https://github.com/julep-ai/julep/blob/c703332acc3c978fec6732847b3d2cfd6d3b1330/sdks/ts/src/api/core/BaseHttpRequest.ts#L12)
+[src/api/core/BaseHttpRequest.ts:12](https://github.com/julep-ai/julep/blob/1aacc650d71dfc8cc6e2993599c2493784d992ef/sdks/ts/src/api/core/BaseHttpRequest.ts#L12)
