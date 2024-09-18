@@ -2,7 +2,7 @@ name: julep-llm-proxy
 
 services:
   litellm:
-    image: ghcr.io/berriai/litellm:main-stable
+    image: ghcr.io/berriai/litellm-database:main-v1.46.2
     volumes:
       - ./litellm-config.yaml:/app/config.yaml
       - .keys:/app/.keys
