@@ -16,7 +16,6 @@ __all__: List[str] = ["acompletion"]
 async def acompletion(
     *, model: str, messages: list[dict], custom_api_key: str = None, **kwargs
 ) -> ModelResponse | CustomStreamWrapper:
-    model = f"openai/{model}"  # This is here because litellm proxy expects this format
 
     supported_params = get_supported_openai_params(model)
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
