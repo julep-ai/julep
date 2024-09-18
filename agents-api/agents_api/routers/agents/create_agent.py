@@ -19,6 +19,7 @@ async def create_agent(
     x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
     data: CreateAgentRequest,
 ) -> ResourceCreatedResponse:
+    # TODO: Validate model name
     agent = models.agent.create_agent(
         developer_id=x_developer_id,
         data=data,

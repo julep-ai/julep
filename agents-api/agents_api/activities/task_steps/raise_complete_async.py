@@ -13,7 +13,7 @@ async def raise_complete_async(context: StepContext, output: StepOutcome) -> Non
     # TODO: Create a transtition to "wait" and save the captured_token to the transition
 
     captured_token = activity.info().task_token
-    captured_token = captured_token.decode('latin-1')
+    captured_token = captured_token.decode("latin-1")
     transition_info = CreateTransitionRequest(
         current=context.cursor,
         type="wait",

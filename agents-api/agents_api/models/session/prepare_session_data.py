@@ -127,6 +127,33 @@ def prepare_session_data(
             "instructions":      instructions,
         }
 
+    # Version where we don't have default settings
+    agent_data[collect(record)] :=
+        agents[agent_ids],
+        agent_id in agent_ids,
+        *agents{
+            agent_id,
+            model,
+            name,
+            about,
+            created_at,
+            updated_at,
+            metadata,
+            instructions,
+        },
+        not settings_data[agent_id, _],
+        record = {
+            "id":         agent_id,
+            "name":       name,
+            "model":      model,
+            "about":      about,
+            "created_at": created_at,
+            "updated_at": updated_at,
+            "metadata":   metadata,
+            "default_settings":  {},
+            "instructions":      instructions,
+        }
+
     user_data[collect(record)] :=
         users[user_ids],
         user_id in user_ids,
