@@ -26,6 +26,7 @@ T = TypeVar("T")
 
 @rewrap_exceptions(
     {
+        AssertionError: partialclass(HTTPException, status_code=400),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
         TypeError: partialclass(HTTPException, status_code=400),
