@@ -23,6 +23,10 @@ interface Endpoints {
         @doc("The session ID")
         id: uuid;
 
+        @header
+        @doc("Custom API key")
+        "X-Custom-Api-Key"?: string;
+
         @bodyRoot
         @doc("Request to generate a response from the model")
         body: ChatInput;
