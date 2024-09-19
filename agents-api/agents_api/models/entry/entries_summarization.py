@@ -99,14 +99,13 @@ def entries_summarization_query(
             content_to_json(new_entry.content),
             new_entry.token_count,
             new_entry.tokenizer,
-            new_entry.created_at.isoformat(),
             new_entry.timestamp,
         ]
     ]
 
     query = """
     {
-        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, created_at, timestamp] <- $entries
+        ?[entry_id, session_id, source, role, name, content, token_count, tokenizer, timestamp] <- $entries
 
         :insert entries {
             entry_id,
@@ -117,7 +116,6 @@ def entries_summarization_query(
             content,
             token_count,
             tokenizer,
-            created_at,
             timestamp,
         }
     }
