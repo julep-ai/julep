@@ -40,7 +40,7 @@ async def truncation(
         entry_ids=get_extra_entries(
             [
                 Entry(
-                    entry_id=row["entry_id"],
+                    id=row["entry_id"],
                     session_id=session_id,
                     source=row["source"],
                     role=row["role"],
@@ -49,6 +49,7 @@ async def truncation(
                     created_at=row["created_at"],
                     timestamp=row["timestamp"],
                     tokenizer=row["tokenizer"],
+                    token_count=row["token_count"],
                 )
                 for _, row in get_toplevel_entries_query(
                     session_id=session_id
