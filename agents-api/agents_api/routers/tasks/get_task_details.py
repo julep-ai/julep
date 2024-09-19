@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from pycozo.client import QueryException
-from pydantic import UUID4
+from uuid import UUID
 
 from ...autogen.openapi_model import (
     Task,
@@ -14,8 +14,8 @@ from .router import router
 
 @router.get("/tasks/{task_id}", tags=["tasks"])
 async def get_task_details(
-    task_id: UUID4,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    task_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> Task:
     not_found = HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"

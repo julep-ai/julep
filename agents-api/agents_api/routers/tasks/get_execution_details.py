@@ -1,4 +1,4 @@
-from pydantic import UUID4
+from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     Execution,
@@ -11,5 +11,5 @@ from .router import router
 
 
 @router.get("/executions/{execution_id}", tags=["executions"])
-async def get_execution_details(execution_id: UUID4) -> Execution:
+async def get_execution_details(execution_id: UUID) -> Execution:
     return get_execution_query(execution_id=execution_id)

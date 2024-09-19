@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter
-from pydantic import UUID4
+from uuid import UUID
 from temporalio.client import WorkflowExecutionStatus
 
 from agents_api.autogen.openapi_model import JobStatus
@@ -41,7 +41,7 @@ def map_job_status(
 
 
 @router.get("/jobs/{job_id}", tags=["jobs"])
-async def get_job_status(job_id: UUID4) -> JobStatus:
+async def get_job_status(job_id: UUID) -> JobStatus:
     client = await get_client()
     handle = client.get_workflow_handle(
         workflow_id=str(job_id),

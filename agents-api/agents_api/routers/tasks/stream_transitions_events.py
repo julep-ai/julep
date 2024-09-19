@@ -6,7 +6,7 @@ from typing import Annotated
 import anyio
 from anyio.streams.memory import MemoryObjectSendStream
 from fastapi import Depends, Query
-from pydantic import UUID4
+from uuid import UUID
 from sse_starlette.sse import EventSourceResponse
 from starlette.requests import Request
 from temporalio.api.enums.v1 import EventType
@@ -81,8 +81,8 @@ async def event_publisher(
 
 @router.get("/executions/{execution_id}/transitions.stream", tags=["executions"])
 async def stream_transitions_events(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    execution_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    execution_id: UUID,
     req: Request,
     next_page_token: Annotated[str | None, Query()] = None,
 ):

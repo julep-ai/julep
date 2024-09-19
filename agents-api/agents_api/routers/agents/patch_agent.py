@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_200_OK
 
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse
@@ -17,8 +17,8 @@ from .router import router
     tags=["agents"],
 )
 async def patch_agent(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    agent_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    agent_id: UUID,
     data: PatchAgentRequest,
 ) -> ResourceUpdatedResponse:
     return patch_agent_query(

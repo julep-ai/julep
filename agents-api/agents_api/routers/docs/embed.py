@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 import agents_api.clients.embed as embedder
 
@@ -15,7 +15,7 @@ from .router import router
 
 @router.post("/embed", tags=["docs"])
 async def embed(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     data: EmbedQueryRequest,
 ) -> EmbedQueryResponse:
     text_to_embed: str | list[str] = data.text

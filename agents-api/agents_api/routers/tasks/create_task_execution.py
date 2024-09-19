@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, Depends, HTTPException, status
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from pycozo.client import QueryException
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import WorkflowHandle
 
@@ -92,9 +92,9 @@ async def start_execution(
     tags=["executions"],
 )
 async def create_task_execution(
-    task_id: UUID4,
+    task_id: UUID,
     data: CreateExecutionRequest,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     try:

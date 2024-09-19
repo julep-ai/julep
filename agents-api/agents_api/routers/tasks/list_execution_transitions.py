@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import UUID4
+from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     ListResponse,
@@ -15,7 +15,7 @@ from .router import router
 
 @router.get("/executions/{execution_id}/transitions", tags=["executions"])
 async def list_execution_transitions(
-    execution_id: UUID4,
+    execution_id: UUID,
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
@@ -35,8 +35,8 @@ async def list_execution_transitions(
 # TODO: Do we need this?
 # @router.get("/executions/{execution_id}/transitions/{transition_id}", tags=["tasks"])
 # async def get_execution_transition(
-#     execution_id: UUID4,
-#     transition_id: UUID4,
+#     execution_id: UUID,
+#     transition_id: UUID,
 # ) -> Transition:
 #     try:
 #         res = [

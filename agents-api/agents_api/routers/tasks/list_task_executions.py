@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     Execution,
@@ -17,8 +17,8 @@ from .router import router
 
 @router.get("/tasks/{task_id}/executions", tags=["tasks"])
 async def list_task_executions(
-    task_id: UUID4,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    task_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",

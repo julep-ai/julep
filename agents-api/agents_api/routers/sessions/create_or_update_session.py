@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
@@ -18,7 +18,7 @@ from .router import router
 
 @router.post("/sessions/{session_id}", status_code=HTTP_201_CREATED, tags=["sessions"])
 async def create_or_update_session(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     session_id: UUID,
     data: CreateOrUpdateSessionRequest,
 ) -> ResourceUpdatedResponse:
