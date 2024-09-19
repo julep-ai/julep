@@ -14,7 +14,7 @@ __all__: List[str] = ["acompletion"]
 @wraps(_acompletion)
 @beartype
 async def acompletion(
-    *, model: str, messages: list[dict], custom_api_key: str = None, **kwargs
+    *, model: str, messages: list[dict], custom_api_key: None | str = None, **kwargs
 ) -> ModelResponse | CustomStreamWrapper:
 
     supported_params = get_supported_openai_params(model)
