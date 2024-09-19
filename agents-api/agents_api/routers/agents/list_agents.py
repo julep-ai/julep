@@ -1,9 +1,9 @@
 import json
 from json import JSONDecodeError
 from typing import Annotated, Literal
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-from uuid import UUID
 
 from ...autogen.openapi_model import Agent, ListResponse
 from ...dependencies.developer_id import get_developer_id

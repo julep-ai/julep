@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
+from uuid import UUID
 
 from fastapi import Depends
-from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     Execution,

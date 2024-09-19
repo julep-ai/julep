@@ -1,9 +1,9 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException
 from jsonschema import validate
 from jsonschema.exceptions import SchemaError, ValidationError
-from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
