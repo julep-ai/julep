@@ -199,7 +199,7 @@ ___
 | :------ | :------ | :------ |
 | `messages` | [`InputChatMLMessage`](api.md#inputchatmlmessage)[] | A list of new input messages comprising the conversation so far. |
 | `tool_choice?` | [`ToolChoiceOption`](api.md#toolchoiceoption) \| [`NamedToolChoice`](api.md#namedtoolchoice) \| ``null`` | Can be one of existing tools given to the agent earlier or the ones included in the request |
-| `tools?` | [`Tool`](api.md#tool)[] \| ``null`` | (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overriden |
+| `tools?` | [`Tool`](api.md#tool)[] \| ``null`` | (Advanced) List of tools that are provided in addition to agent's default set of tools. Functions of same name in agent set are overridden |
 
 #### Defined in
 
