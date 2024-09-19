@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from agents_api.autogen.Chat import ChatInput
 
 from ...autogen.openapi_model import DocReference, History
-from ...clients import embed
+from ...clients import vertexai as embed
 from ...common.protocol.developers import Developer
 from ...common.protocol.sessions import ChatContext
 from ..docs.search_docs_hybrid import search_docs_hybrid
@@ -61,7 +61,7 @@ async def gather_messages(
         return past_messages, []
 
     # Search matching docs
-    [query_embedding, *_] = await embed.embed(
+    query_embedding = await embed.embed(
         inputs=[
             f"{msg.get('name') or msg['role']}: {msg['content']}"
             for msg in new_raw_messages

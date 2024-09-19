@@ -1,9 +1,9 @@
 from typing import Annotated
-
-from fastapi import Depends
 from uuid import UUID
 
-import agents_api.clients.embed as embedder
+from fastapi import Depends
+
+import agents_api.clients.vertexai as embedder
 
 from ...autogen.openapi_model import (
     EmbedQueryRequest,

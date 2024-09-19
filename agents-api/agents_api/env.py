@@ -77,6 +77,9 @@ temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 
+# Google cloud
+google_project_id: str = env.str("GOOGLE_PROJECT_ID")
+vertex_location: str = env.str("VERTEX_LOCATION", default="us-central1")
 
 # Consolidate environment variables
 environment: Dict[str, Any] = dict(
@@ -97,6 +100,7 @@ environment: Dict[str, Any] = dict(
     temporal_namespace=temporal_namespace,
     embedding_model_id=embedding_model_id,
     testing=testing,
+    google_project_id=google_project_id,
 )
 
 if debug or testing:

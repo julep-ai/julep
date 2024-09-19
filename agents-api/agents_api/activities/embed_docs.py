@@ -2,7 +2,7 @@ from beartype import beartype
 from temporalio import activity
 
 from ..clients import cozo
-from ..clients import embed as embedder
+from ..clients import vertexai as embedder
 from ..env import testing
 from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 from .types import EmbedDocsPayload

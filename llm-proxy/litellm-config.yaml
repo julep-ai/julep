@@ -103,6 +103,12 @@ model_list:
     api_base: os.environ/EMBEDDING_SERVICE_BASE
     tags: ["free"]
 
+- model_name: text-embedding-004
+  litellm_params:
+    model: vertex_ai/text-embedding-004
+    vertex_project: os.environ/GOOGLE_PROJECT_ID
+    vertex_location: os.environ/VERTEX_LOCATION
+
 
 # -*= Free models =*-
 # -------------------

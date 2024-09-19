@@ -3,7 +3,8 @@
 from ward import test
 
 from agents_api.autogen.openapi_model import ChatInput, CreateSessionRequest
-from agents_api.clients import embed, litellm
+from agents_api.clients import litellm
+from agents_api.clients import vertexai as embed
 from agents_api.common.protocol.sessions import ChatContext
 from agents_api.models.chat.gather_messages import gather_messages
 from agents_api.models.chat.prepare_chat_context import prepare_chat_context
