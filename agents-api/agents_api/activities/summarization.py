@@ -64,13 +64,20 @@ async def summarization(session_id: str) -> None:
     }
 
     for idx, msg in enumerate(summarized):
+        content = trimmed_map.get(idx, msg["content"])
+        # TODO: set tokenizer
+        # TODO: calc token count
         new_entry = Entry(
+            id=uuid4(),
             session_id=session_id,
             source="summarizer",
             role="system",
             name="information",
-            content=trimmed_map.get(idx, msg["content"]),
+            content=content,
             timestamp=entries[-1]["timestamp"] + 0.01,
+            token_count=sum([len(c) // 3.5 for c in content]),
+            created_at=utcnow(),
+            tokenizer="",
         )
 
         entries_summarization_query(
