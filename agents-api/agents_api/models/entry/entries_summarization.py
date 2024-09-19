@@ -99,7 +99,7 @@ def entries_summarization_query(
             content_to_json(new_entry.content),
             new_entry.token_count,
             new_entry.tokenizer,
-            new_entry.created_at,
+            new_entry.created_at.isoformat(),
             new_entry.timestamp,
         ]
     ]
