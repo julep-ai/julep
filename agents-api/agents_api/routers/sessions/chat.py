@@ -86,7 +86,7 @@ async def chat(
         new_messages = await render_template(new_raw_messages, variables=env)
     else:
         new_messages = new_raw_messages
-    
+
     for m in past_messages:
         with suppress(KeyError):
             del m["created_at"]

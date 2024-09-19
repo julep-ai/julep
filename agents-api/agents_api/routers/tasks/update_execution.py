@@ -35,7 +35,6 @@ async def update_execution(
             await wf_handle.cancel()
 
         case ResumeExecutionRequest():
-
             token_data = get_paused_execution_token(
                 developer_id=x_developer_id, execution_id=execution_id
             )

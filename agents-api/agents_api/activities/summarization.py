@@ -2,12 +2,13 @@
 
 
 import asyncio
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from beartype import beartype
 from temporalio import activity
 
 from agents_api.autogen.openapi_model import Entry
+from agents_api.common.utils.datetime import utcnow
 from agents_api.env import summarization_model_name
 from agents_api.models.entry.entries_summarization import (
     entries_summarization_query,
@@ -38,13 +39,18 @@ async def summarization(session_id: str) -> None:
     )
     trimmed_messages = await trim_messages(summarized, model=summarization_model_name)
     ts_delta = (entries[1]["timestamp"] - entries[0]["timestamp"]) / 2
+    # TODO: set tokenizer, double check token_count calculation
     new_entities_entry = Entry(
+        id=uuid4(),
         session_id=session_id,
         source="summarizer",
         role="system",
         name="entities",
         content=entities["content"],
         timestamp=entries[0]["timestamp"] + ts_delta,
+        token_count=sum([len(c) // 3.5 for c in entities["content"]]),
+        created_at=utcnow(),
+        tokenizer="",
     )
 
     entries_summarization_query(
