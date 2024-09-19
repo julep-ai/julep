@@ -6,9 +6,9 @@ services:
       temporal-db:
         condition: service_started
     environment:
-      - DB=postgres12
-      - DB_PORT=5432
-      - DB_HOST=temporal-db
+      - DB=${TEMPORAL_POSTGRES_DB:-postgres12}
+      - DB_PORT=${TEMPORAL_POSTGRES_PORT:-5432}
+      - DB_HOST=${TEMPORAL_POSTGRES_HOST:-temporal-db}
       - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
       - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
       - POSTGRES_SEEDS=temporal-db
