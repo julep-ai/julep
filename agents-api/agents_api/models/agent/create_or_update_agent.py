@@ -80,6 +80,29 @@ def create_or_update_agent(
         }
     )
 
+    # TODO: remove this
+    ### # Create default agent settings
+    ### # Construct a query to insert default settings for the new agent
+    ### default_settings_query = f"""
+    ### %if {{
+    ###     len[count(agent_id)] :=
+    ###         *agent_default_settings{{agent_id}},
+    ###         agent_id = to_uuid($agent_id)
+
+    ###     ?[should_create] := len[count], count > 0
+    ### }}
+    ### %then {{
+    ###     ?[{settings_cols}] <- $settings_vals
+
+    ###     :put agent_default_settings {{
+    ###         {settings_cols}
+    ###     }}
+    ### }}
+    ### """
+
+    # FIXME: This create or update query will overwrite the settings
+    #        Need to find a way to only run the insert query if the agent_default_settings
+
     # Create default agent settings
     # Construct a query to insert default settings for the new agent
     default_settings_query = f"""
@@ -89,6 +112,7 @@ def create_or_update_agent(
             {settings_cols}
         }}
     """
+
     # create the agent
     # Construct a query to insert the new agent record into the agents table
     agent_query = """
@@ -127,7 +151,7 @@ def create_or_update_agent(
 
     queries = [
         verify_developer_id_query(developer_id),
-        default_settings_query if default_settings else None,
+        default_settings_query,
         agent_query,
     ]
 

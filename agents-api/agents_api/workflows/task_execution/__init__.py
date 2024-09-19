@@ -416,10 +416,10 @@ class TaskExecutionWorkflow:
                         task_steps.prompt_step,
                         context,
                         schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else 600),
+                            seconds=30 if debug or testing else 600
+                        ),
                     )
-                    state = PartialTransition(
-                        output=new_response.output, type="resume")
+                    state = PartialTransition(output=new_response.output, type="resume")
 
             # case PromptStep(), StepOutcome(
             #     output=response

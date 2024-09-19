@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
-from pydantic import UUID4
+from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     ResumeExecutionRequest,
@@ -21,8 +21,8 @@ from .router import router
 
 @router.put("/executions/{execution_id}", tags=["executions"])
 async def update_execution(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    execution_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    execution_id: UUID,
     data: ResumeExecutionRequest | StopExecutionRequest,
 ):
     temporal_client = await get_client()

@@ -3,7 +3,7 @@ from json import JSONDecodeError
 from typing import Annotated, Literal
 
 from fastapi import Depends, HTTPException, status
-from pydantic import UUID4
+from uuid import UUID
 
 from ...autogen.openapi_model import Agent, ListResponse
 from ...dependencies.developer_id import get_developer_id
@@ -13,7 +13,7 @@ from .router import router
 
 @router.get("/agents", tags=["agents"])
 async def list_agents(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException
 from jsonschema import validate
 from jsonschema.exceptions import SchemaError, ValidationError
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 
 from agents_api.autogen.openapi_model import (
@@ -23,9 +23,9 @@ from .router import router
 )
 async def create_or_update_task(
     data: CreateOrUpdateTaskRequest,
-    agent_id: UUID4,
-    task_id: UUID4,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    agent_id: UUID,
+    task_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceUpdatedResponse:
     # TODO: Do thorough validation of the task spec
     # SCRUM-10

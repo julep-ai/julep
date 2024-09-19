@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 from ...autogen.openapi_model import User
 from ...dependencies.developer_id import get_developer_id
@@ -11,7 +11,7 @@ from .router import router
 
 @router.get("/users/{user_id}", tags=["users"])
 async def get_user_details(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    user_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    user_id: UUID,
 ) -> User:
     return get_user_query(developer_id=x_developer_id, user_id=user_id)

@@ -1,7 +1,7 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from uuid import UUID, uuid4
 
-from fastapi import BackgroundTasks, Depends
+from fastapi import BackgroundTasks, Depends, Header
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import (
@@ -33,6 +33,7 @@ async def chat(
     session_id: UUID,
     chat_input: ChatInput,
     background_tasks: BackgroundTasks,
+    x_custom_api_key: Optional[str] = Header(None, alias="X-Custom-Api-Key"),
 ) -> ChatResponse:
     if chat_input.stream:
         raise NotImplementedError("Streaming is not yet implemented")
@@ -58,7 +59,13 @@ async def chat(
 
     # Prepare the environment
     env: dict = chat_context.get_chat_environment()
-    env["docs"] = doc_references
+    env["docs"] = [
+        dict(
+            title=ref.title,
+            content=[snippet.content for snippet in ref.snippets],
+        )
+        for ref in doc_references
+    ]
 
     # Render the system message
     if situation := chat_context.session.situation:
@@ -107,6 +114,7 @@ async def chat(
         tools=tools or None,
         user=str(developer.id),  # For tracking usage
         tags=developer.tags,  # For filtering models in litellm
+        custom_api_key=x_custom_api_key,
         **settings,
     )
 
@@ -120,6 +128,7 @@ async def chat(
         ]
 
         # Add the response to the new entries
+        # FIXME: We need to save all the choices
         new_entries.append(
             CreateEntryRequest.from_model_input(
                 model=settings["model"],

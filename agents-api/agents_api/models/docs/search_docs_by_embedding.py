@@ -194,11 +194,11 @@ def search_docs_by_embedding(
     """
 
     collect_query = """
-        m[
+        n[
             doc_id,
             owner_type,
             owner_id,
-            collect(snippet),
+            unique(snippet_data),
             distance,
             title,
         ] := 
@@ -209,10 +209,29 @@ def search_docs_by_embedding(
                 snippet_data,
                 distance,
                 title,
-            }, snippet = {
-                "index": snippet_data->0,
-                "content": snippet_data->1,
             }
+
+        m[
+            doc_id,
+            owner_type,
+            owner_id,
+            collect(snippet),
+            distance,
+            title,
+        ] := 
+            n[
+                doc_id,
+                owner_type,
+                owner_id,
+                snippet_data,
+                distance,
+                title,
+            ],
+            snippet = {
+                "index": snippet_datum->0,
+                "content": snippet_datum->1
+            },
+            snippet_datum in snippet_data
 
         ?[
             id,

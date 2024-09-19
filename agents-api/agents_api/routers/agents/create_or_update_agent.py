@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 
 import agents_api.models as models
@@ -19,8 +19,9 @@ from .router import router
 async def create_or_update_agent(
     agent_id: UUID,
     data: CreateOrUpdateAgentRequest,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceCreatedResponse:
+    # TODO: Validate model name
     agent = models.agent.create_or_update_agent(
         developer_id=x_developer_id,
         agent_id=agent_id,

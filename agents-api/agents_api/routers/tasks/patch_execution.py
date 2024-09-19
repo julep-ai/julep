@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     ResourceUpdatedResponse,
@@ -17,9 +17,9 @@ from .router import router
 
 @router.patch("/tasks/{task_id}/executions/{execution_id}", tags=["tasks"])
 async def patch_execution(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    task_id: UUID4,
-    execution_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    task_id: UUID,
+    execution_id: UUID,
     data: UpdateExecutionRequest,
 ) -> ResourceUpdatedResponse:
     return update_execution_query(

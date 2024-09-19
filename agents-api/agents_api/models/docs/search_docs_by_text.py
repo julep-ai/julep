@@ -1,5 +1,6 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
+import json
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
@@ -60,6 +61,10 @@ def search_docs_by_text(
     owners: list[list[str]] = [
         [owner_type, str(owner_id)] for owner_type, owner_id in owners
     ]
+
+    # Need to use NEAR/3($query) to search for arbitrary text within 3 words of each other
+    # See: https://docs.cozodb.org/en/latest/vector.html#full-text-search-fts
+    query = f"NEAR/3({json.dumps(query)})"
 
     # Construct the datalog query for searching document snippets
     search_query = f"""
