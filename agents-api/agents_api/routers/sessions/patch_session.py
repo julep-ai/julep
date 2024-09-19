@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 from ...autogen.openapi_model import (
     PatchSessionRequest,
@@ -14,8 +14,8 @@ from .router import router
 
 @router.patch("/sessions/{session_id}", tags=["sessions"])
 async def patch_session(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    session_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    session_id: UUID,
     data: PatchSessionRequest,
 ) -> ResourceUpdatedResponse:
     return patch_session_query(

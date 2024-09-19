@@ -59,7 +59,13 @@ async def chat(
 
     # Prepare the environment
     env: dict = chat_context.get_chat_environment()
-    env["docs"] = doc_references
+    env["docs"] = [
+        dict(
+            title=ref.title,
+            content=[snippet.content for snippet in ref.snippets],
+        )
+        for ref in doc_references
+    ]
 
     # Render the system message
     if situation := chat_context.session.situation:
@@ -122,6 +128,7 @@ async def chat(
         ]
 
         # Add the response to the new entries
+        # FIXME: We need to save all the choices
         new_entries.append(
             CreateEntryRequest.from_model_input(
                 model=settings["model"],

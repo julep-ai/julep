@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 
 from ...autogen.openapi_model import CreateOrUpdateUserRequest, ResourceCreatedResponse
@@ -14,8 +14,8 @@ from .router import router
 
 @router.post("/users/{user_id}", status_code=HTTP_201_CREATED, tags=["users"])
 async def create_or_update_user(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
-    user_id: UUID4,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
+    user_id: UUID,
     data: CreateOrUpdateUserRequest,
 ) -> ResourceCreatedResponse:
     user = create_or_update_user_query(

@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_202_ACCEPTED
 
 from ...autogen.openapi_model import ResourceDeletedResponse
@@ -14,9 +14,9 @@ from .router import router
     "/agents/{agent_id}/docs/{doc_id}", status_code=HTTP_202_ACCEPTED, tags=["docs"]
 )
 async def delete_agent_doc(
-    doc_id: UUID4,
-    agent_id: UUID4,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    doc_id: UUID,
+    agent_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
     return delete_doc_query(
         developer_id=x_developer_id,
@@ -30,9 +30,9 @@ async def delete_agent_doc(
     "/users/{user_id}/docs/{doc_id}", status_code=HTTP_202_ACCEPTED, tags=["docs"]
 )
 async def delete_user_doc(
-    doc_id: UUID4,
-    user_id: UUID4,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    doc_id: UUID,
+    user_id: UUID,
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
 ) -> ResourceDeletedResponse:
     return delete_doc_query(
         developer_id=x_developer_id,

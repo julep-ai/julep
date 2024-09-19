@@ -2,7 +2,7 @@ import time
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 from ...autogen.openapi_model import (
     DocSearchResponse,
@@ -63,11 +63,11 @@ def get_search_fn_and_params(
 
 @router.post("/users/{user_id}/search", tags=["docs"])
 async def search_user_docs(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     search_params: (
         TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest
     ),
-    user_id: UUID4,
+    user_id: UUID,
 ) -> DocSearchResponse:
     search_fn, params = get_search_fn_and_params(search_params)
 
@@ -90,11 +90,11 @@ async def search_user_docs(
 
 @router.post("/agents/{agent_id}/search", tags=["docs"])
 async def search_agent_docs(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     search_params: (
         TextOnlyDocSearchRequest | VectorDocSearchRequest | HybridDocSearchRequest
     ),
-    agent_id: UUID4,
+    agent_id: UUID,
 ) -> DocSearchResponse:
     search_fn, params = get_search_fn_and_params(search_params)
 

@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks, Depends
-from pydantic import UUID4
+from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import Client as TemporalClient
 
@@ -54,9 +54,9 @@ async def run_embed_docs_task(
 
 @router.post("/users/{user_id}/docs", status_code=HTTP_201_CREATED, tags=["docs"])
 async def create_user_doc(
-    user_id: UUID4,
+    user_id: UUID,
     data: CreateDocRequest,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     doc = create_doc_query(
@@ -84,9 +84,9 @@ async def create_user_doc(
 
 @router.post("/agents/{agent_id}/docs", status_code=HTTP_201_CREATED, tags=["docs"])
 async def create_agent_doc(
-    agent_id: UUID4,
+    agent_id: UUID,
     data: CreateDocRequest,
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
     doc = create_doc_query(

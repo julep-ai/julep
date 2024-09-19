@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import Depends
-from pydantic import UUID4
+from uuid import UUID
 
 from ...autogen.openapi_model import ListResponse, Tool
 from ...dependencies.developer_id import get_developer_id
@@ -12,7 +12,7 @@ from .router import router
 
 @router.get("/agents/{agent_id}/tools", tags=["agents"])
 async def list_agent_tools(
-    x_developer_id: Annotated[UUID4, Depends(get_developer_id)],
+    x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     agent_id: UUID,
     limit: int = 100,
     offset: int = 0,
