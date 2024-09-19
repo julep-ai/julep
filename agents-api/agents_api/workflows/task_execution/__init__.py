@@ -81,7 +81,7 @@ with workflow.unsafe.imports_passed_through():
 # Mapping of step types to their corresponding activities
 STEP_TO_ACTIVITY = {
     PromptStep: task_steps.prompt_step,
-    # ToolCallStep: tool_call_step,
+    ToolCallStep: task_steps.tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
     SwitchStep: task_steps.switch_step,
     LogStep: task_steps.log_step,
@@ -213,6 +213,13 @@ class TaskExecutionWorkflow:
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
 
+        print("ACTIVITY")
+        print(activity)
+        print("-"*80)
+        print("OUTCOME")
+        print(outcome)
+        print("-"*80)
+        
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
@@ -466,11 +473,32 @@ class TaskExecutionWorkflow:
                 workflow.logger.error("ParallelStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
-            case ToolCallStep(), _:
+            case ToolCallStep(), StepOutcome(output=tool_call):
                 # FIXME: Implement ToolCallStep
                 # SCRUM-16
-                workflow.logger.error("ToolCallStep not yet implemented")
-                raise ApplicationError("Not implemented")
+                print("InsideToolCallStep")
+                print("-"*80)
+                print("context")
+                print(context)
+                # Enter a wait-for-input step to ask the developer to run the tool calls
+                tool_call_response = await workflow.execute_activity(
+                    task_steps.raise_complete_async,
+                    args=[context, tool_call],
+                    schedule_to_close_timeout=timedelta(days=31),
+                )
+
+                print("tool_call_response")
+                print(tool_call_response)
+
+                tool_call_result = tool_call_response.get('content', None)
+                
+                print("-"*80)
+                print("tool_call_result")
+                print(tool_call_result)
+
+                state = PartialTransition(
+                    output=tool_call_response, type="resume")
+                
 
             case _:
                 workflow.logger.error(
