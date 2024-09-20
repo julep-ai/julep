@@ -7,10 +7,13 @@ It supports various workflows and activities related to agents' operations.
 
 import asyncio
 
+from tenacity import retry, retry_if_exception_type, wait_fixed
+
 from ..clients import temporal
 from .worker import create_worker
 
 
+@retry(wait=wait_fixed(20), retry=retry_if_exception_type(RuntimeError))
 async def main():
     """
     Initializes the Temporal client and worker with TLS configuration (if provided),
