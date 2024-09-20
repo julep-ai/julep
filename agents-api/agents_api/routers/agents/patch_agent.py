@@ -1,7 +1,7 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends
-from uuid import UUID
 from starlette.status import HTTP_200_OK
 
 from ...autogen.openapi_model import PatchAgentRequest, ResourceUpdatedResponse

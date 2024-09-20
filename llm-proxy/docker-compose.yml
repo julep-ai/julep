@@ -3,11 +3,10 @@ name: julep-llm-proxy
 services:
   litellm:
     image: ghcr.io/berriai/litellm-database:main-v1.46.6
+    restart: unless-stopped
     volumes:
       - ./litellm-config.yaml:/app/config.yaml
-      - .keys:/app/.keys
-    ports:
-      - "4000:4000"
+      - .keys:/app/.keys:ro
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
       - LITELLM_POSTGRES_DB=${LITELLM_POSTGRES_DB:-litellm}
@@ -41,9 +40,15 @@ services:
       - litellm-db
       - litellm-redis
 
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./litellm-config.yaml
+          target: /app/config.yaml
+
   litellm-db:
     image: postgres:16
-    restart: always
+    restart: unless-stopped
     volumes:
       - litellm-db-data:/var/lib/postgresql/data
     ports:
@@ -61,13 +66,11 @@ services:
 
   litellm-redis:
     image: redis/redis-stack-server
-    restart: always
+    restart: unless-stopped
     environment:
       REDIS_ARGS: --requirepass ${LITELLM_REDIS_PASSWORD}
     volumes:
       - litellm-redis-data:/data
-    ports:
-      - "16379:6379"
 
 volumes:
   litellm-db-data:

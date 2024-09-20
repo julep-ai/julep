@@ -1,8 +1,8 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from pycozo.client import QueryException
-from uuid import UUID
 
 from ...autogen.openapi_model import (
     Task,
