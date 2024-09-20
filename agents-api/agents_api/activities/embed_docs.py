@@ -1,8 +1,7 @@
 from beartype import beartype
 from temporalio import activity
 
-from ..clients import cozo
-from ..clients import vertexai as embedder
+from ..clients import cozo, litellm
 from ..env import testing
 from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 from .types import EmbedDocsPayload
@@ -14,8 +13,8 @@ async def embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
     embed_instruction: str = payload.embed_instruction or ""
     title: str = payload.title or ""
 
-    embeddings = await embedder.embed(
-        [
+    embeddings = await litellm.aembedding(
+        inputs=[
             (
                 embed_instruction + (title + "\n\n" + snippet) if title else snippet
             ).strip()

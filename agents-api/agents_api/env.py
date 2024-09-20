@@ -25,6 +25,7 @@ api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 # -----
 task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
 
+
 # Debug
 # -----
 debug: bool = env.bool("AGENTS_API_DEBUG", default=False)
@@ -51,6 +52,7 @@ if api_key == _random_generated_key:
 
 api_key_header_name: str = env.str("AGENTS_API_KEY_HEADER_NAME", default="X-Auth-Key")
 
+
 # Litellm API
 # -----------
 litellm_url: str = env.str("LITELLM_URL", default="http://0.0.0.0:4000")
@@ -59,13 +61,11 @@ litellm_master_key: str = env.str("LITELLM_MASTER_KEY", default="")
 
 # Embedding service
 # -----------------
-embedding_service_base: str = env.str(
-    "EMBEDDING_SERVICE_BASE", default="http://0.0.0.0:8082"
-)
 embedding_model_id: str = env.str(
     "EMBEDDING_MODEL_ID", default="Alibaba-NLP/gte-large-en-v1.5"
 )
-truncate_embed_text: bool = env.bool("TRUNCATE_EMBED_TEXT", default=True)
+
+embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 
 
 # Temporal
@@ -77,9 +77,6 @@ temporal_private_key: str = env.str("TEMPORAL_PRIVATE_KEY", default=None)
 temporal_endpoint: Any = env.str("TEMPORAL_ENDPOINT", default="localhost:7233")
 temporal_task_queue: Any = env.str("TEMPORAL_TASK_QUEUE", default="julep-task-queue")
 
-# Google cloud
-google_project_id: str = env.str("GOOGLE_PROJECT_ID")
-vertex_location: str = env.str("VERTEX_LOCATION", default="us-central1")
 
 # Consolidate environment variables
 environment: Dict[str, Any] = dict(
@@ -94,13 +91,10 @@ environment: Dict[str, Any] = dict(
     api_key_header_name=api_key_header_name,
     hostname=hostname,
     api_prefix=api_prefix,
-    embedding_service_base=embedding_service_base,
-    truncate_embed_text=truncate_embed_text,
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
     embedding_model_id=embedding_model_id,
     testing=testing,
-    google_project_id=google_project_id,
 )
 
 if debug or testing:

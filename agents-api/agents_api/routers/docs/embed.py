@@ -3,12 +3,11 @@ from uuid import UUID
 
 from fastapi import Depends
 
-import agents_api.clients.vertexai as embedder
-
 from ...autogen.openapi_model import (
     EmbedQueryRequest,
     EmbedQueryResponse,
 )
+from ...clients import litellm
 from ...dependencies.developer_id import get_developer_id
 from .router import router
 
@@ -23,6 +22,6 @@ async def embed(
         [text_to_embed] if isinstance(text_to_embed, str) else text_to_embed
     )
 
-    vectors = await embedder.embed(inputs=text_to_embed)
+    vectors = await litellm.aembedding(inputs=text_to_embed)
 
     return EmbedQueryResponse(vectors=vectors)

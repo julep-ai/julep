@@ -14,8 +14,6 @@ services:
       - POSTGRES_SEEDS=temporal-db
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
     image: temporalio/auto-setup:1.24
-    ports:
-      - 7233:7233
     volumes:
       - ./dynamicconfig:/etc/temporal/config/dynamicconfig
 
@@ -35,8 +33,6 @@ services:
       - POSTGRES_DB=${TEMPORAL_POSTGRES_DB:-temporal}
       - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
       - POSTGRES_PASSWORD=${TEMPORAL_POSTGRES_PASSWORD}
-    ports:
-      - 25432:5432
     volumes:
       - temporal-db-data:/var/lib/postgresql/data
     healthcheck:

@@ -4,6 +4,7 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
+    restart: unless-stopped
     ports:
       - "9000:8000"
       - "9443:9443"
@@ -16,8 +17,6 @@ services:
     container_name: prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-    ports:
-      - 9090:9090
     restart: unless-stopped
     volumes:
       - ./prometheus:/etc/prometheus
