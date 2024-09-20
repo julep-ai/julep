@@ -62,10 +62,12 @@ async def gather_messages(
 
     # Search matching docs
     [query_embedding, *_] = await litellm.aembedding(
-        inputs="\n\n".join([
-            f"{msg.get('name') or msg['role']}: {msg['content']}"
-            for msg in new_raw_messages
-        ]),
+        inputs="\n\n".join(
+            [
+                f"{msg.get('name') or msg['role']}: {msg['content']}"
+                for msg in new_raw_messages
+            ]
+        ),
     )
     query_text = new_raw_messages[-1]["content"]
 

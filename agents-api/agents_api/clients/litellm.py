@@ -1,16 +1,25 @@
 from functools import wraps
 from typing import List, Literal
 
+import litellm
 from beartype import beartype
 from litellm import (
     acompletion as _acompletion,
+)
+from litellm import (
     aembedding as _aembedding,
+)
+from litellm import (
     get_supported_openai_params,
 )
-import litellm
 from litellm.utils import CustomStreamWrapper, ModelResponse
 
-from ..env import embedding_model_id, embedding_dimensions, litellm_master_key, litellm_url
+from ..env import (
+    embedding_dimensions,
+    embedding_model_id,
+    litellm_master_key,
+    litellm_url,
+)
 
 __all__: List[str] = ["acompletion"]
 
@@ -24,7 +33,7 @@ async def acompletion(
     *, model: str, messages: list[dict], custom_api_key: None | str = None, **kwargs
 ) -> ModelResponse | CustomStreamWrapper:
     if not custom_api_key:
-        model = f"openai/{model}"  # FIXME: This is for litellm 
+        model = f"openai/{model}"  # FIXME: This is for litellm
 
     supported_params = get_supported_openai_params(model)
     settings = {k: v for k, v in kwargs.items() if k in supported_params}
@@ -42,7 +51,7 @@ async def acompletion(
 @beartype
 async def aembedding(
     *,
-    inputs: str |list[str],
+    inputs: str | list[str],
     model: str = embedding_model_id,
     dimensions: int = embedding_dimensions,
     join_inputs: bool = False,
@@ -50,7 +59,7 @@ async def aembedding(
     **settings,
 ) -> list[list[float]]:
     if not custom_api_key:
-        model = f"openai/{model}"  # FIXME: This is for litellm 
+        model = f"openai/{model}"  # FIXME: This is for litellm
 
     if isinstance(inputs, str):
         input = [inputs]
