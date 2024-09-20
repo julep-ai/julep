@@ -12,7 +12,6 @@ x--shared-environment: &shared-environment
   COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
   DEBUG: ${AGENTS_API_DEBUG:-False}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
-  EMBEDDING_SERVICE_BASE: ${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
   SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}

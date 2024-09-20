@@ -2,7 +2,8 @@ name: julep-embedding-service
 
 # Base for embedding service
 x--text-embeddings-inference: &text-embeddings-inference
-  container_name: text-embeddings-inference-cpu
+  hostname: text-embeddings-inference
+  container_name: text-embeddings-inference
   environment:
     - MODEL_ID=${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
 
@@ -20,7 +21,6 @@ x--shared-environment: &shared-environment
   COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
   DEBUG: ${AGENTS_API_DEBUG:-False}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
-  EMBEDDING_SERVICE_BASE: ${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
   SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
@@ -37,16 +37,16 @@ x--shared-environment: &shared-environment
 services:
   text-embeddings-inference-cpu:
     <<: *text-embeddings-inference
+    container_name: text-embeddings-inference-cpu
     profiles:
-      - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
-      - cpu
+      - embedding-cpu
     platform: linux/amd64 # Temp fix for Mac M-series chips
 
   text-embeddings-inference-gpu:
     <<: *text-embeddings-inference
     container_name: text-embeddings-inference-gpu
     profiles:
-      - gpu
+      - embedding-gpu
     image: ghcr.io/huggingface/text-embeddings-inference:1.5
     environment:
       - DTYPE=float16

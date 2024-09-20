@@ -25,7 +25,6 @@ services:
       - GITHUB_API_KEY=${GITHUB_API_KEY}
       - VOYAGE_API_KEY=${VOYAGE_API_KEY}
       - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
-      - EMBEDDING_SERVICE_BASE=${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference-gpu}
     command:
       [
         "--config",
