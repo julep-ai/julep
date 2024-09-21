@@ -2,11 +2,11 @@ import logging
 from base64 import b64decode, b64encode
 from functools import partial
 from typing import Annotated
+from uuid import UUID
 
 import anyio
 from anyio.streams.memory import MemoryObjectSendStream
 from fastapi import Depends, Query
-from uuid import UUID
 from sse_starlette.sse import EventSourceResponse
 from starlette.requests import Request
 from temporalio.api.enums.v1 import EventType

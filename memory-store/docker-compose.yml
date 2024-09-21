@@ -24,6 +24,7 @@ services:
 
   memory-store-backup-cron:
     image: mcuadros/ofelia:latest
+    restart: unless-stopped
     depends_on:
       - memory-store
     command: daemon --docker -f label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}

@@ -85,23 +85,29 @@ model_list:
     api_key: os.environ/VOYAGE_API_KEY
     tags: ["paid"]
 
-- model_name: voyage-large-2
+- model_name: voyage-3
   litellm_params:
     model: "voyage/voyage-large-2"
     api_key: os.environ/VOYAGE_API_KEY
     tags: ["paid"]
 
-- model_name: gte-large-en-v1.5
+- model_name: Alibaba-NLP/gte-large-en-v1.5
   litellm_params:
     model: openai/Alibaba-NLP/gte-large-en-v1.5
-    api_base: os.environ/EMBEDDING_SERVICE_BASE
+    api_base: http://text-embeddings-inference
     tags: ["free"]
 
-- model_name: bge-m3
+- model_name: BAAI/bge-m3
   litellm_params:
     model: openai/BAAI/bge-m3
-    api_base: os.environ/EMBEDDING_SERVICE_BASE
+    api_base: http://text-embeddings-inference
     tags: ["free"]
+
+- model_name: vertex_ai/text-embedding-004
+  litellm_params:
+    model: vertex_ai/text-embedding-004
+    # vertex_project: os.environ/GOOGLE_PROJECT_ID
+    # vertex_location: os.environ/VERTEX_LOCATION
 
 
 # -*= Free models =*-

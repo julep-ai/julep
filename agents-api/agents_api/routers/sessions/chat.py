@@ -47,7 +47,6 @@ async def chat(
     # Merge the settings and prepare environment
     chat_context.merge_settings(chat_input)
     settings: dict = chat_context.settings.model_dump()
-    settings["model"] = f"openai/{settings['model']}"  # litellm proxy idiosyncracy
 
     # Get the past messages and doc references
     past_messages, doc_references = await gather_messages(
