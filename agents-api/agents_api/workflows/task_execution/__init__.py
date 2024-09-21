@@ -530,7 +530,7 @@ class TaskExecutionWorkflow:
 
         # Continue as a child workflow
         return await continue_as_child(
-            context,
+            context.execution_input,
             start=final_state.next,
             previous_inputs=previous_inputs + [final_state.output],
             user_state=self.user_state,
