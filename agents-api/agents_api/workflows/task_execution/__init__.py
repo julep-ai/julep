@@ -212,13 +212,6 @@ class TaskExecutionWorkflow:
 
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
-
-        print("ACTIVITY")
-        print(activity)
-        print("-"*80)
-        print("OUTCOME")
-        print(outcome)
-        print("-"*80)
         
         match context.current_step, outcome:
             # Handle errors (activity returns None)
@@ -398,8 +391,7 @@ class TaskExecutionWorkflow:
 
             case PromptStep(), StepOutcome(
                 output=response
-            ):  # FIXME: if not response.choices[0].tool_calls:
-                # SCRUM-15
+            ):  
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
                 if response["choices"][0]["finish_reason"] != "tool_calls":
                     workflow.logger.debug("Prompt step: Received response")
@@ -428,18 +420,6 @@ class TaskExecutionWorkflow:
                     )
                     state = PartialTransition(output=new_response.output, type="resume")
 
-            # case PromptStep(), StepOutcome(
-            #     output=response
-            # ):  # FIXME: if response.choices[0].tool_calls:
-            #     # SCRUM-15
-            #     workflow.logger.debug("Prompt step: Received response")
-            #
-            #     ## First, enter a wait-for-input step and ask developer to run the tool calls
-            #     ## Then, continue the workflow with the input received from the developer
-            #     ## This will be a dict with the tool call name as key and the tool call arguments as value
-            #     ## The prompt is run again with the tool call arguments as input
-            #     ## And the result is returned
-            #     ## If model asks for more tool calls, repeat the process
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -474,12 +454,6 @@ class TaskExecutionWorkflow:
                 raise ApplicationError("Not implemented")
 
             case ToolCallStep(), StepOutcome(output=tool_call):
-                # FIXME: Implement ToolCallStep
-                # SCRUM-16
-                print("InsideToolCallStep")
-                print("-"*80)
-                print("context")
-                print(context)
                 # Enter a wait-for-input step to ask the developer to run the tool calls
                 tool_call_response = await workflow.execute_activity(
                     task_steps.raise_complete_async,
@@ -487,18 +461,8 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(days=31),
                 )
 
-                print("tool_call_response")
-                print(tool_call_response)
-
-                tool_call_result = tool_call_response.get('content', None)
-                
-                print("-"*80)
-                print("tool_call_result")
-                print(tool_call_result)
-
                 state = PartialTransition(
                     output=tool_call_response, type="resume")
-                
 
             case _:
                 workflow.logger.error(
