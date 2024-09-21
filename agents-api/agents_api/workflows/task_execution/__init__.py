@@ -212,7 +212,7 @@ class TaskExecutionWorkflow:
 
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
-        
+
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
@@ -389,9 +389,7 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(), StepOutcome(
-                output=response
-            ):  
+            case PromptStep(), StepOutcome(output=response):
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
                 if response["choices"][0]["finish_reason"] != "tool_calls":
                     workflow.logger.debug("Prompt step: Received response")
@@ -419,7 +417,6 @@ class TaskExecutionWorkflow:
                         ),
                     )
                     state = PartialTransition(output=new_response.output, type="resume")
-
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -461,8 +458,7 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(days=31),
                 )
 
-                state = PartialTransition(
-                    output=tool_call_response, type="resume")
+                state = PartialTransition(output=tool_call_response, type="resume")
 
             case _:
                 workflow.logger.error(
