@@ -1,50 +1,59 @@
 name: julep-llm-proxy
 
+x--litellm-base: &litellm-base
+  image: ghcr.io/berriai/litellm-database:main-v1.46.6
+  restart: unless-stopped
+  hostname: litellm
+  volumes:
+    - ./litellm-config.yaml:/app/config.yaml
+    - .keys:/app/.keys:ro
+  environment:
+    - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    - DATABASE_URL=${LITELLM_DATABASE_URL:-postgresql://${LITELLM_POSTGRES_USER:-llmproxy}:${LITELLM_POSTGRES_PASSWORD}@${LITELLM_POSTGRES_HOST:-litellm-db}:${LITELLM_POSTGRES_PORT:-5432}/${LITELLM_POSTGRES_DB:-litellm}?sslmode=${LITELLM_POSTGRES_SSLMODE:-prefer_ssl}}
+    - REDIS_URL=${LITELLM_REDIS_URL:-${LITELLM_REDIS_PROTOCOL:-redis}://${LITELLM_REDIS_USER:-default}:${LITELLM_REDIS_PASSWORD:-${LITELLM_REDIS_PASSWORD}}@${LITELLM_REDIS_HOST:-litellm-redis}:${LITELLM_REDIS_PORT:-6379}}
+
+    - OPENAI_API_KEY=${OPENAI_API_KEY}
+    - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    - GROQ_API_KEY=${GROQ_API_KEY}
+    - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+    - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+    - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY}
+    - GITHUB_API_KEY=${GITHUB_API_KEY}
+    - VOYAGE_API_KEY=${VOYAGE_API_KEY}
+    - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+  command:
+    [
+      "--config",
+      "/app/config.yaml",
+      "--port",
+      "4000",
+      "--num_workers",
+      "8",
+      "--telemetry",
+      "False"
+    ]
+
+  develop:
+    watch:
+      - action: sync+restart
+        path: ./litellm-config.yaml
+        target: /app/config.yaml
+
+
 services:
+  litellm-managed:
+    <<: *litellm-base
+    profiles:
+      - managed-db
+
   litellm:
-    image: ghcr.io/berriai/litellm-database:main-v1.46.6
-    restart: unless-stopped
-    volumes:
-      - ./litellm-config.yaml:/app/config.yaml
-      - .keys:/app/.keys:ro
-    environment:
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
-      - LITELLM_POSTGRES_DB=${LITELLM_POSTGRES_DB:-litellm}
-      - LITELLM_POSTGRES_USER=${LITELLM_POSTGRES_USER:-llmproxy}
-      - LITELLM_POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD}
-      - LITELLM_REDIS_HOST=${LITELLM_REDIS_HOST:-litellm-redis}
-      - LITELLM_REDIS_PORT=${LITELLM_REDIS_PORT:-6379}
-      - LITELLM_REDIS_PASSWORD=${LITELLM_REDIS_PASSWORD}
-      - LITELLM_DATABASE_URL=postgresql://${LITELLM_POSTGRES_USER:-llmproxy}:${LITELLM_POSTGRES_PASSWORD}@litellm-db:5432/${LITELLM_POSTGRES_DB:-litellm}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
-      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
-      - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY}
-      - GITHUB_API_KEY=${GITHUB_API_KEY}
-      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
-    command:
-      [
-        "--config",
-        "/app/config.yaml",
-        "--port",
-        "4000",
-        "--num_workers",
-        "8",
-        "--telemetry",
-        "False"
-      ]
+    <<: *litellm-base
+    profiles:
+      - self-hosted-db
+
     depends_on:
       - litellm-db
       - litellm-redis
-
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./litellm-config.yaml
-          target: /app/config.yaml
 
   litellm-db:
     image: postgres:16
@@ -53,20 +62,24 @@ services:
       - litellm-db-data:/var/lib/postgresql/data
     ports:
       - "15432:5432"
+    profiles:
+      - self-hosted-db
     environment:
       - POSTGRES_DB=${LITELLM_POSTGRES_DB:-litellm}
       - POSTGRES_USER=${LITELLM_POSTGRES_USER:-llmproxy}
       - POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${LITELLM_POSTGRES_DB:-litellm} -U ${LITELLM_POSTGRES_USER:-llmproxy}" ]
-
+ 
       interval: 1s
       timeout: 5s
       retries: 10
-
+ 
   litellm-redis:
     image: redis/redis-stack-server
     restart: unless-stopped
+    profiles:
+      - self-hosted-db
     environment:
       REDIS_ARGS: --requirepass ${LITELLM_REDIS_PASSWORD}
     volumes:

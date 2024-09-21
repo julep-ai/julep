@@ -25,8 +25,6 @@ x--shared-environment: &shared-environment
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG}
   depends_on:
-    memory-store:
-      condition: service_started
     worker:
       condition: service_started
   environment:
@@ -92,9 +90,6 @@ services:
   cozo-migrate:
     image: julepai/cozo-migrate:${TAG}
     container_name: cozo-migrate
-    depends_on:
-      memory-store:
-        condition: service_started
     build:
       context: .
       dockerfile: Dockerfile.migration
