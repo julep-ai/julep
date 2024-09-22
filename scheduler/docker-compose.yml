@@ -62,8 +62,6 @@ services:
     image: temporalio/ui:latest
     profiles:
       - temporal-ui
-    depends_on:
-      - temporal
     environment:
       - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:7233}
       - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS:-http://localhost:3000}
