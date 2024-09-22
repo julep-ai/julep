@@ -72,9 +72,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    depends_on:
-      temporal:
-        condition: service_started
 
     develop:
       watch:
