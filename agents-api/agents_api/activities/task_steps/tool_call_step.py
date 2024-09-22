@@ -4,9 +4,8 @@ import secrets
 from beartype import beartype
 from temporalio import activity
 
-from agents_api.activities.task_steps import base_evaluate
-from agents_api.autogen.Tasks import ToolCallStep
-
+from ...activities.task_steps import base_evaluate
+from ...autogen.openapi_model import ToolCallStep
 from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
