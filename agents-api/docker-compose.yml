@@ -32,8 +32,6 @@ x--base-agents-api: &base-agents-api
   build:
     context: .
     dockerfile: Dockerfile
-  ports:
-    - "8080:8080"
 
   develop:
     watch:
@@ -54,6 +52,9 @@ services:
     profiles:
       - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
       - single-tenant
+
+    ports:
+      - "8080:8080"
 
   agents-api-multi-tenant:
     <<: *base-agents-api

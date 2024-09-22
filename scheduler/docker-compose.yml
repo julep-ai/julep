@@ -1,43 +1,59 @@
 name: julep-scheduler
 
-services:
-  temporal:
-    depends_on:
-      temporal-db:
-        condition: service_started
-    environment:
-      - DB=${TEMPORAL_POSTGRES_DB:-postgres12}
-      - DB_PORT=${TEMPORAL_POSTGRES_PORT:-5432}
-      - DB_HOST=${TEMPORAL_POSTGRES_HOST:-temporal-db}
-      - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
-      - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
-      - POSTGRES_SEEDS=temporal-db
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
-    image: temporalio/auto-setup:1.24
-    volumes:
-      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+x--temporal-base: &temporal-base
+  image: temporalio/auto-setup:1.25
+  hostname: temporal
+  environment:
+    - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
+    - POSTGRES_DB=${TEMPORAL_POSTGRES_DB:-temporal}
+    - POSTGRES_SEEDS=${TEMPORAL_POSTGRES_HOST:-temporal-db}
+    - DB_HOST=${TEMPORAL_POSTGRES_HOST:-temporal-db}
+    - DB_PORT=${TEMPORAL_POSTGRES_PORT:-5432}
+    - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
 
-  temporal-admin-tools:
+    - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:7233}
+    - POSTGRES_TLS_ENABLED=${TEMPORAL_POSTGRES_TLS_ENABLED:-false}
+    - POSTGRES_TLS_CA_FILE=/cert/ca.crt
+    - SQL_TLS_ENABLED=${TEMPORAL_POSTGRES_TLS_ENABLED:-false}
+    - SQL_CA=/cert/ca.crt
+    - POSTGRES_TLS_DISABLE_HOST_VERIFICATION=${TEMPORAL_POSTGRES_TLS_DISABLE_HOST_VERIFICATION:-false}
+    - VISIBILITY_DBNAME=${TEMPORAL_VISIBILITY_DBNAME:-temporal_visibility}
+    - SKIP_SCHEMA_SETUP=${TEMPORAL_SKIP_SCHEMA_SETUP:-false}
+    - SKIP_DB_CREATE=${TEMPORAL_SKIP_DB_CREATE:-false}
+    - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/temporal-postgres.yaml
+    - DB=postgres12
+    - LOG_LEVEL=${TEMPORAL_LOG_LEVEL:-info}
+  volumes:
+    - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+    - ./cert:/cert
+
+services:
+  temporal-managed:
+    <<: *temporal-base
+    profiles:
+      - managed-db
+
+  temporal:
+    <<: *temporal-base
+    profiles:
+      - self-hosted-db
     depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CLI_ADDRESS=temporal:7233
-    image: temporalio/admin-tools:1.24
-    stdin_open: true
-    tty: true
+      - temporal-db
 
   temporal-db:
     image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - temporal-db-data:/var/lib/postgresql/data
+    profiles:
+      - self-hosted-db
     environment:
       - POSTGRES_DB=${TEMPORAL_POSTGRES_DB:-temporal}
       - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
       - POSTGRES_PASSWORD=${TEMPORAL_POSTGRES_PASSWORD}
-    volumes:
-      - temporal-db-data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${TEMPORAL_POSTGRES_DB:-temporal} -U ${TEMPORAL_POSTGRES_USER:-temporal}" ]
-
+ 
       interval: 1s
       timeout: 5s
       retries: 10
@@ -49,8 +65,8 @@ services:
     depends_on:
       - temporal
     environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:7233}
+      - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS:-http://localhost:3000}
     ports:
       - 9000:8080  # Since 8080 is already used by agents-api
 

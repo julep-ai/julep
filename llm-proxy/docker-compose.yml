@@ -60,8 +60,6 @@ services:
     restart: unless-stopped
     volumes:
       - litellm-db-data:/var/lib/postgresql/data
-    ports:
-      - "15432:5432"
     profiles:
       - self-hosted-db
     environment:
