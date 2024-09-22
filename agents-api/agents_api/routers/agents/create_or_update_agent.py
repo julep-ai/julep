@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
-from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 
 import agents_api.models as models

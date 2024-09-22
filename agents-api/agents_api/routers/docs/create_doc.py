@@ -2,7 +2,6 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import BackgroundTasks, Depends
-from uuid import UUID
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import Client as TemporalClient
 

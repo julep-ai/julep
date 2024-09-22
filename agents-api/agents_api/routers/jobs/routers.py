@@ -1,7 +1,7 @@
 from typing import Literal
+from uuid import UUID
 
 from fastapi import APIRouter
-from uuid import UUID
 from temporalio.client import WorkflowExecutionStatus
 
 from agents_api.autogen.openapi_model import JobStatus

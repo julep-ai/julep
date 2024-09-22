@@ -1,8 +1,8 @@
 import time
 from typing import Annotated, Any, Dict, List, Optional, Tuple, Union
+from uuid import UUID
 
 from fastapi import Depends
-from uuid import UUID
 
 from ...autogen.openapi_model import (
     DocSearchResponse,

@@ -1,5 +1,4 @@
 from typing import Literal
-
 from uuid import UUID
 
 from agents_api.autogen.openapi_model import (

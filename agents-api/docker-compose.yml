@@ -12,7 +12,6 @@ x--shared-environment: &shared-environment
   COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
   DEBUG: ${AGENTS_API_DEBUG:-False}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
-  EMBEDDING_SERVICE_BASE: ${EMBEDDING_SERVICE_BASE:-http://text-embeddings-inference}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
   SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
@@ -26,8 +25,6 @@ x--shared-environment: &shared-environment
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG}
   depends_on:
-    memory-store:
-      condition: service_started
     worker:
       condition: service_started
   environment:
@@ -35,8 +32,6 @@ x--base-agents-api: &base-agents-api
   build:
     context: .
     dockerfile: Dockerfile
-  ports:
-    - "8080:8080"
 
   develop:
     watch:
@@ -57,6 +52,9 @@ services:
     profiles:
       - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
       - single-tenant
+
+    ports:
+      - "8080:8080"
 
   agents-api-multi-tenant:
     <<: *base-agents-api
@@ -93,9 +91,6 @@ services:
   cozo-migrate:
     image: julepai/cozo-migrate:${TAG}
     container_name: cozo-migrate
-    depends_on:
-      memory-store:
-        condition: service_started
     build:
       context: .
       dockerfile: Dockerfile.migration

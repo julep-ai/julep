@@ -1,7 +1,7 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends
-from uuid import UUID
 
 from ...autogen.openapi_model import Doc
 from ...dependencies.developer_id import get_developer_id

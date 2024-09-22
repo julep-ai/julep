@@ -1,7 +1,7 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException
-from uuid import UUID
 
 from agents_api.autogen.openapi_model import (
     ResumeExecutionRequest,
@@ -35,7 +35,6 @@ async def update_execution(
             await wf_handle.cancel()
 
         case ResumeExecutionRequest():
-
             token_data = get_paused_execution_token(
                 developer_id=x_developer_id, execution_id=execution_id
             )
