@@ -81,7 +81,7 @@ with workflow.unsafe.imports_passed_through():
 # Mapping of step types to their corresponding activities
 STEP_TO_ACTIVITY = {
     PromptStep: task_steps.prompt_step,
-    # ToolCallStep: tool_call_step,
+    ToolCallStep: task_steps.tool_call_step,
     WaitForInputStep: task_steps.wait_for_input_step,
     SwitchStep: task_steps.switch_step,
     LogStep: task_steps.log_step,
@@ -389,10 +389,7 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(), StepOutcome(
-                output=response
-            ):  # FIXME: if not response.choices[0].tool_calls:
-                # SCRUM-15
+            case PromptStep(), StepOutcome(output=response):
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
                 if response["choices"][0]["finish_reason"] != "tool_calls":
                     workflow.logger.debug("Prompt step: Received response")
@@ -420,19 +417,6 @@ class TaskExecutionWorkflow:
                         ),
                     )
                     state = PartialTransition(output=new_response.output, type="resume")
-
-            # case PromptStep(), StepOutcome(
-            #     output=response
-            # ):  # FIXME: if response.choices[0].tool_calls:
-            #     # SCRUM-15
-            #     workflow.logger.debug("Prompt step: Received response")
-            #
-            #     ## First, enter a wait-for-input step and ask developer to run the tool calls
-            #     ## Then, continue the workflow with the input received from the developer
-            #     ## This will be a dict with the tool call name as key and the tool call arguments as value
-            #     ## The prompt is run again with the tool call arguments as input
-            #     ## And the result is returned
-            #     ## If model asks for more tool calls, repeat the process
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -466,11 +450,15 @@ class TaskExecutionWorkflow:
                 workflow.logger.error("ParallelStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
-            case ToolCallStep(), _:
-                # FIXME: Implement ToolCallStep
-                # SCRUM-16
-                workflow.logger.error("ToolCallStep not yet implemented")
-                raise ApplicationError("Not implemented")
+            case ToolCallStep(), StepOutcome(output=tool_call):
+                # Enter a wait-for-input step to ask the developer to run the tool calls
+                tool_call_response = await workflow.execute_activity(
+                    task_steps.raise_complete_async,
+                    args=[context, tool_call],
+                    schedule_to_close_timeout=timedelta(days=31),
+                )
+
+                state = PartialTransition(output=tool_call_response, type="resume")
 
             case _:
                 workflow.logger.error(
@@ -502,7 +490,7 @@ class TaskExecutionWorkflow:
 
         # Continue as a child workflow
         return await continue_as_child(
-            context,
+            context.execution_input,
             start=final_state.next,
             previous_inputs=previous_inputs + [final_state.output],
             user_state=self.user_state,

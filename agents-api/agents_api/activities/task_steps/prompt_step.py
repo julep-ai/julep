@@ -22,7 +22,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         context_data,
         skip_vars=["developer_id"],
     )
-
     # Get settings and run llm
     agent_default_settings: dict = (
         context.execution_input.agent.default_settings.model_dump()
