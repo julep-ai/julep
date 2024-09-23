@@ -72,7 +72,7 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
     "error": [],
     "cancelled": [],
     # Intermediate states
-    "wait": ["resume", "cancelled", "finish", "finish_branch"],
+    "wait": ["resume", "step", "cancelled", "finish", "finish_branch"],
     "resume": [
         "wait",
         "error",
