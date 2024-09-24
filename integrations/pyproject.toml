@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "integrations"
+version = "0.1.0"
+description = "Integration service for various AI tools"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain-community = "^0.3.0"
+fastapi = "^0.115.0"
+uvicorn = "^0.30.6"
+langchain = "^0.3.0"
+pydantic = "^2.9.2"
+duckduckgo-search = "^6.2.13"
+openai = "^1.47.1"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
