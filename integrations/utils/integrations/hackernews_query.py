@@ -1,6 +1,9 @@
 from langchain_community.document_loaders import HNLoader
 
 async def hackernews_query(parameters: dict) -> str:
+    """
+    Fetches and formats content from a Hacker News thread using the provided URL.
+    """
     url = parameters.get("url")
     if not url:
         raise ValueError(

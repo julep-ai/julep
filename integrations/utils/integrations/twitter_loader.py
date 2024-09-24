@@ -4,6 +4,9 @@ from langchain_community.document_loaders import TwitterTweetLoader
 
 
 async def twitter_loader(parameters: dict) -> str:
+    """
+    Loads tweets from specified Twitter users and returns them as formatted string.
+    """
     bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
     if not bearer_token:
         raise ValueError("Twitter API bearer token is not set")

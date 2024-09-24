@@ -2,6 +2,9 @@ from langchain_community.document_loaders import WikipediaLoader
 
 
 async def wikipedia_query(parameters: dict) -> str:
+    """
+    Searches Wikipedia for a given query and returns formatted results.
+    """
     query = parameters.get("query")
     if not query:
         raise ValueError("Query parameter is required for Wikipedia search")

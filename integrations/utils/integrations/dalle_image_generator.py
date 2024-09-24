@@ -2,6 +2,9 @@ from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 
 
 async def dalle_image_generator(parameters: dict) -> str:
+    """
+    Generates an image using DALL-E based on a provided prompt.
+    """
     # FIXME: Fix OpenAI API Key error
 
     dalle = DallEAPIWrapper()
