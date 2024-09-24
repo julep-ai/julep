@@ -15,7 +15,17 @@ duckduckgo-search = "^6.2.13"
 openai = "^1.47.1"
 tweepy = "^4.14.0"
 wikipedia = "^1.4.0"
+fire = "^0.6.0"
 
+[tool.poe.tasks]
+format = "ruff format"
+lint = "ruff check --select I --fix --unsafe-fixes agents_api/**/*.py migrations/**/*.py tests/**/*.py"
+typecheck = "pytype --config pytype.toml"
+check = [
+    "lint",
+    "format",
+    "typecheck",
+]
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
