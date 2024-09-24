@@ -35,11 +35,41 @@ model FunctionDef {
     name?: null = null;
 
     /** Description of the function  */
-    description?: identifierSafeUnicode;
+    description?: string;
 
     /** The parameters the function accepts */
     parameters?: FunctionParameters;
 
+}
+
+/** Integration definition */
+model IntegrationDef {
+    /** The provider of the integration */
+    provider: string;
+
+    /** The specific method of the integration to call */
+    method?: string;
+
+    /** Optional description of the integration */
+    description?: string;
+
+    /** The setup parameters the integration accepts */
+    setup?: FunctionParameters;
+
+    /** The arguments to pre-apply to the integration call */
+    arguments?: FunctionParameters;
+}
+
+/** System definition */
+model SystemDef {
+    /** The name of the system call */
+    call: string;
+
+    /** Optional description of the system call */
+    description?: string;
+
+    /** The arguments to pre-apply to the system call */
+    arguments?: FunctionParameters;
 }
 
 // TODO: We should use this model for all tools, not just functions and discriminate on the type
@@ -51,9 +81,9 @@ model Tool {
     name: validPythonIdentifier;
 
     /** The function to call */
-    function: FunctionDef;
-    integration?: unknown;
-    system?: unknown;
+    function?: FunctionDef;
+    integration?: IntegrationDef;
+    system?: SystemDef;
     api_call?: unknown;
 
     ...HasTimestamps;
