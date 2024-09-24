@@ -45,7 +45,7 @@ model FunctionDef {
 /** Integration definition */
 model IntegrationDef {
     /** The provider of the integration */
-    provider: string;
+    provider: integrationProvider;
 
     /** The specific method of the integration to call */
     method?: string;
@@ -84,7 +84,7 @@ model Tool {
     function?: FunctionDef;
     integration?: IntegrationDef;
     system?: SystemDef;
-    api_call?: unknown;
+    api_call?: never; // TODO: Implement
 
     ...HasTimestamps;
     ...HasId;
@@ -101,9 +101,9 @@ model NamedToolChoice {
     type: ToolType;
 
     function?: FunctionCallOption;
-    integration?: unknown;
-    system?: unknown;
-    api_call?: unknown;
+    integration?: never; // TODO: Implement
+    system?: never; // TODO: Implement
+    api_call?: never; // TODO: Implement
 }
 
 model NamedFunctionChoice extends NamedToolChoice {
@@ -142,9 +142,9 @@ model ChosenToolCall {
     type: ToolType;
 
     function?: FunctionCallOption;
-    integration?: unknown;
-    system?: unknown;
-    api_call?: unknown;
+    integration?: never; // TODO: Implement
+    system?: never; // TODO: Implement
+    api_call?: never; // TODO: Implement
 
     ...HasId;
 }

@@ -22,9 +22,6 @@ class ChosenToolCall(BaseModel):
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
@@ -50,7 +47,6 @@ class CreateToolRequest(BaseModel):
     """
     integration: IntegrationDef | None = None
     system: SystemDef | None = None
-    api_call: Any | None = None
 
 
 class FunctionCallOption(BaseModel):
@@ -93,7 +89,17 @@ class IntegrationDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    provider: str
+    provider: Literal[
+        "dummy",
+        "dall-e",
+        "duckduckgo",
+        "hackernews",
+        "weather",
+        "wikipedia",
+        "twitter",
+        "webpage",
+        "requests",
+    ]
     """
     The provider of the integration
     """
@@ -123,7 +129,20 @@ class IntegrationDefUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    provider: str | None = None
+    provider: (
+        Literal[
+            "dummy",
+            "dall-e",
+            "duckduckgo",
+            "hackernews",
+            "weather",
+            "wikipedia",
+            "twitter",
+            "webpage",
+            "requests",
+        ]
+        | None
+    ) = None
     """
     The provider of the integration
     """
@@ -154,9 +173,6 @@ class NamedToolChoice(BaseModel):
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
 
 
 class PatchToolRequest(BaseModel):
@@ -181,7 +197,6 @@ class PatchToolRequest(BaseModel):
     """
     integration: IntegrationDefUpdate | None = None
     system: SystemDefUpdate | None = None
-    api_call: Any | None = None
 
 
 class SystemDef(BaseModel):
@@ -246,7 +261,6 @@ class Tool(BaseModel):
     """
     integration: IntegrationDef | None = None
     system: SystemDef | None = None
-    api_call: Any | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -291,7 +305,6 @@ class UpdateToolRequest(BaseModel):
     """
     integration: IntegrationDef | None = None
     system: SystemDef | None = None
-    api_call: Any | None = None
 
 
 class ChosenFunctionCall(ChosenToolCall):
