@@ -45,15 +45,33 @@ Build powerful AI applications with stateful agents, complex workflows, and inte
 
 ## 🚀 Upcoming Release: v0.4 Alpha
 
-<div align="center">
-  <img src=".github/i-have-an-announcement.gif" alt="Announcing v0.4 Alpha">
-</div>
+**Release Date**: October 7 (Hacktoberfest Launch)
 
-We're excited to announce that v0.4 is currently in alpha! This release brings significant improvements and new features. Stay tuned for the official release.
+We are thrilled to announce the upcoming release of **Julep v0.4 Alpha** on **October 7**, just in time for **Hacktoberfest**!
 
-For a comprehensive overview of Julep's core concepts and upcoming features, check out our [detailed concepts guide](docs/julep-concepts.md).
+### **Key Highlights**
 
-Looking for the previous version? You can find the [v0.3 README here](v0.3_README.md).
+#### **New Feature: Tasks**
+
+- **Autonomous Workflows**: Unlock the ability for agents to perform long-term, multi-step tasks autonomously. Define complex workflows that enable your agents to operate with minimal intervention.
+
+- **Harness OpenAI's o1 Models**: Leverage the advanced reasoning and planning capabilities of OpenAI's o1 models. Perfect for orchestrating intricate and prolonged tasks that require sophisticated understanding and execution.
+
+- **100+ Integrations**: Seamlessly integrate with popular tools and APIs, including **GitHub**, **Salesforce**, **File Manager**, **Code Execution**, and more. Expand your agents' capabilities to perform a wide range of actions.
+
+#### **Rewritten from Scratch Based on Developer Feedback**
+
+- **Enhanced Doc Search**: Experience a significant improvement in document retrieval. Agents can now access the most relevant information faster, ensuring more accurate and contextually appropriate interactions.
+
+- **Easier to Use**: We've streamlined the user experience with simplified APIs and more intuitive interfaces. Building powerful AI applications is now more straightforward than ever.
+
+- **Multi-Agent Sessions**: Support for sessions with multiple agents and users. Enable complex interaction patterns, collaborative problem-solving, and more dynamic conversations within your applications.
+
+- **Extensive Integrations**: Incorporate a multitude of popular tools and services directly into your AI applications, enhancing functionality and providing richer experiences for your users.
+
+### **Call to Action**
+
+- **Join Our Discord Community**: Be among the first to access Julep v0.4 Alpha! [Join our Discord](https://discord.com/invite/JTSBGRZrzj) to get early access and API keys. Engage with other developers, share your projects, and provide feedback.
 
 ---
 
