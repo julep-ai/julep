@@ -60,4 +60,8 @@ def get_evaluator(
 def simple_eval_dict(exprs: dict[str, str], values: dict[str, Any]) -> dict[str, Any]:
     evaluator = get_evaluator(names=values)
 
-    return {k: evaluator.eval(v) for k, v in exprs.items()}
+    def preprocess_expression(expr: str) -> str:
+        # Replace Jinja-like syntax with Python format
+        return re2.sub(r'\{\{(.*?)\}\}', lambda m: f"str({m.group(1).strip()})", expr)
+
+    return {k: evaluator.eval(preprocess_expression(v)) for k, v in exprs.items()}
