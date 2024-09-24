@@ -1,6 +1,7 @@
 import os
+
 from langchain_community.tools import ElevenLabsText2SpeechTool
-import os
+
 
 async def tts_query(parameters: dict) -> str:
     """
