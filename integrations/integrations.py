@@ -20,9 +20,6 @@ async def duckduckgo_search(parameters: dict) -> str:
 
 
 async def dalle_image_generator(parameters: dict) -> str:
-    import os
-    print("OPENAI_API_KEY")
-    print(os.environ["OPENAI_API_KEY"])
     dalle = DallEAPIWrapper()
     prompt = parameters.get("prompt")
     if not prompt:
