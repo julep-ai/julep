@@ -13,6 +13,8 @@ langchain = "^0.3.0"
 pydantic = "^2.9.2"
 duckduckgo-search = "^6.2.13"
 openai = "^1.47.1"
+tweepy = "^4.14.0"
+wikipedia = "^1.4.0"
 
 
 [tool.poetry.dev-dependencies]
