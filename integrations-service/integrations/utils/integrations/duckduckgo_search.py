@@ -8,10 +8,6 @@ async def duckduckgo_search(arguments: DuckDuckGoSearchExecutionArguments) -> st
     Performs a web search using DuckDuckGo and returns the results.
     """
 
-    assert isinstance(
-        arguments, DuckDuckGoSearchExecutionArguments
-    ), "Invalid arguments"
-
     search = DuckDuckGoSearchRun()
     query = arguments.query
     if not query:
