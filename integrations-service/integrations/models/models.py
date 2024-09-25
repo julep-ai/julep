@@ -34,6 +34,8 @@ class IntegrationDef(BaseModel):
             "twitter",
             "web_base",
             "requests",
+            "gmail",
+            "tts_query",
         ]
         | None
     ) = None
