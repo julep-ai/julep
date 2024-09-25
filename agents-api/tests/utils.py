@@ -91,3 +91,13 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
         acompletion.return_value = mock_model_response
 
         yield embed, acompletion
+
+
+@contextmanager
+def patch_integration_service(output: dict = {"result": "ok"}):
+    with patch(
+        "agents_api.clients.integrations.run_integration_service"
+    ) as run_integration_service:
+        run_integration_service.return_value = output
+
+        yield run_integration_service

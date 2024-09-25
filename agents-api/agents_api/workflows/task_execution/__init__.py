@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
         ForeachStep,
         GetStep,
         IfElseWorkflowStep,
+        IntegrationDef,
         LogStep,
         MapReduceStep,
         ParallelStep,
@@ -60,7 +61,7 @@ with workflow.unsafe.imports_passed_through():
 
 # WorkflowStep = (
 #     EvaluateStep  # ✅
-#     | ToolCallStep  # ❌  <--- high priority
+#     | ToolCallStep  # ✅
 #     | PromptStep  # 🟡    <--- high priority
 #     | GetStep  # ✅
 #     | SetStep  # ✅
@@ -482,12 +483,19 @@ class TaskExecutionWorkflow:
                 call = tool_call["integration"]
                 tool_name = call["name"]
                 arguments = call["arguments"]
-                integration = next(
+                integration_spec = next(
                     (t for t in context.tools if t.name == tool_name), None
                 )
 
-                if integration is None:
+                if integration_spec is None:
                     raise ApplicationError(f"Integration {tool_name} not found")
+
+                integration = IntegrationDef(
+                    provider=integration_spec.spec["provider"],
+                    setup=integration_spec.spec["setup"],
+                    method=integration_spec.spec["method"],
+                    arguments=arguments,
+                )
 
                 tool_call_response = await workflow.execute_activity(
                     execute_integration,

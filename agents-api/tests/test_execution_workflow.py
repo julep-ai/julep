@@ -16,7 +16,7 @@ from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 
 from .fixtures import cozo_client, test_agent, test_developer_id
-from .utils import patch_testing_temporal
+from .utils import patch_integration_service, patch_testing_temporal
 
 EMBEDDING_SIZE: int = 1024
 
@@ -441,7 +441,7 @@ async def _(
             assert result["hello"] == data.input["test"]
 
 
-@test("workflow: tool call integration type step")
+@test("workflow: tool call integration dummy")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
@@ -492,6 +492,65 @@ async def _(
 
         result = await handle.result()
         assert result["test"] == data.input["test"]
+
+
+@test("workflow: tool call integration mocked weather")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "tools": [
+                    {
+                        "type": "integration",
+                        "name": "get_weather",
+                        "integration": {
+                            "provider": "weather",
+                            "setup": {"openweathermap_api_key": "test"},
+                            "arguments": {"test": "fake"},
+                        },
+                    }
+                ],
+                "main": [
+                    {
+                        "tool": "get_weather",
+                        "arguments": {"location": "_.test"},
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    expected_output = {"temperature": 20, "humidity": 60}
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        with patch_integration_service(expected_output) as mock_integration_service:
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
+
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
+            mock_run_task_execution_workflow.assert_called_once()
+            mock_integration_service.assert_called_once()
+
+            result = await handle.result()
+            assert result == expected_output
 
 
 # FIXME: This test is not working. It gets stuck
@@ -1026,3 +1085,4 @@ async def _(
             mock_run_task_execution_workflow.assert_called_once()
 
             await handle.result()
+
