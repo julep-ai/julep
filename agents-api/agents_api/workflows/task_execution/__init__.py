@@ -11,6 +11,7 @@ from temporalio.exceptions import ApplicationError
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
+    from ...activities.execute_integration import execute_integration
     from ...autogen.openapi_model import (
         EmbedStep,
         ErrorWorkflowStep,
@@ -460,7 +461,9 @@ class TaskExecutionWorkflow:
                 workflow.logger.error("ParallelStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
-            case ToolCallStep(), StepOutcome(output=tool_call):
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "function":
                 # Enter a wait-for-input step to ask the developer to run the tool calls
                 tool_call_response = await workflow.execute_activity(
                     task_steps.raise_complete_async,
@@ -469,6 +472,33 @@ class TaskExecutionWorkflow:
                 )
 
                 state = PartialTransition(output=tool_call_response, type="resume")
+
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "integration":
+                call = tool_call["integration"]
+                tool_name = call["name"]
+                arguments = call["arguments"]
+                integration = next(
+                    (t for t in context.tools if t.name == tool_name), None
+                )
+
+                if integration is None:
+                    raise ApplicationError(f"Integration {tool_name} not found")
+
+                tool_call_response = await workflow.execute_activity(
+                    execute_integration,
+                    args=[context, tool_name, integration, arguments],
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
+                )
+
+                state = PartialTransition(output=tool_call_response, type="step")
+
+            case ToolCallStep(), StepOutcome(output=_):
+                # FIXME: Handle system/api_call tool_calls
+                raise ApplicationError("Not implemented")
 
             case _:
                 workflow.logger.error(
