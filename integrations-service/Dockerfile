@@ -13,7 +13,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
 # Copy project
-COPY . .
+COPY . ./
 
 # Run the application
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "integrations.web", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,10 +1,21 @@
-from typing import Literal
+from typing import Literal, Union
+
 from pydantic import BaseModel
+
+from .dalle_image_generator import DalleImageGeneratorParams
+from .duckduckgo_search import DuckDuckGoSearchExecutionParams
+from .wikipedia import WikipediaExecutionParams
+
+ExecuteIntegrationParams = Union[
+    WikipediaExecutionParams,
+    DuckDuckGoSearchExecutionParams,
+    DalleImageGeneratorParams,
+]
 
 
 class IntegrationExecutionRequest(BaseModel):
     integration_name: str
-    parameters: dict
+    parameters: ExecuteIntegrationParams
 
 
 class IntegrationExecutionResponse(BaseModel):

@@ -1,7 +1,9 @@
 from langchain_community.utilities.dalle_image_generator import DallEAPIWrapper
 
+from ...models import DalleImageGeneratorParams
 
-async def dalle_image_generator(parameters: dict) -> str:
+
+async def dalle_image_generator(parameters: DalleImageGeneratorParams) -> str:
     """
     Generates an image using DALL-E based on a provided prompt.
     """
