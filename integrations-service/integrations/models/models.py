@@ -2,20 +2,20 @@ from typing import Literal, Union
 
 from pydantic import BaseModel
 
-from .dalle_image_generator import DalleImageGeneratorParams
-from .duckduckgo_search import DuckDuckGoSearchExecutionParams
-from .wikipedia import WikipediaExecutionParams
+from .dalle_image_generator import DalleImageGeneratorArguments
+from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
+from .wikipedia import WikipediaExecutionArguments
 
-ExecuteIntegrationParams = Union[
-    WikipediaExecutionParams,
-    DuckDuckGoSearchExecutionParams,
-    DalleImageGeneratorParams,
+ExecuteIntegrationArguments = Union[
+    WikipediaExecutionArguments,
+    DuckDuckGoSearchExecutionArguments,
+    DalleImageGeneratorArguments,
 ]
 
 
 class IntegrationExecutionRequest(BaseModel):
     integration_name: str
-    parameters: ExecuteIntegrationParams
+    parameters: ExecuteIntegrationArguments
 
 
 class IntegrationExecutionResponse(BaseModel):

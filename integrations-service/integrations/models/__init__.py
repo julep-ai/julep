@@ -1,10 +1,10 @@
-from .dalle_image_generator import DalleImageGeneratorParams
-from .duckduckgo_search import DuckDuckGoSearchExecutionParams
-from .wikipedia import WikipediaExecutionParams
+from .dalle_image_generator import DalleImageGeneratorArguments
+from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
+from .wikipedia import WikipediaExecutionArguments
 
 # TODO: Move these models somewhere else
 from .models import (
-    ExecuteIntegrationParams,
+    ExecuteIntegrationArguments,
     IntegrationDef,
     IntegrationExecutionRequest,
     IntegrationExecutionResponse,

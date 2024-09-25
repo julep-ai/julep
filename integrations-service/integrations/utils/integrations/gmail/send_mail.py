@@ -1,4 +1,4 @@
-async def send_mail(parameters: dict) -> str:
+async def send_mail(arguments: dict) -> str:
     """
     Dummy integration for sending an email to a specified recipient with a given subject and message.
     """

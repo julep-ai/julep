@@ -1,17 +1,17 @@
 from langchain_community.document_loaders import WikipediaLoader
 
-from ...models import WikipediaExecutionParams
+from ...models import WikipediaExecutionArguments
 
 
-async def wikipedia(parameters: WikipediaExecutionParams) -> str:
+async def wikipedia(arguments: WikipediaExecutionArguments) -> str:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """
-    query = parameters.query
+    query = arguments.query
     if not query:
         raise ValueError("Query parameter is required for Wikipedia search")
 
-    load_max_docs = parameters.load_max_docs
+    load_max_docs = arguments.load_max_docs
 
     loader = WikipediaLoader(query=query, load_max_docs=load_max_docs)
     documents = loader.load()

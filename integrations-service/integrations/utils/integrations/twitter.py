@@ -3,7 +3,7 @@ import os
 from langchain_community.document_loaders import TwitterTweetLoader
 
 
-async def twitter(parameters: dict) -> str:
+async def twitter(arguments: dict) -> str:
     """
     Loads tweets from specified Twitter users and returns them as formatted string.
     """
@@ -11,11 +11,11 @@ async def twitter(parameters: dict) -> str:
     if not bearer_token:
         raise ValueError("Twitter API bearer token is not set")
 
-    twitter_users = parameters.get("twitter_users")
+    twitter_users = arguments.get("twitter_users")
     if not twitter_users:
         raise ValueError("Twitter users parameter is required for Twitter loader")
 
-    number_tweets = parameters.get("number_tweets", 50)
+    number_tweets = arguments.get("number_tweets", 50)
 
     loader = TwitterTweetLoader.from_bearer_token(
         oauth2_bearer_token=bearer_token,

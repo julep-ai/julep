@@ -1,11 +1,11 @@
 from langchain_community.document_loaders import HNLoader
 
 
-async def hacker_news(parameters: dict) -> str:
+async def hacker_news(arguments: dict) -> str:
     """
     Fetches and formats content from a Hacker News thread using the provided URL.
     """
-    url = parameters.get("url")
+    url = arguments.get("url")
     if not url:
         raise ValueError("URL parameter is required for Hacker News search")
     loader = HNLoader(url)
