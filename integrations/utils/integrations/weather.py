@@ -3,7 +3,7 @@ import os
 from langchain_community.utilities import OpenWeatherMapAPIWrapper
 
 
-async def weather_data(parameters: dict) -> str:
+async def weather(parameters: dict) -> str:
     """
     Fetches weather data for a specified location using OpenWeatherMap API.
     """

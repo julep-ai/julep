@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import WikipediaLoader
 
 
-async def wikipedia_query(parameters: dict) -> str:
+async def wikipedia(parameters: dict) -> str:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """

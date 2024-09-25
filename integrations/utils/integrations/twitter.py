@@ -3,7 +3,7 @@ import os
 from langchain_community.document_loaders import TwitterTweetLoader
 
 
-async def twitter_loader(parameters: dict) -> str:
+async def twitter(parameters: dict) -> str:
     """
     Loads tweets from specified Twitter users and returns them as formatted string.
     """

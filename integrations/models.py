@@ -1,3 +1,4 @@
+from typing import Literal
 from pydantic import BaseModel
 
 
@@ -11,7 +12,20 @@ class IntegrationExecutionResponse(BaseModel):
 
 
 class IntegrationDef(BaseModel):
-    provider: str
+    provider: (
+        Literal[
+            "dummy",
+            "dalle_image_generator",
+            "duckduckgo_search",
+            "hacker_news",
+            "weather",
+            "wikipedia",
+            "twitter",
+            "web_base",
+            "requests",
+        ]
+        | None
+    ) = None
     """
     The provider of the integration
     """
