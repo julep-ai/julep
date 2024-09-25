@@ -390,44 +390,47 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(
-                forward_tool_results=forward_tool_results, unwrap=False
-            ), StepOutcome(output=response):
-                workflow.logger.debug(f"Prompt step: Received response: {response}")
-
-                if (
-                    response["choices"][0]["finish_reason"] != "tool_calls"
-                    or not forward_tool_results
-                ):
-                    workflow.logger.debug("Prompt step: Received response")
-                    state = PartialTransition(output=response)
-                else:
-                    workflow.logger.debug("Prompt step: Received tool call")
-                    message = response["choices"][0]["message"]
-                    tool_calls_input = message["tool_calls"]
-
-                    # Enter a wait-for-input step to ask the developer to run the tool calls
-                    tool_calls_results = await workflow.execute_activity(
-                        task_steps.raise_complete_async,
-                        args=[context, tool_calls_input],
-                        schedule_to_close_timeout=timedelta(days=31),
-                    )
-
-                    # Feed the tool call results back to the model
-                    context.current_step.prompt.append(message)
-                    context.current_step.prompt.append(tool_calls_results)
-                    new_response = await workflow.execute_activity(
-                        task_steps.prompt_step,
-                        context,
-                        schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else 600
-                        ),
-                    )
-                    state = PartialTransition(output=new_response.output, type="resume")
-
             case PromptStep(unwrap=True), StepOutcome(output=response):
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
                 state = PartialTransition(output=response)
+
+            case PromptStep(forward_tool_results=False, unwrap=False), StepOutcome(
+                output=response
+            ):
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                state = PartialTransition(output=response)
+
+            case PromptStep(unwrap=False), StepOutcome(output=response) if response[
+                "choices"
+            ][0]["finish_reason"] != "tool_calls":
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                state = PartialTransition(output=response)
+
+            case PromptStep(unwrap=False), StepOutcome(output=response) if response[
+                "choices"
+            ][0]["finish_reason"] == "tool_calls":
+                workflow.logger.debug("Prompt step: Received tool call")
+                message = response["choices"][0]["message"]
+                tool_calls_input = message["tool_calls"]
+
+                # Enter a wait-for-input step to ask the developer to run the tool calls
+                tool_calls_results = await workflow.execute_activity(
+                    task_steps.raise_complete_async,
+                    args=[context, tool_calls_input],
+                    schedule_to_close_timeout=timedelta(days=31),
+                )
+
+                # Feed the tool call results back to the model
+                context.current_step.prompt.append(message)
+                context.current_step.prompt.append(tool_calls_results)
+                new_response = await workflow.execute_activity(
+                    task_steps.prompt_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
+                )
+                state = PartialTransition(output=new_response.output, type="resume")
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -494,7 +497,7 @@ class TaskExecutionWorkflow:
                     ),
                 )
 
-                state = PartialTransition(output=tool_call_response, type="step")
+                state = PartialTransition(output=tool_call_response)
 
             case ToolCallStep(), StepOutcome(output=_):
                 # FIXME: Handle system/api_call tool_calls

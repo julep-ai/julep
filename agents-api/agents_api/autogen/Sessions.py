@@ -43,12 +43,12 @@ class CreateSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: Literal["auto"] | StrictBool = "auto"
+    forward_tool_results: StrictBool | None = None
     """
     Whether to forward the tool results to the model when available.
     "true" => always forward
     "false" => never forward
-    "auto" => forward if applicable
+    null => forward if applicable (default)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -80,12 +80,12 @@ class PatchSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: Literal["auto"] | StrictBool = "auto"
+    forward_tool_results: StrictBool | None = None
     """
     Whether to forward the tool results to the model when available.
     "true" => always forward
     "false" => never forward
-    "auto" => forward if applicable
+    null => forward if applicable (default)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -117,12 +117,12 @@ class Session(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: Literal["auto"] | StrictBool = "auto"
+    forward_tool_results: StrictBool | None = None
     """
     Whether to forward the tool results to the model when available.
     "true" => always forward
     "false" => never forward
-    "auto" => forward if applicable
+    null => forward if applicable (default)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -190,12 +190,12 @@ class UpdateSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: Literal["auto"] | StrictBool = "auto"
+    forward_tool_results: StrictBool | None = None
     """
     Whether to forward the tool results to the model when available.
     "true" => always forward
     "false" => never forward
-    "auto" => forward if applicable
+    null => forward if applicable (default)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -234,12 +234,12 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: Literal["auto"] | StrictBool = "auto"
+    forward_tool_results: StrictBool | None = None
     """
     Whether to forward the tool results to the model when available.
     "true" => always forward
     "false" => never forward
-    "auto" => forward if applicable
+    null => forward if applicable (default)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.

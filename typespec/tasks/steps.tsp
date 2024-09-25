@@ -110,11 +110,11 @@ model PromptStepDef {
     /** Whether to forward the tool results to the model when available.
      * "true" => always forward
      * "false" => never forward
-     * "auto" => forward if applicable
+     * null => forward if applicable (default)
      * 
      * If a tool call is made, the tool's output will be used as the model's input.
      * If a tool call is not made, the model's output will be used as the next step's input. */
-    forward_tool_results: "auto" | boolean = "auto";
+    forward_tool_results: boolean | null = null;
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
