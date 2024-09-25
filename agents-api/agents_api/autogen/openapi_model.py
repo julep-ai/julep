@@ -200,6 +200,7 @@ class TaskSpec(_Task):
     model_config = ConfigDict(extra="ignore")
 
     workflows: list[Workflow]
+    tools: list[TaskToolDef]
 
     # Remove main field from the model
     main: None = None

@@ -9,6 +9,16 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
+class JinjaTemplate(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: str
+    """
+    A valid jinja template.
+    """
+
+
 class Limit(RootModel[int]):
     model_config = ConfigDict(
         populate_by_name=True,
