@@ -14,12 +14,21 @@ ExecuteIntegrationArguments = Union[
 
 
 class IntegrationExecutionRequest(BaseModel):
-    integration_name: str
-    parameters: ExecuteIntegrationArguments
+    setup: dict | None = None
+    """
+    The setup parameters the integration accepts (such as API keys)
+    """
+    arguments: ExecuteIntegrationArguments
+    """
+    The arguments to pass to the integration
+    """
 
 
 class IntegrationExecutionResponse(BaseModel):
     result: str
+    """
+    The result of the integration execution
+    """
 
 
 class IntegrationDef(BaseModel):

@@ -6,16 +6,16 @@ from .integrations.wikipedia import wikipedia
 
 
 async def execute_integration(
-    integration_name: str, arguments: ExecuteIntegrationArguments
+    provider: str, arguments: ExecuteIntegrationArguments
 ) -> str:
-    match integration_name:
+    match provider:
         case "duckduckgo_search":
             return await duckduckgo_search(arguments)
         case "dalle_image_generator":
             return await dalle_image_generator(arguments)
-        case "twitter_loader":
+        case "twitter":
             return await twitter(arguments)
-        case "wikipedia_query":
+        case "wikipedia":
             return await wikipedia(arguments)
         case _:
-            raise ValueError(f"Unknown integration: {integration_name}")
+            raise ValueError(f"Unknown integration: {provider}")
