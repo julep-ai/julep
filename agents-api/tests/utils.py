@@ -84,7 +84,7 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
         object="text_completion",
     )
 
-    with patch("agents_api.clients.embed.embed") as embed, patch(
+    with patch("agents_api.clients.litellm.aembedding") as embed, patch(
         "agents_api.clients.litellm.acompletion"
     ) as acompletion:
         embed.return_value = [[1.0] * EMBEDDING_SIZE]

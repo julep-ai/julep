@@ -3,9 +3,10 @@ import secrets
 
 from beartype import beartype
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
-from ...activities.task_steps import base_evaluate
-from ...autogen.openapi_model import ToolCallStep
+from ...activities.task_steps.base_evaluate import base_evaluate
+from ...autogen.openapi_model import Tool, ToolCallStep
 from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
@@ -26,24 +27,27 @@ def generate_call_id():
 async def tool_call_step(context: StepContext) -> StepOutcome:
     assert isinstance(context.current_step, ToolCallStep)
 
-    tool_type, tool_name = context.current_step.tool.split(".")
+    tools: list[Tool] = context.tools
+    tool_name = context.current_step.tool
+
+    tool = next((t for t in tools if t.name == tool_name), None)
+
+    if tool is None:
+        raise ApplicationError(f"Tool {tool_name} not found in the toolset")
+
     arguments = await base_evaluate(
         context.current_step.arguments, context.model_dump()
     )
 
-    tools = context.execution_input.tools
-
-    assert tool_name in [tool.name for tool in tools], f"Tool {tool_name} not found"
-
     call_id = generate_call_id()
 
     tool_call = {
-        tool_type: {
+        tool.type: {
             "arguments": arguments,
             "name": tool_name,
         },
         "id": call_id,
-        "type": tool_type,
+        "type": tool.type,
     }
 
     return StepOutcome(output=tool_call)
