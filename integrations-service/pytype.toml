@@ -1,0 +1,64 @@
+# NOTE: All relative paths are relative to the location of this file.
+
+[tool.pytype]
+
+# Space-separated list of files or directories to exclude.
+exclude = [
+]
+
+# Space-separated list of files or directories to process.
+inputs = [
+    '.',
+]
+
+# Keep going past errors to analyze as many files as possible.
+keep_going = true
+
+# Run N jobs in parallel. When 'auto' is used, this will be equivalent to the
+# number of CPUs on the host system.
+jobs = 'auto'
+
+# All pytype output goes here.
+output = '.pytype'
+
+# Platform (e.g., "linux", "win32") that the target code runs on.
+platform = 'linux'
+
+# Paths to source code directories, separated by ':'.
+pythonpath = '.'
+
+# Python version (major.minor) of the target code.
+python_version = '3.11'
+
+# Don't allow None to match bool. This flag is temporary and will be removed
+# once this behavior is enabled by default.
+none_is_not_bool = true
+
+# Variables initialized as None retain their None binding. This flag is
+# temporary and will be removed once this behavior is enabled by default.
+strict_none_binding = true
+
+# Space-separated list of error names to ignore.
+disable = [
+    'pyi-error',
+]
+
+# --------------
+# Optional flags
+# --------------
+
+# Bind 'self' in methods with non-transparent decorators. This flag is temporary
+# and will be removed once this behavior is enabled by default.
+bind_decorated_methods = false
+
+# Enable parameter count checks for overriding methods with renamed arguments.
+# This flag is temporary and will be removed once this behavior is enabled by
+# default.
+overriding_renamed_parameter_count_checks = false
+
+# Opt-in: Do not allow Any as a return type.
+no_return_any = false
+
+# Opt-in: Require decoration with @typing.override when overriding a method or
+# nested class attribute of a parent class.
+require_override_decorator = false

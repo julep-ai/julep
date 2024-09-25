@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "integrations"
+version = "0.1.0"
+description = "Integration service for various AI tools"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain-community = "^0.3.0"
+fastapi = "^0.115.0"
+uvicorn = "^0.30.6"
+langchain = "^0.3.0"
+pydantic = "^2.9.2"
+duckduckgo-search = "^6.2.13"
+openai = "^1.47.1"
+tweepy = "^4.14.0"
+wikipedia = "^1.4.0"
+fire = "^0.6.0"
+pyowm = "^3.3.0"
+
+[tool.poe.tasks]
+format = "ruff format"
+lint = "ruff check --select I --fix --unsafe-fixes agents_api/**/*.py migrations/**/*.py tests/**/*.py"
+typecheck = "pytype --config pytype.toml"
+check = [
+    "lint",
+    "format",
+    "typecheck",
+]
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
