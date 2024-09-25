@@ -91,14 +91,11 @@ class IntegrationDef(BaseModel):
     )
     provider: Literal[
         "dummy",
-        "dall-e",
-        "duckduckgo",
-        "hackernews",
+        "dalle_image_generator",
+        "duckduckgo_search",
+        "hacker_news",
         "weather",
         "wikipedia",
-        "twitter",
-        "webpage",
-        "requests",
     ]
     """
     The provider of the integration
@@ -132,14 +129,11 @@ class IntegrationDefUpdate(BaseModel):
     provider: (
         Literal[
             "dummy",
-            "dall-e",
-            "duckduckgo",
-            "hackernews",
+            "dalle_image_generator",
+            "duckduckgo_search",
+            "hacker_news",
             "weather",
             "wikipedia",
-            "twitter",
-            "webpage",
-            "requests",
         ]
         | None
     ) = None

@@ -1,0 +1,44 @@
+name: Simple multi step task
+
+input_schema:
+  type: object
+  properties:
+    topics:
+      type: array
+      items:
+        type: string
+
+tools:
+  - type: function
+    function:
+      name: generate_questions
+      description: Generate a list of questions for a given topic
+      parameters:
+      type: object
+      properties:
+        topic:
+            type: string
+            description: The topic to generate questions for
+
+  - type: integration
+    name: duckduckgo_search
+    integration:
+      provider: duckduckgo
+      setup:
+        api_key: <something>
+      arguments:
+        language: en-US
+
+main:
+  - foreach:
+      in: _["topics"]
+      do:
+        prompt:
+          - role: system
+            content: |-
+              Generate a list of 10 questions for the topic {{_}} as valid yaml.
+        unwrap: true
+
+  - tool: duckduckgo_search
+    arguments:
+      query: "'\n'.join(_)"
