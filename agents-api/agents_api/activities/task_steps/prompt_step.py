@@ -1,5 +1,6 @@
 from beartype import beartype
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
@@ -63,18 +64,29 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     else:
         passed_settings: dict = {}
 
+    # Wrap the prompt in a list if it is not already
+    if isinstance(prompt, str):
+        prompt = [{"role": "user", "content": prompt}]
+
     completion_data: dict = {
         "model": agent_model,
         "tools": formatted_agent_tools or None,
-        ("messages" if isinstance(prompt, list) else "prompt"): prompt,
+        "messages": prompt,
         **agent_default_settings,
         **passed_settings,
     }
+
     response = await litellm.acompletion(
         **completion_data,
     )
 
+    if context.current_step.unwrap:
+        if response.choices[0].finish_reason == "tool_calls":
+            raise ApplicationError("Tool calls cannot be unwrapped")
+
+        response = response.choices[0].message.content
+
     return StepOutcome(
-        output=response.model_dump(),
+        output=response.model_dump() if hasattr(response, "model_dump") else response,
         next=None,
     )

@@ -389,9 +389,15 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(), StepOutcome(output=response):
+            case PromptStep(
+                forward_tool_results=forward_tool_results, unwrap=False
+            ), StepOutcome(output=response):
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
-                if response["choices"][0]["finish_reason"] != "tool_calls":
+
+                if (
+                    response["choices"][0]["finish_reason"] != "tool_calls"
+                    or not forward_tool_results
+                ):
                     workflow.logger.debug("Prompt step: Received response")
                     state = PartialTransition(output=response)
                 else:
@@ -405,8 +411,8 @@ class TaskExecutionWorkflow:
                         args=[context, tool_calls_input],
                         schedule_to_close_timeout=timedelta(days=31),
                     )
+
                     # Feed the tool call results back to the model
-                    # context.inputs.append(tool_calls_results)
                     context.current_step.prompt.append(message)
                     context.current_step.prompt.append(tool_calls_results)
                     new_response = await workflow.execute_activity(
@@ -417,6 +423,10 @@ class TaskExecutionWorkflow:
                         ),
                     )
                     state = PartialTransition(output=new_response.output, type="resume")
+
+            case PromptStep(unwrap=True), StepOutcome(output=response):
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                state = PartialTransition(output=response)
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -468,6 +478,7 @@ class TaskExecutionWorkflow:
 
         # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
+
         # The returned value is the transition finally created
         final_state = await transition(context, state)
 
