@@ -7,6 +7,9 @@ async def wikipedia(arguments: WikipediaExecutionArguments) -> str:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """
+
+    assert isinstance(arguments, WikipediaExecutionArguments), "Invalid arguments"
+
     query = arguments.query
     if not query:
         raise ValueError("Query parameter is required for Wikipedia search")

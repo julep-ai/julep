@@ -7,6 +7,9 @@ async def hacker_news(arguments: HackerNewsExecutionArguments) -> str:
     """
     Fetches and formats content from a Hacker News thread using the provided URL.
     """
+
+    assert isinstance(arguments, HackerNewsExecutionArguments), "Invalid arguments"
+
     url = arguments.url
     if not url:
         raise ValueError("URL parameter is required for Hacker News search")
