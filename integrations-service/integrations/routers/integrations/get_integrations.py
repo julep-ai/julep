@@ -47,7 +47,7 @@ def create_integration_def(module: Any) -> IntegrationDef:
             for param in signature.parameters.values()
             if param.name != "parameters"
         }
-    print("PROVIDER", provider)
+
     return IntegrationDef(
         provider=provider,
         method=method,
