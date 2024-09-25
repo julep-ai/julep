@@ -48,6 +48,8 @@ def cozo_client(migrations_dir: str = "./migrations"):
     # and initialize the schema.
     client = CozoClient()
 
+    setattr(app.state, "cozo_client", client)
+
     init(client)
     apply(client, migrations_dir=migrations_dir, all_=True)
 

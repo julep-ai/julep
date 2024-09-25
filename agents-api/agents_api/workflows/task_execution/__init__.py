@@ -11,6 +11,7 @@ from temporalio.exceptions import ApplicationError
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
+    from ...activities.execute_integration import execute_integration
     from ...autogen.openapi_model import (
         EmbedStep,
         ErrorWorkflowStep,
@@ -389,34 +390,47 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(type="resume", output=result)
 
-            case PromptStep(), StepOutcome(output=response):
+            case PromptStep(unwrap=True), StepOutcome(output=response):
                 workflow.logger.debug(f"Prompt step: Received response: {response}")
-                if response["choices"][0]["finish_reason"] != "tool_calls":
-                    workflow.logger.debug("Prompt step: Received response")
-                    state = PartialTransition(output=response)
-                else:
-                    workflow.logger.debug("Prompt step: Received tool call")
-                    message = response["choices"][0]["message"]
-                    tool_calls_input = message["tool_calls"]
+                state = PartialTransition(output=response)
 
-                    # Enter a wait-for-input step to ask the developer to run the tool calls
-                    tool_calls_results = await workflow.execute_activity(
-                        task_steps.raise_complete_async,
-                        args=[context, tool_calls_input],
-                        schedule_to_close_timeout=timedelta(days=31),
-                    )
-                    # Feed the tool call results back to the model
-                    # context.inputs.append(tool_calls_results)
-                    context.current_step.prompt.append(message)
-                    context.current_step.prompt.append(tool_calls_results)
-                    new_response = await workflow.execute_activity(
-                        task_steps.prompt_step,
-                        context,
-                        schedule_to_close_timeout=timedelta(
-                            seconds=30 if debug or testing else 600
-                        ),
-                    )
-                    state = PartialTransition(output=new_response.output, type="resume")
+            case PromptStep(forward_tool_results=False, unwrap=False), StepOutcome(
+                output=response
+            ):
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                state = PartialTransition(output=response)
+
+            case PromptStep(unwrap=False), StepOutcome(output=response) if response[
+                "choices"
+            ][0]["finish_reason"] != "tool_calls":
+                workflow.logger.debug(f"Prompt step: Received response: {response}")
+                state = PartialTransition(output=response)
+
+            case PromptStep(unwrap=False), StepOutcome(output=response) if response[
+                "choices"
+            ][0]["finish_reason"] == "tool_calls":
+                workflow.logger.debug("Prompt step: Received tool call")
+                message = response["choices"][0]["message"]
+                tool_calls_input = message["tool_calls"]
+
+                # Enter a wait-for-input step to ask the developer to run the tool calls
+                tool_calls_results = await workflow.execute_activity(
+                    task_steps.raise_complete_async,
+                    args=[context, tool_calls_input],
+                    schedule_to_close_timeout=timedelta(days=31),
+                )
+
+                # Feed the tool call results back to the model
+                context.current_step.prompt.append(message)
+                context.current_step.prompt.append(tool_calls_results)
+                new_response = await workflow.execute_activity(
+                    task_steps.prompt_step,
+                    context,
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
+                )
+                state = PartialTransition(output=new_response.output, type="resume")
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
@@ -450,7 +464,9 @@ class TaskExecutionWorkflow:
                 workflow.logger.error("ParallelStep not yet implemented")
                 raise ApplicationError("Not implemented")
 
-            case ToolCallStep(), StepOutcome(output=tool_call):
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "function":
                 # Enter a wait-for-input step to ask the developer to run the tool calls
                 tool_call_response = await workflow.execute_activity(
                     task_steps.raise_complete_async,
@@ -460,6 +476,33 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(output=tool_call_response, type="resume")
 
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "integration":
+                call = tool_call["integration"]
+                tool_name = call["name"]
+                arguments = call["arguments"]
+                integration = next(
+                    (t for t in context.tools if t.name == tool_name), None
+                )
+
+                if integration is None:
+                    raise ApplicationError(f"Integration {tool_name} not found")
+
+                tool_call_response = await workflow.execute_activity(
+                    execute_integration,
+                    args=[context, tool_name, integration, arguments],
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
+                )
+
+                state = PartialTransition(output=tool_call_response)
+
+            case ToolCallStep(), StepOutcome(output=_):
+                # FIXME: Handle system/api_call tool_calls
+                raise ApplicationError("Not implemented")
+
             case _:
                 workflow.logger.error(
                     f"Unhandled step type: {type(context.current_step).__name__}"
@@ -468,6 +511,7 @@ class TaskExecutionWorkflow:
 
         # 4. Transition to the next step
         workflow.logger.info(f"Transitioning after step {context.cursor.step}")
+
         # The returned value is the transition finally created
         final_state = await transition(context, state)
 

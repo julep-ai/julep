@@ -30,6 +30,24 @@ model TaskTool extends CreateToolRequest {
     inherited?: boolean = false;
 }
 
+/** Reference to a tool by id */
+model ToolRefById {
+    @visibility("read", "create")
+    id?: uuid;
+}
+
+/** Reference to a tool by name */
+model ToolRefByName {
+    @visibility("read", "create")
+    name?: validPythonIdentifier;
+}
+
+/** Reference to a tool */
+model ToolRef {
+    @visibility("read", "create")
+    ref: ToolRefById | ToolRefByName;
+}
+
 /** Object describing a Task */
 model Task {
     @visibility("read", "create")
