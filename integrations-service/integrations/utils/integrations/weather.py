@@ -2,14 +2,18 @@ import os
 
 from langchain_community.utilities import OpenWeatherMapAPIWrapper
 
+from ...models import WeatherExecutionArguments, WeatherExecutionSetup
 
-async def weather(arguments: dict) -> str:
+
+async def weather(
+    setup: WeatherExecutionSetup, arguments: WeatherExecutionArguments
+) -> str:
     """
     Fetches weather data for a specified location using OpenWeatherMap API.
     """
-    location = arguments.get("location")
+    location = arguments.location
 
-    openweathermap_api_key = os.getenv("OPENWEATHERMAP_API_KEY")
+    openweathermap_api_key = setup.openweathermap_api_key
     if not location:
         raise ValueError("Location parameter is required for weather data")
 
