@@ -1,12 +1,15 @@
 from ..models import ExecuteIntegrationArguments, ExecuteIntegrationSetup
 from .integrations.dalle_image_generator import dalle_image_generator
 from .integrations.duckduckgo_search import duckduckgo_search
-from .integrations.wikipedia import wikipedia
-from .integrations.weather import weather
 from .integrations.hacker_news import hacker_news
+from .integrations.weather import weather
+from .integrations.wikipedia import wikipedia
+
 
 async def execute_integration(
-    provider: str, setup: ExecuteIntegrationSetup | None, arguments: ExecuteIntegrationArguments
+    provider: str,
+    setup: ExecuteIntegrationSetup | None,
+    arguments: ExecuteIntegrationArguments,
 ) -> str:
     match provider:
         case "duckduckgo_search":

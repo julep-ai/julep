@@ -8,7 +8,9 @@ from .router import router
 @router.post("/execute/{provider}", tags=["execution"])
 async def execute(
     provider: str = Path(..., description="The integration provider"),
-    request: IntegrationExecutionRequest = Body(..., description="The integration execution request")
+    request: IntegrationExecutionRequest = Body(
+        ..., description="The integration execution request"
+    ),
 ) -> IntegrationExecutionResponse:
     try:
         result = await execute_integration(provider, request.setup, request.arguments)
