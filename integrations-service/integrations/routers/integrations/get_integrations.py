@@ -1,15 +1,17 @@
 import importlib
 import inspect
 import os
-from typing import List, Any
+from typing import Any, List
+
 from pydantic import BaseModel
+
 from ...models.models import IntegrationDef
 from ...utils import integrations
 from .router import router
 
 
 def create_integration_def(module: Any) -> IntegrationDef:
-    module_parts = module.__name__.split('.')
+    module_parts = module.__name__.split(".")
     if len(module_parts) > 4:  # Nested integration
         provider = module_parts[-2]
         method = module_parts[-1]
@@ -18,8 +20,11 @@ def create_integration_def(module: Any) -> IntegrationDef:
         method = None
 
     # Find the first function in the module
-    function_name = next(name for name, obj in inspect.getmembers(
-        module) if inspect.isfunction(obj) and not name.startswith('_'))
+    function_name = next(
+        name
+        for name, obj in inspect.getmembers(module)
+        if inspect.isfunction(obj) and not name.startswith("_")
+    )
     function = getattr(module, function_name)
     signature = inspect.signature(function)
 
@@ -62,14 +67,16 @@ async def get_integrations() -> List[IntegrationDef]:
         if os.path.isdir(item_path):
             # This is a toolkit
             for file in os.listdir(item_path):
-                if file.endswith('.py') and not file.startswith('__'):
+                if file.endswith(".py") and not file.startswith("__"):
                     module = importlib.import_module(
-                        f"...utils.integrations.{item}.{file[:-3]}", package=__package__)
+                        f"...utils.integrations.{item}.{file[:-3]}", package=__package__
+                    )
                     integration_defs.append(create_integration_def(module))
-        elif item.endswith('.py') and not item.startswith('__'):
+        elif item.endswith(".py") and not item.startswith("__"):
             # This is a single-file tool
             module = importlib.import_module(
-                f"...utils.integrations.{item[:-3]}", package=__package__)
+                f"...utils.integrations.{item[:-3]}", package=__package__
+            )
             integration_defs.append(create_integration_def(module))
 
     return integration_defs
