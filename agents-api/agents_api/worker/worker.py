@@ -15,6 +15,7 @@ def create_worker(client: Client) -> Any:
     from ..activities import task_steps
     from ..activities.demo import demo_activity
     from ..activities.embed_docs import embed_docs
+    from ..activities.execute_integration import execute_integration
     from ..activities.mem_mgmt import mem_mgmt
     from ..activities.mem_rating import mem_rating
     from ..activities.summarization import summarization
@@ -49,10 +50,11 @@ def create_worker(client: Client) -> Any:
         activities=[
             *task_activities,
             demo_activity,
-            summarization,
+            embed_docs,
+            execute_integration,
             mem_mgmt,
             mem_rating,
-            embed_docs,
+            summarization,
             truncation,
         ],
     )

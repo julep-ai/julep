@@ -4,6 +4,7 @@ import "../chat";
 import "../common";
 import "../docs";
 import "../entries";
+import "../tools";
 
 import "./step_kind.tsp";
 
@@ -13,6 +14,7 @@ using Chat;
 using Common;
 using Docs;
 using Entries;
+using Tools;
 
 namespace Tasks;
 
@@ -76,7 +78,7 @@ model ToolCallStep extends BaseWorkflowStep<"tool_call"> {
 
 model ToolCallStepDef {
     /** The tool to run */
-    tool: toolRef;
+    tool: validPythonIdentifier;
 
     /** The input parameters for the tool (defaults to last step output) */
     arguments: ExpressionObject<unknown> | "_" = "_";
@@ -93,8 +95,26 @@ model PromptStepDef {
     /** The prompt to run */
     prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
+    /** The tools to use for the prompt */
+    tools: "all" | (ToolRef | CreateToolRequest)[] = #[];
+
+    /** The tool choice for the prompt */
+    tool_choice?: ToolChoiceOption;
+
     /** Settings for the prompt */
     settings?: ChatSettings;
+
+    /** Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content` */
+    unwrap?: boolean = false;
+
+    /** Whether to forward the tool results to the model when available.
+     * "true" => always forward
+     * "false" => never forward
+     * null => forward if applicable (default)
+     * 
+     * If a tool call is made, the tool's output will be used as the model's input.
+     * If a tool call is not made, the model's output will be used as the next step's input. */
+    forward_tool_results: boolean | null = null;
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {

@@ -48,12 +48,21 @@ alias eventStream = "text/event-stream";
 /** Different possible sources that can produce new entries */
 alias entrySource = "api_request" | "api_response" | "tool_response" | "internal" | "summarizer" | "meta";
 
-/** Naming convention for tool references. Tools are resolved in order: `step-settings` -> `task` -> `agent` */
-@pattern("^(function|integration|system|api_call)\\.(\\w+)$")
-scalar toolRef extends string;
-
 /** A simple python expression compatible with SimpleEval. */
 scalar PyExpression extends string;
 
 /** A valid jinja template. */
 scalar JinjaTemplate extends string;
+
+/** Integration provider name */
+alias integrationProvider = (
+    | "dummy"
+    | "dall-e"
+    | "duckduckgo"
+    | "hackernews"
+    | "weather"
+    | "wikipedia"
+    | "twitter"
+    | "webpage"
+    | "requests"
+);

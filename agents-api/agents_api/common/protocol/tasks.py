@@ -126,7 +126,7 @@ class ExecutionInput(BaseModel):
     execution: Execution
     task: TaskSpecDef
     agent: Agent
-    tools: list[Tool]
+    agent_tools: list[Tool]
     arguments: dict[str, Any]
 
     # Not used at the moment
@@ -138,6 +138,23 @@ class StepContext(BaseModel):
     execution_input: ExecutionInput
     inputs: list[Any]
     cursor: TransitionTarget
+
+    @computed_field
+    @property
+    def tools(self) -> list[Tool]:
+        execution_input = self.execution_input
+        task = execution_input.task
+        agent_tools = execution_input.agent_tools
+
+        if not task.inherit_tools:
+            return task.tools
+
+        # Remove duplicates from agent_tools
+        filtered_tools = [
+            t for t in agent_tools if t.name not in map(lambda x: x.name, task.tools)
+        ]
+
+        return filtered_tools + task.tools
 
     @computed_field
     @property

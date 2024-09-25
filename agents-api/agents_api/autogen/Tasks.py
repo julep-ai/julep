@@ -15,7 +15,7 @@ from .Docs import (
     TextOnlyDocSearchRequest,
     VectorDocSearchRequest,
 )
-from .Tools import CreateToolRequest
+from .Tools import CreateToolRequest, NamedToolChoice
 
 
 class CaseThen(BaseModel):
@@ -30,6 +30,34 @@ class CaseThen(BaseModel):
         EvaluateStep
         | ToolCallStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
+        | WaitForInputStep
+    )
+    """
+    The steps to run if the condition is true
+    """
+
+
+class CaseThenUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    case: Literal["_"] | str
+    """
+    The condition to evaluate
+    """
+    then: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStepUpdateItem
         | GetStep
         | SetStep
         | LogStep
@@ -72,6 +100,14 @@ class ContentModel(BaseModel):
     """
     The type (fixed to 'image_url')
     """
+
+
+class ContentModel1(Content):
+    pass
+
+
+class ContentModel2(ContentModel):
+    pass
 
 
 class CreateTaskRequest(BaseModel):
@@ -197,6 +233,30 @@ class ForeachDo(BaseModel):
     """
 
 
+class ForeachDoUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    in_: Annotated[str, Field(alias="in")]
+    """
+    The variable to iterate over.
+    VALIDATION: Should NOT return more than 1000 elements.
+    """
+    do: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStepUpdateItem
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+    )
+    """
+    The steps to run for each iteration
+    """
+
+
 class ForeachStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -208,6 +268,20 @@ class ForeachStep(BaseModel):
     The kind of step
     """
     foreach: ForeachDo
+    """
+    The steps to run for each iteration
+    """
+
+
+class ForeachStepUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    foreach: ForeachDoUpdateItem
     """
     The steps to run for each iteration
     """
@@ -263,6 +337,58 @@ class IfElseWorkflowStep(BaseModel):
         EvaluateStep
         | ToolCallStep
         | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
+        | WaitForInputStep
+        | None,
+        Field(None, alias="else"),
+    ]
+    """
+    The steps to run if the condition is false
+    """
+
+
+class IfElseWorkflowStepUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    if_: Annotated[str, Field(alias="if")]
+    """
+    The condition to evaluate
+    """
+    then: (
+        EvaluateStep
+        | ToolCallStep
+        | PromptStepUpdateItem
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
+        | WaitForInputStep
+    )
+    """
+    The steps to run if the condition is true
+    """
+    else_: Annotated[
+        EvaluateStep
+        | ToolCallStep
+        | PromptStepUpdateItem
         | GetStep
         | SetStep
         | LogStep
@@ -371,7 +497,7 @@ class MainModel(BaseModel):
     map: (
         EvaluateStep
         | ToolCallStep
-        | PromptStep
+        | PromptStepUpdateItem
         | GetStep
         | SetStep
         | LogStep
@@ -425,6 +551,32 @@ class ParallelStep(BaseModel):
     """
 
 
+class ParallelStepUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    parallel: Annotated[
+        list[
+            EvaluateStep
+            | ToolCallStep
+            | PromptStepUpdateItem
+            | GetStep
+            | SetStep
+            | LogStep
+            | EmbedStep
+            | SearchStep
+        ],
+        Field(max_length=100),
+    ]
+    """
+    The steps to run in parallel. Max concurrency will depend on the platform.
+    """
+
+
 class PatchTaskRequest(BaseModel):
     """
     Payload for patching a task
@@ -438,7 +590,7 @@ class PatchTaskRequest(BaseModel):
         list[
             EvaluateStep
             | ToolCallStep
-            | PromptStep
+            | PromptStepUpdateItem
             | GetStep
             | SetStep
             | LogStep
@@ -449,10 +601,10 @@ class PatchTaskRequest(BaseModel):
             | ErrorWorkflowStep
             | YieldStep
             | WaitForInputStep
-            | IfElseWorkflowStep
-            | SwitchStep
-            | ForeachStep
-            | ParallelStep
+            | IfElseWorkflowStepUpdateItem
+            | SwitchStepUpdateItem
+            | ForeachStepUpdateItem
+            | ParallelStepUpdateItem
             | MainModel
         ]
         | None,
@@ -520,9 +672,71 @@ class PromptStep(BaseModel):
     """
     The prompt to run
     """
+    tools: Literal["all"] | list[ToolRef | CreateToolRequest] = []
+    """
+    The tools to use for the prompt
+    """
+    tool_choice: Literal["auto", "none"] | NamedToolChoice | None = None
+    """
+    The tool choice for the prompt
+    """
     settings: ChatSettings | None = None
     """
     Settings for the prompt
+    """
+    unwrap: StrictBool = False
+    """
+    Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
+    """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be used as the model's input.
+    If a tool call is not made, the model's output will be used as the next step's input.
+    """
+
+
+class PromptStepUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    prompt: list[PromptItem] | str
+    """
+    The prompt to run
+    """
+    tools: Literal["all"] | list[ToolRefUpdateItem | CreateToolRequest] = []
+    """
+    The tools to use for the prompt
+    """
+    tool_choice: Literal["auto", "none"] | NamedToolChoice | None = None
+    """
+    The tool choice for the prompt
+    """
+    settings: ChatSettings | None = None
+    """
+    Settings for the prompt
+    """
+    unwrap: StrictBool = False
+    """
+    Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content`
+    """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be used as the model's input.
+    If a tool call is not made, the model's output will be used as the next step's input.
     """
 
 
@@ -626,6 +840,20 @@ class SwitchStep(BaseModel):
     """
 
 
+class SwitchStepUpdateItem(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    kind_: str | None = None
+    """
+    Discriminator property for BaseWorkflowStep.
+    """
+    switch: Annotated[list[CaseThenUpdateItem], Field(min_length=1)]
+    """
+    The cond tree
+    """
+
+
 class Task(BaseModel):
     """
     Object describing a Task
@@ -706,9 +934,7 @@ class ToolCallStep(BaseModel):
     """
     The kind of step
     """
-    tool: Annotated[
-        str, Field(pattern="^(function|integration|system|api_call)\\.(\\w+)$")
-    ]
+    tool: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     The tool to run
     """
@@ -716,6 +942,52 @@ class ToolCallStep(BaseModel):
     """
     The input parameters for the tool (defaults to last step output)
     """
+
+
+class ToolRef(BaseModel):
+    """
+    Reference to a tool
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    ref: ToolRefById | ToolRefByName
+
+
+class ToolRefById(BaseModel):
+    """
+    Reference to a tool by id
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: UUID | None = None
+
+
+class ToolRefByName(BaseModel):
+    """
+    Reference to a tool by name
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: Annotated[str | None, Field(None, max_length=40, pattern="^[^\\W0-9]\\w*$")]
+    """
+    Valid python identifier names
+    """
+
+
+class ToolRefUpdateItem(BaseModel):
+    """
+    Reference to a tool
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class UpdateTaskRequest(BaseModel):

@@ -39,13 +39,10 @@ T = TypeVar("T")
     transform=lambda d: {
         **d,
         "task": {
-            "tools": [
-                {tool["type"]: tool.pop("spec"), **tool}
-                for tool in map(fix_uuid_if_present, d["task"].pop("tools"))
-            ],
+            "tools": [*map(fix_uuid_if_present, d["task"].pop("tools"))],
             **d["task"],
         },
-        "tools": [
+        "agent_tools": [
             {tool["type"]: tool.pop("spec"), **tool}
             for tool in map(fix_uuid_if_present, d["tools"])
         ],

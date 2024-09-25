@@ -22,9 +22,6 @@ class ChosenToolCall(BaseModel):
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
@@ -44,13 +41,12 @@ class CreateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDef | None = None
+    system: SystemDef | None = None
 
 
 class FunctionCallOption(BaseModel):
@@ -75,20 +71,96 @@ class FunctionDef(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    description: Annotated[
-        str | None,
-        Field(
-            None,
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ]
+    description: str | None = None
     """
     Description of the function
     """
     parameters: dict[str, Any] | None = None
     """
     The parameters the function accepts
+    """
+
+
+class IntegrationDef(BaseModel):
+    """
+    Integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal[
+        "dummy",
+        "dall-e",
+        "duckduckgo",
+        "hackernews",
+        "weather",
+        "wikipedia",
+        "twitter",
+        "webpage",
+        "requests",
+    ]
+    """
+    The provider of the integration
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    description: str | None = None
+    """
+    Optional description of the integration
+    """
+    setup: dict[str, Any] | None = None
+    """
+    The setup parameters the integration accepts
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the integration call
+    """
+
+
+class IntegrationDefUpdate(BaseModel):
+    """
+    Integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: (
+        Literal[
+            "dummy",
+            "dall-e",
+            "duckduckgo",
+            "hackernews",
+            "weather",
+            "wikipedia",
+            "twitter",
+            "webpage",
+            "requests",
+        ]
+        | None
+    ) = None
+    """
+    The provider of the integration
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    description: str | None = None
+    """
+    Optional description of the integration
+    """
+    setup: dict[str, Any] | None = None
+    """
+    The setup parameters the integration accepts
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the integration call
     """
 
 
@@ -101,9 +173,6 @@ class NamedToolChoice(BaseModel):
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
 
 
 class PatchToolRequest(BaseModel):
@@ -126,9 +195,52 @@ class PatchToolRequest(BaseModel):
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDefUpdate | None = None
+    system: SystemDefUpdate | None = None
+
+
+class SystemDef(BaseModel):
+    """
+    System definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    call: str
+    """
+    The name of the system call
+    """
+    description: str | None = None
+    """
+    Optional description of the system call
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the system call
+    """
+
+
+class SystemDefUpdate(BaseModel):
+    """
+    System definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    call: str | None = None
+    """
+    The name of the system call
+    """
+    description: str | None = None
+    """
+    Optional description of the system call
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the system call
+    """
 
 
 class Tool(BaseModel):
@@ -143,13 +255,12 @@ class Tool(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDef | None = None
+    system: SystemDef | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -188,13 +299,12 @@ class UpdateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDef | None = None
+    system: SystemDef | None = None
 
 
 class ChosenFunctionCall(ChosenToolCall):
