@@ -68,6 +68,13 @@ embedding_model_id: str = env.str(
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
 
 
+# Integration service
+# -------------------
+integration_service_url: str = env.str(
+    "INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000"
+)
+
+
 # Temporal
 # --------
 temporal_worker_url: str = env.str("TEMPORAL_WORKER_URL", default="localhost:7233")
