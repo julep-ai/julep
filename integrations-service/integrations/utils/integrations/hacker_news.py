@@ -1,11 +1,13 @@
 from langchain_community.document_loaders import HNLoader
 
+from ...models import HackerNewsExecutionArguments
 
-async def hacker_news(arguments: dict) -> str:
+
+async def hacker_news(arguments: HackerNewsExecutionArguments) -> str:
     """
     Fetches and formats content from a Hacker News thread using the provided URL.
     """
-    url = arguments.get("url")
+    url = arguments.url
     if not url:
         raise ValueError("URL parameter is required for Hacker News search")
     loader = HNLoader(url)

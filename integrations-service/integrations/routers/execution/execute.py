@@ -11,7 +11,7 @@ async def execute(
     request: IntegrationExecutionRequest = Body(..., description="The integration execution request")
 ) -> IntegrationExecutionResponse:
     try:
-        result = await execute_integration(provider, request.arguments)
+        result = await execute_integration(provider, request.setup, request.arguments)
         return IntegrationExecutionResponse(result=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -2,19 +2,28 @@ from typing import Literal, Union
 
 from pydantic import BaseModel
 
-from .dalle_image_generator import DalleImageGeneratorArguments
+from .dalle_image_generator import DalleImageGeneratorArguments, DalleImageGeneratorSetup
 from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
 from .wikipedia import WikipediaExecutionArguments
+from .weather import WeatherExecutionSetup, WeatherExecutionArguments
+from .hacker_news import HackerNewsExecutionArguments
 
 ExecuteIntegrationArguments = Union[
     WikipediaExecutionArguments,
     DuckDuckGoSearchExecutionArguments,
     DalleImageGeneratorArguments,
+    WeatherExecutionArguments,
+    HackerNewsExecutionArguments,
+]
+
+ExecuteIntegrationSetup = Union[
+    DalleImageGeneratorSetup,
+    WeatherExecutionSetup,
 ]
 
 
 class IntegrationExecutionRequest(BaseModel):
-    setup: dict | None = None
+    setup: ExecuteIntegrationSetup | None = None
     """
     The setup parameters the integration accepts (such as API keys)
     """

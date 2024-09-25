@@ -1,7 +1,4 @@
-import os
-
 from langchain_community.utilities import OpenWeatherMapAPIWrapper
-
 from ...models import WeatherExecutionArguments, WeatherExecutionSetup
 
 
