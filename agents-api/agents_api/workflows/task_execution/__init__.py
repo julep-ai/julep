@@ -381,8 +381,6 @@ class TaskExecutionWorkflow:
             case WaitForInputStep(), StepOutcome(output=output):
                 workflow.logger.info("Wait for input step: Waiting for external input")
 
-                await transition(context, type="wait", output=output)
-
                 result = await workflow.execute_activity(
                     task_steps.raise_complete_async,
                     args=[context, output],
