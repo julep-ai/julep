@@ -12,6 +12,8 @@ include:
   - ./scheduler/docker-compose.yml
   - ./llm-proxy/docker-compose.yml
   - ./integrations-service/docker-compose.yml
+  - ./prometheus/docker-compose.yml
+  - ./grafana/docker-compose.yml
 
   # TODO: Enable after testing
   # - ./monitoring/docker-compose.yml
