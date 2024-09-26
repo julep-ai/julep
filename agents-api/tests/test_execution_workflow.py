@@ -1085,4 +1085,3 @@ async def _(
             mock_run_task_execution_workflow.assert_called_once()
 
             await handle.result()
-
