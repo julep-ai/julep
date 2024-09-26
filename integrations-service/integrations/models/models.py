@@ -10,6 +10,8 @@ from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
 from .hacker_news import HackerNewsExecutionArguments
 from .weather import WeatherExecutionArguments, WeatherExecutionSetup
 from .wikipedia import WikipediaExecutionArguments
+from .spider import SpiderExecutionArguments, SpiderExecutionSetup
+
 
 ExecuteIntegrationArguments = Union[
     WikipediaExecutionArguments,
@@ -17,11 +19,13 @@ ExecuteIntegrationArguments = Union[
     DalleImageGeneratorArguments,
     WeatherExecutionArguments,
     HackerNewsExecutionArguments,
+    SpiderExecutionArguments,
 ]
 
 ExecuteIntegrationSetup = Union[
     DalleImageGeneratorSetup,
     WeatherExecutionSetup,
+    SpiderExecutionSetup,
 ]
 
 
@@ -57,6 +61,7 @@ class IntegrationDef(BaseModel):
             "requests",
             "gmail",
             "tts_query",
+            "spider",
         ]
         | None
     ) = None
