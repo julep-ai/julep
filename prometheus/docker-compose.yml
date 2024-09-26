@@ -1,0 +1,17 @@
+name: prometheus
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    profiles:
+      - multi-tenant
+    
+    ports:
+      - 11000:9090
+
+    volumes:
+      - ./prometheus_data/prometheus.yml:/etc/prometheus/prometheus.yml
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
