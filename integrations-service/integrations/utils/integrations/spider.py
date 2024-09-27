@@ -1,6 +1,5 @@
 from ...models import SpiderExecutionArguments, SpiderExecutionSetup
-
-import requests, os, json
+from langchain_community.document_loaders import SpiderLoader
 
 async def spider(
     setup: SpiderExecutionSetup, arguments: SpiderExecutionArguments) -> str:
@@ -16,25 +15,26 @@ async def spider(
     if not query:
         raise ValueError("URL parameter is required for spider")
     
-    headers = {
-        'Authorization': setup.spider_api_key,
-        'Content-Type': 'application/json',
-    }
+    spider_loader = SpiderLoader(
+        api_key=setup.spider_api_key,
+        base_url=arguments.query,
+        mode=arguments.mode,
+        params=arguments.params
+    )
 
-    json_data = {"limit":arguments.limit,
-                 "metadata":arguments.metdata,
-                 "url":arguments.query,
-                 "return_format":arguments.return_format,
-                 "request": arguments.request}
-                 
+    documents = spider_loader.load()
 
-    response = requests.post(arguments.base_url,  headers=headers, json=json_data)
+    # Format the results as string
+    result = "\n\n".join(
+        [
+            f"Title: {doc.metadata['title']}\n"
+            f"Content: {doc.page_content}..."
+            for doc in documents
+        ]
+    )
 
-    # Ensure the request was successful
-    status = response.raise_for_status()
+    return result
 
-    if status != 200:
-        raise Exception(f"Failed to fetch data from {query}")
 
-    # Read and return the entire response content as JSON
-    return str(response.json())
+
+
