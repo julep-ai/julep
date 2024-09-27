@@ -21,6 +21,7 @@ def tool_args_for_task(
     developer_id: UUID,
     agent_id: UUID,
     task_id: UUID,
+    tool_type: Literal["integration", "api_call"] = "integration",
     arg_type: Literal["args", "setup"] = "args",
 ) -> tuple[list[str], dict]:
     agent_id = str(agent_id)
@@ -39,8 +40,8 @@ def tool_args_for_task(
                 agent_id,
                 metadata: agent_metadata,
             }},
-            task_{arg_type} = get(task_metadata, "x-tool-{arg_type}", {{}}),
-            agent_{arg_type} = get(agent_metadata, "x-tool-{arg_type}", {{}}),
+            task_{arg_type} = get(task_metadata, "x-{tool_type}-{arg_type}", {{}}),
+            agent_{arg_type} = get(agent_metadata, "x-{tool_type}-{arg_type}", {{}}),
 
             # Right values overwrite left values
             # See: https://docs.cozodb.org/en/latest/functions.html#Func.Vector.concat
@@ -64,6 +65,7 @@ def tool_args_for_session(
     session_id: UUID,
     agent_id: UUID,
     arg_type: Literal["args", "setup"] = "args",
+    tool_type: Literal["integration", "api_call"] = "integration",
 ) -> tuple[list[str], dict]:
     session_id = str(session_id)
 
@@ -80,8 +82,8 @@ def tool_args_for_session(
                 agent_id,
                 metadata: agent_metadata,
             }},
-            session_{arg_type} = get(session_metadata, "x-tool-{arg_type}", {{}}),
-            agent_{arg_type} = get(agent_metadata, "x-tool-{arg_type}", {{}}),
+            session_{arg_type} = get(session_metadata, "x-{tool_type}-{arg_type}", {{}}),
+            agent_{arg_type} = get(agent_metadata, "x-{tool_type}-{arg_type}", {{}}),
 
             # Right values overwrite left values
             # See: https://docs.cozodb.org/en/latest/functions.html#Func.Vector.concat
@@ -115,22 +117,28 @@ def get_tool_args_from_metadata(
     agent_id: UUID,
     session_id: UUID | None = None,
     task_id: UUID | None = None,
-    arg_type: Literal["args", "setup"] = "args",
+    tool_type: Literal["integration", "api_call"] = "integration",
+    arg_type: Literal["args", "setup", "headers"] = "args",
 ) -> tuple[list[str], dict]:
+    common: dict = dict(
+        developer_id=developer_id,
+        agent_id=agent_id,
+        tool_type=tool_type,
+        arg_type=arg_type,
+    )
+
     match session_id, task_id:
         case (None, task_id) if task_id is not None:
             return tool_args_for_task(
-                developer_id=developer_id,
-                agent_id=agent_id,
+                **common,
                 task_id=task_id,
-                arg_type=arg_type,
             )
+
         case (session_id, None) if session_id is not None:
             return tool_args_for_session(
-                developer_id=developer_id,
-                agent_id=agent_id,
+                **common,
                 session_id=session_id,
-                arg_type=arg_type,
             )
+
         case (_, _):
             raise ValueError("Either session_id or task_id must be provided")
