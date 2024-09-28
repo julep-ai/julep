@@ -1,13 +1,11 @@
-name: Build and push images to docker hub on merge to dev
-run-name: ${{ github.actor }} is building and pushing images to docker hub
+name: Bake images on PR
+run-name: ${{ github.actor }} is baking images
 
 on:
-  push:
-    branches:
-      - "dev"
+  pull_request:
 
 jobs:
-  Bake-Push-Images:
+  Bake-Images:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,17 +20,17 @@ jobs:
           username: julepai
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
-      - name: Build and push agent images
+      - name: Bake images
         uses: docker/bake-action@v5
         with:
           files: |
             ./docker-bake.hcl
           targets: agents-api
-          push: true
+          push: false
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            *.args.TAG=dev
+            *.args.TAG=pr-${{ github.ref_name }}
             *.args.GIT_SHA=${{ github.sha }}
 
 concurrency:

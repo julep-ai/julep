@@ -13,11 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set git sha
-        id: variables
-        run: |
-          echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -28,7 +23,7 @@ jobs:
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
       - name: Build and push agent images
-        uses: docker/bake-action@v3
+        uses: docker/bake-action@v5
         with:
           files: |
             ./docker-bake.hcl
@@ -38,7 +33,7 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
             *.args.TAG=latest
-            *.args.GIT_SHA=${{ steps.variables.outputs.git_sha }}
+            *.args.GIT_SHA=${{ github.sha }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
