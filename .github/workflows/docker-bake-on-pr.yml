@@ -31,7 +31,7 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
         env:
-          TAG: pr-${{ github.ref_name }}
+          TAG: pr-run-${{ github.run_number }}-${{ github.run_attempt }}
           GIT_SHA: ${{ github.sha }}
 
 concurrency:
