@@ -1,21 +1,24 @@
-name: Changelog CI
+name: Changelog on release
 
-# TODO: This is currently not working. Need to fix it
 on:
-  pull_request:
-    types: [ opened, synchronize ]
+  release:
+    types: [published]
 
 jobs:
-  build:
+  changelog:
     runs-on: ubuntu-latest
 
     steps:
       # Checks-out your repository
-      - uses: actions/checkout@v2
-
-      - name: Run Changelog CI
-        uses: saadmk11/changelog-ci@v1.1.2
+      - uses: actions/checkout@v4
         with:
-          changelog_filename: CHANGELOG.md
-          # config_file: changelog-ci-config.json
+          fetch-depth: 0
+          ref: dev
+
+      # Generate changelog from release notes
+      - uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          pull_request: true
+      
