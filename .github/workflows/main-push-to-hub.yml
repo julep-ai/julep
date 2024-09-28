@@ -32,8 +32,9 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            TAG=latest
-            GIT_SHA=${{ github.sha }}
+        env:
+          TAG: latest
+          GIT_SHA: ${{ github.sha }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
