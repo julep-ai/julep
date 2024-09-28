@@ -28,7 +28,7 @@ platform = 'linux'
 pythonpath = '.'
 
 # Python version (major.minor) of the target code.
-python_version = '3.11'
+python_version = '3.12'
 
 # Don't allow None to match bool. This flag is temporary and will be removed
 # once this behavior is enabled by default.

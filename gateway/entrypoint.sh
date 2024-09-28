@@ -1,8 +1,11 @@
 #!/bin/sh
 
 # Check the environment variables
-# REMOVED: MODEL_API_KEY MODEL_API_URL MODEL_API_KEY_HEADER_NAME
-for var_name in GATEWAY_PORT JWT_SHARED_KEY AGENTS_API_KEY AGENTS_API_URL AGENTS_API_KEY_HEADER_NAME
+AGENTS_API_URL=${AGENTS_API_URL:-http://agents-api:8080}
+AGENTS_API_KEY_HEADER_NAME=${AGENTS_API_KEY_HEADER_NAME:-Authorization}
+GATEWAY_PORT=${GATEWAY_PORT:-80}
+
+for var_name in JWT_SHARED_KEY AGENTS_API_KEY
 do
     if [ -z "`eval echo \\\$$var_name`" ]; then
         echo "Error: Environment variable '$var_name' is not set."

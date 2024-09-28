@@ -5,7 +5,7 @@ description = "Integration service for various AI tools"
 authors = ["Your Name <your.email@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.12,<3.13"
 langchain-community = "^0.3.0"
 fastapi = "^0.115.0"
 uvicorn = "^0.30.6"
@@ -20,7 +20,7 @@ pyowm = "^3.3.0"
 
 [tool.poe.tasks]
 format = "ruff format"
-lint = "ruff check --select I --fix --unsafe-fixes agents_api/**/*.py migrations/**/*.py tests/**/*.py"
+lint = "ruff check --select I --fix --unsafe-fixes integrations/**/*.py"
 typecheck = "pytype --config pytype.toml"
 check = [
     "lint",
@@ -30,6 +30,8 @@ check = [
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
+pytype = "^2024.9.13"
+ruff = "^0.6.8"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
