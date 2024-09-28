@@ -30,9 +30,9 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            *.args.TAG=pr-${{ github.ref_name }}
-            *.args.GIT_SHA=${{ github.sha }}
+            TAG=pr-${{ github.ref_name }}
+            GIT_SHA=${{ github.sha }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
