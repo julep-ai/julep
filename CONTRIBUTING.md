@@ -30,4 +30,44 @@ Improvements to documentation are always appreciated! If you see areas that coul
 
 We'd love to hear your feedback and ideas for the project! Feel free to submit an issue or contact the maintainers directly to share your thoughts. Your input is very valuable in shaping the future direction of the project.
 
+## Building Docker Images with Buildx Bake
+
+We use Docker Buildx Bake to build our Docker images. This allows us to build multiple images concurrently and efficiently. Follow these steps to build the Docker images:
+
+1. Ensure you have Docker and Docker Buildx installed on your system.
+
+2. Navigate to the root directory of the project where the `docker-bake.hcl` file is located.
+
+3. To build all services, run:
+   ```
+   docker buildx bake --file docker-bake.hcl
+   ```
+
+4. To build a specific service, use:
+   ```
+   docker buildx bake --file docker-bake.hcl <service-name>
+   ```
+   Replace `<service-name>` with one of the following:
+   - agents-api
+   - agents-api-worker
+   - cozo-migrate
+   - memory-store
+   - integrations
+   - gateway
+   - embedding-service-cpu
+   - embedding-service-gpu
+
+5. To set a custom tag for the images, use:
+   ```
+   docker buildx bake --file docker-bake.hcl --set *.tags=myorg/myimage:v1.0
+   ```
+   Replace `myorg/myimage:v1.0` with your desired image name and tag.
+
+6. By default, the images are built with the "latest" tag. To specify a different tag, you can set the TAG variable:
+   ```
+   docker buildx bake --file docker-bake.hcl --set TAG=v1.2.3
+   ```
+
+Note: The `docker-bake.hcl` file defines the build contexts, Dockerfiles, and tags for each service. If you need to modify the build process for a specific service, update the corresponding target in the `docker-bake.hcl` file.
+
 Thank you for your interest in contributing to this project!

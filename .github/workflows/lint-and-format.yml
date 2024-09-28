@@ -1,4 +1,4 @@
-name: Lint and typecheck APIs and SDKs
+name: Lint and typecheck agents-api
 run-name: ${{ github.actor }} is linting and typechecking the code
 
 # TODO: Fix CI github actions
@@ -10,99 +10,61 @@ jobs:
   Lint-And-Format:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        directory: [agents-api, sdks/python]
-
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
 
       - name: Configure Poetry to use .venv
         run: |
-          cd ${{ matrix.directory }}
+          cd agents-api
           poetry config virtualenvs.in-project true
 
       - name: Cache Poetry virtualenv
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.directory }}/.venv
-          key: ${{ runner.os }}-${{ matrix.directory }}-poetry-${{ hashFiles(format('{0}/poetry.lock', matrix.directory)) }}
+          path: agents-api/.venv
+          key: ${{ runner.os }}-agents-api-poetry-${{ hashFiles('agents-api/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.directory }}-poetry-
+            ${{ runner.os }}-agents-api-poetry-
 
       - name: Cache pytype
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.directory }}/.pytype
-          key: ${{ runner.os }}-${{ matrix.directory }}-pytype-${{ hashFiles(format('{0}/**/*.py', matrix.directory)) }}
+          path: agents-api/.pytype
+          key: ${{ runner.os }}-agents-api-pytype-${{ hashFiles('agents-api/**/*.py') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.directory }}-pytype-
+            ${{ runner.os }}-agents-api-pytype-
 
       - name: Install dependencies
         run: |
-          cd ${{ matrix.directory }}
+          cd agents-api
           poetry install
-
-      - name: Lint and format
-        run: |
-          cd ${{ matrix.directory }}
-          poetry run poe format
-          poetry run poe lint
 
       - name: Typecheck
         run: |
-          cd ${{ matrix.directory }}
+          cd agents-api
           poetry run poe typecheck
 
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "refactor: Lint ${{ matrix.directory }} (CI)"
-          branch: ${{ github.head_ref }}
-
-  Lint-And-Format-TS-SDK:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: sdks/ts/node_modules
-          key: ${{ runner.os }}-sdks-ts-npm-${{ hashFiles('sdks/ts/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-sdks-ts-npm-
-
-      - name: Install npm dependencies
+      - name: Lint and format
         run: |
-          cd sdks/ts
-          npm ci
+          cd agents-api
+          poetry run poe format
+          poetry run poe lint
 
-      - name: Lint and format TypeScript SDK
+      - name: Run tests
         run: |
-          cd sdks/ts
-          npm run format
-
-      - name: Build TypeScript SDK
-        run: |
-          cd sdks/ts
-          npm run build
+          cd agents-api
+          poetry run poe test
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "refactor: Lint sdks/ts (CI)"
+          commit_message: "refactor: Lint agents-api (CI)"
           branch: ${{ github.head_ref }}
 
 concurrency:
