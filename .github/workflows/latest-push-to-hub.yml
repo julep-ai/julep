@@ -1,10 +1,10 @@
-name: Build and push images to docker hub on merge to dev
+name: Build and push images to docker hub on merge to main
 run-name: ${{ github.actor }} is building and pushing images to docker hub
 
 on:
   push:
     branches:
-      - "dev"
+      - "main"
 
 jobs:
   Bake-Push-Images:
@@ -12,12 +12,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set branch name
-        id: variables
-        run: |
-          echo "branch_name=$(echo ${GITHUB_REF#refs/heads/} | tr '/' '-')" >> $GITHUB_OUTPUT
-          echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -29,7 +23,7 @@ jobs:
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"
 
       - name: Build and push agent images
-        uses: docker/bake-action@v3
+        uses: docker/bake-action@v5
         with:
           files: |
             ./docker-bake.hcl
@@ -38,9 +32,10 @@ jobs:
           set: |
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
-            *.args.TAG=${{ steps.variables.outputs.branch_name }}
-            *.args.GIT_SHA=${{ steps.variables.outputs.git_sha }}
+        env:
+          TAG: latest
+          GIT_SHA: ${{ github.sha }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
