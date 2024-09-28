@@ -1,12 +1,5 @@
-from .hacker_news import HackerNewsExecutionArguments
-
-# TODO: Move these models somewhere else
-from .models import (
-    ExecuteIntegrationArguments,
-    ExecuteIntegrationSetup,
-    IntegrationDef,
-    IntegrationExecutionRequest,
-    IntegrationExecutionResponse,
-)
-from .weather import WeatherExecutionArguments, WeatherExecutionSetup
-from .wikipedia import WikipediaExecutionArguments
+from .base_models import BaseArguments, BaseOutput, BaseSetup
+from .hacker_news import HackerNewsArguments, HackerNewsOutput
+from .spider import SpiderArguments, SpiderOutput, SpiderSetup
+from .weather import WeatherArguments, WeatherOutput, WeatherSetup
+from .wikipedia import WikipediaArguments, WikipediaOutput

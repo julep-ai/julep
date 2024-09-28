@@ -1,6 +1,20 @@
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from langchain_core.documents import Document
+from pydantic import Field
+
+from .base_models import (
+    BaseArguments,
+    BaseOutput,
+)
 
 
-class WikipediaExecutionArguments(BaseModel):
+class Wikipediarguments(BaseArguments):
     query: str = Field(..., description="The search query string")
     load_max_docs: int = Field(2, description="Maximum number of documents to load")
+
+
+class WikipediaOutput(BaseOutput):
+    documents: list[Document] = Field(
+        ..., description="The documents returned from the Wikipedia search"
+    )
