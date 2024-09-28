@@ -13,10 +13,8 @@ RUN pip install 'poetry>=1.8.0,<1.9.0' \
 
 COPY pyproject.toml poetry.lock ./
 
-RUN poetry install --no-dev
+RUN poetry install --no-dev --no-root
 
 COPY . ./
-
-RUN poetry install --no-dev
 
 ENTRYPOINT ["python", "-m", "agents_api.web", "--host", "0.0.0.0", "--port", "8080"]
