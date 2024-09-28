@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED True
 ENV POETRY_CACHE_DIR=/tmp/poetry_cache

@@ -702,7 +702,7 @@ Remember to replace `YOUR_API_KEY`, `{agent_id}`, and `{tool_id}` with your actu
 
 ### Partial application of arguments to tools
 
-Often, it's necessary to _partial_ some arguments of a particular tool. You can do that by setting the `x-tool-parameters` field on the `metadata` of the required scope. For instance, say you have the following user-defined function tool:
+Often, it's necessary to _partial_ some arguments of a particular tool. You can do that by setting the `x-integration-args` field on the `metadata` of the required scope. For instance, say you have the following user-defined function tool:
 ```yaml  
 name: check_account_status
 description: Get the account status for a customer
@@ -719,7 +719,7 @@ When chatting with a particular user, the `customer_id` field is expected to be 
 {
   "metadata": {
     ...
-    "x-tool-parameters": {
+    "x-integration-args": {
       "function:check_account_status": {
         "customer_id": 42
       }
@@ -737,12 +737,12 @@ This follows the precedence order of `metadata` fields. For example, say you are
 user:
   id: 11
   metadata:
-    x-tool-parameters:
+    x-integration-args:
       favorite: Emma Roberts
 agent:
   id: 22
   metadata:
-    x-tool-parameters:
+    x-integration-args:
       favorite: Emma Watson
   tools:
   - type: function
@@ -752,7 +752,7 @@ agent:
 session:
   id: 123
   metadata:
-    x-tool-parameters:
+    x-integration-args:
       favorite: Emma Stone
 ```
 
