@@ -1,3 +1,18 @@
+<a name="v0.4.1"></a>
+# [v0.4.1](https://github.com/julep-ai/julep/releases/tag/v0.4.1) - 28 Sep 2024
+
+## What's Changed
+* Update changelog for v0.4.0 by [@github-actions](https://github.com/github-actions) in https://github.com/julep-ai/julep/pull/531
+* fix: Bake on release as well by [@creatorrr](https://github.com/creatorrr) in https://github.com/julep-ai/julep/pull/532
+
+## New Contributors
+* [@github-actions](https://github.com/github-actions) made their first contribution in https://github.com/julep-ai/julep/pull/531
+
+**Full Changelog**: https://github.com/julep-ai/julep/compare/v0.4.0...v0.4.1
+
+[Changes][v0.4.1]
+
+
 <a name="v0.4.0"></a>
 # [v0.4.0](https://github.com/julep-ai/julep/releases/tag/v0.4.0) - 28 Sep 2024
 
@@ -248,6 +263,7 @@
 [Changes][v0.2.12]
 
 
+[v0.4.1]: https://github.com/julep-ai/julep/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/julep-ai/julep/compare/v0.3.4...v0.4.0
 [v0.3.4]: https://github.com/julep-ai/julep/compare/v0.3.3...v0.3.4
 [v0.3.3]: https://github.com/julep-ai/julep/compare/v0.3.2...v0.3.3
