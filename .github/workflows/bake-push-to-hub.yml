@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - "dev"
+    tags:
+      - "v*"
 
 jobs:
   Bake-Push-Images:
@@ -33,9 +35,9 @@ jobs:
             *.cache-from=type=gha
             *.cache-to=type=gha,mode=max
         env:
-          TAG: dev
+          TAG: ${{ github.ref_name }}
           GIT_SHA: ${{ github.sha }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
+  cancel-in-progress: true
