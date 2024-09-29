@@ -1,15 +1,15 @@
 from langchain_community.utilities import OpenWeatherMapAPIWrapper
 
-from ...models import WeatherArguments, WeatherOutput, WeatherSetup
+from ...models import WeatherGetArguments, WeatherGetOutput, WeatherSetup
 
 
-async def weather(setup: WeatherSetup, arguments: WeatherArguments) -> WeatherOutput:
+async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput:
     """
     Fetches weather data for a specified location using OpenWeatherMap API.
     """
 
     assert isinstance(setup, WeatherSetup), "Invalid setup"
-    assert isinstance(arguments, WeatherArguments), "Invalid arguments"
+    assert isinstance(arguments, WeatherGetArguments), "Invalid arguments"
 
     location = arguments.location
 
@@ -19,4 +19,4 @@ async def weather(setup: WeatherSetup, arguments: WeatherArguments) -> WeatherOu
 
     weather = OpenWeatherMapAPIWrapper(openweathermap_api_key=openweathermap_api_key)
     result = weather.run(location)
-    return WeatherOutput(result=result)
+    return WeatherGetOutput(result=result)

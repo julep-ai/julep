@@ -29,12 +29,12 @@ class ProviderInfo(BaseModel):
 class BaseProviderMethod(BaseModel):
     method: IdentifierName
     description: str
-    arguments: Any  # JsonSchema[BaseArguments]
-    output: Any  # JsonSchema[BaseOutput]
+    arguments: type[BaseArguments]
+    output: type[BaseOutput]
 
 
 class BaseProvider(BaseModel):
     provider: IdentifierName
-    setup: Any  # JsonSchema[BaseSetup] | None
+    setup: type[BaseSetup] | None
     methods: list[BaseProviderMethod]
     info: ProviderInfo

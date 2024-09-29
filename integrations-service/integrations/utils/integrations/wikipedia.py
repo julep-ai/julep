@@ -1,9 +1,9 @@
 from langchain_community.document_loaders import WikipediaLoader
 
-from ...models import WikipediaArguments, WikipediaOutput
+from ...models import WikipediaSearchArguments, WikipediaSearchOutput
 
 
-async def wikipedia(arguments: WikipediaArguments) -> WikipediaOutput:
+async def search(arguments: WikipediaSearchArguments) -> WikipediaSearchOutput:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """
@@ -17,4 +17,4 @@ async def wikipedia(arguments: WikipediaArguments) -> WikipediaOutput:
     loader = WikipediaLoader(query=query, load_max_docs=load_max_docs)
     documents = loader.load()
 
-    return WikipediaOutput(documents=documents)
+    return WikipediaSearchOutput(documents=documents)

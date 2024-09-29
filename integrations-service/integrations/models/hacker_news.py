@@ -5,11 +5,11 @@ from pydantic_core import Url
 from .base_models import BaseArguments, BaseOutput
 
 
-class HackerNewsArguments(BaseArguments):
+class HackerNewsFetchArguments(BaseArguments):
     url: Url = Field(..., description="The URL of the Hacker News thread to fetch")
 
 
-class HackerNewsOutput(BaseOutput):
+class HackerNewsFetchOutput(BaseOutput):
     documents: list[Document] = Field(
         ..., description="The documents returned from the Hacker News search"
     )

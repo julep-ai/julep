@@ -1,14 +1,9 @@
+import importlib
 from ..models.base_models import IdentifierName
 from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
-from ..models.hacker_news import HackerNewsArguments
-from ..models.spider import SpiderArguments, SpiderSetup
-from ..models.weather import WeatherArguments, WeatherSetup
-from ..models.wikipedia import WikipediaArguments
-from .integrations.hacker_news import hacker_news
-from .integrations.spider import spider
-from .integrations.weather import weather
-from .integrations.wikipedia import wikipedia
 
+from ..providers import providers
+from ..models.base_models import BaseProvider
 
 async def execute_integration(
     provider: IdentifierName,
@@ -16,24 +11,27 @@ async def execute_integration(
     method: IdentifierName | None = None,
     setup: ExecutionSetup | None = None,
 ) -> ExecutionResponse:
-    match provider:
-        case "wikipedia":
-            return await wikipedia(
-                arguments=WikipediaArguments(**arguments.model_dump())
-            )
-        case "weather":
-            return await weather(
-                setup=WeatherSetup(**setup.model_dump()),
-                arguments=WeatherArguments(**arguments.model_dump()),
-            )
-        case "hacker_news":
-            return await hacker_news(
-                arguments=HackerNewsArguments(**arguments.model_dump())
-            )
-        case "spider":
-            return await spider(
-                setup=SpiderSetup(**setup.model_dump()),
-                arguments=SpiderArguments(**arguments.model_dump()),
-            )
-        case _:
-            raise ValueError(f"Unknown integration: {provider}")
+    if provider not in providers:
+        raise ValueError(f"Unknown provider: {provider}")
+    provider: BaseProvider = providers[provider]
+    if method is None:
+        method = provider.methods[0].method
+    if method not in [method.method for method in provider.methods]:
+        raise ValueError(f"Unknown method: {method} for provider: {provider}")
+    
+    provider_module = importlib.import_module(
+        f"integrations.utils.integrations.{provider.provider}", package="integrations")
+    execution_function = getattr(provider_module, method)
+
+    if setup:
+        setup_class = provider.setup
+        if setup_class:
+            setup = setup_class(**setup.model_dump())
+    arguments_class = next(
+        m for m in provider.methods if m.method == method).arguments
+    parsed_arguments = arguments_class(**arguments.model_dump())
+
+    if setup:
+        return await execution_function(setup=setup, arguments=parsed_arguments)
+    else:
+        return await execution_function(arguments=parsed_arguments)

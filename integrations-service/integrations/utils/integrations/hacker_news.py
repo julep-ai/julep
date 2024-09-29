@@ -1,14 +1,14 @@
 from langchain_community.document_loaders import HNLoader
 
-from ...models import HackerNewsArguments, HackerNewsOutput
+from ...models import HackerNewsFetchArguments, HackerNewsFetchOutput
 
 
-async def hacker_news(arguments: HackerNewsArguments) -> HackerNewsOutput:
+async def fetch(arguments: HackerNewsFetchArguments) -> HackerNewsFetchOutput:
     """
     Fetches and formats content from a Hacker News thread using the provided URL.
     """
 
-    assert isinstance(arguments, HackerNewsArguments), "Invalid arguments"
+    assert isinstance(arguments, HackerNewsFetchArguments), "Invalid arguments"
 
     url = arguments.url
     if not url:
@@ -19,4 +19,4 @@ async def hacker_news(arguments: HackerNewsArguments) -> HackerNewsOutput:
     if not documents:
         raise ValueError("No data found for the given URL")
 
-    return HackerNewsOutput(documents=documents)
+    return HackerNewsFetchOutput(documents=documents)

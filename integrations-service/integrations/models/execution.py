@@ -2,14 +2,17 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-from .hacker_news import HackerNewsArguments, HackerNewsOutput
-from .spider import SpiderArguments, SpiderOutput, SpiderSetup
-from .weather import WeatherArguments, WeatherOutput, WeatherSetup
-from .wikipedia import WikipediaArguments, WikipediaOutput
+from .hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
+from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
+from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
+from .wikipedia import WikipediaSearchArguments, WikipediaSearchOutput
 
 ExecutionSetup = Union[SpiderSetup, WeatherSetup]
 ExecutionArguments = Union[
-    SpiderArguments, WeatherArguments, HackerNewsArguments, WikipediaArguments
+    SpiderFetchArguments,
+    WeatherGetArguments,
+    HackerNewsFetchArguments,
+    WikipediaSearchArguments,
 ]
 
 
@@ -25,5 +28,5 @@ class ExecutionRequest(BaseModel):
 
 
 ExecutionResponse = Union[
-    SpiderOutput, WeatherOutput, HackerNewsOutput, WikipediaOutput
+    SpiderFetchOutput, WeatherGetOutput, HackerNewsFetchOutput, WikipediaSearchOutput
 ]
