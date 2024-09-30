@@ -1,9 +1,24 @@
-from .models.base_models import BaseProvider, BaseProviderMethod, ProviderInfo
-from .models.wikipedia import WikipediaSearchArguments, WikipediaSearchOutput
-from .models.weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
-from .models.hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
-from .models.spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
-
+from .models import (
+    BaseProvider,
+    BaseProviderMethod,
+    ProviderInfo,
+    WikipediaSearchArguments,
+    WikipediaSearchOutput,
+    WeatherGetArguments,
+    WeatherGetOutput,
+    WeatherSetup,
+    HackerNewsFetchArguments,
+    HackerNewsFetchOutput,
+    SpiderFetchArguments,
+    SpiderFetchOutput,
+    SpiderSetup,
+    BraveSearchArguments,
+    BraveSearchOutput,
+    BraveSearchSetup,
+    BrowserBaseSetup,
+    BrowserBaseLoadArguments,
+    BrowserBaseLoadOutput,
+)
 wikipedia = BaseProvider(
     provider="wikipedia",
     setup=None,
@@ -80,9 +95,49 @@ spider = BaseProvider(
     ),
 )
 
+brave = BaseProvider(
+    provider="brave",
+    setup=BraveSearchSetup,
+    methods=[
+        BaseProviderMethod(
+            method="search",
+            description="Search with Brave",
+            arguments=BraveSearchArguments,
+            output=BraveSearchOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://brave.com/",
+        docs="https://brave.com/docs/",
+        icon="https://brave.com/favicon.ico",
+        friendly_name="Brave Search",
+    ),
+)
+
+browserbase = BaseProvider(
+    provider="browserbase",
+    setup=BrowserBaseSetup,
+    methods=[
+        BaseProviderMethod(
+            method="load",
+            description="Load documents from the provided urls",
+            arguments=BrowserBaseLoadArguments,
+            output=BrowserBaseLoadOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        url="https://browserbase.com/",
+        docs="https://browserbase.com/docs/",
+        icon="https://browserbase.com/favicon.ico",
+        friendly_name="BrowserBase",
+    ),
+)
+
 providers = {
     "wikipedia": wikipedia,
     "weather": weather,
     "hacker_news": hacker_news,
     "spider": spider,
+    "brave": brave,
+    "browserbase": browserbase,
 }

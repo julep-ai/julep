@@ -3,7 +3,7 @@ from langchain_community.document_loaders import HNLoader
 from ...models import HackerNewsFetchArguments, HackerNewsFetchOutput
 
 
-async def fetch(arguments: HackerNewsFetchArguments) -> HackerNewsFetchOutput:
+def fetch(arguments: HackerNewsFetchArguments) -> HackerNewsFetchOutput:
     """
     Fetches and formats content from a Hacker News thread using the provided URL.
     """

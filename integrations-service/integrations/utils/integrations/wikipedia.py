@@ -3,7 +3,7 @@ from langchain_community.document_loaders import WikipediaLoader
 from ...models import WikipediaSearchArguments, WikipediaSearchOutput
 
 
-async def search(arguments: WikipediaSearchArguments) -> WikipediaSearchOutput:
+def search(arguments: WikipediaSearchArguments) -> WikipediaSearchOutput:
     """
     Searches Wikipedia for a given query and returns formatted results.
     """

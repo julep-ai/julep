@@ -6,15 +6,34 @@ from .hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
 from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
 from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
 from .wikipedia import WikipediaSearchArguments, WikipediaSearchOutput
+from .brave import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
+from .browserbase import BrowserBaseSetup, BrowserBaseLoadArguments, BrowserBaseLoadOutput
 
-ExecutionSetup = Union[SpiderSetup, WeatherSetup]
+
+ExecutionSetup = Union[
+    SpiderSetup,
+    WeatherSetup,
+    BraveSearchSetup,
+    BrowserBaseSetup,
+]
+
 ExecutionArguments = Union[
     SpiderFetchArguments,
     WeatherGetArguments,
     HackerNewsFetchArguments,
     WikipediaSearchArguments,
+    BraveSearchArguments,
+    BrowserBaseLoadArguments,
 ]
 
+ExecutionResponse = Union[
+    SpiderFetchOutput,
+    WeatherGetOutput,
+    HackerNewsFetchOutput,
+    WikipediaSearchOutput,
+    BraveSearchOutput,
+    BrowserBaseLoadOutput
+]
 
 class ExecutionRequest(BaseModel):
     setup: Optional[ExecutionSetup]
@@ -25,8 +44,3 @@ class ExecutionRequest(BaseModel):
     """
     The arguments to pass to the integration
     """
-
-
-ExecutionResponse = Union[
-    SpiderFetchOutput, WeatherGetOutput, HackerNewsFetchOutput, WikipediaSearchOutput
-]

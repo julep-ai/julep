@@ -3,7 +3,7 @@ from langchain_community.document_loaders import SpiderLoader
 from ...models import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
 
 
-async def crawl(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderFetchOutput:
+def crawl(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderFetchOutput:
     """
     Fetches data from a specified URL.
     """

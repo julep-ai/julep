@@ -5,7 +5,7 @@ from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionS
 from ..providers import providers
 from ..models.base_models import BaseProvider
 
-async def execute_integration(
+def execute_integration(
     provider: IdentifierName,
     arguments: ExecutionArguments,
     method: IdentifierName | None = None,
@@ -32,6 +32,6 @@ async def execute_integration(
     parsed_arguments = arguments_class(**arguments.model_dump())
 
     if setup:
-        return await execution_function(setup=setup, arguments=parsed_arguments)
+        return execution_function(setup=setup, arguments=parsed_arguments)
     else:
-        return await execution_function(arguments=parsed_arguments)
+        return execution_function(arguments=parsed_arguments)
