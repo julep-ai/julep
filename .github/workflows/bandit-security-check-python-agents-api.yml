@@ -15,4 +15,4 @@ jobs:
         path: "./agents-api/agents_api"
         level: high
         confidence: high
-        exit_zero: true
+        # exit_zero: true
