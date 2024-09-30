@@ -25,4 +25,4 @@ async def crawl(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderFe
 
     documents = spider_loader.load()
 
-    return SpiderFetchOutput(result=documents)
+    return SpiderFetchOutput(documents=documents)
