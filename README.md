@@ -146,12 +146,12 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 
 ## 🎉🚀 **Exciting News: Julep 1.0 Alpha Release!** 🚀🎉
 
-We're thrilled to announce the alpha release of Julep 1.0! 🥳
+We're thrilled to announce the **alpha** release of <u>Julep 1.0</u>! 🥳
 
 🌟 **What's New:**
 - Enhanced workflow capabilities
 - Improved agent persistence
-- Expanded tool integrations
+- Tons of in-built tool integrations (like dalle, google search, sendgrid, etc.)
 - Streamlined API
 
 🧪 Try it out and help shape the future of AI workflows!
@@ -178,9 +178,12 @@ With Julep, you can:
 
 Whether you're developing a chatbot, automating tasks, or building a complex AI assistant, Julep provides the flexibility and features you need to turn your ideas into reality swiftly and efficiently.
 
+<!-- TODO: Add a screencast -->
 
 <details>
 <summary>Here's a quick python example:</summary>
+
+<!-- TODO: Add a gif that shows the execution of the task in the README -->
 
 <pre><code class="language-python">
 from julep import Julep, AsyncJulep
@@ -510,6 +513,87 @@ This example demonstrates how to create an agent with a custom tool, define a co
 > [!TIP]
 > You can find another node.js example [here](example.ts) or python example [here](example.py).
 
+## Concepts
+
+Julep is built on several key technical components that work together to create powerful AI workflows:
+
+### Agents
+AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users. Agents are the core functional units of Julep.
+
+```mermaid
+graph TD
+    Agent[Agent] --> LLM[Large Language Model]
+    Agent --> Tasks[Tasks]
+    Agent --> Users[Users]
+    Tasks --> Tools[Tools]
+```
+
+### Users
+Entities that interact with agents. Users can be associated with sessions and have their own metadata, allowing for personalized interactions.
+
+```mermaid
+graph LR
+    User[User] --> Sessions[Sessions]
+    Sessions --> Agents[Agents]
+    Sessions --> Metadata[Metadata]
+```
+
+### Sessions
+Stateful interactions between agents and users. Sessions maintain context across multiple exchanges and can be configured for different behaviors, including context management and overflow handling.
+
+```mermaid
+graph LR
+    Sessions[Sessions] --> Agents[Agents]
+    Sessions --> Users[Users]
+    Sessions --> ContextManagement[Context Management]
+    Sessions --> OverflowHandling[Overflow Handling]
+```
+
+### Tasks
+Multi-step, programmatic workflows that agents can execute. Tasks define complex operations and can include various types of steps, such as prompts, tool calls, and conditional logic.
+
+```mermaid
+graph TD
+    Tasks[Tasks] --> Steps[Workflow Steps]
+    Steps --> Prompt[Prompt]
+    Steps --> ToolCalls[Tool Calls]
+    Steps --> ConditionalLogic[Conditional Logic]
+```
+
+### Tools
+Integrations that extend an agent's capabilities. Tools can be user-defined functions, system tools, or third-party API integrations. They allow agents to perform actions beyond text generation.
+
+```mermaid
+graph LR
+    Tools[Tools] --> UserDefinedFunctions[User-Defined Functions]
+    Tools --> SystemTools[System Tools]
+    Tools --> ThirdPartyAPIs[Third-Party APIs]
+```
+
+### Documents
+Text or data objects that can be associated with agents or users. Documents are vectorized and stored in a vector database, enabling semantic search and retrieval during agent interactions.
+
+```mermaid
+graph LR
+    Documents[Documents] --> VectorDatabase[Vector Database]
+    Documents --> SemanticSearch[Semantic Search]
+    Documents --> AgentsOrUsers[Agents or Users]
+```
+
+### Executions
+Instances of tasks that have been initiated with specific inputs. Executions have their own lifecycle and state machine, allowing for monitoring, management, and resumption of long-running processes.
+
+```mermaid
+graph LR
+    Executions[Executions] --> Tasks[Tasks]
+    Executions --> Lifecycle[Lifecycle]
+    Executions --> Monitoring[Monitoring]
+    Executions --> Management[Management]
+    Executions --> Resumption[Resumption]
+```
+
+For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md).
+
 ## Understanding Tasks
 
 Tasks are the core of Julep's workflow system. They allow you to define complex, multi-step AI workflows that your agents can execute. Here's a brief overview of task components:
@@ -629,13 +713,18 @@ results = client.documents.search(
 
 For more advanced features and detailed usage, please refer to our [Advanced Features Documentation](https://docs.julep.ai/advanced-features).
 
+## SDK Reference
+
+- [Node.js SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md)
+- [Python SDK](https://github.com/julep-ai/python-sdk/blob/main/api.md)
+
 ## API Reference
 
 Explore our comprehensive API documentation to learn more about agents, tasks, and executions:
 
-- [Agents API](https://docs.julep.ai/api/agents)
-- [Tasks API](https://docs.julep.ai/api/tasks)
-- [Executions API](https://docs.julep.ai/api/executions)
+- [Agents API](https://api.julep.ai/api/docs#tag/agents)
+- [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
+- [Executions API](https://api.julep.ai/api/docs#tag/executions)
 
 ## Examples and Tutorials
 

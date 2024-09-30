@@ -1,119 +1,3 @@
-<!--
-****************
-** Guidelines **
-****************
-
-**Chosen Approach:**
-
-The **Quick Start Guide Focused README** is the most promising for optimizing the time to first workflow. It allows developers to get hands-on experience quickly, which is essential for engagement and understanding.
-
-* * *
-
-**Outline for the README:**
-
-1.  **Title and Badges**
-    *   Julep Logo or Title
-    *   Build status, npm version, license badges
-2.  **Introduction**
-    *   _Briefly explain what Julep is and its purpose._
-    *   Emphasize how it simplifies building persistent AI agents with workflows.
-3.  **Features**
-    *   _Highlight key features with a focus on "tasks" (AI workflows)._
-    *   Mention support for persistent sessions, tool integration, and document management.
-4.  **Installation**
-    *   _Provide npm installation command:_
-        
-        bash
-        
-        Copy code
-        
-        `npm install julep`
-        
-5.  **Quick Start Guide**
-    *   **Step 1: Import Julep**
-        *   _Show how to import Julep into a project._
-            
-            javascript
-            
-            Copy code
-            
-            `const Julep = require('julep');`
-            
-    *   **Step 2: Initialize the Agent**
-        *   _Guide on creating a new agent with basic settings._
-            
-            javascript
-            
-            Copy code
-            
-            `const agent = new Julep.Agent({  name: 'MyAgent',  model: 'gpt-4-turbo', });`
-            
-    *   **Step 3: Chat with the Agent**
-        *   _Provide a simple example of a chat with the agent._
-            
-            javascript
-            
-            Copy code
-            
-            `const response = await client.sessions.chat({  session_id: session.id,  message: 'Hello, how are you?' });`   
-            
-    *   **Step 4: Create a multi-step Task**
-        *   _Provide a simple example of a task definition._
-            
-            javascript
-            
-            Copy code
-            
-            `const task = {  name: 'GreetingTask',  main: [    {      prompt: 'Say hello to the user.',    },  ], }; agent.addTask(task);`
-            
-    *   **Step 5: Execute the Task**
-        *   _Show how to run the task and handle the output._
-            
-            javascript
-            
-            Copy code
-            
-            `agent.executeTask('GreetingTask').then((output) => {  console.log(output); });`
-            
-6.  **Understanding Tasks**
-    *   _Explain what tasks are and how they function within Julep._
-    *   Describe different types of workflow steps.
-        *   Prompt, Tool Call, Evaluate, etc.
-    *   _Note:_ Link to detailed documentation for each step type.
-7.  **Advanced Features**
-    *   _Briefly mention other capabilities:_
-        *   Adding tools to agents.
-        *   Managing sessions and users.
-        *   Document integration and search.
-8.  **API Reference**
-    *   _Link to full API documentation._
-    *   Mention key endpoints for agents, tasks, and executions.
-9.  **Examples and Tutorials**
-    *   _Provide links to example projects or further tutorials._
-    *   Encourage users to explore and build upon provided examples.
-10.  **Contributing**
-    *   _Instructions for contributing to the project._
-    *   Link to contribution guidelines and code of conduct.
-11.  **Support and Community**
-    *   _Information on how to get help._
-    *   Links to community forums, chat groups, or issue trackers.
-12.  **License**
-    *   _State the project's license._
-    *   Provide a link to the LICENSE file.
-13.  **Acknowledgements**
-    *   _Credit to contributors and used resources._
-
-* * *
-
-**Notes:**
-
-*   **Code Examples:** Ensure all code snippets are easy to understand and copy-paste ready.
-*   **Simplicity:** Keep explanations concise to maintain focus on getting started quickly.
-*   **Links:** Include hyperlinks to detailed documentation sections for users who want to delve deeper.
-*   **Visuals:** Consider adding diagrams or images to illustrate concepts if possible.
-*   **Tone:** Maintain an encouraging and helpful tone throughout the README
--->
-
 <sup>[English](README.md) | 中文</sup>
 
 <div align="center">
@@ -147,15 +31,15 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 
 ## 🎉🚀 **激动人心的消息：Julep 1.0 Alpha 版发布！** 🚀🎉
 
-我们很高兴地宣布 Julep 1.0 的 alpha 版本发布！🥳
+我们很高兴地宣布 **Julep 1.0** 的 **alpha** 版本发布！🥳
 
 🌟 **新特性：**
 - 增强的工作流功能
 - 改进的代理持久性
-- 扩展的工具集成
+- 大量内置工具集成（如 DALL·E、Google 搜索、SendGrid 等）
 - 简化的 API
 
-🧪 试用它并帮助塑造 AI 工作流的未来！
+🧪 尝试使用并帮助塑造 AI 工作流的未来！
 
 > [!NOTE]
 > 在测试阶段，您可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 获取 API 密钥。
@@ -178,8 +62,12 @@ Julep 是一个开源平台，用于创建具有可定制工作流的持久 AI �
 
 无论您是在开发聊天机器人、自动化任务，还是构建复杂的 AI 助手，Julep 都能为您提供所需的灵活性和功能，帮助您快速高效地将想法转化为现实。
 
+<!-- TODO: 添加一个屏幕录像 -->
+
 <details>
 <summary>这里有一个简单的 Python 示例：</summary>
+
+<!-- TODO: 在 README 中添加展示任务执行过程的 gif -->
 
 <pre><code class="language-python">
 from julep import Julep, AsyncJulep
@@ -505,6 +393,87 @@ await client.executions.stream(execution_id=execution.id)
 > [!TIP]
 > 您可以在[这里](example.ts)找到另一个 Node.js 示例，或在[这里](example.py)找到 Python 示例。
 
+## 概念
+
+Julep 建立在几个关键的技术组件之上，这些组件协同工作以创建强大的 AI 工作流：
+
+### 代理
+由大型语言模型（LLM）支持的 AI 实体，执行任务并与用户交互。代理是 Julep 的核心功能单元。
+
+```mermaid
+graph TD
+    Agent[代理] --> LLM[大型语言模型]
+    Agent --> Tasks[任务]
+    Agent --> Users[用户]
+    Tasks --> Tools[工具]
+```
+
+### 用户
+与代理交互的实体。用户可以与会话关联，并拥有自己的元数据，允许个性化交互。
+
+```mermaid
+graph LR
+    User[用户] --> Sessions[会话]
+    Sessions --> Agents[代理]
+    Sessions --> Metadata[元数据]
+```
+
+### 会话
+代理和用户之间的有状态交互。会话在多次交换中保持上下文，可以配置不同的行为，包括上下文管理和溢出处理。
+
+```mermaid
+graph LR
+    Sessions[会话] --> Agents[代理]
+    Sessions --> Users[用户]
+    Sessions --> ContextManagement[上下文管理]
+    Sessions --> OverflowHandling[溢出处理]
+```
+
+### 任务
+代理可以执行的多步骤、程序化工作流。任务定义复杂操作，可以包括各种类型的步骤，如提示、工具调用和条件逻辑。
+
+```mermaid
+graph TD
+    Tasks[任务] --> Steps[工作流步骤]
+    Steps --> Prompt[提示]
+    Steps --> ToolCalls[工具调用]
+    Steps --> ConditionalLogic[条件逻辑]
+```
+
+### 工具
+扩展代理能力的集成。工具可以是用户定义的函数、系统工具或第三方 API 集成。它们允许代理执行超出文本生成的操作。
+
+```mermaid
+graph LR
+    Tools[工具] --> UserDefinedFunctions[用户定义函数]
+    Tools --> SystemTools[系统工具]
+    Tools --> ThirdPartyAPIs[第三方 API]
+```
+
+### 文档
+可以与代理或用户关联的文本或数据对象。文档被向量化并存储在向量数据库中，在代理交互期间实现语义搜索和检索。
+
+```mermaid
+graph LR
+    Documents[文档] --> VectorDatabase[向量数据库]
+    Documents --> SemanticSearch[语义搜索]
+    Documents --> AgentsOrUsers[代理或用户]
+```
+
+### 执行
+已经用特定输入启动的任务实例。执行有自己的生命周期和状态机，允许监控、管理和恢复长时间运行的进程。
+
+```mermaid
+graph LR
+    Executions[执行] --> Tasks[任务]
+    Executions --> Lifecycle[生命周期]
+    Executions --> Monitoring[监控]
+    Executions --> Management[管理]
+    Executions --> Resumption[恢复]
+```
+
+有关这些概念及其交互的更详细解释，请参阅我们的[概念文档](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md)。
+
 ## 理解任务
 
 任务是 Julep 工作流系统的核心。它们允许您定义复杂的多步骤 AI 工作流，供您的代理执行。以下是任务组件的简要概述：
@@ -624,13 +593,18 @@ results = client.documents.search(
 
 有关更多高级功能和详细用法，请参阅我们的[高级功能文档](https://docs.julep.ai/advanced-features)。
 
+## SDK 参考
+
+- [Node.js SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md)
+- [Python SDK](https://github.com/julep-ai/python-sdk/blob/main/api.md)
+
 ## API 参考
 
 探索我们全面的 API 文档，了解更多关于代理、任务和执行的信息：
 
-- [代理 API](https://docs.julep.ai/api/agents)
-- [任务 API](https://docs.julep.ai/api/tasks)
-- [执行 API](https://docs.julep.ai/api/executions)
+- [代理 API](https://api.julep.ai/api/docs#tag/agents)
+- [任务 API](https://api.julep.ai/api/docs#tag/tasks)
+- [执行 API](https://api.julep.ai/api/docs#tag/executions)
 
 ## 示例和教程
 
@@ -660,4 +634,4 @@ results = client.documents.search(
 
 ## 致谢
 
-们要感谢所有贡献者和开源社区为他们宝贵的资源和贡献。
+我们要感谢所有贡献者和开源社区为他们宝贵的资源和贡献。
