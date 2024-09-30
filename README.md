@@ -117,7 +117,7 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 <sup>English | [中文翻译](/README-CN.md)</sup>
 
 <div align="center">
-    <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Rapidly%20build%20AI%20workflows%20and%20agents&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
+    <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=Build%20AI%20agents%20and%20workflows%20with%20a%20simple%20API&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&owner=1&pattern=Solid&stargazers=1&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
