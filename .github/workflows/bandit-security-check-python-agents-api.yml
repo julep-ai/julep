@@ -1,0 +1,18 @@
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  bandit_check:
+    name: bandit check security of python code in agents-api
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: mdegis/bandit-action@v1.1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        path: "./agents-api/agents_api"
+        level: high
+        confidence: high
+        # exit_zero: true
