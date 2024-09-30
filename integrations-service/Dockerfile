@@ -1,4 +1,7 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
+# check=error=true
+
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -16,4 +19,4 @@ RUN poetry config virtualenvs.create false \
 COPY . ./
 
 # Run the application
-CMD ["python", "-m", "integrations.web", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["python", "-m", "integrations.web", "--host", "0.0.0.0", "--port", "8000"]

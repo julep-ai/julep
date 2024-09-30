@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "agents_api"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.12,<3.13"
 fastapi = "^0.112.1"
 pycozo = {extras = ["embedded"], version = "^0.7.6"}
 uvicorn = "^0.30.6"
@@ -44,7 +44,7 @@ ruff = "^0.5.5"
 datamodel-code-generator = "^0.25.9"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.25.1"
-pytype = ">=2024.4.11"
+pytype = ">=2024.9.13"
 pyjwt = "^2.8.0"
 ward = "^0.68.0b0"
 jupyterlab = "^4.2.4"
