@@ -58,7 +58,7 @@ async def update_execution(
                 act_handle = temporal_client.get_async_activity_handle(
                     activity_id=activity_id,
                     workflow_id=workflow_id,
-                    workflow_run_id=workflow_run_id,
+                    run_id=workflow_run_id,
                 )
             try:
                 print("Activity id")

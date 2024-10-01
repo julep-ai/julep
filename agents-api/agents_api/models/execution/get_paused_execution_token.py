@@ -49,7 +49,7 @@ def get_paused_execution_token(
     """
 
     get_query = """
-    ?[task_token, max(created_at), metadata] :=
+    ?[task_token, created_at, metadata] :=
         execution_id = to_uuid($execution_id),
         *executions {
             execution_id,
@@ -63,6 +63,8 @@ def get_paused_execution_token(
         },
         type = "wait"
 
+    :sort -created_at
+    :limit 1
     """
 
     queries = [
