@@ -57,11 +57,14 @@ scalar JinjaTemplate extends string;
 /** Integration provider name */
 alias integrationProvider = (
     | "dummy"
-    | "dalle_image_generator"
-    | "duckduckgo_search"
     | "hacker_news"
     | "weather"
     | "wikipedia"
+    | "spider"
+    | "brave"
+    | "browserbase"
+    // | "dalle_image_generator"
+    // | "duckduckgo_search"
     // | "twitter"
     // | "webpage"
     // | "requests"

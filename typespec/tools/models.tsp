@@ -45,7 +45,7 @@ model FunctionDef {
 /** Integration definition */
 model IntegrationDef {
     /** The provider of the integration */
-    provider: integrationProvider;
+    provider: integrationProvider | string;
 
     /** The specific method of the integration to call */
     method?: string;
