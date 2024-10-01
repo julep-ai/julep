@@ -1,3 +1,4 @@
+import base64
 from typing import Annotated
 from uuid import UUID
 
@@ -25,23 +26,50 @@ async def update_execution(
     execution_id: UUID,
     data: ResumeExecutionRequest | StopExecutionRequest,
 ):
+    print("inside update execution")
+    print("getting temporal client")
     temporal_client = await get_client()
 
     match data:
         case StopExecutionRequest():
-            wf_handle = temporal_client.get_workflow_handle_for(
-                *get_temporal_workflow_data(execution_id=execution_id)
-            )
-            await wf_handle.cancel()
+            try:
+                wf_handle = temporal_client.get_workflow_handle_for(
+                    *get_temporal_workflow_data(execution_id=execution_id)
+                )
+                await wf_handle.cancel()
+            except Exception as e:
+                print(f"Error stopping execution: {e}")
+                raise HTTPException(status_code=500, detail="Failed to stop execution")
 
         case ResumeExecutionRequest():
+            print("Resuming execution")
             token_data = get_paused_execution_token(
                 developer_id=x_developer_id, execution_id=execution_id
             )
-            act_handle = temporal_client.get_async_activity_handle(
-                task_token=str.encode(token_data["task_token"], encoding="latin-1")
-            )
-            await act_handle.complete(data.input)
-            print("Resumed execution successfully")
+            activity_id = token_data["metadata"].get("x-activity-id", None)
+            workflow_run_id = token_data["metadata"].get("workflow_run_id", None)
+            workflow_id = token_data["metadata"].get("workflow_id", None)
+            if activity_id is None or workflow_run_id is None or workflow_id is None:
+                act_handle = temporal_client.get_async_activity_handle(
+                    task_token=str.encode(
+                        token_data["task_token"], encoding="latin-1"
+                    ),
+                )
+
+            else:
+                act_handle = temporal_client.get_async_activity_handle(
+                    activity_id=activity_id,
+                    workflow_id=workflow_id,
+                    workflow_run_id=workflow_run_id,
+                )
+            try:
+                print("Activity id")
+                print(act_handle._id_or_token)
+                await act_handle.complete(data.input)
+                print("Resumed execution successfully")
+            except Exception as e:
+                print(f"Error resuming execution: {e}")
+                raise HTTPException(status_code=500, detail="Failed to resume execution")
         case _:
+            print("Invalid request dataaaa")
             raise HTTPException(status_code=400, detail="Invalid request data")
