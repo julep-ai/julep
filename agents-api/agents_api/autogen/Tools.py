@@ -42,12 +42,9 @@ class CreateToolRequest(BaseModel):
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDef | None = None
-    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: IntegrationDef | None = None
-    system: SystemDef | None = None
     integration: IntegrationDef | None = None
     system: SystemDef | None = None
 
@@ -74,7 +71,6 @@ class FunctionDef(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    description: str | None = None
     description: str | None = None
     """
     Description of the function
@@ -245,52 +241,6 @@ class SystemDefUpdate(BaseModel):
     """
     The arguments to pre-apply to the system call
     """
-    integration: IntegrationDefUpdate | None = None
-    system: SystemDefUpdate | None = None
-
-
-class SystemDef(BaseModel):
-    """
-    System definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    call: str
-    """
-    The name of the system call
-    """
-    description: str | None = None
-    """
-    Optional description of the system call
-    """
-    arguments: dict[str, Any] | None = None
-    """
-    The arguments to pre-apply to the system call
-    """
-
-
-class SystemDefUpdate(BaseModel):
-    """
-    System definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    call: str | None = None
-    """
-    The name of the system call
-    """
-    description: str | None = None
-    """
-    Optional description of the system call
-    """
-    arguments: dict[str, Any] | None = None
-    """
-    The arguments to pre-apply to the system call
-    """
 
 
 class Tool(BaseModel):
@@ -306,12 +256,9 @@ class Tool(BaseModel):
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDef | None = None
-    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: IntegrationDef | None = None
-    system: SystemDef | None = None
     integration: IntegrationDef | None = None
     system: SystemDef | None = None
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -353,12 +300,9 @@ class UpdateToolRequest(BaseModel):
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
     function: FunctionDef | None = None
-    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: IntegrationDef | None = None
-    system: SystemDef | None = None
     integration: IntegrationDef | None = None
     system: SystemDef | None = None
 
