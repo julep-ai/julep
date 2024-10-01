@@ -3,7 +3,7 @@ from langchain_community.tools import BraveSearch
 from ...models import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
 
 
-def search(
+async def search(
     setup: BraveSearchSetup, arguments: BraveSearchArguments
 ) -> BraveSearchOutput:
     """

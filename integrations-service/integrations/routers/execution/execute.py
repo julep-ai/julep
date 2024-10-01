@@ -7,12 +7,12 @@ from .router import router
 
 
 @router.post("/execute/{provider}", tags=["execution"])
-def execute(
+async def execute(
     provider: IdentifierName,
     data: ExecutionRequest,
 ) -> ExecutionResponse:
     try:
-        return execute_integration(
+        return await execute_integration(
             provider=provider, arguments=data.arguments, setup=data.setup
         )
     except ValueError as e:

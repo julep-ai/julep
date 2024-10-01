@@ -3,7 +3,7 @@ from langchain_community.document_loaders import BrowserbaseLoader
 from ...models import BrowserBaseLoadArguments, BrowserBaseLoadOutput, BrowserBaseSetup
 
 
-def load(
+async def load(
     setup: BrowserBaseSetup, arguments: BrowserBaseLoadArguments
 ) -> BrowserBaseLoadOutput:
     """

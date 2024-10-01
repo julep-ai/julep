@@ -3,7 +3,7 @@ from langchain_community.utilities import OpenWeatherMapAPIWrapper
 from ...models import WeatherGetArguments, WeatherGetOutput, WeatherSetup
 
 
-def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput:
+async def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput:
     """
     Fetches weather data for a specified location using OpenWeatherMap API.
     """
