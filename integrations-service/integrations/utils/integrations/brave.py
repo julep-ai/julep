@@ -3,7 +3,9 @@ from langchain_community.tools import BraveSearch
 from ...models import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
 
 
-def search(setup: BraveSearchSetup, arguments: BraveSearchArguments) -> BraveSearchOutput:
+def search(
+    setup: BraveSearchSetup, arguments: BraveSearchArguments
+) -> BraveSearchOutput:
     """
     Searches Brave Search with the provided query.
     """
@@ -11,8 +13,7 @@ def search(setup: BraveSearchSetup, arguments: BraveSearchArguments) -> BraveSea
     assert isinstance(setup, BraveSearchSetup), "Invalid setup"
     assert isinstance(arguments, BraveSearchArguments), "Invalid arguments"
 
-    tool = BraveSearch.from_api_key(
-        api_key=setup.api_key, search_kwargs={"count": 3})
+    tool = BraveSearch.from_api_key(api_key=setup.api_key, search_kwargs={"count": 3})
 
     result = tool.run(arguments.query)
     return BraveSearchOutput(result=result)

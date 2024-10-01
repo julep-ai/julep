@@ -1,9 +1,9 @@
 import importlib
-from ..models.base_models import IdentifierName
-from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
 
+from ..models.base_models import BaseProvider, IdentifierName
+from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
 from ..providers import providers
-from ..models.base_models import BaseProvider
+
 
 def execute_integration(
     provider: IdentifierName,
@@ -18,17 +18,17 @@ def execute_integration(
         method = provider.methods[0].method
     if method not in [method.method for method in provider.methods]:
         raise ValueError(f"Unknown method: {method} for provider: {provider}")
-    
+
     provider_module = importlib.import_module(
-        f"integrations.utils.integrations.{provider.provider}", package="integrations")
+        f"integrations.utils.integrations.{provider.provider}", package="integrations"
+    )
     execution_function = getattr(provider_module, method)
 
     if setup:
         setup_class = provider.setup
         if setup_class:
             setup = setup_class(**setup.model_dump())
-    arguments_class = next(
-        m for m in provider.methods if m.method == method).arguments
+    arguments_class = next(m for m in provider.methods if m.method == method).arguments
     parsed_arguments = arguments_class(**arguments.model_dump())
 
     if setup:

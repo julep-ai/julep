@@ -6,7 +6,9 @@ from ...models.base_models import BaseProvider, BaseProviderMethod
 from .router import router
 
 
-def convert_to_openai_tool(provider: BaseProvider, method: Optional[BaseProviderMethod] = None) -> dict:
+def convert_to_openai_tool(
+    provider: BaseProvider, method: Optional[BaseProviderMethod] = None
+) -> dict:
     method = method or provider.methods[0]
     name = f"{provider.provider}_{method.method}"
     description = method.description

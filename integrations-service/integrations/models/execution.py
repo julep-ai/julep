@@ -2,13 +2,16 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
+from .brave import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
+from .browserbase import (
+    BrowserBaseLoadArguments,
+    BrowserBaseLoadOutput,
+    BrowserBaseSetup,
+)
 from .hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
 from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
 from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
 from .wikipedia import WikipediaSearchArguments, WikipediaSearchOutput
-from .brave import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
-from .browserbase import BrowserBaseSetup, BrowserBaseLoadArguments, BrowserBaseLoadOutput
-
 
 ExecutionSetup = Union[
     SpiderSetup,
@@ -32,8 +35,9 @@ ExecutionResponse = Union[
     HackerNewsFetchOutput,
     WikipediaSearchOutput,
     BraveSearchOutput,
-    BrowserBaseLoadOutput
+    BrowserBaseLoadOutput,
 ]
+
 
 class ExecutionRequest(BaseModel):
     setup: Optional[ExecutionSetup]

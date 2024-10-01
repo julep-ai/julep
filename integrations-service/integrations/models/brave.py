@@ -8,15 +8,11 @@ from .base_models import (
 
 
 class BraveSearchSetup(BaseSetup):
-    api_key: str = Field(
-        ..., description="The api key for Brave Search"
-    )
+    api_key: str = Field(..., description="The api key for Brave Search")
 
 
 class BraveSearchArguments(BaseArguments):
-    query: str = Field(
-        ..., description="The search query for searching with Brave"
-    )
+    query: str = Field(..., description="The search query for searching with Brave")
 
 
 class BraveSearchOutput(BaseOutput):

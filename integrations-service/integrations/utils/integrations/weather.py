@@ -21,19 +21,3 @@ def get(setup: WeatherSetup, arguments: WeatherGetArguments) -> WeatherGetOutput
     result = weather.run(location)
     return WeatherGetOutput(result=result)
 
-
-
-# Provider: Setup
-#           Methods
-#               Method: Arguments
-#               Method: Output
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#

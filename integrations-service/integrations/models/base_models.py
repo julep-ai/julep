@@ -3,20 +3,16 @@ from typing import Annotated, Any, Optional
 from pydantic import BaseModel, Field, RootModel
 from pydantic_core import Url
 
-IdentifierName = Annotated[str, Field(
-    max_length=40, pattern="^[^\\W0-9]\\w*$")]
+IdentifierName = Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
 
 
-class BaseSetup(BaseModel):
-    ...
+class BaseSetup(BaseModel): ...
 
 
-class BaseArguments(BaseModel):
-    ...
+class BaseArguments(BaseModel): ...
 
 
-class BaseOutput(BaseModel):
-    ...
+class BaseOutput(BaseModel): ...
 
 
 class ProviderInfo(BaseModel):

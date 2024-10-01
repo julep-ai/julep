@@ -1,11 +1,11 @@
-
 from langchain_community.document_loaders import BrowserbaseLoader
 
+from ...models import BrowserBaseLoadArguments, BrowserBaseLoadOutput, BrowserBaseSetup
 
-from ...models import BrowserBaseSetup, BrowserBaseLoadArguments, BrowserBaseLoadOutput
 
-
-def load(setup: BrowserBaseSetup, arguments: BrowserBaseLoadArguments) -> BrowserBaseLoadOutput:
+def load(
+    setup: BrowserBaseSetup, arguments: BrowserBaseLoadArguments
+) -> BrowserBaseLoadOutput:
     """
     Loads documents from the provided urls using BrowserBase.
     """

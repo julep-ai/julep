@@ -1,6 +1,8 @@
 from typing import List
+
 from ...providers import providers
 from .router import router
+
 
 @router.get("/integrations", tags=["integrations"])
 async def get_integrations() -> List[dict]:
@@ -21,8 +23,8 @@ async def get_integrations() -> List[dict]:
                 "url": p.info.url,
                 "docs": p.info.docs,
                 "icon": p.info.icon,
-                "friendly_name": p.info.friendly_name
-            }
+                "friendly_name": p.info.friendly_name,
+            },
         }
         for p in providers.values()
     ]
