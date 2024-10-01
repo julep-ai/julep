@@ -57,13 +57,9 @@ async def encode_payloads(req: Request) -> Response:
 
     response = JSONResponse(content=json_format.MessageToDict(encoded_payloads))    
     print(response)
-    # await cors_middleware(response)
-    
-    define_message = {
-        "message": "Encoded payloads"
-    }
+    # response = await cors_middleware(response)
 
-    return JSONResponse(content=define_message)
+    return response
 
 # Decode route
 @router.post("/decode", tags=["decryption"])
@@ -80,10 +76,6 @@ async def decode_payloads(req: Request)-> Response:
     response = JSONResponse(content=json_format.MessageToDict(decoded_payloads))
 
     print(response)
-    # await cors_middleware(response)
-
-    define_message = {
-        "message": "Decoded payloads"
-    }
-
-    return JSONResponse(content=define_message)
+    # response = await cors_middleware(response)
+    
+    return response
