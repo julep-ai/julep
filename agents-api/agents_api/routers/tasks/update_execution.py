@@ -51,9 +51,7 @@ async def update_execution(
             workflow_id = token_data["metadata"].get("workflow_id", None)
             if activity_id is None or workflow_run_id is None or workflow_id is None:
                 act_handle = temporal_client.get_async_activity_handle(
-                    task_token=str.encode(
-                        token_data["task_token"], encoding="latin-1"
-                    ),
+                    task_token=base64.b64decode(token_data["task_token"].encode('ascii')),
                 )
 
             else:

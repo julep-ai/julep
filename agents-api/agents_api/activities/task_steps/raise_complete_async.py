@@ -21,7 +21,9 @@ async def raise_complete_async(context: StepContext, output: StepOutcome) -> Non
     workflow_id = activity_info.workflow_id
     print("activity_id")
     print(activity_id)
-    captured_token = captured_token.decode("latin-1")
+
+    captured_token = base64.b64encode(captured_token).decode('ascii')
+
     transition_info = CreateTransitionRequest(
         current=context.cursor,
         type="wait",
