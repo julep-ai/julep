@@ -17,6 +17,9 @@ tweepy = "^4.14.0"
 wikipedia = "^1.4.0"
 fire = "^0.6.0"
 pyowm = "^3.3.0"
+spider-client = "^0.0.70"
+browserbase = "^0.3.0"
+setuptools = "^75.1.0"
 
 [tool.poe.tasks]
 format = "ruff format"

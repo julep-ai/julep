@@ -89,14 +89,18 @@ class IntegrationDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    provider: Literal[
-        "dummy",
-        "dalle_image_generator",
-        "duckduckgo_search",
-        "hacker_news",
-        "weather",
-        "wikipedia",
-    ]
+    provider: (
+        Literal[
+            "dummy",
+            "hacker_news",
+            "weather",
+            "wikipedia",
+            "spider",
+            "brave",
+            "browserbase",
+        ]
+        | str
+    )
     """
     The provider of the integration
     """
@@ -129,12 +133,14 @@ class IntegrationDefUpdate(BaseModel):
     provider: (
         Literal[
             "dummy",
-            "dalle_image_generator",
-            "duckduckgo_search",
             "hacker_news",
             "weather",
             "wikipedia",
+            "spider",
+            "brave",
+            "browserbase",
         ]
+        | str
         | None
     ) = None
     """

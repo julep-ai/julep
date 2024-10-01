@@ -1,26 +1,37 @@
-from ..models import ExecuteIntegrationArguments, ExecuteIntegrationSetup
-from .integrations.dalle_image_generator import dalle_image_generator
-from .integrations.duckduckgo_search import duckduckgo_search
-from .integrations.hacker_news import hacker_news
-from .integrations.weather import weather
-from .integrations.wikipedia import wikipedia
+import importlib
+
+from ..models.base_models import BaseProvider, IdentifierName
+from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
+from ..providers import providers
 
 
 async def execute_integration(
-    provider: str,
-    setup: ExecuteIntegrationSetup | None,
-    arguments: ExecuteIntegrationArguments,
-) -> str:
-    match provider:
-        case "duckduckgo_search":
-            return await duckduckgo_search(arguments=arguments)
-        case "dalle_image_generator":
-            return await dalle_image_generator(setup=setup, arguments=arguments)
-        case "wikipedia":
-            return await wikipedia(arguments=arguments)
-        case "weather":
-            return await weather(setup=setup, arguments=arguments)
-        case "hacker_news":
-            return await hacker_news(arguments=arguments)
-        case _:
-            raise ValueError(f"Unknown integration: {provider}")
+    provider: IdentifierName,
+    arguments: ExecutionArguments,
+    method: IdentifierName | None = None,
+    setup: ExecutionSetup | None = None,
+) -> ExecutionResponse:
+    if provider not in providers:
+        raise ValueError(f"Unknown provider: {provider}")
+    provider: BaseProvider = providers[provider]
+    if method is None:
+        method = provider.methods[0].method
+    if method not in [method.method for method in provider.methods]:
+        raise ValueError(f"Unknown method: {method} for provider: {provider}")
+
+    provider_module = importlib.import_module(
+        f"integrations.utils.integrations.{provider.provider}", package="integrations"
+    )
+    execution_function = getattr(provider_module, method)
+
+    if setup:
+        setup_class = provider.setup
+        if setup_class:
+            setup = setup_class(**setup.model_dump())
+    arguments_class = next(m for m in provider.methods if m.method == method).arguments
+    parsed_arguments = arguments_class(**arguments.model_dump())
+
+    if setup:
+        return await execution_function(setup=setup, arguments=parsed_arguments)
+    else:
+        return execution_function(arguments=parsed_arguments)

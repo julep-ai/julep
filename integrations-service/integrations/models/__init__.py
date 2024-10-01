@@ -1,17 +1,18 @@
-from .dalle_image_generator import (
-    DalleImageGeneratorArguments,
-    DalleImageGeneratorSetup,
+from .base_models import (
+    BaseArguments,
+    BaseOutput,
+    BaseProvider,
+    BaseProviderMethod,
+    BaseSetup,
+    ProviderInfo,
 )
-from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
-from .hacker_news import HackerNewsExecutionArguments
-
-# TODO: Move these models somewhere else
-from .models import (
-    ExecuteIntegrationArguments,
-    ExecuteIntegrationSetup,
-    IntegrationDef,
-    IntegrationExecutionRequest,
-    IntegrationExecutionResponse,
+from .brave import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
+from .browserbase import (
+    BrowserBaseLoadArguments,
+    BrowserBaseLoadOutput,
+    BrowserBaseSetup,
 )
-from .weather import WeatherExecutionArguments, WeatherExecutionSetup
-from .wikipedia import WikipediaExecutionArguments
+from .hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
+from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
+from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
+from .wikipedia import WikipediaSearchArguments, WikipediaSearchOutput

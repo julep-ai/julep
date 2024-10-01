@@ -2,26 +2,24 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from ...models.models import IntegrationDef
-from .get_integrations import get_integrations
+from ...models.base_models import BaseProvider, BaseProviderMethod
 from .router import router
 
 
-def convert_to_openai_tool(integration: IntegrationDef) -> dict:
+def convert_to_openai_tool(
+    provider: BaseProvider, method: Optional[BaseProviderMethod] = None
+) -> dict:
+    method = method or provider.methods[0]
+    name = f"{provider.provider}_{method.method}"
+    description = method.description
+    arguments = method.arguments.model_json_schema()
+
     return {
         "type": "function",
         "function": {
-            "name": integration.provider,
-            "description": integration.description,
-            "parameters": {
-                "type": "object",
-                "properties": integration.arguments,
-                "required": [
-                    k
-                    for k, v in integration.arguments.items()
-                    if v.get("required", False)
-                ],
-            },
+            "name": name,
+            "description": description,
+            "parameters": arguments,
         },
     }
 
@@ -29,12 +27,18 @@ def convert_to_openai_tool(integration: IntegrationDef) -> dict:
 @router.get("/integrations/{provider}/tool", tags=["integration_tool"])
 @router.get("/integrations/{provider}/{method}/tool", tags=["integration_tool"])
 async def get_integration_tool(provider: str, method: Optional[str] = None):
-    integrations = await get_integrations()
+    from ...providers import providers
 
-    for integration in integrations:
-        if integration.provider == provider and (
-            method is None or integration.method == method
-        ):
-            return convert_to_openai_tool(integration)
+    provider: BaseProvider | None = providers.get(provider, None)
+
+    if not provider:
+        raise HTTPException(status_code=404, detail="Integration not found")
+
+    if method:
+        for m in provider.methods:
+            if m.method == method:
+                return convert_to_openai_tool(provider, m)
+    else:
+        return convert_to_openai_tool(provider)
 
     raise HTTPException(status_code=404, detail="Integration not found")

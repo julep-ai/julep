@@ -1,19 +1,33 @@
-from fastapi import Body, HTTPException, Path
+from fastapi import HTTPException
 
-from ...models import IntegrationExecutionRequest, IntegrationExecutionResponse
+from ...models.base_models import IdentifierName
+from ...models.execution import ExecutionRequest, ExecutionResponse
 from ...utils.execute_integration import execute_integration
 from .router import router
 
 
 @router.post("/execute/{provider}", tags=["execution"])
 async def execute(
-    provider: str = Path(..., description="The integration provider"),
-    request: IntegrationExecutionRequest = Body(
-        ..., description="The integration execution request"
-    ),
-) -> IntegrationExecutionResponse:
+    provider: IdentifierName,
+    data: ExecutionRequest,
+) -> ExecutionResponse:
     try:
-        result = await execute_integration(provider, request.setup, request.arguments)
-        return IntegrationExecutionResponse(result=result)
+        return await execute_integration(
+            provider=provider, arguments=data.arguments, setup=data.setup
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/execute/{provider}/{method}", tags=["execution"])
+def execute(
+    provider: IdentifierName,
+    method: IdentifierName,
+    data: ExecutionRequest,
+) -> ExecutionResponse:
+    try:
+        return execute_integration(
+            provider=provider, arguments=data.arguments, setup=data.setup, method=method
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

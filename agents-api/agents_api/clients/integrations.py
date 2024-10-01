@@ -19,7 +19,7 @@ async def run_integration_service(
     slug = f"{provider}/{method}" if method else provider
     url = f"{integration_service_url}/execute/{slug}"
 
-    setup = setup or {}
+    setup = setup or None
 
     async with AsyncClient() as client:
         response = await client.post(
