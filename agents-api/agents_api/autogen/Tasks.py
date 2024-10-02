@@ -35,10 +35,10 @@ class CaseThen(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | YieldStep
         | WaitForInputStep
     )
     """
@@ -63,10 +63,10 @@ class CaseThenUpdateItem(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | YieldStep
         | WaitForInputStep
     )
     """
@@ -130,10 +130,10 @@ class CreateTaskRequest(BaseModel):
             | LogStep
             | EmbedStep
             | SearchStep
+            | YieldStep
             | ReturnStep
             | SleepStep
             | ErrorWorkflowStep
-            | YieldStep
             | WaitForInputStep
             | IfElseWorkflowStep
             | SwitchStep
@@ -227,6 +227,7 @@ class ForeachDo(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
     )
     """
     The steps to run for each iteration
@@ -251,6 +252,7 @@ class ForeachDoUpdateItem(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
     )
     """
     The steps to run for each iteration
@@ -324,10 +326,10 @@ class IfElseWorkflowStep(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | YieldStep
         | WaitForInputStep
     )
     """
@@ -342,10 +344,10 @@ class IfElseWorkflowStep(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | YieldStep
         | WaitForInputStep
         | None,
         Field(None, alias="else"),
@@ -376,10 +378,10 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | YieldStep
         | WaitForInputStep
     )
     """
@@ -394,10 +396,10 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep
-        | YieldStep
         | WaitForInputStep
         | None,
         Field(None, alias="else"),
@@ -462,6 +464,7 @@ class Main(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
     )
     """
     The steps to run for each iteration
@@ -503,6 +506,7 @@ class MainModel(BaseModel):
         | LogStep
         | EmbedStep
         | SearchStep
+        | YieldStep
     )
     """
     The steps to run for each iteration
@@ -543,6 +547,7 @@ class ParallelStep(BaseModel):
             | LogStep
             | EmbedStep
             | SearchStep
+            | YieldStep
         ],
         Field(max_length=100),
     ]
@@ -569,6 +574,7 @@ class ParallelStepUpdateItem(BaseModel):
             | LogStep
             | EmbedStep
             | SearchStep
+            | YieldStep
         ],
         Field(max_length=100),
     ]
@@ -596,10 +602,10 @@ class PatchTaskRequest(BaseModel):
             | LogStep
             | EmbedStep
             | SearchStep
+            | YieldStep
             | ReturnStep
             | SleepStep
             | ErrorWorkflowStep
-            | YieldStep
             | WaitForInputStep
             | IfElseWorkflowStepUpdateItem
             | SwitchStepUpdateItem
@@ -874,10 +880,10 @@ class Task(BaseModel):
             | LogStep
             | EmbedStep
             | SearchStep
+            | YieldStep
             | ReturnStep
             | SleepStep
             | ErrorWorkflowStep
-            | YieldStep
             | WaitForInputStep
             | IfElseWorkflowStep
             | SwitchStep
@@ -1009,10 +1015,10 @@ class UpdateTaskRequest(BaseModel):
             | LogStep
             | EmbedStep
             | SearchStep
+            | YieldStep
             | ReturnStep
             | SleepStep
             | ErrorWorkflowStep
-            | YieldStep
             | WaitForInputStep
             | IfElseWorkflowStep
             | SwitchStep
