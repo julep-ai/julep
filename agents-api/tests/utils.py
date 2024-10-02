@@ -9,8 +9,7 @@ from temporalio.testing import WorkflowEnvironment
 
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
-
-EMBEDDING_SIZE: int = 1024
+from tests.fixtures import EMBEDDING_SIZE
 
 
 @asynccontextmanager
