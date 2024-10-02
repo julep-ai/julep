@@ -31,7 +31,7 @@ alias ToolChoiceOption = "auto" | "none" | NamedToolChoice;
 
 /** Function definition */
 model FunctionDef {
-    /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
+    /** DO NOT USE: This will be overridden by the tool name. Here only for compatibility reasons. */
     name?: null = null;
 
     /** Description of the function  */
