@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  memory-store:
+    image: julepai/memory-store:${TAG}
+    environment:
+      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+      COZO_PORT: 9070
+      COZO_MNT_DIR: /data
+      COZO_BACKUP_DIR: /backup
+    volumes:
+      - cozo_data:/data
+      - cozo_backup:/backup
+    ports:
+      - "9070:9070"
+
+  gateway:
+    image: julepai/gateway:${TAG}
+    environment:
+      GATEWAY_PORT: 80
+      JWT_SHARED_KEY: ${JWT_SHARED_KEY}
+      AGENTS_API_URL: http://agents-api-multi-tenant:8080
+      AGENTS_API_KEY: ${AGENTS_API_KEY}
+      AGENTS_API_KEY_HEADER_NAME: Authorization
+      TRAEFIK_LOG_LEVEL: INFO
+    ports:
+      - "80:80"
+
+  embedding-service:
+    image: ghcr.io/huggingface/text-embeddings-inference:gpu-1.5
+    environment:
+      MODEL_ID: Alibaba-NLP/gte-large-en-v1.5
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+      NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
+      GITHUB_API_KEY: ${GITHUB_API_KEY}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+      TRUNCATE_EMBED_TEXT: True
+    volumes:
+      - ~/.cache/huggingface/hub:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  agents-api-multi-tenant:
+    image: julepai/agents-api:${TAG}
+    environment:
+      AGENTS_API_KEY: ${AGENTS_API_KEY}
+      AGENTS_API_KEY_HEADER_NAME: Authorization
+      AGENTS_API_HOSTNAME: gateway
+      AGENTS_API_PUBLIC_PORT: 80
+      AGENTS_API_PROTOCOL: http
+      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+      COZO_HOST: http://memory-store:9070
+      DEBUG: False
+      EMBEDDING_MODEL_ID: Alibaba-NLP/gte-large-en-v1.5
+      INTEGRATION_SERVICE_URL: http://integrations:8000
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_URL: http://litellm:4000
+      SUMMARIZATION_MODEL_NAME: gpt-4-turbo
+      TEMPORAL_ENDPOINT: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: julep-task-queue
+      TEMPORAL_WORKER_URL: temporal:7233
+      WORKER_URL: temporal:7233
+      AGENTS_API_MULTI_TENANT_MODE: true
+      AGENTS_API_PREFIX: "/api"
+    ports:
+      - "8080:8080"
+    depends_on:
+      memory-store:
+        condition: service_started
+      gateway:
+        condition: service_started
+
+  litellm:
+    image: ghcr.io/berriai/litellm-database:main-v1.46.6
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      DATABASE_URL: postgresql://${LITELLM_POSTGRES_USER:-llmproxy}:${LITELLM_POSTGRES_PASSWORD}@litellm-db:5432/${LITELLM_POSTGRES_DB:-litellm}?sslmode=prefer
+      REDIS_URL: redis://default:${LITELLM_REDIS_PASSWORD}@litellm-redis:6379
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+      - .keys:/app/.keys:ro
+    ports:
+      - "4000:4000"
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+      litellm-redis:
+        condition: service_started
+
+  litellm-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${LITELLM_POSTGRES_DB:-litellm}
+      POSTGRES_USER: ${LITELLM_POSTGRES_USER:-llmproxy}
+      POSTGRES_PASSWORD: ${LITELLM_POSTGRES_PASSWORD}
+    volumes:
+      - litellm-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LITELLM_POSTGRES_USER:-llmproxy}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  litellm-redis:
+    image: redis:6
+    command: redis-server --requirepass ${LITELLM_REDIS_PASSWORD}
+    volumes:
+      - litellm-redis-data:/data
+
+  temporal:
+    image: temporalio/auto-setup:1.25
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=${TEMPORAL_POSTGRES_USER:-temporal}
+      - POSTGRES_PWD=${TEMPORAL_POSTGRES_PASSWORD}
+      - POSTGRES_SEEDS=temporal-db
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+
+  temporal-db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD}
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+    volumes:
+      - temporal-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEMPORAL_POSTGRES_USER:-temporal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cozo_data:
+  cozo_backup:
+  litellm-db-data:
+  litellm-redis-data:
+  temporal-db-data:
