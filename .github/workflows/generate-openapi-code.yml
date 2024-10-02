@@ -1,0 +1,16 @@
+name: Generate OpenAPI Code
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  generate-openapi-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run generate_openapi_code.sh
+        run: bash scripts/generate_openapi_code.sh
