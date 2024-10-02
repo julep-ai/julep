@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
+from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
@@ -200,6 +201,7 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(
                         seconds=30 if debug or testing else 600
                     ),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
                 workflow.logger.debug(
                     f"Step {context.cursor.step} completed successfully"
