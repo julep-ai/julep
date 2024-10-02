@@ -49,7 +49,8 @@ alias MappableWorkflowStep =
     | SetStep
     | LogStep
     | EmbedStep
-    | SearchStep;
+    | SearchStep
+    | YieldStep;
 
 alias NonConditionalWorkflowStep =
     | MappableWorkflowStep
