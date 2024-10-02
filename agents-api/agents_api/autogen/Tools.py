@@ -69,7 +69,7 @@ class FunctionDef(BaseModel):
     )
     name: Any | None = None
     """
-    DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
+    DO NOT USE: This will be overridden by the tool name. Here only for compatibility reasons.
     """
     description: str | None = None
     """
