@@ -50,9 +50,6 @@ model IntegrationDef {
     /** The specific method of the integration to call */
     method?: string;
 
-    /** Optional description of the integration */
-    description?: string;
-
     /** The setup parameters the integration accepts */
     setup?: FunctionParameters;
 
@@ -64,9 +61,6 @@ model IntegrationDef {
 model SystemDef {
     /** The name of the system call */
     call: string;
-
-    /** Optional description of the system call */
-    description?: string;
 
     /** The arguments to pre-apply to the system call */
     arguments?: FunctionParameters;

@@ -229,10 +229,6 @@ class IntegrationDef(BaseModel):
     """
     The specific method of the integration to call
     """
-    description: str | None = None
-    """
-    Optional description of the integration
-    """
     setup: dict[str, Any] | None = None
     """
     The setup parameters the integration accepts
@@ -270,10 +266,6 @@ class IntegrationDefUpdate(BaseModel):
     method: str | None = None
     """
     The specific method of the integration to call
-    """
-    description: str | None = None
-    """
-    Optional description of the integration
     """
     setup: dict[str, Any] | None = None
     """
@@ -346,10 +338,6 @@ class SystemDef(BaseModel):
     """
     The name of the system call
     """
-    description: str | None = None
-    """
-    Optional description of the system call
-    """
     arguments: dict[str, Any] | None = None
     """
     The arguments to pre-apply to the system call
@@ -367,10 +355,6 @@ class SystemDefUpdate(BaseModel):
     call: str | None = None
     """
     The name of the system call
-    """
-    description: str | None = None
-    """
-    Optional description of the system call
     """
     arguments: dict[str, Any] | None = None
     """
