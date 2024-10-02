@@ -1,6 +1,6 @@
 import httpx
 
-from agents_api.env import temporal_worker_url
+from ...env import temporal_worker_url
 
 from .types import (
     MemoryManagementTask,

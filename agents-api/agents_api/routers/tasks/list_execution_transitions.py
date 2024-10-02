@@ -1,14 +1,13 @@
 from typing import Literal
 from uuid import UUID
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     ListResponse,
     Transition,
 )
-from agents_api.models.execution.list_execution_transitions import (
+from ...models.execution.list_execution_transitions import (
     list_execution_transitions as list_execution_transitions_query,
 )
-
 from .router import router
 
 
