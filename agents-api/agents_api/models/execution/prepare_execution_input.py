@@ -149,6 +149,7 @@ def prepare_execution_input(
         "name",
         "type",
         "spec",
+        "description",
         "created_at",
         "updated_at",
     )

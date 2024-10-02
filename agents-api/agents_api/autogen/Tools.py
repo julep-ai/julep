@@ -41,6 +41,10 @@ class CreateToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    description: str | None = None
+    """
+    Description of the tool
+    """
     function: FunctionDef | None = None
     """
     The function to call
@@ -191,6 +195,10 @@ class PatchToolRequest(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    description: str | None = None
+    """
+    Description of the tool
+    """
     function: FunctionDef | None = None
     """
     The function to call
@@ -255,6 +263,10 @@ class Tool(BaseModel):
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
+    description: str | None = None
+    """
+    Description of the tool
+    """
     function: FunctionDef | None = None
     """
     The function to call
@@ -298,6 +310,10 @@ class UpdateToolRequest(BaseModel):
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    description: str | None = None
+    """
+    Description of the tool
     """
     function: FunctionDef | None = None
     """

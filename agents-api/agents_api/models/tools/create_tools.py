@@ -64,6 +64,7 @@ def create_tools(
             str(uuid4()),
             tool.type,
             tool.name,
+            tool.description,
             getattr(tool, tool.type).dict(),
         ]
         for tool in data
@@ -85,11 +86,11 @@ def create_tools(
 
     # Datalog query for inserting new tool records into the 'agent_functions' relation
     create_query = """
-        input[agent_id, tool_id, type, name, spec] <- $records
+        input[agent_id, tool_id, type, name, spec, description] <- $records
         
         # Do not add duplicate
-        ?[agent_id, tool_id, type, name, spec] :=
-            input[agent_id, tool_id, type, name, spec],
+        ?[agent_id, tool_id, type, name, spec, description] :=
+            input[agent_id, tool_id, type, name, spec, description],
             not *tools{
                 agent_id: to_uuid(agent_id),
                 type,
@@ -102,6 +103,7 @@ def create_tools(
             type,
             name,
             spec,
+            description,
         }
         :returning
     """

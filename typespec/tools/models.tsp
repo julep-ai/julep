@@ -80,6 +80,9 @@ model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
 
+    /** Description of the tool */
+    description?: string;
+
     /** The function to call */
     function?: FunctionDef;
     integration?: IntegrationDef;
