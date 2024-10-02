@@ -50,7 +50,7 @@ async def get_job_status(job_id: UUID) -> JobStatus:
     state = map_job_status(job_description.status)
 
     return JobStatus(
-        name=handle.id,
+        name=job_description.workflow_type,
         reason=f"Execution status: {state}",
         created_at=job_description.start_time,
         updated_at=job_description.execution_time,
