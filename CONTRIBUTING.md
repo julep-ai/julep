@@ -30,44 +30,72 @@ Improvements to documentation are always appreciated! If you see areas that coul
 
 We'd love to hear your feedback and ideas for the project! Feel free to submit an issue or contact the maintainers directly to share your thoughts. Your input is very valuable in shaping the future direction of the project.
 
-## Building Docker Images with Buildx Bake
+### Setup Instructions
 
-We use Docker Buildx Bake to build our Docker images. This allows us to build multiple images concurrently and efficiently. Follow these steps to build the Docker images:
+##### 1. Clone the Repository
+Clone the repository from your preferred source:
 
-1. Ensure you have Docker and Docker Buildx installed on your system.
+```bash
+git clone <repository_url>
+```
 
-2. Navigate to the root directory of the project where the `docker-bake.hcl` file is located.
+##### 2. Navigate to the Root Directory
+Change to the root directory of the project:
 
-3. To build all services, run:
-   ```
-   docker buildx bake --file docker-bake.hcl
-   ```
+```bash
+cd <repository_root>
+```
 
-4. To build a specific service, use:
-   ```
-   docker buildx bake --file docker-bake.hcl <service-name>
-   ```
-   Replace `<service-name>` with one of the following:
-   - agents-api
-   - agents-api-worker
-   - cozo-migrate
-   - memory-store
-   - integrations
-   - gateway
-   - embedding-service-cpu
-   - embedding-service-gpu
+##### 3. Set Up Environment Variables
+- Create a `.env` file in the root directory.
+- Refer to the `.env.example` file for a list of required variables.
+- Ensure that all necessary variables are set in the `.env` file.
 
-5. To set a custom tag for the images, use:
-   ```
-   docker buildx bake --file docker-bake.hcl --set *.tags=myorg/myimage:v1.0
-   ```
-   Replace `myorg/myimage:v1.0` with your desired image name and tag.
+##### 4. Create a Docker Volume for Backup
+Create a Docker volume named `cozo_backup`:
 
-6. By default, the images are built with the "latest" tag. To specify a different tag, you can set the TAG variable:
-   ```
-   docker buildx bake --file docker-bake.hcl --set TAG=v1.2.3
-   ```
+```bash
+docker volume create cozo_backup
+```
 
-Note: The `docker-bake.hcl` file defines the build contexts, Dockerfiles, and tags for each service. If you need to modify the build process for a specific service, update the corresponding target in the `docker-bake.hcl` file.
+##### 5. Run the Project using Docker Compose
+You can run the project in two different modes: **Single Tenant** or **Multi-Tenant**. Choose one of the following commands based on your requirement:
 
-Thank you for your interest in contributing to this project!
+###### Single-Tenant Mode
+Run the project in single-tenant mode:
+
+```bash
+docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
+```
+
+> **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
+
+###### Multi-Tenant Mode
+Run the project in multi-tenant mode:
+
+```bash
+docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
+```
+
+> **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
+
+##### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
+
+To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
+
+Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
+
+```bash
+jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+```
+
+This command generates a JWT token that will be valid for 10 days.
+
+##### 7. Access and Interact
+- **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
+- **API Interactions**: Depending on the chosen mode, interact with the setup using the provided endpoints.
+
+##### Troubleshooting
+- Ensure that all required Docker images are available.
+- Check for missing environment variables in the `.env` file.
+- Use the `docker compose logs` command to view detailed logs for debugging.
