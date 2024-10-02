@@ -26,6 +26,30 @@
     <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub 许可证"></a>
 </p>
 
+*****
+
+## 🌟 诚邀贡献者！
+
+我们很高兴欢迎新的贡献者加入 Julep 项目！我们创建了几个"适合新手的问题"来帮助您入门。以下是您可以贡献的方式：
+
+1. 查看我们的 [CONTRIBUTING.md](CONTRIBUTING.md) 文件，了解如何贡献的指南。
+2. 浏览我们的[适合新手的问题](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)，找到一个您感兴趣的任务。
+3. 如果您有任何问题或需要帮助，请随时在我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 频道上联系我们。
+
+您的贡献，无论大小，对我们都很宝贵。让我们一起创造令人惊叹的东西吧！🚀
+
+### 🎉 DevFest.AI 2024年10月
+
+激动人心的消息！我们将在整个2024年10月参与 DevFest.AI 活动！🗓️
+
+- 在此活动期间为 Julep 做出贡献，有机会赢得超棒的 Julep 周边和礼品！🎁
+- 加入来自世界各地的开发者，为 AI 仓库做出贡献并参与精彩的活动。
+- 非常感谢 DevFest.AI 组织这个fantastic的活动！
+
+> [!TIP]
+> 准备好加入这场盛会了吗？**[发推文开始参与](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)**，让我们开始编码吧！🖥️
+
+![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
 *****
 
@@ -49,6 +73,9 @@
 >   加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 或提交 [issue](https://github.com/julep-ai/julep/issues)。
 
 请继续关注我们即将发布的稳定版本的更多更新！📢
+
+
+*****
 
 ## 简介
 
