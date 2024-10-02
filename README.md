@@ -7,104 +7,6 @@
 
 The **Quick Start Guide Focused README** is the most promising for optimizing the time to first workflow. It allows developers to get hands-on experience quickly, which is essential for engagement and understanding.
 
-* * *
-
-**Outline for the README:**
-
-1.  **Title and Badges**
-    *   Julep Logo or Title
-    *   Build status, npm version, license badges
-2.  **Introduction**
-    *   _Briefly explain what Julep is and its purpose._
-    *   Emphasize how it simplifies building persistent AI agents with workflows.
-3.  **Features**
-    *   _Highlight key features with a focus on "tasks" (AI workflows)._
-    *   Mention support for persistent sessions, tool integration, and document management.
-4.  **Installation**
-    *   _Provide npm installation command:_
-        
-        bash
-        
-        Copy code
-        
-        `npm install julep`
-        
-5.  **Quick Start Guide**
-    *   **Step 1: Import Julep**
-        *   _Show how to import Julep into a project._
-            
-            javascript
-            
-            Copy code
-            
-            `const Julep = require('julep');`
-            
-    *   **Step 2: Initialize the Agent**
-        *   _Guide on creating a new agent with basic settings._
-            
-            javascript
-            
-            Copy code
-            
-            `const agent = new Julep.Agent({  name: 'MyAgent',  model: 'gpt-4-turbo', });`
-            
-    *   **Step 3: Chat with the Agent**
-        *   _Provide a simple example of a chat with the agent._
-            
-            javascript
-            
-            Copy code
-            
-            `const response = await client.sessions.chat({  session_id: session.id,  message: 'Hello, how are you?' });`   
-            
-    *   **Step 4: Define a Task (Workflow)**
-        *   _Provide a simple example of a task definition._
-            
-            javascript
-            
-            Copy code
-            
-            `const task = {  name: 'GreetingTask',  main: [    {      prompt: 'Say hello to the user.',    },  ], }; agent.addTask(task);`
-            
-    *   **Step 5: Execute the Task**
-        *   _Show how to run the task and handle the output._
-            
-            javascript
-            
-            Copy code
-            
-            `agent.executeTask('GreetingTask').then((output) => {  console.log(output); });`
-            
-6.  **Understanding Tasks**
-    *   _Explain what tasks are and how they function within Julep._
-    *   Describe different types of workflow steps.
-        *   Prompt, Tool Call, Evaluate, etc.
-    *   _Note:_ Link to detailed documentation for each step type.
-7.  **Advanced Features**
-    *   _Briefly mention other capabilities:_
-        *   Adding tools to agents.
-        *   Managing sessions and users.
-        *   Document integration and search.
-8.  **API Reference**
-    *   _Link to full API documentation._
-    *   Mention key endpoints for agents, tasks, and executions.
-9.  **Examples and Tutorials**
-    *   _Provide links to example projects or further tutorials._
-    *   Encourage users to explore and build upon provided examples.
-10.  **Contributing**
-    *   _Instructions for contributing to the project._
-    *   Link to contribution guidelines and code of conduct.
-11.  **Support and Community**
-    *   _Information on how to get help._
-    *   Links to community forums, chat groups, or issue trackers.
-12.  **License**
-    *   _State the project's license._
-    *   Provide a link to the LICENSE file.
-13.  **Acknowledgements**
-    *   _Credit to contributors and used resources._
-
-* * *
-
 **Notes:**
 
 *   **Code Examples:** Ensure all code snippets are easy to understand and copy-paste ready.
@@ -144,6 +46,31 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 
 *****
 
+## 🌟 Call for Contributors!
+
+We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
+
+1. Check out our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute.
+2. Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a task that interests you.
+3. If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.
+
+Your contributions, big or small, are valuable to us. Let's build something amazing together! 🚀
+
+### 🎉 DevFest.AI October 2024
+
+Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓️
+
+- Contribute to Julep during this event and get a chance to win awesome Julep merch and swag! 🎁
+- Join developers from around the world in contributing to AI repositories and participating in amazing events.
+- A big thank you to DevFest.AI for organizing this fantastic initiative!
+
+> [!TIP]
+> Ready to join the fun? **[Tweet to start participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
+
+![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
+
+*****
+
 ## 🎉🚀 **Exciting News: Julep 1.0 Alpha Release!** 🚀🎉
 
 We're thrilled to announce the **alpha** release of <u>Julep 1.0</u>! 🥳
@@ -165,6 +92,7 @@ We're thrilled to announce the **alpha** release of <u>Julep 1.0</u>! 🥳
 
 Stay tuned for more updates as we approach our stable release! 📢
 
+*****
 
 ## Introduction
 

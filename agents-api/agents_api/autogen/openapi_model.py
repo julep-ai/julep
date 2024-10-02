@@ -1,10 +1,12 @@
 # ruff: noqa: F401, F403, F405
+import ast
 from typing import Annotated, Any, Generic, Literal, Self, Type, TypeVar, get_args
 from uuid import UUID
 
+import jinja2
 from litellm.utils import _select_tokenizer as select_tokenizer
 from litellm.utils import token_counter
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, field_validator, model_validator, validator
 
 from ..common.utils.datetime import utcnow
 from .Agents import *
@@ -152,6 +154,179 @@ class CreateEntryRequest(BaseEntry):
         )
 
 
+# Patch Task Workflow Steps
+# --------------------------------------
+
+
+def validate_python_expression(expr: str) -> tuple[bool, str]:
+    try:
+        ast.parse(expr)
+        return True, ""
+    except SyntaxError as e:
+        return False, f"SyntaxError in '{expr}': {str(e)}"
+
+
+def validate_jinja_template(template: str) -> tuple[bool, str]:
+    env = jinja2.Environment()
+    try:
+        parsed_template = env.parse(template)
+        for node in parsed_template.body:
+            if isinstance(node, jinja2.nodes.Output):
+                for child in node.nodes:
+                    if isinstance(child, jinja2.nodes.Name):
+                        # Check if the variable is a valid Python expression
+                        is_valid, error = validate_python_expression(child.name)
+                        if not is_valid:
+                            return (
+                                False,
+                                f"Invalid Python expression in Jinja template '{template}': {error}",
+                            )
+        return True, ""
+    except jinja2.exceptions.TemplateSyntaxError as e:
+        return False, f"TemplateSyntaxError in '{template}': {str(e)}"
+
+
+_EvaluateStep = EvaluateStep
+
+
+class EvaluateStep(_EvaluateStep):
+    @field_validator("evaluate")
+    def validate_evaluate_expressions(cls, v):
+        for key, expr in v.items():
+            is_valid, error = validate_python_expression(expr)
+            if not is_valid:
+                raise ValueError(f"Invalid Python expression in key '{key}': {error}")
+        return v
+
+
+_ToolCallStep = ToolCallStep
+
+
+class ToolCallStep(_ToolCallStep):
+    @field_validator("arguments")
+    def validate_arguments(cls, v):
+        if isinstance(v, dict):
+            for key, expr in v.items():
+                if isinstance(expr, str):
+                    is_valid, error = validate_python_expression(expr)
+                    if not is_valid:
+                        raise ValueError(
+                            f"Invalid Python expression in arguments key '{key}': {error}"
+                        )
+        return v
+
+
+_PromptStep = PromptStep
+
+
+class PromptStep(_PromptStep):
+    @field_validator("prompt")
+    def validate_prompt(cls, v):
+        if isinstance(v, str):
+            is_valid, error = validate_jinja_template(v)
+            if not is_valid:
+                raise ValueError(f"Invalid Jinja template in prompt: {error}")
+        elif isinstance(v, list):
+            for item in v:
+                if "content" in item:
+                    is_valid, error = validate_jinja_template(item["content"])
+                    if not is_valid:
+                        raise ValueError(
+                            f"Invalid Jinja template in prompt content: {error}"
+                        )
+        return v
+
+
+_SetStep = SetStep
+
+
+class SetStep(_SetStep):
+    @field_validator("set")
+    def validate_set_expressions(cls, v):
+        for key, expr in v.items():
+            is_valid, error = validate_python_expression(expr)
+            if not is_valid:
+                raise ValueError(
+                    f"Invalid Python expression in set key '{key}': {error}"
+                )
+        return v
+
+
+_LogStep = LogStep
+
+
+class LogStep(_LogStep):
+    @field_validator("log")
+    def validate_log_template(cls, v):
+        is_valid, error = validate_jinja_template(v)
+        if not is_valid:
+            raise ValueError(f"Invalid Jinja template in log: {error}")
+        return v
+
+
+_ReturnStep = ReturnStep
+
+
+class ReturnStep(_ReturnStep):
+    @field_validator("return_")
+    def validate_return_expressions(cls, v):
+        for key, expr in v.items():
+            is_valid, error = validate_python_expression(expr)
+            if not is_valid:
+                raise ValueError(
+                    f"Invalid Python expression in return key '{key}': {error}"
+                )
+        return v
+
+
+_YieldStep = YieldStep
+
+
+class YieldStep(_YieldStep):
+    @field_validator("arguments")
+    def validate_yield_arguments(cls, v):
+        if isinstance(v, dict):
+            for key, expr in v.items():
+                is_valid, error = validate_python_expression(expr)
+                if not is_valid:
+                    raise ValueError(
+                        f"Invalid Python expression in yield arguments key '{key}': {error}"
+                    )
+        return v
+
+
+_IfElseWorkflowStep = IfElseWorkflowStep
+
+
+class IfElseWorkflowStep(_IfElseWorkflowStep):
+    @field_validator("if_")
+    def validate_if_expression(cls, v):
+        is_valid, error = validate_python_expression(v)
+        if not is_valid:
+            raise ValueError(f"Invalid Python expression in if condition: {error}")
+        return v
+
+
+_MapReduceStep = MapReduceStep
+
+
+class MapReduceStep(_MapReduceStep):
+    @field_validator("over")
+    def validate_over_expression(cls, v):
+        is_valid, error = validate_python_expression(v)
+        if not is_valid:
+            raise ValueError(f"Invalid Python expression in over: {error}")
+        return v
+
+    @field_validator("reduce")
+    def validate_reduce_expression(cls, v):
+        if v is not None:
+            is_valid, error = validate_python_expression(v)
+            if not is_valid:
+                raise ValueError(f"Invalid Python expression in reduce: {error}")
+        return v
+
+
 # Workflow related models
 # -----------------------
 
@@ -228,6 +403,29 @@ class Task(_Task):
 # Patch some models to allow extra fields
 # --------------------------------------
 
+WorkflowType = RootModel[
+    list[
+        EvaluateStep
+        | ToolCallStep
+        | PromptStep
+        | GetStep
+        | SetStep
+        | LogStep
+        | EmbedStep
+        | SearchStep
+        | ReturnStep
+        | SleepStep
+        | ErrorWorkflowStep
+        | YieldStep
+        | WaitForInputStep
+        | IfElseWorkflowStep
+        | SwitchStep
+        | ForeachStep
+        | ParallelStep
+        | MapReduceStep
+    ]
+]
+
 
 _CreateTaskRequest = CreateTaskRequest
 
@@ -239,6 +437,22 @@ class CreateTaskRequest(_CreateTaskRequest):
             "extra": "allow",
         }
     )
+
+    @model_validator(mode="after")
+    def validate_subworkflows(self) -> Self:
+        subworkflows = {
+            k: v
+            for k, v in self.model_dump().items()
+            if k not in _CreateTaskRequest.model_fields
+        }
+
+        for workflow_name, workflow_definition in subworkflows.items():
+            try:
+                WorkflowType.model_validate(workflow_definition)
+                setattr(self, workflow_name, WorkflowType(workflow_definition))
+            except Exception as e:
+                raise ValueError(f"Invalid subworkflow '{workflow_name}': {str(e)}")
+        return self
 
 
 CreateOrUpdateTaskRequest = CreateTaskRequest
