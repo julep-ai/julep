@@ -68,7 +68,7 @@ Run the project in single-tenant mode:
 docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
 ```
 
-> **Note:** In single-tenant mode, you can interact with the SDK directly without the need fopr the API KEY.
+> **Note:** In single-tenant mode, you can interact with the SDK directly without the need for the API KEY.
 
 ###### Multi-Tenant Mode
 Run the project in multi-tenant mode:
@@ -77,20 +77,16 @@ Run the project in multi-tenant mode:
 docker compose --env-file .env --profile temporal-ui --profile multi-tenant --profile embedding-cpu --profile self-hosted-db up --force-recreate --build --watch
 ```
 
-> **Note:** In multi-tenant mode, you need to generate a JWT token that act as an API KEY to interact with the SDK in the local setup.
+> **Note:** In multi-tenant mode, you need to generate a JWT token locally that act as an API KEY to interact with the SDK.
 
 ##### 6. Generate a JWT Token (Only for Multi-Tenant Mode)
 
-To generate a JWT token, `jwt-cli` is required. Install it using the following command:
+To generate a JWT token, `jwt-cli` is required. Kindly install the same before proceeding with the next steps.
+
+Use the following command and replace `JWT_SHARED_KEY` with the corresponding key from your `.env` file to generate a JWT token:
 
 ```bash
-npm install -g jwt-cli
-```
-
-Use the following command and replace `{JWT_SHARED_KEY}` with the corresponding key from your `.env` file to generate a JWT token:
-
-```bash
-jwt encode --secret {JWT_SHARED_KEY} --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
+jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --sub '00000000-0000-0000-0000-000000000000' '{}'
 ```
 
 This command generates a JWT token that will be valid for 10 days.

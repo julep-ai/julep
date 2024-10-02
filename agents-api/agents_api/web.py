@@ -24,11 +24,11 @@ from .exceptions import PromptTooBigError
 from .routers import (
     agents,
     docs,
+    internal,
     jobs,
     sessions,
     tasks,
     users,
-    internal,
 )
 
 if not sentry_dsn:
