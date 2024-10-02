@@ -14,7 +14,7 @@ Below is a quick overview of the notebooks, their purpose, and a link to run eac
 |------------------------------------------------- |---------------------------------------------------------------------------- |--------------------------------------------------------------------|
 | `01-Website_Crawler_using_Spider.ipynb`          | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)           | Implements a web crawler using a spider to extract website content. |
 | `02-Sarcastic_News_Headline_Generator.ipynb`     | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/02-Sarcastic_News_Headline_Generator.ipynb)           | Generates sarcastic news headlines using a Brave Search Tool.  |
-| `03-SmartResearcher_With_WebSearch.ipynb`        | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)           | Searches and aggregates web information for research purposes using Brave Search.     |
+| `03-SmartResearcher_With_WebSearch.ipynb`        | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)           | Searches and aggregates web information for research purposes using Brave Search.     |
 | `04-TripPlanner_With_Weather_And_WikiInfo.ipynb` | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)           | Plans trips using weather data and Wikipedia information.          |
 
 ### Additional Information
