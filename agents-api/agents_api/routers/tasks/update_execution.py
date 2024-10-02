@@ -47,7 +47,9 @@ async def update_execution(
             workflow_id = token_data["metadata"].get("x-workflow-id", None)
             if activity_id is None or run_id is None or workflow_id is None:
                 act_handle = temporal_client.get_async_activity_handle(
-                    task_token=base64.b64decode(token_data["task_token"].encode('ascii')),
+                    task_token=base64.b64decode(
+                        token_data["task_token"].encode("ascii")
+                    ),
                 )
 
             else:
@@ -59,6 +61,8 @@ async def update_execution(
             try:
                 await act_handle.complete(data.input)
             except Exception as e:
-                raise HTTPException(status_code=500, detail="Failed to resume execution")
+                raise HTTPException(
+                    status_code=500, detail="Failed to resume execution"
+                )
         case _:
             raise HTTPException(status_code=400, detail="Invalid request data")
