@@ -1,7 +1,6 @@
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from fastapi import BackgroundTasks, Depends
 from starlette.status import HTTP_201_CREATED
 from temporalio.client import Client as TemporalClient
@@ -9,6 +8,7 @@ from temporalio.client import Client as TemporalClient
 from ...activities.types import EmbedDocsPayload
 from ...autogen.openapi_model import CreateDocRequest, ResourceCreatedResponse
 from ...clients import temporal
+from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from ...dependencies.developer_id import get_developer_id
 from ...env import temporal_task_queue, testing
 from ...models.docs.create_doc import create_doc as create_doc_query
@@ -42,7 +42,7 @@ async def run_embed_docs_task(
         embed_payload,
         task_queue=temporal_task_queue,
         id=str(job_id),
-        retry_policy=DEFAULT_RETRY_POLICY
+        retry_policy=DEFAULT_RETRY_POLICY,
     )
 
     # TODO: Remove this conditional once we have a way to run workflows in

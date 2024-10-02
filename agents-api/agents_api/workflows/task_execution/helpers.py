@@ -4,7 +4,9 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
+
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
+
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...autogen.openapi_model import (
@@ -33,7 +35,7 @@ async def continue_as_child(
             previous_inputs,
             user_state,
         ],
-        retry_policy=DEFAULT_RETRY_POLICY
+        retry_policy=DEFAULT_RETRY_POLICY,
     )
 
 
@@ -170,7 +172,7 @@ async def execute_map_reduce_step(
             task_steps.base_evaluate,
             args=[reduce, {"results": result, "_": output}],
             schedule_to_close_timeout=timedelta(seconds=30),
-            retry_policy=DEFAULT_RETRY_POLICY
+            retry_policy=DEFAULT_RETRY_POLICY,
         )
 
     return result
@@ -246,7 +248,7 @@ async def execute_map_reduce_step_parallel(
                     extra_lambda_strs,
                 ],
                 schedule_to_close_timeout=timedelta(seconds=30),
-                retry_policy=DEFAULT_RETRY_POLICY
+                retry_policy=DEFAULT_RETRY_POLICY,
             )
 
         except BaseException as e:

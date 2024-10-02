@@ -19,5 +19,5 @@ class EmbedDocsWorkflow:
             embed_docs,
             embed_payload,
             schedule_to_close_timeout=timedelta(seconds=600),
-            retry_policy=DEFAULT_RETRY_POLICY
+            retry_policy=DEFAULT_RETRY_POLICY,
         )

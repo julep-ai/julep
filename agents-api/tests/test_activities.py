@@ -50,7 +50,7 @@ async def _():
             args=[1, 2],
             id=str(uuid4()),
             task_queue=temporal_task_queue,
-            retry_policy=DEFAULT_RETRY_POLICY
+            retry_policy=DEFAULT_RETRY_POLICY,
         )
 
         assert result == 3

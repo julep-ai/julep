@@ -16,5 +16,5 @@ class DemoWorkflow:
             demo_activity,
             args=[a, b],
             start_to_close_timeout=timedelta(seconds=30),
-            retry_policy=DEFAULT_RETRY_POLICY
+            retry_policy=DEFAULT_RETRY_POLICY,
         )

@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from temporalio.exceptions import ApplicationError
 
 from ...activities import task_steps
@@ -11,6 +10,7 @@ from ...autogen.openapi_model import (
     TransitionTarget,
 )
 from ...common.protocol.tasks import PartialTransition, StepContext
+from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
 
 async def transition(
@@ -45,7 +45,7 @@ async def transition(
             task_steps.transition_step,
             args=[context, transition_request],
             schedule_to_close_timeout=timedelta(seconds=30),
-            retry_policy=DEFAULT_RETRY_POLICY
+            retry_policy=DEFAULT_RETRY_POLICY,
         )
 
     except Exception as e:
