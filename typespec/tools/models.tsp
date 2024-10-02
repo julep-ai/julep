@@ -72,7 +72,37 @@ model SystemDef {
     arguments?: FunctionParameters;
 }
 
-// TODO: We should use this model for all tools, not just functions and discriminate on the type
+/** API call definition */
+model ApiCallDef {
+    /** The HTTP method to use */
+    method: httpMethod;
+
+    /** The URL to call */
+    url: url;
+
+    /** The headers to send with the request */
+    headers?: Record<string>;
+
+    /** The content as base64 to send with the request */
+    content?: string;
+
+    /** The data to send as form data */
+    data?: Record<string>;
+
+    /** JSON body to send with the request */
+    json?: Record<unknown>;
+
+    /** Cookies */
+    cookies?: Record<string>;
+
+    /** The parameters to send with the request */
+    params?: string | Record<unknown>;
+
+    /** Follow redirects */
+    follow_redirects?: boolean;
+}
+
+
 model Tool {
     /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
     type: ToolType = ToolType.function;
@@ -85,9 +115,15 @@ model Tool {
 
     /** The function to call */
     function?: FunctionDef;
+
+    /** The integration to call */
     integration?: IntegrationDef;
+
+    /** The system to call */
     system?: SystemDef;
-    api_call?: never; // TODO: Implement
+
+    /** The API call to make */
+    api_call?: ApiCallDef;
 
     ...HasTimestamps;
     ...HasId;
@@ -100,13 +136,13 @@ model FunctionCallOption {
 
 @discriminator("type")
 model NamedToolChoice {
-    /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
+    /** Whether this tool is a `function` */
     type: ToolType;
 
     function?: FunctionCallOption;
-    integration?: never; // TODO: Implement
-    system?: never; // TODO: Implement
-    api_call?: never; // TODO: Implement
+    integration?: never;
+    system?: never;
+    api_call?: never;
 }
 
 model NamedFunctionChoice extends NamedToolChoice {
@@ -145,9 +181,9 @@ model ChosenToolCall {
     type: ToolType;
 
     function?: FunctionCallOption;
-    integration?: never; // TODO: Implement
-    system?: never; // TODO: Implement
-    api_call?: never; // TODO: Implement
+    integration?: never;
+    system?: never;
+    api_call?: never;
 
     ...HasId;
 }

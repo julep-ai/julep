@@ -6,7 +6,114 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+
+
+class ApiCallDef(BaseModel):
+    """
+    API call definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal[
+        "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"
+    ]
+    """
+    The HTTP method to use
+    """
+    url: AnyUrl
+    """
+    The URL to call
+    """
+    headers: dict[str, str] | None = None
+    """
+    The headers to send with the request
+    """
+    content: str | None = None
+    """
+    The content as base64 to send with the request
+    """
+    data: dict[str, str] | None = None
+    """
+    The data to send as form data
+    """
+    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
+    """
+    JSON body to send with the request
+    """
+    cookies: dict[str, str] | None = None
+    """
+    Cookies
+    """
+    params: str | dict[str, Any] | None = None
+    """
+    The parameters to send with the request
+    """
+    follow_redirects: StrictBool | None = None
+    """
+    Follow redirects
+    """
+
+
+class ApiCallDefUpdate(BaseModel):
+    """
+    API call definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: (
+        Literal[
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH",
+            "HEAD",
+            "OPTIONS",
+            "CONNECT",
+            "TRACE",
+        ]
+        | None
+    ) = None
+    """
+    The HTTP method to use
+    """
+    url: AnyUrl | None = None
+    """
+    The URL to call
+    """
+    headers: dict[str, str] | None = None
+    """
+    The headers to send with the request
+    """
+    content: str | None = None
+    """
+    The content as base64 to send with the request
+    """
+    data: dict[str, str] | None = None
+    """
+    The data to send as form data
+    """
+    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
+    """
+    JSON body to send with the request
+    """
+    cookies: dict[str, str] | None = None
+    """
+    Cookies
+    """
+    params: str | dict[str, Any] | None = None
+    """
+    The parameters to send with the request
+    """
+    follow_redirects: StrictBool | None = None
+    """
+    Follow redirects
+    """
 
 
 class ChosenToolCall(BaseModel):
@@ -50,7 +157,17 @@ class CreateToolRequest(BaseModel):
     The function to call
     """
     integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
     system: SystemDef | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDef | None = None
+    """
+    The API call to make
+    """
 
 
 class FunctionCallOption(BaseModel):
@@ -174,7 +291,7 @@ class NamedToolChoice(BaseModel):
     )
     type: Literal["function", "integration", "system", "api_call"]
     """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
+    Whether this tool is a `function`
     """
     function: FunctionCallOption | None = None
 
@@ -204,7 +321,17 @@ class PatchToolRequest(BaseModel):
     The function to call
     """
     integration: IntegrationDefUpdate | None = None
+    """
+    The integration to call
+    """
     system: SystemDefUpdate | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDefUpdate | None = None
+    """
+    The API call to make
+    """
 
 
 class SystemDef(BaseModel):
@@ -272,7 +399,17 @@ class Tool(BaseModel):
     The function to call
     """
     integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
     system: SystemDef | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDef | None = None
+    """
+    The API call to make
+    """
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -320,7 +457,17 @@ class UpdateToolRequest(BaseModel):
     The function to call
     """
     integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
     system: SystemDef | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDef | None = None
+    """
+    The API call to make
+    """
 
 
 class ChosenFunctionCall(ChosenToolCall):
