@@ -231,7 +231,9 @@ class PromptStep(_PromptStep):
                 if "content" in item:
                     is_valid, error = validate_jinja_template(item["content"])
                     if not is_valid:
-                        raise ValueError(f"Invalid Jinja template in prompt content: {error}")
+                        raise ValueError(
+                            f"Invalid Jinja template in prompt content: {error}"
+                        )
         return v
 
 
