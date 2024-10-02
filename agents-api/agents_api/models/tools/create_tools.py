@@ -64,27 +64,29 @@ def create_tools(
             str(uuid4()),
             tool.type,
             tool.name,
-            tool.description,
+            tool.description if hasattr(tool, "description") else None,
             getattr(tool, tool.type).dict(),
         ]
         for tool in data
     ]
 
     ensure_tool_name_unique_query = """
-        input[agent_id, tool_id, type, name, spec] <- $records
+        input[agent_id, tool_id, type, name, spec, description] <- $records
         ?[tool_id] :=
-            input[agent_id, _, type, name, _],
+            input[agent_id, _, type, name, _, _],
             *tools{
                 agent_id: to_uuid(agent_id),
                 tool_id,
                 type,
                 name,
+                spec,
+                description,
             }
 
         :assert none
     """
 
-    # Datalog query for inserting new tool records into the 'agent_functions' relation
+    # Datalog query for inserting new tool records into the 'tools' relation
     create_query = """
         input[agent_id, tool_id, type, name, spec, description] <- $records
         
