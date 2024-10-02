@@ -33,7 +33,7 @@ T = TypeVar("T")
         d["type"]: {
             **d.pop("spec"),
             "name": d["name"],
-            "description": d("description"),
+            "description": d["description"],
         },
         **d,
     },
