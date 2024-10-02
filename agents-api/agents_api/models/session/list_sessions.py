@@ -41,7 +41,8 @@ def list_sessions(
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
 ) -> tuple[list[str], dict]:
-    """Lists sessions from the 'cozodb' database based on the provided filters.
+    """
+    Lists sessions from the 'cozodb' database based on the provided filters.
 
     Parameters:
         developer_id (UUID): The developer's ID to filter sessions by.
