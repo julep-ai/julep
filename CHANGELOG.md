@@ -168,7 +168,7 @@
 ## What's Changed
 * fix: Add summarizer source type to the query by [@whiterabbit1983](https://github.com/whiterabbit1983) in https://github.com/julep-ai/julep/pull/301
 * fix: Get summarization model form env var and create a corresponsing … by [@whiterabbit1983](https://github.com/whiterabbit1983) in https://github.com/julep-ai/julep/pull/302
-* feat: Make docs content be splited by users by [@whiterabbit1983](https://github.com/whiterabbit1983) in https://github.com/julep-ai/julep/pull/303
+* feat: Make docs content be split by users by [@whiterabbit1983](https://github.com/whiterabbit1983) in https://github.com/julep-ai/julep/pull/303
 * feat: litellm for multiple model support by [@alt-glitch](https://github.com/alt-glitch) in https://github.com/julep-ai/julep/pull/304
 * use VALID_MODELS to support JULEP_MODELS by [@alt-glitch](https://github.com/alt-glitch) in https://github.com/julep-ai/julep/pull/308
 * Agent creation fixes by [@whiterabbit1983](https://github.com/whiterabbit1983) in https://github.com/julep-ai/julep/pull/309
@@ -208,18 +208,18 @@
 * Sweep: Add a detailed README.md in the examples/ directory by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/215
 * fix: Set metadata to an empty dict by default by [@whiterabbit1983](https://github.com/whiterabbit1983) in https://github.com/julep-ai/julep/pull/217
 * Sweep: Update the docstrings and comments in sdks/ts/src/env.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/235
-* Sweep: Update the docstrings and comments in sdks/ts/src/managers/memory.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/236
+* Sweep: Update the docstrings and comments in sdks/ts/src/managers/memory.ts to fix any issues and mismatches between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/236
 * Sweep: Update the docstrings and comments in sdks/ts/src/utils/invariant.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/237
 * Sweep: Update the docstrings and comments in sdks/ts/src/managers/agent.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/238
-* Sweep: Update the docstrings and comments in sdks/ts/src/managers/tool.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/239
+* Sweep: Update the docstrings and comments in sdks/ts/src/managers/tool.ts to fix any issues and mismatches between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/239
 * Sweep: Update the docstrings and comments in sdks/ts/src/utils/isValidUuid4.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/240
 * Sweep: Update the docstrings and comments in sdks/ts/src/client.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/241
 * Sweep: Update the docstrings and comments in sdks/ts/src/utils/requestConstructor.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/242
 * Sweep: Update the docstrings and comments in sdks/ts/src/managers/base.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/243
-* Sweep: Update the docstrings and comments in sdks/ts/src/managers/user.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/244
+* Sweep: Update the docstrings and comments in sdks/ts/src/managers/user.ts to fix any issues and mismatches between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/244
 * Sweep: Update the docstrings and comments in sdks/ts/src/managers/session.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/245
 * Sweep: Update the docstrings and comments in sdks/ts/src/utils/openaiPatch.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/246
-* Sweep: Update the docstrings and comments in sdks/ts/src/managers/doc.ts to fix any issues and mismatch between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/247
+* Sweep: Update the docstrings and comments in sdks/ts/src/managers/doc.ts to fix any issues and mismatches between the comment and associated code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/247
 * doc(sdks/ts): Generate documentation for the typescript SDK by [@creatorrr](https://github.com/creatorrr) in https://github.com/julep-ai/julep/pull/248
 * Sweep: Update the docstrings and comments in sdks/python/julep/env.py to fix any issues and mismatch between the comments present and surrounding code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/262
 * Sweep: Update the docstrings and comments in sdks/python/julep/managers/memory.py to fix any issues and mismatch between the comments present and surrounding code by [@sweep-ai](https://github.com/sweep-ai) in https://github.com/julep-ai/julep/pull/271
