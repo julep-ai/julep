@@ -12,6 +12,7 @@ from temporalio.exceptions import ApplicationError
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...activities.execute_integration import execute_integration
+    from ...activities.excecute_api_call import execute_api_call
     from ...autogen.openapi_model import (
         EmbedStep,
         ErrorWorkflowStep,
@@ -21,6 +22,7 @@ with workflow.unsafe.imports_passed_through():
         GetStep,
         IfElseWorkflowStep,
         IntegrationDef,
+        ApiCallDef,
         LogStep,
         MapReduceStep,
         ParallelStep,
@@ -504,6 +506,43 @@ class TaskExecutionWorkflow:
                 )
 
                 state = PartialTransition(output=tool_call_response)
+
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "api_call":
+                call = tool_call["api_call"]
+                tool_name = call["name"]
+                # arguments = call["arguments"]
+                apicall_spec = next(
+                    (t for t in context.tools if t.name == tool_name), None
+                )
+
+                if apicall_spec is None:
+                    raise ApplicationError(f"Integration {tool_name} not found")
+
+                api_call = ApiCallDef(
+                    method=apicall_spec.spec["method"],
+                    url=apicall_spec.spec["url"],
+                    headers=apicall_spec.spec["headers"],
+                    follow_redirects=apicall_spec.spec["follow_redirects"],
+                )
+
+                # Extract the optional arguments for `content`, `data`, `json`, `cookies`, and `params`
+                content = call["content"]
+                data = call["data"]
+                json_ = call["json"]
+                cookies = call["cookies"]
+                params = call["params"]
+
+                # Execute the API call using the `execute_api_call` function
+                tool_call_response = await workflow.execute_activity(
+                    execute_api_call,
+                    args=[context, tool_name, api_call, content, data, json_, cookies, params],
+                    schedule_to_close_timeout=timedelta(seconds=30 if debug or testing else 600),
+                )
+
+                state = PartialTransition(output=tool_call_response)
+
 
             case ToolCallStep(), StepOutcome(output=_):
                 # FIXME: Handle system/api_call tool_calls
