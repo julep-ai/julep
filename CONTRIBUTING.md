@@ -6,8 +6,8 @@ We welcome contributions to this project! There are several ways you can contrib
 
 If you find a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please include:
 - Steps to reproduce the issue
-- Expected behavior
-- Actual behavior
+- Expected behaviour
+- Actual behaviour
 - Screenshots if applicable 
 
 ### Submitting Pull Requests
