@@ -77,88 +77,35 @@ class InputChatMLMessage(Message):
     pass
 
 
-# Custom types (not generated correctly)
-# --------------------------------------
-
-ChatMLContent = (
-    list[ChatMLTextContentPart | ChatMLImageContentPart]
-    | Tool
-    | ChosenToolCall
-    | str
-    | ToolResponse
-    | list[
-        list[ChatMLTextContentPart | ChatMLImageContentPart]
-        | Tool
-        | ChosenToolCall
-        | str
-        | ToolResponse
-    ]
-)
-
-# Extract ChatMLRole
-ChatMLRole = BaseEntry.model_fields["role"].annotation
-
-# Extract ChatMLSource
-ChatMLSource = BaseEntry.model_fields["source"].annotation
-
-# Extract ExecutionStatus
-ExecutionStatus = Execution.model_fields["status"].annotation
-
-# Extract TransitionType
-TransitionType = Transition.model_fields["type"].annotation
-
-# Assertions to ensure consistency (optional, but recommended for runtime checks)
-assert ChatMLRole == BaseEntry.model_fields["role"].annotation
-assert ChatMLSource == BaseEntry.model_fields["source"].annotation
-assert ExecutionStatus == Execution.model_fields["status"].annotation
-assert TransitionType == Transition.model_fields["type"].annotation
+# Patches
+# -------
 
 
-# Create models
-# -------------
+def type_property(self: BaseModel) -> str:
+    return (
+        "function"
+        if self.function
+        else "integration"
+        if self.integration
+        else "system"
+        if self.system
+        else "api_call"
+        if self.api_call
+        else None
+    )
 
 
-class CreateTransitionRequest(Transition):
-    # The following fields are optional in this
+# Patch original Tool class to add 'type' property
+TaskTool.type = computed_field(property(type_property))
 
-    id: UUID | None = None
-    execution_id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
-    metadata: dict[str, Any] | None = None
-    task_token: str | None = None
+# Patch original Tool class to add 'type' property
+Tool.type = computed_field(property(type_property))
 
+# Patch original UpdateToolRequest class to add 'type' property
+UpdateToolRequest.type = computed_field(property(type_property))
 
-class CreateEntryRequest(BaseEntry):
-    timestamp: Annotated[
-        float, Field(ge=0.0, default_factory=lambda: utcnow().timestamp())
-    ]
-
-    @classmethod
-    def from_model_input(
-        cls: Type[Self],
-        model: str,
-        *,
-        role: ChatMLRole,
-        content: ChatMLContent,
-        name: str | None = None,
-        source: ChatMLSource,
-        **kwargs: dict,
-    ) -> Self:
-        tokenizer: dict = select_tokenizer(model=model)
-        token_count = token_counter(
-            model=model, messages=[{"role": role, "content": content, "name": name}]
-        )
-
-        return cls(
-            role=role,
-            content=content,
-            name=name,
-            source=source,
-            tokenizer=tokenizer["type"],
-            token_count=token_count,
-            **kwargs,
-        )
+# Patch original PatchToolRequest class to add 'type' property
+PatchToolRequest.type = computed_field(property(type_property))
 
 
 # Patch Task Workflow Steps
