@@ -470,11 +470,13 @@ async def _(
                 "main": [
                     {
                         "tool": "hello",
-                        "params": {"test": "_.test"},
+                        "arguments": {
+                            "params": {"test": "_.test"},
+                        },
                     },
                     {
-                        "evaluate": {"hello": "_.json.args"},
-                    }
+                        "evaluate": {"hello": "_.json.args.test"},
+                    },
                 ],
             }
         ),

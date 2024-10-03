@@ -512,7 +512,7 @@ class TaskExecutionWorkflow:
             ] == "api_call":
                 call = tool_call["api_call"]
                 tool_name = call["name"]
-                # arguments = call["arguments"]
+                arguments = call["arguments"]
                 apicall_spec = next(
                     (t for t in context.tools if t.name == tool_name), None
                 )
@@ -527,25 +527,16 @@ class TaskExecutionWorkflow:
                     follow_redirects=apicall_spec.spec["follow_redirects"],
                 )
 
-                # Extract the optional arguments for `content`, `data`, `json`, `cookies`, and `params`
-                content = call.get("content", None)
-                data = call.get("data", None)
-                json_ = call.get("json", None)
-                cookies = call.get("cookies", None)
-                params = call.get("params", None)
+                if "json_" in arguments:
+                    arguments["json"] = arguments["json_"]
+                    del arguments["json_"]
 
                 # Execute the API call using the `execute_api_call` function
                 tool_call_response = await workflow.execute_activity(
                     execute_api_call,
                     args=[
-                        context,
-                        tool_name,
                         api_call,
-                        content,
-                        data,
-                        json_,
-                        cookies,
-                        params,
+                        arguments,
                     ],
                     schedule_to_close_timeout=timedelta(
                         seconds=30 if debug or testing else 600
