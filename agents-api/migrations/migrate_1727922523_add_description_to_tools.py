@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "add_description_to_tools"
 CREATED_AT = 1727922523.283493

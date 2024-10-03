@@ -11,9 +11,10 @@ from temporalio.exceptions import ApplicationError
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
-    from ...activities.execute_integration import execute_integration
     from ...activities.excecute_api_call import execute_api_call
+    from ...activities.execute_integration import execute_integration
     from ...autogen.openapi_model import (
+        ApiCallDef,
         EmbedStep,
         ErrorWorkflowStep,
         EvaluateStep,
@@ -22,7 +23,6 @@ with workflow.unsafe.imports_passed_through():
         GetStep,
         IfElseWorkflowStep,
         IntegrationDef,
-        ApiCallDef,
         LogStep,
         MapReduceStep,
         ParallelStep,
@@ -537,12 +537,22 @@ class TaskExecutionWorkflow:
                 # Execute the API call using the `execute_api_call` function
                 tool_call_response = await workflow.execute_activity(
                     execute_api_call,
-                    args=[context, tool_name, api_call, content, data, json_, cookies, params],
-                    schedule_to_close_timeout=timedelta(seconds=30 if debug or testing else 600),
+                    args=[
+                        context,
+                        tool_name,
+                        api_call,
+                        content,
+                        data,
+                        json_,
+                        cookies,
+                        params,
+                    ],
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
                 )
 
                 state = PartialTransition(output=tool_call_response)
-
 
             case ToolCallStep(), StepOutcome(output=_):
                 # FIXME: Handle system/api_call tool_calls

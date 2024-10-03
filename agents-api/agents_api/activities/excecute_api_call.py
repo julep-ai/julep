@@ -1,14 +1,17 @@
-from typing import Any, Annotated, Field, Optional, Union
+from typing import Annotated, Any, Optional, Union
+
 import httpx
 from beartype import beartype
+from pydantic import Field
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
+
 # from ..clients import integrations
 from ..common.protocol.tasks import StepContext
 from ..env import testing
+
 # from ..models.tools import get_tool_args_from_metadata
-from pydantic import Field
 
 
 @beartype
@@ -34,7 +37,6 @@ async def execute_api_call(
     # arguments = (
     #     merged_tool_args.get(tool_name, {}) | (integration.arguments or {}) | arguments
     # )
-
 
     try:
         return await httpx.request(
