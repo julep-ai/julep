@@ -22,6 +22,115 @@ To contribute code changes:
 
 Please ensure your code follows the existing style and passes all tests.
 
+## Project Overview and Architecture
+
+### Key Components
+
+1. **agents-api**: The core API service for Julep.
+2. **typespec**: API specifications and contracts.
+3. **integrations-service**: Handles external integrations.
+4. **embedding-service**: Manages text embeddings.
+5. **memory-store**: Handles persistent storage.
+6. **llm-proxy**: Proxy for language model interactions.
+7. **scheduler**: Manages task scheduling.
+8. **gateway**: API gateway and routing.
+9. **monitoring**: System monitoring and metrics.
+
+### Technology Stack
+
+- **FastAPI**: Web framework for building APIs
+- **TypeSpec**: API specification language
+- **Cozo**: Database system
+- **Temporal**: Workflow engine
+- **Docker**: Containerization
+
+### Relationships Between Components
+
+The `agents-api` serves as the central component, interacting with most other services:
+- It uses `typespec` definitions for API contracts.
+- Communicates with `integrations-service` for external tool interactions.
+- Utilizes `embedding-service` for text processing.
+- Stores data in `memory-store`.
+- Interacts with language models through `llm-proxy`.
+- Uses `scheduler` for task management.
+- All API requests pass through the `gateway`.
+- `monitoring` observes the entire system.
+
+## Understanding the Codebase
+
+To get a comprehensive understanding of Julep, we recommend exploring the codebase in the following order:
+
+1. **Project Overview**
+   - Read `README.md` in the root directory
+   - Explore `docs/` for detailed documentation
+
+2. **System Architecture**
+   - Examine `docker-compose.yml` in the root directory
+   - Review `deploy/` directory for different deployment configurations
+
+3. **API Specifications**
+   - Learn about TypeSpec: https://typespec.io/docs/
+   - Explore `typespec/` directory:
+     - Start with `common/` folder
+     - Review `main.tsp`
+     - Examine each module sequentially
+
+4. **Core API Implementation**
+   - Learn about FastAPI: https://fastapi.tiangolo.com/
+   - Explore `agents-api/` directory:
+     - Review `README.md` for an overview
+     - Examine `routers/` for API endpoints
+     - Look into `models/` for data models
+
+5. **Database and Storage**
+   - Learn about Cozo: https://docs.cozodb.org/en/latest/tutorial.html
+   - Review `agents-api/README.md` for database schema
+   - Explore `agents-api/models/` for database queries
+
+6. **Workflow Management**
+   - Learn about Temporal: https://docs.temporal.io/develop/python
+   - Explore `agents-api/activities/` for individual workflow steps
+   - Review `agents-api/workflows/task_execution/` for main workflow logic
+
+7. **Testing**
+   - Examine `agents-api/tests/` for test cases
+
+8. **Additional Services**
+   - Explore other service directories (`integrations-service/`, `embedding-service/`, etc.) to understand their specific roles and implementations
+
+## Contributing Guidelines
+
+1. **Set Up Development Environment**
+   - Clone the repository
+   - Install Docker and Docker Compose
+   - Set up necessary API keys and environment variables
+
+2. **Choose an Area to Contribute**
+   - Check the issue tracker for open issues
+   - Look for "good first issue" labels for newcomers
+
+3. **Make Changes**
+   - Create a new branch for your changes
+   - Write clean, well-documented code
+   - Ensure your changes adhere to the project's coding standards
+
+4. **Test Your Changes**
+   - Run existing tests
+   - Add new tests for new functionality
+   - Ensure all tests pass before submitting your changes
+
+5. **Submit a Pull Request**
+   - Provide a clear description of your changes
+   - Reference any related issues
+   - Be prepared to respond to feedback and make adjustments
+
+6. **Code Review**
+   - Address any comments or suggestions from reviewers
+   - Make necessary changes and push updates to your branch
+
+7. **Merge**
+   - Once approved, your changes will be merged into the main branch
+
 ### Documentation Improvements 
 
 Improvements to documentation are always appreciated! If you see areas that could be clarified or expanded, feel free to make the changes and submit a pull request.
@@ -99,3 +208,6 @@ This command generates a JWT token that will be valid for 10 days.
 - Ensure that all required Docker images are available.
 - Check for missing environment variables in the `.env` file.
 - Use the `docker compose logs` command to view detailed logs for debugging.
+
+
+Remember, contributions aren't limited to code. Documentation improvements, bug reports, and feature suggestions are also valuable contributions to the project.
