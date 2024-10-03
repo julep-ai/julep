@@ -8,7 +8,6 @@ from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from ...common.retry_policies import DEFAULT_RETRY_POLICY
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
@@ -55,6 +54,8 @@ with workflow.unsafe.imports_passed_through():
         execute_switch_branch,
     )
     from .transition import transition
+    from ...common.retry_policies import DEFAULT_RETRY_POLICY
+
 
 # Supported steps
 # ---------------
