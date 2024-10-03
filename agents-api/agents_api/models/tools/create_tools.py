@@ -22,13 +22,13 @@ ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
 
 
-# @rewrap_exceptions(
-#     {
-#         QueryException: partialclass(HTTPException, status_code=400),
-#         ValidationError: partialclass(HTTPException, status_code=400),
-#         TypeError: partialclass(HTTPException, status_code=400),
-#     }
-# )
+@rewrap_exceptions(
+    {
+        QueryException: partialclass(HTTPException, status_code=400),
+        ValidationError: partialclass(HTTPException, status_code=400),
+        TypeError: partialclass(HTTPException, status_code=400),
+    }
+)
 @wrap_in_class(
     Tool,
     transform=lambda d: {
@@ -38,7 +38,7 @@ T = TypeVar("T")
     },
     _kind="inserted",
 )
-@cozo_query(debug=True)
+@cozo_query
 @beartype
 def create_tools(
     *,
