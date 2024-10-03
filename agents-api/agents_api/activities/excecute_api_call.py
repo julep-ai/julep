@@ -39,9 +39,9 @@ async def execute_api_call(
     # )
 
     try:
-        return await httpx.request(
+        response =  httpx.request(
             method=api_call.method,
-            url=api_call.url,
+            url=str(api_call.url),
             headers=api_call.headers,
             content=content,
             data=data,
@@ -50,6 +50,15 @@ async def execute_api_call(
             params=params,
             follow_redirects=api_call.follow_redirects,
         )
+
+        response_dict = {
+            "status_code": response.status_code,
+            # "headers": response.headers,
+            # "content": response.content,
+            "json": response.json(),
+        }
+
+        return response_dict
 
     except BaseException as e:
         if activity.in_activity():

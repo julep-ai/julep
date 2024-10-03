@@ -473,7 +473,7 @@ async def _(
                         "params": {"test": "_.test"},
                     },
                     {
-                        "evaluate": {"hello": "_.json()['args']['test']"},
+                        "evaluate": {"hello": "_.json.args"},
                     }
                 ],
             }

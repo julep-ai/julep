@@ -528,11 +528,11 @@ class TaskExecutionWorkflow:
                 )
 
                 # Extract the optional arguments for `content`, `data`, `json`, `cookies`, and `params`
-                content = call["content"]
-                data = call["data"]
-                json_ = call["json"]
-                cookies = call["cookies"]
-                params = call["params"]
+                content = call.get("content", None)
+                data = call.get("data", None)
+                json_ = call.get("json", None)
+                cookies = call.get("cookies", None)
+                params = call.get("params", None)
 
                 # Execute the API call using the `execute_api_call` function
                 tool_call_response = await workflow.execute_activity(
