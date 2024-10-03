@@ -30,7 +30,8 @@ T = TypeVar("T")
         lambda e: isinstance(e, QueryException)
         and "Developer does not own resource"
         in e.resp["display"]: lambda *_: HTTPException(
-            detail="developer not found or doesnt own resource", status_code=404
+            detail="The specified developer does not own the requested resource. Please verify the ownership or check if the developer ID is correct.",
+            status_code=404
         ),
         QueryException: partialclass(HTTPException, status_code=400),
         ValidationError: partialclass(HTTPException, status_code=400),
