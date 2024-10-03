@@ -1,0 +1,56 @@
+name: Typecheck agents-api
+run-name: ${{ github.actor }} is typechecking the code
+
+# TODO: Fix CI github actions
+# SCRUM-26
+
+on: [pull_request]
+
+jobs:
+  Typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Configure Poetry to use .venv
+        run: |
+          cd agents-api
+          poetry config virtualenvs.in-project true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: agents-api/.venv
+          key: ${{ runner.os }}-agents-api-poetry-${{ hashFiles('agents-api/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-agents-api-poetry-
+
+      - name: Cache pytype
+        uses: actions/cache@v4
+        with:
+          path: agents-api/.pytype
+          key: ${{ runner.os }}-agents-api-pytype-${{ hashFiles('agents-api/**/*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-agents-api-pytype-
+
+      - name: Install dependencies
+        run: |
+          cd agents-api
+          poetry install
+
+      - name: Typecheck
+        run: |
+          cd agents-api
+          poetry run poe typecheck
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

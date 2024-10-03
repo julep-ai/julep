@@ -87,6 +87,8 @@ def get_doc(
                 metadata,
             },
             snippets[snippet_data]
+
+        :limit 1
     """
 
     queries = [

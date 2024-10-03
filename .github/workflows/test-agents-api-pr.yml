@@ -1,5 +1,5 @@
-name: Lint and typecheck agents-api
-run-name: ${{ github.actor }} is linting and typechecking the code
+name: Test agents-api
+run-name: ${{ github.actor }} is testing the code
 
 # TODO: Fix CI github actions
 # SCRUM-26
@@ -7,7 +7,7 @@ run-name: ${{ github.actor }} is linting and typechecking the code
 on: [pull_request]
 
 jobs:
-  Lint-And-Format:
+  Test:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,39 +33,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-agents-api-poetry-
 
-      - name: Cache pytype
-        uses: actions/cache@v4
-        with:
-          path: agents-api/.pytype
-          key: ${{ runner.os }}-agents-api-pytype-${{ hashFiles('agents-api/**/*.py') }}
-          restore-keys: |
-            ${{ runner.os }}-agents-api-pytype-
-
       - name: Install dependencies
         run: |
           cd agents-api
           poetry install
 
-      - name: Typecheck
-        run: |
-          cd agents-api
-          poetry run poe typecheck
-
-      - name: Lint and format
-        run: |
-          cd agents-api
-          poetry run poe format
-          poetry run poe lint
-
       - name: Run tests
         run: |
           cd agents-api
           poetry run poe test
-
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "refactor: Lint agents-api (CI)"
-          branch: ${{ github.head_ref }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

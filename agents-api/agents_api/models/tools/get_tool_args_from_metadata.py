@@ -46,6 +46,8 @@ def tool_args_for_task(
             # Right values overwrite left values
             # See: https://docs.cozodb.org/en/latest/functions.html#Func.Vector.concat
             values = concat(agent_{arg_type}, task_{arg_type}),
+
+        :limit 1
     """
 
     queries = [
@@ -88,6 +90,8 @@ def tool_args_for_session(
             # Right values overwrite left values
             # See: https://docs.cozodb.org/en/latest/functions.html#Func.Vector.concat
             values = concat(agent_{arg_type}, session_{arg_type}),
+
+        :limit 1
     """
 
     queries = [
