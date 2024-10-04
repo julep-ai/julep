@@ -81,6 +81,7 @@ def embed_snippets(
             }},
             index > {max(snippet_indices)}
 
+        :limit 1
         :assert none
     """
 
