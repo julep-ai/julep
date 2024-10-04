@@ -35,7 +35,7 @@ class ApiCallDef(BaseModel):
     """
     The content as base64 to send with the request
     """
-    data: dict[str, str] | None = None
+    data: dict[str, Any] | None = None
     """
     The data to send as form data
     """
@@ -54,6 +54,10 @@ class ApiCallDef(BaseModel):
     follow_redirects: StrictBool | None = None
     """
     Follow redirects
+    """
+    timeout: int | None = None
+    """
+    The timeout for the request
     """
 
 
@@ -94,7 +98,7 @@ class ApiCallDefUpdate(BaseModel):
     """
     The content as base64 to send with the request
     """
-    data: dict[str, str] | None = None
+    data: dict[str, Any] | None = None
     """
     The data to send as form data
     """
@@ -113,6 +117,10 @@ class ApiCallDefUpdate(BaseModel):
     follow_redirects: StrictBool | None = None
     """
     Follow redirects
+    """
+    timeout: int | None = None
+    """
+    The timeout for the request
     """
 
 
@@ -188,9 +196,9 @@ class FunctionDef(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    description: str | None = None
+    description: Any | None = None
     """
-    Description of the function
+    DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons.
     """
     parameters: dict[str, Any] | None = None
     """
@@ -322,9 +330,34 @@ class SystemDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    call: str
+    resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"]
     """
-    The name of the system call
+    Resource is the name of the resource to use
+    """
+    operation: Literal[
+        "create",
+        "update",
+        "patch",
+        "create_or_update",
+        "embed",
+        "change_status",
+        "search",
+        "chat",
+        "history",
+        "delete",
+        "get",
+        "list",
+    ]
+    """
+    Operation is the name of the operation to perform
+    """
+    resource_id: UUID | None = None
+    """
+    Resource id (if applicable)
+    """
+    subresource: Literal["tool", "doc", "execution", "transition"] | None = None
+    """
+    Sub-resource type (if applicable)
     """
     arguments: dict[str, Any] | None = None
     """
@@ -340,9 +373,39 @@ class SystemDefUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    call: str | None = None
+    resource: (
+        Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None
+    ) = None
     """
-    The name of the system call
+    Resource is the name of the resource to use
+    """
+    operation: (
+        Literal[
+            "create",
+            "update",
+            "patch",
+            "create_or_update",
+            "embed",
+            "change_status",
+            "search",
+            "chat",
+            "history",
+            "delete",
+            "get",
+            "list",
+        ]
+        | None
+    ) = None
+    """
+    Operation is the name of the operation to perform
+    """
+    resource_id: UUID | None = None
+    """
+    Resource id (if applicable)
+    """
+    subresource: Literal["tool", "doc", "execution", "transition"] | None = None
+    """
+    Sub-resource type (if applicable)
     """
     arguments: dict[str, Any] | None = None
     """

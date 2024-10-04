@@ -440,6 +440,66 @@ async def _(
             assert result["hello"] == data.input["test"]
 
 
+@test("workflow: system call - list agents")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "Test system tool task",
+                "description": "List agents using system call",
+                "input_schema": {"type": "object"},
+                "tools": [
+                    {
+                        "name": "list_agents",
+                        "description": "List all agents",
+                        "type": "system",
+                        "system": {"resource": "agent", "operation": "list"},
+                    },
+                ],
+                "main": [
+                    {
+                        "tool": "list_agents",
+                        "arguments": {
+                            "limit": "10",
+                        },
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert isinstance(result, list)
+        # Result's length should be less than or equal to the limit
+        assert len(result) <= 10
+        # Check if all items are agent dictionaries
+        assert all(isinstance(agent, dict) for agent in result)
+        # Check if each agent has an 'id' field
+        assert all("id" in agent for agent in result)
+
+
 @test("workflow: tool call api_call")
 async def _(
     client=cozo_client,
