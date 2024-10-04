@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: agents-api/.pytype
-          key: ${{ runner.os }}-agents-api-pytype-${{ hashFiles('agents-api/**/*.py') }}
+          key: ${{ runner.os }}-agents-api-pytype-
           restore-keys: |
             ${{ runner.os }}-agents-api-pytype-
 
