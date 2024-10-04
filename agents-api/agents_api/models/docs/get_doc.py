@@ -37,6 +37,7 @@ T = TypeVar("T")
     one=True,
     transform=lambda d: {
         "content": [s[1] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
+        "embeddings": [s[2] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
         **d,
     },
 )
@@ -68,8 +69,9 @@ def get_doc(
                 doc_id,
                 index,
                 content,
+                embedding,
             },
-            snippet_data = [index, content]
+            snippet_data = [index, content, embedding]
 
         ?[
             id,
