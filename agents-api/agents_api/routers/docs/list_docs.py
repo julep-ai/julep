@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 
 from ...autogen.openapi_model import Doc, ListResponse
 from ...dependencies.developer_id import get_developer_id
+from ...dependencies.query_filter import FilterModel, create_filter_extractor
 from ...models.docs.list_docs import list_docs as list_docs_query
 from .router import router
 
@@ -15,20 +16,12 @@ from .router import router
 async def list_user_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     user_id: UUID,
+    metadata_filter: Annotated[FilterModel | None, Depends(create_filter_extractor("metadata_filter"))],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: str = "{}",
 ) -> ListResponse[Doc]:
-    try:
-        metadata_filter = json.loads(metadata_filter)
-    except JSONDecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="metadata_filter is not a valid JSON",
-        )
-
     docs = list_docs_query(
         developer_id=x_developer_id,
         owner_type="user",
@@ -37,7 +30,7 @@ async def list_user_docs(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
-        metadata_filter=metadata_filter,
+        metadata_filter=metadata_filter.model_dump(mode="json"),
     )
 
     return ListResponse[Doc](items=docs)
@@ -47,20 +40,12 @@ async def list_user_docs(
 async def list_agent_docs(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     agent_id: UUID,
+    metadata_filter: Annotated[FilterModel | None, Depends(create_filter_extractor("metadata_filter"))],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
-    metadata_filter: str = "{}",
 ) -> ListResponse[Doc]:
-    try:
-        metadata_filter = json.loads(metadata_filter)
-    except JSONDecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="metadata_filter is not a valid JSON",
-        )
-
     docs = list_docs_query(
         developer_id=x_developer_id,
         owner_type="agent",
@@ -69,7 +54,7 @@ async def list_agent_docs(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
-        metadata_filter=metadata_filter,
+        metadata_filter=metadata_filter.model_dump(mode="json"),
     )
 
     return ListResponse[Doc](items=docs)
