@@ -39,7 +39,8 @@ T = TypeVar("T")
 def update_user(
     *, developer_id: UUID, user_id: UUID, data: UpdateUserRequest
 ) -> tuple[list[str], dict]:
-    """Updates user information in the 'cozodb' database.
+    """
+    Updates user information in the 'cozodb' database.
 
     Parameters:
         developer_id (UUID): The developer's unique identifier.

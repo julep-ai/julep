@@ -74,9 +74,6 @@ model SystemDef {
 
 // TODO: We should use this model for all tools, not just functions and discriminate on the type
 model Tool {
-    /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
-    type: ToolType = ToolType.function;
-
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
 
@@ -95,22 +92,11 @@ model FunctionCallOption {
     name: string;
 }
 
-@discriminator("type")
 model NamedToolChoice {
-    /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
-    type: ToolType;
-
     function?: FunctionCallOption;
     integration?: never; // TODO: Implement
     system?: never; // TODO: Implement
     api_call?: never; // TODO: Implement
-}
-
-model NamedFunctionChoice extends NamedToolChoice {
-    type: ToolType.function;
-
-    /** The function to call */
-    function: FunctionCallOption;
 }
 
 model ToolResponse {

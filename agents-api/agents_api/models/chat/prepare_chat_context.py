@@ -119,6 +119,8 @@ def prepare_chat_context(
         ?[{', '.join(session_data_fields)}, toolsets] :=
             *_session_data_json {{ {', '.join(session_data_fields)} }},
             *_toolsets_json {{ toolsets }}
+
+        :limit 1
     """
 
     queries = [

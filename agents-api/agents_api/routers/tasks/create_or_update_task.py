@@ -6,15 +6,14 @@ from jsonschema import validate
 from jsonschema.exceptions import SchemaError, ValidationError
 from starlette.status import HTTP_201_CREATED
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     CreateOrUpdateTaskRequest,
     ResourceUpdatedResponse,
 )
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.task.create_or_update_task import (
+from ...dependencies.developer_id import get_developer_id
+from ...models.task.create_or_update_task import (
     create_or_update_task as create_or_update_task_query,
 )
-
 from .router import router
 
 

@@ -50,10 +50,10 @@ def create_doc(
     Constructs and executes a datalog query to create a new document and its associated snippets in the 'cozodb' database.
 
     Parameters:
-    - owner_type (Literal["user", "agent"]): The type of the owner of the document.
-    - owner_id (UUID): The UUID of the document owner.
-    - id (UUID): The UUID of the document to be created.
-    - data (CreateDocRequest): The content of the document.
+        owner_type (Literal["user", "agent"]): The type of the owner of the document.
+        owner_id (UUID): The UUID of the document owner.
+        id (UUID): The UUID of the document to be created.
+        data (CreateDocRequest): The content of the document.
     """
 
     doc_id = str(doc_id or uuid4())
