@@ -15,7 +15,6 @@ from agents_api.models.task.delete_task import delete_task
 from agents_api.models.task.get_task import get_task
 from agents_api.models.task.list_tasks import list_tasks
 from agents_api.models.task.update_task import update_task
-
 from tests.fixtures import cozo_client, test_agent, test_developer_id, test_task
 
 

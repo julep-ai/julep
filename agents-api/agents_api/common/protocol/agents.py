@@ -9,7 +9,7 @@ class AgentDefaultSettings(BaseModel):
 
     top_p: float = 1.0
     """Top-p sampling setting controlling the nucleus of the probability distribution to sample from."""
-    
+
     repetition_penalty: float = 1.0
     """Penalty applied to discourage repetition in the agent's responses."""
 

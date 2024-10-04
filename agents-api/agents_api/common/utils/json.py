@@ -39,7 +39,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         obj: The object to serialize.
         Returns: A serializable object or raises a TypeError if the object is not serializable.
         """
-        
+
         if obj is None:
             return self._default_empty_value
 

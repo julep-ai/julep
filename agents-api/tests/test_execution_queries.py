@@ -15,7 +15,6 @@ from agents_api.models.execution.create_temporal_lookup import create_temporal_l
 from agents_api.models.execution.get_execution import get_execution
 from agents_api.models.execution.list_executions import list_executions
 from agents_api.models.execution.lookup_temporal_data import lookup_temporal_data
-
 from tests.fixtures import (
     cozo_client,
     test_developer_id,

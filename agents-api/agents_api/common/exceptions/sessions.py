@@ -8,6 +8,7 @@ from uuid import UUID
 
 from . import BaseCommonException
 
+
 class BaseSessionException(BaseCommonException):
     """
     Base exception class for session-related errors.
