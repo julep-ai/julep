@@ -41,6 +41,7 @@ def _(
     )
 
 
+# TODO: Execute embedding workflow to fix this test and other docs tests
 @test("model: get docs")
 def _(client=cozo_client, doc=test_doc, developer_id=test_developer_id):
     get_doc(

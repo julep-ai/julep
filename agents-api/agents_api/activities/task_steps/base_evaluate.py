@@ -12,7 +12,7 @@ from ..utils import get_evaluator
 
 @beartype
 async def base_evaluate(
-    exprs: str | list[str] | dict[str, str],
+    exprs: str | list[str] | dict[str, str] | dict[str, dict[str, str]],
     values: dict[str, Any] = {},
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
@@ -53,8 +53,17 @@ async def base_evaluate(
             case list():
                 return [evaluator.eval(expr) for expr in exprs]
 
+            case dict() as d if all(isinstance(v, dict) for v in d.values()):
+                return {
+                    k: {ik: evaluator.eval(iv) for ik, iv in v.items()}
+                    for k, v in d.items()
+                }
+
             case dict():
                 return {k: evaluator.eval(v) for k, v in exprs.items()}
+
+            case _:
+                raise ValueError(f"Invalid expression: {exprs}")
 
     except BaseException as e:
         if activity.in_activity():

@@ -82,7 +82,7 @@ model ToolCallStepDef {
     tool: validPythonIdentifier;
 
     /** The input parameters for the tool (defaults to last step output) */
-    arguments: ExpressionObject<unknown> | "_" = "_";
+    arguments: NestedExpressionObject<unknown> | "_" = "_";
 }
 
 model PromptStep extends BaseWorkflowStep<"prompt"> {

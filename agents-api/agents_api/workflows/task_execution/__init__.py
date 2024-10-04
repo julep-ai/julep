@@ -11,8 +11,10 @@ from temporalio.exceptions import ApplicationError
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
+    from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...autogen.openapi_model import (
+        ApiCallDef,
         EmbedStep,
         ErrorWorkflowStep,
         EvaluateStep,
@@ -498,6 +500,44 @@ class TaskExecutionWorkflow:
                 tool_call_response = await workflow.execute_activity(
                     execute_integration,
                     args=[context, tool_name, integration, arguments],
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
+                )
+
+                state = PartialTransition(output=tool_call_response)
+
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "api_call":
+                call = tool_call["api_call"]
+                tool_name = call["name"]
+                arguments = call["arguments"]
+                apicall_spec = next(
+                    (t for t in context.tools if t.name == tool_name), None
+                )
+
+                if apicall_spec is None:
+                    raise ApplicationError(f"Integration {tool_name} not found")
+
+                api_call = ApiCallDef(
+                    method=apicall_spec.spec["method"],
+                    url=apicall_spec.spec["url"],
+                    headers=apicall_spec.spec["headers"],
+                    follow_redirects=apicall_spec.spec["follow_redirects"],
+                )
+
+                if "json_" in arguments:
+                    arguments["json"] = arguments["json_"]
+                    del arguments["json_"]
+
+                # Execute the API call using the `execute_api_call` function
+                tool_call_response = await workflow.execute_activity(
+                    execute_api_call,
+                    args=[
+                        api_call,
+                        arguments,
+                    ],
                     schedule_to_close_timeout=timedelta(
                         seconds=30 if debug or testing else 600
                     ),
