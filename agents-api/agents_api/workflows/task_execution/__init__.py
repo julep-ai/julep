@@ -13,6 +13,7 @@ with workflow.unsafe.imports_passed_through():
     from ...activities import task_steps
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
+    from ...activities.execute_system import execute_system
     from ...autogen.openapi_model import (
         ApiCallDef,
         EmbedStep,
@@ -39,6 +40,7 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
         YieldStep,
     )
+    from ...autogen.Tools import SystemDef
     from ...common.protocol.tasks import (
         ExecutionInput,
         PartialTransition,
@@ -545,9 +547,28 @@ class TaskExecutionWorkflow:
 
                 state = PartialTransition(output=tool_call_response)
 
-            case ToolCallStep(), StepOutcome(output=_):
-                # FIXME: Handle system/api_call tool_calls
-                raise ApplicationError("Not implemented")
+            case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
+                "type"
+            ] == "system":
+                call = tool_call.get("system")
+
+                system_call = SystemDef(**call)
+                tool_call_response = await workflow.execute_activity(
+                    execute_system,
+                    args=[context, system_call],
+                    schedule_to_close_timeout=timedelta(
+                        seconds=30 if debug or testing else 600
+                    ),
+                )
+
+                # FIXME: This is a hack to make the output of the system call match
+                #  the expected output format (convert uuid/datetime to strings)
+                def model_dump(obj):
+                    if isinstance(obj, list):
+                        return [model_dump(item) for item in obj]
+                    return obj.model_dump(mode="json")
+
+                state = PartialTransition(output=model_dump(tool_call_response))
 
             case _:
                 workflow.logger.error(
