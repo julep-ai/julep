@@ -44,15 +44,15 @@ def create_or_update_user(
     Constructs and executes a datalog query to create a new user in the database.
 
     Parameters:
-    - user_id (UUID): The unique identifier for the user.
-    - developer_id (UUID): The unique identifier for the developer creating the user.
-    - name (str): The name of the user.
-    - about (str): A description of the user.
-    - metadata (dict, optional): A dictionary of metadata for the user. Defaults to an empty dict.
-    - client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.
+        user_id (UUID): The unique identifier for the user.
+        developer_id (UUID): The unique identifier for the developer creating the user.
+        name (str): The name of the user.
+        about (str): A description of the user.
+        metadata (dict, optional): A dictionary of metadata for the user. Defaults to an empty dict.
+        client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.
 
     Returns:
-    User: The newly created user record.
+        User: The newly created user record.
     """
 
     # Extract the user data from the payload

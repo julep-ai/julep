@@ -67,6 +67,8 @@ def get_developer(
                 created_at,
                 updated_at,
             }
+
+        :limit 1
     """
 
     return (query, {"developer_id": developer_id})

@@ -43,6 +43,8 @@ def lookup_temporal_data(
       *temporal_executions_lookup {
         id, execution_id, run_id, first_execution_run_id, result_run_id
       }
+
+    :limit 1
     """
 
     queries = [

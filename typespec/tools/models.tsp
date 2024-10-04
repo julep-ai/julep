@@ -98,9 +98,6 @@ model ApiCallDef {
 
 
 model Tool {
-    /** Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now) */
-    type: ToolType = ToolType.function;
-
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
 
@@ -128,22 +125,11 @@ model FunctionCallOption {
     name: string;
 }
 
-@discriminator("type")
 model NamedToolChoice {
-    /** Whether this tool is a `function` */
-    type: ToolType;
-
     function?: FunctionCallOption;
     integration?: never;
     system?: never;
     api_call?: never;
-}
-
-model NamedFunctionChoice extends NamedToolChoice {
-    type: ToolType.function;
-
-    /** The function to call */
-    function: FunctionCallOption;
 }
 
 model ToolResponse {
