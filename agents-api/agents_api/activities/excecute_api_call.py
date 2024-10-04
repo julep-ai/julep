@@ -28,18 +28,18 @@ async def execute_api_call(
     request_args: RequestArgs,
 ) -> Any:
     try:
-        response = httpx.request(
-            method=api_call.method,
-            url=str(api_call.url),
-            headers=api_call.headers,
-            follow_redirects=api_call.follow_redirects,
-            **request_args,
-        )
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method=api_call.method,
+                url=str(api_call.url),
+                headers=api_call.headers,
+                follow_redirects=api_call.follow_redirects,
+                **request_args,
+            )
 
         response_dict = {
             "status_code": response.status_code,
-            # FIXME: We need to handle the headers properly and convert them to a plain dict
-            # "headers": response.headers,
+            "headers": dict(response.headers),
             "content": response.content,
             "json": response.json(),
         }
