@@ -209,6 +209,8 @@ def prepare_session_data(
         session_data[session],
         user_data[users],
         agent_data[agents]
+
+    :limit 1
     """
 
     queries = [

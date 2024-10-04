@@ -53,9 +53,9 @@ def search_docs_by_text(
     Searches for document snippets in CozoDB by embedding query.
 
     Parameters:
-    - owners (list[tuple[Literal["user", "agent"], UUID]]): The type of the owner of the documents.
-    - query (str): The query string.
-    - k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
+        owners (list[tuple[Literal["user", "agent"], UUID]]): The type of the owner of the documents.
+        query (str): The query string.
+        k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
     """
 
     owners: list[list[str]] = [

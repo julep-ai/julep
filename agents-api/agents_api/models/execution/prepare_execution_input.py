@@ -187,6 +187,8 @@ def prepare_execution_input(
       user = null,
       session = null,
       arguments = execution->"input"
+
+    :limit 1
     """
 
     queries = [

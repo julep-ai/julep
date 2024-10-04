@@ -10,6 +10,7 @@ from temporalio.testing import WorkflowEnvironment
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 
+# Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
 
 

@@ -46,13 +46,13 @@ def update_agent(
     Constructs and executes a datalog query to update an agent and its default settings in the 'cozodb' database.
 
     Parameters:
-    - agent_id (UUID): The unique identifier of the agent to be updated.
-    - developer_id (UUID): The unique identifier of the developer associated with the agent.
-    - data (UpdateAgentRequest): The request payload containing the updated agent data.
-    - client (CozoClient, optional): The database client used to execute the query. Defaults to a pre-configured client instance.
+        agent_id (UUID): The unique identifier of the agent to be updated.
+        developer_id (UUID): The unique identifier of the developer associated with the agent.
+        data (UpdateAgentRequest): The request payload containing the updated agent data.
+        client (CozoClient, optional): The database client used to execute the query. Defaults to a pre-configured client instance.
 
     Returns:
-    ResourceUpdatedResponse: The updated agent data.
+        ResourceUpdatedResponse: The updated agent data.
     """
     default_settings = (
         data.default_settings.model_dump(exclude_none=True)

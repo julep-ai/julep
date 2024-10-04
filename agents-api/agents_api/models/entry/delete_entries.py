@@ -49,7 +49,7 @@ def delete_entries_for_session(
     Constructs and returns a datalog query for deleting entries associated with a given session ID from the 'cozodb' database.
 
     Parameters:
-    - session_id (UUID): The unique identifier of the session whose entries are to be deleted.
+        session_id (UUID): The unique identifier of the session whose entries are to be deleted.
     """
 
     delete_query = """

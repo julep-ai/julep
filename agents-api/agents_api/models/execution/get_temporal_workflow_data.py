@@ -45,6 +45,8 @@ def get_temporal_workflow_data(
               result_run_id,
               first_execution_run_id,
           }
+
+    :limit 1
     """
 
     return (

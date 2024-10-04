@@ -49,12 +49,12 @@ def delete_user(*, developer_id: UUID, user_id: UUID) -> tuple[list[str], dict]:
     Constructs and returns a datalog query for deleting an user and its default settings from the database.
 
     Parameters:
-    - developer_id (UUID): The UUID of the developer owning the user.
-    - user_id (UUID): The UUID of the user to be deleted.
-    - client (CozoClient, optional): An instance of the CozoClient to execute the query.
+        developer_id (UUID): The UUID of the developer owning the user.
+        user_id (UUID): The UUID of the user to be deleted.
+        client (CozoClient, optional): An instance of the CozoClient to execute the query.
 
     Returns:
-    - ResourceDeletedResponse: The response indicating the deletion of the user.
+        ResourceDeletedResponse: The response indicating the deletion of the user.
     """
 
     queries = [
