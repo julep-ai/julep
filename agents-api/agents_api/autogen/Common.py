@@ -3,10 +3,28 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+
+
+class IdentifierSafeUnicode(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[
+        str,
+        Field(
+            max_length=120,
+            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
+        ),
+    ]
+    """
+    For Unicode character safety
+    See: https://unicode.org/reports/tr31/
+    See: https://www.unicode.org/reports/tr39/#Identifier_Characters
+    """
 
 
 class JinjaTemplate(RootModel[str]):
@@ -19,16 +37,6 @@ class JinjaTemplate(RootModel[str]):
     """
 
 
-class Limit(RootModel[int]):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    root: Annotated[int, Field(ge=1, lt=1000)]
-    """
-    Limit the number of results
-    """
-
-
 class LogitBias(RootModel[float]):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -36,13 +44,29 @@ class LogitBias(RootModel[float]):
     root: Annotated[float, Field(ge=-100.0, le=100.0)]
 
 
-class Offset(RootModel[int]):
+class PaginationOptions(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    root: Annotated[int, Field(ge=0)]
+    limit: Annotated[int, Field(100, ge=1, lt=1000)]
     """
-    Offset to apply to the results
+    Limit the number of items returned
+    """
+    offset: Annotated[int, Field(0, ge=0)]
+    """
+    Offset the items returned
+    """
+    sort_by: Literal["created_at", "updated_at"] = "created_at"
+    """
+    Sort by a field
+    """
+    direction: Literal["asc", "desc"] = "asc"
+    """
+    Sort direction
+    """
+    metadata_filter: str = "{}"
+    """
+    JSON string of object that should be used to filter objects by metadata
     """
 
 
@@ -115,3 +139,13 @@ class Uuid(RootModel[UUID]):
         populate_by_name=True,
     )
     root: UUID
+
+
+class ValidPythonIdentifier(RootModel[str]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
+    """
+    Valid python identifier names
+    """

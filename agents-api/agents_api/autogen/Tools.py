@@ -8,6 +8,32 @@ from uuid import UUID
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
+from .Common import PaginationOptions, ValidPythonIdentifier
+from .Docs import (
+    CreateDocRequest,
+    EmbedQueryRequest,
+    HybridDocSearchRequest,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
+from .Executions import (
+    CreateExecutionRequest,
+    ResumeExecutionRequest,
+    StopExecutionRequest,
+)
+from .Sessions import (
+    CreateOrUpdateSessionRequest,
+    CreateSessionRequest,
+    PatchSessionRequest,
+    UpdateSessionRequest,
+)
+from .Users import (
+    CreateOrUpdateUserRequest,
+    CreateUserRequest,
+    PatchUserRequest,
+    UpdateUserRequest,
+)
+
 
 class ApiCallDef(BaseModel):
     """
@@ -17,9 +43,7 @@ class ApiCallDef(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    method: Literal[
-        "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"
-    ]
+    method: Literal["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
     """
     The HTTP method to use
     """
@@ -35,7 +59,7 @@ class ApiCallDef(BaseModel):
     """
     The content as base64 to send with the request
     """
-    data: dict[str, str] | None = None
+    data: dict[str, Any] | None = None
     """
     The data to send as form data
     """
@@ -51,68 +75,55 @@ class ApiCallDef(BaseModel):
     """
     The parameters to send with the request
     """
-    follow_redirects: StrictBool | None = None
+    follow_redirects: StrictBool = False
     """
     Follow redirects
     """
-
-
-class ApiCallDefUpdate(BaseModel):
+    timeout: int | None = None
     """
-    API call definition
+    The timeout for the request
+    """
+
+
+class BaseSystemDef(BaseModel):
+    """
+    Base system definition
     """
 
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    method: (
-        Literal[
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "PATCH",
-            "HEAD",
-            "OPTIONS",
-            "CONNECT",
-            "TRACE",
-        ]
-        | None
-    ) = None
+    resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"]
     """
-    The HTTP method to use
+    Resource is the name of the resource to use
     """
-    url: AnyUrl | None = None
+    resource_id: UUID | None = None
     """
-    The URL to call
+    Resource id (if applicable)
     """
-    headers: dict[str, str] | None = None
+    subresource: UUID | None = None
     """
-    The headers to send with the request
+    Sub-resource type (if applicable)
     """
-    content: str | None = None
+    operation: Literal[
+        "create",
+        "update",
+        "patch",
+        "create_or_update",
+        "embed",
+        "change_status",
+        "search",
+        "history",
+        "delete",
+        "get",
+        "list",
+    ]
     """
-    The content as base64 to send with the request
+    Operation is the name of the operation to perform
     """
-    data: dict[str, str] | None = None
+    arguments: Any | None = None
     """
-    The data to send as form data
-    """
-    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
-    """
-    JSON body to send with the request
-    """
-    cookies: dict[str, str] | None = None
-    """
-    Cookies
-    """
-    params: str | dict[str, Any] | None = None
-    """
-    The parameters to send with the request
-    """
-    follow_redirects: StrictBool | None = None
-    """
-    Follow redirects
+    The arguments to pre-apply to the system call
     """
 
 
@@ -156,21 +167,13 @@ class CreateToolRequest(BaseModel):
     """
     The integration to call
     """
-    system: SystemDef | None = None
-    """
-    The system to call
-    """
-    api_call: ApiCallDef | None = None
-    """
-    The API call to make
-    """
 
 
 class FunctionCallOption(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: str
+    name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     The name of the function
     """
@@ -188,9 +191,9 @@ class FunctionDef(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    description: str | None = None
+    description: Any | None = None
     """
-    Description of the function
+    DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons.
     """
     parameters: dict[str, Any] | None = None
     """
@@ -304,50 +307,406 @@ class PatchToolRequest(BaseModel):
     """
     The integration to call
     """
-    system: SystemDefUpdate | None = None
-    """
-    The system to call
-    """
-    api_call: ApiCallDefUpdate | None = None
-    """
-    The API call to make
-    """
 
 
-class SystemDef(BaseModel):
-    """
-    System definition
-    """
-
+class SystemAgentDeleteDef(BaseSystemDef):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    call: str
-    """
-    The name of the system call
-    """
-    arguments: dict[str, Any] | None = None
-    """
-    The arguments to pre-apply to the system call
-    """
+    resource: Literal["agent"] = "agent"
+    operation: Literal["delete"] = "delete"
+    resource_id: UUID
 
 
-class SystemDefUpdate(BaseModel):
-    """
-    System definition
-    """
-
+class SystemAgentGetDef(BaseSystemDef):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    call: str | None = None
+    resource: Literal["agent"] = "agent"
+    operation: Literal["get"] = "get"
+    resource_id: UUID
+
+
+class SystemAgentListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemCreateToolRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
-    The name of the system call
+    Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    arguments: dict[str, Any] | None = None
+    description: str | None = None
     """
-    The arguments to pre-apply to the system call
+    Description of the tool
     """
+    function: FunctionDef | None = None
+    """
+    The function to call
+    """
+    integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
+
+
+class SystemDocCreateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent", "user"] = "agent"
+    resource_id: UUID
+    subresource: Literal["doc"] = "doc"
+    operation: Literal["create"] = "create"
+    arguments: CreateDocRequest
+
+
+class SystemDocDeleteDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent", "user"] = "agent"
+    resource_id: UUID
+    subresource: Literal["doc"] = "doc"
+    operation: Literal["delete"] = "delete"
+
+
+class SystemDocEmbedDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["doc"] = "doc"
+    operation: Literal["embed"] = "embed"
+    arguments: EmbedQueryRequest
+
+
+class SystemDocGetDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["doc"] = "doc"
+    resource_id: UUID
+    operation: Literal["get"] = "get"
+
+
+class SystemDocListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent", "user"] = "agent"
+    resource_id: UUID
+    subresource: Literal["doc"] = "doc"
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemDocSearchDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent", "user"] = "agent"
+    resource_id: UUID
+    subresource: Literal["doc"] = "doc"
+    operation: Literal["search"] = "search"
+    arguments: (
+        VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
+    )
+
+
+class SystemExecutionChangeStatusDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["execution"] = "execution"
+    resource_id: UUID
+    operation: Literal["change_status"] = "change_status"
+    arguments: ResumeExecutionRequest | StopExecutionRequest
+
+
+class SystemExecutionCreateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["task"] = "task"
+    resource_id: UUID
+    subresource: Literal["execution"] = "execution"
+    operation: Literal["create"] = "create"
+    arguments: CreateExecutionRequest
+
+
+class SystemExecutionGetDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["execution"] = "execution"
+    resource_id: UUID
+    operation: Literal["get"] = "get"
+
+
+class SystemExecutionListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["task"] = "task"
+    resource_id: UUID
+    subresource: Literal["execution"] = "execution"
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemJobGetDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["job"] = "job"
+    resource_id: UUID
+    operation: Literal["get"] = "get"
+
+
+class SystemPatchToolRequest(SystemCreateToolRequest):
+    pass
+
+
+class SystemSessionCreateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["create"] = "create"
+    arguments: CreateSessionRequest
+
+
+class SystemSessionCreateOrUpdateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["create_or_update"] = "create_or_update"
+    arguments: CreateOrUpdateSessionRequest
+
+
+class SystemSessionDeleteDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["delete"] = "delete"
+
+
+class SystemSessionGetDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["get"] = "get"
+
+
+class SystemSessionHistoryDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["history"] = "history"
+
+
+class SystemSessionListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemSessionPatchDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["patch"] = "patch"
+    arguments: PatchSessionRequest
+
+
+class SystemSessionUpdateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["session"] = "session"
+    resource_id: UUID
+    operation: Literal["update"] = "update"
+    arguments: UpdateSessionRequest
+
+
+class SystemTaskGetDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["task"] = "task"
+    resource_id: UUID
+    operation: Literal["get"] = "get"
+
+
+class SystemTaskListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    resource_id: UUID
+    subresource: Literal["task"] = "task"
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemToolCreateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    operation: Literal["create"] = "create"
+    arguments: SystemCreateToolRequest
+
+
+class SystemToolDeleteDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    operation: Literal["delete"] = "delete"
+
+
+class SystemToolListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemToolPatchDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    operation: Literal["patch"] = "patch"
+    arguments: SystemPatchToolRequest
+
+
+class SystemToolUpdateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent"] = "agent"
+    resource_id: UUID
+    subresource: Literal["tool"] = "tool"
+    operation: Literal["update"] = "update"
+    arguments: SystemUpdateToolRequest
+
+
+class SystemTransitionListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["execution"] = "execution"
+    resource_id: UUID
+    subresource: Literal["transition"] = "transition"
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemUpdateToolRequest(SystemCreateToolRequest):
+    pass
+
+
+class SystemUserCreateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["create"] = "create"
+    arguments: CreateUserRequest
+
+
+class SystemUserCreateOrUpdateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["create_or_update"] = "create_or_update"
+    arguments: CreateOrUpdateUserRequest
+
+
+class SystemUserDeleteDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["delete"] = "delete"
+
+
+class SystemUserGetDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["get"] = "get"
+
+
+class SystemUserListDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["list"] = "list"
+    arguments: PaginationOptions
+
+
+class SystemUserPatchDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["patch"] = "patch"
+    arguments: PatchUserRequest
+
+
+class SystemUserUpdateDef(BaseSystemDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["user"] = "user"
+    resource_id: UUID
+    operation: Literal["update"] = "update"
+    arguments: UpdateUserRequest
 
 
 class Tool(BaseModel):
@@ -370,7 +729,46 @@ class Tool(BaseModel):
     """
     The integration to call
     """
-    system: SystemDef | None = None
+    system: (
+        SystemAgentListDef
+        | SystemAgentDeleteDef
+        | SystemAgentGetDef
+        | SystemToolCreateDef
+        | SystemToolUpdateDef
+        | SystemToolListDef
+        | SystemToolDeleteDef
+        | SystemToolPatchDef
+        | SystemDocCreateDef
+        | SystemDocListDef
+        | SystemDocDeleteDef
+        | SystemDocGetDef
+        | SystemDocEmbedDef
+        | SystemDocSearchDef
+        | SystemSessionCreateDef
+        | SystemSessionUpdateDef
+        | SystemSessionListDef
+        | SystemSessionDeleteDef
+        | SystemSessionCreateOrUpdateDef
+        | SystemSessionGetDef
+        | SystemSessionHistoryDef
+        | SystemSessionPatchDef
+        | SystemUserCreateDef
+        | SystemUserUpdateDef
+        | SystemUserListDef
+        | SystemUserDeleteDef
+        | SystemUserCreateOrUpdateDef
+        | SystemUserGetDef
+        | SystemUserPatchDef
+        | SystemJobGetDef
+        | SystemTaskListDef
+        | SystemTaskGetDef
+        | SystemExecutionCreateDef
+        | SystemExecutionListDef
+        | SystemExecutionChangeStatusDef
+        | SystemExecutionGetDef
+        | SystemTransitionListDef
+        | None
+    ) = None
     """
     The system to call
     """
@@ -423,14 +821,6 @@ class UpdateToolRequest(BaseModel):
     integration: IntegrationDef | None = None
     """
     The integration to call
-    """
-    system: SystemDef | None = None
-    """
-    The system to call
-    """
-    api_call: ApiCallDef | None = None
-    """
-    The API call to make
     """
 
 

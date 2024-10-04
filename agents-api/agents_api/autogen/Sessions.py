@@ -6,7 +6,14 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, StrictBool
+
+
+class ContextOverflowType(RootModel[Literal["truncate", "adaptive"]]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    root: Literal["truncate", "adaptive"]
 
 
 class CreateSessionRequest(BaseModel):
@@ -91,6 +98,12 @@ class PatchSessionRequest(BaseModel):
     If a tool call is not made, the model's output will be returned as is.
     """
     metadata: dict[str, Any] | None = None
+
+
+class PatchSessionRequestUpdate(PatchSessionRequest):
+    """
+    Payload for patching a session
+    """
 
 
 class Session(BaseModel):

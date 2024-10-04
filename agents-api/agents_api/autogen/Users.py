@@ -61,6 +61,12 @@ class PatchUserRequest(BaseModel):
     """
 
 
+class PatchUserRequestUpdate(PatchUserRequest):
+    """
+    Payload for patching a user
+    """
+
+
 class UpdateUserRequest(BaseModel):
     """
     Payload for updating a user

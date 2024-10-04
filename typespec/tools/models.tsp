@@ -1,4 +1,8 @@
 import "../common";
+import "./function.tsp";
+import "./integration.tsp";
+import "./system.tsp";
+import "./api_call.tsp";
 
 using Common;
 
@@ -22,80 +26,9 @@ enum ToolType {
     api_call,
 }
 
-/** The parameters the functions accepts, described as a JSON Schema object. */
-alias FunctionParameters = Record<unknown>;
-
 alias ToolOutput = Record<unknown>;
 
 alias ToolChoiceOption = "auto" | "none" | NamedToolChoice;
-
-/** Function definition */
-model FunctionDef {
-    /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
-    name?: null = null;
-
-    /** Description of the function  */
-    description?: string;
-
-    /** The parameters the function accepts */
-    parameters?: FunctionParameters;
-
-}
-
-/** Integration definition */
-model IntegrationDef {
-    /** The provider of the integration */
-    provider: integrationProvider | string;
-
-    /** The specific method of the integration to call */
-    method?: string;
-
-    /** The setup parameters the integration accepts */
-    setup?: FunctionParameters;
-
-    /** The arguments to pre-apply to the integration call */
-    arguments?: FunctionParameters;
-}
-
-/** System definition */
-model SystemDef {
-    /** The name of the system call */
-    call: string;
-
-    /** The arguments to pre-apply to the system call */
-    arguments?: FunctionParameters;
-}
-
-/** API call definition */
-model ApiCallDef {
-    /** The HTTP method to use */
-    method: httpMethod;
-
-    /** The URL to call */
-    url: url;
-
-    /** The headers to send with the request */
-    headers?: Record<string>;
-
-    /** The content as base64 to send with the request */
-    content?: string;
-
-    /** The data to send as form data */
-    data?: Record<string>;
-
-    /** JSON body to send with the request */
-    json?: Record<unknown>;
-
-    /** Cookies */
-    cookies?: Record<string>;
-
-    /** The parameters to send with the request */
-    params?: string | Record<unknown>;
-
-    /** Follow redirects */
-    follow_redirects?: boolean;
-}
-
 
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
@@ -118,11 +51,6 @@ model Tool {
 
     ...HasTimestamps;
     ...HasId;
-}
-
-model FunctionCallOption {
-    /** The name of the function */
-    name: string;
 }
 
 model NamedToolChoice {
