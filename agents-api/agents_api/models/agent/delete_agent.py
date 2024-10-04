@@ -31,11 +31,23 @@ T = TypeVar("T")
         and "Developer does not own resource"
         in e.resp["display"]: lambda *_: HTTPException(
             detail="The specified developer does not own the requested resource. Please verify the ownership or check if the developer ID is correct.",
-            status_code=404
+            status_code=404,
         ),
-        QueryException: partialclass(HTTPException, status_code=400,detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect."),
-        ValidationError: partialclass(HTTPException, status_code=400,detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format."),
-        TypeError: partialclass(HTTPException, status_code=400,detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again."),
+        QueryException: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect.",
+        ),
+        ValidationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format.",
+        ),
+        TypeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again.",
+        ),
     }
 )
 @wrap_in_class(

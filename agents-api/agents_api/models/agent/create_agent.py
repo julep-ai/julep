@@ -31,11 +31,23 @@ T = TypeVar("T")
         and "asserted to return some results, but returned none"
         in str(e): lambda *_: HTTPException(
             detail="Developer not found. Please ensure the provided auth token (which refers to your developer_id) is valid and the developer has the necessary permissions to create an agent.",
-            status_code=403
+            status_code=403,
         ),
-        QueryException: partialclass(HTTPException, status_code=400, detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect."),
-        ValidationError: partialclass(HTTPException, status_code=400, detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format."),
-        TypeError: partialclass(HTTPException, status_code=400, detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again."),
+        QueryException: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect.",
+        ),
+        ValidationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format.",
+        ),
+        TypeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again.",
+        ),
     }
 )
 @wrap_in_class(
