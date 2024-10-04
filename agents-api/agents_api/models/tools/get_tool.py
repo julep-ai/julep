@@ -68,6 +68,8 @@ def get_tool(
                 updated_at,
                 created_at,
             }
+
+        :limit 1
     """
 
     queries = [

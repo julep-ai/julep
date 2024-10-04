@@ -101,6 +101,8 @@ def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict]:
                 "min_p": min_p,
                 "preset": preset,
             }
+
+        :limit 1
     """
 
     queries = [

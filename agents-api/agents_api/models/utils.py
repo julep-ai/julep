@@ -127,6 +127,8 @@ def verify_developer_id_query(developer_id: UUID | str) -> str:
         matched[num],
         exists = num > 0,
         assert(exists, "Developer does not exist")
+
+    :limit 1
     """
 
 
@@ -162,6 +164,8 @@ def verify_developer_owns_resource_query(
         found[num],
         exists = num > 0,
         assert(exists, "Developer does not own resource {resource} with {resource_id_key} {resource_id_value}")
+
+    :limit 1
     """
 
     rule = rule_head + rule_body + assertion
