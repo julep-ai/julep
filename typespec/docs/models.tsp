@@ -23,6 +23,10 @@ model Doc {
 
     /** Contents of the document */
     content: string | string[];
+
+    /** Embeddings for the document */
+    @visibility("read")
+    embeddings?: float32[] | float32[][];
 }
 
 /** Payload for creating a doc */

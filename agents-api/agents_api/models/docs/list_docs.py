@@ -34,6 +34,7 @@ T = TypeVar("T")
     Doc,
     transform=lambda d: {
         "content": [s[1] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
+        "embeddings": [s[2] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
         **d,
     },
 )
@@ -67,8 +68,9 @@ def list_docs(
                 doc_id: id,
                 index,
                 content,
+                embedding,
             }},
-            snippet_data = [index, content]
+            snippet_data = [index, content, embedding]
 
         ?[
             owner_type,
