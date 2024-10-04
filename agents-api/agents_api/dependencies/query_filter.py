@@ -20,6 +20,7 @@ def convert_value(value: str) -> Any:
             continue
     return value
 
+
 def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], FilterModel]:
     """
     Creates a dependency function to extract filter parameters with a given prefix.
@@ -47,7 +48,7 @@ def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], Filte
         filters: dict[str, Any] = {}
         for key, value in request.query_params.items():
             if key.startswith(prefix):
-                filter_key = key[len(prefix):]
+                filter_key = key[len(prefix) :]
                 filters[filter_key] = convert_value(value)
 
         return FilterModel(**filters)

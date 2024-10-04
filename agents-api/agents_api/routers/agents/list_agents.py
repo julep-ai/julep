@@ -17,15 +17,13 @@ async def list_agents(
     # Example:
     # > ?metadata_filter.name=John&metadata_filter.age=30
     metadata_filter: Annotated[
-        FilterModel | None, 
-        Depends(create_filter_extractor("metadata_filter"))
+        FilterModel | None, Depends(create_filter_extractor("metadata_filter"))
     ],
     limit: int = 100,
     offset: int = 0,
     sort_by: Literal["created_at", "updated_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
 ) -> ListResponse[Agent]:
-
     agents = list_agents_query(
         developer_id=x_developer_id,
         limit=limit,
