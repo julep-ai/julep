@@ -49,12 +49,12 @@ def patch_user(
     Generates a datalog query for updating a user's information.
 
     Parameters:
-    - developer_id (UUID): The UUID of the developer.
-    - user_id (UUID): The UUID of the user to be updated.
-    - **update_data: Arbitrary keyword arguments representing the data to be updated.
+        developer_id (UUID): The UUID of the developer.
+        user_id (UUID): The UUID of the user to be updated.
+        **update_data: Arbitrary keyword arguments representing the data to be updated.
 
     Returns:
-    - tuple[str, dict]: A pandas DataFrame containing the results of the query execution.
+        tuple[str, dict]: A pandas DataFrame containing the results of the query execution.
     """
 
     update_data = data.model_dump(exclude_unset=True)

@@ -45,6 +45,7 @@ def get_paused_execution_token(
         execution_id = to_uuid($execution_id),
         status = "awaiting_input"
 
+    :limit 1
     :assert some
     """
 

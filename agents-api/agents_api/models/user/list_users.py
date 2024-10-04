@@ -43,13 +43,13 @@ def list_users(
     Queries the 'cozodb' database to list users associated with a specific developer.
 
     Parameters:
-    - developer_id (UUID): The unique identifier of the developer.
-    - limit (int): The maximum number of users to return. Defaults to 100.
-    - offset (int): The number of users to skip before starting to collect the result set. Defaults to 0.
-    - metadata_filter (dict[str, Any]): A dictionary representing filters to apply on user metadata.
+        developer_id (UUID): The unique identifier of the developer.
+        limit (int): The maximum number of users to return. Defaults to 100.
+        offset (int): The number of users to skip before starting to collect the result set. Defaults to 0.
+        metadata_filter (dict[str, Any]): A dictionary representing filters to apply on user metadata.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the queried user data.
+        pd.DataFrame: A DataFrame containing the queried user data.
     """
     # Construct a filter string for the metadata based on the provided dictionary.
     metadata_filter_str = ", ".join(

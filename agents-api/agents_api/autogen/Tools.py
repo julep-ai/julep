@@ -33,10 +33,6 @@ class CreateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
@@ -168,10 +164,6 @@ class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     function: FunctionCallOption | None = None
 
 
@@ -183,10 +175,6 @@ class PatchToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str | None, Field(None, max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
@@ -247,10 +235,6 @@ class Tool(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
@@ -291,10 +275,6 @@ class UpdateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
@@ -308,17 +288,6 @@ class UpdateToolRequest(BaseModel):
 
 
 class ChosenFunctionCall(ChosenToolCall):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function"] = "function"
-    function: FunctionCallOption
-    """
-    The function to call
-    """
-
-
-class NamedFunctionChoice(NamedToolChoice):
     model_config = ConfigDict(
         populate_by_name=True,
     )
