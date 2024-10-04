@@ -1,7 +1,7 @@
 import json
 from typing import cast
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     ChatMLImageContentPart,
     ChatMLTextContentPart,
 )

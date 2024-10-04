@@ -56,12 +56,12 @@ def search_docs_by_embedding(
     Searches for document snippets in CozoDB by embedding query.
 
     Parameters:
-    - owner_type (Literal["user", "agent"]): The type of the owner of the documents.
-    - owner_id (UUID): The unique identifier of the owner.
-    - query_embedding (list[float]): The embedding vector of the query.
-    - k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
-    - confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
-    - mmr_lambda (float, optional): The lambda parameter for MMR. Defaults to 0.25.
+        owner_type (Literal["user", "agent"]): The type of the owner of the documents.
+        owner_id (UUID): The unique identifier of the owner.
+        query_embedding (list[float]): The embedding vector of the query.
+        k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
+        confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
+        mmr_lambda (float, optional): The lambda parameter for MMR. Defaults to 0.25.
     """
 
     assert len(query_embedding) == embedding_size

@@ -65,7 +65,9 @@ def get_execution_transition(
                 is_null(next_tuple),
                 null,
                 {"workflow": next_tuple->0, "step": next_tuple->1},
-            ),
+            )
+
+        :limit 1
     """
 
     get_query += filter
