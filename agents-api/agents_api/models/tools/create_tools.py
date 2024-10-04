@@ -51,11 +51,11 @@ def create_tools(
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
     Parameters:
-    - agent_id (UUID): The unique identifier for the agent.
-    - data (list[CreateToolRequest]): A list of function definitions to be inserted.
+        agent_id (UUID): The unique identifier for the agent.
+        data (list[CreateToolRequest]): A list of function definitions to be inserted.
 
     Returns:
-    list[Tool]
+        list[Tool]
     """
 
     tools_data = [

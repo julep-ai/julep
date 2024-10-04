@@ -51,11 +51,11 @@ def delete_session(
     Deletes a session and its related data from the 'cozodb' database.
 
     Parameters:
-    - developer_id (UUID): The unique identifier for the developer.
-    - session_id (UUID): The unique identifier for the session to be deleted.
+        developer_id (UUID): The unique identifier for the developer.
+        session_id (UUID): The unique identifier for the session to be deleted.
 
     Returns:
-    - ResourceDeletedResponse: The response indicating the deletion of the session.
+        ResourceDeletedResponse: The response indicating the deletion of the session.
     """
     session_id = str(session_id)
     developer_id = str(developer_id)

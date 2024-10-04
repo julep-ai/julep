@@ -68,12 +68,12 @@ def create_agent(
     Constructs and executes a datalog query to create a new agent in the database.
 
     Parameters:
-    - agent_id (UUID | None): The unique identifier for the agent.
-    - developer_id (UUID): The unique identifier for the developer creating the agent.
-    - data (CreateAgentRequest): The data for the new agent.
+        agent_id (UUID | None): The unique identifier for the agent.
+        developer_id (UUID): The unique identifier for the developer creating the agent.
+        data (CreateAgentRequest): The data for the new agent.
 
     Returns:
-    - Agent: The newly created agent record.
+        Agent: The newly created agent record.
     """
 
     agent_id = agent_id or uuid4()

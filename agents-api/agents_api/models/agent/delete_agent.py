@@ -67,12 +67,12 @@ def delete_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict
     Constructs and returns a datalog query for deleting an agent and its default settings from the database.
 
     Parameters:
-    - developer_id (UUID): The UUID of the developer owning the agent.
-    - agent_id (UUID): The UUID of the agent to be deleted.
-    - client (CozoClient, optional): An instance of the CozoClient to execute the query.
+        developer_id (UUID): The UUID of the developer owning the agent.
+        agent_id (UUID): The UUID of the agent to be deleted.
+        client (CozoClient, optional): An instance of the CozoClient to execute the query.
 
     Returns:
-    - ResourceDeletedResponse: The response indicating the deletion of the agent.
+        ResourceDeletedResponse: The response indicating the deletion of the agent.
     """
 
     queries = [

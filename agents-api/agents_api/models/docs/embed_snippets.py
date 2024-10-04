@@ -49,9 +49,9 @@ def embed_snippets(
     """Embeds document snippets in the cozodb database.
 
     Parameters:
-    doc_id (UUID): The unique identifier for the document.
-    snippet_indices (list[int]): Indices of the snippets in the document.
-    embeddings (list[list[float]]): Embedding vectors for the snippets.
+        doc_id (UUID): The unique identifier for the document.
+        snippet_indices (list[int]): Indices of the snippets in the document.
+        embeddings (list[list[float]]): Embedding vectors for the snippets.
     """
 
     doc_id = str(doc_id)

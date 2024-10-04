@@ -15,8 +15,8 @@ from agents_api.autogen.openapi_model import (
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
 
-from .fixtures import cozo_client, test_agent, test_developer_id
-from .utils import patch_integration_service, patch_testing_temporal
+from tests.fixtures import cozo_client, test_agent, test_developer_id
+from tests.utils import patch_integration_service, patch_testing_temporal
 
 EMBEDDING_SIZE: int = 1024
 

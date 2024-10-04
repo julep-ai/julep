@@ -46,12 +46,12 @@ def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict]:
     This function constructs and executes a datalog query to retrieve information about a specific agent, including its default settings, based on the provided agent_id and developer_id.
 
     Parameters:
-    - developer_id (UUID): The unique identifier for the developer.
-    - agent_id (UUID): The unique identifier for the agent.
-    - client (CozoClient, optional): The database client used to execute the query.
+        developer_id (UUID): The unique identifier for the developer.
+        agent_id (UUID): The unique identifier for the agent.
+        client (CozoClient, optional): The database client used to execute the query.
 
     Returns:
-    - Agent
+        Agent
     """
     # Constructing a datalog query to retrieve agent details and default settings.
     # The query uses input parameters for agent_id and developer_id to filter the results.

@@ -7,13 +7,8 @@ from agents_api.activities.types import EmbedDocsPayload
 from agents_api.clients import temporal
 from agents_api.env import temporal_task_queue
 from agents_api.workflows.demo import DemoWorkflow
-
-from .fixtures import (
-    cozo_client,
-    test_developer_id,
-    test_doc,
-)
-from .utils import patch_testing_temporal
+from tests.fixtures import cozo_client, test_developer_id, test_doc
+from tests.utils import patch_testing_temporal
 
 
 @test("activity: call direct embed_docs")
