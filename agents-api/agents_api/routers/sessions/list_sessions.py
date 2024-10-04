@@ -29,7 +29,9 @@ async def list_sessions(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
-        metadata_filter=metadata_filter.model_dump(mode="json"),
+        metadata_filter=metadata_filter.model_dump(mode="json")
+        if metadata_filter
+        else {},
     )
 
     return ListResponse[Session](items=sessions)

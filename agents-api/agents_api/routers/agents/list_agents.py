@@ -30,7 +30,9 @@ async def list_agents(
         offset=offset,
         sort_by=sort_by,
         direction=direction,
-        metadata_filter=metadata_filter.model_dump(mode="json"),
+        metadata_filter=metadata_filter.model_dump(mode="json")
+        if metadata_filter
+        else {},
     )
 
     return ListResponse[Agent](items=agents)
