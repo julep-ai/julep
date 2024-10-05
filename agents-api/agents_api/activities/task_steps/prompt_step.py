@@ -2,12 +2,29 @@ from beartype import beartype
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
+from ...autogen.Tools import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.utils.template import render_template
 from ...models.tools.list_tools import list_tools
+
+
+# FIXME: This shouldn't be here.
+def format_agent_tool(tool: Tool) -> dict:
+    if tool.function:
+        return {
+            "type": "function",
+            "function": {
+                "name": tool.name,
+                "description": tool.description,
+                "parameters": tool.function.parameters,
+            },
+        }
+    # TODO: Add integration | system | api_call tool types
+    else:
+        return {}
 
 
 @activity.defn
@@ -46,15 +63,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
 
     # Format agent_tools for litellm
     formatted_agent_tools = [
-        {
-            "type": tool.type,
-            "function": {
-                "name": tool.function.name,
-                "description": tool.function.description,
-                "parameters": tool.function.parameters,
-            },
-        }
-        for tool in agent_tools
+        format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
     ]
 
     if context.current_step.settings:

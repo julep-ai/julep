@@ -6,13 +6,14 @@ from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 from ...activities.task_steps.base_evaluate import base_evaluate
-from ...autogen.openapi_model import Tool, ToolCallStep
+from ...autogen.openapi_model import TaskToolDef, Tool, ToolCallStep
 from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
 
 
+# FIXME: This shouldn't be here.
 def generate_call_id():
     # Generate 18 random bytes (which will result in 24 base64 characters)
     random_bytes = secrets.token_bytes(18)
@@ -20,6 +21,26 @@ def generate_call_id():
     base64_string = base64.urlsafe_b64encode(random_bytes).decode("ascii").rstrip("=")
     # Add the "call_" prefix
     return f"call_{base64_string}"
+
+
+# FIXME: This shouldn't be here, and shouldn't be done this way. Should be refactored.
+def construct_tool_call(tool: TaskToolDef, arguments: dict, call_id: str) -> dict:
+    return {
+        tool.type: {
+            "arguments": arguments,
+            "name": tool.name,
+        }
+        if tool.type != "system"
+        else {
+            "resource": tool.spec["resource"],
+            "operation": tool.spec["operation"],
+            "resource_id": tool.spec["resource_id"],
+            "subresource": tool.spec["subresource"],
+            "arguments": arguments,
+        },
+        "id": call_id,
+        "type": tool.type,
+    }
 
 
 @activity.defn
@@ -40,14 +61,6 @@ async def tool_call_step(context: StepContext) -> StepOutcome:
     )
 
     call_id = generate_call_id()
-
-    tool_call = {
-        tool.type: {
-            "arguments": arguments,
-            "name": tool_name,
-        },
-        "id": call_id,
-        "type": tool.type,
-    }
+    tool_call = construct_tool_call(tool, arguments, call_id)
 
     return StepOutcome(output=tool_call)

@@ -1,8 +1,13 @@
+name: Bandit security check python agents-api
+run-name: ${{ github.actor }} is checking the security of the code
+
 on:
   pull_request:
-    branches:
-    - main
-    - dev
+    paths:
+      - 'agents-api/**'
+  push:
+    paths:
+      - 'agents-api/**'
 
 jobs:
   bandit_check:
