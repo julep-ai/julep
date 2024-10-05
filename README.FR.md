@@ -24,7 +24,7 @@ Le **Guide de démarrage rapide axé sur le README** est l'option la plus promet
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow"><strong>Explore Docs</strong></a>
+  <a href="https://docs.julep.ai" rel="dofollow"><strong>Explorer la documentation</strong></a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
   ·
@@ -35,7 +35,7 @@ Le **Guide de démarrage rapide axé sur le README** est l'option la plus promet
 
 <p align="center">
     <a href="https://www.npmjs.com/package/@julep/sdk">
-        <img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version">
+        <img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="Version NPM">
     </a>
     <span>&nbsp;</span>
     <a href="https://pypi.org/project/julep">
@@ -43,81 +43,80 @@ Le **Guide de démarrage rapide axé sur le README** est l'option la plus promet
     </a>
     <span>&nbsp;</span>
     <a href="https://hub.docker.com/u/julepai">
-        <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Docker Image Version">
+        <img src="https://img.shields.io/docker/v/julepai/agents-api?sort=semver&amp;style=social&amp;logo=docker&amp;link=https%3A%2F%2Fhub.docker.com%2Fu%2Fjulepai" alt="Version de l'image Docker">
     </a>
     <span>&nbsp;</span>
     <a href="https://choosealicense.com/licenses/apache/">
-        <img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License">
+        <img src="https://img.shields.io/github/license/julep-ai/julep" alt="Licence GitHub">
     </a>
 </p>
 
 *****
 
-## 🌟 Call for Contributors!
+## 🌟 Appel à Contributeurs !
 
-We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
+Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous avons créé plusieurs "bonnes premières issues" pour vous aider à démarrer. Voici comment vous pouvez contribuer :
 
-1. Check out our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute.
-2. Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a task that interests you.
-3. If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.
+1. Consultez notre fichier [CONTRIBUTING.md](CONTRIBUTING.md) pour des directives sur la façon de contribuer.
+2. Parcourez nos [bonnes premières issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour trouver une tâche qui vous intéresse.
+3. Si vous avez des questions ou avez besoin d'aide, n'hésitez pas à nous contacter sur notre canal [Discord](https://discord.com/invite/JTSBGRZrzj).
 
-Your contributions, big or small, are valuable to us. Let's build something amazing together! 🚀
+Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons quelque chose d'incroyable ensemble ! 🚀
 
-### 🎉 DevFest.AI October 2024
+### 🎉 DevFest.AI Octobre 2024
 
-Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓️
+Nouvelles passionnantes ! Nous participons à DevFest.AI tout au long d'octobre 2024 ! 🗓️
 
-- Contribute to Julep during this event and get a chance to win awesome Julep merch and swag! 🎁
-- Join developers from around the world in contributing to AI repositories and participating in amazing events.
-- A big thank you to DevFest.AI for organizing this fantastic initiative!
+- Contribuez à Julep pendant cet événement et obtenez une chance de gagner d'incroyables produits dérivés et cadeaux Julep ! 🎁
+- Rejoignez des développeurs du monde entier pour contribuer à des dépôts d'IA et participer à des événements incroyables.
+- Un grand merci à DevFest.AI pour l'organisation de cette initiative fantastique !
 
 > [!TIP]
-> Ready to join the fun? **[Tweet to start participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
+> Prêt à rejoindre le plaisir ? **[Tweetez pour commencer à participer](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** et allons-y ! 🖥️
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-
 *****
 
-## 🎉🚀 **Exciting News: Julep 1.0 Alpha Release!** 🚀🎉
+## 🎉🚀 **Nouvelles Passionnantes : Lancement de Julep 1.0 Alpha !** 🚀🎉
 
-We're thrilled to announce the **alpha** release of <u>Julep 1.0</u>! 🥳
+Nous sommes ravis d'annoncer le **lancement alpha** de <u>Julep 1.0</u> ! 🥳
 
-🌟 **What's New:**
-- Enhanced workflow capabilities
-- Improved agent persistence
-- Tons of in-built tool integrations (like dalle, google search, sendgrid, etc.)
-- Streamlined API
+🌟 **Quoi de Neuf :**
+- Capacités de flux de travail améliorées
+- Amélioration de la persistance des agents
+- De nombreuses intégrations d'outils intégrées (comme dalle, recherche google, sendgrid, etc.)
+- API simplifiée
 
-🧪 Try it out and help shape the future of AI workflows!
+🧪 Essayez-le et aidez à façonner l'avenir des flux de travail IA !
 
 > [!NOTE]
-> While we are in beta, you can reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get your API key.
+> Pendant que nous sommes en beta, vous pouvez nous contacter sur [Discord](https://discord.com/invite/JTSBGRZrzj) pour obtenir votre clé API.
 
 > [!TIP]
-> 🐛 Found a bug? Have a suggestion? We'd love to hear from you!
->   Join our [Discord](https://discord.com/invite/JTSBGRZrzj) or open an [issue](https://github.com/julep-ai/julep/issues).
+> 🐛 Vous avez trouvé un bug ? Vous avez une suggestion ? Nous aimerions avoir de vos nouvelles !
+>   Rejoignez notre [Discord](https://discord.com/invite/JTSBGRZrzj) ou ouvrez une [issue](https://github.com/julep-ai/julep/issues).
 
-Stay tuned for more updates as we approach our stable release! 📢
+Restez à l'écoute pour plus de mises à jour à mesure que nous approchons de notre version stable ! 📢
 
 *****
 
 ## Introduction
 
-Julep is an open-source platform for creating persistent AI agents with customizable workflows. It provides tools to develop, manage, and deploy AI-driven applications, focusing on flexibility and ease of use.
+Julep est une plateforme open-source pour créer des agents IA persistants avec des flux de travail personnalisables. Elle fournit des outils pour développer, gérer et déployer des applications pilotées par l'IA, en mettant l'accent sur la flexibilité et la facilité d'utilisation.
 
-With Julep, you can:
-- Quickly develop AI agents that retain context and state across interactions
-- Design and execute sophisticated workflows tailored to your AI agents
-- Seamlessly integrate various tools and APIs into your AI workflows
-- Effortlessly manage persistent sessions and user interactions
+Avec Julep, vous pouvez :
+- Développer rapidement des agents IA qui conservent le contexte et l'état lors des interactions
+- Concevoir et exécuter des flux de travail sophistiqués adaptés à vos agents IA
+- Intégrer facilement divers outils et API dans vos flux de travail IA
+- Gérer sans effort des sessions persistantes et des interactions utilisateur
 
-Whether you're developing a chatbot, automating tasks, or building a complex AI assistant, Julep provides the flexibility and features you need to turn your ideas into reality swiftly and efficiently.
+Que vous développiez un chatbot, automatisiez des tâches ou construisiez un assistant IA complexe, Julep vous offre la flexibilité et les fonctionnalités dont vous avez besoin pour transformer vos idées en réalité rapidement et efficacement.
 
-<!-- TODO: Add a screencast -->
+<!-- TODO: Ajouter un screencast -->
 
 <details>
-<summary>Here's a quick python example:</summary>
+<summary>Voici un exemple rapide de Python :</summary>
 
 <!-- TODO: Add a gif that shows the execution of the task in the README -->
 
@@ -251,7 +250,7 @@ To get started with Julep, install it using [npm](https://www.npmjs.com/package/
 npm install @julep/sdk
 ```
 
-gold
+ OU
 
 ```bash
 pip install julep
@@ -272,7 +271,7 @@ Tout d'abord, importez le SDK Julep dans votre projet :
 const Julep = require('@julep/sdk');
 ```
 
-gold
+ OU
 
 ```python
 from julep import AsyncJulep
@@ -292,7 +291,7 @@ const agent = await julep.agents.create({
 });
 ```
 
-gold
+ OU
 
 ```python
 client = AsyncJulep(api_key="your_api_key")
@@ -322,7 +321,7 @@ const response = await julep.sessions.chat({
 console.log(response);
 ```
 
-gold
+ OU
 
 ```python
 session = await client.sessions.create(agent_id=agent.id)
