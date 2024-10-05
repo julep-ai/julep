@@ -15,7 +15,9 @@ def convert_value(value: str) -> Any:
     return value
 
 
-def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], dict[str, Any]]:
+def create_filter_extractor(
+    prefix: str = "filter",
+) -> Callable[[Request], dict[str, Any]]:
     """
     Creates a dependency function to extract filter parameters with a given prefix.
 
