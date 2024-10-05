@@ -3,7 +3,7 @@ from uuid import UUID
 from beartype import beartype
 from temporalio import activity
 
-from agents_api.autogen.openapi_model import Entry
+from ..autogen.openapi_model import Entry
 
 # from agents_api.models.entry.entries_summarization import get_toplevel_entries_query
 

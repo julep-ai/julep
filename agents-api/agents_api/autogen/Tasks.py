@@ -944,7 +944,7 @@ class ToolCallStep(BaseModel):
     """
     The tool to run
     """
-    arguments: dict[str, str] | Literal["_"] = "_"
+    arguments: dict[str, dict[str, str] | str] | Literal["_"] = "_"
     """
     The input parameters for the tool (defaults to last step output)
     """

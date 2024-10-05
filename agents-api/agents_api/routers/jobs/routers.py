@@ -4,8 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter
 from temporalio.client import WorkflowExecutionStatus
 
-from agents_api.autogen.openapi_model import JobStatus
-from agents_api.clients.temporal import get_client
+from ...autogen.openapi_model import JobStatus
+from ...clients.temporal import get_client
 
 router: APIRouter = APIRouter()
 

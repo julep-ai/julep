@@ -4,13 +4,12 @@ from uuid import UUID
 from fastapi import Depends
 from starlette.status import HTTP_201_CREATED
 
-import agents_api.models as models
-
 from ...autogen.openapi_model import (
     CreateAgentRequest,
     ResourceCreatedResponse,
 )
 from ...dependencies.developer_id import get_developer_id
+from ...models.agent.create_agent import create_agent as create_agent_query
 from .router import router
 
 
@@ -20,7 +19,7 @@ async def create_agent(
     data: CreateAgentRequest,
 ) -> ResourceCreatedResponse:
     # TODO: Validate model name
-    agent = models.agent.create_agent(
+    agent = create_agent_query(
         developer_id=x_developer_id,
         data=data,
     )

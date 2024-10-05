@@ -7,6 +7,8 @@ namespace Common;
 @format("uuid")
 scalar uuid extends string;
 
+alias concreteType = numeric | string | boolean | null;
+
 /**
  * For Unicode character safety
  * See: https://unicode.org/reports/tr31/
@@ -69,3 +71,6 @@ alias integrationProvider = (
     // | "webpage"
     // | "requests"
 );
+
+/** A valid HTTP method */
+alias httpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "CONNECT" | "TRACE";

@@ -67,7 +67,10 @@ def get_user(
             created_at,
             updated_at,
             metadata,
-        }"""
+        }
+
+    :limit 1
+    """
 
     queries = [
         verify_developer_id_query(developer_id),

@@ -149,6 +149,7 @@ def prepare_execution_input(
         "name",
         "type",
         "spec",
+        "description",
         "created_at",
         "updated_at",
     )
@@ -187,6 +188,8 @@ def prepare_execution_input(
       user = null,
       session = null,
       arguments = execution->"input"
+
+    :limit 1
     """
 
     queries = [

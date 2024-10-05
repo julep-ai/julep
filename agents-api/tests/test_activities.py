@@ -7,6 +7,7 @@ from agents_api.activities.types import EmbedDocsPayload
 from agents_api.clients import temporal
 from agents_api.env import temporal_task_queue
 from agents_api.workflows.demo import DemoWorkflow
+
 from agents_api.workflows.task_execution.helpers import DEFAULT_RETRY_POLICY
 
 from .fixtures import (

@@ -4,14 +4,14 @@ from uuid import uuid4
 
 from ward import test
 
-from .fixtures import (
+from tests.fixtures import (
     client,
     make_request,
     test_agent,
     test_execution,
     test_task,
 )
-from .utils import patch_testing_temporal
+from tests.utils import patch_testing_temporal
 
 
 @test("route: unauthorized should fail")
