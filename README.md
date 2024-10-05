@@ -683,3 +683,9 @@ This project is licensed under the [Apache License 2.0](https://github.com/julep
 ## Acknowledgements
 
 We would like to express our gratitude to all contributors and the open-source community for their valuable resources and contributions.
+
+### 💫 Contributors
+
+<a href="https://github.com/julep-ai/julep/graphs/contributors">
+  <img alt="contributors" src="https://contrib.rocks/image?repo=julep-ai/julep"/>
+</a>
