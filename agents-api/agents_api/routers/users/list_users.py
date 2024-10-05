@@ -31,4 +31,3 @@ async def list_users(
     )
 
     return ListResponse[User](items=users)
-
