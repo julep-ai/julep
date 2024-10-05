@@ -47,6 +47,7 @@ with workflow.unsafe.imports_passed_through():
         StepContext,
         StepOutcome,
     )
+    from ...common.retry_policies import DEFAULT_RETRY_POLICY
     from ...env import debug, testing
     from .helpers import (
         continue_as_child,
@@ -57,6 +58,7 @@ with workflow.unsafe.imports_passed_through():
         execute_switch_branch,
     )
     from .transition import transition
+
 
 # Supported steps
 # ---------------
@@ -204,6 +206,7 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(
                         seconds=30 if debug or testing else 600
                     ),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
                 workflow.logger.debug(
                     f"Step {context.cursor.step} completed successfully"
@@ -389,6 +392,7 @@ class TaskExecutionWorkflow:
                     task_steps.raise_complete_async,
                     args=[context, output],
                     schedule_to_close_timeout=timedelta(days=31),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
 
                 state = PartialTransition(type="resume", output=result)
@@ -421,6 +425,7 @@ class TaskExecutionWorkflow:
                     task_steps.raise_complete_async,
                     args=[context, tool_calls_input],
                     schedule_to_close_timeout=timedelta(days=31),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
 
                 # Feed the tool call results back to the model
@@ -432,6 +437,7 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(
                         seconds=30 if debug or testing else 600
                     ),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
                 state = PartialTransition(output=new_response.output, type="resume")
 
@@ -475,6 +481,7 @@ class TaskExecutionWorkflow:
                     task_steps.raise_complete_async,
                     args=[context, tool_call],
                     schedule_to_close_timeout=timedelta(days=31),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
 
                 state = PartialTransition(output=tool_call_response, type="resume")
@@ -505,6 +512,7 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(
                         seconds=30 if debug or testing else 600
                     ),
+                    retry_policy=DEFAULT_RETRY_POLICY,
                 )
 
                 state = PartialTransition(output=tool_call_response)

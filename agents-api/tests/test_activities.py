@@ -7,8 +7,14 @@ from agents_api.activities.types import EmbedDocsPayload
 from agents_api.clients import temporal
 from agents_api.env import temporal_task_queue
 from agents_api.workflows.demo import DemoWorkflow
-from tests.fixtures import cozo_client, test_developer_id, test_doc
-from tests.utils import patch_testing_temporal
+from agents_api.workflows.task_execution.helpers import DEFAULT_RETRY_POLICY
+
+from .fixtures import (
+    cozo_client,
+    test_developer_id,
+    test_doc,
+)
+from .utils import patch_testing_temporal
 
 
 @test("activity: call direct embed_docs")
@@ -44,6 +50,7 @@ async def _():
             args=[1, 2],
             id=str(uuid4()),
             task_queue=temporal_task_queue,
+            retry_policy=DEFAULT_RETRY_POLICY,
         )
 
         assert result == 3
