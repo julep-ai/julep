@@ -1,12 +1,6 @@
 from typing import Any, Callable
 
 from fastapi import Request
-from pydantic import BaseModel
-
-
-class FilterModel(BaseModel):
-    class Config:
-        extra = "allow"  # Allow arbitrary fields
 
 
 def convert_value(value: str) -> Any:
@@ -21,7 +15,7 @@ def convert_value(value: str) -> Any:
     return value
 
 
-def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], FilterModel]:
+def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], dict[str, Any]]:
     """
     Creates a dependency function to extract filter parameters with a given prefix.
 
@@ -29,13 +23,13 @@ def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], Filte
         prefix (str): The prefix to identify filter parameters.
 
     Returns:
-        Callable[[Request], FilterModel]: The dependency function.
+        Callable[[Request], dict[str, Any]]: The dependency function.
     """
 
     # Add a dot to the prefix to allow for nested filters
     prefix += "."
 
-    def extract_filters(request: Request) -> FilterModel:
+    def extract_filters(request: Request) -> dict[str, Any]:
         """
         Extracts query parameters that start with the specified prefix and returns them as a dictionary.
 
@@ -43,7 +37,7 @@ def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], Filte
             request (Request): The incoming HTTP request.
 
         Returns:
-            FilterModel: A FilterModel instance containing the filter parameters.
+            dict[str, Any]: A dictionary containing the filter parameters.
         """
 
         filters: dict[str, Any] = {}
@@ -53,6 +47,6 @@ def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], Filte
                 filter_key = key[len(prefix) :]
                 filters[filter_key] = convert_value(value)
 
-        return FilterModel(**filters)
+        return filters
 
     return extract_filters
