@@ -4,6 +4,8 @@ from uuid import UUID
 from beartype import beartype
 from temporalio import activity
 
+from agents_api.autogen.Docs import CreateDocRequest
+
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..env import testing
@@ -102,7 +104,11 @@ async def execute_system(
                 if system.operation == "list":
                     return list_docs_query(**user_doc_args)
                 elif system.operation == "create":
-                    return create_doc_query(**user_doc_args)
+                    # Create a CreateDocRequest object from the "data" field in the arguments
+                    if "data" in user_doc_args:
+                        doc_data = user_doc_args.pop("data")
+                        create_doc_request = CreateDocRequest(**doc_data)
+                    return create_doc_query(**user_doc_args, data=create_doc_request)
                 elif system.operation == "delete":
                     return delete_doc_query(**user_doc_args)
 
