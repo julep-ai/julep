@@ -1317,10 +1317,15 @@ components:
       name: metadata_filter
       in: query
       required: true
-      description: JSON string of object that should be used to filter objects by metadata
+      description: Object to filter results by metadata
       schema:
-        type: string
-        default: '{}'
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: number
+            - type: string
+            - type: boolean
+          nullable: true
       explode: false
     Common.PaginationOptions.offset:
       name: offset
