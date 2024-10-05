@@ -188,9 +188,7 @@ class TaskExecutionWorkflow:
         if context.is_first_step:
             await transition(
                 context,
-                type="init"
-                if context.is_main and not is_recursive
-                else "init_branch",
+                type="init" if context.is_main and not is_recursive else "init_branch",
                 output=context.current_input,
                 next=context.cursor,
                 metadata={},

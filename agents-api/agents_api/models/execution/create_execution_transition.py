@@ -46,8 +46,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
 
             if data.next.workflow == data.current.workflow:
                 assert (
-                    data.next.step == 0 or 
-                    data.next.step > data.current.step
+                    data.next.step == 0 or data.next.step > data.current.step
                 ), "Next step must be greater than current unless it's the first step"
 
         case _:

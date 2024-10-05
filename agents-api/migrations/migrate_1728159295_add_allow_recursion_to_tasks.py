@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "add_allow_recursion_to_tasks"
 CREATED_AT = 1728159295.671258
@@ -48,7 +48,7 @@ add_allow_recursion_to_tasks_relation = dict(
         metadata: Json default {},
     }
     """,
-down="""
+    down="""
     ?[
         agent_id,
         task_id,
