@@ -23,7 +23,6 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | `11-Advanced_Chat_Interactions.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/11-Advanced_Chat_Interactions.ipynb)           | Covers advanced chat features and context handling.               | No |
 | `12-Monitoring_Task_Executions.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/12-Monitoring_Task_Executions.ipynb)           | Shows how to monitor and manage task executions.                  | No |
 | `13-Error_Handling_and_Recovery.ipynb`           | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.ipynb)           | Demonstrates implementing error handling and recovery in tasks.   | No |
-| `14-API_Versioning_and_Configurations.ipynb`     | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/14-API_Versioning_and_Configurations.ipynb)           | Explores API versioning and server configuration options.         | No |
 
 ## Potential Cookbooks for Contributors
 
@@ -134,14 +133,8 @@ These notebooks showcase various features of Julep. Here's an overview of the ke
    - Streaming execution progress
    - Monitoring task lifecycle
 
-9. **API Versioning**
-   - Support for different API versions
-
-10. **Authentication**
+9. **Authentication**
     - API Key authentication
-
-11. **Server Configuration**
-    - Configurable server environments
 
 We encourage contributors to create new notebooks that demonstrate these features in various combinations and use cases.
 
