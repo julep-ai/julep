@@ -181,12 +181,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  results:
+                  items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Docs.Doc'
                 required:
-                  - results
+                  - items
     post:
       operationId: AgentDocsRoute_create
       description: Create a Doc for this Agent
@@ -290,12 +290,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  results:
+                  items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Tasks.Task'
                 required:
-                  - results
+                  - items
     post:
       operationId: TasksRoute_create
       description: Create a new task
@@ -434,12 +434,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  results:
+                  items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Tools.Tool'
                 required:
-                  - results
+                  - items
     post:
       operationId: AgentToolsRoute_create
       description: Create a new tool for this agent
@@ -713,7 +713,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  results:
+                  items:
                     type: array
                     items:
                       type: object
@@ -725,7 +725,7 @@ paths:
                       required:
                         - transitions
                 required:
-                  - results
+                  - items
   /executions/{id}/transitions.stream:
     get:
       operationId: ExecutionTransitionsStreamRoute_stream
@@ -1026,12 +1026,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  results:
+                  items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Executions.Execution'
                 required:
-                  - results
+                  - items
   /users:
     get:
       operationId: UsersRoute_list
@@ -1196,12 +1196,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  results:
+                  items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Docs.Doc'
                 required:
-                  - results
+                  - items
     post:
       operationId: UserDocsRoute_create
       description: Create a Doc for this User
@@ -1317,10 +1317,15 @@ components:
       name: metadata_filter
       in: query
       required: true
-      description: JSON string of object that should be used to filter objects by metadata
+      description: Object to filter results by metadata
       schema:
-        type: string
-        default: '{}'
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: number
+            - type: string
+            - type: boolean
+          nullable: true
       explode: false
     Common.PaginationOptions.offset:
       name: offset
