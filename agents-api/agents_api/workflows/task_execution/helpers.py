@@ -26,6 +26,7 @@ async def continue_as_child(
     start: TransitionTarget,
     previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
+    is_recursive: bool = False,
 ) -> Any:
     return await workflow.execute_child_workflow(
         "TaskExecutionWorkflow",
@@ -34,6 +35,7 @@ async def continue_as_child(
             start,
             previous_inputs,
             user_state,
+            is_recursive,
         ],
         retry_policy=DEFAULT_RETRY_POLICY,
     )

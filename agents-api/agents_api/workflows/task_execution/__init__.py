@@ -154,7 +154,15 @@ class TaskExecutionWorkflow:
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
         previous_inputs: list[Any] = [],
         user_state: dict[str, Any] = {},
+        is_recursive: bool = False,
     ) -> Any:
+        # Check if the task allows recursion
+        if is_recursive and not execution_input.task.allow_recursion:
+            raise ApplicationError(
+                "Recursive workflows are not allowed for this task."
+                + " Please set `allow_recursion: true` in the task definition if you want to allow recursive workflows."
+            )
+
         # Set the initial user state
         self.user_state = user_state
 
@@ -180,7 +188,9 @@ class TaskExecutionWorkflow:
         if context.is_first_step:
             await transition(
                 context,
-                type="init" if context.is_main else "init_branch",
+                type="init"
+                if context.is_main and not is_recursive
+                else "init_branch",
                 output=context.current_input,
                 next=context.cursor,
                 metadata={},
@@ -607,10 +617,16 @@ class TaskExecutionWorkflow:
             f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
         )
 
+        is_recursive = (
+            final_state.next.step == 0
+            and final_state.next.workflow == context.cursor.workflow
+        )
+
         # Continue as a child workflow
         return await continue_as_child(
             context.execution_input,
             start=final_state.next,
             previous_inputs=previous_inputs + [final_state.output],
             user_state=self.user_state,
+            is_recursive=is_recursive,
         )

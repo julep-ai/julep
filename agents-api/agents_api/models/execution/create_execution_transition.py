@@ -46,8 +46,9 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
 
             if data.next.workflow == data.current.workflow:
                 assert (
+                    data.next.step == 0 or 
                     data.next.step > data.current.step
-                ), "Next step must be greater than current"
+                ), "Next step must be greater than current unless it's the first step"
 
         case _:
             raise ValueError(f"Invalid transition type: {data.type}")
@@ -71,7 +72,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
     one=True,
     _kind="inserted",
 )
-@cozo_query
+@cozo_query(debug=True)
 @beartype
 def create_execution_transition(
     *,

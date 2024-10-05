@@ -3919,6 +3919,7 @@ components:
         - input_schema
         - tools
         - inherit_tools
+        - allow_recursion
       properties:
         name:
           type: string
@@ -4022,6 +4023,10 @@ components:
           type: boolean
           description: Whether to inherit tools from the parent agent or not. Defaults to true.
           default: true
+        allow_recursion:
+          type: boolean
+          description: Whether to allow recursive workflows or not.
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -4635,6 +4640,10 @@ components:
           type: boolean
           description: Whether to inherit tools from the parent agent or not. Defaults to true.
           default: true
+        allow_recursion:
+          type: boolean
+          description: Whether to allow recursive workflows or not.
+          default: false
         metadata:
           type: object
           additionalProperties: {}
@@ -5191,6 +5200,7 @@ components:
         - input_schema
         - tools
         - inherit_tools
+        - allow_recursion
         - id
         - created_at
         - updated_at
@@ -5297,6 +5307,10 @@ components:
           type: boolean
           description: Whether to inherit tools from the parent agent or not. Defaults to true.
           default: true
+        allow_recursion:
+          type: boolean
+          description: Whether to allow recursive workflows or not.
+          default: false
         id:
           allOf:
             - $ref: '#/components/schemas/Common.uuid'
@@ -5482,6 +5496,7 @@ components:
         - input_schema
         - tools
         - inherit_tools
+        - allow_recursion
       properties:
         description:
           type: string
@@ -5583,6 +5598,10 @@ components:
           type: boolean
           description: Whether to inherit tools from the parent agent or not. Defaults to true.
           default: true
+        allow_recursion:
+          type: boolean
+          description: Whether to allow recursive workflows or not.
+          default: false
         metadata:
           type: object
           additionalProperties: {}

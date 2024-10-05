@@ -158,6 +158,10 @@ class CreateTaskRequest(BaseModel):
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
+    allow_recursion: StrictBool = False
+    """
+    Whether to allow recursive workflows or not.
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -631,6 +635,10 @@ class PatchTaskRequest(BaseModel):
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
+    allow_recursion: StrictBool = False
+    """
+    Whether to allow recursive workflows or not.
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -908,6 +916,10 @@ class Task(BaseModel):
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
+    allow_recursion: StrictBool = False
+    """
+    Whether to allow recursive workflows or not.
+    """
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
@@ -1042,6 +1054,10 @@ class UpdateTaskRequest(BaseModel):
     inherit_tools: StrictBool = True
     """
     Whether to inherit tools from the parent agent or not. Defaults to true.
+    """
+    allow_recursion: StrictBool = False
+    """
+    Whether to allow recursive workflows or not.
     """
     metadata: dict[str, Any] | None = None
 
