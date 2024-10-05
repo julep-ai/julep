@@ -32,6 +32,9 @@ def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], Filte
         Callable[[Request], FilterModel]: The dependency function.
     """
 
+    # Add a dot to the prefix to allow for nested filters
+    prefix += "."
+
     def extract_filters(request: Request) -> FilterModel:
         """
         Extracts query parameters that start with the specified prefix and returns them as a dictionary.
@@ -42,10 +45,9 @@ def create_filter_extractor(prefix: str = "filter") -> Callable[[Request], Filte
         Returns:
             FilterModel: A FilterModel instance containing the filter parameters.
         """
-        nonlocal prefix
-        prefix += "."
 
         filters: dict[str, Any] = {}
+
         for key, value in request.query_params.items():
             if key.startswith(prefix):
                 filter_key = key[len(prefix) :]

@@ -90,7 +90,8 @@ def list_docs(
                 created_at,
                 metadata,
             }},
-            snippets[id, snippet_data]
+            snippets[id, snippet_data],
+            {metadata_filter_str}
         
         :limit $limit
         :offset $offset
@@ -112,6 +113,5 @@ def list_docs(
             "owner_type": owner_type,
             "limit": limit,
             "offset": offset,
-            "metadata_filter": metadata_filter_str,
         },
     )
