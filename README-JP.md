@@ -29,7 +29,7 @@
 *****
 
 <details>
-<summary>🌟 コントリビューターとDevFest.AI参加者の皆様へ：</summary>
+<summary><b>🌟 コントリビューターとDevFest.AI参加者の皆様へ：</b></summary>
 
 ## 🌟 コントリビューター募集！
 

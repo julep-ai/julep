@@ -29,7 +29,7 @@
 *****
 
 <details>
-<summary>🌟 贡献者和 DevFest.AI 参与者：</summary>
+<summary><b>🌟 贡献者和 DevFest.AI 参与者：</b></summary>
 
 ## 🌟 诚邀贡献者！
 

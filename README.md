@@ -29,7 +29,7 @@
 *****
 
 <details>
-<summary>🌟 Contributors and DevFest.AI Participants:</summary>
+<summary><b>🌟 Contributors and DevFest.AI Participants:</b></summary>
 
 ## 🌟 Call for Contributors!
 
