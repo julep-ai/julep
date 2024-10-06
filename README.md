@@ -1,21 +1,3 @@
-<!--
-****************
-** Guidelines **
-****************
-
-**Chosen Approach:**
-
-The **Quick Start Guide Focused README** is the most promising for optimizing the time to first workflow. It allows developers to get hands-on experience quickly, which is essential for engagement and understanding.
-
-**Notes:**
-
-*   **Code Examples:** Ensure all code snippets are easy to understand and copy-paste ready.
-*   **Simplicity:** Keep explanations concise to maintain focus on getting started quickly.
-*   **Links:** Include hyperlinks to detailed documentation sections for users who want to delve deeper.
-*   **Visuals:** Consider adding diagrams or images to illustrate concepts if possible.
-*   **Tone:** Maintain an encouraging and helpful tone throughout the README
--->
-
 <sup>English | [中文翻译](/README-CN.md) | [日本語翻訳](/README-JP.md)</sup>
 
 <div align="center">
@@ -46,6 +28,9 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 
 *****
 
+<details>
+<summary>🌟 Contributors and DevFest.AI Participants:</summary>
+
 ## 🌟 Call for Contributors!
 
 We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
@@ -65,34 +50,18 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - A big thank you to DevFest.AI for organizing this fantastic initiative!
 
 > [!TIP]
-> Ready to join the fun? **[Tweet to start participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
+> Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-*****
+</details>
 
-## 🎉🚀 **Exciting News: Julep 1.0 Alpha Release!** 🚀🎉
-
-We're thrilled to announce the **alpha** release of <u>Julep 1.0</u>! 🥳
-
-🌟 **What's New:**
-- Enhanced workflow capabilities
-- Improved agent persistence
-- Tons of in-built tool integrations (like dalle, google search, sendgrid, etc.)
-- Streamlined API
-
-🧪 Try it out and help shape the future of AI workflows!
-
-> [!NOTE]
-> While we are in beta, you can reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get your API key.
+<!-- START doctoc -->
+<!-- END doctoc -->
 
 > [!TIP]
 > 🐛 Found a bug? Have a suggestion? We'd love to hear from you!
 >   Join our [Discord](https://discord.com/invite/JTSBGRZrzj) or open an [issue](https://github.com/julep-ai/julep/issues).
-
-Stay tuned for more updates as we approach our stable release! 📢
-
-*****
 
 ## Introduction
 
@@ -221,6 +190,10 @@ client.executions.create(task_id=task.id, input={"topic": "Python"})
 # 🔁 This will run the task every 24 hours,
 #    research for the topic "Python", and
 #    send the results to the user's email
+
+# 🎉 Watch as the story and comic panels are generated
+# Changed 'client.executions.stream' to 'client.executions.transitions.stream'
+await client.executions.transitions.stream(execution_id=execution.id)
 </code></pre>
 </details>
 
@@ -431,7 +404,7 @@ execution = await client.executions.create(
 )
 
 # 🎉 Watch as the story and comic panels are generated
-await client.executions.stream(execution_id=execution.id)
+await client.executions.transitions.stream(execution_id=execution.id)
 ```
 
 This example demonstrates how to create an agent with a custom tool, define a complex task with multiple steps, and execute it to generate a creative output.

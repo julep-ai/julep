@@ -28,6 +28,9 @@
 
 *****
 
+<details>
+<summary>🌟 贡献者和 DevFest.AI 参与者：</summary>
+
 ## 🌟 诚邀贡献者！
 
 我们很高兴欢迎新的贡献者加入 Julep 项目！我们创建了几个"适合新手的问题"来帮助您入门。以下是您可以贡献的方式：
@@ -51,31 +54,14 @@
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-*****
+</details>
 
-## 🎉🚀 **激动人心的消息：Julep 1.0 Alpha 版发布！** 🚀🎉
-
-我们很高兴地宣布 **Julep 1.0** 的 **alpha** 版本发布！🥳
-
-🌟 **新特性：**
-- 增强的工作流功能
-- 改进的代理持久性
-- 大量内置工具集成（如 DALL·E、Google 搜索、SendGrid 等）
-- 简化的 API
-
-🧪 尝试使用并帮助塑造 AI 工作流的未来！
-
-> [!NOTE]
-> 在测试阶段，您可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 获取 API 密钥。
+<!-- START doctoc -->
+<!-- END doctoc -->
 
 > [!TIP]
 > 🐛 发现了 bug？有建议？我们很乐意听取您的意见！
 >   加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 或提交 [issue](https://github.com/julep-ai/julep/issues)。
-
-请继续关注我们即将发布的稳定版本的更多更新！📢
-
-
-*****
 
 ## 简介
 

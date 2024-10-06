@@ -28,6 +28,9 @@
 
 *****
 
+<details>
+<summary>🌟 コントリビューターとDevFest.AI参加者の皆様へ：</summary>
+
 ## 🌟 コントリビューター募集！
 
 Julepプロジェクトに新しいコントリビューターを歓迎します！スタートに役立つ「初心者向けの問題」をいくつか作成しました。以下は、貢献する方法です：
@@ -51,30 +54,14 @@ Julepプロジェクトに新しいコントリビューターを歓迎します
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-*****
+</details>
 
-## 🎉🚀 **エキサイティングなニュース：Julep 1.0 Alphaリリース！** 🚀🎉
-
-**Julep 1.0**の**アルファ**リリースを発表できることを嬉しく思います！🥳
-
-🌟 **新機能：**
-- 強化されたワークフロー機能
-- 改善されたエージェントの持続性
-- 多数の組み込みツール統合（dalle、google検索、sendgridなど）
-- 簡素化されたAPI
-
-🧪 試してみて、AIワークフローの未来を形作る手助けをしましょう！
-
-> [!NOTE]
-> ベータ版の間、APIキーを取得するには[Discord](https://discord.com/invite/JTSBGRZrzj)でお問い合わせください。
+<!-- START doctoc -->
+<!-- END doctoc -->
 
 > [!TIP]
 > 🐛 バグを見つけましたか？提案がありますか？私たちはあなたの意見を聞きたいです！
 >   [Discord](https://discord.com/invite/JTSBGRZrzj)に参加するか、[issue](https://github.com/julep-ai/julep/issues)を開いてください。
-
-安定版リリースに向けて、さらに多くの更新情報をお楽しみに！📢
-
-*****
 
 ## 紹介
 
