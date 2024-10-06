@@ -28,6 +28,9 @@
 
 *****
 
+> [!TIP]
+> 👨‍💻 devfest.aiイベントに参加されましたか？私たちの[Discord](https://discord.com/invite/JTSBGRZrzj)に参加して、以下の詳細をご確認ください。
+
 <details>
 <summary><b>🌟 コントリビューターとDevFest.AI参加者の皆様へ：</b></summary>
 
@@ -78,10 +81,6 @@ Julepプロジェクトに新しいコントリビューターを歓迎します
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-> [!TIP]
-> 🐛 バグを見つけましたか？提案がありますか？私たちはあなたの意見を聞きたいです！
->   [Discord](https://discord.com/invite/JTSBGRZrzj)に参加するか、[issue](https://github.com/julep-ai/julep/issues)を開いてください。
 
 ## 紹介
 

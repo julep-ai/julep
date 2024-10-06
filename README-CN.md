@@ -28,6 +28,9 @@
 
 *****
 
+> [!TIP]
+> 👨‍💻 来参加 devfest.ai 活动？加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 并查看下方详情。
+
 <details>
 <summary><b>🌟 贡献者和 DevFest.AI 参与者：</b></summary>
 
@@ -78,10 +81,6 @@
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-> [!TIP]
-> 🐛 发现了 bug？有建议？我们很乐意听取您的意见！
->   加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 或提交 [issue](https://github.com/julep-ai/julep/issues)。
 
 ## 简介
 
