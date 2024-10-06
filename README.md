@@ -64,7 +64,8 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <details>
 <summary><b>📖 Table of Contents</b></summary>
 
-- [Quick Intro](#quick-intro)
+- [Introduction](#introduction)
+- [Quick Example](#quick-example)
 - [Key Features](#key-features)
 - [Why Julep vs. LangChain?](#why-julep-vs-langchain)
 - [Installation](#installation)
