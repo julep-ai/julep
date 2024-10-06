@@ -10,6 +10,5 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAX_HEADER_LEVEL: 3
-          TOC_TITLE: '<b>📖 Table of Contents</b>'
+          TOC_TITLE: '<h3>📖 Table of Contents</h3>'
           FOLDING: true
-
