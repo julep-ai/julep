@@ -9,7 +9,7 @@ jobs:
       - uses: technote-space/toc-generator@v4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAX_HEADER_LEVEL: 2
+          MAX_HEADER_LEVEL: 3
           TOC_TITLE: '<b>📖 Table of Contents</b>'
           FOLDING: true
 
