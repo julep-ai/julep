@@ -89,6 +89,8 @@ Julep is a platform for creating AI agents that maintain state and execute compl
 
 Julep lets you define multi-step tasks that can include conditional logic, loops, parallel processing, and built-in integration with 100s of external tools and APIs. Typically AI applications tend to be linear and have simple chains of a handful of prompts and API calls without much branching or decision-making.
 
+> [!TIP]
+> Imagine you want to build an AI agent that can do more than just answer simple queries—it needs to handle complex tasks, remember past interactions, and maybe even integrate with other tools or APIs. That's where Julep comes in.
 
 ## Quick Example
 
@@ -211,8 +213,6 @@ main:
 
 > [!TIP]
 > Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.
-> 
-> Imagine you want to build an AI agent that can do more than just answer simple queries—it needs to handle complex tasks, remember past interactions, and maybe even integrate with other tools or APIs. That's where Julep comes in.
 
 ## Key Features
 
