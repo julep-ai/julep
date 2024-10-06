@@ -28,6 +28,12 @@
 
 *****
 
+> [!TIP]
+> 👨‍💻 来参加 devfest.ai 活动？加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 并查看下方详情。
+
+<details>
+<summary><b>🌟 贡献者和 DevFest.AI 参与者：</b></summary>
+
 ## 🌟 诚邀贡献者！
 
 我们很高兴欢迎新的贡献者加入 Julep 项目！我们创建了几个"适合新手的问题"来帮助您入门。以下是您可以贡献的方式：
@@ -51,31 +57,30 @@
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-*****
+</details>
 
-## 🎉🚀 **激动人心的消息：Julep 1.0 Alpha 版发布！** 🚀🎉
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<details>
+<summary><b>📖 Table of Contents</b></summary>
 
-我们很高兴地宣布 **Julep 1.0** 的 **alpha** 版本发布！🥳
+- [简介](#%E7%AE%80%E4%BB%8B)
+- [特性](#%E7%89%B9%E6%80%A7)
+- [安装](#%E5%AE%89%E8%A3%85)
+- [快速入门指南](#%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97)
+- [概念](#%E6%A6%82%E5%BF%B5)
+- [理解任务](#%E7%90%86%E8%A7%A3%E4%BB%BB%E5%8A%A1)
+- [高级功能](#%E9%AB%98%E7%BA%A7%E5%8A%9F%E8%83%BD)
+- [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
+- [API 参考](#api-%E5%8F%82%E8%80%83)
+- [示例和教程](#%E7%A4%BA%E4%BE%8B%E5%92%8C%E6%95%99%E7%A8%8B)
+- [贡献](#%E8%B4%A1%E7%8C%AE)
+- [支持和社区](#%E6%94%AF%E6%8C%81%E5%92%8C%E7%A4%BE%E5%8C%BA)
+- [许可证](#%E8%AE%B8%E5%8F%AF%E8%AF%81)
+- [致谢](#%E8%87%B4%E8%B0%A2)
 
-🌟 **新特性：**
-- 增强的工作流功能
-- 改进的代理持久性
-- 大量内置工具集成（如 DALL·E、Google 搜索、SendGrid 等）
-- 简化的 API
-
-🧪 尝试使用并帮助塑造 AI 工作流的未来！
-
-> [!NOTE]
-> 在测试阶段，您可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 获取 API 密钥。
-
-> [!TIP]
-> 🐛 发现了 bug？有建议？我们很乐意听取您的意见！
->   加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 或提交 [issue](https://github.com/julep-ai/julep/issues)。
-
-请继续关注我们即将发布的稳定版本的更多更新！📢
-
-
-*****
+</details>
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## 简介
 

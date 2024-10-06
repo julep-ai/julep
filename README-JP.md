@@ -28,6 +28,12 @@
 
 *****
 
+> [!TIP]
+> 👨‍💻 devfest.aiイベントに参加されましたか？私たちの[Discord](https://discord.com/invite/JTSBGRZrzj)に参加して、以下の詳細をご確認ください。
+
+<details>
+<summary><b>🌟 コントリビューターとDevFest.AI参加者の皆様へ：</b></summary>
+
 ## 🌟 コントリビューター募集！
 
 Julepプロジェクトに新しいコントリビューターを歓迎します！スタートに役立つ「初心者向けの問題」をいくつか作成しました。以下は、貢献する方法です：
@@ -51,30 +57,30 @@ Julepプロジェクトに新しいコントリビューターを歓迎します
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-*****
+</details>
 
-## 🎉🚀 **エキサイティングなニュース：Julep 1.0 Alphaリリース！** 🚀🎉
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<details>
+<summary><b>📖 Table of Contents</b></summary>
 
-**Julep 1.0**の**アルファ**リリースを発表できることを嬉しく思います！🥳
+- [紹介](#%E7%B4%B9%E4%BB%8B)
+- [特徴](#%E7%89%B9%E5%BE%B4)
+- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
+- [クイックスタートガイド](#%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88%E3%82%AC%E3%82%A4%E3%83%89)
+- [概念](#%E6%A6%82%E5%BF%B5)
+- [タスクの理解](#%E3%82%BF%E3%82%B9%E3%82%AF%E3%81%AE%E7%90%86%E8%A7%A3)
+- [高度な機能](#%E9%AB%98%E5%BA%A6%E3%81%AA%E6%A9%9F%E8%83%BD)
+- [SDKリファレンス](#sdk%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
+- [APIリファレンス](#api%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
+- [例とチュートリアル](#%E4%BE%8B%E3%81%A8%E3%83%81%E3%83%A5%E3%83%BC%E3%83%88%E3%83%AA%E3%82%A2%E3%83%AB)
+- [貢献](#%E8%B2%A2%E7%8C%AE)
+- [サポートとコミュニティ](#%E3%82%B5%E3%83%9D%E3%83%BC%E3%83%88%E3%81%A8%E3%82%B3%E3%83%9F%E3%83%A5%E3%83%8B%E3%83%86%E3%82%A3)
+- [ライセンス](#%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9)
+- [謝辞](#%E8%AC%9D%E8%BE%9E)
 
-🌟 **新機能：**
-- 強化されたワークフロー機能
-- 改善されたエージェントの持続性
-- 多数の組み込みツール統合（dalle、google検索、sendgridなど）
-- 簡素化されたAPI
-
-🧪 試してみて、AIワークフローの未来を形作る手助けをしましょう！
-
-> [!NOTE]
-> ベータ版の間、APIキーを取得するには[Discord](https://discord.com/invite/JTSBGRZrzj)でお問い合わせください。
-
-> [!TIP]
-> 🐛 バグを見つけましたか？提案がありますか？私たちはあなたの意見を聞きたいです！
->   [Discord](https://discord.com/invite/JTSBGRZrzj)に参加するか、[issue](https://github.com/julep-ai/julep/issues)を開いてください。
-
-安定版リリースに向けて、さらに多くの更新情報をお楽しみに！📢
-
-*****
+</details>
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## 紹介
 

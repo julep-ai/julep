@@ -1,21 +1,3 @@
-<!--
-****************
-** Guidelines **
-****************
-
-**Chosen Approach:**
-
-The **Quick Start Guide Focused README** is the most promising for optimizing the time to first workflow. It allows developers to get hands-on experience quickly, which is essential for engagement and understanding.
-
-**Notes:**
-
-*   **Code Examples:** Ensure all code snippets are easy to understand and copy-paste ready.
-*   **Simplicity:** Keep explanations concise to maintain focus on getting started quickly.
-*   **Links:** Include hyperlinks to detailed documentation sections for users who want to delve deeper.
-*   **Visuals:** Consider adding diagrams or images to illustrate concepts if possible.
-*   **Tone:** Maintain an encouraging and helpful tone throughout the README
--->
-
 <sup>English | [中文翻译](/README-CN.md) | [日本語翻訳](/README-JP.md)</sup>
 
 <div align="center">
@@ -46,6 +28,12 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 
 *****
 
+> [!TIP]
+> 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
+
+<details>
+<summary><b>🌟 Contributors and DevFest.AI Participants</b></summary>
+
 ## 🌟 Call for Contributors!
 
 We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
@@ -65,176 +53,210 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - A big thank you to DevFest.AI for organizing this fantastic initiative!
 
 > [!TIP]
-> Ready to join the fun? **[Tweet to start participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
+> Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
-*****
+</details>
 
-## 🎉🚀 **Exciting News: Julep 1.0 Alpha Release!** 🚀🎉
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<details>
+<summary><b>📖 Table of Contents</b></summary>
 
-We're thrilled to announce the **alpha** release of <u>Julep 1.0</u>! 🥳
+- [Quick Intro](#quick-intro)
+- [Key Features](#key-features)
+- [Why Julep vs. LangChain?](#why-julep-vs-langchain)
+- [Installation](#installation)
+- [Python Quick Start 🐍](#python-quick-start-)
+- [Node.js Quick Start 🟩](#nodejs-quick-start-)
+- [Components](#components)
+- [Concepts](#concepts)
+- [Understanding Tasks](#understanding-tasks)
+- [Advanced Features](#advanced-features)
+- [SDK Reference](#sdk-reference)
+- [API Reference](#api-reference)
 
-🌟 **What's New:**
-- Enhanced workflow capabilities
-- Improved agent persistence
-- Tons of in-built tool integrations (like dalle, google search, sendgrid, etc.)
-- Streamlined API
+</details>
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-🧪 Try it out and help shape the future of AI workflows!
-
-> [!NOTE]
-> While we are in beta, you can reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get your API key.
-
-> [!TIP]
-> 🐛 Found a bug? Have a suggestion? We'd love to hear from you!
->   Join our [Discord](https://discord.com/invite/JTSBGRZrzj) or open an [issue](https://github.com/julep-ai/julep/issues).
-
-Stay tuned for more updates as we approach our stable release! 📢
-
-*****
-
-## Introduction
-
-Julep is an open-source platform for creating persistent AI agents with customizable workflows. It provides tools to develop, manage, and deploy AI-driven applications, focusing on flexibility and ease of use.
-
-With Julep, you can:
-- Quickly develop AI agents that retain context and state across interactions
-- Design and execute sophisticated workflows tailored to your AI agents
-- Seamlessly integrate various tools and APIs into your AI workflows
-- Effortlessly manage persistent sessions and user interactions
-
-Whether you're developing a chatbot, automating tasks, or building a complex AI assistant, Julep provides the flexibility and features you need to turn your ideas into reality swiftly and efficiently.
+## Quick Intro
 
 <!-- TODO: Add a screencast -->
 
-<details>
-<summary>Here's a quick python example:</summary>
+Julep is a platform for creating AI agents that maintain state and execute complex workflows. It offers long-term context and orchestrates multi-step tasks.
 
-<!-- TODO: Add a gif that shows the execution of the task in the README -->
+Imagine you want to build an AI agent that can do more than just answer simple queries—it needs to handle complex tasks, remember past interactions, and maybe even integrate with other tools or APIs. That's where Julep comes in.
 
-<pre><code class="language-python">
-from julep import Julep, AsyncJulep
+Julep lets you define multi-step tasks that can include conditional logic, loops, parallel processing, and built-in integration with 100s of external tools and APIs. Typically AI applications tend to be linear and have simple chains of a handful of prompts and API calls without much branching or decision-making.
 
-# 🔑 Initialize the Julep client
-#     Or alternatively, use AsyncJulep for async operations
-client = Julep(api_key="your_api_key")
+Imagine a Research AI agent that can do the following:
+  1. Take a topic,
+  2. Come up with 100 search queries for that topic,
+  3. Perform those web searches in parallel,
+  4. Collect and compile the results, 
+  5. Come up with 5 follow-up questions,
+  6. Repeat the process with new queries,
+  7. Summarize the results,
+  8. Send the summary to Discord
 
-##################
-## 🤖 Agent 🤖 ##
-##################
+In julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. Here's a working example:
 
-# Create a research agent
-agent = client.agents.create(
-    name="Research Agent",
-    model="claude-3.5-sonnet",
-    about="You are a research agent designed to handle research inquiries.",
-)
+```yaml
+name: Research Agent
 
-# 🔍 Add a web search tool to the agent
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="web_search",  # Should be python valid variable name
-    description="Use this tool to research inquiries.",
-    integration={
-        "provider": "brave",
-        "method": "search",
-        "setup": {
-            "api_key": "your_brave_api_key",
-        },
-    },
-)
+# Optional: Define the input schema for the task
+input_schema:
+  type: object
+  properties:
+    topic:
+      type: string
+      description: The main topic to research
 
-#################
-## 💬 Chat 💬 ##
-#################
+# Define the tools that the agent can use
+tools:
+- name: web_search
+  type: integration
+  integration:
+    provider: brave
+    setup:
+      api_key: "YOUR_BRAVE_API_KEY"
 
-# Start an interactive chat session with the agent
-session = client.sessions.create(
-    agent_id=agent.id,
-    context_overflow="adaptive",  # 🧠 Julep will dynamically compute the context window if needed
-)
+- name: discord_webhook
+  type: api_call
+  api_call:
+    url: "YOUR_DISCORD_WEBHOOK_URL"
+    method: POST
+    headers:
+      Content-Type: application/json
 
-# 🔄 Chat loop
-while (user_input := input("You: ")) != "exit":
-    response = client.sessions.chat(
-        session_id=session.id,
-        message=user_input,
-    )
+# Special variables:
+# - inputs: for accessing the input to the task
+# - outputs: for accessing the output of previous steps
+# - _: for accessing the output of the previous step
 
-    print("Agent: ", response.choices[0].message.content)
+# Define the main workflow
+main:
+- prompt:
+    - role: system
+      content: >-
+        You are a research assistant.
+        Generate 100 diverse search queries related to the topic:
+        {{inputs[0].topic}}
+
+        Write one query per line.
+  unwrap: true
+
+# Evaluate the search queries using a simple python expression
+- evaluate:
+    search_queries: "_.split('\n')"
+
+# Run the web search in parallel for each query
+- over: "_.search_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+    on_error:
+  parallelism: 100
+
+# Collect the results from the web search
+- evaluate:
+    results: "'\n'.join([item.result for item in _])"
+
+# Generate follow-up questions based on the results
+- prompt:
+    - role: system
+      content: >-
+        Based on the following research results, generate 5 follow-up questions that would deepen our understanding of {{inputs[0].topic}}:
+        {{_.results}}
+
+        Write one question per line.
+  unwrap: true
+
+- evaluate:
+    follow_up_queries: "_.split('\n')"
+
+# Run the web search in parallel for each follow-up query
+- over: "_.follow_up_queries"
+  map:
+    tool: web_search
+    arguments:
+      query: "_"
+
+  parallelism: 5
+
+- evaluate:
+    all_results: "outputs[3].results + '\n'.join([item.result for item in _])"
+
+# Summarize the results
+- prompt:
+    - role: system
+      content: >
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}. 
+        The summary should be well-structured, informative, and highlight key findings and insights:
+        {{_.all_results}}
+  unwrap: true
+
+# Send the summary to Discord
+- tool: discord_webhook
+  arguments:
+    content: >
+      **Research Summary for {{inputs[0].topic}}**
+
+      {{_}}
+```
+
+> [!TIP]
+> Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.
 
 
-#################
-## 📋 Task 📋 ##
-#################
+## Key Features
 
-# Create a recurring research task for the agent
-task = client.tasks.create(
-    agent_id=agent.id,
-    name="Research Task",
-    description="Research the given topic every 24 hours.",
-    #
-    # 🛠️ Task specific tools
-    tools=[
-        {
-            "name": "send_email",
-            "description": "Send an email to the user with the results.",
-            "api_call": {
-                "method": "post",
-                "url": "https://api.sendgrid.com/v3/mail/send",
-                "headers": {"Authorization": "Bearer YOUR_SENDGRID_API_KEY"},
-            },
-        }
-    ],
-    #
-    # 🔢 Task main steps
-    main=[
-        #
-        # Step 1: Research the topic
-        {
-            # `_` (underscore) variable refers to the previous step's output
-            # Here, it points to the topic input from the user
-            "prompt": "Look up topic '{{_.topic}}' and summarize the results.",
-            "tools": [{"ref": {"name": "web_search"}}],  # 🔍 Use the web search tool from the agent
-            "unwrap": True,
-        },
-        #
-        # Step 2: Send email with research results
-        {
-            "tool": "send_email",
-            "arguments": {
-                "subject": "Research Results",
-                "body": "'Here are the research results for today: ' + _.content",
-                "to": "inputs[0].email",  # Reference the email from the user's input
-            },
-        },
-        #
-        # Step 3: Wait for 24 hours before repeating
-        {"sleep": "24 * 60 * 60"},
-    ],
-)
+1. **Persistent AI Agents**: Persist context and state over long-term interactions.
+2. **Stateful Sessions**: Remember past interactions for personalized responses.
+3. **Multi-Step Workflows**: Build complex, multi-step processes with loops and conditional logic.
+4. **Task Orchestration**: Manage long-running tasks that can run indefinitely.
+5. **Built-in Tools**: Integrate built-in tools and external APIs into workflows.
+6. **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your workflows running smoothly.
+7. **RAG**: Use Julep's document store to build a RAG system for your own data.
 
-# 🚀 Start the recurring task
-client.executions.create(task_id=task.id, input={"topic": "Python"})
+Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
 
-# 🔁 This will run the task every 24 hours,
-#    research for the topic "Python", and
-#    send the results to the user's email
-</code></pre>
-</details>
+## Why Julep vs. LangChain?
 
+### Different Use Cases
 
-## Features
+Think of LangChain and Julep as tools with different focuses within the AI development stack.
 
-Julep simplifies the process of building persistent AI agents with customizable workflows. Key features include:
+LangChain is great for creating sequences of prompts and managing interactions with LLMs. It has a large ecosystem with lots of pre-built integrations, which makes it convenient if you want to get something up and running quickly. LangChain fits well with simple use cases that involve a linear chain of prompts and API calls.
 
-- **Persistent AI Agents**: Create and manage AI agents that maintain context across interactions.
-- **Customizable Workflows**: Design complex, multi-step AI workflows using Tasks.
-- **Tool Integration**: Seamlessly integrate various tools and APIs into your AI workflows.
-- **Document Management**: Efficiently manage and search through documents for your agents.
-- **Session Management**: Handle persistent sessions for continuous interactions.
-- **Flexible Execution**: Support for parallel processing, conditional logic, and error handling in workflows.
+Julep, on the other hand, is more about building persistent AI agents that can maintain context over long-term interactions. It shines when you need complex workflows that involve multi-step tasks, conditional logic, and integration with various tools or APIs directly within the agent's process. It's designed from the ground up to manage persistent sessions and complex workflows.
+
+Use Julep if you imagine building a complex AI assistant that needs to:
+
+- Keep track of user interactions over days or weeks.
+- Perform scheduled tasks, like sending daily summaries or monitoring data sources.
+- Make decisions based on prior interactions or stored data.
+- Interact with multiple external services as part of its workflow.
+
+Then Julep provides the infrastructure to support all that without you having to build it from scratch.
+
+### Different Form Factor
+
+Julep is a **platform** that includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform. In order to build something with Julep, you write a description of the workflow in `YAML`, and then run the workflow in the cloud.
+
+Julep is built for heavy-lifting, multi-step, and long-running workflows and there's no limit to how complex the workflow can be.
+
+LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. In order to build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
+
+LangChain might be sufficient and quicker to implement for simple use cases that involve a linear chain of prompts and API calls.
+
+### In Summary
+
+Use LangChain when you need to manage LLM interactions and prompt sequences in a stateless or short-term context.
+
+Choose Julep when you need a robust framework for stateful agents with advanced workflow capabilities, persistent sessions, and complex task orchestration.
 
 ## Installation
 
@@ -250,93 +272,34 @@ or
 pip install julep
 ```
 
-> [!TIP]
+> [!NOTE]
 > ~~Get your API key [here](https://app.julep.ai/api-keys).~~
 >  
 > While we are in beta, you can reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get your API key.
 
-## Quick Start Guide
+> [!TIP]
+> 💻 Are you a _show me the code!™_ kind of person? We have created a ton of cookbooks for you to get started with. **Check out the [cookbooks](/cookbooks)** to browse through examples.
+> 
+> 💡 There's also lots of ideas that you can build on top of Julep. **Check out the [list of ideas](/cookbooks/IDEAS.md)** to get some inspiration.
 
-### Step 1: Import Julep
+## Python Quick Start 🐍
 
-First, import the Julep SDK into your project:
-
-```javascript
-const Julep = require('@julep/sdk');
-```
-
-or
+### Step 1: Create an Agent
 
 ```python
-from julep import AsyncJulep
-```
+import yaml
+from julep import Julep # or AsyncJulep
 
-### Step 2: Initialize the Agent
+client = Julep(api_key="your_julep_api_key")
 
-Create a new agent with basic settings:
-
-```javascript
-const julep = new Julep({ apiKey: 'your-api-key' });
-
-const agent = await julep.agents.create({
-  name: 'ResearchAssistant',
-  model: 'gpt-4-turbo',
-  about: "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
-});
-```
-
-or
-
-```python
-client = AsyncJulep(api_key="your_api_key")
-
-agent = await client.agents.create(
+agent = client.agents.create(
     name="Storytelling Agent",
-    model="gpt-4-turbo",
+    model="gpt-4o",
     about="You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
 )
-```
 
-### Step 3: Chat with the Agent
-
-Start an interactive chat session with the agent:
-
-```javascript
-const session = await julep.sessions.create({
-  agentId: agent.id,
-}); 
-
-// Send messages to the agent
-const response = await julep.sessions.chat({
-  sessionId: session.id,
-  message: 'Hello, can you tell me a story?',
-});
-
-console.log(response);
-```
-
-or
-
-```python
-session = await client.sessions.create(agent_id=agent.id)
-
-# Send messages to the agent
-response = await client.sessions.chat(
-    session_id=session.id,
-    message="Hello, can you tell me a story?",
-)
-
-print(response)
-``` 
-
-
-### Step 4: Create a multi-step Task
-
-Let's define a multi-step task to create a story and generate a paneled comic strip based on an input idea:
-
-```python
 # 🛠️ Add an image generation tool (DALL·E) to the agent
-await client.agents.tools.create(
+client.agents.tools.create(
     agent_id=agent.id,
     name="image_generator",
     description="Use this tool to generate images based on descriptions.",
@@ -344,183 +307,317 @@ await client.agents.tools.create(
         "provider": "dalle",
         "method": "generate_image",
         "setup": {
-            "api_key": "your_dalle_api_key",
+            "api_key": "your_openai_api_key",
         },
     },
 )
+```
 
+### Step 2: Create a Task that generates a story and comic strip
+
+Let's define a multi-step task to create a story and generate a paneled comic strip based on an input idea:
+
+```python
 # 📋 Task
 # Create a task that takes an idea and creates a story and a 4-panel comic strip
-task = await client.tasks.create(
+task_yaml = """
+name: Story and Comic Creator
+description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+
+main:
+  # Step 1: Generate a story and outline into 4 panels
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: >
+          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
+          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
+    unwrap: true
+
+  # Step 2: Extract the panel descriptions and story
+  - evaluate:
+      story: _.split('1. ')[0].strip()
+      panels: re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)
+
+  # Step 3: Generate images for each panel using the image generator tool
+  - foreach:
+      in: _.panels
+      do:
+        tool: image_generator
+        arguments:
+          description: _
+
+  # Step 4: Generate a catchy title for the story
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: >
+          Based on the story below, generate a catchy title.
+
+          Story: {{outputs[1].story}}
+    unwrap: true
+
+  # Step 5: Return the story, the generated images, and the title
+  - return:
+      title: outputs[3]
+      story: outputs[1].story
+      comic_panels: "[output.image.url for output in outputs[2]]"
+"""
+
+task = client.tasks.create(
     agent_id=agent.id,
-    name="Story and Comic Creator",
-    description="Create a story based on an idea and generate a 4-panel comic strip illustrating the story.",
-    main=[
-        # Step 1: Generate a story and outline into 4 panels
-        {
-            "prompt": [
-                {
-                    "role": "system",
-                    "content": "You are {{agent.name}}. {{agent.about}}"
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        "Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip. "
-                        "Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story."
-                    ),
-                },
-            ],
-            "unwrap": True,
-        },
-        # Step 2: Extract the panel descriptions and story
-        {
-            "evaluate": {
-                "story": "_.split('1. ')[0].strip()",
-                "panels": "re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)",
-            }
-        },
-        # Step 3: Generate images for each panel using the image generator tool
-        {
-            "foreach": {
-                "in": "_.panels",
-                "do": {
-                    "tool": "image_generator",
-                    "arguments": {
-                        "description": "_",
-                    },
-                },
-            },
-        },
-        # Step 4: Generate a catchy title for the story
-        {
-            "prompt": [
-                {
-                    "role": "system",
-                    "content": "You are {{agent.name}}. {{agent.about}}"
-                },
-                {
-                    "role": "user",
-                    "content": "Based on the story below, generate a catchy title.\n\nStory: {{outputs[1].story}}",
-                },
-            ],
-            "unwrap": True,
-        },
-        # Step 5: Return the story, the generated images, and the title
-        {
-            "return": {
-                "title": "outputs[3]",
-                "story": "outputs[1].story",
-                "comic_panels": "[output.image.url for output in outputs[2]]",
-            }
-        },
-    ],
+    **yaml.safe_load(task_yaml)
 )
 ```
 
-> [!TIP]
-> node.js version of this is similar.
-
-### Step 5: Execute the Task
+### Step 3: Execute the Task
 
 ```python
 # 🚀 Execute the task with an input idea
-execution = await client.executions.create(
+execution = client.executions.create(
     task_id=task.id,
     input={"idea": "A cat who learns to fly"}
 )
 
 # 🎉 Watch as the story and comic panels are generated
-await client.executions.stream(execution_id=execution.id)
+for transition in client.executions.transitions.stream(execution_id=execution.id):
+    print(transition)
+
+# 📦 Once the execution is finished, retrieve the results
+result = client.executions.get(execution_id=execution.id)
 ```
 
-This example demonstrates how to create an agent with a custom tool, define a complex task with multiple steps, and execute it to generate a creative output.
+### Step 4: Chat with the Agent
 
-<!-- TODO: Add gif that shows the execution of the task in the README -->
+Start an interactive chat session with the agent:
+
+```python
+session = client.sessions.create(agent_id=agent.id)
+
+# 💬 Send messages to the agent
+while (message := input("Enter a message: ")) != "quit":
+    response = client.sessions.chat(
+        session_id=session.id,
+        message=message,
+    )
+
+    print(response)
+``` 
 
 > [!TIP]
-> You can find another node.js example [here](example.ts) or python example [here](example.py).
+> You can find the full python example [here](example.py).
+
+
+## Node.js Quick Start 🟩
+
+### Step 1: Create an Agent
+
+```javascript
+import { Julep } from '@julep/sdk';
+import yaml from 'js-yaml';
+
+const client = new Julep({ apiKey: 'your_julep_api_key' });
+
+async function createAgent() {
+  const agent = await client.agents.create({
+    name: "Storytelling Agent",
+    model: "gpt-4",
+    about: "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+  });
+
+  // 🛠️ Add an image generation tool (DALL·E) to the agent
+  await client.agents.tools.create(agent.id, {
+    name: "image_generator",
+    description: "Use this tool to generate images based on descriptions.",
+    integration: {
+      provider: "dalle",
+      method: "generate_image",
+      setup: {
+        api_key: "your_openai_api_key",
+      },
+    },
+  });
+
+  return agent;
+}
+```
+
+### Step 2: Create a Task that generates a story and comic strip
+
+```javascript
+const taskYaml = `
+name: Story and Comic Creator
+description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+
+main:
+  # Step 1: Generate a story and outline into 4 panels
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: >
+          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
+          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
+    unwrap: true
+
+  # Step 2: Extract the panel descriptions and story
+  - evaluate:
+      story: _.split('1. ')[0].trim()
+      panels: _.match(/\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)/g)
+
+  # Step 3: Generate images for each panel using the image generator tool
+  - foreach:
+      in: _.panels
+      do:
+        tool: image_generator
+        arguments:
+          description: _
+
+  # Step 4: Generate a catchy title for the story
+  - prompt:
+      - role: system
+        content: You are {{agent.name}}. {{agent.about}}
+      - role: user
+        content: >
+          Based on the story below, generate a catchy title.
+
+          Story: {{outputs[1].story}}
+    unwrap: true
+
+  # Step 5: Return the story, the generated images, and the title
+  - return:
+      title: outputs[3]
+      story: outputs[1].story
+      comic_panels: outputs[2].map(output => output.image.url)
+`;
+
+async function createTask(agent) {
+  const task = await client.tasks.create(agent.id, yaml.load(taskYaml));
+  return task;
+}
+```
+
+### Step 3: Execute the Task
+
+```javascript
+async function executeTask(task) {
+  const execution = await client.executions.create(task.id, {
+    input: { idea: "A cat who learns to fly" }
+  });
+
+  // 🎉 Watch as the story and comic panels are generated
+  for await (const transition of client.executions.transitions.stream(execution.id)) {
+    console.log(transition);
+  }
+
+  // 📦 Once the execution is finished, retrieve the results
+  const result = await client.executions.get(execution.id);
+  return result;
+}
+```
+
+### Step 4: Chat with the Agent
+
+```javascript
+async function chatWithAgent(agent) {
+  const session = await client.sessions.create({ agent_id: agent.id });
+
+  // 💬 Send messages to the agent
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const chat = async () => {
+    rl.question("Enter a message (or 'quit' to exit): ", async (message) => {
+      if (message.toLowerCase() === 'quit') {
+        rl.close();
+        return;
+      }
+
+      const response = await client.sessions.chat(session.id, { message });
+      console.log(response);
+      chat();
+    });
+  };
+
+  chat();
+}
+
+// Run the example
+async function runExample() {
+  const agent = await createAgent();
+  const task = await createTask(agent);
+  const result = await executeTask(task);
+  console.log("Task Result:", result);
+  await chatWithAgent(agent);
+}
+
+runExample().catch(console.error);
+```
+
+> [!TIP]
+> You can find the full Node.js example [here](example.js).
+
+## Components
+
+Julep is made up of the following components:
+
+- **Julep Platform**: The Julep platform is a cloud service that runs your workflows. It includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform.
+- **Julep SDKs**: Julep SDKs are a set of libraries for building workflows. There are SDKs for Python and JavaScript, with more on the way.
+- **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
+
+### Mental Model
+
+Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
+
+1. **Your Application Code:**
+   - You use the Julep SDK in your application to define agents, tasks, and workflows.
+   - The SDK provides functions and classes that make it easy to set up and manage these components.
+
+2. **Julep Backend Service:**
+   - The SDK communicates with the Julep backend over the network.
+   - The backend handles execution of tasks, maintains session state, stores documents, and orchestrates workflows.
+
+3. **Integration with Tools and APIs:**
+   - Within your workflows, you can integrate external tools and services.
+   - The backend facilitates these integrations, so your agents can, for example, perform web searches, access databases, or call third-party APIs.
+
+In simpler terms:
+- Julep is a platform for building stateful AI agents.
+- You use the SDK (like a toolkit) in your code to define what your agents do.
+- The backend service (which you can think of as the engine) runs these definitions, manages state, and handles complexity.
 
 ## Concepts
 
 Julep is built on several key technical components that work together to create powerful AI workflows:
 
-### Agents
-AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users. Agents are the core functional units of Julep.
-
 ```mermaid
 graph TD
-    Agent[Agent] --> LLM[Large Language Model]
+    User[User] --> Session[Session]
+    Session --> Agent[Agent]
     Agent --> Tasks[Tasks]
-    Agent --> Users[Users]
+    Agent --> LLM[Large Language Model]
     Tasks --> Tools[Tools]
+    Tasks --> Documents[Documents]
+    Documents --> VectorDB[Vector Database]
+    Agent --> Executions[Executions]
+    
+    classDef core fill:#f9f,stroke:#333,stroke-width:2px;
+    class Agent,Tasks,Session core;
 ```
 
-### Users
-Entities that interact with agents. Users can be associated with sessions and have their own metadata, allowing for personalized interactions.
+- **Agents**: AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users.
+- **Users**: Entities that interact with agents through sessions.
+- **Sessions**: Stateful interactions between agents and users, maintaining context across multiple exchanges.
+- **Tasks**: Multi-step, programmatic workflows that agents can execute, including various types of steps like prompts, tool calls, and conditional logic.
+- **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
+- **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
+- **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
 
-```mermaid
-graph LR
-    User[User] --> Sessions[Sessions]
-    Sessions --> Agents[Agents]
-    Sessions --> Metadata[Metadata]
-```
-
-### Sessions
-Stateful interactions between agents and users. Sessions maintain context across multiple exchanges and can be configured for different behaviors, including context management and overflow handling.
-
-```mermaid
-graph LR
-    Sessions[Sessions] --> Agents[Agents]
-    Sessions --> Users[Users]
-    Sessions --> ContextManagement[Context Management]
-    Sessions --> OverflowHandling[Overflow Handling]
-```
-
-### Tasks
-Multi-step, programmatic workflows that agents can execute. Tasks define complex operations and can include various types of steps, such as prompts, tool calls, and conditional logic.
-
-```mermaid
-graph TD
-    Tasks[Tasks] --> Steps[Workflow Steps]
-    Steps --> Prompt[Prompt]
-    Steps --> ToolCalls[Tool Calls]
-    Steps --> ConditionalLogic[Conditional Logic]
-```
-
-### Tools
-Integrations that extend an agent's capabilities. Tools can be user-defined functions, system tools, or third-party API integrations. They allow agents to perform actions beyond text generation.
-
-```mermaid
-graph LR
-    Tools[Tools] --> UserDefinedFunctions[User-Defined Functions]
-    Tools --> SystemTools[System Tools]
-    Tools --> ThirdPartyAPIs[Third-Party APIs]
-```
-
-### Documents
-Text or data objects that can be associated with agents or users. Documents are vectorized and stored in a vector database, enabling semantic search and retrieval during agent interactions.
-
-```mermaid
-graph LR
-    Documents[Documents] --> VectorDatabase[Vector Database]
-    Documents --> SemanticSearch[Semantic Search]
-    Documents --> AgentsOrUsers[Agents or Users]
-```
-
-### Executions
-Instances of tasks that have been initiated with specific inputs. Executions have their own lifecycle and state machine, allowing for monitoring, management, and resumption of long-running processes.
-
-```mermaid
-graph LR
-    Executions[Executions] --> Tasks[Tasks]
-    Executions --> Lifecycle[Lifecycle]
-    Executions --> Monitoring[Monitoring]
-    Executions --> Management[Management]
-    Executions --> Resumption[Resumption]
-```
-
-For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md).
+For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](/docs/julep-concepts.md).
 
 ## Understanding Tasks
 
@@ -628,14 +725,15 @@ Easily manage and search through documents for your agents:
 ```python
 # Upload a document
 document = client.documents.create(
-    file="path/to/document.pdf",
+    title="AI advancements",
+    content="AI is changing the world...",
     metadata={"category": "research_paper"}
 )
 
 # Search documents
 results = client.documents.search(
     query="AI advancements",
-    filter={"category": "research_paper"}
+    metadata_filter={"category": "research_paper"}
 )
 ```
 
@@ -653,33 +751,3 @@ Explore our comprehensive API documentation to learn more about agents, tasks, a
 - [Agents API](https://api.julep.ai/api/docs#tag/agents)
 - [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
 - [Executions API](https://api.julep.ai/api/docs#tag/executions)
-
-## Examples and Tutorials
-
-Discover example projects and tutorials to help you get started and build upon provided examples:
-
-- [Example Projects](https://github.com/julep-ai/julep/tree/main/examples)
-- [Tutorials](https://docs.julep.ai/tutorials)
-
-## Contributing
-
-We welcome contributions to the project! Learn how to contribute and our code of conduct:
-
-- [Contributing Guidelines](https://github.com/julep-ai/julep/blob/main/CONTRIBUTING.md)
-- [Code of Conduct](https://github.com/julep-ai/julep/blob/main/CODE_OF_CONDUCT.md)
-
-## Support and Community
-
-Join our community to get help, ask questions, and share your ideas:
-
-- [Discord](https://discord.com/invite/JTSBGRZrzj)
-- [GitHub Discussions](https://github.com/julep-ai/julep/discussions)
-- [Twitter](https://twitter.com/julep_ai)
-
-## License
-
-This project is licensed under the [Apache License 2.0](https://github.com/julep-ai/julep/blob/main/LICENSE).
-
-## Acknowledgements
-
-We would like to express our gratitude to all contributors and the open-source community for their valuable resources and contributions.
