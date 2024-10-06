@@ -62,7 +62,7 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><b>📖 Table of Contents</b></summary>
+<summary><h3>📖 Table of Contents</h3></summary>
 
 - [简介](#%E7%AE%80%E4%BB%8B)
 - [特性](#%E7%89%B9%E6%80%A7)
