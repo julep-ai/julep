@@ -64,20 +64,18 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <details>
 <summary><b>📖 Table of Contents</b></summary>
 
-- [Introduction](#introduction)
-- [Features](#features)
+- [Quick Intro](#quick-intro)
+- [Key Features](#key-features)
+- [Why Julep vs. LangChain?](#why-julep-vs-langchain)
 - [Installation](#installation)
-- [Quick Start Guide](#quick-start-guide)
+- [Python Quick Start 🐍](#python-quick-start-)
+- [Node.js Quick Start 🟩](#nodejs-quick-start-)
+- [Components](#components)
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
 - [Advanced Features](#advanced-features)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
-- [Examples and Tutorials](#examples-and-tutorials)
-- [Contributing](#contributing)
-- [Support and Community](#support-and-community)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
