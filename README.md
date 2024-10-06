@@ -59,7 +59,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary>Table of Contents</summary>
+<summary><b>📖 Table of Contents</b></summary>
 
 - [Introduction](#introduction)
 - [Features](#features)
