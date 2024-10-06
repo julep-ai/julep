@@ -16,7 +16,7 @@ The **Quick Start Guide Focused README** is the most promising for optimizing th
 *   **Tone:** Maintain an encouraging and helpful tone throughout the README
 -->
 
-<sup>English | [中文翻译](/README-CN.md)</sup>
+<sup>English | [中文翻译](/README-CN.md) | [日本語翻訳](/README-JP.md)</sup>
 
 <div align="center">
  <img src = "https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20building%20multi-step%20agent%20workflows.&font=Raleway&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&theme=Light" alt ="julep" width = "640" height"320"/>
