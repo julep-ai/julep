@@ -9,3 +9,6 @@ jobs:
       - uses: technote-space/toc-generator@v4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAX_HEADER_LEVEL: 2
+          FOLDING: true
+
