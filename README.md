@@ -100,7 +100,7 @@ Imagine a Research AI agent that can do the following:
   7. Summarize the results,
   8. Send the summary to Discord
 
-In julep, this would be a single task under 80 lines of code and run fully managed all on its own. <b>Here's a working example:</b>
+In julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. Here's a working example:
 
 ```yaml
 name: Research Agent
@@ -130,21 +130,12 @@ tools:
     headers:
       Content-Type: application/json
 
-# Define the main workflow
-# ------------------------
-
-# There are a few different types of steps you can define in Julep:
-# - prompt: for generating new queries, results, follow-ups, etc.
-# - evaluate: for performing calculations, evaluations, etc.
-# - tool: for calling external APIs, databases, etc.
-# - map-reduce: for performing a workflow over a list of items in parallel
-# ... and more!
-
 # Special variables:
 # - inputs: for accessing the input to the task
 # - outputs: for accessing the output of previous steps
 # - _: for accessing the output of the previous step
 
+# Define the main workflow
 main:
 - prompt:
     - role: system
@@ -156,9 +147,11 @@ main:
         Write one query per line.
   unwrap: true
 
+# Evaluate the search queries using a simple python expression
 - evaluate:
     search_queries: "_.split('\n')"
 
+# Run the web search in parallel for each query
 - over: "_.search_queries"
   map:
     tool: web_search
@@ -167,9 +160,11 @@ main:
     on_error:
   parallelism: 100
 
+# Collect the results from the web search
 - evaluate:
     results: "'\n'.join([item.result for item in _])"
 
+# Generate follow-up questions based on the results
 - prompt:
     - role: system
       content: >-
@@ -182,6 +177,7 @@ main:
 - evaluate:
     follow_up_queries: "_.split('\n')"
 
+# Run the web search in parallel for each follow-up query
 - over: "_.follow_up_queries"
   map:
     tool: web_search
@@ -193,6 +189,7 @@ main:
 - evaluate:
     all_results: "outputs[3].results + '\n'.join([item.result for item in _])"
 
+# Summarize the results
 - prompt:
     - role: system
       content: >
@@ -201,6 +198,7 @@ main:
         {{_.all_results}}
   unwrap: true
 
+# Send the summary to Discord
 - tool: discord_webhook
   arguments:
     content: >
