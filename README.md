@@ -28,11 +28,11 @@
 
 *****
 
-> [!TIP]
+> [!NOTE]
 > 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
 
 <details>
-<summary><b>🌟 Contributors and DevFest.AI Participants</b></summary>
+<summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
 
 ## 🌟 Call for Contributors!
 
@@ -62,7 +62,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><b>📖 Table of Contents</b></summary>
+<summary><h3>📖 Table of Contents</h3></summary>
 
 - [Introduction](#introduction)
 - [Quick Example](#quick-example)
