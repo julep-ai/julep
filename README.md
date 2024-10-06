@@ -617,14 +617,17 @@ Julep is built on several key technical components that work together to create 
 
 ```mermaid
 graph TD
-    User[User] --> Session[Session]
+    User[User] ==> Session[Session]
     Session --> Agent[Agent]
     Agent --> Tasks[Tasks]
     Agent --> LLM[Large Language Model]
     Tasks --> Tools[Tools]
-    Tasks --> Documents[Documents]
+    Agent --> Documents[Documents]
     Documents --> VectorDB[Vector Database]
-    Agent --> Executions[Executions]
+    Tasks --> Executions[Executions]
+
+    classDef client fill:#9ff,stroke:#333,stroke-width:1px;
+    class User client;
     
     classDef core fill:#f9f,stroke:#333,stroke-width:2px;
     class Agent,Tasks,Session core;
