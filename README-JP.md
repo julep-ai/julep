@@ -1,7 +1,7 @@
-<sup>[English](README.md) | [中文](README-CN.md) | 日本語</sup>
+<sup>[English](README.md) | [中文翻译](/README-CN.md) | 日本語</sup>
 
 <div align="center">
- <img src = "https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20building%20multi-step%20agent%20workflows.&font=Raleway&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&theme=Light" alt ="julep" width = "640" height"320"/>
+ <img src = "https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20building%20multi-step%20agent%20workflows.&font=Raleway&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&theme=Light" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
