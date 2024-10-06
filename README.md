@@ -56,8 +56,42 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 </details>
 
-<!-- START doctoc -->
-<!-- END doctoc -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start Guide](#quick-start-guide)
+  - [Step 1: Import Julep](#step-1-import-julep)
+  - [Step 2: Initialize the Agent](#step-2-initialize-the-agent)
+  - [Step 3: Chat with the Agent](#step-3-chat-with-the-agent)
+  - [Step 4: Create a multi-step Task](#step-4-create-a-multi-step-task)
+  - [Step 5: Execute the Task](#step-5-execute-the-task)
+- [Concepts](#concepts)
+  - [Agents](#agents)
+  - [Users](#users)
+  - [Sessions](#sessions)
+  - [Tasks](#tasks)
+  - [Tools](#tools)
+  - [Documents](#documents)
+  - [Executions](#executions)
+- [Understanding Tasks](#understanding-tasks)
+  - [Types of Workflow Steps](#types-of-workflow-steps)
+- [Advanced Features](#advanced-features)
+  - [Adding Tools to Agents](#adding-tools-to-agents)
+  - [Managing Sessions and Users](#managing-sessions-and-users)
+  - [Document Integration and Search](#document-integration-and-search)
+- [SDK Reference](#sdk-reference)
+- [API Reference](#api-reference)
+- [Examples and Tutorials](#examples-and-tutorials)
+- [Contributing](#contributing)
+- [Support and Community](#support-and-community)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 > [!TIP]
 > 🐛 Found a bug? Have a suggestion? We'd love to hear from you!
