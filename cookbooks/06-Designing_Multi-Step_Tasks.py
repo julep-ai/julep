@@ -60,39 +60,39 @@ tools:
   integration:
     provider: brave
     setup:
-      api_key: "your_brave_api_key"
+      api_key: "your_api_key"
 
 main:
 # Step 1: Prompt - Initial research question
 - prompt:
-    - role: system
-      content: "You are a research assistant. Your task is to formulate three specific research questions about the given topic: {{inputs[0].topic}}"
+  - role: system
+    content: "You are a research assistant. Your task is to formulate three specific research questions about the given topic: {{inputs[0].topic}}"
   unwrap: true
 
 # Step 2: Tool Call - Web search for each question
 - foreach:
-    in: "_.split('\\n')"
+    in: "_.split('\n')"
     do:
       tool: web_search
       arguments:
-        query: "_"
+        query: _
 
 # Step 3: Evaluate - Extract relevant information
 - evaluate:
-    relevant_info: "[output['organic'][0]['description'] for output in _]"
+    relevant_info: "[output for output in _]"
 
 # Step 4: Conditional Logic - Check if enough information is gathered
 - if: "len(_.relevant_info) >= 3"
   then:
-    - prompt:
-        - role: system
-          content: "Summarize the following information about {{inputs[0].topic}}:\n{{_.relevant_info}}"
-    unwrap: true
+      prompt:
+      - role: system
+        content: "Summarize the following information about {{inputs[0].topic}}:\n{{_.relevant_info}}"
+      unwrap: true
   else:
-    - prompt:
-        - role: system
-          content: "Not enough information gathered. Please provide a brief overview of {{inputs[0].topic}} based on your knowledge."
-    unwrap: true
+      prompt:
+      - role: system
+        content: "Not enough information gathered. Please provide a brief overview of {{inputs[0].topic}} based on your knowledge."
+      unwrap: true
 
 # Step 5: Log - Record the summary
 - log: "Summary for {{inputs[0].topic}}: {{_}}"
@@ -101,6 +101,7 @@ main:
 - return: 
     summary: "_"
     topic: "inputs[0].topic"
+                          
 """)
 
 # Creating/Updating a task

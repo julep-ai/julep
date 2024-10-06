@@ -33,7 +33,7 @@ print(f"Agent created with ID: {agent.id}")
 
 # Create a session for interaction
 session = client.sessions.create(
-    agent_id=agent.id,
+    agent=agent.id,
     context_overflow="adaptive"
 )
 
@@ -41,9 +41,14 @@ print(f"Session created with ID: {session.id}")
 
 # Function to chat with the agent
 def chat_with_agent(message):
+    message = {
+        "role": "user",
+        "content": message,
+    }
+    # TODO: message validation error
     response = client.sessions.chat(
         session_id=session.id,
-        message=message
+        messages=[message],
     )
     return response.choices[0].message.content
 

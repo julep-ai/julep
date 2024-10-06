@@ -56,13 +56,6 @@ tools:
   integration:
     provider: wikipedia
 
-- name: news_api
-  type: integration
-  integration:
-    provider: newsapi
-    setup:
-      api_key: "YOUR_NEWSAPI_API_KEY"
-
 main:
 - tool: brave_search
   arguments:
@@ -76,12 +69,6 @@ main:
   arguments:
     query: "{{inputs[0].topic}}"
 
-- tool: news_api
-  arguments:
-    q: "{{inputs[0].topic}}"
-    language: "en"
-    sortBy: "relevancy"
-
 - prompt:
   - role: system
     content: >-
@@ -90,16 +77,14 @@ main:
       
       1. Overview (based on Wikipedia data)
       2. Latest Developments (based on Brave Search results)
-      3. Recent News (based on News API results)
-      4. Weather Impact (if applicable, based on weather data for {{inputs[0].location}})
-      5. Analysis and Conclusions
+      3. Weather Impact (if applicable, based on weather data for {{inputs[0].location}})
+      4. Analysis and Conclusions
       
       Use the following data for your report:
       
       Brave Search Results: {{outputs[0]}}
       Weather Data: {{outputs[1]}}
       Wikipedia Data: {{outputs[2]}}
-      News API Results: {{outputs[3]}}
       
       Provide a well-structured, informative report that synthesizes information from all these sources.
   unwrap: true
