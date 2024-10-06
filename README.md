@@ -229,6 +229,8 @@ main:
 
 > [!TIP]
 > Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.
+> 
+> In this example, Julep will automatically manage parallel executions, retry failed steps, resend api requests, and keep the workflows running reliably until completion.
 
 ## Key Features
 
