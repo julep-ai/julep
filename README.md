@@ -93,6 +93,12 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
   - [Document Integration and Search](#document-integration-and-search)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
+- [Examples and Tutorials](#examples-and-tutorials)
+- [Contributing](#contributing)
+- [Support and Community](#support-and-community)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+  - [💫 Contributors](#-contributors)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
