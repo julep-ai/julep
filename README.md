@@ -1,7 +1,7 @@
 <sup>English | [中文翻译](/README-CN.md) | [日本語翻訳](/README-JP.md)</sup>
 
 <div align="center">
- <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20building%20multi-step%20agent%20workflows.&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
+ <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
 <p align="center">
@@ -596,6 +596,10 @@ Julep is made up of the following components:
 - **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
 
 ### Mental Model
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/4426b106-1d1f-4320-91e9-d32d737b1d17" height="320" /> 
+</div>
 
 Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
 
