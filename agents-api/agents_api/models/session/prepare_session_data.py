@@ -56,12 +56,13 @@ def prepare_session_data(
 
     # This query retrieves session information by using `input` to pass parameters,
     get_query = """
-    input[session_id] <- [[
+    input[session_id, developer_id] <- [[
         to_uuid($session_id),
+        to_uuid($developer_id),
     ]]
 
     participants[collect(participant_id), participant_type] :=
-        input[session_id],
+        input[session_id, developer_id],
         *session_lookup{
             session_id,
             participant_id,
@@ -102,9 +103,11 @@ def prepare_session_data(
         }
 
     agent_data[collect(record)] :=
+        input[session_id, developer_id],
         agents[agent_ids],
         agent_id in agent_ids,
         *agents{
+            developer_id,
             agent_id,
             model,
             name,
@@ -129,9 +132,11 @@ def prepare_session_data(
 
     # Version where we don't have default settings
     agent_data[collect(record)] :=
+        input[session_id, developer_id],
         agents[agent_ids],
         agent_id in agent_ids,
         *agents{
+            developer_id,
             agent_id,
             model,
             name,
@@ -155,9 +160,11 @@ def prepare_session_data(
         }
 
     user_data[collect(record)] :=
+        input[session_id, developer_id],
         users[user_ids],
         user_id in user_ids,
         *users{
+            developer_id,
             user_id,
             name,
             about,
@@ -175,8 +182,9 @@ def prepare_session_data(
         }
 
     session_data[record] :=
-        input[session_id],
+        input[session_id, developer_id],
         *sessions{
+            developer_id,
             session_id,
             situation,
             summary,

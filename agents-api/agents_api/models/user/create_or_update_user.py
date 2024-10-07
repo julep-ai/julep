@@ -70,6 +70,7 @@ def create_or_update_user(
         ?[user_id, developer_id, name, about, metadata, created_at, updated_at] :=
             input[_user_id, developer_id, name, about, metadata, updated_at],
             *users{
+                developer_id,
                 user_id,
                 created_at,
             },
@@ -78,6 +79,7 @@ def create_or_update_user(
         ?[user_id, developer_id, name, about, metadata, created_at, updated_at] :=
             input[_user_id, developer_id, name, about, metadata, updated_at],
             not *users{
+                developer_id,
                 user_id,
             }, created_at = now(),
             user_id = to_uuid(_user_id),
