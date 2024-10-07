@@ -41,7 +41,9 @@ summarization_model_name: str = env.str(
     "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )
 do_verify_developer: bool = env.bool("DO_VERIFY_DEVELOPER", default=True)
-do_verify_developer_owns_resource: bool = env.bool("DO_VERIFY_DEVELOPER_OWNS_RESOURCE", default=True)
+do_verify_developer_owns_resource: bool = env.bool(
+    "DO_VERIFY_DEVELOPER_OWNS_RESOURCE", default=True
+)
 
 
 # Auth
