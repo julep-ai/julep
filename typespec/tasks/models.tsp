@@ -68,6 +68,9 @@ model Task {
     /** Whether to inherit tools from the parent agent or not. Defaults to true. */
     inherit_tools: boolean = true;
 
+    /** Whether to allow recursive workflows or not. */
+    allow_recursion: boolean = false;
+
     ...HasId;
     ...HasTimestamps;
     ...HasMetadata;
