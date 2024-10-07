@@ -55,6 +55,11 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 > [!TIP]
 > Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
 
+> [!NOTE]
+> Get your API key [here](https://dashboard-dev.julep.ai).
+>  
+> While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
+
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
 </details>
@@ -294,9 +299,9 @@ pip install julep
 ```
 
 > [!NOTE]
-> ~~Get your API key [here](https://app.julep.ai/api-keys).~~
+> Get your API key [here](https://dashboard-dev.julep.ai).
 >  
-> While we are in beta, you can reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get your API key.
+> While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
 
 > [!TIP]
 > 💻 Are you a _show me the code!™_ kind of person? We have created a ton of cookbooks for you to get started with. **Check out the [cookbooks](/cookbooks)** to browse through examples.

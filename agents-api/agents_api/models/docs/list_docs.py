@@ -50,6 +50,7 @@ def list_docs(
     sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
+    include_without_embeddings: bool = False,
 ) -> tuple[list[str], dict]:
     # Transforms the metadata_filter dictionary into a string representation for the datalog query.
     metadata_filter_str = ", ".join(
@@ -70,6 +71,7 @@ def list_docs(
                 content,
                 embedding,
             }},
+            {"" if include_without_embeddings else "not is_null(embedding),"}
             snippet_data = [index, content, embedding]
 
         ?[
