@@ -10,7 +10,7 @@ langchain-community = "^0.3.0"
 fastapi = "^0.115.0"
 uvicorn = "^0.30.6"
 langchain = "^0.3.0"
-pydantic = "^2.9.2"
+pydantic = {extras = ["email"], version = "^2.9.2"}
 duckduckgo-search = "^6.2.13"
 openai = "^1.47.1"
 tweepy = "^4.14.0"
@@ -20,6 +20,7 @@ pyowm = "^3.3.0"
 spider-client = "^0.0.70"
 browserbase = "^0.3.0"
 setuptools = "^75.1.0"
+beartype = "^0.19.0"
 
 [tool.poe.tasks]
 format = "ruff format"

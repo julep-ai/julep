@@ -26,10 +26,15 @@ async def execute_integration(
 
     if setup:
         setup_class = provider.setup
-        if setup_class:
+        if setup_class and not isinstance(setup, setup_class):
             setup = setup_class(**setup.model_dump())
+
     arguments_class = next(m for m in provider.methods if m.method == method).arguments
-    parsed_arguments = arguments_class(**arguments.model_dump())
+    
+    if not isinstance(arguments, arguments_class):
+        parsed_arguments = arguments_class(**arguments.model_dump())
+    else:
+        parsed_arguments = arguments
 
     if setup:
         return await execution_function(setup=setup, arguments=parsed_arguments)
