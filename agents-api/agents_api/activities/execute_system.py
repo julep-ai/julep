@@ -5,7 +5,12 @@ from beartype import beartype
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..autogen.Docs import CreateDocRequest, HybridDocSearchRequest, TextOnlyDocSearchRequest, VectorDocSearchRequest
+from ..autogen.Docs import (
+    CreateDocRequest,
+    HybridDocSearchRequest,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..env import testing
@@ -91,7 +96,7 @@ async def execute_system(
                 elif system.operation == "search":
                     # The `search_agent_docs` function requires `x_developer_id` instead of `developer_id`.
                     arguments["x_developer_id"] = arguments.pop("developer_id")
-                    
+
                     if "text" in arguments and "vector" in arguments:
                         search_params = HybridDocSearchRequest(
                             text=arguments.pop("text"),
@@ -160,7 +165,6 @@ async def execute_system(
                 elif system.operation == "search":
                     # The `search_user_docs` function requires `x_developer_id` instead of `developer_id`.
                     arguments["x_developer_id"] = arguments.pop("developer_id")
-
 
                     if "text" in arguments and "vector" in arguments:
                         search_params = HybridDocSearchRequest(
