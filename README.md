@@ -597,6 +597,10 @@ Julep is made up of the following components:
 
 ### Mental Model
 
+<div align="center">
+<img src="https://github.com/user-attachments/assets/4426b106-1d1f-4320-91e9-d32d737b1d17" height="320" /> 
+</div>
+
 Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
 
 1. **Your Application Code:**
