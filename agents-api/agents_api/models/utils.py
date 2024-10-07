@@ -8,6 +8,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ..common.utils.cozo import uuid_int_list_to_uuid4
+from ..env import do_verify_developer, do_verify_developer_owns_resource
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -117,6 +118,9 @@ def mark_session_updated_query(developer_id: UUID | str, session_id: UUID | str)
 
 
 def verify_developer_id_query(developer_id: UUID | str) -> str:
+    if not do_verify_developer:
+        return "?[exists] := exists = true"
+
     return f"""
     matched[count(developer_id)] :=
         *developers{{
@@ -138,6 +142,9 @@ def verify_developer_owns_resource_query(
     parents: list[tuple[str, str]] | None = None,
     **resource_id,
 ) -> str:
+    if not do_verify_developer_owns_resource:
+        return "?[exists] := exists = true"
+
     parents = parents or []
     resource_id_key, resource_id_value = next(iter(resource_id.items()))
 

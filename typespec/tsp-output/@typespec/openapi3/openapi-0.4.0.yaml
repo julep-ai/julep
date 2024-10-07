@@ -3871,8 +3871,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -3901,8 +3899,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -3935,8 +3931,6 @@ components:
               - $ref: '#/components/schemas/Tasks.GetStep'
               - $ref: '#/components/schemas/Tasks.SetStep'
               - $ref: '#/components/schemas/Tasks.LogStep'
-              - $ref: '#/components/schemas/Tasks.EmbedStep'
-              - $ref: '#/components/schemas/Tasks.SearchStep'
               - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -3971,8 +3965,6 @@ components:
                       - $ref: '#/components/schemas/Tasks.GetStep'
                       - $ref: '#/components/schemas/Tasks.SetStep'
                       - $ref: '#/components/schemas/Tasks.LogStep'
-                      - $ref: '#/components/schemas/Tasks.EmbedStep'
-                      - $ref: '#/components/schemas/Tasks.SearchStep'
                       - $ref: '#/components/schemas/Tasks.YieldStep'
                     description: The steps to run for each iteration
                   reduce:
@@ -4035,8 +4027,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4071,8 +4061,6 @@ components:
                     - $ref: '#/components/schemas/Tasks.GetStep'
                     - $ref: '#/components/schemas/Tasks.SetStep'
                     - $ref: '#/components/schemas/Tasks.LogStep'
-                    - $ref: '#/components/schemas/Tasks.EmbedStep'
-                    - $ref: '#/components/schemas/Tasks.SearchStep'
                     - $ref: '#/components/schemas/Tasks.YieldStep'
                   description: The steps to run for each iteration
                 reduce:
@@ -4105,36 +4093,6 @@ components:
                   discriminator:
                     propertyName: kind_
       description: Payload for creating a task
-    Tasks.EmbedStep:
-      type: object
-      required:
-        - kind_
-        - embed
-      properties:
-        kind_:
-          type: string
-          enum:
-            - embed
-          default: embed
-          readOnly: true
-        embed:
-          allOf:
-            - $ref: '#/components/schemas/Docs.EmbedQueryRequest'
-          description: The text to embed
-      allOf:
-        - type: object
-          required:
-            - kind_
-          properties:
-            kind_:
-              type: string
-              enum:
-                - embed
-              description: The kind of step
-              readOnly: true
-          discriminator:
-            propertyName: kind_
-            mapping: {}
     Tasks.ErrorWorkflowStep:
       type: object
       required:
@@ -4215,8 +4173,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
           description: The steps to run for each iteration
     Tasks.ForeachDoUpdateItem:
@@ -4239,8 +4195,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
           description: The steps to run for each iteration
     Tasks.ForeachStep:
@@ -4346,8 +4300,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4363,8 +4315,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4407,8 +4357,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4424,8 +4372,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4496,8 +4442,6 @@ components:
               - $ref: '#/components/schemas/Tasks.GetStep'
               - $ref: '#/components/schemas/Tasks.SetStep'
               - $ref: '#/components/schemas/Tasks.LogStep'
-              - $ref: '#/components/schemas/Tasks.EmbedStep'
-              - $ref: '#/components/schemas/Tasks.SearchStep'
               - $ref: '#/components/schemas/Tasks.YieldStep'
           maxItems: 100
           description: The steps to run in parallel. Max concurrency will depend on the platform.
@@ -4530,8 +4474,6 @@ components:
               - $ref: '#/components/schemas/Tasks.GetStep'
               - $ref: '#/components/schemas/Tasks.SetStep'
               - $ref: '#/components/schemas/Tasks.LogStep'
-              - $ref: '#/components/schemas/Tasks.EmbedStep'
-              - $ref: '#/components/schemas/Tasks.SearchStep'
               - $ref: '#/components/schemas/Tasks.YieldStep'
           maxItems: 100
           description: The steps to run in parallel. Max concurrency will depend on the platform.
@@ -4560,8 +4502,6 @@ components:
               - $ref: '#/components/schemas/Tasks.GetStep'
               - $ref: '#/components/schemas/Tasks.SetStep'
               - $ref: '#/components/schemas/Tasks.LogStep'
-              - $ref: '#/components/schemas/Tasks.EmbedStep'
-              - $ref: '#/components/schemas/Tasks.SearchStep'
               - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4589,8 +4529,6 @@ components:
                       - $ref: '#/components/schemas/Tasks.GetStep'
                       - $ref: '#/components/schemas/Tasks.SetStep'
                       - $ref: '#/components/schemas/Tasks.LogStep'
-                      - $ref: '#/components/schemas/Tasks.EmbedStep'
-                      - $ref: '#/components/schemas/Tasks.SearchStep'
                       - $ref: '#/components/schemas/Tasks.YieldStep'
                     description: The steps to run for each iteration
                   reduce:
@@ -4648,8 +4586,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -4677,8 +4613,6 @@ components:
                     - $ref: '#/components/schemas/Tasks.GetStep'
                     - $ref: '#/components/schemas/Tasks.SetStep'
                     - $ref: '#/components/schemas/Tasks.LogStep'
-                    - $ref: '#/components/schemas/Tasks.EmbedStep'
-                    - $ref: '#/components/schemas/Tasks.SearchStep'
                     - $ref: '#/components/schemas/Tasks.YieldStep'
                   description: The steps to run for each iteration
                 reduce:
@@ -5001,38 +4935,6 @@ components:
           discriminator:
             propertyName: kind_
             mapping: {}
-    Tasks.SearchStep:
-      type: object
-      required:
-        - kind_
-        - search
-      properties:
-        kind_:
-          type: string
-          enum:
-            - search
-          default: search
-          readOnly: true
-        search:
-          anyOf:
-            - $ref: '#/components/schemas/Docs.VectorDocSearchRequest'
-            - $ref: '#/components/schemas/Docs.TextOnlyDocSearchRequest'
-            - $ref: '#/components/schemas/Docs.HybridDocSearchRequest'
-          description: The search query
-      allOf:
-        - type: object
-          required:
-            - kind_
-          properties:
-            kind_:
-              type: string
-              enum:
-                - search
-              description: The kind of step
-              readOnly: true
-          discriminator:
-            propertyName: kind_
-            mapping: {}
     Tasks.SetStep:
       type: object
       required:
@@ -5210,8 +5112,6 @@ components:
               - $ref: '#/components/schemas/Tasks.GetStep'
               - $ref: '#/components/schemas/Tasks.SetStep'
               - $ref: '#/components/schemas/Tasks.LogStep'
-              - $ref: '#/components/schemas/Tasks.EmbedStep'
-              - $ref: '#/components/schemas/Tasks.SearchStep'
               - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -5246,8 +5146,6 @@ components:
                       - $ref: '#/components/schemas/Tasks.GetStep'
                       - $ref: '#/components/schemas/Tasks.SetStep'
                       - $ref: '#/components/schemas/Tasks.LogStep'
-                      - $ref: '#/components/schemas/Tasks.EmbedStep'
-                      - $ref: '#/components/schemas/Tasks.SearchStep'
                       - $ref: '#/components/schemas/Tasks.YieldStep'
                     description: The steps to run for each iteration
                   reduce:
@@ -5324,8 +5222,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -5360,8 +5256,6 @@ components:
                     - $ref: '#/components/schemas/Tasks.GetStep'
                     - $ref: '#/components/schemas/Tasks.SetStep'
                     - $ref: '#/components/schemas/Tasks.LogStep'
-                    - $ref: '#/components/schemas/Tasks.EmbedStep'
-                    - $ref: '#/components/schemas/Tasks.SearchStep'
                     - $ref: '#/components/schemas/Tasks.YieldStep'
                   description: The steps to run for each iteration
                 reduce:
@@ -5496,8 +5390,6 @@ components:
               - $ref: '#/components/schemas/Tasks.GetStep'
               - $ref: '#/components/schemas/Tasks.SetStep'
               - $ref: '#/components/schemas/Tasks.LogStep'
-              - $ref: '#/components/schemas/Tasks.EmbedStep'
-              - $ref: '#/components/schemas/Tasks.SearchStep'
               - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -5532,8 +5424,6 @@ components:
                       - $ref: '#/components/schemas/Tasks.GetStep'
                       - $ref: '#/components/schemas/Tasks.SetStep'
                       - $ref: '#/components/schemas/Tasks.LogStep'
-                      - $ref: '#/components/schemas/Tasks.EmbedStep'
-                      - $ref: '#/components/schemas/Tasks.SearchStep'
                       - $ref: '#/components/schemas/Tasks.YieldStep'
                     description: The steps to run for each iteration
                   reduce:
@@ -5596,8 +5486,6 @@ components:
             - $ref: '#/components/schemas/Tasks.GetStep'
             - $ref: '#/components/schemas/Tasks.SetStep'
             - $ref: '#/components/schemas/Tasks.LogStep'
-            - $ref: '#/components/schemas/Tasks.EmbedStep'
-            - $ref: '#/components/schemas/Tasks.SearchStep'
             - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
@@ -5632,8 +5520,6 @@ components:
                     - $ref: '#/components/schemas/Tasks.GetStep'
                     - $ref: '#/components/schemas/Tasks.SetStep'
                     - $ref: '#/components/schemas/Tasks.LogStep'
-                    - $ref: '#/components/schemas/Tasks.EmbedStep'
-                    - $ref: '#/components/schemas/Tasks.SearchStep'
                     - $ref: '#/components/schemas/Tasks.YieldStep'
                   description: The steps to run for each iteration
                 reduce:
@@ -5967,6 +5853,7 @@ components:
                 - spider
                 - brave
                 - browserbase
+                - email
             - type: string
           description: The provider of the integration
         method:
@@ -5995,6 +5882,7 @@ components:
                 - spider
                 - brave
                 - browserbase
+                - email
             - type: string
           description: The provider of the integration
         method:

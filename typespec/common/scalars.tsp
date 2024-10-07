@@ -55,22 +55,3 @@ scalar PyExpression extends string;
 
 /** A valid jinja template. */
 scalar JinjaTemplate extends string;
-
-/** Integration provider name */
-alias integrationProvider = (
-    | "dummy"
-    | "hacker_news"
-    | "weather"
-    | "wikipedia"
-    | "spider"
-    | "brave"
-    | "browserbase"
-    // | "dalle_image_generator"
-    // | "duckduckgo_search"
-    // | "twitter"
-    // | "webpage"
-    // | "requests"
-);
-
-/** A valid HTTP method */
-alias httpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "CONNECT" | "TRACE";

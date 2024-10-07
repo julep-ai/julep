@@ -2,8 +2,15 @@ from typing import Any
 from uuid import UUID
 
 from beartype import beartype
+from fastapi.background import BackgroundTasks
 from temporalio import activity
 
+from ..autogen.Docs import (
+    CreateDocRequest,
+    HybridDocSearchRequest,
+    TextOnlyDocSearchRequest,
+    VectorDocSearchRequest,
+)
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..env import testing
@@ -31,6 +38,8 @@ from ..models.user.delete_user import delete_user as delete_user_query
 from ..models.user.get_user import get_user as get_user_query
 from ..models.user.list_users import list_users as list_users_query
 from ..models.user.update_user import update_user as update_user_query
+from ..routers.docs.create_doc import create_agent_doc, create_user_doc
+from ..routers.docs.search_docs import search_agent_docs, search_user_docs
 
 
 @beartype
@@ -63,16 +72,53 @@ async def execute_system(
                 agent_doc_args = {
                     **{
                         "owner_type": "agent",
-                        "owner_id": arguments.pop("agent_id"),
+                        "owner_id": arguments["agent_id"],
                     },
                     **arguments,
                 }
+                agent_doc_args.pop("agent_id")
+
                 if system.operation == "list":
                     return list_docs_query(**agent_doc_args)
+
                 elif system.operation == "create":
-                    return create_doc_query(**agent_doc_args)
+                    # The `create_agent_doc` function requires `x_developer_id` instead of `developer_id`.
+                    arguments["x_developer_id"] = arguments.pop("developer_id")
+                    return await create_agent_doc(
+                        data=CreateDocRequest(**arguments.pop("data")),
+                        background_tasks=BackgroundTasks(),
+                        **arguments,
+                    )
+
                 elif system.operation == "delete":
                     return delete_doc_query(**agent_doc_args)
+
+                elif system.operation == "search":
+                    # The `search_agent_docs` function requires `x_developer_id` instead of `developer_id`.
+                    arguments["x_developer_id"] = arguments.pop("developer_id")
+
+                    if "text" in arguments and "vector" in arguments:
+                        search_params = HybridDocSearchRequest(
+                            text=arguments.pop("text"),
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    elif "text" in arguments:
+                        search_params = TextOnlyDocSearchRequest(
+                            text=arguments.pop("text"),
+                            limit=arguments.get("limit", 10),
+                        )
+                    elif "vector" in arguments:
+                        search_params = VectorDocSearchRequest(
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    return await search_agent_docs(
+                        search_params=search_params,
+                        **arguments,
+                    )
 
             # NO SUBRESOURCE
             elif system.subresource == None:
@@ -95,16 +141,53 @@ async def execute_system(
                 user_doc_args = {
                     **{
                         "owner_type": "user",
-                        "owner_id": arguments.pop("user_id"),
+                        "owner_id": arguments["user_id"],
                     },
                     **arguments,
                 }
+                user_doc_args.pop("user_id")
+
                 if system.operation == "list":
                     return list_docs_query(**user_doc_args)
+
                 elif system.operation == "create":
-                    return create_doc_query(**user_doc_args)
+                    # The `create_user_doc` function requires `x_developer_id` instead of `developer_id`.
+                    arguments["x_developer_id"] = arguments.pop("developer_id")
+                    return await create_user_doc(
+                        data=CreateDocRequest(**arguments.pop("data")),
+                        background_tasks=BackgroundTasks(),
+                        **arguments,
+                    )
+
                 elif system.operation == "delete":
                     return delete_doc_query(**user_doc_args)
+
+                elif system.operation == "search":
+                    # The `search_user_docs` function requires `x_developer_id` instead of `developer_id`.
+                    arguments["x_developer_id"] = arguments.pop("developer_id")
+
+                    if "text" in arguments and "vector" in arguments:
+                        search_params = HybridDocSearchRequest(
+                            text=arguments.pop("text"),
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    elif "text" in arguments:
+                        search_params = TextOnlyDocSearchRequest(
+                            text=arguments.pop("text"),
+                            limit=arguments.get("limit", 10),
+                        )
+                    elif "vector" in arguments:
+                        search_params = VectorDocSearchRequest(
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    return await search_user_docs(
+                        search_params=search_params,
+                        **arguments,
+                    )
 
             # NO SUBRESOURCE
             elif system.subresource == None:

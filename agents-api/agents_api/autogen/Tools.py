@@ -223,6 +223,7 @@ class IntegrationDef(BaseModel):
             "spider",
             "brave",
             "browserbase",
+            "email",
         ]
         | str
     )
@@ -260,6 +261,7 @@ class IntegrationDefUpdate(BaseModel):
             "spider",
             "brave",
             "browserbase",
+            "email",
         ]
         | str
         | None
