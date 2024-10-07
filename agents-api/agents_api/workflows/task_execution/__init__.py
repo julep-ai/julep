@@ -16,7 +16,6 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.execute_system import execute_system
     from ...autogen.openapi_model import (
         ApiCallDef,
-        EmbedStep,
         ErrorWorkflowStep,
         EvaluateStep,
         ForeachDo,
@@ -29,7 +28,6 @@ with workflow.unsafe.imports_passed_through():
         ParallelStep,
         PromptStep,
         ReturnStep,
-        SearchStep,
         SetStep,
         SleepFor,
         SleepStep,
@@ -72,8 +70,6 @@ with workflow.unsafe.imports_passed_through():
 #     | GetStep  # ✅
 #     | SetStep  # ✅
 #     | LogStep  # ✅
-#     | EmbedStep  # ❌
-#     | SearchStep  # ❌
 #     | ReturnStep  # ✅
 #     | SleepStep  # ✅
 #     | ErrorWorkflowStep  # ✅
@@ -454,18 +450,6 @@ class TaskExecutionWorkflow:
                 workflow.logger.debug(f"Retrieved value: {value}")
 
                 state = PartialTransition(output=value)
-
-            case EmbedStep(), _:
-                # FIXME: Implement EmbedStep
-                # SCRUM-19
-                workflow.logger.error("EmbedStep not yet implemented")
-                raise ApplicationError("Not implemented")
-
-            case SearchStep(), _:
-                # FIXME: Implement SearchStep
-                # SCRUM-18
-                workflow.logger.error("SearchStep not yet implemented")
-                raise ApplicationError("Not implemented")
 
             case ParallelStep(), _:
                 # FIXME: Implement ParallelStep

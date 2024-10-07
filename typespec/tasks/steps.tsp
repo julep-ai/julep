@@ -48,8 +48,6 @@ alias MappableWorkflowStep =
     | GetStep
     | SetStep
     | LogStep
-    | EmbedStep
-    | SearchStep
     | YieldStep;
 
 alias NonConditionalWorkflowStep =
@@ -157,34 +155,6 @@ model LogStep extends BaseWorkflowStep<"log"> {
 model LogStepDef {
     /** The value to log */
     log: JinjaTemplate;
-}
-
-////////////////////////
-/// Doc search steps ///
-////////////////////////
-
-model EmbedStep extends BaseWorkflowStep<"embed"> {
-    @visibility("read")
-    kind_: "embed" = "embed";
-
-    ...EmbedStepDef;
-}
-
-model EmbedStepDef {
-    /** The text to embed */
-    embed: EmbedQueryRequest;
-}
-
-model SearchStep extends BaseWorkflowStep<"search"> {
-    @visibility("read")
-    kind_: "search" = "search";
-
-    ...SearchStepDef;
-}
-
-model SearchStepDef {
-    /** The search query */
-    search: DocSearchRequest;
 }
 
 ///////////////////////

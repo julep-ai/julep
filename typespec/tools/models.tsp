@@ -8,6 +8,23 @@ namespace Tools;
 // TOOL MODELS
 //
 
+// TODO: Split these into different files
+
+/** A valid HTTP method */
+alias httpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "CONNECT" | "TRACE";
+
+/** Integration provider name */
+alias integrationProvider = (
+    | "dummy"
+    | "hacker_news"
+    | "weather"
+    | "wikipedia"
+    | "spider"
+    | "brave"
+    | "browserbase"
+    | "email"
+);
+
 enum ToolType {
     /** A tool that emulates a function call */
     function,
@@ -41,6 +58,8 @@ model FunctionDef {
     parameters?: FunctionParameters;
 
 }
+
+// TODO: Add granular definitions for each integration
 
 /** Integration definition */
 model IntegrationDef {
@@ -92,6 +111,8 @@ alias operationType = (
     | "get"
     | "list"
 );
+
+// TODO: Add granular definitions for each system call
 
 /** System definition */
 model SystemDef {
