@@ -48,7 +48,7 @@ input_schema:
 
 main:
 - prompt:
-    role: system
+  - role: system
     content: >-
       You are a user registration assistant. Create a user profile based on the following information:
       Username: {{inputs[0].username}}
@@ -60,10 +60,10 @@ main:
 - evaluate:
     user_profile: >-
       {
-        "username": inputs[0].username,
-        "interests": inputs[0].interests,
-        "bio": _.split('\n\n')[0],
-        "content_preferences": _.split('\n\n')[1]
+        'username': {{inputs[0].username}},
+        'interests': {{inputs[0].interests}},
+        'bio': '_.split('\n\n')[0]',
+        'content_preferences': '_.split('\n\n')[1]'
       }
 
 - return: outputs[1].user_profile
@@ -85,37 +85,33 @@ input_schema:
   properties:
     user_profile:
       type: object
-
-tools:
-- name: content_database
-  type: integration
-  integration:
-    provider: mock
-    setup:
-      data: [
-        {"id": 1, "title": "Introduction to AI", "category": "Technology"},
-        {"id": 2, "title": "Healthy Eating Habits", "category": "Health"},
-        {"id": 3, "title": "Financial Planning 101", "category": "Finance"},
-        {"id": 4, "title": "The Art of Photography", "category": "Art"},
-        {"id": 5, "title": "Beginner's Guide to Yoga", "category": "Fitness"}
-      ]
+      description: User's profile containing their interests and preferences.
+    content_list:
+      type: array
+      description: List of available content to recommend from.
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          title:
+            type: string
+          category:
+            type: string
 
 main:
-- tool: content_database
-  arguments: {}
-
 - prompt:
-    role: system
+  - role: system
     content: >-
       You are a content recommendation system. Based on the user's profile and the available content,
       recommend 3 pieces of content that best match the user's interests and preferences.
-      
+
       User Profile:
       {{inputs[0].user_profile}}
-      
+
       Available Content:
-      {{outputs[0]}}
-      
+      {{inputs[0].content_list}}
+
       Provide your recommendations in the following format:
       1. [Content ID] - [Content Title] - Reason for recommendation
       2. [Content ID] - [Content Title] - Reason for recommendation
@@ -123,6 +119,7 @@ main:
   unwrap: true
 
 - return: _
+
 """)
 
 # Creating the recommendation task
@@ -144,16 +141,26 @@ def register_user(username, interests):
     result = client.executions.get(execution.id)
     return result.output
 
-# Function to get personalized content recommendations
+# Function to get personalized recommendations for a user
 def get_recommendations(user_profile):
+    content_list = [
+        {"id": 1, "title": "Introduction to AI", "category": "Technology"},
+        {"id": 2, "title": "Healthy Eating Habits", "category": "Health"},
+        {"id": 3, "title": "Financial Planning 101", "category": "Finance"},
+        {"id": 4, "title": "The Art of Photography", "category": "Art"},
+        {"id": 5, "title": "Beginner's Guide to Yoga", "category": "Fitness"}
+    ]
+
     execution = client.executions.create(
         task_id=RECOMMENDATION_TASK_UUID,
         input={
-            "user_profile": user_profile
+            "user_profile": user_profile,
+            "content_list": content_list
         }
     )
     result = client.executions.get(execution.id)
     return result.output
+
 
 # Function to update user preferences
 def update_user_preferences(user_profile, new_interests):

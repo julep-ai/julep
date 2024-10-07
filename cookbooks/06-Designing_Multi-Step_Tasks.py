@@ -1,5 +1,5 @@
 import uuid
-import yaml
+import yaml, time
 from julep import Client
 
 # Global UUID is generated for agent and task
@@ -121,10 +121,13 @@ execution = client.executions.create(
 
 print(f"Execution ID: {execution.id}")
 
+# Wait for the execution to complete
+time.sleep(10)
+
 # Getting the execution details
 execution = client.executions.get(execution.id)
 print("Execution Output:")
-print(execution.output)
+print(client.executions.transitions.list(execution_id=execution.id).items[0].output) 
 
 # Listing all the steps of a defined task
 transitions = client.executions.transitions.list(execution_id=execution.id).items
@@ -132,7 +135,6 @@ print("Execution Steps:")
 for transition in transitions:
     print(transition)
 
-# Streaming the execution steps
-print("Streaming Execution Steps:")
-for transition in client.executions.transitions.stream(execution_id=execution.id):
-    print(transition)
+# Stream the steps of the defined task
+print("Streaming execution transitions:")
+print(client.executions.transitions.stream(execution_id=execution.id))
