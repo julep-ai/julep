@@ -16,9 +16,9 @@ class BaseOutput(BaseModel): ...
 
 
 class ProviderInfo(BaseModel):
-    url: Optional[Url]
-    docs: Optional[Url]
-    icon: Optional[Url]
+    url: Optional[Url] = None
+    docs: Optional[Url] = None
+    icon: Optional[Url] = None
     friendly_name: str
 
 
