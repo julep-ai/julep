@@ -71,6 +71,7 @@ def get_agent(*, developer_id: UUID, agent_id: UUID) -> tuple[list[str], dict]:
             instructions,
         ] := input[id],
             *agents {
+                developer_id: to_uuid($developer_id),
                 agent_id: id,
                 model,
                 name,
