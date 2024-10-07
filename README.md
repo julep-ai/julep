@@ -98,6 +98,12 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
   - [Document Integration and Search](#document-integration-and-search)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
+- [Examples and Tutorials](#examples-and-tutorials)
+- [Contributing](#contributing)
+- [Support and Community](#support-and-community)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+  - [💫 Contributors](#-contributors)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -780,3 +786,38 @@ Explore our comprehensive API documentation to learn more about agents, tasks, a
 - [Agents API](https://api.julep.ai/api/docs#tag/agents)
 - [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
 - [Executions API](https://api.julep.ai/api/docs#tag/executions)
+## Examples and Tutorials
+
+Discover example projects and tutorials to help you get started and build upon provided examples:
+
+- [Example Projects](https://github.com/julep-ai/julep/tree/main/examples)
+- [Tutorials](https://docs.julep.ai/tutorials)
+
+## Contributing
+
+We welcome contributions to the project! Learn how to contribute and our code of conduct:
+
+- [Contributing Guidelines](https://github.com/julep-ai/julep/blob/main/CONTRIBUTING.md)
+- [Code of Conduct](https://github.com/julep-ai/julep/blob/main/CODE_OF_CONDUCT.md)
+
+## Support and Community
+
+Join our community to get help, ask questions, and share your ideas:
+
+- [Discord](https://discord.com/invite/JTSBGRZrzj)
+- [GitHub Discussions](https://github.com/julep-ai/julep/discussions)
+- [Twitter](https://twitter.com/julep_ai)
+
+## License
+
+This project is licensed under the [Apache License 2.0](https://github.com/julep-ai/julep/blob/main/LICENSE).
+
+## Acknowledgements
+
+We would like to express our gratitude to all contributors and the open-source community for their valuable resources and contributions.
+
+### 💫 Contributors
+
+<a href="https://github.com/julep-ai/julep/graphs/contributors">
+  <img alt="contributors" src="https://contrib.rocks/image?repo=julep-ai/julep"/>
+</a>
