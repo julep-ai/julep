@@ -5,7 +5,7 @@ from beartype import beartype
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
-from ..autogen.Docs import CreateDocRequest
+from ..autogen.Docs import CreateDocRequest, HybridDocSearchRequest, TextOnlyDocSearchRequest, VectorDocSearchRequest
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
 from ..env import testing
@@ -91,7 +91,29 @@ async def execute_system(
                 elif system.operation == "search":
                     # The `search_agent_docs` function requires `x_developer_id` instead of `developer_id`.
                     arguments["x_developer_id"] = arguments.pop("developer_id")
-                    return await search_agent_docs(**arguments)
+                    
+                    if "text" in arguments and "vector" in arguments:
+                        search_params = HybridDocSearchRequest(
+                            text=arguments.pop("text"),
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    elif "text" in arguments:
+                        search_params = TextOnlyDocSearchRequest(
+                            text=arguments.pop("text"),
+                            limit=arguments.get("limit", 10),
+                        )
+                    elif "vector" in arguments:
+                        search_params = VectorDocSearchRequest(
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    return await search_agent_docs(
+                        search_params=search_params,
+                        **arguments,
+                    )
 
             # NO SUBRESOURCE
             elif system.subresource == None:
@@ -138,7 +160,30 @@ async def execute_system(
                 elif system.operation == "search":
                     # The `search_user_docs` function requires `x_developer_id` instead of `developer_id`.
                     arguments["x_developer_id"] = arguments.pop("developer_id")
-                    return await search_user_docs(**arguments)
+
+
+                    if "text" in arguments and "vector" in arguments:
+                        search_params = HybridDocSearchRequest(
+                            text=arguments.pop("text"),
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    elif "text" in arguments:
+                        search_params = TextOnlyDocSearchRequest(
+                            text=arguments.pop("text"),
+                            limit=arguments.get("limit", 10),
+                        )
+                    elif "vector" in arguments:
+                        search_params = VectorDocSearchRequest(
+                            vector=arguments.pop("vector"),
+                            limit=arguments.get("limit", 10),
+                        )
+
+                    return await search_user_docs(
+                        search_params=search_params,
+                        **arguments,
+                    )
 
             # NO SUBRESOURCE
             elif system.subresource == None:
