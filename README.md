@@ -96,6 +96,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
   - [Adding Tools to Agents](#adding-tools-to-agents)
   - [Managing Sessions and Users](#managing-sessions-and-users)
   - [Document Integration and Search](#document-integration-and-search)
+- [Integrations](#integrations)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
 
@@ -104,14 +105,12 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 ## Introduction
 
-<!-- TODO: Add a screencast -->
+Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.
 
-Julep is a platform for creating AI agents that maintain state and execute complex workflows. It offers long-term context and orchestrates multi-step tasks.
-
-Julep lets you define multi-step tasks that can include conditional logic, loops, parallel processing, and built-in integration with 100s of external tools and APIs. Typically AI applications tend to be linear and have simple chains of a handful of prompts and API calls without much branching or decision-making.
+Julep lets you define multi-step tasks that can include decision-making, loops, parallel processing, and built-in integration with hundreds of external tools and APIs. Typically, AI applications tend to be simple and have linear chains of a handful of prompts and API calls without much branching or decision-making.
 
 > [!TIP]
-> Imagine you want to build an AI agent that can do more than just answer simple queries—it needs to handle complex tasks, remember past interactions, and maybe even integrate with other tools or APIs. That's where Julep comes in.
+> Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.
 
 ## Quick Example
 
@@ -125,7 +124,7 @@ Imagine a Research AI agent that can do the following:
   7. Summarize the results,
   8. Send the summary to Discord
 
-In julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. Here's a working example:
+In Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. Here's a working example:
 
 ```yaml
 name: Research Agent
@@ -235,17 +234,17 @@ main:
 > [!TIP]
 > Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.
 > 
-> In this example, Julep will automatically manage parallel executions, retry failed steps, resend api requests, and keep the workflows running reliably until completion.
+> In this example, Julep will automatically manage parallel executions, retry failed steps, resend API requests, and keep the tasks running reliably until completion.
 
 ## Key Features
 
-1. **Persistent AI Agents**: Persist context and state over long-term interactions.
-2. **Stateful Sessions**: Remember past interactions for personalized responses.
-3. **Multi-Step Workflows**: Build complex, multi-step processes with loops and conditional logic.
-4. **Task Orchestration**: Manage long-running tasks that can run indefinitely.
-5. **Built-in Tools**: Integrate built-in tools and external APIs into workflows.
-6. **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your workflows running smoothly.
-7. **RAG**: Use Julep's document store to build a RAG system for your own data.
+1. **Persistent AI Agents**: Remember context and information over long-term interactions.
+2. **Stateful Sessions**: Keep track of past interactions for personalized responses.
+3. **Multi-Step Tasks**: Build complex, multi-step processes with loops and decision-making.
+4. **Task Management**: Handle long-running tasks that can run indefinitely.
+5. **Built-in Tools**: Use built-in tools and external APIs in your tasks.
+6. **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.
+7. **RAG**: Use Julep's document store to build a system for retrieving and using your own data.
 
 Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
 
@@ -255,34 +254,34 @@ Julep is ideal for applications that require AI use cases beyond simple prompt-r
 
 Think of LangChain and Julep as tools with different focuses within the AI development stack.
 
-LangChain is great for creating sequences of prompts and managing interactions with LLMs. It has a large ecosystem with lots of pre-built integrations, which makes it convenient if you want to get something up and running quickly. LangChain fits well with simple use cases that involve a linear chain of prompts and API calls.
+LangChain is great for creating sequences of prompts and managing interactions with AI models. It has a large ecosystem with lots of pre-built integrations, which makes it convenient if you want to get something up and running quickly. LangChain fits well with simple use cases that involve a linear chain of prompts and API calls.
 
-Julep, on the other hand, is more about building persistent AI agents that can maintain context over long-term interactions. It shines when you need complex workflows that involve multi-step tasks, conditional logic, and integration with various tools or APIs directly within the agent's process. It's designed from the ground up to manage persistent sessions and complex workflows.
+Julep, on the other hand, is more about building persistent AI agents that can remember things over long-term interactions. It shines when you need complex tasks that involve multiple steps, decision-making, and integration with various tools or APIs directly within the agent's process. It's designed from the ground up to manage persistent sessions and complex tasks.
 
 Use Julep if you imagine building a complex AI assistant that needs to:
 
 - Keep track of user interactions over days or weeks.
 - Perform scheduled tasks, like sending daily summaries or monitoring data sources.
 - Make decisions based on prior interactions or stored data.
-- Interact with multiple external services as part of its workflow.
+- Interact with multiple external services as part of its task.
 
 Then Julep provides the infrastructure to support all that without you having to build it from scratch.
 
 ### Different Form Factor
 
-Julep is a **platform** that includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform. In order to build something with Julep, you write a description of the workflow in `YAML`, and then run the workflow in the cloud.
+Julep is a **platform** that includes a language for describing tasks, a server for running those tasks, and an SDK for interacting with the platform. To build something with Julep, you write a description of the task in `YAML`, and then run the task in the cloud.
 
-Julep is built for heavy-lifting, multi-step, and long-running workflows and there's no limit to how complex the workflow can be.
+Julep is built for heavy-lifting, multi-step, and long-running tasks and there's no limit to how complex the task can be.
 
-LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. In order to build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
+LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. To build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
 
 LangChain might be sufficient and quicker to implement for simple use cases that involve a linear chain of prompts and API calls.
 
 ### In Summary
 
-Use LangChain when you need to manage LLM interactions and prompt sequences in a stateless or short-term context.
+Use LangChain when you need to manage AI model interactions and prompt sequences in a stateless or short-term context.
 
-Choose Julep when you need a robust framework for stateful agents with advanced workflow capabilities, persistent sessions, and complex task orchestration.
+Choose Julep when you need a robust framework for stateful agents with advanced task capabilities, persistent sessions, and complex task management.
 
 ## Installation
 
@@ -662,55 +661,137 @@ Tasks are the core of Julep's workflow system. They allow you to define complex,
 
 ### Types of Workflow Steps
 
-Tasks in Julep can include various types of steps:
+Tasks in Julep can include various types of steps, allowing you to create complex and powerful workflows. Here's an overview of the available step types, organized by category:
+
+#### Common Steps
 
 1. **Prompt**: Send a message to the AI model and receive a response.
-   ```python
-   {"prompt": "Analyze the following data: {{data}}"}
+   ```yaml
+   - prompt: "Analyze the following data: {{data}}"
    ```
 
 2. **Tool Call**: Execute an integrated tool or API.
-   ```python
-   {"tool": "web_search", "arguments": {"query": "Latest AI developments"}}
+   ```yaml
+   - tool: web_search
+     arguments:
+       query: "Latest AI developments"
    ```
 
 3. **Evaluate**: Perform calculations or manipulate data.
-   ```python
-   {"evaluate": {"average_score": "sum(scores) / len(scores)"}}
+   ```yaml
+   - evaluate:
+       average_score: "sum(scores) / len(scores)"
    ```
 
-4. **Conditional Logic**: Execute steps based on conditions.
-   ```python
-   {"if": "score > 0.8", "then": [...], "else": [...]}
+4. **Wait for Input**: Pause workflow until input is received.
+   ```yaml
+   - wait_for_input:
+       info:
+         message: "Please provide additional information."
    ```
 
-5. **Loops**: Iterate over data or repeat steps.
-   ```python
-   {"foreach": {"in": "data_list", "do": [...]}}
+5. **Log**: Log a specified value or message.
+   ```yaml
+   - log: "Processing completed for item {{item_id}}"
    ```
 
-| Step Name          | Description                                                                                      | Input                                                |
-|--------------------|--------------------------------------------------------------------------------------------------|------------------------------------------------------|
-| **Prompt**         | Send a message to the AI model and receive a response.                                           | Prompt text or template                              |
-| **Tool Call**      | Execute an integrated tool or API.                                                               | Tool name and arguments                              |
-| **Evaluate**       | Perform calculations or manipulate data.                                                         | Expressions or variables to evaluate                |
-| **Wait for Input** | Pause workflow until input is received.                                                          | Any required user or system input                    |
-| **Log**            | Log a specified value or message.                                                                | Message or value to log                              |
-| **Embed**          | Embed text into a specific format or system.                                                    | Text or content to embed                             |
-| **Search**         | Perform a document search based on a query.                                                     | Search query                                         |
-| **Get**            | Retrieve a value from a key-value store.                                                        | Key identifier                                       |
-| **Set**            | Assign a value to a key in a key-value store.                                                   | Key and value to assign                              |
-| **Parallel**       | Run multiple steps in parallel.                                                                  | List of steps to execute simultaneously              |
-| **Foreach**        | Iterate over a collection and perform steps for each item.                                      | Collection or list to iterate over                   |
-| **MapReduce**      | Map over a collection and reduce the results based on an expression.                            | Collection to map and reduce expressions             |
-| **If Else**        | Conditional execution of steps based on a condition.                                           | Condition to evaluate                                |
-| **Switch**         | Execute steps based on multiple conditions, similar to a switch-case statement.                  | Multiple conditions and corresponding steps          |
-| **Yield**          | Run a subworkflow and await its completion.                                                     | Subworkflow identifier and input data                |
-| **Error**          | Handle errors by specifying an error message.                                                   | Error message or handling instructions               |
-| **Sleep**          | Pause the workflow for a specified duration.                                                    | Duration (seconds, minutes, etc.)                    |
-| **Return**         | Return a value from the workflow.                                                                | Value to return                                       |
+#### Key-Value Steps
 
-For detailed information on each step type and advanced usage, please refer to our [Task Documentation](https://docs.julep.ai/tasks).
+6. **Get**: Retrieve a value from a key-value store.
+   ```yaml
+   - get: "user_preference"
+   ```
+
+7. **Set**: Assign a value to a key in a key-value store.
+   ```yaml
+   - set:
+       user_preference: "dark_mode"
+   ```
+
+#### Iteration Steps
+
+8. **Foreach**: Iterate over a collection and perform steps for each item.
+   ```yaml
+   - foreach:
+       in: "data_list"
+       do:
+         - log: "Processing item {{_}}"
+   ```
+
+9. **Map-Reduce**: Map over a collection and reduce the results.
+   ```yaml
+   - map_reduce:
+       over: "numbers"
+       map:
+         - evaluate:
+             squared: "_ ** 2"
+       reduce: "sum(results)"
+   ```
+
+10. **Parallel**: Run multiple steps in parallel.
+    ```yaml
+    - parallel:
+        - tool: web_search
+          arguments:
+            query: "AI news"
+        - tool: weather_check
+          arguments:
+            location: "New York"
+    ```
+
+#### Conditional Steps
+
+11. **If-Else**: Conditional execution of steps.
+    ```yaml
+    - if: "score > 0.8"
+      then:
+        - log: "High score achieved"
+      else:
+        - log: "Score needs improvement"
+    ```
+
+12. **Switch**: Execute steps based on multiple conditions.
+    ```yaml
+    - switch:
+        - case: "category == 'A'"
+          then:
+            - log: "Category A processing"
+        - case: "category == 'B'"
+          then:
+            - log: "Category B processing"
+        - case: "_"  # Default case
+          then:
+            - log: "Unknown category"
+    ```
+
+#### Other Control Flow
+
+13. **Sleep**: Pause the workflow for a specified duration.
+    ```yaml
+    - sleep:
+        seconds: 30
+    ```
+
+14. **Return**: Return a value from the workflow.
+    ```yaml
+    - return:
+        result: "Task completed successfully"
+    ```
+
+15. **Yield**: Run a subworkflow and await its completion.
+    ```yaml
+    - yield:
+        workflow: "data_processing_subflow"
+        arguments:
+          input_data: "{{raw_data}}"
+    ```
+
+16. **Error**: Handle errors by specifying an error message.
+    ```yaml
+    - error: "Invalid input provided"
+    ```
+
+Each step type serves a specific purpose in building sophisticated AI workflows. This categorization helps in understanding the various control flows and operations available in Julep tasks.
 
 ## Advanced Features
 
@@ -771,6 +852,98 @@ results = client.documents.search(
 ```
 
 For more advanced features and detailed usage, please refer to our [Advanced Features Documentation](https://docs.julep.ai/advanced-features).
+
+## Integrations
+
+Julep supports various integrations that extend the capabilities of your AI agents. Here's a list of available integrations and their supported arguments:
+
+### Brave Search
+
+```yaml
+setup:
+  api_key: string  # The API key for Brave Search
+
+arguments:
+  query: string  # The search query for searching with Brave
+
+output:
+  result: string  # The result of the Brave Search
+```
+
+### BrowserBase
+
+```yaml
+setup:
+  api_key: string       # The API key for BrowserBase
+  project_id: string    # The project ID for BrowserBase
+  session_id: string    # (Optional) The session ID for BrowserBase
+
+arguments:
+  urls: list[string]    # The URLs for loading with BrowserBase
+
+output:
+  documents: list       # The documents loaded from the URLs
+```
+
+### Email
+
+```yaml
+setup:
+  host: string      # The host of the email server
+  port: integer     # The port of the email server
+  user: string      # The username of the email server
+  password: string  # The password of the email server
+
+arguments:
+  to: string        # The email address to send the email to
+  from: string      # The email address to send the email from
+  subject: string   # The subject of the email
+  body: string      # The body of the email
+
+output:
+  success: boolean  # Whether the email was sent successfully
+```
+
+### Spider
+
+```yaml
+setup:
+  spider_api_key: string  # The API key for Spider
+
+arguments:
+  url: string             # The URL for which to fetch data
+  mode: string            # The type of crawlers (default: "scrape")
+  params: dict            # (Optional) The parameters for the Spider API
+
+output:
+  documents: list         # The documents returned from the spider
+```
+
+### Weather
+
+```yaml
+setup:
+  openweathermap_api_key: string  # The API key for OpenWeatherMap
+
+arguments:
+  location: string                # The location for which to fetch weather data
+
+output:
+  result: string                  # The weather data for the specified location
+```
+
+### Wikipedia
+
+```yaml
+arguments:
+  query: string           # The search query string
+  load_max_docs: integer  # Maximum number of documents to load (default: 2)
+
+output:
+  documents: list         # The documents returned from the Wikipedia search
+```
+
+These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).
 
 ## SDK Reference
 
