@@ -1,5 +1,12 @@
 # Customizing Tasks
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This guide covers how to define and customize tasks for agents in Julep.
 
 ## Creating a Basic Task

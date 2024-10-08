@@ -1,5 +1,12 @@
 # Managing Users
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This guide covers how to create, update, and delete users in Julep.
 
 ## Creating a User

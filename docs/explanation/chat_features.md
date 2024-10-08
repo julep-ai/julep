@@ -1,5 +1,12 @@
 # Chat Features in Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 Julep provides a robust chat system with various features for dynamic interaction with agents. Here's an overview of the key components and functionalities:
 
 ## Chat Input

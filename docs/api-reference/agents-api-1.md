@@ -2,6 +2,14 @@
 description: API for creating and modifying Users
 ---
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
+
 # Users
 
 ## List all users

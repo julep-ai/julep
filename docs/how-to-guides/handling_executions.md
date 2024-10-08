@@ -1,5 +1,12 @@
 # Handling Executions
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This guide covers how to manage and monitor task executions in Julep.
 
 ## Starting an Execution
