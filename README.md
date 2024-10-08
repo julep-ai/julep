@@ -791,9 +791,9 @@ client.agents.tools.create(
     name="web_search",
     description="Search the web for information.",
     integration={
-        "provider": "google",
+        "provider": "brave",
         "method": "search",
-        "setup": {"api_key": "your_google_api_key"},
+        "setup": {"api_key": "your_brave_api_key"},
     },
 )
 ```
