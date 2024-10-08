@@ -1,4 +1,4 @@
-<sup>English | [中文翻译](/README-CN.md) | [日本語翻訳](/README-JP.md)</sup>
+<sup>English | [中文翻译](https://github.com/julep-ai/julep/blob/dev/README-CN.md) | [日本語翻訳](https://github.com/julep-ai/julep/blob/dev/README-JP.md)</sup>
 
 <div align="center">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
@@ -57,7 +57,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 > [!NOTE]
 > Get your API key [here](https://dashboard-dev.julep.ai).
->  
+>
 > While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
@@ -113,9 +113,9 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.
 
-Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs. 
+Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs.
 
-While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios. 
+While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios.
 
 It supports:
 - Intricate, multi-step processes
@@ -201,7 +201,7 @@ main:
 - prompt:
     - role: system
       content: >
-        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}. 
+        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
         The summary should be well-structured, informative, and highlight key findings and insights:
         {{_.results}}
   unwrap: true
@@ -217,7 +217,7 @@ main:
 
 > [!TIP]
 > Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.
-> 
+>
 > In this example, Julep will automatically manage parallel executions, retry failed steps, resend API requests, and keep the tasks running reliably until completion.
 
 ## Key Features
@@ -283,13 +283,13 @@ pip install julep
 
 > [!NOTE]
 > Get your API key [here](https://dashboard-dev.julep.ai).
->  
+>
 > While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
 
 > [!TIP]
-> 💻 Are you a _show me the code!™_ kind of person? We have created a ton of cookbooks for you to get started with. **Check out the [cookbooks](/cookbooks)** to browse through examples.
-> 
-> 💡 There's also lots of ideas that you can build on top of Julep. **Check out the [list of ideas](/cookbooks/IDEAS.md)** to get some inspiration.
+> 💻 Are you a _show me the code!™_ kind of person? We have created a ton of cookbooks for you to get started with. **Check out the [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks)** to browse through examples.
+>
+> 💡 There's also lots of ideas that you can build on top of Julep. **Check out the [list of ideas](https://github.com/julep-ai/julep/tree/dev/cookbooks/IDEAS.md)** to get some inspiration.
 
 ## Python Quick Start 🐍
 
@@ -413,7 +413,7 @@ while (message := input("Enter a message: ")) != "quit":
     )
 
     print(response)
-``` 
+```
 
 > [!TIP]
 > You can find the full python example [here](example.py).
@@ -581,7 +581,7 @@ Julep is made up of the following components:
 ### Mental Model
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" /> 
+  <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" />
 </div>
 
 Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
@@ -620,7 +620,7 @@ graph TD
 
     classDef client fill:#9ff,stroke:#333,stroke-width:1px;
     class User client;
-    
+
     classDef core fill:#f9f,stroke:#333,stroke-width:2px;
     class Agent,Tasks,Session core;
 ```
@@ -633,7 +633,7 @@ graph TD
 - **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
 - **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
 
-For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](/docs/julep-concepts.md).
+For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md).
 
 ## Understanding Tasks
 
