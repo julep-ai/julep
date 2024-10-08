@@ -1,5 +1,12 @@
 # Doc Endpoints
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This document provides a reference for all Doc API endpoints in Julep.
 
 ## List Docs for a User

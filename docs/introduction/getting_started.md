@@ -1,5 +1,12 @@
 # Getting Started with Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This guide will help you set up and start using the Julep API.
 
 ## Prerequisites

@@ -1,5 +1,12 @@
 # Metadata Precedence in Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 In Julep, several objects can have `metadata` added to them:
 - Agent
 - User
