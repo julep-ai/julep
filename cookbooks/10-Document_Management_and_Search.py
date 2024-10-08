@@ -10,8 +10,10 @@
 # 7. Execute the document search task
 # 8. Display the search results
 
+# UNDER CONSTRUCTION - NOT WORKING YET
+
 import uuid
-import yaml
+import yaml,time
 from julep import Client
 
 # Global UUID is generated for agent and tasks
@@ -47,6 +49,15 @@ input_schema:
             type: string
           metadata:
             type: object
+                                 
+tools:
+- name: document_create
+  type: system
+  system:
+    resource: agent
+    resource_id: "{{agent_id}}"
+    subresource: doc
+    operation: create                             
 
 main:
 - over: inputs[0].documents
@@ -57,7 +68,7 @@ main:
       metadata: _.metadata
 
 - prompt:
-    role: system
+  - role: system
     content: >-
       You have successfully uploaded and indexed {{len(outputs[0])}} documents.
       Provide a summary of the uploaded documents.
@@ -82,6 +93,15 @@ input_schema:
     filters:
       type: object
 
+tools:
+- name: document_search
+  type: system
+  system:
+    resource: agent
+    resource_id: "{{agent_id}}"
+    subresource: doc
+    operation: search
+                                     
 main:
 - tool: document_search
   arguments:
@@ -109,14 +129,17 @@ search_task = client.tasks.create_or_update(
 # Sample documents
 sample_documents = [
     {
+        "Title": "The Impact of Technology on Society",
         "content": "Artificial Intelligence (AI) is revolutionizing various industries, including healthcare, finance, and transportation.",
         "metadata": {"category": "technology", "author": "John Doe"}
     },
     {
+        "Title": "Climate Change and Global Warming",
         "content": "Climate change is a pressing global issue that requires immediate action from governments, businesses, and individuals.",
         "metadata": {"category": "environment", "author": "Jane Smith"}
     },
     {
+        "Title": "Remote Work and Digital Transformation",
         "content": "The COVID-19 pandemic has accelerated the adoption of remote work and digital technologies across many organizations.",
         "metadata": {"category": "business", "author": "Alice Johnson"}
     }

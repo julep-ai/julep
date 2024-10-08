@@ -12,6 +12,8 @@
 #    d. Integrating external information during the conversation
 # 6. Display the chat history and any relevant metrics
 
+# UNDER CONSTRUCTION - NOT WORKING YET
+
 import uuid
 import yaml
 import os
@@ -170,8 +172,3 @@ def run_chat_session():
 
 # Run the chat session
 run_chat_session()
-
-# Display execution metrics (optional)
-print("\nExecution Metrics:")
-for transition in client.executions.transitions.list(execution_id=execution.id).items:
-    print(f"Step: {transition.type}, Duration: {transition.duration_ms}ms")

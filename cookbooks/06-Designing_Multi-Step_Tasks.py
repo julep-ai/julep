@@ -35,7 +35,6 @@ agent = client.agents.create_or_update(
 client.agents.tools.create(
     agent_id=AGENT_UUID,
     name="web_search",
-    description="Search the web for information.",
     integration={
         "provider": "brave",
         "method": "search",

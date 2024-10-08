@@ -12,7 +12,7 @@
 # 9. Display updated personalized recommendations after preference changes
 
 import uuid
-import yaml
+import yaml, time
 from julep import Client
 
 # Global UUIDs for agent and tasks
@@ -58,15 +58,13 @@ main:
   unwrap: true
 
 - evaluate:
-    user_profile: >-
-      {
-        'username': {{inputs[0].username}},
-        'interests': {{inputs[0].interests}},
-        'bio': '_.split('\n\n')[0]',
-        'content_preferences': '_.split('\n\n')[1]'
-      }
+    username: inputs[0].username
+    interests: inputs[0].interests
+    bio: _.split('\\n')[0]
+    content_preferences: _.split('\\n')[1]
 
-- return: outputs[1].user_profile
+- return: 
+    profile: _
 """)
 
 # Creating the registration task
@@ -117,9 +115,6 @@ main:
       2. [Content ID] - [Content Title] - Reason for recommendation
       3. [Content ID] - [Content Title] - Reason for recommendation
   unwrap: true
-
-- return: _
-
 """)
 
 # Creating the recommendation task
@@ -138,8 +133,10 @@ def register_user(username, interests):
             "interests": interests
         }
     )
+    time.sleep(2)
     result = client.executions.get(execution.id)
-    return result.output
+    user_result = client.executions.transitions.list(execution_id=result.id).items[0].output
+    return user_result
 
 # Function to get personalized recommendations for a user
 def get_recommendations(user_profile):
@@ -158,8 +155,10 @@ def get_recommendations(user_profile):
             "content_list": content_list
         }
     )
+    time.sleep(2)
     result = client.executions.get(execution.id)
-    return result.output
+    recommendation_respose = client.executions.transitions.list(execution_id=result.id).items[0].output
+    return recommendation_respose
 
 
 # Function to update user preferences

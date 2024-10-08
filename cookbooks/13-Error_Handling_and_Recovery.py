@@ -9,6 +9,8 @@
 # 6. Show how to log and report errors
 # 7. Demonstrate graceful degradation when a step fails
 
+# UNDER CONSTRUCTION - NOT WORKING YET
+
 import uuid
 import yaml
 import time
