@@ -4,8 +4,10 @@ if a given error is non-retryable. These are used in conjunction with custom
 Temporal interceptors to prevent unnecessary retries of certain error types.
 """
 
-import asyncio
-
+import beartype
+import beartype.roar
+import box
+import box.exceptions
 import fastapi
 import httpx
 import jinja2
@@ -66,6 +68,24 @@ NON_RETRYABLE_ERROR_TYPES = [
     pydantic.ValidationError,
     requests.exceptions.InvalidURL,
     requests.exceptions.MissingSchema,
+    # Box exceptions
+    box.exceptions.BoxKeyError,
+    box.exceptions.BoxTypeError,
+    box.exceptions.BoxValueError,
+    # Beartype exceptions
+    beartype.roar.BeartypeException,
+    beartype.roar.BeartypeDecorException,
+    beartype.roar.BeartypeDecorHintException,
+    beartype.roar.BeartypeDecorHintNonpepException,
+    beartype.roar.BeartypeDecorHintPepException,
+    beartype.roar.BeartypeDecorHintPepUnsupportedException,
+    beartype.roar.BeartypeDecorHintTypeException,
+    beartype.roar.BeartypeDecorParamException,
+    beartype.roar.BeartypeDecorParamNameException,
+    beartype.roar.BeartypeCallHintParamViolation,
+    beartype.roar.BeartypeCallHintReturnViolation,
+    beartype.roar.BeartypeDecorHintParamDefaultViolation,
+    beartype.roar.BeartypeDoorHintViolation,
 ]
 
 
