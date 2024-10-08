@@ -15,6 +15,7 @@ import jsonschema.exceptions
 import pydantic
 import requests
 import temporalio.exceptions
+import asyncio
 
 # List of error types that should not be retried
 NON_RETRYABLE_ERROR_TYPES = [
