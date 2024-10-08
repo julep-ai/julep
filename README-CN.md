@@ -596,9 +596,9 @@ client.agents.tools.create(
     name="web_search",
     description="搜索网络以获取信息。",
     integration={
-        "provider": "google",
+        "provider": "brave",
         "method": "search",
-        "setup": {"api_key": "your_google_api_key"},
+        "setup": {"api_key": "your_brave_api_key"},
     },
 )
 ```
@@ -617,7 +617,12 @@ session = client.sessions.create(
 # 在同一会话中继续对话
 response = client.sessions.chat(
     session_id=session.id,
-    message="继续我们之前的对话。"
+    messages=[
+        {
+            "role": "user",
+            "content": "继续我们之前的对话。"
+        }
+    ]
 )
 ```
 
@@ -627,15 +632,16 @@ response = client.sessions.chat(
 
 ```python
 # 上传文档
-document = client.documents.create(
-    file="path/to/document.pdf",
+document = client.agents.docs.create(
+    title="AI advancements",
+    content="AI is changing the world...",
     metadata={"category": "research_paper"}
 )
 
 # 搜索文档
-results = client.documents.search(
-    query="AI 进展",
-    filter={"category": "research_paper"}
+results = client.agents.docs.search(
+    text="AI advancements",
+    metadata_filter={"category": "research_paper"}
 )
 ```
 

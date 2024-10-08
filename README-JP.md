@@ -600,9 +600,9 @@ client.agents.tools.create(
     name="web_search",
     description="Search the web for information.",
     integration={
-        "provider": "google",
+        "provider": "brave",
         "method": "search",
-        "setup": {"api_key": "your_google_api_key"},
+        "setup": {"api_key": "your_brave_api_key"},
     },
 )
 ```
@@ -614,14 +614,19 @@ Julepは、持続的なインタラクションのための強力なセッショ
 ```python
 session = client.sessions.create(
     agent_id=agent.id,
-    user_id="user123",
+    user_id=user.id,
     context_overflow="adaptive"
 )
 
 # 同じセッションで会話を続ける
 response = client.sessions.chat(
     session_id=session.id,
-    message="Follow up on our previous conversation."
+    messages=[
+      {
+        "role": "user",
+        "content": "Follow up on our previous conversation."
+      }
+    ]
 )
 ```
 
@@ -631,15 +636,16 @@ response = client.sessions.chat(
 
 ```python
 # ドキュメントをアップロードする
-document = client.documents.create(
-    file="path/to/document.pdf",
+document = client.agents.docs.create(
+    title="AI advancements",
+    content="AI is changing the world...",
     metadata={"category": "research_paper"}
 )
 
 # ドキュメントを検索する
-results = client.documents.search(
-    query="AI advancements",
-    filter={"category": "research_paper"}
+results = client.agents.docs.search(
+    text="AI advancements",
+    metadata_filter={"category": "research_paper"}
 )
 ```
 
