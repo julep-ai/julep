@@ -97,6 +97,12 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! ðŸ—“ï¸
   - [Managing Sessions and Users](#managing-sessions-and-users)
   - [Document Integration and Search](#document-integration-and-search)
 - [Integrations](#integrations)
+  - [Brave Search](#brave-search)
+  - [BrowserBase](#browserbase)
+  - [Email](#email)
+  - [Spider](#spider)
+  - [Weather](#weather)
+  - [Wikipedia](#wikipedia)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
 
