@@ -31,7 +31,7 @@ T = TypeVar("T")
         and "Developer does not exist" in str(e): lambda *_: HTTPException(
             detail="The specified developer does not exist.",
             status_code=403,
-        ),        
+        ),
         lambda e: isinstance(e, QueryException)
         and "Developer does not own resource"
         in e.resp["display"]: lambda *_: HTTPException(
