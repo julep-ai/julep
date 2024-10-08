@@ -294,15 +294,21 @@ def rewrap_exceptions(
     ],
     /,
 ):
+    """
+    A decorator to catch and transform exceptions using a provided mapping.
+    The mapping defines which exceptions to catch and how to re-wrap them
+    with more descriptive error messages for better debugging.
+    """
+
     def decorator(func: Callable[P, T]):
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            nonlocal mapping
-
             try:
+                # Attempt to run the function
                 result: T = func(*args, **kwargs)
 
             except BaseException as error:
+                # Iterate over the provided exception mapping
                 for check, transform in mapping.items():
                     should_catch = (
                         isinstance(error, check)
@@ -311,23 +317,30 @@ def rewrap_exceptions(
                     )
 
                     if should_catch:
+                        # Transform the error into a more descriptive version
                         new_error = (
-                            transform(str(error))
+                            transform(str(error))  # Capture the error message
                             if isinstance(transform, type)
                             else transform(error)
                         )
 
+                        # Optionally, add more context to the error
+                        new_error_message = (
+                            f"Error in {func.__name__}: {new_error}. "
+                            f"Potential cause: {str(error)}. "
+                            "Please check input parameters or external resources."
+                        )
+
+                        # Set the cause for traceback clarity
                         setattr(new_error, "__cause__", error)
 
-                        raise new_error from error
+                        # Raise the new transformed error with context
+                        raise new_error(new_error_message) from error
 
-                raise
+                # If no custom transformation, raise the original error
+                raise error
 
             return result
-
-        # Set the wrapped function as an attribute of the wrapper,
-        # forwards the __wrapped__ attribute if it exists.
-        setattr(wrapper, "__wrapped__", getattr(func, "__wrapped__", func))
 
         return wrapper
 
