@@ -22,6 +22,7 @@ def create_worker(client: Client) -> Any:
     from ..activities.mem_rating import mem_rating
     from ..activities.summarization import summarization
     from ..activities.truncation import truncation
+    from ..common.interceptors import CustomInterceptor
     from ..env import (
         temporal_task_queue,
     )
@@ -61,6 +62,7 @@ def create_worker(client: Client) -> Any:
             summarization,
             truncation,
         ],
+        interceptors=[CustomInterceptor()],
     )
 
     return worker
