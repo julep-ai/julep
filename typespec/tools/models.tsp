@@ -246,7 +246,6 @@ model CreateToolRequest {
 model UpdateToolRequest {
     ...Tool;
 }
-
 /** Payload for patching a tool */
 model PatchToolRequest is UpdateToolRequest {}
 
