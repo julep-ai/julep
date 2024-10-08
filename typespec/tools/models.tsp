@@ -8,6 +8,23 @@ namespace Tools;
 // TOOL MODELS
 //
 
+// TODO: Split these into different files
+
+/** A valid HTTP method */
+alias httpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "CONNECT" | "TRACE";
+
+/** Integration provider name */
+alias integrationProvider = (
+    | "dummy"
+    | "hacker_news"
+    | "weather"
+    | "wikipedia"
+    | "spider"
+    | "brave"
+    | "browserbase"
+    | "email"
+);
+
 enum ToolType {
     /** A tool that emulates a function call */
     function,
@@ -34,13 +51,15 @@ model FunctionDef {
     /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
     name?: null = null;
 
-    /** Description of the function  */
-    description?: string;
+    /** DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons. */
+    description?: null = null;
 
     /** The parameters the function accepts */
     parameters?: FunctionParameters;
 
 }
+
+// TODO: Add granular definitions for each integration
 
 /** Integration definition */
 model IntegrationDef {
@@ -57,10 +76,57 @@ model IntegrationDef {
     arguments?: FunctionParameters;
 }
 
+//
+// SYSTEM TOOL MODELS
+//
+
+alias resourceType = (
+    | "agent"
+    | "user"
+    | "task"
+    | "execution"
+    | "doc"
+    | "session"
+    | "job"
+);
+
+alias subresourceType = (
+    | "tool"
+    | "doc"
+    | "execution"
+    | "transition"
+);
+
+alias operationType = (
+    | "create"
+    | "update"
+    | "patch"
+    | "create_or_update"
+    | "embed"
+    | "change_status"
+    | "search"
+    | "chat"
+    | "history"
+    | "delete"
+    | "get"
+    | "list"
+);
+
+// TODO: Add granular definitions for each system call
+
 /** System definition */
 model SystemDef {
-    /** The name of the system call */
-    call: string;
+    /** Resource is the name of the resource to use */
+    resource: resourceType;
+
+    /** Operation is the name of the operation to perform */
+    operation: operationType;
+
+    /** Resource id (if applicable) */
+    resource_id?: uuid;
+
+    /** Sub-resource type (if applicable) */
+    subresource?: subresourceType;
 
     /** The arguments to pre-apply to the system call */
     arguments?: FunctionParameters;
@@ -81,7 +147,7 @@ model ApiCallDef {
     content?: string;
 
     /** The data to send as form data */
-    data?: Record<string>;
+    data?: Record<unknown>;
 
     /** JSON body to send with the request */
     json?: Record<unknown>;
@@ -94,6 +160,9 @@ model ApiCallDef {
 
     /** Follow redirects */
     follow_redirects?: boolean;
+
+    /** The timeout for the request */
+    timeout?: uint8;
 }
 
 

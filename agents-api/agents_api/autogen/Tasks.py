@@ -9,12 +9,6 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 from .Chat import ChatSettings
-from .Docs import (
-    EmbedQueryRequest,
-    HybridDocSearchRequest,
-    TextOnlyDocSearchRequest,
-    VectorDocSearchRequest,
-)
 from .Tools import CreateToolRequest, NamedToolChoice
 
 
@@ -33,8 +27,6 @@ class CaseThen(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
         | ReturnStep
         | SleepStep
@@ -61,8 +53,6 @@ class CaseThenUpdateItem(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
         | ReturnStep
         | SleepStep
@@ -128,8 +118,6 @@ class CreateTaskRequest(BaseModel):
             | GetStep
             | SetStep
             | LogStep
-            | EmbedStep
-            | SearchStep
             | YieldStep
             | ReturnStep
             | SleepStep
@@ -159,22 +147,6 @@ class CreateTaskRequest(BaseModel):
     Whether to inherit tools from the parent agent or not. Defaults to true.
     """
     metadata: dict[str, Any] | None = None
-
-
-class EmbedStep(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    kind_: Annotated[
-        Literal["embed"], Field("embed", json_schema_extra={"readOnly": True})
-    ]
-    """
-    The kind of step
-    """
-    embed: EmbedQueryRequest
-    """
-    The text to embed
-    """
 
 
 class ErrorWorkflowStep(BaseModel):
@@ -225,8 +197,6 @@ class ForeachDo(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
     )
     """
@@ -250,8 +220,6 @@ class ForeachDoUpdateItem(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
     )
     """
@@ -324,8 +292,6 @@ class IfElseWorkflowStep(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
         | ReturnStep
         | SleepStep
@@ -342,8 +308,6 @@ class IfElseWorkflowStep(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
         | ReturnStep
         | SleepStep
@@ -376,8 +340,6 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
         | ReturnStep
         | SleepStep
@@ -394,8 +356,6 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
         | ReturnStep
         | SleepStep
@@ -462,8 +422,6 @@ class Main(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
     )
     """
@@ -504,8 +462,6 @@ class MainModel(BaseModel):
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | YieldStep
     )
     """
@@ -545,8 +501,6 @@ class ParallelStep(BaseModel):
             | GetStep
             | SetStep
             | LogStep
-            | EmbedStep
-            | SearchStep
             | YieldStep
         ],
         Field(max_length=100),
@@ -572,8 +526,6 @@ class ParallelStepUpdateItem(BaseModel):
             | GetStep
             | SetStep
             | LogStep
-            | EmbedStep
-            | SearchStep
             | YieldStep
         ],
         Field(max_length=100),
@@ -600,8 +552,6 @@ class PatchTaskRequest(BaseModel):
             | GetStep
             | SetStep
             | LogStep
-            | EmbedStep
-            | SearchStep
             | YieldStep
             | ReturnStep
             | SleepStep
@@ -762,22 +712,6 @@ class ReturnStep(BaseModel):
     """
 
 
-class SearchStep(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    kind_: Annotated[
-        Literal["search"], Field("search", json_schema_extra={"readOnly": True})
-    ]
-    """
-    The kind of step
-    """
-    search: VectorDocSearchRequest | TextOnlyDocSearchRequest | HybridDocSearchRequest
-    """
-    The search query
-    """
-
-
 class SetStep(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -878,8 +812,6 @@ class Task(BaseModel):
             | GetStep
             | SetStep
             | LogStep
-            | EmbedStep
-            | SearchStep
             | YieldStep
             | ReturnStep
             | SleepStep
@@ -1013,8 +945,6 @@ class UpdateTaskRequest(BaseModel):
             | GetStep
             | SetStep
             | LogStep
-            | EmbedStep
-            | SearchStep
             | YieldStep
             | ReturnStep
             | SleepStep

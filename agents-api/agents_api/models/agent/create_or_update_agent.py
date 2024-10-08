@@ -136,6 +136,7 @@ def create_or_update_agent(
             input[_agent_id, developer_id, model, name, about, metadata, instructions, updated_at],
             *agents{
                 agent_id,
+                developer_id,
                 created_at,
             },
             agent_id = to_uuid(_agent_id),
@@ -144,6 +145,7 @@ def create_or_update_agent(
             input[_agent_id, developer_id, model, name, about, metadata, instructions, updated_at],
             not *agents{
                 agent_id,
+                developer_id,
             }, created_at = now(),
             agent_id = to_uuid(_agent_id),
 

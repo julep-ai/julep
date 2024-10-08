@@ -12,7 +12,6 @@ from pydantic import (
     computed_field,
     field_validator,
     model_validator,
-    validator,
 )
 
 from ..common.utils.datetime import utcnow
@@ -401,8 +400,6 @@ WorkflowStep = (
     | GetStep
     | SetStep
     | LogStep
-    | EmbedStep
-    | SearchStep
     | ReturnStep
     | SleepStep
     | ErrorWorkflowStep
@@ -475,8 +472,6 @@ WorkflowType = RootModel[
         | GetStep
         | SetStep
         | LogStep
-        | EmbedStep
-        | SearchStep
         | ReturnStep
         | SleepStep
         | ErrorWorkflowStep

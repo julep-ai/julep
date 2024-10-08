@@ -1,10 +1,13 @@
 name: Typecheck agents-api
 run-name: ${{ github.actor }} is typechecking the code
 
-# TODO: Fix CI github actions
-# SCRUM-26
-
-on: [pull_request]
+on:
+  pull_request:
+    paths:
+      - 'agents-api/**'
+  push:
+    paths:
+      - 'agents-api/**'
 
 jobs:
   Typecheck:

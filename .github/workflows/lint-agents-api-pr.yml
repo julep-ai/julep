@@ -1,10 +1,13 @@
-name: Lint and typecheck agents-api
-run-name: ${{ github.actor }} is linting and typechecking the code
+name: Lint agents-api
+run-name: ${{ github.actor }} is linting the code
 
-# TODO: Fix CI github actions
-# SCRUM-26
-
-on: [pull_request]
+on:
+  pull_request:
+    paths:
+      - 'agents-api/**'
+  push:
+    paths:
+      - 'agents-api/**'
 
 jobs:
   Lint-And-Format:

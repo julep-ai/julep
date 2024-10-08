@@ -36,7 +36,16 @@ http:
       middlewares:
         - agents-api-strip-prefix-api
       service: service-agents-api
-      priority: 2
+      priority: 2 
+      
+    agents-api-redirect-to-docs:
+      entryPoints:
+        - web
+      rule: Path(`/`)
+      middlewares:
+        - agents-api-redirect-to-docs
+      service: service-agents-api
+      priority: 3
 
   middlewares:
     corsHeaders:
@@ -45,6 +54,11 @@ http:
         accessControlAllowHeaders: "*"
         accessControlAllowOriginList: "*"
         addVaryHeader: true
+
+    agents-api-redirect-to-docs:
+      redirectRegex:
+        regex: "^(.*)$"
+        replacement: "/api/docs"
 
     agents-api-add-headers:
       headers:
