@@ -113,7 +113,14 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 Julep is a platform for creating AI agents that remember past interactions and can perform complex tasks. It offers long-term memory and manages multi-step processes.
 
-Julep lets you define multi-step tasks that can include decision-making, loops, parallel processing, and built-in integration with hundreds of external tools and APIs. Typically, AI applications tend to be simple and have linear chains of a handful of prompts and API calls without much branching or decision-making.
+Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs. 
+
+While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios. 
+
+It supports:
+- Intricate, multi-step processes
+- Dynamic decision-making
+- Parallel execution
 
 > [!TIP]
 > Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.
@@ -124,13 +131,10 @@ Imagine a Research AI agent that can do the following:
   1. Take a topic,
   2. Come up with 100 search queries for that topic,
   3. Perform those web searches in parallel,
-  4. Collect and compile the results, 
-  5. Come up with 5 follow-up questions,
-  6. Repeat the process with new queries,
-  7. Summarize the results,
-  8. Send the summary to Discord
+  4. Summarize the results,
+  5. Send the summary to Discord
 
-In Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. Here's a working example:
+In Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger. Here's a working example:
 
 ```yaml
 name: Research Agent
@@ -187,37 +191,11 @@ main:
     tool: web_search
     arguments:
       query: "_"
-    on_error:
   parallelism: 100
 
 # Collect the results from the web search
 - evaluate:
     results: "'\n'.join([item.result for item in _])"
-
-# Generate follow-up questions based on the results
-- prompt:
-    - role: system
-      content: >-
-        Based on the following research results, generate 5 follow-up questions that would deepen our understanding of {{inputs[0].topic}}:
-        {{_.results}}
-
-        Write one question per line.
-  unwrap: true
-
-- evaluate:
-    follow_up_queries: "_.split('\n')"
-
-# Run the web search in parallel for each follow-up query
-- over: "_.follow_up_queries"
-  map:
-    tool: web_search
-    arguments:
-      query: "_"
-
-  parallelism: 5
-
-- evaluate:
-    all_results: "outputs[3].results + '\n'.join([item.result for item in _])"
 
 # Summarize the results
 - prompt:
@@ -225,7 +203,7 @@ main:
       content: >
         You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}. 
         The summary should be well-structured, informative, and highlight key findings and insights:
-        {{_.all_results}}
+        {{_.results}}
   unwrap: true
 
 # Send the summary to Discord
@@ -244,13 +222,13 @@ main:
 
 ## Key Features
 
-1. **Persistent AI Agents**: Remember context and information over long-term interactions.
-2. **Stateful Sessions**: Keep track of past interactions for personalized responses.
-3. **Multi-Step Tasks**: Build complex, multi-step processes with loops and decision-making.
-4. **Task Management**: Handle long-running tasks that can run indefinitely.
-5. **Built-in Tools**: Use built-in tools and external APIs in your tasks.
-6. **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.
-7. **RAG**: Use Julep's document store to build a system for retrieving and using your own data.
+1. 🧠 **Persistent AI Agents**: Remember context and information over long-term interactions.
+2. 💾 **Stateful Sessions**: Keep track of past interactions for personalized responses.
+3. 🔄 **Multi-Step Tasks**: Build complex, multi-step processes with loops and decision-making.
+4. ⏳ **Task Management**: Handle long-running tasks that can run indefinitely.
+5. 🛠️ **Built-in Tools**: Use built-in tools and external APIs in your tasks.
+6. 🔧 **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.
+7. 📚 **RAG**: Use Julep's document store to build a system for retrieving and using your own data.
 
 Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
 
