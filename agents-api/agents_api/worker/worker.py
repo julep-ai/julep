@@ -22,6 +22,7 @@ def create_worker(client: Client) -> Any:
     from ..activities.mem_rating import mem_rating
     from ..activities.summarization import summarization
     from ..activities.truncation import truncation
+    from ..common.interceptors import CustomInterceptor
     from ..env import (
         temporal_task_queue,
     )
@@ -32,7 +33,6 @@ def create_worker(client: Client) -> Any:
     from ..workflows.summarization import SummarizationWorkflow
     from ..workflows.task_execution import TaskExecutionWorkflow
     from ..workflows.truncation import TruncationWorkflow
-    from ..common.interceptors import CustomInterceptor
 
     task_activity_names, task_activities = zip(*getmembers(task_steps, isfunction))
 
@@ -62,7 +62,7 @@ def create_worker(client: Client) -> Any:
             summarization,
             truncation,
         ],
-        interceptors=[CustomInterceptor()]
+        interceptors=[CustomInterceptor()],
     )
 
     return worker

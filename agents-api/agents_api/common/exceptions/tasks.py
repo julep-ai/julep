@@ -4,14 +4,15 @@ if a given error is non-retryable. These are used in conjunction with custom
 Temporal interceptors to prevent unnecessary retries of certain error types.
 """
 
-import temporalio.exceptions
+import asyncio
+
 import fastapi
 import httpx
-import asyncio
 import jinja2
 import jsonschema.exceptions
 import pydantic
 import requests
+import temporalio.exceptions
 
 # List of error types that should not be retried
 NON_RETRYABLE_ERROR_TYPES = [
