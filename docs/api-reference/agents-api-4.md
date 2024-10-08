@@ -2,6 +2,13 @@
 description: API for creating and modifying docs
 ---
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 # Docs
 
 ## Get all docs (for an agent or user)

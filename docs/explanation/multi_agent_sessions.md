@@ -1,5 +1,12 @@
 # Multi-Agent Sessions in Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 Julep supports different types of sessions based on the number of agents and users involved. This flexibility allows for complex interactions and use cases.
 
 ## Types of Sessions
