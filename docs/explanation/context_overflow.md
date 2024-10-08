@@ -1,5 +1,12 @@
 # Context Overflow Handling in Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 Julep provides mechanisms to handle scenarios where the context size grows beyond the `token_budget` or the model's input limit. The behavior is determined by the `context_overflow` setting:
 
 1. `null` (default): 

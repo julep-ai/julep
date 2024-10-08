@@ -1,5 +1,12 @@
 # Integrating Tools
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This tutorial will show you how to integrate tools with your Julep agents.
 
 ## Creating a User-Defined Function Tool

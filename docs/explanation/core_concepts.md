@@ -1,5 +1,12 @@
 # Core Concepts in Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 Julep is a powerful backend system for managing agent execution. It provides several key components that work together to create flexible and intelligent applications. Here are the core concepts:
 
 ## Agent
