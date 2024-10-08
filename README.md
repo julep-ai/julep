@@ -791,9 +791,9 @@ client.agents.tools.create(
     name="web_search",
     description="Search the web for information.",
     integration={
-        "provider": "google",
+        "provider": "brave",
         "method": "search",
-        "setup": {"api_key": "your_google_api_key"},
+        "setup": {"api_key": "your_brave_api_key"},
     },
 )
 ```
@@ -805,14 +805,19 @@ Julep provides robust session management for persistent interactions:
 ```python
 session = client.sessions.create(
     agent_id=agent.id,
-    user_id="user123",
+    user_id=user.id,
     context_overflow="adaptive"
 )
 
 # Continue conversation in the same session
 response = client.sessions.chat(
     session_id=session.id,
-    message="Follow up on our previous conversation."
+    messages=[
+      {
+        "role": "user",
+        "content": "Follow up on the previous conversation."
+      }
+    ]
 )
 ```
 
@@ -822,15 +827,15 @@ Easily manage and search through documents for your agents:
 
 ```python
 # Upload a document
-document = client.documents.create(
+document = client.agents.docs.create(
     title="AI advancements",
     content="AI is changing the world...",
     metadata={"category": "research_paper"}
 )
 
 # Search documents
-results = client.documents.search(
-    query="AI advancements",
+results = client.agents.docs.search(
+    text="AI advancements",
     metadata_filter={"category": "research_paper"}
 )
 ```
