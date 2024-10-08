@@ -37,26 +37,30 @@ enum ToolType {
 
     /** A tool that makes an API call */
     api_call,
+
+    /** Custom tool for future extensibility */
+    custom,
 }
 
-/** The parameters the functions accepts, described as a JSON Schema object. */
-alias FunctionParameters = Record<unknown>;
+/** The parameters the functions accepts, described as a JSON Schema object with validation. */
+alias FunctionParameters = Record<string, { type: string, required?: boolean, default?: unknown }>;
 
+/** Output of the tool */
 alias ToolOutput = Record<unknown>;
 
+/** Choice options for tools */
 alias ToolChoiceOption = "auto" | "none" | NamedToolChoice;
 
 /** Function definition */
 model FunctionDef {
-    /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
+    /** DO NOT USE: This will be overridden by the tool name. Here only for compatibility reasons. */
     name?: null = null;
 
-    /** DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons. */
+    /** DO NOT USE: This will be overridden by the tool description. Here only for compatibility reasons. */
     description?: null = null;
 
     /** The parameters the function accepts */
     parameters?: FunctionParameters;
-
 }
 
 // TODO: Add granular definitions for each integration
@@ -112,9 +116,15 @@ alias operationType = (
     | "list"
 );
 
-// TODO: Add granular definitions for each system call
+/** More granular system call for creating a user */
+model CreateUserSystemDef extends SystemDef {
+    resource: "user";
+    operation: "create";
+    username: string;
+    email: string;
+}
 
-/** System definition */
+/** General system call definition */
 model SystemDef {
     /** Resource is the name of the resource to use */
     resource: resourceType;
@@ -132,7 +142,7 @@ model SystemDef {
     arguments?: FunctionParameters;
 }
 
-/** API call definition */
+/** API call definition with retries and pagination support */
 model ApiCallDef {
     /** The HTTP method to use */
     method: httpMethod;
@@ -163,9 +173,19 @@ model ApiCallDef {
 
     /** The timeout for the request */
     timeout?: uint8;
+
+    /** Number of retry attempts */
+    retries?: uint8;
+
+    /** Max requests per second */
+    rate_limit?: uint8;
+
+    /** Pagination support */
+    page_size?: uint8;
+    page_number?: uint8;
 }
 
-
+/** General tool definition with logging */
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
@@ -184,6 +204,13 @@ model Tool {
 
     /** The API call to make */
     api_call?: ApiCallDef;
+
+    /** Log of actions performed by the tool */
+    log?: {
+        user: string;
+        action_time: datetime;
+        action_details: string;
+    };
 
     ...HasTimestamps;
     ...HasId;
