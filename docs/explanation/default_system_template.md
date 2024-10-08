@@ -1,5 +1,12 @@
 # Default System Template in Julep
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 Julep uses a default system template for sessions when a custom one is not provided. This template is written in Jinja2 and incorporates various elements from the agent, user, and session context. Here's a breakdown of the template:
 
 ```jinja

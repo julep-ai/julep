@@ -1,29 +1,10 @@
-import { Julep } from '@julep/sdk';
-import yaml from 'js-yaml';
-import readline from 'readline';
-
-// Add these type declarations at the top of the file
-declare module '@julep/sdk';
-declare module 'js-yaml';
+const { Julep } = require('@julep/sdk');
+const yaml = require('js-yaml');
+const readline = require('readline');
 
 const client = new Julep({ apiKey: 'your_julep_api_key' });
 
-interface Agent {
-  id: string;
-  // Add other properties as needed
-}
-
-interface Task {
-  id: string;
-  // Add other properties as needed
-}
-
-interface Execution {
-  id: string;
-  // Add other properties as needed
-}
-
-async function createAgent(): Promise<Agent> {
+async function createAgent() {
   const agent = await client.agents.create({
     name: "Storytelling Agent",
     model: "gpt-4",
@@ -92,12 +73,12 @@ main:
       comic_panels: outputs[2].map(output => output.image.url)
 `;
 
-async function createTask(agent: Agent): Promise<Task> {
+async function createTask(agent) {
   const task = await client.tasks.create(agent.id, yaml.load(taskYaml));
   return task;
 }
 
-async function executeTask(task: Task): Promise<Execution> {
+async function executeTask(task) {
   const execution = await client.executions.create(task.id, {
     input: { idea: "A cat who learns to fly" }
   });
@@ -112,7 +93,7 @@ async function executeTask(task: Task): Promise<Execution> {
   return result;
 }
 
-async function chatWithAgent(agent: Agent): Promise<void> {
+async function chatWithAgent(agent) {
   const session = await client.sessions.create({ agent_id: agent.id });
 
   // 💬 Send messages to the agent
