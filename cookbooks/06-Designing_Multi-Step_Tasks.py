@@ -70,7 +70,7 @@ main:
 
 # Step 2: Tool Call - Web search for each question
 - foreach:
-    in: "_.split('\n')"
+    in: _.split('\\n')
     do:
       tool: web_search
       arguments:
