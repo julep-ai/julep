@@ -65,6 +65,7 @@ main:
     tool: document_upload
     arguments:
       agent_id: "'{agent.id}'"
+      title: _.title
       content: _.content
       metadata: _.metadata
 
@@ -105,8 +106,8 @@ main:
 - tool: document_search
   arguments:
     agent_id: "'{agent.id}'"
-    query: inputs[0].query
-    filters: inputs[0].filters
+    text: inputs[0].query
+    metadata_filters: inputs[0].filters
 
 - prompt:
   - role: system
