@@ -1,48 +1,44 @@
-# agents-api
+## agents-api Overview
 
-## Overview
+The `agents-api` project forms the foundation of an agent management system, defining the structure and API capabilities for managing agents. It supports essential operations such as creating, updating, listing, and deleting agents, as well as managing associated documents, tools, and tasks. 
 
-The `agents-api` project serves as the foundation of the agent management system, defining the structure and capabilities of the API that manages agents. It includes operations such as creating, updating, listing, and deleting agents, as well as managing documents and tools associated with these agents.
+The system is modular, containing several key components that interact with a CozoDB database, perform CRUD operations, and handle tasks like memory management and external service integration.
 
 ## Modules
 
-### Models
+### 1. **Models**
+   - **Purpose**: Encapsulates all database interactions with CozoDB, providing structured CRUD operations for various entities.
+   - **Entities**: Agents, developers, documents, entries, memories, sessions, etc.
 
-The `models` module encapsulates all data interactions with the CozoDB database, providing a structured way to perform CRUD operations and other specific data manipulations across various entities.
+### 2. **Routers**
+   - **Purpose**: Handles HTTP requests and directs them to the appropriate handler functions for operations related to agents, documents, etc.
 
-### Routers
+### 3. **Dependencies**
+   - **Purpose**: Houses essential components such as authentication, developer identification, and custom exception handling required for the API to function.
 
-The `routers` module handles HTTP routing for different parts of the application, directing incoming HTTP requests to the appropriate handler functions.
+### 4. **Common Utilities**
+   - **Purpose**: Provides utility functions for interacting with the Cozo API client, handling dates, time, and custom JSON operations.
 
-### Dependencies
+### 5. **Activities**
+   - **Purpose**: Facilitates memory management, relationship summarization, and generating insights from dialogues with agents.
 
-This module contains components crucial for the operation of the agents-api, including authentication, developer identification, and custom exception handling.
+### 6. **Clients**
+   - **Purpose**: Contains classes and functions to interface with external services and APIs, abstracting external service details from the core application logic.
 
-### Common Utilities
+### 7. **Workers**
+   - **Purpose**: Manages background tasks and enhances performance by offloading heavy tasks such as agent task executions.
 
-The `utils` module offers a collection of utility functions designed to support various aspects of the application, including interactions with the Cozo API client, date and time operations, and custom JSON utilities.
 
-### Activities
+## Getting Started with Development
 
-The `activities` module facilitates various activities related to agent interactions, such as memory management, generating insights from dialogues, and summarizing relationships.
+1. **Clone the Repository**:
+   - Retrieve the source code to your local environment.
+3. **Install Dependencies**:
+   - Run `npm install` or the relevant package manager to install the necessary modules.
+5. **Run the Application**:
+   - Use your development server (e.g., FastAPI or Node) to run the API for testing and development.
 
-### Clients
-
-The `clients` module contains client classes and functions for interacting with various external services and APIs, providing a simplified interface for the rest of the application.
-
-### Workers
-
-This module is responsible for handling background tasks and jobs for the Agents API application, enhancing the application's performance and scalability.
-
-## Getting Started
-
-To set up the project for development:
-
-1. Clone the repository.
-2. Install dependencies.
-3. Run the application.
-
-This guide provides a brief overview for new contributors to get started with the project development.
+This serves as a concise overview for developers to understand the structure and operations of the `agents-api`.
 
 ## Schema
 
