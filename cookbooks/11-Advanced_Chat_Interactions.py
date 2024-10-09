@@ -39,6 +39,17 @@ agent = client.agents.create_or_update(
     model="gpt-4-turbo",
 )
 
+# Add a web search tool to the agent
+client.agents.tools.create(
+    agent_id=AGENT_UUID,
+    name="web_search",
+    integration={
+        "provider": "brave",
+        "method": "search",
+        "setup": {"api_key": "YOUR_BRAVE_API_KEY"},
+    },
+)
+
 # Defining a task for handling complex conversations
 chat_task_def = yaml.safe_load("""
 name: Advanced Chat Interaction

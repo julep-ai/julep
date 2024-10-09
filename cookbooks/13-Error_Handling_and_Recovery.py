@@ -75,11 +75,9 @@ tools:
           type: string
 
 main:
-- evaluate:
-    value: inputs[0].operation
-                          
+
 - switch:
-    case: "'divide'"
+    case: "inputs[0].operation == 'divide'"
       tool: divide
       arguments:
         divisor: inputs[0].value
@@ -89,7 +87,7 @@ main:
           delay: 2
         fallback:
           return: "Error: Division by zero or invalid input"
-    case: "'api_call'"
+    case: "inputs[0].operation == 'api_call'"
         tool: api_call
         arguments:
           endpoint: "/status/{{inputs[0].value}}"
@@ -99,9 +97,9 @@ main:
             delay: 5
           fallback:
             return: "Error: API call failed after multiple attempts"
-      case: "'process_data'"
+      case: "inputs[0].operation == 'process_data'"
         evaluate:
-            data: "'Sample data: ' + str(inputs[0].value)"
+          data: "'Sample data: ' + str(inputs[0].value)"
         tool: process_data
         arguments:
           data: _.data
