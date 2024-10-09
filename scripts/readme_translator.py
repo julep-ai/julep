@@ -53,7 +53,7 @@ def save_translated_readme(translated_content: str, lang: str) -> None:
     """
     Save the translated README content to a file.
     """
-    filename = f"README_{lang.split('-')[-1].upper()}.md"
+    filename = f"README-{lang.split('-')[-1].upper()}.md"
     with open(filename, "w", encoding='utf-8') as file:
         file.write(translated_content)
 
