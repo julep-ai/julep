@@ -13,5 +13,9 @@ services:
     volumes:
       - ./prometheus_data/prometheus.yml:/etc/prometheus/prometheus.yml
     
+    depends_on:
+      agents-api-multi-tenant:
+        condition: service_started
+    
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
