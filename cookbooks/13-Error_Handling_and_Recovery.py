@@ -75,45 +75,47 @@ tools:
           type: string
 
 main:
-- switch:
+- evaluate:
     value: inputs[0].operation
-    cases:
-      divide:
-        - tool: divide
-          arguments:
-            divisor: inputs[0].value
-          on_error:
-            retry:
-              max_attempts: 3
-              delay: 2
-            fallback:
-              return: "Error: Division by zero or invalid input"
-      api_call:
-        - tool: api_call
-          arguments:
-            endpoint: "/status/{{inputs[0].value}}"
-          on_error:
-            retry:
-              max_attempts: 3
-              delay: 5
-            fallback:
-              return: "Error: API call failed after multiple attempts"
-      process_data:
-        - evaluate:
+                          
+- switch:
+    case: "'divide'"
+      tool: divide
+      arguments:
+        divisor: inputs[0].value
+      on_error:
+        retry:
+          max_attempts: 3
+          delay: 2
+        fallback:
+          return: "Error: Division by zero or invalid input"
+    case: "'api_call'"
+        tool: api_call
+        arguments:
+          endpoint: "/status/{{inputs[0].value}}"
+        on_error:
+          retry:
+            max_attempts: 3
+            delay: 5
+          fallback:
+            return: "Error: API call failed after multiple attempts"
+      case: "'process_data'"
+        evaluate:
             data: "'Sample data: ' + str(inputs[0].value)"
-        - tool: process_data
-          arguments:
-            data: _.data
-          on_error:
-            log: "Error occurred while processing data"
-            return: "Error: Data processing failed"
+        tool: process_data
+        arguments:
+          data: _.data
+        on_error:
+          log: "Error occurred while processing data"
+          return: "Error: Data processing failed"
 
 - prompt:
-    role: system
+  - role: system
     content: >-
       Summarize the result of the operation:
       Operation: {{inputs[0].operation}}
-      Result: {{_}}
+      Result: {{_}}]
+  unwrap: true
 """)
 
 # Creating the task

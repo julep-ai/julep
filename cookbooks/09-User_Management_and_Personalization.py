@@ -133,6 +133,7 @@ def register_user(username, interests):
             "interests": interests
         }
     )
+    # Wait for the execution to complete
     time.sleep(2)
     result = client.executions.get(execution.id)
     user_result = client.executions.transitions.list(execution_id=result.id).items[0].output
@@ -155,6 +156,7 @@ def get_recommendations(user_profile):
             "content_list": content_list
         }
     )
+    # Wait for the execution to complete
     time.sleep(2)
     result = client.executions.get(execution.id)
     recommendation_respose = client.executions.transitions.list(execution_id=result.id).items[0].output

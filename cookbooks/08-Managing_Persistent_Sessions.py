@@ -102,6 +102,7 @@ for i in range(5):
     # Get the execution result
     result = client.executions.get(execution.id)
 
+    # Wait for the execution to complete
     time.sleep(2)
     
     # Update the context and print the response
@@ -133,6 +134,7 @@ overflow_execution = client.executions.create(
 )
 
 overflow_result = client.executions.get(overflow_execution.id)
+# Wait for the execution to complete
 time.sleep(2)
 overflow_response = client.executions.transitions.list(execution_id=overflow_result.id).items[0].output
 print(f"Agent response to large input: {overflow_response['session_context']['agent_response']}")
