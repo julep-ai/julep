@@ -38,8 +38,6 @@ The system is modular, containing several key components that interact with a Co
 5. **Run the Application**:
    - Use your development server (e.g., FastAPI or Node) to run the API for testing and development.
 
-This serves as a concise overview for developers to understand the structure and operations of the `agents-api`.
-
 ## Schema
 
 ### Relation `agent_default_settings`
