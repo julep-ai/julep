@@ -1,3 +1,4 @@
+import base64
 from typing import Annotated, Any, Optional, TypedDict, Union
 
 import httpx
@@ -42,10 +43,12 @@ async def execute_api_call(
                 **request_args,
             )
 
+        content_base64 = base64.b64encode(response.content).decode("ascii")
+
         response_dict = {
             "status_code": response.status_code,
             "headers": dict(response.headers),
-            "content": response.content,
+            "content": content_base64,
             "json": response.json(),
         }
 
