@@ -20,6 +20,8 @@ class RequestArgs(TypedDict):
     json_: Optional[dict[str, Any]]
     cookies: Optional[dict[str, str]]
     params: Optional[Union[str, dict[str, Any]]]
+    url: Optional[str]
+    headers: Optional[dict[str, str]]
 
 
 @beartype
@@ -29,10 +31,13 @@ async def execute_api_call(
 ) -> Any:
     try:
         async with httpx.AsyncClient() as client:
+            arg_url = request_args.pop("url", None)
+            arg_headers = request_args.pop("headers", None)
+
             response = await client.request(
                 method=api_call.method,
-                url=str(api_call.url),
-                headers=api_call.headers,
+                url=arg_url or str(api_call.url),
+                headers=arg_headers or api_call.headers,
                 follow_redirects=api_call.follow_redirects,
                 **request_args,
             )
