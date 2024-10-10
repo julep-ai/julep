@@ -1,29 +1,46 @@
-from googletrans import Translator
 import os
+from deep_translator import GoogleTranslator
 
-# Initialize the translator
-translator = Translator()
+# Define file paths relative to the script's location (outside scripts folder)
+# Assuming the script is in a 'scripts' folder and README.md is one level up
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Load the original README content
-with open('README.md', 'r', encoding='utf-8') as readme_file:
-    original_content = readme_file.read()
+readme_path = os.path.join(base_path, 'README.md')
+readme_cn_path = os.path.join(base_path, 'README-CN.md')
+readme_jp_path = os.path.join(base_path, 'README-JP.md')
+readme_fr_path = os.path.join(base_path, 'README-FR.md')
 
-# Define the target languages
+# Language codes for GoogleTranslator
 languages = {
-    'CN': 'zh-cn',  # Chinese
-    'JP': 'ja',     # Japanese
-    'FR': 'fr',     # French
+    "chinese": "zh-CN",
+    "japanese": "ja",
+    "french": "fr"
 }
 
-# Translate the content and write to new files
-for code, lang in languages.items():
-    translated_content = translator.translate(original_content, dest=lang).text
+# Function to translate content
+def translate_content(content, target_lang):
+    translator = GoogleTranslator(source='en', target=target_lang)
+    return translator.translate(content)
 
-    # Write the translated content to a new file
-    with open(f'README-{code}.md', 'w', encoding='utf-8') as translated_file:
-        translated_file.write(f'# Translated README in {lang.upper()}\n\n')
-        translated_file.write(translated_content)
-    
-    print(f'Translated README.md to README-{code}.md')
+# Read the original README.md content
+with open(readme_path, 'r', encoding='utf-8') as f:
+    original_content = f.read()
 
-print("Translation complete!")
+# Translate and save each translation
+translations = {
+    "chinese": translate_content(original_content, languages["chinese"]),
+    "japanese": translate_content(original_content, languages["japanese"]),
+    "french": translate_content(original_content, languages["french"]),
+}
+
+# Write translated contents to respective files in the same location as README.md
+with open(readme_cn_path, 'w', encoding='utf-8') as f:
+    f.write(translations["chinese"])
+
+with open(readme_jp_path, 'w', encoding='utf-8') as f:
+    f.write(translations["japanese"])
+
+with open(readme_fr_path, 'w', encoding='utf-8') as f:
+    f.write(translations["french"])
+
+print("README.md translated to Chinese, Japanese, and French successfully!")
