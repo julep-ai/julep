@@ -4167,6 +4167,7 @@ components:
             VALIDATION: Should NOT return more than 1000 elements.
         do:
           anyOf:
+            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.EvaluateStep'
             - $ref: '#/components/schemas/Tasks.ToolCallStep'
             - $ref: '#/components/schemas/Tasks.PromptStep'
@@ -4189,6 +4190,7 @@ components:
             VALIDATION: Should NOT return more than 1000 elements.
         do:
           anyOf:
+            - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.EvaluateStep'
             - $ref: '#/components/schemas/Tasks.ToolCallStep'
             - $ref: '#/components/schemas/Tasks.PromptStepUpdateItem'
