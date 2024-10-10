@@ -34,6 +34,7 @@ T = TypeVar("T")
     Doc,
     transform=lambda d: {
         "content": [s[1] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
+        "embeddings": [s[2] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
         **d,
     },
 )
@@ -49,6 +50,7 @@ def list_docs(
     sort_by: Literal["created_at"] = "created_at",
     direction: Literal["asc", "desc"] = "desc",
     metadata_filter: dict[str, Any] = {},
+    include_without_embeddings: bool = False,
 ) -> tuple[list[str], dict]:
     # Transforms the metadata_filter dictionary into a string representation for the datalog query.
     metadata_filter_str = ", ".join(
@@ -67,8 +69,10 @@ def list_docs(
                 doc_id: id,
                 index,
                 content,
+                embedding,
             }},
-            snippet_data = [index, content]
+            {"" if include_without_embeddings else "not is_null(embedding),"}
+            snippet_data = [index, content, embedding]
 
         ?[
             owner_type,
@@ -88,7 +92,8 @@ def list_docs(
                 created_at,
                 metadata,
             }},
-            snippets[id, snippet_data]
+            snippets[id, snippet_data],
+            {metadata_filter_str}
         
         :limit $limit
         :offset $offset
@@ -110,6 +115,5 @@ def list_docs(
             "owner_type": owner_type,
             "limit": limit,
             "offset": offset,
-            "metadata_filter": metadata_filter_str,
         },
     )

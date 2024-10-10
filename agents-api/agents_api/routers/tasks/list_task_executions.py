@@ -3,15 +3,14 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     Execution,
     ListResponse,
 )
-from agents_api.dependencies.developer_id import get_developer_id
-from agents_api.models.execution.list_executions import (
+from ...dependencies.developer_id import get_developer_id
+from ...models.execution.list_executions import (
     list_executions as list_task_executions_query,
 )
-
 from .router import router
 
 

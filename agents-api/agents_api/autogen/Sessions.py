@@ -43,6 +43,16 @@ class CreateSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be sent back to the model as the model's input.
+    If a tool call is not made, the model's output will be returned as is.
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -70,6 +80,16 @@ class PatchSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be sent back to the model as the model's input.
+    If a tool call is not made, the model's output will be returned as is.
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -96,6 +116,16 @@ class Session(BaseModel):
     context_overflow: Literal["truncate", "adaptive"] | None = None
     """
     Action to start on context window overflow
+    """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be sent back to the model as the model's input.
+    If a tool call is not made, the model's output will be returned as is.
     """
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     metadata: dict[str, Any] | None = None
@@ -160,6 +190,16 @@ class UpdateSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be sent back to the model as the model's input.
+    If a tool call is not made, the model's output will be returned as is.
+    """
     metadata: dict[str, Any] | None = None
 
 
@@ -193,6 +233,16 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     context_overflow: Literal["truncate", "adaptive"] | None = None
     """
     Action to start on context window overflow
+    """
+    forward_tool_results: StrictBool | None = None
+    """
+    Whether to forward the tool results to the model when available.
+    "true" => always forward
+    "false" => never forward
+    null => forward if applicable (default)
+
+    If a tool call is made, the tool's output will be sent back to the model as the model's input.
+    If a tool call is not made, the model's output will be returned as is.
     """
     metadata: dict[str, Any] | None = None
 

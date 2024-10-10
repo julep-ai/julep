@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+# check=error=true
 # We need to build the cozo binary first from the repo
 # https://github.com/cozodb/cozo
 # Then copy the binary to the ./bin directory

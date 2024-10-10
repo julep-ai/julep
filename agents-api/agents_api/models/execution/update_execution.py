@@ -82,6 +82,8 @@ def update_execution(
     ?[num] :=
         valid_status[num],
         assert(num > 0, 'Invalid status')
+
+    :limit 1
     """
 
     update_query = f"""

@@ -11,6 +11,7 @@ include:
   - ./agents-api/docker-compose.yml
   - ./scheduler/docker-compose.yml
   - ./llm-proxy/docker-compose.yml
+  - ./integrations-service/docker-compose.yml
 
   # TODO: Enable after testing
   # - ./monitoring/docker-compose.yml

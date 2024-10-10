@@ -131,7 +131,9 @@ def get_history(
             session_relations[relations],
             session_id = to_uuid($session_id),
             created_at = now()
-     """
+
+        :limit 1
+    """
 
     queries = [
         verify_developer_id_query(developer_id),

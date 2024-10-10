@@ -1,6 +1,6 @@
 from ward import test
 
-from .fixtures import (
+from tests.fixtures import (
     make_request,
     patch_embed_acompletion,
     test_agent,
@@ -8,7 +8,7 @@ from .fixtures import (
     test_user,
     test_user_doc,
 )
-from .utils import patch_testing_temporal
+from tests.utils import patch_testing_temporal
 
 
 @test("route: create user doc")

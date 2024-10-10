@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from ward import test
 
-from .fixtures import cozo_client, test_agent, test_developer_id
-from .utils import patch_http_client_with_temporal
+from tests.fixtures import cozo_client, test_agent, test_developer_id
+from tests.utils import patch_http_client_with_temporal
 
 
 @test("workflow route: evaluate step single")

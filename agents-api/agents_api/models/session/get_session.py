@@ -95,7 +95,10 @@ def get_session(
             token_budget,
             context_overflow,
             @ "END"
-        }, updated_at = to_int(validity)
+        },
+        updated_at = to_int(validity)
+
+    :limit 1
     """
 
     queries = [

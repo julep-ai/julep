@@ -142,6 +142,7 @@ def _(
 ):
     update_data = UpdateToolRequest(
         name="updated_tool",
+        description="An updated description",
         type="function",
         function={
             "description": "An updated function that prints hello world",

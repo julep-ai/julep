@@ -6,13 +6,18 @@ from . import BaseCommonException
 
 
 class BaseUserException(BaseCommonException):
-    """Base exception class for user-related errors. This class serves as a parent for all user-related exceptions to facilitate catching errors specific to user operations."""
+    """
+    Base exception class for user-related errors.
+
+    This class serves as a parent for all user-related exceptions to facilitate catching errors specific to user operations.
+    """
 
     pass
 
 
 class UserNotFoundError(BaseUserException):
-    """Exception raised when a requested user cannot be found.
+    """
+    Exception raised when a requested user cannot be found.
     Attributes:
         developer_id (UUID | str): The ID of the developer attempting the operation.
         user_id (UUID | str): The ID of the user that was not found.
@@ -27,7 +32,8 @@ class UserNotFoundError(BaseUserException):
 
 
 class UserDocNotFoundError(BaseUserException):
-    """Exception raised when a specific document related to a user cannot be found.
+    """
+    Exception raised when a specific document related to a user cannot be found.
     Attributes:
         user_id (UUID | str): The ID of the user associated with the document.
         doc_id (UUID | str): The ID of the document that was not found.

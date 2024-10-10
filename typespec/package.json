@@ -1,14 +1,14 @@
 {
   "name": "julep-typespec",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "dependencies": {
-    "@typespec/compiler": "^0.59.1",
-    "@typespec/http": "^0.59.1",
-    "@typespec/openapi": "^0.59.0",
-    "@typespec/openapi3": "^0.59.1",
-    "@typespec/rest": "^0.59.1",
-    "@typespec/versioning": "^0.59.0"
+    "@typespec/compiler": "^0.60.1",
+    "@typespec/http": "^0.60.0",
+    "@typespec/openapi": "^0.60.0",
+    "@typespec/openapi3": "^0.60.0",
+    "@typespec/rest": "^0.60.0",
+    "@typespec/versioning": "^0.60.1"
   },
   "private": true
 }

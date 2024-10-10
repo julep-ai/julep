@@ -45,11 +45,12 @@ def get_paused_execution_token(
         execution_id = to_uuid($execution_id),
         status = "awaiting_input"
 
+    :limit 1
     :assert some
     """
 
     get_query = """
-    ?[task_token, max(created_at)] :=
+    ?[task_token, created_at, metadata] :=
         execution_id = to_uuid($execution_id),
         *executions {
             execution_id,
@@ -59,9 +60,12 @@ def get_paused_execution_token(
             created_at,
             task_token,
             type,
+            metadata,
         },
         type = "wait"
 
+    :sort -created_at
+    :limit 1
     """
 
     queries = [

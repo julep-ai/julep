@@ -136,7 +136,7 @@ interface ChildLimitOffsetPagination<
 
         ...PaginationOptions,
     ): {
-        results: T[];
+        items: T[];
     };
 }
 

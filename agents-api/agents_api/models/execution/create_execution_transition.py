@@ -141,6 +141,8 @@ def create_execution_transition(
         found = length(prev_transitions),
         valid = if($next_type == "init", found == 0, found > 0),
         assert(valid, "Invalid transition"),
+
+    :limit 1
     """
 
     # Prepare the insert query

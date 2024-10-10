@@ -10,6 +10,7 @@ from temporalio.testing import WorkflowEnvironment
 from agents_api.worker.codec import pydantic_data_converter
 from agents_api.worker.worker import create_worker
 
+# Replicated here to prevent circular import
 EMBEDDING_SIZE: int = 1024
 
 
@@ -84,10 +85,20 @@ def patch_embed_acompletion(output={"role": "assistant", "content": "Hello, worl
         object="text_completion",
     )
 
-    with patch("agents_api.clients.embed.embed") as embed, patch(
+    with patch("agents_api.clients.litellm.aembedding") as embed, patch(
         "agents_api.clients.litellm.acompletion"
     ) as acompletion:
         embed.return_value = [[1.0] * EMBEDDING_SIZE]
         acompletion.return_value = mock_model_response
 
         yield embed, acompletion
+
+
+@contextmanager
+def patch_integration_service(output: dict = {"result": "ok"}):
+    with patch(
+        "agents_api.clients.integrations.run_integration_service"
+    ) as run_integration_service:
+        run_integration_service.return_value = output
+
+        yield run_integration_service

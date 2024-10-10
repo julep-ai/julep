@@ -5,6 +5,7 @@ from temporalio.client import Client, TLSConfig
 
 from ..autogen.openapi_model import TransitionTarget
 from ..common.protocol.tasks import ExecutionInput
+from ..common.retry_policies import DEFAULT_RETRY_POLICY
 from ..env import (
     temporal_client_cert,
     temporal_namespace,
@@ -54,6 +55,7 @@ async def run_task_execution_workflow(
         task_queue=temporal_task_queue,
         id=str(job_id),
         run_timeout=timedelta(days=31),
+        retry_policy=DEFAULT_RETRY_POLICY,
         # TODO: Should add search_attributes for queryability
     )
 

@@ -1,6 +1,9 @@
+# syntax=docker/dockerfile:1
+# check=error=true
+
 FROM python:3.11-slim
 
-ENV PYTHONUNBUFFERED True
+ENV PYTHONUNBUFFERED=1
 ENV POETRY_CACHE_DIR=/tmp/poetry_cache
 
 WORKDIR /app
@@ -9,8 +12,11 @@ RUN pip install --no-cache-dir --upgrade cozo-migrate
 
 COPY . ./
 ENV COZO_HOST="http://cozo:9070"
-ENV COZO_AUTH_TOKEN="myauthkey"
 
+# Expected environment variables:
+# COZO_AUTH_TOKEN="myauthkey"
+
+SHELL ["/bin/bash", "-c"]
 ENTRYPOINT \
     cozo-migrate -e http -h $COZO_HOST --auth $COZO_AUTH_TOKEN init \
     ; cozo-migrate -e http -h $COZO_HOST --auth $COZO_AUTH_TOKEN -d ./migrations apply -ay

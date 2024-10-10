@@ -30,7 +30,11 @@ T = TypeVar("T")
 @wrap_in_class(
     Tool,
     transform=lambda d: {
-        d["type"]: {**d.pop("spec"), "name": d["name"]},
+        d["type"]: {
+            **d.pop("spec"),
+            "name": d["name"],
+            "description": d["description"],
+        },
         **d,
     },
 )
@@ -58,6 +62,7 @@ def list_tools(
             name,
             type,
             spec,
+            description,
             updated_at,
             created_at,
         ] := input[agent_id],
@@ -67,6 +72,7 @@ def list_tools(
                 name,
                 type,
                 spec,
+                description,
                 updated_at,
                 created_at,
             }}

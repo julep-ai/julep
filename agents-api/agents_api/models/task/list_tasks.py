@@ -74,20 +74,6 @@ def list_tasks(
         }},
         updated_at = to_int(updated_at_ms) / 1000
 
-    tool_data[collect(tool_def)] :=
-        input[agent_id],
-        *tools {{
-            agent_id,
-            type,
-            name,
-            spec,
-        }}, tool_def = {{
-            "type": type,
-            "name": name,
-            "spec": spec,
-            "inherited": true,
-        }}
-
     ?[
         task_id,
         agent_id,
@@ -101,20 +87,19 @@ def list_tasks(
         updated_at,
         metadata,
     ] := 
-        tool_data[inherited_tools],
         task_data[
             task_id,
             agent_id,
             name,
             description,
             input_schema,
-            task_tools,
+            tools,
             inherit_tools,
             workflows,
             created_at,
             updated_at,
             metadata,
-        ], tools = task_tools ++ if(inherit_tools, inherited_tools, [])
+        ]
 
     :limit $limit
     :offset $offset

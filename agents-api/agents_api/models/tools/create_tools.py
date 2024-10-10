@@ -51,11 +51,11 @@ def create_tools(
     Constructs a datalog query for inserting tool records into the 'agent_functions' relation in the CozoDB.
 
     Parameters:
-    - agent_id (UUID): The unique identifier for the agent.
-    - data (list[CreateToolRequest]): A list of function definitions to be inserted.
+        agent_id (UUID): The unique identifier for the agent.
+        data (list[CreateToolRequest]): A list of function definitions to be inserted.
 
     Returns:
-    list[Tool]
+        list[Tool]
     """
 
     tools_data = [
@@ -65,31 +65,35 @@ def create_tools(
             tool.type,
             tool.name,
             getattr(tool, tool.type).dict(),
+            tool.description if hasattr(tool, "description") else None,
         ]
         for tool in data
     ]
 
     ensure_tool_name_unique_query = """
-        input[agent_id, tool_id, type, name, spec] <- $records
+        input[agent_id, tool_id, type, name, spec, description] <- $records
         ?[tool_id] :=
-            input[agent_id, _, type, name, _],
+            input[agent_id, _, type, name, _, _],
             *tools{
                 agent_id: to_uuid(agent_id),
                 tool_id,
                 type,
                 name,
+                spec,
+                description,
             }
 
+        :limit 1
         :assert none
     """
 
-    # Datalog query for inserting new tool records into the 'agent_functions' relation
+    # Datalog query for inserting new tool records into the 'tools' relation
     create_query = """
-        input[agent_id, tool_id, type, name, spec] <- $records
+        input[agent_id, tool_id, type, name, spec, description] <- $records
         
         # Do not add duplicate
-        ?[agent_id, tool_id, type, name, spec] :=
-            input[agent_id, tool_id, type, name, spec],
+        ?[agent_id, tool_id, type, name, spec, description] :=
+            input[agent_id, tool_id, type, name, spec, description],
             not *tools{
                 agent_id: to_uuid(agent_id),
                 type,
@@ -102,6 +106,7 @@ def create_tools(
             type,
             name,
             spec,
+            description,
         }
         :returning
     """

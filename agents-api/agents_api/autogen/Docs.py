@@ -57,6 +57,13 @@ class Doc(BaseModel):
     """
     Contents of the document
     """
+    embeddings: Annotated[
+        list[float] | list[list[float]] | None,
+        Field(None, json_schema_extra={"readOnly": True}),
+    ]
+    """
+    Embeddings for the document
+    """
 
 
 class DocOwner(BaseModel):

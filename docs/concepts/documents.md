@@ -2,6 +2,13 @@
 description: Documents to be added for Retrieval Augmented Generation
 ---
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 # 📖 Documents
 
 A typical RAG application has the following components:

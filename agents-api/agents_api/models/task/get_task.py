@@ -68,20 +68,6 @@ def get_task(
         },
         updated_at = to_int(updated_at_ms) / 1000
 
-    tool_data[collect(tool_def)] :=
-        task_data[_, agent_id, _, _, _, _, _, _, _, _, _],
-        *tools {
-            agent_id,
-            type,
-            name,
-            spec,
-        }, tool_def = {
-            "type": type,
-            "name": name,
-            "spec": spec,
-            "inherited": true,
-        }
-
     ?[
         id,
         agent_id,
@@ -95,20 +81,19 @@ def get_task(
         updated_at,
         metadata,
     ] := 
-        tool_data[inherited_tools],
         task_data[
             id,
             agent_id,
             name,
             description,
             input_schema,
-            task_tools,
+            tools,
             inherit_tools,
             workflows,
             created_at,
             updated_at,
             metadata,
-        ], tools = task_tools ++ if(inherit_tools, inherited_tools, [])
+        ]
 
     :limit 1
     """

@@ -2,6 +2,13 @@
 description: A conversation "session" between a user and an agent.
 ---
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 # 🔁 Sessions
 
 ## What is a Session?

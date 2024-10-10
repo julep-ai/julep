@@ -62,6 +62,15 @@ model Session {
     /** Action to start on context window overflow */
     context_overflow: ContextOverflowType | null = null;
 
+    /** Whether to forward the tool results to the model when available.
+     * "true" => always forward
+     * "false" => never forward
+     * null => forward if applicable (default)
+     * 
+     * If a tool call is made, the tool's output will be sent back to the model as the model's input.
+     * If a tool call is not made, the model's output will be returned as is. */
+    forward_tool_results: boolean | null = null;
+
     ...HasId;
     ...HasMetadata;
     ...HasTimestamps;

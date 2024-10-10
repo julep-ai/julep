@@ -46,13 +46,13 @@ def patch_agent(
     """Patches agent data based on provided updates.
 
     Parameters:
-    agent_id (UUID): The unique identifier for the agent.
-    developer_id (UUID): The unique identifier for the developer.
-    default_settings (dict, optional): Default settings to apply to the agent.
-    **update_data: Arbitrary keyword arguments representing data to update.
+        agent_id (UUID): The unique identifier for the agent.
+        developer_id (UUID): The unique identifier for the developer.
+        default_settings (dict, optional): Default settings to apply to the agent.
+        **update_data: Arbitrary keyword arguments representing data to update.
 
     Returns:
-    ResourceUpdatedResponse: The updated agent data.
+        ResourceUpdatedResponse: The updated agent data.
     """
     update_data = data.model_dump(exclude_unset=True)
 

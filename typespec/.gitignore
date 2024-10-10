@@ -1,1 +1,8 @@
-/tsp-output/
+# Ignore everything in tsp-output
+tsp-output/**/*.*
+
+# Don't ignore the openapi3 directory
+!tsp-output/@typespec/openapi3/
+
+# But don't ignore openapi-*.yaml files in tsp-output/@typespec/openapi3/
+!tsp-output/@typespec/openapi3/openapi-*.yaml

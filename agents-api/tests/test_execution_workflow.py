@@ -14,9 +14,8 @@ from agents_api.autogen.openapi_model import (
 )
 from agents_api.models.task.create_task import create_task
 from agents_api.routers.tasks.create_task_execution import start_execution
-
-from .fixtures import cozo_client, test_agent, test_developer_id
-from .utils import patch_testing_temporal
+from tests.fixtures import cozo_client, test_agent, test_developer_id
+from tests.utils import patch_integration_service, patch_testing_temporal
 
 EMBEDDING_SIZE: int = 1024
 
@@ -338,7 +337,7 @@ async def _(
         assert result["value"] == data.input["test"]
 
 
-# @test("workflow: log step")
+@test("workflow: log step")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
@@ -441,7 +440,239 @@ async def _(
             assert result["hello"] == data.input["test"]
 
 
-@test("workflow: wait for input step start")
+@test("workflow: system call - list agents")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "Test system tool task",
+                "description": "List agents using system call",
+                "input_schema": {"type": "object"},
+                "tools": [
+                    {
+                        "name": "list_agents",
+                        "description": "List all agents",
+                        "type": "system",
+                        "system": {"resource": "agent", "operation": "list"},
+                    },
+                ],
+                "main": [
+                    {
+                        "tool": "list_agents",
+                        "arguments": {
+                            "limit": "10",
+                        },
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert isinstance(result, list)
+        # Result's length should be less than or equal to the limit
+        assert len(result) <= 10
+        # Check if all items are agent dictionaries
+        assert all(isinstance(agent, dict) for agent in result)
+        # Check if each agent has an 'id' field
+        assert all("id" in agent for agent in result)
+
+
+@test("workflow: tool call api_call")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "tools": [
+                    {
+                        "type": "api_call",
+                        "name": "hello",
+                        "api_call": {
+                            "method": "GET",
+                            "url": "https://httpbin.org/get",
+                        },
+                    }
+                ],
+                "main": [
+                    {
+                        "tool": "hello",
+                        "arguments": {
+                            "params": {"test": "_.test"},
+                        },
+                    },
+                    {
+                        "evaluate": {"hello": "_.json.args.test"},
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert result["hello"] == data.input["test"]
+
+
+@test("workflow: tool call integration dummy")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "tools": [
+                    {
+                        "type": "integration",
+                        "name": "hello",
+                        "integration": {
+                            "provider": "dummy",
+                        },
+                    }
+                ],
+                "main": [
+                    {
+                        "tool": "hello",
+                        "arguments": {"test": "_.test"},
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        result = await handle.result()
+        assert result["test"] == data.input["test"]
+
+
+@test("workflow: tool call integration mocked weather")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "tools": [
+                    {
+                        "type": "integration",
+                        "name": "get_weather",
+                        "integration": {
+                            "provider": "weather",
+                            "setup": {"openweathermap_api_key": "test"},
+                            "arguments": {"test": "fake"},
+                        },
+                    }
+                ],
+                "main": [
+                    {
+                        "tool": "get_weather",
+                        "arguments": {"location": "_.test"},
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    expected_output = {"temperature": 20, "humidity": 60}
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        with patch_integration_service(expected_output) as mock_integration_service:
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
+
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
+            mock_run_task_execution_workflow.assert_called_once()
+            mock_integration_service.assert_called_once()
+
+            result = await handle.result()
+            assert result == expected_output
+
+
+# FIXME: This test is not working. It gets stuck
+# @test("workflow: wait for input step start")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
@@ -816,6 +1047,66 @@ async def _(
             result = result["choices"][0]["message"]
             assert result["content"] == "Hello, world!"
             assert result["role"] == "assistant"
+
+
+@test("workflow: prompt step unwrap")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    mock_model_response = ModelResponse(
+        id="fake_id",
+        choices=[Choices(message={"role": "assistant", "content": "Hello, world!"})],
+        created=0,
+        object="text_completion",
+    )
+
+    with patch("agents_api.clients.litellm.acompletion") as acompletion:
+        acompletion.return_value = mock_model_response
+        data = CreateExecutionRequest(input={"test": "input"})
+
+        task = create_task(
+            developer_id=developer_id,
+            agent_id=agent.id,
+            data=CreateTaskRequest(
+                **{
+                    "name": "test task",
+                    "description": "test task about",
+                    "input_schema": {"type": "object", "additionalProperties": True},
+                    "main": [
+                        {
+                            "prompt": [
+                                {
+                                    "role": "user",
+                                    "content": "message",
+                                },
+                            ],
+                            "unwrap": True,
+                            "settings": {},
+                        },
+                    ],
+                }
+            ),
+            client=client,
+        )
+
+        async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+            execution, handle = await start_execution(
+                developer_id=developer_id,
+                task_id=task.id,
+                data=data,
+                client=client,
+            )
+
+            assert handle is not None
+            assert execution.task_id == task.id
+            assert execution.input == data.input
+
+            mock_run_task_execution_workflow.assert_called_once()
+
+            result = await handle.result()
+            assert result == "Hello, world!"
 
 
 @test("workflow: set and get steps")

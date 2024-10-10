@@ -1,12 +1,11 @@
 from uuid import UUID
 
-from agents_api.autogen.openapi_model import (
+from ...autogen.openapi_model import (
     Execution,
 )
-from agents_api.models.execution.get_execution import (
+from ...models.execution.get_execution import (
     get_execution as get_execution_query,
 )
-
 from .router import router
 
 

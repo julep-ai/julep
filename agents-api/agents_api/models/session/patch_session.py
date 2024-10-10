@@ -60,12 +60,13 @@ def patch_session(
     developer_id: UUID,
     data: PatchSessionRequest,
 ) -> tuple[list[str], dict]:
-    """Patch session data in the 'cozodb' database.
+    """
+    Patch session data in the 'cozodb' database.
 
     Parameters:
-    - session_id (UUID): The unique identifier for the session to be updated.
-    - developer_id (UUID): The unique identifier for the developer making the update.
-    - data (PatchSessionRequest): The request payload containing the updates to apply.
+        session_id (UUID): The unique identifier for the session to be updated.
+        developer_id (UUID): The unique identifier for the developer making the update.
+        data (PatchSessionRequest): The request payload containing the updates to apply.
     """
 
     update_data = data.model_dump(exclude_unset=True)

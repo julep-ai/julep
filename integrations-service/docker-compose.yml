@@ -1,0 +1,26 @@
+name: julep-integrations
+
+# Shared environment variables
+x--shared-environment: &shared-environment
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+services:
+  integrations:
+    environment:
+      <<: *shared-environment
+    
+    build: .
+    ports:
+      - "8000:8000"
+    
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./
+          target: /app/
+          ignore:
+            - ./**/*.pyc
+        - action: rebuild
+          path: poetry.lock
+        - action: rebuild
+          path: Dockerfile
