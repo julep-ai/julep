@@ -36,7 +36,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Advanced Chat Assistant",
     about="An AI agent capable of handling complex conversations with context management and external integrations.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Add a web search tool to the agent

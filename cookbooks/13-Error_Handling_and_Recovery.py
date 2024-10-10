@@ -29,7 +29,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Error Handler",
     about="An AI agent specialized in demonstrating error handling and recovery mechanisms.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Defining a task with potential errors and recovery mechanisms

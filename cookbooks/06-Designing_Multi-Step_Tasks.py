@@ -28,7 +28,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name=name,
     about=about,
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Add a web search tool to the agent

@@ -29,7 +29,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Personalization Assistant",
     about="An AI agent specialized in user management and personalized content recommendations.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Defining a task for user registration and profile creation
