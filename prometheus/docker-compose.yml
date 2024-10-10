@@ -6,12 +6,10 @@ services:
     container_name: prometheus
     profiles:
       - multi-tenant
-    
-    ports:
-      - 11000:9090
 
     volumes:
-      - ./prometheus_data/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
     
     depends_on:
       agents-api-multi-tenant:
@@ -19,3 +17,7 @@ services:
     
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+
+volumes:
+  prometheus_data:
+    external: true
