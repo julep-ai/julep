@@ -671,8 +671,7 @@ async def _(
             assert result == expected_output
 
 
-# FIXME: This test is not working. It gets stuck
-# @test("workflow: wait for input step start")
+@test("workflow: wait for input step start")
 async def _(
     client=cozo_client,
     developer_id=test_developer_id,
@@ -710,7 +709,12 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         # Let it run for a bit
-        await asyncio.sleep(3)
+        result_coroutine = handle.result()
+        task = asyncio.create_task(result_coroutine)
+        try:
+            await asyncio.wait_for(task, timeout=3)
+        except asyncio.TimeoutError:
+            task.cancel()
 
         # Get the history
         history = await handle.fetch_history()
@@ -728,10 +732,76 @@ async def _(
             activity for activity in activities_scheduled if activity
         ]
 
-        future = handle.result()
-        await future
-
         assert "wait_for_input_step" in activities_scheduled
+
+
+@test("workflow: foreach wait for input step start")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "main": [
+                    {
+                        "foreach": {
+                            "in": "'a b c'.split()",
+                            "do": {"wait_for_input": {"info": {"hi": '"bye"'}}},
+                        },
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        assert execution.task_id == task.id
+        assert execution.input == data.input
+        mock_run_task_execution_workflow.assert_called_once()
+
+        # Let it run for a bit
+        result_coroutine = handle.result()
+        task = asyncio.create_task(result_coroutine)
+        try:
+            await asyncio.wait_for(task, timeout=3)
+        except asyncio.TimeoutError:
+            task.cancel()
+
+        # Get the history
+        history = await handle.fetch_history()
+        events = [MessageToDict(e) for e in history.events]
+        assert len(events) > 0
+
+        activities_scheduled = [
+            event.get("activityTaskScheduledEventAttributes", {})
+            .get("activityType", {})
+            .get("name")
+            for event in events
+            if "ACTIVITY_TASK_SCHEDULED" in event["eventType"]
+        ]
+        activities_scheduled = [
+            activity for activity in activities_scheduled if activity
+        ]
+
+        assert "for_each_step" in activities_scheduled
 
 
 @test("workflow: if-else step")
