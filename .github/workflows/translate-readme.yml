@@ -24,8 +24,7 @@ jobs:
         pip install googletrans==4.0.0-rc1
 
     - name: Run translation script
-      run: |
-        python translate_readme.py
+      run: python ./scripts/translate_readme.py
 
     - name: Commit changes
       run: |
