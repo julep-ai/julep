@@ -57,15 +57,20 @@ execution = client.executions.create(
     input={}
 )
 
+# Waiting for the execution to complete
+import time
+time.sleep(5)
+
 # Getting the execution details
 execution = client.executions.get(execution.id)
 print("Execution output:", execution.output)
 
 # Listing all the steps of a defined task
 transitions = client.executions.transitions.list(execution_id=execution.id).items
-print("Execution transitions:", transitions)
-
-# Streaming the execution steps
-print("Streaming execution transitions:")
-for transition in client.executions.transitions.stream(execution_id=execution.id):
+print("Execution Steps:")
+for transition in transitions:
     print(transition)
+
+# Stream the steps of the defined task
+print("Streaming execution transitions:")
+print(client.executions.transitions.stream(execution_id=execution.id))

@@ -27,7 +27,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Session Manager",
     about="An AI agent specialized in managing persistent sessions and context.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Defining a task for managing user context
@@ -44,7 +44,7 @@ input_schema:
 
 main:
 - prompt:
-    role: system
+  - role: system
     content: >-
       You are a session management agent. Your task is to maintain context
       across user interactions. Here's the current context: {{inputs[0].session_context}}
@@ -53,16 +53,17 @@ main:
       
       Respond to the user and update the context with any new relevant information.
   unwrap: true
-
+                          
 - evaluate:
-    updated_context: >-
-      {**inputs[0].session_context, 
+    session_context: >-
+      {
+        **inputs[0].session_context, 
        'last_interaction': inputs[0].user_input,
-       'agent_response': _}
+       'agent_response': _}                          
 
 - return: 
     response: _
-    context: outputs[1].updated_context
+    context: outputs[1].session_context
 """)
 
 # Creating the task
@@ -78,7 +79,7 @@ def user_interaction(prompt):
 
 # Create a session
 session = client.sessions.create(
-    agent_id=AGENT_UUID,
+    agent=agent.id,
     context_overflow="adaptive"  # Use adaptive context management
 )
 
@@ -100,10 +101,16 @@ for i in range(5):
     
     # Get the execution result
     result = client.executions.get(execution.id)
+
+    # Wait for the execution to complete
+    time.sleep(2)
     
     # Update the context and print the response
-    context = result.output['context']
-    print(f"Agent: {result.output['response']}")
+    final_response = client.executions.transitions.list(execution_id=result.id).items[0].output
+    print(final_response)
+    # print(client.executions.transitions.list(execution_id=result.id).items[0])
+    context = final_response['session_context']
+    print(f"Agent: {final_response['session_context']['agent_response']}")
     print(f"Updated Context: {context}")
     print()
     
@@ -127,11 +134,13 @@ overflow_execution = client.executions.create(
 )
 
 overflow_result = client.executions.get(overflow_execution.id)
-print(f"Agent response to large input: {overflow_result.output['response']}")
-print(f"Updated context after overflow: {overflow_result.output['context']}")
+# Wait for the execution to complete
+time.sleep(2)
+overflow_response = client.executions.transitions.list(execution_id=overflow_result.id).items[0].output
+print(f"Agent response to large input: {overflow_response['session_context']['agent_response']}")
+print(f"Updated context after overflow: {overflow_response['session_context']}")
 
 # Display session history
 print("\nSession History:")
-history = client.sessions.messages.list(session_id=session.id)
-for message in history.items:
-    print(f"{message.role}: {message.content}")
+history = client.sessions.history(session_id=session.id)
+print(history)

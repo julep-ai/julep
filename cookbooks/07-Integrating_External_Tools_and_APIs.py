@@ -19,10 +19,10 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name=name,
     about=about,
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
-# Defining a Task
+# Defining a Task with various step types
 task_def = yaml.safe_load("""
 name: Comprehensive Analysis Report
 
@@ -42,14 +42,14 @@ tools:
   integration:
     provider: brave
     setup:
-      api_key: "YOUR_BRAVE_API_KEY"
+      api_key: "YOUR_API_KEY"
 
 - name: weather
   type: integration
   integration:
     provider: weather
     setup:
-      openweathermap_api_key: "YOUR_OPENWEATHERMAP_API_KEY"
+      openweathermap_api_key: "YOUR_API_KEY"
 
 - name: wikipedia
   type: integration
@@ -59,20 +59,20 @@ tools:
 main:
 - tool: brave_search
   arguments:
-    query: "{{inputs[0].topic}} latest developments"
+    query: "inputs[0].topic + ' latest developments'"
 
 - tool: weather
   arguments:
-    location: "{{inputs[0].location}}"
+    location: inputs[0].location
 
 - tool: wikipedia
   arguments:
-    query: "{{inputs[0].topic}}"
+    query: inputs[0].topic
 
 - prompt:
   - role: system
     content: >-
-      You are a comprehensive analyst. Your task is to create a detailed report on the topic "{{inputs[0].topic}}" 
+      You are a comprehensive analyst. Your task is to create a detailed report on the topic {{inputs[0].topic}} 
       using the information gathered from various sources. Include the following sections in your report:
       
       1. Overview (based on Wikipedia data)
@@ -88,8 +88,6 @@ main:
       
       Provide a well-structured, informative report that synthesizes information from all these sources.
   unwrap: true
-
-- return: _
 """)
 
 # Creating/Updating a task
@@ -104,11 +102,15 @@ execution = client.executions.create(
     task_id=task.id,
     input={
         "topic": "Renewable Energy",
-        "location": "Berlin, Germany"
+        "location": "Berlin"
     }
 )
 
 print(f"Execution ID: {execution.id}")
+
+# Waiting for the execution to complete
+import time
+time.sleep(5)
 
 # Getting the execution details
 execution = client.executions.get(execution.id)
@@ -116,11 +118,11 @@ print("Execution Output:")
 print(execution.output)
 
 # List all steps of the executed task
+transitions = client.executions.transitions.list(execution_id=execution.id).items
 print("Execution Steps:")
-for item in client.executions.transitions.list(execution_id=execution.id).items:
-    print(item)
+for transition in transitions:
+    print(transition)
 
-# Stream the execution steps in real-time
-print("Streaming Execution Steps:")
-for step in client.executions.transitions.stream(execution_id=execution.id):
-    print(step)
+# Stream the steps of the defined task
+print("Streaming execution transitions:")
+print(client.executions.transitions.stream(execution_id=execution.id))
