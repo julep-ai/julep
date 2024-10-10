@@ -14,6 +14,7 @@ import fastapi
 import httpx
 import jinja2
 import jsonschema.exceptions
+import litellm
 import pydantic
 import requests
 import temporalio.exceptions
@@ -70,10 +71,12 @@ NON_RETRYABLE_ERROR_TYPES = [
     pydantic.ValidationError,
     requests.exceptions.InvalidURL,
     requests.exceptions.MissingSchema,
+    #
     # Box exceptions
     box.exceptions.BoxKeyError,
     box.exceptions.BoxTypeError,
     box.exceptions.BoxValueError,
+    #
     # Beartype exceptions
     beartype.roar.BeartypeException,
     beartype.roar.BeartypeDecorException,
@@ -88,6 +91,14 @@ NON_RETRYABLE_ERROR_TYPES = [
     beartype.roar.BeartypeCallHintReturnViolation,
     beartype.roar.BeartypeDecorHintParamDefaultViolation,
     beartype.roar.BeartypeDoorHintViolation,
+    #
+    # LiteLLM exceptions
+    litellm.exceptions.NotFoundError,
+    litellm.exceptions.InvalidRequestError,
+    litellm.exceptions.AuthenticationError,
+    litellm.exceptions.ServiceUnavailableError,
+    litellm.exceptions.OpenAIError,
+    litellm.exceptions.APIError,
 ]
 
 
