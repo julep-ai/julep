@@ -821,7 +821,7 @@ async def _(
                 {
                     "if": "False",
                     "then": {"evaluate": {"hello": '"world"'}},
-                    "else": {"evaluate": {"hello": 'random.randint(0, 10)'}},
+                    "else": {"evaluate": {"hello": "random.randint(0, 10)"}},
                 },
             ],
         }

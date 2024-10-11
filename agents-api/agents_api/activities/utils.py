@@ -56,7 +56,6 @@ ALLOWED_FUNCTIONS = {
 }
 
 
-
 class stdlib_re:
     fullmatch = re2.fullmatch
     search = re2.search
