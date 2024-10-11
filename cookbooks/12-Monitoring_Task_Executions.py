@@ -12,6 +12,8 @@
 # 5. Execute the task and demonstrate real-time monitoring
 # 6. Display execution summary and metrics
 
+# UNDER CONSTRUCTION - NOT WORKING YET
+
 import uuid
 import yaml
 from julep import Client
@@ -30,7 +32,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Task Execution Monitor",
     about="An AI agent designed to monitor and manage complex task executions.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Defining a multi-step task that simulates a complex workflow
