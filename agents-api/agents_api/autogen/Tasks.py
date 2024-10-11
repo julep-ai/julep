@@ -191,7 +191,8 @@ class ForeachDo(BaseModel):
     VALIDATION: Should NOT return more than 1000 elements.
     """
     do: (
-        EvaluateStep
+        WaitForInputStep
+        | EvaluateStep
         | ToolCallStep
         | PromptStep
         | GetStep
@@ -214,7 +215,8 @@ class ForeachDoUpdateItem(BaseModel):
     VALIDATION: Should NOT return more than 1000 elements.
     """
     do: (
-        EvaluateStep
+        WaitForInputStep
+        | EvaluateStep
         | ToolCallStep
         | PromptStepUpdateItem
         | GetStep

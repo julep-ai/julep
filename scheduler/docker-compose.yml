@@ -53,7 +53,7 @@ services:
       - POSTGRES_PASSWORD=${TEMPORAL_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${TEMPORAL_POSTGRES_DB:-temporal} -U ${TEMPORAL_POSTGRES_USER:-temporal}" ]
- 
+
       interval: 1s
       timeout: 5s
       retries: 10
@@ -63,8 +63,22 @@ services:
     profiles:
       - temporal-ui
     environment:
+      # See: https://github.com/temporalio/ui-server/blob/main/docker/config-template.yaml
       - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS:-temporal:7233}
-      - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS:-http://localhost:3000}
+      # Note: Not setting it enables all origins
+      # - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS:-http://localhost:3000}
+      - TEMPORAL_CODEC_ENDPOINT=http://localhost/api/temporal
+      - TEMPORAL_UI_ENABLED=true
+      - TEMPORAL_FEEDBACK_URL=https://github.com/julep-ai/julep
+      - TEMPORAL_NOTIFY_ON_NEW_VERSION=false
+      - TEMPORAL_CSRF_COOKIE_INSECURE=true
+        # - TEMPORAL_HIDE_LOGS=true
+        # - TEMPORAL_BANNER_TEXT=gagagaga
+        # - TEMPORAL_DISABLE_WRITE_ACTIONS=true
+        # - TEMPORAL_HIDE_WORKFLOW_QUERY_ERRORS=true
+        # - TEMPORAL_REFRESH_WORKFLOW_COUNTS_DISABLED=true
+      - TEMPORAL_OPEN_API_ENABLED=true
+
     ports:
       - 9000:8080  # Since 8080 is already used by agents-api
 

@@ -27,15 +27,23 @@ async def continue_as_child(
     previous_inputs: list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
-    return await workflow.execute_child_workflow(
-        "TaskExecutionWorkflow",
+    info = workflow.info()
+
+    if info.is_continue_as_new_suggested():
+        run = workflow.continue_as_new
+    else:
+        run = lambda *args, **kwargs: workflow.execute_child_workflow(  # noqa: E731
+            info.workflow_type, *args, **kwargs
+        )
+
+    return await run(
         args=[
             execution_input,
             start,
             previous_inputs,
-            user_state,
         ],
         retry_policy=DEFAULT_RETRY_POLICY,
+        memo=workflow.memo() | user_state,
     )
 
 
@@ -46,7 +54,7 @@ async def execute_switch_branch(
     switch: list,
     index: int,
     previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Switch step: Chose branch {index}")
     chosen_branch = switch[index]
@@ -77,7 +85,7 @@ async def execute_if_else_branch(
     else_branch: WorkflowStep,
     condition: bool,
     previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"If-Else step: Condition evaluated to {condition}")
     chosen_branch = then_branch if condition else else_branch
@@ -108,7 +116,7 @@ async def execute_foreach_step(
     do_step: WorkflowStep,
     items: list[Any],
     previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
     results = []
@@ -142,7 +150,7 @@ async def execute_map_reduce_step(
     map_defn: WorkflowStep,
     items: list[Any],
     previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    user_state: dict[str, Any] = {},
     reduce: str | None = None,
     initial: Any = [],
 ) -> Any:
@@ -185,7 +193,7 @@ async def execute_map_reduce_step_parallel(
     map_defn: WorkflowStep,
     items: list[Any],
     previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    user_state: dict[str, Any] = {},
     initial: Any = [],
     reduce: str | None = None,
     parallelism: int = task_max_parallelism,
