@@ -69,8 +69,6 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <details>
 <summary><h3>📖 Table of Contents</h3></summary>
 
-- [🌟 Call for Contributors!](#-call-for-contributors)
-  - [🎉 DevFest.AI October 2024](#-devfestai-october-2024)
 - [Introduction](#introduction)
 - [Quick Example](#quick-example)
 - [Key Features](#key-features)
@@ -94,11 +92,6 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Types of Workflow Steps](#types-of-workflow-steps)
-    - [Common Steps](#common-steps)
-    - [Key-Value Steps](#key-value-steps)
-    - [Iteration Steps](#iteration-steps)
-    - [Conditional Steps](#conditional-steps)
-    - [Other Control Flow](#other-control-flow)
 - [Advanced Features](#advanced-features)
   - [Adding Tools to Agents](#adding-tools-to-agents)
   - [Managing Sessions and Users](#managing-sessions-and-users)
