@@ -1,5 +1,5 @@
 import uuid
-import yaml
+import yaml, time
 from julep import Client
 
 # Global UUID is generated for agent and task
@@ -28,14 +28,13 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name=name,
     about=about,
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Add a web search tool to the agent
 client.agents.tools.create(
     agent_id=AGENT_UUID,
     name="web_search",
-    description="Search the web for information.",
     integration={
         "provider": "brave",
         "method": "search",
@@ -71,7 +70,7 @@ main:
 
 # Step 2: Tool Call - Web search for each question
 - foreach:
-    in: "_.split('\n')"
+    in: _.split('\\n')
     do:
       tool: web_search
       arguments:
@@ -121,10 +120,13 @@ execution = client.executions.create(
 
 print(f"Execution ID: {execution.id}")
 
+# Wait for the execution to complete
+time.sleep(10)
+
 # Getting the execution details
 execution = client.executions.get(execution.id)
 print("Execution Output:")
-print(execution.output)
+print(client.executions.transitions.list(execution_id=execution.id).items[0].output) 
 
 # Listing all the steps of a defined task
 transitions = client.executions.transitions.list(execution_id=execution.id).items
@@ -132,7 +134,6 @@ print("Execution Steps:")
 for transition in transitions:
     print(transition)
 
-# Streaming the execution steps
-print("Streaming Execution Steps:")
-for transition in client.executions.transitions.stream(execution_id=execution.id):
-    print(transition)
+# Stream the steps of the defined task
+print("Streaming execution transitions:")
+print(client.executions.transitions.stream(execution_id=execution.id))
