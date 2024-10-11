@@ -1,4 +1,6 @@
 import os
+from markdown_it import MarkdownIt
+from markdown_it.token import Token
 from deep_translator import GoogleTranslator
 
 # Define file paths relative to the script's location (outside scripts folder)
@@ -10,37 +12,54 @@ readme_cn_path = os.path.join(base_path, 'README-CN.md')
 readme_jp_path = os.path.join(base_path, 'README-JP.md')
 readme_fr_path = os.path.join(base_path, 'README-FR.md')
 
-# Language codes for GoogleTranslator
+# Function to split text into chunks of 5000 characters or less
+def split_text(text, max_len=5000):
+    return [text[i:i + max_len] for i in range(0, len(text), max_len)]
+
+def is_text_token(token: Token) -> bool:
+    # Check if the token is a text token that needs translation
+    return token.type == 'inline' and all(child.type == 'text' for child in token.children)
+
+# Function to translate the text, handling the 5000 character limit
+def translate_text(text, lang):
+    # Translate the text in Markdown while preserving other Markdown elements
+	md = MarkdownIt()
+	translator = GoogleTranslator(source='en', target=lang)
+	translated_text = ''
+
+    # Split the text into chunks if it's longer than 5000 characters
+	chunks = split_text(text)
+    
+	# Translate each chunk and combine the results
+	for chunk in chunks:
+		tokens = md.parse(chunk)
+		for token in tokens:
+			if is_text_token(token) and token.content.strip():
+				try:
+					translated_text += translator.translate(token.content) or token.content
+				except Exception as e:
+					print(f"Error translating '{token.content}': {e}")
+					translated_text += token.content
+			else:
+				translated_text += token.content
+    
+	return translated_text
+
+# Read the README file
+with open(readme_path, 'r', encoding='utf-8') as file:
+    original_content = file.read()
+
+# Translate to different languages
 languages = {
-    "chinese": "zh-CN",
-    "japanese": "ja",
-    "french": "fr"
+    'zh-CN': readme_cn_path,  # Chinese
+    'ja': readme_jp_path,        # Japanese
+    'fr': readme_fr_path         # French
 }
 
-# Function to translate content
-def translate_content(content, target_lang):
-    translator = GoogleTranslator(source='en', target=target_lang)
-    return translator.translate(content)
-
-# Read the original README.md content
-with open(readme_path, 'r', encoding='utf-8') as f:
-    original_content = f.read()
-
-# Translate and save each translation
-translations = {
-    "chinese": translate_content(original_content, languages["chinese"]),
-    "japanese": translate_content(original_content, languages["japanese"]),
-    "french": translate_content(original_content, languages["french"]),
-}
-
-# Write translated contents to respective files in the same location as README.md
-with open(readme_cn_path, 'w', encoding='utf-8') as f:
-    f.write(translations["chinese"])
-
-with open(readme_jp_path, 'w', encoding='utf-8') as f:
-    f.write(translations["japanese"])
-
-with open(readme_fr_path, 'w', encoding='utf-8') as f:
-    f.write(translations["french"])
+# Translate and write the translated content to corresponding files
+for lang, filename in languages.items():
+    translated_content = translate_text(original_content, lang)
+    with open(f'{filename}', 'w', encoding='utf-8') as output_file:
+        output_file.write(translated_content)
 
 print("README.md translated to Chinese, Japanese, and French successfully!")
