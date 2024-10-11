@@ -118,30 +118,6 @@ GenericStep = RootModel[WorkflowStep]
 # Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
-    user_state: dict[str, Any] = {}
-
-    def __init__(self) -> None:
-        self.user_state = {}
-
-    # TODO: Add endpoints for getting and setting user state for an execution
-    # Query methods for user state
-    @workflow.query
-    def get_user_state(self) -> dict[str, Any]:
-        return self.user_state
-
-    @workflow.query
-    def get_user_state_by_key(self, key: str) -> Any:
-        return self.user_state.get(key)
-
-    # Signal methods for updating user state
-    @workflow.signal
-    def set_user_state(self, key: str, value: Any) -> None:
-        self.user_state[key] = value
-
-    @workflow.signal
-    def update_user_state(self, values: dict[str, Any]) -> None:
-        self.user_state.update(values)
-
     # Main workflow run method
     @workflow.run
     async def run(
@@ -149,11 +125,7 @@ class TaskExecutionWorkflow:
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
         previous_inputs: list[Any] = [],
-        user_state: dict[str, Any] = {},
     ) -> Any:
-        # Set the initial user state
-        self.user_state = user_state
-
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
@@ -258,7 +230,6 @@ class TaskExecutionWorkflow:
                     switch=switch,
                     index=index,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -276,7 +247,6 @@ class TaskExecutionWorkflow:
                     else_branch=else_branch,
                     condition=condition,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -288,7 +258,6 @@ class TaskExecutionWorkflow:
                     do_step=do_step,
                     items=items,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -303,7 +272,6 @@ class TaskExecutionWorkflow:
                     reduce=reduce,
                     initial=initial,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -316,7 +284,6 @@ class TaskExecutionWorkflow:
                     map_defn=map_defn,
                     items=items,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                     initial=initial,
                     reduce=reduce,
                     parallelism=parallelism,
@@ -376,7 +343,6 @@ class TaskExecutionWorkflow:
                     context,
                     start=yield_next_target,
                     previous_inputs=[output],
-                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -439,14 +405,15 @@ class TaskExecutionWorkflow:
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
-                self.update_user_state(evaluated_output)
 
                 # Pass along the previous output unchanged
-                state = PartialTransition(output=context.current_input)
+                state = PartialTransition(
+                    output=context.current_input, user_state=evaluated_output
+                )
 
             case GetStep(get=key), _:
                 workflow.logger.info(f"Get step: Fetching '{key}' from user state")
-                value = self.get_user_state_by_key(key)
+                value = workflow.memo_value(key, default=None)
                 workflow.logger.debug(f"Retrieved value: {value}")
 
                 state = PartialTransition(output=value)
@@ -596,5 +563,5 @@ class TaskExecutionWorkflow:
             context.execution_input,
             start=final_state.next,
             previous_inputs=previous_inputs + [final_state.output],
-            user_state=self.user_state,
+            user_state=state.user_state,
         )

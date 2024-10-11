@@ -31,7 +31,7 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput):
         try:
             return await super().execute_activity(input)
-        except Exception as e:
+        except BaseException as e:
             if is_non_retryable_error(e):
                 raise ApplicationError(
                     str(e),
@@ -53,7 +53,7 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
     async def execute_workflow(self, input: ExecuteWorkflowInput):
         try:
             return await super().execute_workflow(input)
-        except Exception as e:
+        except BaseException as e:
             if is_non_retryable_error(e):
                 raise ApplicationError(
                     str(e),
