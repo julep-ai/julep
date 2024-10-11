@@ -29,6 +29,15 @@ http:
       service: service-agents-api
       priority: 1
     
+    agents-monitor:
+      entryPoints:
+        - web
+      rule: Path(`/monitor{path:.*}`)
+      middlewares:
+        - corsHeaders
+      service: service-monitor
+      priority: 1
+    
     agents-api-docs:
       entryPoints:
         - web
@@ -99,7 +108,13 @@ http:
         passHostHeader: false
         servers:
           - url: $AGENTS_API_URL
-          
+
+    service-monitor:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $MONITOR_URL
+
 experimental:
   localPlugins:
     jwt:
