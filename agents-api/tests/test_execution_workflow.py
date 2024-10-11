@@ -819,9 +819,9 @@ async def _(
             "input_schema": {"type": "object", "additionalProperties": True},
             "main": [
                 {
-                    "if": "True",
+                    "if": "False",
                     "then": {"evaluate": {"hello": '"world"'}},
-                    "else": {"evaluate": {"hello": '"nope"'}},
+                    "else": {"evaluate": {"hello": "random.randint(0, 10)"}},
                 },
             ],
         }
@@ -849,7 +849,7 @@ async def _(
         mock_run_task_execution_workflow.assert_called_once()
 
         result = await handle.result()
-        assert result["hello"] == "world"
+        assert result["hello"] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
 @test("workflow: switch step")
