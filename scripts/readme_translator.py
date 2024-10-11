@@ -1,7 +1,12 @@
-from deep_translator import GoogleTranslator
-from pathlib import Path
 import re
 from typing import List
+from pathlib import Path
+from functools import partial
+from deep_translator import GoogleTranslator
+import parmapper
+
+HTML_TAGS_PATTERN = r"(<[^>]+>)"
+CODEBLOCK_PATTERN = r"(```[\s\S]*?```|\n)"
 
 def create_translator(target: str) -> GoogleTranslator:
     """
@@ -9,27 +14,31 @@ def create_translator(target: str) -> GoogleTranslator:
     """
     return GoogleTranslator(source="en", target=target)
 
-def translate_raw_html(translator: GoogleTranslator, html_content: str) -> str:
+def translate_segment(translator: GoogleTranslator, segment: str) -> str:
     """
-    Translate a given raw html content using the provided translator, preserving HTML tags and newlines.
+    Translate a given raw HTML content using the provided translator, preserving HTML tags and newlines.
     """
-    html_tags_pattern = r"(<[^>]+>)"
-    segments = re.split(html_tags_pattern, html_content)
+    if re.fullmatch(CODEBLOCK_PATTERN, segment) or segment == '\n':
+        return segment
 
+    segments = re.split(HTML_TAGS_PATTERN, segment)
     translated_segments = []
-    for segment in segments:
-        if re.fullmatch(html_tags_pattern, segment):
-            translated_segments.append(segment)
+
+    for sub_segment in segments:
+        if re.fullmatch(HTML_TAGS_PATTERN, sub_segment):
+            translated_segments.append(sub_segment)
         else:
             try:
-                if re.fullmatch(r'^[!"#$%&\'()*+,\-./:;<=>?@[\]^_`{|}~]+$', segment):
-                    translated_segments.append(segment)
+                if re.fullmatch(r'^[!"#$%&\'()*+,\-./:;<=>?@[\]^_`{|}~]+$', sub_segment):
+                    translated_segments.append(sub_segment)
                     continue
-                translated = translator.translate(segment)
-                translated_segments.append(translated if translated else segment)
+
+                translated = translator.translate(sub_segment)
+                translated_segments.append(translated if translated else sub_segment)
             except Exception as e:
-                print(f"Error translating segment '{segment}': {e}")
-                translated_segments.append(segment)
+                print(f"Error translating segment '{sub_segment}': {e}")
+                translated_segments.append(sub_segment)
+
     return "".join(translated_segments)
 
 def translate_readme(source: str, target: str) -> str:
@@ -38,15 +47,9 @@ def translate_readme(source: str, target: str) -> str:
     """
     file_content = Path(source).read_text(encoding='utf-8')
     translator = create_translator(target)
-    code_block_pattern = r"(```[\s\S]*?```|\n)"
-    segments = re.split(code_block_pattern, file_content)
-    
-    translated_segments = []
-    for segment in segments:
-        if re.fullmatch(code_block_pattern, segment) or segment == '\n':
-            translated_segments.append(segment)
-        else:
-            translated_segments.append(translate_raw_html(translator, segment))
+    segments = re.split(CODEBLOCK_PATTERN, file_content)
+    segment_translation = partial(translate_segment, translator)
+    translated_segments = list(parmapper.parmap(segment_translation, segments))
     return ''.join(translated_segments)
 
 def save_translated_readme(translated_content: str, lang: str) -> None:
@@ -63,7 +66,7 @@ def main() -> None:
     """
     source_file = "README.md"
     destination_langs = ["zh-CN", "ja", "fr"]
-    
+
     for lang in destination_langs:
         translated_readme = translate_readme(source_file, lang)
         save_translated_readme(translated_readme, lang)
