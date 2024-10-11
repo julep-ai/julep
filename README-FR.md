@@ -38,7 +38,7 @@
 
 Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous avons créé plusieurs « bons premiers numéros » pour vous aider à démarrer. Voici comment vous pouvez contribuer :
 
-1. Consultez notre fichier [CONTRIBUTING.md](CONTRIBUTING.md) pour obtenir des instructions sur la manière de contribuer.
+1. Consultez notre fichier [CONTRIBUTING.md](https://github.com/julep-ai/julep/blob/dev/CONTRIBUTING.md) pour obtenir des instructions sur la façon de contribuer.
 2. Parcourez nos [bons premiers numéros](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour trouver une tâche qui vous intéresse.
 3. Si vous avez des questions ou avez besoin d'aide, n'hésitez pas à nous contacter sur notre chaîne [Discord](https://discord.com/invite/JTSBGRZrzj).
 
@@ -67,44 +67,44 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 Table des matières</h3></summary>
 
-- [Introduction](#introduction)
-- [Exemple rapide](#exemple-rapide)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain%C2%A0)
-  - [Différents cas d'utilisation](#diff%C3%A9rents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
-  - [En résumé](#en-r%C3%A9sum%C3%A9)
+- [Présentation](#introduction)
+- [Exemple rapide](#quick-example)
+- [Caractéristiques principales](#key-features)
+- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent)
-- [Démarrage rapide de Node.js 🟩](#d%C3%A9marrage-rapide-de-nodejs-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent-1)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e-1)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che-1)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent-1)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent-1)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task-1)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent-1)
 - [Composants](#composants)
-  - [Modèle mental](#mod%C3%A8le-mental)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Comprendre les tâches](#comprendre-les-t%C3%A2ches)
-  - [Types d'étapes de flux de travail](#types-d%C3%A9tapes-de-flux-de-travail)
-- [Fonctionnalités avancées](#fonctionnalit%C3%A9s-avanc%C3%A9es)
-  - [Ajout d'outils aux agents](#ajout-doutils-aux-agents)
-  - [Gestion des sessions et des utilisateurs](#gestion-des-sessions-et-des-utilisateurs)
-  - [Intégration et recherche de documents](#int%C3%A9gration-et-recherche-de-documents)
-- [Intégrations](#int%C3%A9grations)
-  - [Recherche courageuse](#recherche-courageuse)
-  - [Base de navigateur](#base-de-navigateur)
-  - [E-mail](#e-mail)
-  - [Araignée](#araign%C3%A9e)
-  - [Météo](#m%C3%A9t%C3%A9o)
-  - [Wikipédia](#wikip%C3%A9dia)
-- [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-- [Référence API](#r%C3%A9f%C3%A9rence-api)
+- [Comprendre les tâches](#understanding-tasks)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Fonctionnalités avancées](#advanced-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Intégrations](#intégrations)
+- [Recherche courageuse](#brave-search)
+- [Base du navigateur](#basedunavigateur)
+- [Courriel](#courriel)
+- [Araignée](#araignée)
+- [Météo](#météo)
+- [Wikipédia](#wikipédia)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
