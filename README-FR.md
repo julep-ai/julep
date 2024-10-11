@@ -23,17 +23,17 @@
 [!NOTE]
 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.<details>
 <summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
-🌟 寄稿者を募集します!Julep プロジェクトに新しい貢献者を迎えられることを嬉しく思います。プロジェクトを始めるのに役立つ「最初の良い問題」をいくつか作成しました。貢献する方法は次のとおりです。Check out our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute.Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a task that interests you.If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.あなたの貢献は、大小を問わず私たちにとって貴重です。一緒に素晴らしいものを作りましょう！🚀🎉 DevFest.AI 2024年10月嬉しいニュースです！2024 年 10 月を通して DevFest.AI に参加します！🗓️このイベント中に Julep に貢献すると、素晴らしい Julep のグッズや景品を獲得するチャンスが得られます! 🎁世界中の開発者とともに AI リポジトリに貢献し、素晴らしいイベントに参加しましょう。この素晴らしい取り組みを企画してくださった DevFest.AI に心から感謝します。[!TIP]
+🌟 Appel aux contributeurs !Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous avons créé plusieurs « bons premiers numéros » pour vous aider à démarrer. Voici comment vous pouvez contribuer :Check out our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute.Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a task that interests you.If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.Vos contributions, grandes ou petites, nous sont précieuses. Construisons ensemble quelque chose d'extraordinaire ! 🚀🎉 DevFest.AI Octobre 2024Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du mois d'octobre 2024 ! 🗓️Contribuez à Julep pendant cet événement et obtenez une chance de gagner de superbes produits et cadeaux Julep ! 🎁Rejoignez les développeurs du monde entier en contribuant aux référentiels d'IA et en participant à des événements incroyables.Un grand merci à DevFest.AI pour l'organisation de cette fantastique initiative ![!TIP]
 Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️[!NOTE]
 Get your API key [here](https://dashboard-dev.julep.ai).While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)</details>
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
 <summary><h3>📖 Table of Contents</h3></summary>
-[Introduction](#introduction)[Quick Example](#quick-example)[Key Features](#key-features)[Why Julep vs. LangChain?](#why-julep-vs-langchain)[Different Use Cases](#different-use-cases)[Different Form Factor](#different-form-factor)[In Summary](#in-summary)[Installation](#installation)[Python Quick Start 🐍](#python-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip)[Step 3: Execute the Task](#step-3-execute-the-task)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent)[Node.js Quick Start 🟩](#nodejs-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent-1)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)[Step 3: Execute the Task](#step-3-execute-the-task-1)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent-1)[コンポーネント](#components)[Mental Model](#mental-model)[Concepts](#concepts)[Understanding Tasks](#understanding-tasks)[Types of Workflow Steps](#types-of-workflow-steps)[Advanced Features](#advanced-features)[Adding Tools to Agents](#adding-tools-to-agents)[Managing Sessions and Users](#managing-sessions-and-users)[Document Integration and Search](#document-integration-and-search)[Integrations](#integrations)[Brave Search](#brave-search)[BrowserBase](#browserbase)[Email](#email)[Spider](#spider)[Weather](#weather)[Wikipedia](#wikipedia)[SDK Reference](#sdk-reference)[API Reference](#api-reference)</details>
+[Introduction](#introduction)[Quick Example](#quick-example)[Key Features](#key-features)[Why Julep vs. LangChain?](#why-julep-vs-langchain)[Different Use Cases](#different-use-cases)[Different Form Factor](#different-form-factor)[In Summary](#in-summary)[Installation](#installation)[Python Quick Start 🐍](#python-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip)[Step 3: Execute the Task](#step-3-execute-the-task)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent)[Node.js Quick Start 🟩](#nodejs-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent-1)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)[Step 3: Execute the Task](#step-3-execute-the-task-1)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent-1)[Composants](#composant(nts)[Mental Model](#mental-model)[Concepts](#concepts)[Understanding Tasks](#understanding-tasks)[Types of Workflow Steps](#types-of-workflow-steps)[Advanced Features](#advanced-features)[Adding Tools to Agents](#adding-tools-to-agents)[Managing Sessions and Users](#managing-sessions-and-users)[Document Integration and Search](#document-integration-and-search)[Integrations](#integrations)[Brave Search](#brave-search)[BrowserBase](#browserbase)[Email](#email)[Spider](#spider)[Weather](#weather)[Wikipedia](#wikipedia)[SDK Reference](#sdk-reference)[API Reference](#api-reference)</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-導入Julep は、過去のやり取りを記憶し、複雑なタスクを実行できる AI エージェントを作成するためのプラットフォームです。長期記憶を提供し、複数ステップのプロセスを管理します。Julep を使用すると、意思決定、ループ、並列処理、多数の外部ツールや API との統合を組み込んだ複数ステップのタスクを作成できます。多くの AI アプリケーションは、分岐が最小限の、プロンプトと API 呼び出しの単純な線形チェーンに制限されていますが、Julep はより複雑なシナリオを処理できるように構築されています。サポート対象:複雑で多段階のプロセス動的な意思決定並列実行[!TIP]
-Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.簡単な例次のことができる研究 AI エージェントを想像してください。トピックを取り上げ、そのトピックについて100個の検索クエリを考えてみましょう。これらのウェブ検索を並行して実行すると、結果をまとめると、要約をDiscordに送信するIn Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger. Here's a working example:name: Research Agent
+IntroductionJulep est une plateforme permettant de créer des agents IA qui se souviennent des interactions passées et peuvent effectuer des tâches complexes. Elle offre une mémoire à long terme et gère des processus en plusieurs étapes.Julep permet la création de tâches en plusieurs étapes intégrant la prise de décision, les boucles, le traitement parallèle et l'intégration avec de nombreux outils et API externes.Alors que de nombreuses applications d’IA se limitent à des chaînes simples et linéaires d’invites et d’appels d’API avec une ramification minimale, Julep est conçu pour gérer des scénarios plus complexes.Il prend en charge :Des processus complexes en plusieurs étapesPrise de décision dynamiqueExécution parallèle[!TIP]
+Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.Exemple rapideImaginez un agent d’IA de recherche capable d’effectuer les opérations suivantes :Prenez un sujet,Proposez 100 requêtes de recherche pour ce sujet,Effectuez ces recherches sur le Web en parallèle,Résumer les résultats,Envoyez le résumé sur DiscordIn Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger. Here's a working example:name: Research Agent
 
 # Optional: Define the input schema for the task
 input_schema:
@@ -110,11 +110,11 @@ main:
 
       {{_}}
 [!TIP]
-Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.この例では、Julep は並列実行を自動的に管理し、失敗したステップを再試行し、API リクエストを再送信し、タスクが完了するまで確実に実行し続けます。主な特徴🧠 **Persistent AI Agents**: Remember context and information over long-term interactions.💾 **Stateful Sessions**: Keep track of past interactions for personalized responses.🔄 **Multi-Step Tasks**: Build complex, multi-step processes with loops and decision-making.⏳ **Task Management**: Handle long-running tasks that can run indefinitely.🛠️ **Built-in Tools**: Use built-in tools and external APIs in your tasks.🔧 **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.📚 **RAG**: Use Julep's document store to build a system for retrieving と独自のデータを使用します。Julep は、単純なプロンプト応答モデルを超えた AI ユースケースを必要とするアプリケーションに最適です。Julep と LangChain を比較する理由さまざまなユースケースLangChain と Julep は、AI 開発スタック内で異なる重点を置いたツールと考えてください。LangChain は、プロンプトのシーケンスを作成し、AI モデルとのやり取りを管理するのに最適です。多数の事前構築された統合を備えた大規模なエコシステムを備えているため、何かをすぐに立ち上げて実行したい場合に便利です。LangChain は、プロンプトと API 呼び出しの線形チェーンを含む単純なユースケースに適しています。一方、Julep は、長期的なインタラクションを通じて物事を記憶できる永続的な AI エージェントの構築に重点を置いています。エージェントのプロセス内で複数のステップ、意思決定、さまざまなツールや API との直接統合を伴う複雑なタスクが必要な場合に効果を発揮します。永続的なセッションと複雑なタスクを管理するために、ゼロから設計されています。以下のことを必要とする複雑な AI アシスタントの構築を考えている場合には、Julep を使用してください。数日または数週間にわたってユーザーのインタラクションを追跡します。毎日のサマリーの送信やデータ ソースの監視などのスケジュールされたタスクを実行します。以前のやり取りや保存されたデータに基づいて決定を下します。タスクの一部として複数の外部サービスと対話します。そして、Julep は、ゼロから構築する必要なく、これらすべてをサポートするインフラストラクチャを提供します。異なるフォームファクタJulep is a **platform** that includes a language for describing tasks, a server for running those tasks, and an SDK for interacting with the platform. To build something with Julep, you write a description of the task in `YAML`, and then run the task in the cloud.Julep は、負荷の高い、複数のステップから成る、長時間実行されるタスク向けに構築されており、タスクの複雑さに制限はありません。LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. To build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.LangChain は、プロンプトと API 呼び出しの線形チェーンを含む単純なユースケースでは十分であり、実装も迅速です。要約すればステートレスまたは短期的なコンテキストで AI モデルのインタラクションとプロンプト シーケンスを管理する必要がある場合は、LangChain を使用します。高度なタスク機能、永続的なセッション、複雑なタスク管理を備えたステートフル エージェント用の堅牢なフレームワークが必要な場合は、Julep を選択してください。インストールTo get started with Julep, install it using [npm](https://www.npmjs.com/package/@julep/sdk) or [pip](https://pypi.org/project/julep/):npm install @julep/sdk
-またはpip install julep
+Julep is really useful when you want to build AI agents that can maintain context and state over long-term interactions. It's great for designing complex, multi-step workflows and integrating various tools and APIs directly into your agent's processes.Dans cet exemple, Julep gérera automatiquement les exécutions parallèles, réessayera les étapes ayant échoué, renverra les requêtes API et maintiendra les tâches en cours d'exécution de manière fiable jusqu'à leur achèvement.Caractéristiques principales🧠 **Persistent AI Agents**: Remember context and information over long-term interactions.💾 **Stateful Sessions**: Keep track of past interactions for personalized responses.🔄 **Multi-Step Tasks**: Build complex, multi-step processes with loops and decision-making.⏳ **Task Management**: Handle long-running tasks that can run indefinitely.🛠️ **Built-in Tools**: Use built-in tools and external APIs in your tasks.🔧 **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.📚 **RAG**: Use Julep's document store to build a system for retrieving et en utilisant vos propres données.Julep est idéal pour les applications qui nécessitent des cas d’utilisation de l’IA au-delà des simples modèles de réponse rapide.Pourquoi Julep vs. LangChain ?Différents cas d'utilisationConsidérez LangChain et Julep comme des outils avec des objectifs différents au sein de la pile de développement de l’IA.LangChain est idéal pour créer des séquences d'invites et gérer les interactions avec les modèles d'IA. Il dispose d'un vaste écosystème avec de nombreuses intégrations prédéfinies, ce qui le rend pratique si vous souhaitez mettre en place quelque chose rapidement. LangChain s'adapte bien aux cas d'utilisation simples qui impliquent une chaîne linéaire d'invites et d'appels d'API.Julep, en revanche, s'intéresse davantage à la création d'agents d'IA persistants capables de mémoriser des éléments au cours d'interactions à long terme. Il est particulièrement efficace lorsque vous avez besoin de tâches complexes impliquant plusieurs étapes, une prise de décision et une intégration avec divers outils ou API directement dans le processus de l'agent. Il est conçu dès le départ pour gérer les sessions persistantes et les tâches complexes.Utilisez Julep si vous imaginez créer un assistant IA complexe qui doit :Suivez les interactions des utilisateurs sur plusieurs jours ou semaines.Exécutez des tâches planifiées, comme l’envoi de résumés quotidiens ou la surveillance de sources de données.Prendre des décisions basées sur des interactions antérieures ou des données stockées.Interagir avec plusieurs services externes dans le cadre de sa tâche.Ensuite, Julep fournit l’infrastructure pour prendre en charge tout cela sans que vous ayez à le construire à partir de zéro.Différents facteurs de formeJulep is a **platform** that includes a language for describing tasks, a server for running those tasks, and an SDK for interacting with the platform. To build something with Julep, you write a description of the task in `YAML`, and then run the task in the cloud.Julep est conçu pour les tâches lourdes, en plusieurs étapes et de longue durée, et il n'y a aucune limite à la complexité de la tâche.LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. To build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.LangChain pourrait être suffisant et plus rapide à mettre en œuvre pour les cas d'utilisation simples impliquant une chaîne linéaire d'invites et d'appels d'API.En résuméUtilisez LangChain lorsque vous devez gérer les interactions des modèles d’IA et les séquences d’invite dans un contexte sans état ou à court terme.Choisissez Julep lorsque vous avez besoin d'un framework robuste pour les agents avec état avec des capacités de tâches avancées, des sessions persistantes et une gestion de tâches complexes.InstallationTo get started with Julep, install it using [npm](https://www.npmjs.com/package/@julep/sdk) or [pip](https://pypi.org/project/julep/):npm install @julep/sdk
+oupip install julep
 [!NOTE]
 Get your API key [here](https://dashboard-dev.julep.ai).While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.[!TIP]
-💻 Are you a _show me the code!™_ kind of person? We have created a ton of cookbooks for you to get started with. **Check out the [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks)** to browse through examples.💡 There's also lots of ideas that you can build on top of Julep. **Check out the [list of ideas](https://github.com/julep-ai/julep/tree/dev/cookbooks/IDEAS.md)** to get some inspiration.Python クイックスタート 🐍ステップ1: エージェントを作成するimport yaml
+💻 Are you a _show me the code!™_ kind of person? We have created a ton of cookbooks for you to get started with. **Check out the [cookbooks](https://github.com/julep-ai/julep/tree/dev/cookbooks)** to browse through examples.💡 There's also lots of ideas that you can build on top of Julep. **Check out the [list of ideas](https://github.com/julep-ai/julep/tree/dev/cookbooks/IDEAS.md)** to get some inspiration.Démarrage rapide de Python 🐍Étape 1 : Créer un agentimport yaml
 from julep import Julep # or AsyncJulep
 
 client = Julep(api_key="your_julep_api_key")
@@ -138,7 +138,7 @@ client.agents.tools.create(
         },
     },
 )
-ステップ2: ストーリーと漫画を生成するタスクを作成する入力されたアイデアに基づいてストーリーを作成し、パネル化された漫画を生成するためのマルチステップタスクを定義しましょう。# 📋 Task
+Étape 2 : Créer une tâche qui génère une histoire et une bande dessinéeDéfinissons une tâche en plusieurs étapes pour créer une histoire et générer une bande dessinée à panneaux basée sur une idée d'entrée :# 📋 Task
 # Create a task that takes an idea and creates a story and a 4-panel comic strip
 task_yaml = """
 name: Story and Comic Creator
@@ -155,18 +155,18 @@ main:
           Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
     unwrap: true
 
-  # Step 2: Extract theパネルの説明とストーリーevaluate:
+  # Step 2: Extract thedescriptions des panneaux et histoireevaluate:
   story: _.split('1. ')[0].strip()
-  panels: re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)ステップ3: 画像生成ツールを使用して各パネルの画像を生成するforeach:
+  panels: re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)Étape 3 : Générer des images pour chaque panneau à l'aide de l'outil de génération d'imagesforeach:
   in: _.panels
   do:
     tool: image_generator
     arguments:
-      description: _ステップ4: ストーリーのキャッチーなタイトルを作成するプロンプト：role: system
+      description: _Étape 4 : Générez un titre accrocheur pour l'histoirerapide:role: system
 content: You are {{agent.name}}. {{agent.about}}role: user
 content: >
   Based on the story below, generate a catchy title.Story: {{outputs[1].story}}
-unwrap: trueステップ5: ストーリー、生成された画像、タイトルを返すreturn:
+unwrap: trueÉtape 5 : Renvoyer l'histoire, les images générées et le titrereturn:
   title: outputs[3]
   story: outputs[1].story
   comic_panels: "[output.image.url for output in outputs[2]]"
@@ -189,7 +189,7 @@ for transition in client.executions.transitions.stream(execution_id=execution.id
 
 # 📦 Once the execution is finished, retrieve the results
 result = client.executions.get(execution_id=execution.id)
-ステップ4: エージェントとチャットするエージェントとの対話型チャット セッションを開始します。session = client.sessions.create(agent_id=agent.id)
+Étape 4 : Discutez avec l'agentDémarrez une session de chat interactive avec l'agent :session = client.sessions.create(agent_id=agent.id)
 
 # 💬 Send messages to the agent
 while (message := input("Enter a message: ")) != "quit":
@@ -200,7 +200,7 @@ while (message := input("Enter a message: ")) != "quit":
 
     print(response)
 [!TIP]
-You can find the full python example [here](example.py).Node.js クイックスタート 🟩ステップ1: エージェントを作成するimport { Julep } from '@julep/sdk';
+You can find the full python example [here](example.py).Démarrage rapide de Node.js 🟩Étape 1 : Créer un agentimport { Julep } from '@julep/sdk';
 import yaml from 'js-yaml';
 
 const client = new Julep({ apiKey: 'your_julep_api_key' });
@@ -227,7 +227,7 @@ async function createAgent() {
 
   return agent;
 }
-ステップ2: ストーリーと漫画を生成するタスクを作成するconst taskYaml = `
+Étape 2 : Créer une tâche qui génère une histoire et une bande dessinéeconst taskYaml = `
 name: Story and Comic Creator
 description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
 
@@ -277,7 +277,7 @@ async function createTask(agent) {
   const task = await client.tasks.create(agent.id, yaml.load(taskYaml));
   return task;
 }
-ステップ3: タスクを実行するasync function executeTask(task) {
+Étape 3 : Exécuter la tâcheasync function executeTask(task) {
   const execution = await client.executions.create(task.id, {
     input: { idea: "A cat who learns to fly" }
   });
@@ -291,7 +291,7 @@ async function createTask(agent) {
   const result = await client.executions.get(execution.id);
   return result;
 }
-ステップ4: エージェントとチャットするasync function chatWithAgent(agent) {
+Étape 4 : Discutez avec l'agentasync function chatWithAgent(agent) {
   const session = await client.sessions.create({ agent_id: agent.id });
 
   // 💬Send messages to the agent
@@ -315,7 +315,7 @@ async function runExample() {
   const result = await executeTask(task);
   console.log("Task Result:", result);
   await chatWithAgent(agent);
-}実行例()。コンソールのエラーをキャッチします。
+}runExample().catch(console.error);
 > [!TIP]
 > You can find the full Node.js example [here](example.js).
 
@@ -372,7 +372,7 @@ graph TD
 
     classDef core fill:#f9f,stroke:#333,stroke-width:2px;
     class Agent,Tasks,Session core;
-**Agents**: AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users.**Users**: Entities that interact with agents through sessions.**Sessions**: Stateful interactions between agents and users, maintaining context across multiple exchanges.**Tasks**: Multi-step, programmatic workflows that agents can execute, including various types of steps like prompts, tool calls, and conditional logic.**Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.**Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.**Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md).タスクを理解するタスクは Julep のワークフロー システムの中核です。タスクを使用すると、エージェントが実行できる複雑な複数ステップの AI ワークフローを定義できます。タスク コンポーネントの概要は次のとおりです。**Name and Description**: Each task has a unique name and description for easy identification.**Main Steps**: The core of a task, defining the sequence of actions to be performed.**Tools**: Optional integrations that extend the capabilities of your agent during task execution.ワークフローステップの種類Julep のタスクにはさまざまな種類のステップを含めることができるため、複雑で強力なワークフローを作成できます。利用可能なステップの種類の概要をカテゴリ別にまとめると次のようになります。一般的な手順**Prompt**: SendAI モデルにメッセージを送信し、応答を受け取ります。- prompt: "Analyze the following data: {{data}}"
+**Agents**: AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users.**Users**: Entities that interact with agents through sessions.**Sessions**: Stateful interactions between agents and users, maintaining context across multiple exchanges.**Tasks**: Multi-step, programmatic workflows that agents can execute, including various types of steps like prompts, tool calls, and conditional logic.**Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.**Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.**Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.For a more detailed explanation of these concepts and their interactions, please refer to our [Concepts Documentation](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md).Comprendre les tâchesLes tâches sont au cœur du système de workflow de Julep. Elles vous permettent de définir des workflows IA complexes en plusieurs étapes que vos agents peuvent exécuter. Voici un bref aperçu des composants des tâches :**Name and Description**: Each task has a unique name and description for easy identification.**Main Steps**: The core of a task, defining the sequence of actions to be performed.**Tools**: Optional integrations that extend the capabilities of your agent during task execution.Types d'étapes du flux de travailLes tâches dans Julep peuvent inclure différents types d'étapes, ce qui vous permet de créer des flux de travail complexes et puissants. Voici un aperçu des types d'étapes disponibles, organisés par catégorie :Étapes courantes**Prompt**: Sendun message au modèle d'IA et recevoir une réponse.- prompt: "Analyze the following data: {{data}}"
 **Tool Call**: Execute an integrated tool or API.- tool: web_search
   arguments:
     query: "Latest AI developments"
@@ -382,10 +382,10 @@ graph TD
     info:
       message: "Please provide additional information."
 **Log**: Log a specified value or message.- log: "Processing completed for item {{item_id}}"
-キーバリューステップ**Get**: Retrieve a value from a key-value store.- get: "user_preference"
+Étapes clés-valeurs**Get**: Retrieve a value from a key-value store.- get: "user_preference"
 **Set**: Assign a value to a key in a key-value store.- set:
     user_preference: "dark_mode"
-反復ステップ**Foreach**: Iterate over a collection and perform steps for each item.- foreach:
+Étapes d'itération**Foreach**: Iterate over a collection and perform steps for each item.- foreach:
     in: "data_list"
     do:
       - log: "Processing item {{_}}"
@@ -402,7 +402,7 @@ graph TD
     - tool: weather_check
       arguments:
         location: "New York"
-条件付きステップ**If-Else**: Conditional execution of steps.- if: "score > 0.8"
+Étapes conditionnelles**If-Else**: Conditional execution of steps.- if: "score > 0.8"
   then:
     - log: "High score achieved"
   else:
@@ -417,7 +417,7 @@ graph TD
     - case: "_"  # Default case
       then:
         - log: "Unknown category"
-その他の制御フロー**Sleep**: Pause the workflow for a specified duration.- sleep:
+Autre flux de contrôle**Sleep**: Pause the workflow for a specified duration.- sleep:
     seconds: 30
 **Return**: Return a value from the workflow.- return:
     result: "Task completed successfully"
@@ -426,7 +426,7 @@ graph TD
     arguments:
       input_data: "{{raw_data}}"
 **Error**: Handle errors by specifying an error message.- error: "Invalid input provided"
-各ステップ タイプは、高度な AI ワークフローを構築する上で特定の目的を果たします。この分類は、Julep タスクで使用できるさまざまな制御フローと操作を理解するのに役立ちます。高度な機能Julep は、AI ワークフローを強化するためのさまざまな高度な機能を提供します。エージェントへのツールの追加外部ツールと API を統合してエージェントの機能を拡張します。client.agents.tools.create(
+Chaque type d'étape remplit un objectif spécifique dans la création de workflows d'IA sophistiqués. Cette catégorisation permet de comprendre les différents flux de contrôle et opérations disponibles dans les tâches Julep.Fonctionnalités avancéesJulep propose une gamme de fonctionnalités avancées pour améliorer vos flux de travail d'IA :Ajout d'outils aux agentsÉtendez les capacités de votre agent en intégrant des outils et des API externes :client.agents.tools.create(
     agent_id=agent.id,
     name="web_search",
     description="Search the web for information.",
@@ -436,7 +436,7 @@ graph TD
         "setup": {"api_key": "your_brave_api_key"},
     },
 )
-セッションとユーザーの管理Julep は、永続的なインタラクションのための堅牢なセッション管理を提供します。session = client.sessions.create(
+Gestion des sessions et des utilisateursJulep fournit une gestion de session robuste pour les interactions persistantes :session = client.sessions.create(
     agent_id=agent.id,
     user_id=user.id,
     context_overflow="adaptive"
@@ -452,7 +452,7 @@ response = client.sessions.chat(
       }
     ]
 )
-ドキュメントの統合と検索エージェントのドキュメントを簡単に管理および検索できます。# Upload a document
+Intégration et recherche de documentsGérez et recherchez facilement des documents pour vos agents :# Upload a document
 document = client.agents.docs.create(
     title="AI advancements",
     content="AI is changing the world...",
@@ -464,7 +464,7 @@ results = client.agents.docs.search(
     text="AI advancements",
     metadata_filter={"category": "research_paper"}
 )
-For more advanced features and detailed usage, please refer to our [Advanced Features Documentation](https://docs.julep.ai/advanced-features).統合Julep は、AI エージェントの機能を拡張するさまざまな統合をサポートしています。利用可能な統合とサポートされている引数のリストは次のとおりです。勇敢な検索setup:
+For more advanced features and detailed usage, please refer to our [Advanced Features Documentation](https://docs.julep.ai/advanced-features).IntégrationsJulep prend en charge diverses intégrations qui étendent les capacités de vos agents IA. Voici une liste des intégrations disponibles et de leurs arguments pris en charge :Recherche courageusesetup:
   api_key: string  # The API key for Brave Search
 
 arguments:
@@ -472,7 +472,7 @@ arguments:
 
 output:
   result: string  # The result of the Brave Search
-ブラウザベースsetup:
+Base de navigateursetup:
   api_key: string       # The API key for BrowserBase
   project_id: string    # The project ID for BrowserBase
   session_id: string    # (Optional) The session ID for BrowserBasearguments:
@@ -495,7 +495,7 @@ arguments:
 
 output:
   success: boolean  # Whether the email was sent successfully
-スパイダーsetup:
+Araignéesetup:
   spider_api_key: string  # The API key for Spider
 
 arguments:
@@ -505,7 +505,7 @@ arguments:
 
 output:
   documents: list         # The documents returned from the spider
-天気setup:
+Météosetup:
   openweathermap_api_key: string  # The API key for OpenWeatherMap
 
 arguments:
@@ -513,11 +513,11 @@ arguments:
 
 output:
   result: string                  # The weather data for the specified location
-ウィキペディアarguments:
+Wikipédiaarguments:
   query: string           # The search query string
   load_max_docs: integer  # Maximum number of documents to load (default: 2)
 
 output:
   documents: list         # The documents returned from the Wikipedia search
-These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).SDKリファレンス[Node.js SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md)[Python SDK](https://github.com/julep-ai/python-sdk/blob/main/api.md)APIリファレンスエージェント、タスク、実行の詳細については、包括的な API ドキュメントをご覧ください。[Agents API](https://api.julep.ai/api/docs#tag/agents)[Tasks API](https://api.julep.ai/api/docs#tag/tasks)[Executions API](https://api.julep.ai/api/docs#tag/executions)->> Test <<-
+These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).Référence SDK[Node.js SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md)[Python SDK](https://github.com/julep-ai/python-sdk/blob/main/api.md)Référence APIExplorez notre documentation API complète pour en savoir plus sur les agents, les tâches et les exécutions :[Agents API](https://api.julep.ai/api/docs#tag/agents)[Tasks API](https://api.julep.ai/api/docs#tag/tasks)[Executions API](https://api.julep.ai/api/docs#tag/executions)->> Test <<-
 A simple update to text the translation github action
