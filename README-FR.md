@@ -30,7 +30,26 @@ Get your API key [here](https://dashboard-dev.julep.ai).While we are in beta, yo
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
 <summary><h3>📖 Table of Contents</h3></summary>
-[Introduction](#introduction)[Quick Example](#quick-example)[Key Features](#key-features)[Why Julep vs. LangChain?](#why-julep-vs-langchain)[Different Use Cases](#different-use-cases)[Different Form Factor](#different-form-factor)[In Summary](#in-summary)[Installation](#installation)[Python Quick Start 🐍](#python-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip)[Step 3: Execute the Task](#step-3-execute-the-task)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent)[Node.js Quick Start 🟩](#nodejs-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent-1)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)[Step 3: Execute the Task](#step-3-execute-the-task-1)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent-1)[Composants](#composant(nts)[Mental Model](#mental-model)[Concepts](#concepts)[Understanding Tasks](#understanding-tasks)[Types of Workflow Steps](#types-of-workflow-steps)[Advanced Features](#advanced-features)[Adding Tools to Agents](#adding-tools-to-agents)[Managing Sessions and Users](#managing-sessions-and-users)[Document Integration and Search](#document-integration-and-search)[Integrations](#integrations)[Brave Search](#brave-search)[BrowserBase](#browserbase)[Email](#email)[Spider](#spider)[Weather](#weather)[Wikipedia](#wikipedia)[SDK Reference](#sdk-reference)[API Reference](#api-reference)</details>
+
+- [Optional: Define the input schema for the task](#optional-define-the-input-schema-for-the-task)
+- [Define the tools that the agent can use](#define-the-tools-that-the-agent-can-use)
+- [Special variables:](#special-variables)
+- [- inputs: for accessing the input to the task](#--inputs-for-accessing-the-input-to-the-task)
+- [- outputs: for accessing the output of previous steps](#--outputs-for-accessing-the-output-of-previous-steps)
+- [- _: for accessing the output of the previous step](#--_-for-accessing-the-output-of-the-previous-step)
+- [Define the main workflow](#define-the-main-workflow)
+- [Evaluate the search queries using a simple python expression](#evaluate-the-search-queries-using-a-simple-python-expression)
+- [Run the web search in parallel for each query](#run-the-web-search-in-parallel-for-each-query)
+- [Collect the results from the web search](#collect-the-results-from-the-web-search)
+- [Summarize the results](#summarize-the-results)
+- [Send the summary to Discord](#send-the-summary-to-discord)
+- [🛠️ Add an image generation tool (DALL·E) to the agent](#-add-an-image-generation-tool-dall%C2%B7e-to-the-agent)
+- [Create a task that takes an idea and creates a story and a 4-panel comic strip](#create-a-task-that-takes-an-idea-and-creates-a-story-and-a-4-panel-comic-strip)
+- [Step 1: Generate a story and outline into 4 panels](#step-1-generate-a-story-and-outline-into-4-panels)
+- [Step 2: Extract thedescriptions des panneaux et histoireevaluate:](#step-2-extract-thedescriptions-des-panneaux-et-histoireevaluate)
+    - [Step 3: Execute the Task](#step-3-execute-the-task)
+
+</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 IntroductionJulep est une plateforme permettant de créer des agents IA qui se souviennent des interactions passées et peuvent effectuer des tâches complexes. Elle offre une mémoire à long terme et gère des processus en plusieurs étapes.Julep permet la création de tâches en plusieurs étapes intégrant la prise de décision, les boucles, le traitement parallèle et l'intégration avec de nombreux outils et API externes.Alors que de nombreuses applications d’IA se limitent à des chaînes simples et linéaires d’invites et d’appels d’API avec une ramification minimale, Julep est conçu pour gérer des scénarios plus complexes.Il prend en charge :Des processus complexes en plusieurs étapesPrise de décision dynamiqueExécution parallèle[!TIP]
 Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.Exemple rapideImaginez un agent d’IA de recherche capable d’effectuer les opérations suivantes :Prenez un sujet,Proposez 100 requêtes de recherche pour ce sujet,Effectuez ces recherches sur le Web en parallèle,Résumer les résultats,Envoyez le résumé sur DiscordIn Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger. Here's a working example:name: Research Agent

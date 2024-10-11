@@ -30,7 +30,26 @@ Get your API key [here](https://dashboard-dev.julep.ai).While we are in beta, yo
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
 <summary><h3>📖 Table of Contents</h3></summary>
-[Introduction](#introduction)[Quick Example](#quick-example)[Key Features](#key-features)[Why Julep vs. LangChain?](#why-julep-vs-langchain)[Different Use Cases](#different-use-cases)[Different Form Factor](#different-form-factor)[In Summary](#in-summary)[Installation](#installation)[Python Quick Start 🐍](#python-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip)[Step 3: Execute the Task](#step-3-execute-the-task)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent)[Node.js Quick Start 🟩](#nodejs-quick-start-)[Step 1: Create an Agent](#step-1-create-an-agent-1)[Step 2: Create a Task that generates a story and comic strip](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)[Step 3: Execute the Task](#step-3-execute-the-task-1)[Step 4: Chat with the Agent](#step-4-chat-with-the-agent-1)[组件](#compone（新台币）[Mental Model](#mental-model)[Concepts](#concepts)[Understanding Tasks](#understanding-tasks)[Types of Workflow Steps](#types-of-workflow-steps)[Advanced Features](#advanced-features)[Adding Tools to Agents](#adding-tools-to-agents)[Managing Sessions and Users](#managing-sessions-and-users)[Document Integration and Search](#document-integration-and-search)[Integrations](#integrations)[Brave Search](#brave-search)[BrowserBase](#browserbase)[Email](#email)[Spider](#spider)[Weather](#weather)[Wikipedia](#wikipedia)[SDK Reference](#sdk-reference)[API Reference](#api-reference)</details>
+
+- [Optional: Define the input schema for the task](#optional-define-the-input-schema-for-the-task)
+- [Define the tools that the agent can use](#define-the-tools-that-the-agent-can-use)
+- [Special variables:](#special-variables)
+- [- inputs: for accessing the input to the task](#--inputs-for-accessing-the-input-to-the-task)
+- [- outputs: for accessing the output of previous steps](#--outputs-for-accessing-the-output-of-previous-steps)
+- [- _: for accessing the output of the previous step](#--_-for-accessing-the-output-of-the-previous-step)
+- [Define the main workflow](#define-the-main-workflow)
+- [Evaluate the search queries using a simple python expression](#evaluate-the-search-queries-using-a-simple-python-expression)
+- [Run the web search in parallel for each query](#run-the-web-search-in-parallel-for-each-query)
+- [Collect the results from the web search](#collect-the-results-from-the-web-search)
+- [Summarize the results](#summarize-the-results)
+- [Send the summary to Discord](#send-the-summary-to-discord)
+- [🛠️ Add an image generation tool (DALL·E) to the agent](#-add-an-image-generation-tool-dall%C2%B7e-to-the-agent)
+- [Create a task that takes an idea and creates a story and a 4-panel comic strip](#create-a-task-that-takes-an-idea-and-creates-a-story-and-a-4-panel-comic-strip)
+- [Step 1: Generate a story and outline into 4 panels](#step-1-generate-a-story-and-outline-into-4-panels)
+- [Step 2: Extract the小组描述和故事evaluate:](#step-2-extract-the%E5%B0%8F%E7%BB%84%E6%8F%8F%E8%BF%B0%E5%92%8C%E6%95%85%E4%BA%8Bevaluate)
+    - [Step 3: Execute the Task](#step-3-execute-the-task)
+
+</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 介绍Julep 是一个用于创建 AI 代理的平台，这些代理可以记住过去的互动并执行复杂的任务。它提供长期记忆并管理多步骤流程。Julep 支持创建多步骤任务，包括决策、循环、并行处理以及与众多外部工具和 API 的集成。虽然许多人工智能应用程序仅限于简单、线性的提示链和 API 调用，并且分支很少，但 Julep 可以处理更复杂的场景。它支持：复杂、多步骤的流程动态决策并行执行[!TIP]
 Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.快速示例想象一下一个可以执行以下操作的研究 AI 代理：选一个话题，针对该主题提出 100 个搜索查询，同时进行这些网页搜索，总结结果，将摘要发送至 DiscordIn Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger. Here's a working example:name: Research Agent
