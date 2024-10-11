@@ -9,6 +9,8 @@
 # 6. Show how to log and report errors
 # 7. Demonstrate graceful degradation when a step fails
 
+# UNDER CONSTRUCTION - NOT WORKING YET
+
 import uuid
 import yaml
 import time
@@ -27,7 +29,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Error Handler",
     about="An AI agent specialized in demonstrating error handling and recovery mechanisms.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Defining a task with potential errors and recovery mechanisms
@@ -73,45 +75,45 @@ tools:
           type: string
 
 main:
+
 - switch:
-    value: inputs[0].operation
-    cases:
-      divide:
-        - tool: divide
-          arguments:
-            divisor: inputs[0].value
-          on_error:
-            retry:
-              max_attempts: 3
-              delay: 2
-            fallback:
-              return: "Error: Division by zero or invalid input"
-      api_call:
-        - tool: api_call
-          arguments:
-            endpoint: "/status/{{inputs[0].value}}"
-          on_error:
-            retry:
-              max_attempts: 3
-              delay: 5
-            fallback:
-              return: "Error: API call failed after multiple attempts"
-      process_data:
-        - evaluate:
-            data: "'Sample data: ' + str(inputs[0].value)"
-        - tool: process_data
-          arguments:
-            data: _.data
-          on_error:
-            log: "Error occurred while processing data"
-            return: "Error: Data processing failed"
+    case: "inputs[0].operation == 'divide'"
+      tool: divide
+      arguments:
+        divisor: inputs[0].value
+      on_error:
+        retry:
+          max_attempts: 3
+          delay: 2
+        fallback:
+          return: "Error: Division by zero or invalid input"
+    case: "inputs[0].operation == 'api_call'"
+        tool: api_call
+        arguments:
+          endpoint: "/status/{{inputs[0].value}}"
+        on_error:
+          retry:
+            max_attempts: 3
+            delay: 5
+          fallback:
+            return: "Error: API call failed after multiple attempts"
+      case: "inputs[0].operation == 'process_data'"
+        evaluate:
+          data: "'Sample data: ' + str(inputs[0].value)"
+        tool: process_data
+        arguments:
+          data: _.data
+        on_error:
+          log: "Error occurred while processing data"
+          return: "Error: Data processing failed"
 
 - prompt:
-    role: system
+  - role: system
     content: >-
       Summarize the result of the operation:
       Operation: {{inputs[0].operation}}
-      Result: {{_}}
+      Result: {{_}}]
+  unwrap: true
 """)
 
 # Creating the task
