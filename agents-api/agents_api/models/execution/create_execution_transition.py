@@ -176,7 +176,7 @@ def create_execution_transition(
                 data=UpdateExecutionRequest(
                     status=transition_to_execution_status[data.type]
                 ),
-                output=data.output if data.type == "finish" else None,
+                output=data.output if data.type != "error" else None,
                 error=str(data.output)
                 if data.type == "error" and data.output
                 else None,
