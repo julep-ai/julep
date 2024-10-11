@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install deep-translator
+          python -m pip install deep-translator git+https://github.com/Jwink3101/parmapper
 
       - name: Run translator script
         run: python scripts/readme_translator.py
