@@ -20,7 +20,7 @@ import requests
 import temporalio.exceptions
 
 # List of error types that should not be retried
-NON_RETRYABLE_ERROR_TYPES = [
+NON_RETRYABLE_ERROR_TYPES = (
     # Temporal-specific errors
     temporalio.exceptions.WorkflowAlreadyStartedError,
     temporalio.exceptions.TerminatedError,
@@ -99,10 +99,10 @@ NON_RETRYABLE_ERROR_TYPES = [
     litellm.exceptions.ServiceUnavailableError,
     litellm.exceptions.OpenAIError,
     litellm.exceptions.APIError,
-]
+)
 
 
-def is_non_retryable_error(error: Exception) -> bool:
+def is_non_retryable_error(error: BaseException) -> bool:
     """
     Determines if the given error is non-retryable.
 
@@ -115,4 +115,4 @@ def is_non_retryable_error(error: Exception) -> bool:
     Returns:
         bool: True if the error is non-retryable, False otherwise.
     """
-    return isinstance(error, tuple(NON_RETRYABLE_ERROR_TYPES))
+    return isinstance(error, NON_RETRYABLE_ERROR_TYPES)

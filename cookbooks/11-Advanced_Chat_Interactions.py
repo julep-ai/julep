@@ -12,6 +12,8 @@
 #    d. Integrating external information during the conversation
 # 6. Display the chat history and any relevant metrics
 
+# UNDER CONSTRUCTION - YAML is working but the flow is not correct yet
+
 import uuid
 import yaml
 import os
@@ -34,14 +36,13 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name="Advanced Chat Assistant",
     about="An AI agent capable of handling complex conversations with context management and external integrations.",
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 # Add a web search tool to the agent
 client.agents.tools.create(
     agent_id=AGENT_UUID,
     name="web_search",
-    description="Search the web for information.",
     integration={
         "provider": "brave",
         "method": "search",
@@ -74,48 +75,49 @@ tools:
   integration:
     provider: weather
     setup:
-      api_key: "YOUR_WEATHER_API_KEY"
+      api_key: "API_KEY"
 
 main:
 - evaluate:
     context_length: len(inputs[0].chat_history)
 
-- if:
-    condition: _.context_length > 10
-    then:
-      - evaluate:
-          summarized_history: "Summarize the following chat history: " + str(inputs[0].chat_history[-10:])
-      - prompt:
-          role: system
-          content: >-
-            You are an advanced chat assistant. Here's a summary of the recent conversation:
-            {{outputs[1].summarized_history}}
-            
-            Now, respond to the user's latest input: {{inputs[0].user_input}}
-    else:
-      - prompt:
-          role: system
-          content: >-
-            You are an advanced chat assistant. Here's the conversation history:
-            {{inputs[0].chat_history}}
-            
-            Now, respond to the user's latest input: {{inputs[0].user_input}}
+- if: "_.context_length > '10'"
+  then:
+    evaluate:
+        summarized_history: str(inputs[0].chat_history[-10:])
+    prompt:
+      - role: system
+        content: >-
+          You are an advanced chat assistant. Here's a summary of the recent conversation:
+          {{outputs[1].summarized_history}}
+          
+          Now, respond to the user's latest input: {{inputs[0].user_input}}
+    unwrap: true
+  else:
+    prompt:
+      - role: system
+        content: >-
+          You are an advanced chat assistant. Here's the conversation history:
+          {{inputs[0].chat_history}}
+          
+          Now, respond to the user's latest input: {{inputs[0].user_input}}
+    unwrap: true
 
-- if:
-    condition: "weather" in inputs[0].user_input.lower()
-    then:
-      - tool: weather_api
-        arguments:
-          location: "New York"
-      - prompt:
-          role: system
-          content: >-
-            The user mentioned weather. Here's the current weather information for New York:
-            {{outputs[3]}}
-            
-            Incorporate this information into your response.
-
-- return: _
+- if: "'weather' in inputs[0].user_input.lower()"
+  then:
+    tool: weather_api
+    arguments:
+      location: inputs[0].user_input.lower.split('weather')[1].strip()
+    prompt:
+      - role: system
+        content: >-
+          The user mentioned weather. Here's the current weather information for {{inputs[0].user_input.lower.split('weather')[1].strip()}}
+          
+          Incorporate this information into your response.
+    unwrap: true
+                               
+- return:
+    summary: _
 """)
 
 # Creating the chat task
@@ -139,7 +141,7 @@ def run_chat_session():
     chat_history = []
     print("Starting advanced chat session. Type 'exit' to end the conversation.")
     
-    session = client.sessions.create(agent_id=AGENT_UUID)
+    session = client.sessions.create(agent=AGENT_UUID)
     
     while True:
         user_input = get_user_input()
@@ -155,8 +157,11 @@ def run_chat_session():
                 "chat_history": chat_history
             }
         )
-        
+        # Wait for the execution to complete
+        time.sleep(3)
         result = client.executions.get(execution.id)
+        print(client.executions.transitions.list(execution.id).items)
+        print(f"Execution result: {result.output}")
         assistant_response = result.output
         
         chat_history.append({"role": "assistant", "content": assistant_response})
@@ -170,8 +175,3 @@ def run_chat_session():
 
 # Run the chat session
 run_chat_session()
-
-# Display execution metrics (optional)
-print("\nExecution Metrics:")
-for transition in client.executions.transitions.list(execution_id=execution.id).items:
-    print(f"Step: {transition.type}, Duration: {transition.duration_ms}ms")

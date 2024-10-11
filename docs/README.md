@@ -38,7 +38,7 @@
 
 We're excited to welcome new contributors to the Julep project! We've created several "good first issues" to help you get started. Here's how you can contribute:
 
-1. Check out our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute.
+1. Check out our [CONTRIBUTING.md](https://github.com/julep-ai/julep/blob/dev/CONTRIBUTING.md) file for guidelines on how to contribute.
 2. Browse our [good first issues](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a task that interests you.
 3. If you have any questions or need help, don't hesitate to reach out on our [Discord](https://discord.com/invite/JTSBGRZrzj) channel.
 
@@ -69,6 +69,8 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <details>
 <summary><h3>📖 Table of Contents</h3></summary>
 
+- [🌟 Call for Contributors!](#-call-for-contributors)
+  - [🎉 DevFest.AI October 2024](#-devfestai-october-2024)
 - [Introduction](#introduction)
 - [Quick Example](#quick-example)
 - [Key Features](#key-features)
@@ -92,6 +94,11 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Types of Workflow Steps](#types-of-workflow-steps)
+    - [Common Steps](#common-steps)
+    - [Key-Value Steps](#key-value-steps)
+    - [Iteration Steps](#iteration-steps)
+    - [Conditional Steps](#conditional-steps)
+    - [Other Control Flow](#other-control-flow)
 - [Advanced Features](#advanced-features)
   - [Adding Tools to Agents](#adding-tools-to-agents)
   - [Managing Sessions and Users](#managing-sessions-and-users)
