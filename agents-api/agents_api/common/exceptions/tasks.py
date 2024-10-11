@@ -14,12 +14,13 @@ import fastapi
 import httpx
 import jinja2
 import jsonschema.exceptions
+import litellm
 import pydantic
 import requests
 import temporalio.exceptions
 
 # List of error types that should not be retried
-NON_RETRYABLE_ERROR_TYPES = [
+NON_RETRYABLE_ERROR_TYPES = (
     # Temporal-specific errors
     temporalio.exceptions.WorkflowAlreadyStartedError,
     temporalio.exceptions.TerminatedError,
@@ -70,10 +71,12 @@ NON_RETRYABLE_ERROR_TYPES = [
     pydantic.ValidationError,
     requests.exceptions.InvalidURL,
     requests.exceptions.MissingSchema,
+    #
     # Box exceptions
     box.exceptions.BoxKeyError,
     box.exceptions.BoxTypeError,
     box.exceptions.BoxValueError,
+    #
     # Beartype exceptions
     beartype.roar.BeartypeException,
     beartype.roar.BeartypeDecorException,
@@ -88,10 +91,18 @@ NON_RETRYABLE_ERROR_TYPES = [
     beartype.roar.BeartypeCallHintReturnViolation,
     beartype.roar.BeartypeDecorHintParamDefaultViolation,
     beartype.roar.BeartypeDoorHintViolation,
-]
+    #
+    # LiteLLM exceptions
+    litellm.exceptions.NotFoundError,
+    litellm.exceptions.InvalidRequestError,
+    litellm.exceptions.AuthenticationError,
+    litellm.exceptions.ServiceUnavailableError,
+    litellm.exceptions.OpenAIError,
+    litellm.exceptions.APIError,
+)
 
 
-def is_non_retryable_error(error: Exception) -> bool:
+def is_non_retryable_error(error: BaseException) -> bool:
     """
     Determines if the given error is non-retryable.
 
@@ -104,4 +115,4 @@ def is_non_retryable_error(error: Exception) -> bool:
     Returns:
         bool: True if the error is non-retryable, False otherwise.
     """
-    return isinstance(error, tuple(NON_RETRYABLE_ERROR_TYPES))
+    return isinstance(error, NON_RETRYABLE_ERROR_TYPES)
