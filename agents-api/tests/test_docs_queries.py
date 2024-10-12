@@ -1,6 +1,6 @@
 # Tests for entry queries
 
-from ward import test, skip
+from ward import skip, test
 
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.models.docs.create_doc import create_doc
