@@ -108,6 +108,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! ðŸ—“ï¸
   - [Adding Tools to Agents](#adding-tools-to-agents)
   - [Managing Sessions and Users](#managing-sessions-and-users)
   - [Document Integration and Search](#document-integration-and-search)
+- [Local Quickstart](#local-quickstart)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
 
