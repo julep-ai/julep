@@ -95,6 +95,9 @@ namespace Api {
     @route("/docs")
     interface IndividualDocsRoute extends Docs.IndividualDocEndpoints {}
 
+    @route("/tasks")
+    interface TasksGetRoute extends Tasks.GetEndpoints {}
+
     @route("/agents/{id}/tasks")
     interface TasksRoute extends Tasks.Endpoints {}
 
