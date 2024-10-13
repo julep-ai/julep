@@ -1,3 +1,5 @@
+# UNDER CONSTRUCTION - NOT WORKING YET
+
 import uuid
 from julep import Client
 
@@ -26,7 +28,7 @@ agent = client.agents.create_or_update(
     agent_id=AGENT_UUID,
     name=name,
     about=about,
-    model="gpt-4-turbo",
+    model="gpt-4o",
 )
 
 print(f"Agent created with ID: {agent.id}")

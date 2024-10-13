@@ -107,6 +107,10 @@ execution = client.executions.create(
 
 print(f"Execution ID: {execution.id}")
 
+# Wait for the execution to complete
+import time
+time.sleep(10)
+
 # Getting the execution details
 execution = client.executions.get(execution.id)
 print("Execution Output:")
@@ -114,10 +118,11 @@ print(execution.output)
 
 # List all steps of the executed task
 print("Execution Steps:")
-for item in client.executions.transitions.list(execution_id=execution.id).items:
-    print(item)
+transitions = client.executions.transitions.list(execution_id=execution.id).items
+print("Execution Steps:")
+for transition in transitions:
+    print(transition)
 
-# Stream the execution steps in real-time
-print("Streaming Execution Steps:")
-for step in client.executions.transitions.stream(execution_id=execution.id):
-    print(step)
+# Stream the steps of the defined task
+print("Streaming execution transitions:")
+print(client.executions.transitions.stream(execution_id=execution.id))
