@@ -64,7 +64,9 @@ def create_or_update_task(
     data.metadata = data.metadata or {}
     data.input_schema = data.input_schema or {}
 
-    task_data = task_to_spec(data).model_dump(exclude_none=True, exclude_unset=True)
+    task_data = task_to_spec(data).model_dump(
+        exclude_none=True, exclude_unset=True, mode="json"
+    )
     task_data.pop("task_id", None)
     task_data["created_at"] = utcnow().timestamp()
 

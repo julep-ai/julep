@@ -7,6 +7,7 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from ..activities.truncation import truncation
+    from ..common.retry_policies import DEFAULT_RETRY_POLICY
 
 
 @workflow.defn
@@ -17,4 +18,5 @@ class TruncationWorkflow:
             truncation,
             args=[session_id, token_count_threshold],
             schedule_to_close_timeout=timedelta(seconds=600),
+            retry_policy=DEFAULT_RETRY_POLICY,
         )

@@ -2,7 +2,7 @@ name: julep-memory-store
 
 services:
   memory-store:
-    image: julepai/memory-store:${TAG}
+    image: julepai/memory-store:${TAG:-dev}
     environment:
       - COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}
       - COZO_PORT=${COZO_PORT:-9070}
@@ -18,7 +18,7 @@ services:
 
     labels:
       ofelia.enabled: "true"
-      ofelia.job-exec.backupcron.schedule: "@every 1h"
+      ofelia.job-exec.backupcron.schedule: "@every 3h"
       ofelia.job-exec.backupcron.environment: '["COZO_PORT=${COZO_PORT}", "COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}", "COZO_BACKUP_DIR=${COZO_BACKUP_DIR}"]'
       ofelia.job-exec.backupcron.command: bash /app/backup.sh
 
@@ -33,5 +33,6 @@ services:
 
 volumes:
   cozo_data:
+    external: true
   cozo_backup:
     external: true

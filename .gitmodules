@@ -1,0 +1,6 @@
+[submodule "sdks/node-sdk"]
+	path = sdks/node-sdk
+	url = https://github.com/julep-ai/node-sdk.git
+[submodule "sdks/python-sdk"]
+	path = sdks/python-sdk
+	url = https://github.com/julep-ai/python-sdk.git

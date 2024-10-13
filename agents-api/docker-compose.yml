@@ -12,6 +12,7 @@ x--shared-environment: &shared-environment
   COZO_HOST: ${COZO_HOST:-http://memory-store:9070}
   DEBUG: ${AGENTS_API_DEBUG:-False}
   EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID:-Alibaba-NLP/gte-large-en-v1.5}
+  INTEGRATION_SERVICE_URL: ${INTEGRATION_SERVICE_URL:-http://integrations:8000}
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
   SUMMARIZATION_MODEL_NAME: ${SUMMARIZATION_MODEL_NAME:-gpt-4-turbo}
@@ -23,7 +24,7 @@ x--shared-environment: &shared-environment
   WORKER_URL: ${WORKER_URL:-temporal:7233}
 
 x--base-agents-api: &base-agents-api
-  image: julepai/agents-api:${TAG}
+  image: julepai/agents-api:${TAG:-dev}
   depends_on:
     worker:
       condition: service_started
@@ -32,6 +33,9 @@ x--base-agents-api: &base-agents-api
   build:
     context: .
     dockerfile: Dockerfile
+
+  ports:
+    - "8080:8080"
 
   develop:
     watch:
@@ -53,9 +57,6 @@ services:
       - ''  # Acts as a default profile. See: https://stackoverflow.com/questions/75758174/how-to-make-profile-default-for-docker-compose
       - single-tenant
 
-    ports:
-      - "8080:8080"
-
   agents-api-multi-tenant:
     <<: *base-agents-api
     profiles:
@@ -66,7 +67,7 @@ services:
       AGENTS_API_PREFIX: "/api"
 
   worker:
-    image: julepai/worker:${TAG}
+    image: julepai/worker:${TAG:-dev}
     environment:
       <<: *shared-environment
     build:
@@ -86,7 +87,7 @@ services:
           path: Dockerfile.worker
 
   cozo-migrate:
-    image: julepai/cozo-migrate:${TAG}
+    image: julepai/cozo-migrate:${TAG:-dev}
     container_name: cozo-migrate
     build:
       context: .

@@ -40,6 +40,10 @@ cozo_auth: str = env.str("COZO_AUTH_TOKEN", default=None)
 summarization_model_name: str = env.str(
     "SUMMARIZATION_MODEL_NAME", default="gpt-4-turbo"
 )
+do_verify_developer: bool = env.bool("DO_VERIFY_DEVELOPER", default=True)
+do_verify_developer_owns_resource: bool = env.bool(
+    "DO_VERIFY_DEVELOPER_OWNS_RESOURCE", default=True
+)
 
 
 # Auth
@@ -66,6 +70,13 @@ embedding_model_id: str = env.str(
 )
 
 embedding_dimensions: int = env.int("EMBEDDING_DIMENSIONS", default=1024)
+
+
+# Integration service
+# -------------------
+integration_service_url: str = env.str(
+    "INTEGRATION_SERVICE_URL", default="http://0.0.0.0:8000"
+)
 
 
 # Temporal

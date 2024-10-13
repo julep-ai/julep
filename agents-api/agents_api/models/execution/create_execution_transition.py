@@ -141,6 +141,8 @@ def create_execution_transition(
         found = length(prev_transitions),
         valid = if($next_type == "init", found == 0, found > 0),
         assert(valid, "Invalid transition"),
+
+    :limit 1
     """
 
     # Prepare the insert query
@@ -174,7 +176,7 @@ def create_execution_transition(
                 data=UpdateExecutionRequest(
                     status=transition_to_execution_status[data.type]
                 ),
-                output=data.output if data.type == "finish" else None,
+                output=data.output if data.type != "error" else None,
                 error=str(data.output)
                 if data.type == "error" and data.output
                 else None,

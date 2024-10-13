@@ -2,6 +2,13 @@
 description: A real person or system that needs to interacts with the Agent in your app.
 ---
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 # 🙎 Users
 
 ## What is a User?

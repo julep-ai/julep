@@ -90,12 +90,13 @@ def prepare_chat_context(
             participant_type: "agent",
         },
 
-        *tools { agent_id, tool_id, name, type, spec, updated_at, created_at },
+        *tools { agent_id, tool_id, name, type, spec, description, updated_at, created_at },
         tool = {
             "id": tool_id,
             "name": name,
             "type": type,
             "spec": spec,
+            "description": description,
             "updated_at": updated_at,
             "created_at": created_at,
         }
@@ -119,6 +120,8 @@ def prepare_chat_context(
         ?[{', '.join(session_data_fields)}, toolsets] :=
             *_session_data_json {{ {', '.join(session_data_fields)} }},
             *_toolsets_json {{ toolsets }}
+
+        :limit 1
     """
 
     queries = [

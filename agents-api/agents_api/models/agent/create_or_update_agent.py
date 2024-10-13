@@ -27,9 +27,21 @@ T = TypeVar("T")
 
 @rewrap_exceptions(
     {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
+        QueryException: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect.",
+        ),
+        ValidationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format.",
+        ),
+        TypeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again.",
+        ),
     }
 )
 @wrap_in_class(
@@ -47,18 +59,18 @@ def create_or_update_agent(
     Constructs and executes a datalog query to create a new agent in the database.
 
     Parameters:
-    - agent_id (UUID): The unique identifier for the agent.
-    - developer_id (UUID): The unique identifier for the developer creating the agent.
-    - name (str): The name of the agent.
-    - about (str): A description of the agent.
-    - instructions (list[str], optional): A list of instructions for using the agent. Defaults to an empty list.
-    - model (str, optional): The model identifier for the agent. Defaults to "gpt-4o".
-    - metadata (dict, optional): A dictionary of metadata for the agent. Defaults to an empty dict.
-    - default_settings (dict, optional): A dictionary of default settings for the agent. Defaults to an empty dict.
-    - client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.
+        agent_id (UUID): The unique identifier for the agent.
+        developer_id (UUID): The unique identifier for the developer creating the agent.
+        name (str): The name of the agent.
+        about (str): A description of the agent.
+        instructions (list[str], optional): A list of instructions for using the agent. Defaults to an empty list.
+        model (str, optional): The model identifier for the agent. Defaults to "gpt-4o".
+        metadata (dict, optional): A dictionary of metadata for the agent. Defaults to an empty dict.
+        default_settings (dict, optional): A dictionary of default settings for the agent. Defaults to an empty dict.
+        client (CozoClient, optional): The CozoDB client instance to use for the query. Defaults to a preconfigured client instance.
 
     Returns:
-    Agent: The newly created agent record.
+        Agent: The newly created agent record.
     """
 
     # Extract the agent data from the payload
@@ -71,7 +83,11 @@ def create_or_update_agent(
     data.default_settings = data.default_settings or {}
 
     agent_data = data.model_dump()
-    default_settings = agent_data.pop("default_settings")
+    default_settings = (
+        data.default_settings.model_dump(exclude_none=True)
+        if data.default_settings
+        else {}
+    )
 
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
@@ -124,6 +140,7 @@ def create_or_update_agent(
             input[_agent_id, developer_id, model, name, about, metadata, instructions, updated_at],
             *agents{
                 agent_id,
+                developer_id,
                 created_at,
             },
             agent_id = to_uuid(_agent_id),
@@ -132,6 +149,7 @@ def create_or_update_agent(
             input[_agent_id, developer_id, model, name, about, metadata, instructions, updated_at],
             not *agents{
                 agent_id,
+                developer_id,
             }, created_at = now(),
             agent_id = to_uuid(_agent_id),
 

@@ -36,8 +36,7 @@ from agents_api.models.tools.delete_tool import delete_tool
 from agents_api.models.user.create_user import create_user
 from agents_api.models.user.delete_user import delete_user
 from agents_api.web import app
-
-from .utils import patch_embed_acompletion as patch_embed_acompletion_ctx
+from tests.utils import patch_embed_acompletion as patch_embed_acompletion_ctx
 
 EMBEDDING_SIZE: int = 1024
 
@@ -47,6 +46,8 @@ def cozo_client(migrations_dir: str = "./migrations"):
     # Create a new client for each test
     # and initialize the schema.
     client = CozoClient()
+
+    setattr(app.state, "cozo_client", client)
 
     init(client)
     apply(client, migrations_dir=migrations_dir, all_=True)

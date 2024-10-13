@@ -72,7 +72,7 @@ valid_transitions: dict[TransitionType, list[TransitionType]] = {
     "error": [],
     "cancelled": [],
     # Intermediate states
-    "wait": ["resume", "cancelled", "finish", "finish_branch"],
+    "wait": ["resume", "step", "cancelled", "finish", "finish_branch"],
     "resume": [
         "wait",
         "error",
@@ -118,7 +118,8 @@ transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
 }  # type: ignore
 
 
-PartialTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+class PartialTransition(create_partial_model(CreateTransitionRequest)):
+    user_state: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExecutionInput(BaseModel):
@@ -126,7 +127,7 @@ class ExecutionInput(BaseModel):
     execution: Execution
     task: TaskSpecDef
     agent: Agent
-    tools: list[Tool]
+    agent_tools: list[Tool]
     arguments: dict[str, Any]
 
     # Not used at the moment
@@ -138,6 +139,23 @@ class StepContext(BaseModel):
     execution_input: ExecutionInput
     inputs: list[Any]
     cursor: TransitionTarget
+
+    @computed_field
+    @property
+    def tools(self) -> list[Tool]:
+        execution_input = self.execution_input
+        task = execution_input.task
+        agent_tools = execution_input.agent_tools
+
+        if not task.inherit_tools:
+            return task.tools
+
+        # Remove duplicates from agent_tools
+        filtered_tools = [
+            t for t in agent_tools if t.name not in map(lambda x: x.name, task.tools)
+        ]
+
+        return filtered_tools + task.tools
 
     @computed_field
     @property
@@ -201,19 +219,28 @@ def task_to_spec(
     task: Task | CreateTaskRequest | UpdateTaskRequest | PatchTaskRequest, **model_opts
 ) -> TaskSpecDef | PartialTaskSpecDef:
     task_data = task.model_dump(**model_opts)
-    main = task_data.pop("main")
 
-    workflows = [Workflow(name="main", steps=main)]
+    if "tools" in task_data:
+        del task_data["tools"]
 
-    for k in list(task_data.keys()):
-        if k in TaskSpec.model_fields.keys():
-            continue
+    tools = []
+    for tool in task.tools:
+        tool_spec = getattr(tool, tool.type)
 
-        steps = task_data.pop(k)
-        workflows.append(Workflow(name=k, steps=steps))
+        tools.append(
+            TaskToolDef(
+                type=tool.type,
+                spec=tool_spec.model_dump(),
+                **tool.model_dump(exclude={"type"}),
+            )
+        )
 
-    tools = task_data.pop("tools", [])
-    tools = [TaskToolDef(spec=tool.pop(tool["type"]), **tool) for tool in tools]
+    workflows = [Workflow(name="main", steps=task_data.pop("main"))]
+
+    for key, steps in list(task_data.items()):
+        if key not in TaskSpec.model_fields:
+            workflows.append(Workflow(name=key, steps=steps))
+            del task_data[key]
 
     cls = PartialTaskSpecDef if isinstance(task, PatchTaskRequest) else TaskSpecDef
 

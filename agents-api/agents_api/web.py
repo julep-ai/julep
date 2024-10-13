@@ -13,6 +13,7 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from litellm.exceptions import APIError
+from prometheus_fastapi_instrumentator import Instrumentator
 from pycozo.client import QueryException
 from scalar_fastapi import get_scalar_api_reference
 from temporalio.service import RPCError
@@ -24,6 +25,7 @@ from .exceptions import PromptTooBigError
 from .routers import (
     agents,
     docs,
+    internal,
     jobs,
     sessions,
     tasks,
@@ -99,6 +101,9 @@ app: FastAPI = FastAPI(
     root_path=api_prefix,
 )
 
+# Enable metrics
+Instrumentator().instrument(app).expose(app)
+
 # Create a new router for the docs
 scalar_router = APIRouter()
 
@@ -122,6 +127,7 @@ app.include_router(users.router, dependencies=[Depends(get_api_key)])
 app.include_router(jobs.router, dependencies=[Depends(get_api_key)])
 app.include_router(docs.router, dependencies=[Depends(get_api_key)])
 app.include_router(tasks.router, dependencies=[Depends(get_api_key)])
+app.include_router(internal.router)
 
 # TODO: CORS should be enabled only for JWT auth
 #

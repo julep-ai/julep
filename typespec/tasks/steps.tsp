@@ -4,6 +4,7 @@ import "../chat";
 import "../common";
 import "../docs";
 import "../entries";
+import "../tools";
 
 import "./step_kind.tsp";
 
@@ -13,6 +14,7 @@ using Chat;
 using Common;
 using Docs;
 using Entries;
+using Tools;
 
 namespace Tasks;
 
@@ -39,6 +41,10 @@ model BaseWorkflowStep<T extends WorkflowStepKind> {
     kind_: T;
 }
 
+alias SequentialWorkflowStep =
+    | WaitForInputStep
+    | MappableWorkflowStep;
+
 alias MappableWorkflowStep =
     | EvaluateStep
     | ToolCallStep
@@ -46,15 +52,13 @@ alias MappableWorkflowStep =
     | GetStep
     | SetStep
     | LogStep
-    | EmbedStep
-    | SearchStep;
+    | YieldStep;
 
 alias NonConditionalWorkflowStep =
     | MappableWorkflowStep
     | ReturnStep
     | SleepStep
     | ErrorWorkflowStep
-    | YieldStep
     | WaitForInputStep;
 
 alias ConditionalStep = IfElseWorkflowStep | SwitchStep;
@@ -76,10 +80,10 @@ model ToolCallStep extends BaseWorkflowStep<"tool_call"> {
 
 model ToolCallStepDef {
     /** The tool to run */
-    tool: toolRef;
+    tool: validPythonIdentifier;
 
     /** The input parameters for the tool (defaults to last step output) */
-    arguments: ExpressionObject<unknown> | "_" = "_";
+    arguments: NestedExpressionObject<unknown> | "_" = "_";
 }
 
 model PromptStep extends BaseWorkflowStep<"prompt"> {
@@ -93,8 +97,26 @@ model PromptStepDef {
     /** The prompt to run */
     prompt: JinjaTemplate | InputChatMLMessage<JinjaTemplate>[];
 
+    /** The tools to use for the prompt */
+    tools: "all" | (ToolRef | CreateToolRequest)[] = #[];
+
+    /** The tool choice for the prompt */
+    tool_choice?: ToolChoiceOption;
+
     /** Settings for the prompt */
     settings?: ChatSettings;
+
+    /** Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content` */
+    unwrap?: boolean = false;
+
+    /** Whether to forward the tool results to the model when available.
+     * "true" => always forward
+     * "false" => never forward
+     * null => forward if applicable (default)
+     * 
+     * If a tool call is made, the tool's output will be used as the model's input.
+     * If a tool call is not made, the model's output will be used as the next step's input. */
+    forward_tool_results: boolean | null = null;
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
@@ -136,34 +158,6 @@ model LogStep extends BaseWorkflowStep<"log"> {
 model LogStepDef {
     /** The value to log */
     log: JinjaTemplate;
-}
-
-////////////////////////
-/// Doc search steps ///
-////////////////////////
-
-model EmbedStep extends BaseWorkflowStep<"embed"> {
-    @visibility("read")
-    kind_: "embed" = "embed";
-
-    ...EmbedStepDef;
-}
-
-model EmbedStepDef {
-    /** The text to embed */
-    embed: EmbedQueryRequest;
-}
-
-model SearchStep extends BaseWorkflowStep<"search"> {
-    @visibility("read")
-    kind_: "search" = "search";
-
-    ...SearchStepDef;
-}
-
-model SearchStepDef {
-    /** The search query */
-    search: DocSearchRequest;
 }
 
 ///////////////////////
@@ -217,7 +211,7 @@ model ForeachDo {
     in: TypedExpression<Array<unknown>>;
 
     /** The steps to run for each iteration */
-    do: MappableWorkflowStep;
+    do: SequentialWorkflowStep;
 }
 
 model ForeachStep extends BaseWorkflowStep<"foreach"> {

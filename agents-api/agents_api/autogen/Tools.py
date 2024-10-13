@@ -6,7 +6,122 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
+
+
+class ApiCallDef(BaseModel):
+    """
+    API call definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal[
+        "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT", "TRACE"
+    ]
+    """
+    The HTTP method to use
+    """
+    url: AnyUrl
+    """
+    The URL to call
+    """
+    headers: dict[str, str] | None = None
+    """
+    The headers to send with the request
+    """
+    content: str | None = None
+    """
+    The content as base64 to send with the request
+    """
+    data: dict[str, Any] | None = None
+    """
+    The data to send as form data
+    """
+    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
+    """
+    JSON body to send with the request
+    """
+    cookies: dict[str, str] | None = None
+    """
+    Cookies
+    """
+    params: str | dict[str, Any] | None = None
+    """
+    The parameters to send with the request
+    """
+    follow_redirects: StrictBool | None = None
+    """
+    Follow redirects
+    """
+    timeout: int | None = None
+    """
+    The timeout for the request
+    """
+
+
+class ApiCallDefUpdate(BaseModel):
+    """
+    API call definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: (
+        Literal[
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH",
+            "HEAD",
+            "OPTIONS",
+            "CONNECT",
+            "TRACE",
+        ]
+        | None
+    ) = None
+    """
+    The HTTP method to use
+    """
+    url: AnyUrl | None = None
+    """
+    The URL to call
+    """
+    headers: dict[str, str] | None = None
+    """
+    The headers to send with the request
+    """
+    content: str | None = None
+    """
+    The content as base64 to send with the request
+    """
+    data: dict[str, Any] | None = None
+    """
+    The data to send as form data
+    """
+    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
+    """
+    JSON body to send with the request
+    """
+    cookies: dict[str, str] | None = None
+    """
+    Cookies
+    """
+    params: str | dict[str, Any] | None = None
+    """
+    The parameters to send with the request
+    """
+    follow_redirects: StrictBool | None = None
+    """
+    Follow redirects
+    """
+    timeout: int | None = None
+    """
+    The timeout for the request
+    """
 
 
 class ChosenToolCall(BaseModel):
@@ -22,9 +137,6 @@ class ChosenToolCall(BaseModel):
     Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
     """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
 
 
@@ -36,21 +148,30 @@ class CreateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef
+    description: str | None = None
+    """
+    Description of the tool
+    """
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
+    system: SystemDef | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDef | None = None
+    """
+    The API call to make
+    """
 
 
 class FunctionCallOption(BaseModel):
@@ -75,16 +196,9 @@ class FunctionDef(BaseModel):
     """
     DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons.
     """
-    description: Annotated[
-        str | None,
-        Field(
-            None,
-            max_length=120,
-            pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
-        ),
-    ]
+    description: Any | None = None
     """
-    Description of the function
+    DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons.
     """
     parameters: dict[str, Any] | None = None
     """
@@ -92,18 +206,88 @@ class FunctionDef(BaseModel):
     """
 
 
+class IntegrationDef(BaseModel):
+    """
+    Integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: (
+        Literal[
+            "dummy",
+            "hacker_news",
+            "weather",
+            "wikipedia",
+            "spider",
+            "brave",
+            "browserbase",
+            "email",
+        ]
+        | str
+    )
+    """
+    The provider of the integration
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: dict[str, Any] | None = None
+    """
+    The setup parameters the integration accepts
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the integration call
+    """
+
+
+class IntegrationDefUpdate(BaseModel):
+    """
+    Integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: (
+        Literal[
+            "dummy",
+            "hacker_news",
+            "weather",
+            "wikipedia",
+            "spider",
+            "brave",
+            "browserbase",
+            "email",
+        ]
+        | str
+        | None
+    ) = None
+    """
+    The provider of the integration
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: dict[str, Any] | None = None
+    """
+    The setup parameters the integration accepts
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the integration call
+    """
+
+
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"]
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     function: FunctionCallOption | None = None
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
 
 
 class PatchToolRequest(BaseModel):
@@ -114,42 +298,151 @@ class PatchToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str | None, Field(None, max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
+    """
+    description: str | None = None
+    """
+    Description of the tool
     """
     function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDefUpdate | None = None
+    """
+    The integration to call
+    """
+    system: SystemDefUpdate | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDefUpdate | None = None
+    """
+    The API call to make
+    """
+
+
+class SystemDef(BaseModel):
+    """
+    System definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: Literal["agent", "user", "task", "execution", "doc", "session", "job"]
+    """
+    Resource is the name of the resource to use
+    """
+    operation: Literal[
+        "create",
+        "update",
+        "patch",
+        "create_or_update",
+        "embed",
+        "change_status",
+        "search",
+        "chat",
+        "history",
+        "delete",
+        "get",
+        "list",
+    ]
+    """
+    Operation is the name of the operation to perform
+    """
+    resource_id: UUID | None = None
+    """
+    Resource id (if applicable)
+    """
+    subresource: Literal["tool", "doc", "execution", "transition"] | None = None
+    """
+    Sub-resource type (if applicable)
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the system call
+    """
+
+
+class SystemDefUpdate(BaseModel):
+    """
+    System definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    resource: (
+        Literal["agent", "user", "task", "execution", "doc", "session", "job"] | None
+    ) = None
+    """
+    Resource is the name of the resource to use
+    """
+    operation: (
+        Literal[
+            "create",
+            "update",
+            "patch",
+            "create_or_update",
+            "embed",
+            "change_status",
+            "search",
+            "chat",
+            "history",
+            "delete",
+            "get",
+            "list",
+        ]
+        | None
+    ) = None
+    """
+    Operation is the name of the operation to perform
+    """
+    resource_id: UUID | None = None
+    """
+    Resource id (if applicable)
+    """
+    subresource: Literal["tool", "doc", "execution", "transition"] | None = None
+    """
+    Sub-resource type (if applicable)
+    """
+    arguments: dict[str, Any] | None = None
+    """
+    The arguments to pre-apply to the system call
+    """
 
 
 class Tool(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef
+    description: str | None = None
+    """
+    Description of the tool
+    """
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
+    system: SystemDef | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDef | None = None
+    """
+    The API call to make
+    """
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
     """
     When this resource was created as UTC date-time
@@ -180,35 +473,33 @@ class UpdateToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    type: Literal["function", "integration", "system", "api_call"] = "function"
-    """
-    Whether this tool is a `function`, `api_call`, `system` etc. (Only `function` tool supported right now)
-    """
     name: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
-    function: FunctionDef
+    description: str | None = None
+    """
+    Description of the tool
+    """
+    function: FunctionDef | None = None
     """
     The function to call
     """
-    integration: Any | None = None
-    system: Any | None = None
-    api_call: Any | None = None
+    integration: IntegrationDef | None = None
+    """
+    The integration to call
+    """
+    system: SystemDef | None = None
+    """
+    The system to call
+    """
+    api_call: ApiCallDef | None = None
+    """
+    The API call to make
+    """
 
 
 class ChosenFunctionCall(ChosenToolCall):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    type: Literal["function"] = "function"
-    function: FunctionCallOption
-    """
-    The function to call
-    """
-
-
-class NamedFunctionChoice(NamedToolChoice):
     model_config = ConfigDict(
         populate_by_name=True,
     )
