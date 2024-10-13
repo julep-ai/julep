@@ -1,0 +1,82 @@
+name: julep-blob-store
+
+x-seaweedfs-base:
+  &seaweedfs-base
+  image: chrislusf/seaweedfs
+  profiles:
+    - blob-store
+
+services:
+  seaweedfs-master:
+    <<: *seaweedfs-base
+    ports:
+      - 9333:9333
+      - 19333:19333
+    command: "master -ip=seaweedfs-master -ip.bind=0.0.0.0 -port=9333 -metricsPort=9321 -raftBootstrap"
+    healthcheck:
+      test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:9333/cluster/healthz" ]
+      interval: 60s
+      retries: 6
+      timeout: 60s
+      start_period: 30s
+      start_interval: 10s
+
+  seaweedfs-volume:
+    <<: *seaweedfs-base
+    ports:
+      - 28080:28080  # Since 8080 is already used by agents-api, we use 28080
+      - 18081:18080
+    command: 'volume -mserver="seaweedfs-master:9333" -dir=/data -ip.bind=0.0.0.0 -port=28080 -ip=seaweedfs-volume -metricsPort=9321 -preStopSeconds=3'
+    healthcheck:
+      test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:28080/healthz" ]
+      interval: 60s
+      retries: 6
+      timeout: 30s
+      start_period: 30s
+      start_interval: 10s
+
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+
+    volumes:
+      - seaweedfs_data:/data
+
+  seaweedfs-filer:
+    <<: *seaweedfs-base
+    ports:
+      - 8888:8888
+      - 18888:18888
+    command: 'filer -master="seaweedfs-master:9333" -ip.bind=0.0.0.0 -port=8888 -ip=seaweedfs-filer -metricsPort=9321'
+    tty: true
+    stdin_open: true
+    healthcheck:
+      test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:8888/healthz" ]
+      interval: 60s
+      retries: 6
+      timeout: 30s
+      start_period: 30s
+      start_interval: 10s
+
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+      seaweedfs-volume:
+        condition: service_healthy
+
+  seaweedfs-s3:
+    <<: *seaweedfs-base
+    ports:
+      - 8333:8333
+    command: 's3 -filer="seaweedfs-filer:8888" -ip.bind=0.0.0.0 -port=8333 -metricsPort=9321'
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+      seaweedfs-volume:
+        condition: service_healthy
+      seaweedfs-filer:
+        condition: service_healthy
+
+volumes:
+  seaweedfs_data:
+    external: true
