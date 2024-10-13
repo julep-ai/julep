@@ -56,7 +56,7 @@
 > 准备好加入这场有趣的活动了吗？**[发推文表示你正在参与](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** 让我们开始编码吧！🖥️
 
 > [!注意]
-> 从[此处](https://dashboard-dev.julep.ai)获取您的 API 密钥。
+> 从 [此处](https://dashboard-dev.julep.ai) 获取您的 API 密钥。
 >
 > 虽然我们处于测试阶段，但您也可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 联系，以解除 API 密钥的速率限制。
 
@@ -67,33 +67,50 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 目录</h3></summary>
 
-- [为什么选择 Julep 而不是 LangChain？](#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-julep-%E8%80%8C%E4%B8%8D%E6%98%AF-langchain)
-  - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
-  - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
-- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9)
-- [Node.js 快速入门 🟩](#nodejs-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86-1)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9-1)
-  - [心智模型](#%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B)
-- [概念](#%E6%A6%82%E5%BF%B5)
-- [理解任务](#%E7%90%86%E8%A7%A3%E4%BB%BB%E5%8A%A1)
-  - [工作流步骤的类型](#%E5%B7%A5%E4%BD%9C%E6%B5%81%E6%AD%A5%E9%AA%A4%E7%9A%84%E7%B1%BB%E5%9E%8B)
-- [高级功能](#%E9%AB%98%E7%BA%A7%E5%8A%9F%E8%83%BD)
-  - [向代理添加工具](#%E5%90%91%E4%BB%A3%E7%90%86%E6%B7%BB%E5%8A%A0%E5%B7%A5%E5%85%B7)
-  - [管理会话和用户](#%E7%AE%A1%E7%90%86%E4%BC%9A%E8%AF%9D%E5%92%8C%E7%94%A8%E6%88%B7)
-  - [文档集成与搜索](#%E6%96%87%E6%A1%A3%E9%9B%86%E6%88%90%E4%B8%8E%E6%90%9C%E7%B4%A2)
-- [集成](#%E9%9B%86%E6%88%90)
-  - [勇敢搜索](#%E5%8B%87%E6%95%A2%E6%90%9C%E7%B4%A2)
-  - [浏览器基础](#%E6%B5%8F%E8%A7%88%E5%99%A8%E5%9F%BA%E7%A1%80)
-- [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
+- [简介](#introduction)
+- [快速示例](#quick-example)
+- [主要特点](#key-features)
+- [为什么选择 Julep 而不是 LangChain？](#why-julep-vs-langchain)
+- [不同用例](#different-use-cases)
+- [不同的外形尺寸](#different-form-factor)
+- [总结](#in-summary)
+- [安装](#安装)
+- [Python 快速入门 🐍](#python-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [步骤 3：执行任务](#step-3-execute-the-task)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent)
+- [Node.js 快速入门🟩](#nodejs-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent-1)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [步骤 3：执行任务](#step-3-execute-the-task-1)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent-1)
+- [组件](#components)
+- [心智模型](#mental-model)
+- [概念](#concepts)
+- [理解任务](#understanding-tasks)
+- [工作流步骤的类型](#types-of-workflow-steps)
+- [工具类型](#tool-types)
+- [用户定义的函数](#user-defined-functions)
+- [`系统` 工具](#system-tools)
+- [内置集成](#built-in-integrations)
+- [直接 `api_call`](#direct-api_calls)
+- [集成](#integrations)
+- [勇敢搜索](#brave-search)
+- [BrowserBase](#browserbase)
+- [电子邮件](#email)
+- [蜘蛛](#蜘蛛)
+- [天气](#天气)
+- [维基百科](#wikipedia)
+- [其他功能](#other-features)
+- [向代理添加工具](#adding-tools-to-agents)
+- [管理会话和用户](#managing-sessions-and-users)
+- [文档集成与搜索](#document-integration-and-search)
+- [本地快速启动](#local-quickstart)
+- [SDK 参考](#sdk-reference)
+- [API 参考](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -271,7 +288,7 @@ pip install julep
 ```
 
 > [!注意]
-> 从[此处](https://dashboard-dev.julep.ai)获取您的 API 密钥。
+> 从 [此处](https://dashboard-dev.julep.ai) 获取您的 API 密钥。
 >
 > 虽然我们处于测试阶段，但您也可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 联系，以解除 API 密钥的速率限制。
 
@@ -766,7 +783,215 @@ Julep 中的任务可以包含各种类型的步骤，让您可以创建复杂�
 
 每种步骤类型在构建复杂的 AI 工作流中都有特定的用途。此分类有助于理解 Julep 任务中可用的各种控制流程和操作。
 
-## 高级功能
+
+## 工具类型
+
+代理可以访问许多“工具”——基础模型可以使用一组输入“调用”的任何编程接口来实现目标。例如，它可以使用“web_search(query)”工具在互联网上搜索一些信息。
+
+与代理框架不同，julep 是管理代理执行的后端。客户端可以使用我们的 SDK 与代理进行交互。julep 负责执行任务和运行集成。
+
+julep 中的工具可以是以下之一：
+
+### 用户定义的函数
+
+这些是您可以为模型提供的函数签名，类似于 [openai] 的函数调用工作方式。例如：
+
+```yaml    
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: send_notification
+      description: Send a notification to the user
+      type: function
+      function:
+        parameters:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Content of the notification
+
+    main:
+    - tool: send_notification
+      arguments:
+        content: hi
+```
+  
+每当 julep 遇到_用户定义函数_时，它就会暂停，将控制权交还给客户端，并等待客户端运行函数调用并将结果返回给 julep。
+
+> [!提示]
+> **示例食谱**：[cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+
+### `系统` 工具
+内置工具可用于调用 julep API 本身，例如触发任务执行、附加到元数据字段等。
+“系统”工具内置于后端。它们会在需要时自动执行。它们不需要客户端的任何操作。
+ 
+例如，
+  
+  ```yaml
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: list_agents
+      description: List all agents
+      type: system
+      system:
+        resource: agent
+        operation: list
+    main:
+    - tool: list_agents
+      arguments:
+        limit: 10
+  ```
+
+> [!提示]
+> **示例食谱**：[cookbooks/10-Document_Management_and_Search.py​​](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py​​)
+ 
+### 内置“集成”
+Julep 带有许多内置集成（如下节所述）。`集成` 工具直接在 julep 后端执行。它们在运行时所需的任何其他参数都可以在代理/会话/用户的 `元数据` 字段中设置。
+
+> [!提示]
+> **示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+julep 后端附带来自以下提供商的集成第三方工具：
+- [composio](https://composio.dev) \*\*
+- [匿名]（https://anon.com）\*\*
+- [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)。计划支持 _Github、Gitlab、Gmail、Jira、MultiOn、Slack_ 工具包。
+
+\*\* 由于 _composio_ 和 _anon_ 是第三方提供商，因此他们的工具需要设置帐户链接。
+
+
+### 直接 `api_call`
+
+julep 还可以在工作流执行期间直接以工具调用的形式进行 api 调用。与“集成”相同，其他运行时参数从“元数据”字段加载。
+  
+例如，
+  
+  ```yaml
+    name: Example api_call task
+    tools:
+    - type: api_call
+      name: hello
+      api_call:
+        method: GET
+        url: https://httpbin.org/get
+    main:
+    - tool: hello
+      arguments:
+        params:
+          test: _.input
+  ```
+
+## 集成
+
+Julep 支持各种集成，可以扩展您的 AI 代理的功能。以下是可用集成及其支持的参数的列表：
+
+### 勇敢搜索
+
+```yaml
+setup:
+  api_key: string  # The API key for Brave Search
+
+arguments:
+  query: string  # The search query for searching with Brave
+
+output:
+  result: string  # The result of the Brave Search
+```
+
+> [!提示]
+> **示例食谱**：[cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+
+### 浏览器基础
+
+```yaml
+setup:
+  api_key: string       # The API key for BrowserBase
+  project_id: string    # The project ID for BrowserBase
+  session_id: string    # (Optional) The session ID for BrowserBase
+
+arguments:
+  urls: list[string]    # The URLs for loading with BrowserBase
+
+output:
+  documents: list       # The documents loaded from the URLs
+```
+
+＃＃＃ 电子邮件
+
+```yaml
+setup:
+  host: string      # The host of the email server
+  port: integer     # The port of the email server
+  user: string      # The username of the email server
+  password: string  # The password of the email server
+
+arguments:
+  to: string        # The email address to send the email to
+  from: string      # The email address to send the email from
+  subject: string   # The subject of the email
+  body: string      # The body of the email
+
+output:
+  success: boolean  # Whether the email was sent successfully
+```
+
+> [!提示]
+> **示例食谱**：[cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+
+＃＃＃ 蜘蛛
+
+```yaml
+setup:
+  spider_api_key: string  # The API key for Spider
+
+arguments:
+  url: string             # The URL for which to fetch data
+  mode: string            # The type of crawlers (default: "scrape")
+  params: dict            # (Optional) The parameters for the Spider API
+
+output:
+  documents: list         # The documents returned from the spider
+```
+
+> [!提示]
+> **示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+＃＃＃ 天气
+
+```yaml
+setup:
+  openweathermap_api_key: string  # The API key for OpenWeatherMap
+
+arguments:
+  location: string                # The location for which to fetch weather data
+
+output:
+  result: string                  # The weather data for the specified location
+```
+
+> [!提示]
+> **示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+维基百科
+
+```yaml
+arguments:
+  query: string           # The search query string
+  load_max_docs: integer  # Maximum number of documents to load (default: 2)
+
+output:
+  documents: list         # The documents returned from the Wikipedia search
+```
+
+> [!提示]
+> **示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+这些集成可用于您的任务中，以扩展您的 AI 代理的功能。有关如何在您的工作流程中使用这些集成的详细信息，请参阅我们的 [集成文档](https://docs.julep.ai/integrations)。
+
+其他功能
 
 Julep 提供一系列高级功能来增强您的 AI 工作流程：
 
@@ -829,99 +1054,18 @@ results = client.agents.docs.search(
 )
 ```
 
-有关更多高级功能和详细用法，请参阅我们的[高级功能文档]（https://docs.julep.ai/advanced-features）。
+## 本地快速启动
 
-## 集成
+**要求**：
+- 安装了最新的docker compose
 
-Julep 支持各种集成，可以扩展您的 AI 代理的功能。以下是可用集成及其支持的参数的列表：
-
-### 勇敢搜索
-
-```yaml
-setup:
-  api_key: string  # The API key for Brave Search
-
-arguments:
-  query: string  # The search query for searching with Brave
-
-output:
-  result: string  # The result of the Brave Search
-```
-
-### 浏览器基础
-
-```yaml
-setup:
-  api_key: string       # The API key for BrowserBase
-  project_id: string    # The project ID for BrowserBase
-  session_id: string    # (Optional) The session ID for BrowserBase
-
-arguments:
-  urls: list[string]    # The URLs for loading with BrowserBase
-
-output:
-  documents: list       # The documents loaded from the URLs
-```
-
-＃＃＃ 电子邮件
-
-```yaml
-setup:
-  host: string      # The host of the email server
-  port: integer     # The port of the email server
-  user: string      # The username of the email server
-  password: string  # The password of the email server
-
-arguments:
-  to: string        # The email address to send the email to
-  from: string      # The email address to send the email from
-  subject: string   # The subject of the email
-  body: string      # The body of the email
-
-output:
-  success: boolean  # Whether the email was sent successfully
-```
-
-＃＃＃ 蜘蛛
-
-```yaml
-setup:
-  spider_api_key: string  # The API key for Spider
-
-arguments:
-  url: string             # The URL for which to fetch data
-  mode: string            # The type of crawlers (default: "scrape")
-  params: dict            # (Optional) The parameters for the Spider API
-
-output:
-  documents: list         # The documents returned from the spider
-```
-
-＃＃＃ 天气
-
-```yaml
-setup:
-  openweathermap_api_key: string  # The API key for OpenWeatherMap
-
-arguments:
-  location: string                # The location for which to fetch weather data
-
-output:
-  result: string                  # The weather data for the specified location
-```
-
-维基百科
-
-```yaml
-arguments:
-  query: string           # The search query string
-  load_max_docs: integer  # Maximum number of documents to load (default: 2)
-
-output:
-  documents: list         # The documents returned from the Wikipedia search
-```
-
-这些集成可用于您的任务中，以扩展您的 AI 代理的功能。有关如何在您的工作流程中使用这些集成的详细信息，请参阅我们的 [集成文档](https://docs.julep.ai/integrations)。
+**步骤**：
+1. `git 克隆 https://github.com/julep-ai/julep.git`
+2. `cd julep`
+3. `docker 卷创建 cozo_backup`
+4. `docker 卷创建 cozo_data`
+5. `cp .env.example .env # <-- 编辑此文件`
+6. `docker compose --env-file .env --profile temporary-ui --profile single-tenant --profile self-hosted-db up --build`
 
 ## SDK 参考
 
@@ -930,7 +1074,7 @@ output:
 
 API 参考
 
-浏览我们全面的 API 文档，以了解有关代理、任务和执行的更多信息：
+浏览我们全面的 API 文档，了解有关代理、任务和执行的更多信息：
 
 - [代理 API](https://api.julep.ai/api/docs#tag/agents)
 - [任务 API](https://api.julep.ai/api/docs#tag/tasks)

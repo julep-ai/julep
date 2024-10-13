@@ -67,44 +67,50 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 Table des matières</h3></summary>
 
-- [Introduction](#introduction)
-- [Exemple rapide](#exemple-rapide)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain%C2%A0)
-  - [Différents cas d'utilisation](#diff%C3%A9rents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
-  - [En résumé](#en-r%C3%A9sum%C3%A9)
+- [Présentation](#introduction)
+- [Exemple rapide](#quick-example)
+- [Caractéristiques principales](#key-features)
+- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent)
-- [Démarrage rapide de Node.js 🟩](#d%C3%A9marrage-rapide-de-nodejs-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent-1)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e-1)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che-1)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent-1)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent-1)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task-1)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent-1)
 - [Composants](#composants)
-  - [Modèle mental](#mod%C3%A8le-mental)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Comprendre les tâches](#comprendre-les-t%C3%A2ches)
-  - [Types d'étapes de flux de travail](#types-d%C3%A9tapes-de-flux-de-travail)
-- [Fonctionnalités avancées](#fonctionnalit%C3%A9s-avanc%C3%A9es)
-  - [Ajout d'outils aux agents](#ajout-doutils-aux-agents)
-  - [Gestion des sessions et des utilisateurs](#gestion-des-sessions-et-des-utilisateurs)
-  - [Intégration et recherche de documents](#int%C3%A9gration-et-recherche-de-documents)
-- [Intégrations](#int%C3%A9grations)
-  - [Recherche courageuse](#recherche-courageuse)
-  - [Base de navigateur](#base-de-navigateur)
-  - [E-mail](#e-mail)
-  - [Araignée](#araign%C3%A9e)
-  - [Météo](#m%C3%A9t%C3%A9o)
-  - [Wikipédia](#wikip%C3%A9dia)
-- [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-- [Référence API](#r%C3%A9f%C3%A9rence-api)
+- [Comprendre les tâches](#understanding-tasks)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Types d'outils](#types-d'outils)
+- [Fonctions définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [Intégrations intégrées](#integrations-integrées)
+- [Appels directs d'API](#appels directs d'API)
+- [Intégrations](#intégrations)
+- [Recherche courageuse](#brave-search)
+- [Base du navigateur](#basedunavigateur)
+- [Courriel](#courriel)
+- [Araignée](#araignée)
+- [Météo](#météo)
+- [Wikipédia](#wikipédia)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Démarrage rapide local](#local-quickstart)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -777,7 +783,215 @@ Les tâches dans Julep peuvent inclure différents types d'étapes, ce qui vous 
 
 Chaque type d'étape remplit un objectif spécifique dans la création de workflows d'IA sophistiqués. Cette catégorisation permet de comprendre les différents flux de contrôle et opérations disponibles dans les tâches Julep.
 
-## Fonctionnalités avancées
+
+## Types d'outils
+
+Les agents peuvent avoir accès à un certain nombre d'« outils » : toute interface de programmation qu'un modèle de base peut « appeler » avec un ensemble d'entrées pour atteindre un objectif. Par exemple, il peut utiliser un outil « web_search(query) » pour rechercher des informations sur Internet.
+
+Contrairement aux frameworks d'agents, Julep est un backend qui gère l'exécution des agents. Les clients peuvent interagir avec les agents à l'aide de nos SDK. Julep s'occupe de l'exécution des tâches et de l'exécution des intégrations.
+
+Les outils du julep peuvent être l’un des suivants :
+
+### Fonctions définies par l'utilisateur
+
+Il s'agit de signatures de fonctions que vous pouvez attribuer au modèle pour qu'il puisse choisir, de la même manière que fonctionne l'appel de fonctions d'[openai]. Un exemple :
+
+```yaml    
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: send_notification
+      description: Send a notification to the user
+      type: function
+      function:
+        parameters:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Content of the notification
+
+    main:
+    - tool: send_notification
+      arguments:
+        content: hi
+```
+  
+Chaque fois que julep rencontre une _fonction définie par l'utilisateur_, il s'arrête, rend le contrôle au client et attend que le client exécute l'appel de fonction et renvoie les résultats à julep.
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+
+### outils `système`
+Outils intégrés qui peuvent être utilisés pour appeler les API julep elles-mêmes, comme déclencher l'exécution d'une tâche, ajouter à un champ de métadonnées, etc.
+Les outils « système » sont intégrés au backend. Ils sont exécutés automatiquement lorsque cela est nécessaire. Ils ne nécessitent aucune action du côté client.
+ 
+Par exemple,
+  
+  ```yaml
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: list_agents
+      description: List all agents
+      type: system
+      system:
+        resource: agent
+        operation: list
+    main:
+    - tool: list_agents
+      arguments:
+        limit: 10
+  ```
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+ 
+### Intégrations intégrées
+Julep est livré avec un certain nombre d'intégrations intégrées (comme décrit dans la section ci-dessous). Les outils « d'intégration » sont directement exécutés sur le backend de Julep. Tous les paramètres supplémentaires dont ils ont besoin au moment de l'exécution peuvent être définis dans les champs « métadonnées » de l'agent/session/utilisateur.
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+Le backend Julep est livré avec des outils tiers intégrés provenant des fournisseurs suivants :
+- [composio](https://composio.dev) \*\*
+- [anonyme](https://anon.com) \*\*
+- [kits d'outils langchain](https://python.langchain.com/v0.2/docs/integrations/toolkits/). La prise en charge des kits d'outils _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ est prévue.
+
+\*\* Étant donné que _composio_ et _anon_ sont des fournisseurs tiers, leurs outils nécessitent la configuration d'une liaison de compte.
+
+
+### Appels directs `api_call`
+
+julep peut également effectuer directement des appels d'API lors des exécutions de workflows sous forme d'appels d'outils. Comme pour `integration`, des paramètres d'exécution supplémentaires sont chargés à partir des champs `metadata`.
+  
+Par exemple,
+  
+  ```yaml
+    name: Example api_call task
+    tools:
+    - type: api_call
+      name: hello
+      api_call:
+        method: GET
+        url: https://httpbin.org/get
+    main:
+    - tool: hello
+      arguments:
+        params:
+          test: _.input
+  ```
+
+## Intégrations
+
+Julep prend en charge diverses intégrations qui étendent les capacités de vos agents IA. Voici une liste des intégrations disponibles et de leurs arguments pris en charge :
+
+### Recherche courageuse
+
+```yaml
+setup:
+  api_key: string  # The API key for Brave Search
+
+arguments:
+  query: string  # The search query for searching with Brave
+
+output:
+  result: string  # The result of the Brave Search
+```
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+
+### Base de navigateur
+
+```yaml
+setup:
+  api_key: string       # The API key for BrowserBase
+  project_id: string    # The project ID for BrowserBase
+  session_id: string    # (Optional) The session ID for BrowserBase
+
+arguments:
+  urls: list[string]    # The URLs for loading with BrowserBase
+
+output:
+  documents: list       # The documents loaded from the URLs
+```
+
+### E-mail
+
+```yaml
+setup:
+  host: string      # The host of the email server
+  port: integer     # The port of the email server
+  user: string      # The username of the email server
+  password: string  # The password of the email server
+
+arguments:
+  to: string        # The email address to send the email to
+  from: string      # The email address to send the email from
+  subject: string   # The subject of the email
+  body: string      # The body of the email
+
+output:
+  success: boolean  # Whether the email was sent successfully
+```
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+
+### Araignée
+
+```yaml
+setup:
+  spider_api_key: string  # The API key for Spider
+
+arguments:
+  url: string             # The URL for which to fetch data
+  mode: string            # The type of crawlers (default: "scrape")
+  params: dict            # (Optional) The parameters for the Spider API
+
+output:
+  documents: list         # The documents returned from the spider
+```
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+### Météo
+
+```yaml
+setup:
+  openweathermap_api_key: string  # The API key for OpenWeatherMap
+
+arguments:
+  location: string                # The location for which to fetch weather data
+
+output:
+  result: string                  # The weather data for the specified location
+```
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+### Wikipédia
+
+```yaml
+arguments:
+  query: string           # The search query string
+  load_max_docs: integer  # Maximum number of documents to load (default: 2)
+
+output:
+  documents: list         # The documents returned from the Wikipedia search
+```
+
+> [!TIP]
+> **Exemple de livre de recettes** : [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+Ces intégrations peuvent être utilisées dans vos tâches pour étendre les capacités de vos agents IA. Pour des informations plus détaillées sur la manière d'utiliser ces intégrations dans vos workflows, veuillez consulter notre [Documentation sur les intégrations](https://docs.julep.ai/integrations).
+
+## Autres fonctionnalités
 
 Julep propose une gamme de fonctionnalités avancées pour améliorer vos flux de travail d'IA :
 
@@ -840,99 +1054,18 @@ results = client.agents.docs.search(
 )
 ```
 
-Pour des fonctionnalités plus avancées et une utilisation détaillée, veuillez vous référer à notre [Documentation sur les fonctionnalités avancées](https://docs.julep.ai/advanced-features).
+## Démarrage rapide local
 
-## Intégrations
+**Exigences**:
+- dernier docker compose installé
 
-Julep prend en charge diverses intégrations qui étendent les capacités de vos agents IA. Voici une liste des intégrations disponibles et de leurs arguments pris en charge :
-
-### Recherche courageuse
-
-```yaml
-setup:
-  api_key: string  # The API key for Brave Search
-
-arguments:
-  query: string  # The search query for searching with Brave
-
-output:
-  result: string  # The result of the Brave Search
-```
-
-### Base de navigateur
-
-```yaml
-setup:
-  api_key: string       # The API key for BrowserBase
-  project_id: string    # The project ID for BrowserBase
-  session_id: string    # (Optional) The session ID for BrowserBase
-
-arguments:
-  urls: list[string]    # The URLs for loading with BrowserBase
-
-output:
-  documents: list       # The documents loaded from the URLs
-```
-
-### E-mail
-
-```yaml
-setup:
-  host: string      # The host of the email server
-  port: integer     # The port of the email server
-  user: string      # The username of the email server
-  password: string  # The password of the email server
-
-arguments:
-  to: string        # The email address to send the email to
-  from: string      # The email address to send the email from
-  subject: string   # The subject of the email
-  body: string      # The body of the email
-
-output:
-  success: boolean  # Whether the email was sent successfully
-```
-
-### Araignée
-
-```yaml
-setup:
-  spider_api_key: string  # The API key for Spider
-
-arguments:
-  url: string             # The URL for which to fetch data
-  mode: string            # The type of crawlers (default: "scrape")
-  params: dict            # (Optional) The parameters for the Spider API
-
-output:
-  documents: list         # The documents returned from the spider
-```
-
-### Météo
-
-```yaml
-setup:
-  openweathermap_api_key: string  # The API key for OpenWeatherMap
-
-arguments:
-  location: string                # The location for which to fetch weather data
-
-output:
-  result: string                  # The weather data for the specified location
-```
-
-### Wikipédia
-
-```yaml
-arguments:
-  query: string           # The search query string
-  load_max_docs: integer  # Maximum number of documents to load (default: 2)
-
-output:
-  documents: list         # The documents returned from the Wikipedia search
-```
-
-Ces intégrations peuvent être utilisées dans vos tâches pour étendre les capacités de vos agents IA. Pour des informations plus détaillées sur la manière d'utiliser ces intégrations dans vos workflows, veuillez consulter notre [Documentation sur les intégrations](https://docs.julep.ai/integrations).
+**Mesures**:
+1. `git clone https://github.com/julep-ai/julep.git`
+2. `cd julep`
+3. `docker volume create cozo_backup`
+4. `docker volume create cozo_data`
+5. `cp .env.example .env # <-- Modifier ce fichier`
+6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 
 ## Référence du SDK
 

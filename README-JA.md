@@ -67,41 +67,50 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 目次</h3></summary>
 
-- [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
-- [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
-- [Julep と LangChain を比較する理由](#julep-%E3%81%A8-langchain-%E3%82%92%E6%AF%94%E8%BC%83%E3%81%99%E3%82%8B%E7%90%86%E7%94%B1)
-  - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
-  - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
-- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
-- [Python クイックスタート 🐍](#python-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-  - [ステップ 1: エージェントを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%97-1-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B)
-  - [ステップ2: ストーリーと漫画を生成するタスクを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%972-%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%A8%E6%BC%AB%E7%94%BB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B)
-  - [ステップ3: タスクを実行する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973-%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B)
-  - [ステップ4: エージェントとチャットする](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%974-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A8%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%E3%81%99%E3%82%8B)
-- [Node.js クイックスタート 🟩](#nodejs-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-  - [ステップ 1: エージェントを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%97-1-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-1)
-  - [ステップ2: ストーリーと漫画を生成するタスクを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%972-%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%A8%E6%BC%AB%E7%94%BB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-1)
-  - [ステップ3: タスクを実行する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973-%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B-1)
-  - [ステップ4: エージェントとチャットする](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%974-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A8%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%E3%81%99%E3%82%8B-1)
-- [コンポーネント](#%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88)
-  - [メンタルモデル](#%E3%83%A1%E3%83%B3%E3%82%BF%E3%83%AB%E3%83%A2%E3%83%87%E3%83%AB)
-- [コンセプト](#%E3%82%B3%E3%83%B3%E3%82%BB%E3%83%97%E3%83%88)
-- [タスクを理解する](#%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B)
-  - [ワークフローステップの種類](#%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%95%E3%83%AD%E3%83%BC%E3%82%B9%E3%83%86%E3%83%83%E3%83%97%E3%81%AE%E7%A8%AE%E9%A1%9E)
-- [高度な機能](#%E9%AB%98%E5%BA%A6%E3%81%AA%E6%A9%9F%E8%83%BD)
-  - [エージェントへのツールの追加](#%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%B8%E3%81%AE%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AE%E8%BF%BD%E5%8A%A0)
-  - [セッションとユーザーの管理](#%E3%82%BB%E3%83%83%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%A8%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%81%AE%E7%AE%A1%E7%90%86)
-  - [ドキュメントの統合と検索](#%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%E3%81%AE%E7%B5%B1%E5%90%88%E3%81%A8%E6%A4%9C%E7%B4%A2)
-- [統合](#%E7%B5%B1%E5%90%88)
-  - [ブレイブサーチ](#%E3%83%96%E3%83%AC%E3%82%A4%E3%83%96%E3%82%B5%E3%83%BC%E3%83%81)
-  - [ブラウザベース](#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%99%E3%83%BC%E3%82%B9)
-  - [メール](#%E3%83%A1%E3%83%BC%E3%83%AB)
-  - [スパイダー](#%E3%82%B9%E3%83%91%E3%82%A4%E3%83%80%E3%83%BC)
-  - [ウィキペディア](#%E3%82%A6%E3%82%A3%E3%82%AD%E3%83%9A%E3%83%87%E3%82%A3%E3%82%A2)
-- [SDK リファレンス](#sdk-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [APIリファレンス](#api%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
+- [はじめに](#introduction)
+- [簡単な例](#quick-example)
+- [主な機能](#key-features)
+- [なぜ Julep と LangChain を比較するのか?](#why-julep-vs-langchain)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
+- [ステップ 2: ストーリーとコミック ストリップを生成するタスクを作成する](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [ステップ 3: タスクを実行する](#step-3-execute-the-task)
+- [ステップ 4: エージェントとチャットする](#step-4-chat-with-the-agent)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent-1)
+- [ステップ 2: ストーリーとコミック ストリップを生成するタスクを作成する](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [ステップ 3: タスクを実行する](#step-3-execute-the-task-1)
+- [ステップ 4: エージェントとチャットする](#step-4-chat-with-the-agent-1)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `function`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [組み込みの `integration`s](#built-in-integrations)
+- [直接の `api_call`](#direct-api_calls)
+- [統合](#integrations)
+- [勇敢な検索](#brave-search)
+- [ブラウザベース](#browserbase)
+- [メールアドレス](#email)
+- [スパイダー](#spider)
+- [天気](#weather)
+- [ウィキペディア](#wikipedia)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [ローカルクイックスタート](#local-quickstart)
+- [SDKリファレンス](#sdk-reference)
+- [APIリファレンス](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -585,7 +594,7 @@ Julep は、クライアント側とサーバー側の両方のコンポーネ�
 
 1. **アプリケーションコード:**
 - アプリケーションで Julep SDK を使用して、エージェント、タスク、ワークフローを定義します。
-- SDK は、これらのコンポーネントの設定と管理を容易にする関数とクラスを提供します。
+- SDK は、これらのコンポーネントのセットアップと管理を容易にする関数とクラスを提供します。
 
 2. **Julep バックエンド サービス:**
 - SDK はネットワーク経由で Julep バックエンドと通信します。
@@ -774,7 +783,215 @@ Julep のタスクにはさまざまな種類のステップを含めること�
 
 各ステップ タイプは、高度な AI ワークフローを構築する上で特定の目的を果たします。この分類は、Julep タスクで使用できるさまざまな制御フローと操作を理解するのに役立ちます。
 
-## 高度な機能
+
+## ツールの種類
+
+エージェントには、さまざまな「ツール」へのアクセスを許可できます。これは、基盤モデルが一連の入力を使用して「呼び出す」ことができるプログラム インターフェイスです。たとえば、インターネットで何らかの情報を検索するには、`web_search(query)` ツールを使用します。
+
+エージェント フレームワークとは異なり、julep はエージェントの実行を管理する _バックエンド_ です。クライアントは SDK を使用してエージェントと対話できます。julep はタスクの実行と統合の実行を担当します。
+
+julep のツールは次のいずれかになります。
+
+### ユーザー定義の `function`
+
+これらは、[openai] の関数呼び出しの仕組みと同様に、モデルに選択させることができる関数シグネチャです。例:
+
+```yaml    
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: send_notification
+      description: Send a notification to the user
+      type: function
+      function:
+        parameters:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Content of the notification
+
+    main:
+    - tool: send_notification
+      arguments:
+        content: hi
+```
+  
+julep は、_ユーザー定義関数_ に遭遇するたびに一時停止し、制御をクライアントに戻し、クライアントが関数呼び出しを実行して結果を julep に返すのを待ちます。
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+
+### `システム` ツール
+タスク実行のトリガー、メタデータ フィールドへの追加など、julep API 自体を呼び出すために使用できる組み込みツール。
+`system` ツールはバックエンドに組み込まれています。必要に応じて自動的に実行されます。クライアント側からのアクションは必要ありません。
+ 
+例えば、
+  
+  ```yaml
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: list_agents
+      description: List all agents
+      type: system
+      system:
+        resource: agent
+        operation: list
+    main:
+    - tool: list_agents
+      arguments:
+        limit: 10
+  ```
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/10-Document_Management_and_Search.py​​](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py​​)
+ 
+### 組み込みの `integration`
+Julep には、多数の組み込み統合が付属しています (以下のセクションで説明)。`integration` ツールは、julep バックエンドで直接実行されます。実行時に必要な追加パラメータは、エージェント/セッション/ユーザーの `metadata` フィールドで設定できます。
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+julep バックエンドには、次のプロバイダーからの統合サードパーティ ツールが付属しています。
+- [composio](https://composio.dev) \*\*
+- [匿名](https://anon.com) \*\*
+- [langchain ツールキット](https://python.langchain.com/v0.2/docs/integrations/toolkits/)。_Github、Gitlab、Gmail、Jira、MultiOn、Slack_ ツールキットのサポートが計画されています。
+
+\*\* _composio_ と _anon_ はサードパーティプロバイダーであるため、それらのツールではアカウントリンクを設定する必要があります。
+
+
+### 直接の `api_call`
+
+julep は、ワークフロー実行中にツール呼び出しとして直接 API 呼び出しを行うこともできます。`integration` と同様に、追加のランタイム パラメータは `metadata` フィールドから読み込まれます。
+  
+例えば、
+  
+  ```yaml
+    name: Example api_call task
+    tools:
+    - type: api_call
+      name: hello
+      api_call:
+        method: GET
+        url: https://httpbin.org/get
+    main:
+    - tool: hello
+      arguments:
+        params:
+          test: _.input
+  ```
+
+## 統合
+
+Julep は、AI エージェントの機能を拡張するさまざまな統合をサポートしています。利用可能な統合とサポートされている引数のリストは次のとおりです。
+
+### ブレイブサーチ
+
+```yaml
+setup:
+  api_key: string  # The API key for Brave Search
+
+arguments:
+  query: string  # The search query for searching with Brave
+
+output:
+  result: string  # The result of the Brave Search
+```
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+
+### ブラウザベース
+
+```yaml
+setup:
+  api_key: string       # The API key for BrowserBase
+  project_id: string    # The project ID for BrowserBase
+  session_id: string    # (Optional) The session ID for BrowserBase
+
+arguments:
+  urls: list[string]    # The URLs for loading with BrowserBase
+
+output:
+  documents: list       # The documents loaded from the URLs
+```
+
+### メール
+
+```yaml
+setup:
+  host: string      # The host of the email server
+  port: integer     # The port of the email server
+  user: string      # The username of the email server
+  password: string  # The password of the email server
+
+arguments:
+  to: string        # The email address to send the email to
+  from: string      # The email address to send the email from
+  subject: string   # The subject of the email
+  body: string      # The body of the email
+
+output:
+  success: boolean  # Whether the email was sent successfully
+```
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+
+### スパイダー
+
+```yaml
+setup:
+  spider_api_key: string  # The API key for Spider
+
+arguments:
+  url: string             # The URL for which to fetch data
+  mode: string            # The type of crawlers (default: "scrape")
+  params: dict            # (Optional) The parameters for the Spider API
+
+output:
+  documents: list         # The documents returned from the spider
+```
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+＃＃＃ 天気
+
+```yaml
+setup:
+  openweathermap_api_key: string  # The API key for OpenWeatherMap
+
+arguments:
+  location: string                # The location for which to fetch weather data
+
+output:
+  result: string                  # The weather data for the specified location
+```
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+### ウィキペディア
+
+```yaml
+arguments:
+  query: string           # The search query string
+  load_max_docs: integer  # Maximum number of documents to load (default: 2)
+
+output:
+  documents: list         # The documents returned from the Wikipedia search
+```
+
+> [!ヒント]
+> **サンプルクックブック**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+これらの統合をタスク内で使用して、AI エージェントの機能を拡張できます。ワークフローでこれらの統合を使用する方法の詳細については、[統合ドキュメント](https://docs.julep.ai/integrations)を参照してください。
+
+## その他の機能
 
 Julep は、AI ワークフローを強化するためのさまざまな高度な機能を提供します。
 
@@ -837,99 +1054,18 @@ results = client.agents.docs.search(
 )
 ```
 
-より高度な機能と詳細な使用方法については、[高度な機能のドキュメント](https://docs.julep.ai/advanced-features)を参照してください。
+## ローカルクイックスタート
 
-## 統合
+**要件**：
+- 最新の docker compose がインストールされている
 
-Julep は、AI エージェントの機能を拡張するさまざまな統合をサポートしています。利用可能な統合とサポートされている引数のリストは次のとおりです。
-
-### ブレイブサーチ
-
-```yaml
-setup:
-  api_key: string  # The API key for Brave Search
-
-arguments:
-  query: string  # The search query for searching with Brave
-
-output:
-  result: string  # The result of the Brave Search
-```
-
-### ブラウザベース
-
-```yaml
-setup:
-  api_key: string       # The API key for BrowserBase
-  project_id: string    # The project ID for BrowserBase
-  session_id: string    # (Optional) The session ID for BrowserBase
-
-arguments:
-  urls: list[string]    # The URLs for loading with BrowserBase
-
-output:
-  documents: list       # The documents loaded from the URLs
-```
-
-### メール
-
-```yaml
-setup:
-  host: string      # The host of the email server
-  port: integer     # The port of the email server
-  user: string      # The username of the email server
-  password: string  # The password of the email server
-
-arguments:
-  to: string        # The email address to send the email to
-  from: string      # The email address to send the email from
-  subject: string   # The subject of the email
-  body: string      # The body of the email
-
-output:
-  success: boolean  # Whether the email was sent successfully
-```
-
-### スパイダー
-
-```yaml
-setup:
-  spider_api_key: string  # The API key for Spider
-
-arguments:
-  url: string             # The URL for which to fetch data
-  mode: string            # The type of crawlers (default: "scrape")
-  params: dict            # (Optional) The parameters for the Spider API
-
-output:
-  documents: list         # The documents returned from the spider
-```
-
-＃＃＃ 天気
-
-```yaml
-setup:
-  openweathermap_api_key: string  # The API key for OpenWeatherMap
-
-arguments:
-  location: string                # The location for which to fetch weather data
-
-output:
-  result: string                  # The weather data for the specified location
-```
-
-### ウィキペディア
-
-```yaml
-arguments:
-  query: string           # The search query string
-  load_max_docs: integer  # Maximum number of documents to load (default: 2)
-
-output:
-  documents: list         # The documents returned from the Wikipedia search
-```
-
-これらの統合をタスク内で使用して、AI エージェントの機能を拡張できます。ワークフローでこれらの統合を使用する方法の詳細については、[統合ドキュメント](https://docs.julep.ai/integrations)を参照してください。
+**手順**:
+1. `git clone https://github.com/julep-ai/julep.git`
+2. `cd ジュレップ`
+3. `docker volume create cozo_backup`
+4. `docker volume create cozo_data`
+5. `cp .env.example .env # <-- このファイルを編集します`
+6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 
 ## SDK リファレンス
 
