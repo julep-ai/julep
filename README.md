@@ -1076,3 +1076,11 @@ Explore our comprehensive API documentation to learn more about agents, tasks, a
 - [Agents API](https://api.julep.ai/api/docs#tag/agents)
 - [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
 - [Executions API](https://api.julep.ai/api/docs#tag/executions)
+
+
+  <div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>
+</div>
+
