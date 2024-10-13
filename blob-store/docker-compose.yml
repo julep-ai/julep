@@ -1,14 +1,19 @@
 name: julep-blob-store
 
-x-seaweedfs-base:
-  &seaweedfs-base
-  image: chrislusf/seaweedfs
-  profiles:
-    - blob-store
-
 services:
   seaweedfs:
-    <<: *seaweedfs-base
+    image: julepai/blob-store:${TAG}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - blob-store
+
+    environment:
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - DEBUG=${DEBUG:-true}
+
     ports:
       - 9333:9333  # master port
       - 8333:8333  # s3 port
@@ -17,7 +22,7 @@ services:
       # - 19333:19333  # master grpc port
       # - 18081:18080  # volume grpc port
       # - 18888:18888  # filer grpc port
-    command: "server -filer -s3 -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0 -metricsPort=9321 -master.raftBootstrap=false -master.port=9333 -master.resumeState=true -volume.port=28080 -volume.index=leveldb -filer.port=8888 -s3.port=8333"
+    command: "-filer -s3 -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0 -metricsPort=9321 -master.raftBootstrap=false -master.port=9333 -master.resumeState=true -volume.port=28080 -volume.index=leveldb -filer.port=8888 -s3.port=8333"
     healthcheck:
       test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:9333/cluster/healthz" ]
       interval: 60s
