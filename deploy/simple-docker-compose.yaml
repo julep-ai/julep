@@ -26,7 +26,7 @@ services:
       TEMPORAL_WORKER_URL: temporal:7233
       TRUNCATE_EMBED_TEXT: "True"
       WORKER_URL: temporal:7233
-    image: julepai/agents-api:${TAG:-1.0}
+    image: julepai/agents-api:${TAG:-dev}
     networks:
       default: null
     ports:
@@ -56,12 +56,13 @@ services:
       TEMPORAL_WORKER_URL: temporal:7233
       TRUNCATE_EMBED_TEXT: "True"
       WORKER_URL: temporal:7233
-    image: julepai/cozo-migrate:${TAG:-1.0}
+    image: julepai/cozo-migrate:${TAG:-dev}
     networks:
       default: null
     restart: "no"
 
   integrations:
+    image: julepai/integrations:${TAG:-dev}
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     networks:
@@ -109,12 +110,12 @@ services:
     restart: unless-stopped
     volumes:
       - type: bind
-        source: ./llm-proxy/litellm-config.yaml
+        source: ../llm-proxy/litellm-config.yaml
         target: /app/config.yaml
         bind:
           create_host_path: true
       - type: bind
-        source: ./llm-proxy/.keys
+        source: ../llm-proxy/.keys
         target: /app/.keys
         read_only: true
         bind:
@@ -161,7 +162,7 @@ services:
       COZO_BACKUP_DIR: /backup
       COZO_MNT_DIR: /data
       COZO_PORT: "9070"
-    image: julepai/memory-store:${TAG:-1.0}
+    image: julepai/memory-store:${TAG:-dev}
     labels:
       ofelia.enabled: "true"
       ofelia.job-exec.backupcron.command: bash /app/backup.sh
@@ -236,12 +237,12 @@ services:
       default: null
     volumes:
       - type: bind
-        source: ./scheduler/dynamicconfig
+        source: ../scheduler/dynamicconfig
         target: /etc/temporal/config/dynamicconfig
         bind:
           create_host_path: true
       - type: bind
-        source: ./scheduler/cert
+        source: ../scheduler/cert
         target: /cert
         bind:
           create_host_path: true
@@ -307,7 +308,7 @@ services:
       TEMPORAL_WORKER_URL: temporal:7233
       TRUNCATE_EMBED_TEXT: "True"
       WORKER_URL: temporal:7233
-    image: julepai/worker:${TAG:-1.0}
+    image: julepai/worker:${TAG:-dev}
     networks:
       default: null
 

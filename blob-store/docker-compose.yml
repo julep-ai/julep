@@ -2,7 +2,7 @@ name: julep-blob-store
 
 services:
   seaweedfs:
-    image: julepai/blob-store:${TAG}
+    image: julepai/blob-store:${TAG:-dev}
     build:
       context: .
       dockerfile: Dockerfile
