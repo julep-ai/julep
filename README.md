@@ -92,10 +92,11 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! ðŸ—“ï¸
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Advanced Features](#advanced-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
+- [Tool Types](#tool-types)
+  - [User-defined `function`s](#user-defined-functions)
+  - [`system` tools](#system-tools)
+  - [Built-in `integration`s](#built-in-integrations)
+  - [Direct `api_call`s](#direct-api_calls)
 - [Integrations](#integrations)
   - [Brave Search](#brave-search)
   - [BrowserBase](#browserbase)
@@ -103,6 +104,11 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! ðŸ—“ï¸
   - [Spider](#spider)
   - [Weather](#weather)
   - [Wikipedia](#wikipedia)
+- [Other Features](#other-features)
+  - [Adding Tools to Agents](#adding-tools-to-agents)
+  - [Managing Sessions and Users](#managing-sessions-and-users)
+  - [Document Integration and Search](#document-integration-and-search)
+- [Local Quickstart](#local-quickstart)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
 
@@ -777,7 +783,215 @@ Tasks in Julep can include various types of steps, allowing you to create comple
 
 Each step type serves a specific purpose in building sophisticated AI workflows. This categorization helps in understanding the various control flows and operations available in Julep tasks.
 
-## Advanced Features
+
+## Tool Types
+
+Agents can be given access to a number of "tools" -- any programmatic interface that a foundation model can "call" with a set of inputs to achieve a goal. For example, it might use a `web_search(query)` tool to search the Internet for some information.
+
+Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
+
+Tools in julep can be one of:
+
+### User-defined `function`s
+
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:  
+
+```yaml    
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: send_notification
+      description: Send a notification to the user
+      type: function
+      function:
+        parameters:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Content of the notification
+
+    main:
+    - tool: send_notification
+      arguments:
+        content: hi
+```
+  
+  Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+
+### `system` tools
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
+`system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.  
+ 
+For example,
+  
+  ```yaml
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: list_agents
+      description: List all agents
+      type: system
+      system:
+        resource: agent
+        operation: list
+    main:
+    - tool: list_agents
+      arguments:
+        limit: 10
+  ```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+ 
+### Built-in `integration`s
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+julep backend ships with integrated third party tools from the following providers:
+- [composio](https://composio.dev) \*\*
+- [anon](https://anon.com) \*\*
+- [langchain toolkits](https://python.langchain.com/v0.2/docs/integrations/toolkits/). Support for _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ toolkits is planned.
+
+\*\* Since _composio_ and _anon_ are third-party providers, their tools require setting up account linking.
+
+
+### Direct `api_call`s
+
+julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
+  
+For example,  
+  
+  ```yaml
+    name: Example api_call task
+    tools:
+    - type: api_call
+      name: hello
+      api_call:
+        method: GET
+        url: https://httpbin.org/get
+    main:
+    - tool: hello
+      arguments:
+        params:
+          test: _.input
+  ```
+
+## Integrations
+
+Julep supports various integrations that extend the capabilities of your AI agents. Here's a list of available integrations and their supported arguments:
+
+### Brave Search
+
+```yaml
+setup:
+  api_key: string  # The API key for Brave Search
+
+arguments:
+  query: string  # The search query for searching with Brave
+
+output:
+  result: string  # The result of the Brave Search
+```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+
+### BrowserBase
+
+```yaml
+setup:
+  api_key: string       # The API key for BrowserBase
+  project_id: string    # The project ID for BrowserBase
+  session_id: string    # (Optional) The session ID for BrowserBase
+
+arguments:
+  urls: list[string]    # The URLs for loading with BrowserBase
+
+output:
+  documents: list       # The documents loaded from the URLs
+```
+
+### Email
+
+```yaml
+setup:
+  host: string      # The host of the email server
+  port: integer     # The port of the email server
+  user: string      # The username of the email server
+  password: string  # The password of the email server
+
+arguments:
+  to: string        # The email address to send the email to
+  from: string      # The email address to send the email from
+  subject: string   # The subject of the email
+  body: string      # The body of the email
+
+output:
+  success: boolean  # Whether the email was sent successfully
+```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+
+### Spider
+
+```yaml
+setup:
+  spider_api_key: string  # The API key for Spider
+
+arguments:
+  url: string             # The URL for which to fetch data
+  mode: string            # The type of crawlers (default: "scrape")
+  params: dict            # (Optional) The parameters for the Spider API
+
+output:
+  documents: list         # The documents returned from the spider
+```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+### Weather
+
+```yaml
+setup:
+  openweathermap_api_key: string  # The API key for OpenWeatherMap
+
+arguments:
+  location: string                # The location for which to fetch weather data
+
+output:
+  result: string                  # The weather data for the specified location
+```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+### Wikipedia
+
+```yaml
+arguments:
+  query: string           # The search query string
+  load_max_docs: integer  # Maximum number of documents to load (default: 2)
+
+output:
+  documents: list         # The documents returned from the Wikipedia search
+```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).
+
+## Other Features
 
 Julep offers a range of advanced features to enhance your AI workflows:
 
@@ -840,99 +1054,18 @@ results = client.agents.docs.search(
 )
 ```
 
-For more advanced features and detailed usage, please refer to our [Advanced Features Documentation](https://docs.julep.ai/advanced-features).
+## Local Quickstart
 
-## Integrations
+**Requirements**:
+- latest docker compose installed
 
-Julep supports various integrations that extend the capabilities of your AI agents. Here's a list of available integrations and their supported arguments:
-
-### Brave Search
-
-```yaml
-setup:
-  api_key: string  # The API key for Brave Search
-
-arguments:
-  query: string  # The search query for searching with Brave
-
-output:
-  result: string  # The result of the Brave Search
-```
-
-### BrowserBase
-
-```yaml
-setup:
-  api_key: string       # The API key for BrowserBase
-  project_id: string    # The project ID for BrowserBase
-  session_id: string    # (Optional) The session ID for BrowserBase
-
-arguments:
-  urls: list[string]    # The URLs for loading with BrowserBase
-
-output:
-  documents: list       # The documents loaded from the URLs
-```
-
-### Email
-
-```yaml
-setup:
-  host: string      # The host of the email server
-  port: integer     # The port of the email server
-  user: string      # The username of the email server
-  password: string  # The password of the email server
-
-arguments:
-  to: string        # The email address to send the email to
-  from: string      # The email address to send the email from
-  subject: string   # The subject of the email
-  body: string      # The body of the email
-
-output:
-  success: boolean  # Whether the email was sent successfully
-```
-
-### Spider
-
-```yaml
-setup:
-  spider_api_key: string  # The API key for Spider
-
-arguments:
-  url: string             # The URL for which to fetch data
-  mode: string            # The type of crawlers (default: "scrape")
-  params: dict            # (Optional) The parameters for the Spider API
-
-output:
-  documents: list         # The documents returned from the spider
-```
-
-### Weather
-
-```yaml
-setup:
-  openweathermap_api_key: string  # The API key for OpenWeatherMap
-
-arguments:
-  location: string                # The location for which to fetch weather data
-
-output:
-  result: string                  # The weather data for the specified location
-```
-
-### Wikipedia
-
-```yaml
-arguments:
-  query: string           # The search query string
-  load_max_docs: integer  # Maximum number of documents to load (default: 2)
-
-output:
-  documents: list         # The documents returned from the Wikipedia search
-```
-
-These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).
+**Steps**:
+1. `git clone https://github.com/julep-ai/julep.git`
+2. `cd julep`
+3. `docker volume create cozo_backup`
+4. `docker volume create cozo_data`
+5. `cp .env.example .env  # <-- Edit this file`
+6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 
 ## SDK Reference
 
