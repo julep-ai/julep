@@ -1053,6 +1053,19 @@ results = client.agents.docs.search(
 )
 ```
 
+## Local Quickstart
+
+**Requirements**:
+- latest docker compose installed
+
+**Steps**:
+1. `git clone https://github.com/julep-ai/julep.git`
+2. `cd julep`
+3. `docker volume create cozo_backup`
+4. `docker volume create cozo_data`
+5. `cp .env.example .env  # <-- Edit this file`
+6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
+
 ## SDK Reference
 
 - [Node.js SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md)
