@@ -1,4 +1,4 @@
-<sup>English | [中文翻译](https://github.com/julep-ai/julep/blob/dev/README-CN.md) | [日本語翻訳](https://github.com/julep-ai/julep/blob/dev/README-JP.md)</sup>
+<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md) </sup>
 
 <div align="center">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
@@ -30,6 +30,8 @@
 
 > [!NOTE]
 > 👨‍💻 Here for the devfest.ai event ? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
+> 
+> Get your API key [here](https://dashboard-dev.julep.ai).
 
 <details>
 <summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
@@ -54,11 +56,6 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 > [!TIP]
 > Ready to join the fun? **[Tweet that you are participating](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** and let's get coding! 🖥️
-
-> [!NOTE]
-> Get your API key [here](https://dashboard-dev.julep.ai).
->
-> While we are in beta, you can also reach out on [Discord](https://discord.com/invite/JTSBGRZrzj) to get rate limits lifted on your API key.
 
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 

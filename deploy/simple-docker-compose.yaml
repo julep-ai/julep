@@ -1,0 +1,328 @@
+name: julep
+
+services:
+  agents-api:
+    depends_on:
+      worker:
+        condition: service_started
+        required: true
+    environment:
+      AGENTS_API_HOSTNAME: localhost
+      AGENTS_API_KEY: ${AGENTS_API_KEY}
+      AGENTS_API_KEY_HEADER_NAME: Authorization
+      AGENTS_API_PROTOCOL: http
+      AGENTS_API_PUBLIC_PORT: "80"
+      AGENTS_API_URL: http://agents-api:8080
+      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+      COZO_HOST: http://memory-store:9070
+      EMBEDDING_MODEL_ID: voyage/voyage-3
+      INTEGRATION_SERVICE_URL: http://integrations:8000
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_URL: http://litellm:4000
+      SUMMARIZATION_MODEL_NAME: gpt-4o-mini
+      TEMPORAL_ENDPOINT: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: julep-task-queue
+      TEMPORAL_WORKER_URL: temporal:7233
+      TRUNCATE_EMBED_TEXT: "True"
+      WORKER_URL: temporal:7233
+    image: julepai/agents-api:${TAG:-1.0}
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8080"
+        protocol: tcp
+
+  cozo-migrate:
+    environment:
+      AGENTS_API_HOSTNAME: localhost
+      AGENTS_API_KEY: ${AGENTS_API_KEY}
+      AGENTS_API_KEY_HEADER_NAME: Authorization
+      AGENTS_API_PROTOCOL: http
+      AGENTS_API_PUBLIC_PORT: "80"
+      AGENTS_API_URL: http://agents-api:8080
+      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+      COZO_HOST: http://memory-store:9070
+      EMBEDDING_MODEL_ID: voyage/voyage-3
+      INTEGRATION_SERVICE_URL: http://integrations:8000
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_URL: http://litellm:4000
+      SUMMARIZATION_MODEL_NAME: gpt-4o-mini
+      TEMPORAL_ENDPOINT: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: julep-task-queue
+      TEMPORAL_WORKER_URL: temporal:7233
+      TRUNCATE_EMBED_TEXT: "True"
+      WORKER_URL: temporal:7233
+    image: julepai/cozo-migrate:${TAG:-1.0}
+    networks:
+      default: null
+    restart: "no"
+
+  integrations:
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+
+  litellm:
+    command:
+      - --config
+      - /app/config.yaml
+      - --port
+      - "4000"
+      - --num_workers
+      - "8"
+      - --telemetry
+      - "False"
+    depends_on:
+      litellm-db:
+        condition: service_started
+        required: true
+      litellm-redis:
+        condition: service_started
+        required: true
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+      CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+      DATABASE_URL: ${DATABASE_URL}
+      GITHUB_API_KEY: ${GITHUB_API_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      REDIS_URL: redis://default:${REDIS_PASSWORD:-redis}@litellm-redis:6379
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+    hostname: litellm
+    image: ghcr.io/berriai/litellm-database:main-v1.46.6
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./llm-proxy/litellm-config.yaml
+        target: /app/config.yaml
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ./llm-proxy/.keys
+        target: /app/.keys
+        read_only: true
+        bind:
+          create_host_path: true
+
+  litellm-db:
+    environment:
+      POSTGRES_DB: ${LITELM_POSTGRES_DB:-litellm}
+      POSTGRES_PASSWORD: ${LITELM_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${LITELM_POSTGRES_USER:-llmproxy}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -d ${LITELM_POSTGRES_DB:-litellm} -U ${LITELM_POSTGRES_USER:-llmproxy}
+      timeout: 5s
+      interval: 1s
+      retries: 10
+    image: postgres:16
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: litellm-db-data
+        target: /var/lib/postgresql/data
+        volume: {}
+
+  litellm-redis:
+    environment:
+      REDIS_ARGS: --requirepass ${REDIS_PASSWORD:-redis}
+    image: redis/redis-stack-server
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: litellm-redis-data
+        target: /data
+        volume: {}
+
+  memory-store:
+    environment:
+      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+      COZO_BACKUP_DIR: /backup
+      COZO_MNT_DIR: /data
+      COZO_PORT: "9070"
+    image: julepai/memory-store:${TAG:-1.0}
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.backupcron.command: bash /app/backup.sh
+      ofelia.job-exec.backupcron.environment: '["COZO_PORT=9070", "COZO_AUTH_TOKEN=${COZO_AUTH_TOKEN}", "COZO_BACKUP_DIR=/backup"]'
+      ofelia.job-exec.backupcron.schedule: '@every 3h'
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 9070
+        published: "9070"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: cozo_data
+        target: /data
+        volume: {}
+      - type: volume
+        source: cozo_backup
+        target: /backup
+        volume: {}
+
+  memory-store-backup-cron:
+    command:
+      - daemon
+      - --docker
+      - -f
+      - label=com.docker.compose.project=julep
+    depends_on:
+      memory-store:
+        condition: service_started
+        required: true
+    image: mcuadros/ofelia:latest
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+        bind:
+          create_host_path: true
+
+  temporal:
+    depends_on:
+      temporal-db:
+        condition: service_started
+        required: true
+    environment:
+      DB: postgres12
+      DB_HOST: temporal-db
+      DB_PORT: "5432"
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/temporal-postgres.yaml
+      LOG_LEVEL: info
+      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
+      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
+      POSTGRES_SEEDS: temporal-db
+      POSTGRES_TLS_CA_FILE: /cert/ca.crt
+      POSTGRES_TLS_DISABLE_HOST_VERIFICATION: "false"
+      POSTGRES_TLS_ENABLED: "false"
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+      SKIP_DB_CREATE: "false"
+      SKIP_SCHEMA_SETUP: "false"
+      SQL_CA: /cert/ca.crt
+      SQL_TLS_ENABLED: "false"
+      TEMPORAL_ADDRESS: temporal:7233
+      VISIBILITY_DBNAME: temporal_visibility
+    hostname: temporal
+    image: temporalio/auto-setup:1.25
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: ./scheduler/dynamicconfig
+        target: /etc/temporal/config/dynamicconfig
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ./scheduler/cert
+        target: /cert
+        bind:
+          create_host_path: true
+
+  temporal-db:
+    environment:
+      POSTGRES_DB: ${TEMPORAL_POSTGRES_DB:-temporal}
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:-temporal}
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -d ${TEMPORAL_POSTGRES_DB:-temporal} -U ${TEMPORAL_POSTGRES_USER:-temporal}
+      timeout: 5s
+      interval: 1s
+      retries: 10
+    image: postgres:16
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: temporal-db-data
+        target: /var/lib/postgresql/data
+        volume: {}
+
+  temporal-ui:
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CODEC_ENDPOINT: http://localhost/api/temporal
+      TEMPORAL_CSRF_COOKIE_INSECURE: "true"
+      TEMPORAL_FEEDBACK_URL: https://github.com/julep-ai/julep
+      TEMPORAL_NOTIFY_ON_NEW_VERSION: "false"
+      TEMPORAL_OPEN_API_ENABLED: "true"
+      TEMPORAL_UI_ENABLED: "true"
+    image: temporalio/ui:latest
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "9000"
+        protocol: tcp
+
+  worker:
+    environment:
+      AGENTS_API_HOSTNAME: localhost
+      AGENTS_API_KEY: ${AGENTS_API_KEY}
+      AGENTS_API_KEY_HEADER_NAME: Authorization
+      AGENTS_API_PROTOCOL: http
+      AGENTS_API_PUBLIC_PORT: "80"
+      AGENTS_API_URL: http://agents-api:8080
+      COZO_AUTH_TOKEN: ${COZO_AUTH_TOKEN}
+      COZO_HOST: http://memory-store:9070
+      EMBEDDING_MODEL_ID: voyage/voyage-3
+      INTEGRATION_SERVICE_URL: http://integrations:8000
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_URL: http://litellm:4000
+      SUMMARIZATION_MODEL_NAME: gpt-4o-mini
+      TEMPORAL_ENDPOINT: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: julep-task-queue
+      TEMPORAL_WORKER_URL: temporal:7233
+      TRUNCATE_EMBED_TEXT: "True"
+      WORKER_URL: temporal:7233
+    image: julepai/worker:${TAG:-1.0}
+    networks:
+      default: null
+
+networks:
+  default:
+    name: julep_default
+
+volumes:
+  cozo_backup:
+    name: cozo_backup
+  cozo_data:
+    name: cozo_data
+  litellm-db-data:
+    name: julep_litellm-db-data
+  litellm-redis-data:
+    name: julep_litellm-redis-data
+  temporal-db-data:
+    name: julep_temporal-db-data
