@@ -777,70 +777,84 @@ Tasks in Julep can include various types of steps, allowing you to create comple
 
 Each step type serves a specific purpose in building sophisticated AI workflows. This categorization helps in understanding the various control flows and operations available in Julep tasks.
 
-## Advanced Features
 
-Julep offers a range of advanced features to enhance your AI workflows:
+## Tool Types
 
-### Adding Tools to Agents
+Agents can be given access to a number of "tools" -- any programmatic interface that a foundation model can "call" with a set of inputs to achieve a goal. For example, it might use a `web_search(query)` tool to search the Internet for some information.
 
-Extend your agent's capabilities by integrating external tools and APIs:
+Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
-```python
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="web_search",
-    description="Search the web for information.",
-    integration={
-        "provider": "brave",
-        "method": "search",
-        "setup": {"api_key": "your_brave_api_key"},
-    },
-)
-```
+Tools in julep can be one of:
+1. **User-defined `function`s**  
+ 	These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:  
+ 	```yaml    
+ 	name: send_text_message
+ 	description: Send a text message to a recipient.
+ 	parameters:
+ 	  type: object
+ 	  properties:
+ 	  	to:
+ 	  		type: string
+ 	  		description: Phone number of recipient.
+ 	  	text:
+ 	  		type: string
+ 	  		description: Content of the message.
+ 	```
+  
+  Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-### Managing Sessions and Users
-
-Julep provides robust session management for persistent interactions:
-
-```python
-session = client.sessions.create(
-    agent_id=agent.id,
-    user_id=user.id,
-    context_overflow="adaptive"
-)
-
-# Continue conversation in the same session
-response = client.sessions.chat(
-    session_id=session.id,
-    messages=[
-      {
-        "role": "user",
-        "content": "Follow up on the previous conversation."
-      }
-    ]
-)
-```
-
-### Document Integration and Search
-
-Easily manage and search through documents for your agents:
-
-```python
-# Upload a document
-document = client.agents.docs.create(
-    title="AI advancements",
-    content="AI is changing the world...",
-    metadata={"category": "research_paper"}
-)
-
-# Search documents
-results = client.agents.docs.search(
-    text="AI advancements",
-    metadata_filter={"category": "research_paper"}
-)
-```
-
-For more advanced features and detailed usage, please refer to our [Advanced Features Documentation](https://docs.julep.ai/advanced-features).
+2. **`system` tools**  
+ 	Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+	 
+	 `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
+  For example,
+    
+    ```yaml
+    name: Example system tool task
+    description: List agents using system call
+    input_schema:
+      type: object
+    tools:
+    - name: list_agents
+      description: List all agents
+      type: system
+      system:
+        resource: agent
+        operation: list
+    main:
+    - tool: list_agents
+      arguments:
+        limit: '10'
+    ```
+  
+3. **Built-in `integration`s**  
+  Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+ 	julep backend ships with integrated third party tools from the following providers:
+ 	- [composio](https://composio.dev) \*\*
+ 	- [anon](https://anon.com) \*\*
+ 	- [langchain toolkits](https://python.langchain.com/v0.2/docs/integrations/toolkits/). Support for _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ toolkits is planned.
+   
+ 	\*\* Since _composio_ and _anon_ are third-party providers, their tools require setting up account linking.
+ 	
+4. **`api_call`s**  
+	 julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
+  
+  For example,  
+  
+  ```yaml
+    name: Example api_call task
+    tools:
+    - type: api_call
+      name: hello
+      api_call:
+        method: GET
+        url: https://httpbin.org/get
+    main:
+    - tool: hello
+      arguments:
+        params:
+          test: _.input
+  ```
 
 ## Integrations
 
@@ -933,6 +947,69 @@ output:
 ```
 
 These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).
+
+## Other Features
+
+Julep offers a range of advanced features to enhance your AI workflows:
+
+### Adding Tools to Agents
+
+Extend your agent's capabilities by integrating external tools and APIs:
+
+```python
+client.agents.tools.create(
+    agent_id=agent.id,
+    name="web_search",
+    description="Search the web for information.",
+    integration={
+        "provider": "brave",
+        "method": "search",
+        "setup": {"api_key": "your_brave_api_key"},
+    },
+)
+```
+
+### Managing Sessions and Users
+
+Julep provides robust session management for persistent interactions:
+
+```python
+session = client.sessions.create(
+    agent_id=agent.id,
+    user_id=user.id,
+    context_overflow="adaptive"
+)
+
+# Continue conversation in the same session
+response = client.sessions.chat(
+    session_id=session.id,
+    messages=[
+      {
+        "role": "user",
+        "content": "Follow up on the previous conversation."
+      }
+    ]
+)
+```
+
+### Document Integration and Search
+
+Easily manage and search through documents for your agents:
+
+```python
+# Upload a document
+document = client.agents.docs.create(
+    title="AI advancements",
+    content="AI is changing the world...",
+    metadata={"category": "research_paper"}
+)
+
+# Search documents
+results = client.agents.docs.search(
+    text="AI advancements",
+    metadata_filter={"category": "research_paper"}
+)
+```
 
 ## SDK Reference
 
