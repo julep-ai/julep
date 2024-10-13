@@ -786,35 +786,48 @@ Agents can be given access to a number of "tools" -- any programmatic interface 
 Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
 Tools in julep can be one of:
-1. **User-defined `function`s**  
- 	These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:  
- 	```yaml    
- 	name: send_text_message
- 	description: Send a text message to a recipient.
- 	parameters:
- 	  type: object
- 	  properties:
- 	  	to:
- 	  		type: string
- 	  		description: Phone number of recipient.
- 	  	text:
- 	  		type: string
- 	  		description: Content of the message.
- 	```
+
+### User-defined `function`s
+
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:  
+
+```yaml    
+    name: Example system tool task
+    description: List agents using system call
+
+    tools:
+    - name: send_notification
+      description: Send a notification to the user
+      type: function
+      function:
+        parameters:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Content of the notification
+
+    main:
+    - tool: send_notification
+      arguments:
+        content: hi
+```
   
   Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-2. **`system` tools**  
- 	Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
-	 
-	 `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
-  For example,
-    
-    ```yaml
+> [!TIP]
+> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+
+### `system` tools
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
+`system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.  
+ 
+For example,
+  
+  ```yaml
     name: Example system tool task
     description: List agents using system call
-    input_schema:
-      type: object
+
     tools:
     - name: list_agents
       description: List all agents
@@ -825,22 +838,31 @@ Tools in julep can be one of:
     main:
     - tool: list_agents
       arguments:
-        limit: '10'
-    ```
+        limit: 10
+  ```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+ 
+### Built-in `integration`s
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+julep backend ships with integrated third party tools from the following providers:
+- [composio](https://composio.dev) \*\*
+- [anon](https://anon.com) \*\*
+- [langchain toolkits](https://python.langchain.com/v0.2/docs/integrations/toolkits/). Support for _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ toolkits is planned.
+
+\*\* Since _composio_ and _anon_ are third-party providers, their tools require setting up account linking.
+
+
+### Direct `api_call`s
+
+julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
   
-3. **Built-in `integration`s**  
-  Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
- 	julep backend ships with integrated third party tools from the following providers:
- 	- [composio](https://composio.dev) \*\*
- 	- [anon](https://anon.com) \*\*
- 	- [langchain toolkits](https://python.langchain.com/v0.2/docs/integrations/toolkits/). Support for _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ toolkits is planned.
-   
- 	\*\* Since _composio_ and _anon_ are third-party providers, their tools require setting up account linking.
- 	
-4. **`api_call`s**  
-	 julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
-  
-  For example,  
+For example,  
   
   ```yaml
     name: Example api_call task
@@ -873,6 +895,9 @@ arguments:
 output:
   result: string  # The result of the Brave Search
 ```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
 
 ### BrowserBase
 
@@ -908,6 +933,9 @@ output:
   success: boolean  # Whether the email was sent successfully
 ```
 
+> [!TIP]
+> **Example cookbook**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+
 ### Spider
 
 ```yaml
@@ -923,6 +951,9 @@ output:
   documents: list         # The documents returned from the spider
 ```
 
+> [!TIP]
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
 ### Weather
 
 ```yaml
@@ -936,6 +967,9 @@ output:
   result: string                  # The weather data for the specified location
 ```
 
+> [!TIP]
+> **Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
 ### Wikipedia
 
 ```yaml
@@ -946,6 +980,9 @@ arguments:
 output:
   documents: list         # The documents returned from the Wikipedia search
 ```
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 These integrations can be used within your tasks to extend the capabilities of your AI agents. For more detailed information on how to use these integrations in your workflows, please refer to our [Integrations Documentation](https://docs.julep.ai/integrations).
 
