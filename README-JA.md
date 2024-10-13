@@ -1,4 +1,4 @@
-<sup>English | [中文翻译](https://github.com/julep-ai/julep/blob/dev/README-CN.md) | [日本語翻訳](https://github.com/julep-ai/julep/blob/dev/README-JP.md)</sup>
+<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
@@ -30,6 +30,8 @@
 
 > [!注意]
 > 👨‍💻 devfest.ai イベントに参加しませんか? [Discord](https://discord.com/invite/JTSBGRZrzj) に参加して、以下の詳細を確認してください。
+> 
+> API キーを [こちら](https://dashboard-dev.julep.ai) から取得します。
 
 <details>
 <summary><b>🌟 貢献者とDevFest.AI参加者</b>（クリックして拡大）</summary>
@@ -55,11 +57,6 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 > [!ヒント]
 > 楽しみに参加する準備はできましたか? **[参加することをツイート](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)**して、コーディングを始めましょう! 🖥️
 
-> [!注意]
-> API キーを [こちら](https://dashboard-dev.julep.ai) から取得します。
->
-> ベータ版では、[Discord](https://discord.com/invite/JTSBGRZrzj) に連絡して、API キーのレート制限を解除することもできます。
-
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
 </details>
@@ -67,47 +64,50 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 目次</h3></summary>
 
-- [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
-- [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
-- [Julep と LangChain を比較する理由](#julep-%E3%81%A8-langchain-%E3%82%92%E6%AF%94%E8%BC%83%E3%81%99%E3%82%8B%E7%90%86%E7%94%B1)
-  - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
-  - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
-- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
-- [Python クイックスタート 🐍](#python-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-  - [ステップ 1: エージェントを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%97-1-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B)
-  - [ステップ2: ストーリーと漫画を生成するタスクを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%972-%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%A8%E6%BC%AB%E7%94%BB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B)
-  - [ステップ3: タスクを実行する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973-%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B)
-  - [ステップ4: エージェントとチャットする](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%974-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A8%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%E3%81%99%E3%82%8B)
-- [Node.js クイックスタート 🟩](#nodejs-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-  - [ステップ 1: エージェントを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%97-1-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-1)
-  - [ステップ2: ストーリーと漫画を生成するタスクを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%972-%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%A8%E6%BC%AB%E7%94%BB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-1)
-  - [ステップ3: タスクを実行する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973-%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B-1)
-  - [ステップ4: エージェントとチャットする](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%974-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A8%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%E3%81%99%E3%82%8B-1)
-- [コンポーネント](#%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88)
-  - [メンタルモデル](#%E3%83%A1%E3%83%B3%E3%82%BF%E3%83%AB%E3%83%A2%E3%83%87%E3%83%AB)
-- [コンセプト](#%E3%82%B3%E3%83%B3%E3%82%BB%E3%83%97%E3%83%88)
-- [タスクを理解する](#%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B)
-  - [ワークフローステップの種類](#%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%95%E3%83%AD%E3%83%BC%E3%82%B9%E3%83%86%E3%83%83%E3%83%97%E3%81%AE%E7%A8%AE%E9%A1%9E)
-- [ツールの種類](#%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AE%E7%A8%AE%E9%A1%9E)
-  - [ユーザー定義の `function`](#%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E5%AE%9A%E7%BE%A9%E3%81%AE-function)
-  - [`システム` ツール](#%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0-%E3%83%84%E3%83%BC%E3%83%AB)
-  - [組み込みの `integration`](#%E7%B5%84%E3%81%BF%E8%BE%BC%E3%81%BF%E3%81%AE-integration)
-  - [直接の `api_call`](#%E7%9B%B4%E6%8E%A5%E3%81%AE-api_call)
-- [統合](#%E7%B5%B1%E5%90%88)
-  - [ブレイブサーチ](#%E3%83%96%E3%83%AC%E3%82%A4%E3%83%96%E3%82%B5%E3%83%BC%E3%83%81)
-  - [ブラウザベース](#%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%83%99%E3%83%BC%E3%82%B9)
-  - [メール](#%E3%83%A1%E3%83%BC%E3%83%AB)
-  - [スパイダー](#%E3%82%B9%E3%83%91%E3%82%A4%E3%83%80%E3%83%BC)
-  - [ウィキペディア](#%E3%82%A6%E3%82%A3%E3%82%AD%E3%83%9A%E3%83%87%E3%82%A3%E3%82%A2)
-- [その他の機能](#%E3%81%9D%E3%81%AE%E4%BB%96%E3%81%AE%E6%A9%9F%E8%83%BD)
-  - [エージェントへのツールの追加](#%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%B8%E3%81%AE%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AE%E8%BF%BD%E5%8A%A0)
-  - [セッションとユーザーの管理](#%E3%82%BB%E3%83%83%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%A8%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%81%AE%E7%AE%A1%E7%90%86)
-  - [ドキュメントの統合と検索](#%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%E3%81%AE%E7%B5%B1%E5%90%88%E3%81%A8%E6%A4%9C%E7%B4%A2)
-- [ローカルクイックスタート](#%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88)
-- [SDK リファレンス](#sdk-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [APIリファレンス](#api%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
+- [はじめに](#introduction)
+- [簡単な例](#quick-example)
+- [主な機能](#key-features)
+- [なぜ Julep と LangChain を比較するのか?](#why-julep-vs-langchain)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
+- [ステップ 2: ストーリーとコミック ストリップを生成するタスクを作成する](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [ステップ 3: タスクを実行する](#step-3-execute-the-task)
+- [ステップ 4: エージェントとチャットする](#step-4-chat-with-the-agent)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent-1)
+- [ステップ 2: ストーリーとコミック ストリップを生成するタスクを作成する](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [ステップ 3: タスクを実行する](#step-3-execute-the-task-1)
+- [ステップ 4: エージェントとチャットする](#step-4-chat-with-the-agent-1)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `function`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [組み込みの `integration`s](#built-in-integrations)
+- [直接の `api_call`](#direct-api_calls)
+- [統合](#integrations)
+- [勇敢な検索](#brave-search)
+- [ブラウザベース](#browserbase)
+- [メールアドレス](#email)
+- [スパイダー](#spider)
+- [天気](#weather)
+- [ウィキペディア](#wikipedia)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [ローカルクイックスタート](#local-quickstart)
+- [SDKリファレンス](#sdk-reference)
+- [API リファレンス](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -1076,3 +1076,11 @@ results = client.agents.docs.search(
 - [エージェント API](https://api.julep.ai/api/docs#tag/agents)
 - [タスク API](https://api.julep.ai/api/docs#tag/tasks)
 - [実行API](https://api.julep.ai/api/docs#tag/executions)
+
+
+  <div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>
+</div>
+

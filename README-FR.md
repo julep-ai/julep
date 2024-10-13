@@ -1,4 +1,4 @@
-<sup>English | [中文翻译](https://github.com/julep-ai/julep/blob/dev/README-CN.md) | [日本語翻訳](https://github.com/julep-ai/julep/blob/dev/README-JP.md)</sup>
+<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
@@ -30,6 +30,8 @@
 
 > [!REMARQUE]
 > 👨‍💻 Vous êtes ici pour l'événement devfest.ai ? Rejoignez notre [Discord](https://discord.com/invite/JTSBGRZrzj) et consultez les détails ci-dessous.
+> 
+> Obtenez votre clé API [ici](https://dashboard-dev.julep.ai).
 
 <details>
 <summary><b>🌟 Contributeurs et participants au DevFest.AI</b>(Cliquez pour agrandir)</summary>
@@ -55,11 +57,6 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 > [!TIP]
 > Prêt à vous joindre à la fête ? **[Tweetez que vous participez](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** et commençons à coder ! 🖥️
 
-> [!REMARQUE]
-> Obtenez votre clé API [ici](https://dashboard-dev.julep.ai).
->
-> Pendant que nous sommes en version bêta, vous pouvez également nous contacter sur [Discord](https://discord.com/invite/JTSBGRZrzj) pour obtenir la levée des limites de débit sur votre clé API.
-
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
 </details>
@@ -67,50 +64,50 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 Table des matières</h3></summary>
 
-- [Introduction](#introduction)
-- [Exemple rapide](#exemple-rapide)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain%C2%A0)
-  - [Différents cas d'utilisation](#diff%C3%A9rents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
-  - [En résumé](#en-r%C3%A9sum%C3%A9)
+- [Présentation](#introduction)
+- [Exemple rapide](#quick-example)
+- [Caractéristiques principales](#key-features)
+- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent)
-- [Démarrage rapide de Node.js 🟩](#d%C3%A9marrage-rapide-de-nodejs-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent-1)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e-1)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che-1)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent-1)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent-1)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task-1)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent-1)
 - [Composants](#composants)
-  - [Modèle mental](#mod%C3%A8le-mental)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Comprendre les tâches](#comprendre-les-t%C3%A2ches)
-  - [Types d'étapes de flux de travail](#types-d%C3%A9tapes-de-flux-de-travail)
-- [Types d'outils](#types-doutils)
-  - [Fonctions définies par l'utilisateur](#fonctions-d%C3%A9finies-par-lutilisateur)
-  - [outils `système`](#outils-syst%C3%A8me)
-  - [Intégrations intégrées](#int%C3%A9grations-int%C3%A9gr%C3%A9es)
-  - [Appels directs `api_call`](#appels-directs-api_call)
-- [Intégrations](#int%C3%A9grations)
-  - [Recherche courageuse](#recherche-courageuse)
-  - [Base de navigateur](#base-de-navigateur)
-  - [E-mail](#e-mail)
-  - [Araignée](#araign%C3%A9e)
-  - [Météo](#m%C3%A9t%C3%A9o)
-  - [Wikipédia](#wikip%C3%A9dia)
-- [Autres fonctionnalités](#autres-fonctionnalit%C3%A9s)
-  - [Ajout d'outils aux agents](#ajout-doutils-aux-agents)
-  - [Gestion des sessions et des utilisateurs](#gestion-des-sessions-et-des-utilisateurs)
-  - [Intégration et recherche de documents](#int%C3%A9gration-et-recherche-de-documents)
-- [Démarrage rapide local](#d%C3%A9marrage-rapide-local)
-- [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-- [Référence API](#r%C3%A9f%C3%A9rence-api)
+- [Comprendre les tâches](#understanding-tasks)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Types d'outils](#types-d'outils)
+- [Fonctions définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [Intégrations intégrées](#integrations-integrées)
+- [Appels directs d'API](#appels directs d'API)
+- [Intégrations](#intégrations)
+- [Recherche courageuse](#brave-search)
+- [Base du navigateur](#basedunavigateur)
+- [Courriel](#courriel)
+- [Araignée](#araignée)
+- [Météo](#météo)
+- [Wikipédia](#wikipédia)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Démarrage rapide local](#local-quickstart)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -1079,3 +1076,11 @@ Explorez notre documentation API complète pour en savoir plus sur les agents, l
 - [API des agents](https://api.julep.ai/api/docs#tag/agents)
 - [API des tâches](https://api.julep.ai/api/docs#tag/tasks)
 - [API d'exécution](https://api.julep.ai/api/docs#tag/executions)
+
+
+  <div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>
+</div>
+

@@ -1,4 +1,4 @@
-<sup>English | [中文翻译](https://github.com/julep-ai/julep/blob/dev/README-CN.md) | [日本語翻訳](https://github.com/julep-ai/julep/blob/dev/README-JP.md)</sup>
+<sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
 <div align="center">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
@@ -30,6 +30,8 @@
 
 > [!注意]
 > 👨‍💻 来参加 devfest.ai 活动了吗？加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 并查看以下详细信息。
+> 
+> 从 [此处](https://dashboard-dev.julep.ai) 获取您的 API 密钥。
 
 <details>
 <summary><b>🌟 贡献者和 DevFest.AI 参与者</b>（点击展开）</summary>
@@ -55,11 +57,6 @@
 > [!提示]
 > 准备好加入这场有趣的活动了吗？**[发推文表示你正在参与](https://twitter.com/intent/tweet?text=Pumped%20to%20be%20participating%20in%20%40devfestai%20with%20%40julep_ai%20building%20%23ai%20%23agents%20%23workflows%20Let's%20gooo!%20https%3A%2F%2Fgit.new%2Fjulep)** 让我们开始编码吧！🖥️
 
-> [!注意]
-> 从 [此处](https://dashboard-dev.julep.ai) 获取您的 API 密钥。
->
-> 虽然我们处于测试阶段，但您也可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 联系，以解除 API 密钥的速率限制。
-
 ![Julep DevFest.AI](https://media.giphy.com/media/YjyUeyotft6epaMHtU/giphy.gif)
 
 </details>
@@ -67,38 +64,50 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 目录</h3></summary>
 
-- [为什么选择 Julep 而不是 LangChain？](#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-julep-%E8%80%8C%E4%B8%8D%E6%98%AF-langchain)
-  - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
-  - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
-- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9)
-- [Node.js 快速入门 🟩](#nodejs-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86-1)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9-1)
-  - [心智模型](#%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B)
-- [概念](#%E6%A6%82%E5%BF%B5)
-- [理解任务](#%E7%90%86%E8%A7%A3%E4%BB%BB%E5%8A%A1)
-  - [工作流步骤的类型](#%E5%B7%A5%E4%BD%9C%E6%B5%81%E6%AD%A5%E9%AA%A4%E7%9A%84%E7%B1%BB%E5%9E%8B)
-- [工具类型](#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%9E%8B)
-  - [用户定义的函数](#%E7%94%A8%E6%88%B7%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%BD%E6%95%B0)
-  - [`系统` 工具](#%E7%B3%BB%E7%BB%9F-%E5%B7%A5%E5%85%B7)
-  - [内置“集成”](#%E5%86%85%E7%BD%AE%E9%9B%86%E6%88%90)
-  - [直接 `api_call`](#%E7%9B%B4%E6%8E%A5-api_call)
-- [集成](#%E9%9B%86%E6%88%90)
-  - [勇敢搜索](#%E5%8B%87%E6%95%A2%E6%90%9C%E7%B4%A2)
-  - [浏览器基础](#%E6%B5%8F%E8%A7%88%E5%99%A8%E5%9F%BA%E7%A1%80)
-  - [向代理添加工具](#%E5%90%91%E4%BB%A3%E7%90%86%E6%B7%BB%E5%8A%A0%E5%B7%A5%E5%85%B7)
-  - [管理会话和用户](#%E7%AE%A1%E7%90%86%E4%BC%9A%E8%AF%9D%E5%92%8C%E7%94%A8%E6%88%B7)
-  - [文档集成与搜索](#%E6%96%87%E6%A1%A3%E9%9B%86%E6%88%90%E4%B8%8E%E6%90%9C%E7%B4%A2)
-- [本地快速启动](#%E6%9C%AC%E5%9C%B0%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8)
-- [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
+- [简介](#introduction)
+- [快速示例](#quick-example)
+- [主要特点](#key-features)
+- [为什么选择 Julep 而不是 LangChain？](#why-julep-vs-langchain)
+- [不同用例](#different-use-cases)
+- [不同的外形尺寸](#different-form-factor)
+- [总结](#in-summary)
+- [安装](#安装)
+- [Python 快速入门 🐍](#python-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [步骤 3：执行任务](#step-3-execute-the-task)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent)
+- [Node.js 快速入门🟩](#nodejs-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent-1)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [步骤 3：执行任务](#step-3-execute-the-task-1)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent-1)
+- [组件](#components)
+- [心智模型](#mental-model)
+- [概念](#concepts)
+- [理解任务](#understanding-tasks)
+- [工作流步骤的类型](#types-of-workflow-steps)
+- [工具类型](#tool-types)
+- [用户定义的函数](#user-defined-functions)
+- [`系统` 工具](#system-tools)
+- [内置集成](#built-in-integrations)
+- [直接 `api_call`](#direct-api_calls)
+- [集成](#integrations)
+- [勇敢搜索](#brave-search)
+- [BrowserBase](#browserbase)
+- [电子邮件](#email)
+- [蜘蛛](#蜘蛛)
+- [天气](#天气)
+- [维基百科](#wikipedia)
+- [其他功能](#other-features)
+- [向代理添加工具](#adding-tools-to-agents)
+- [管理会话和用户](#managing-sessions-and-users)
+- [文档集成与搜索](#document-integration-and-search)
+- [本地快速启动](#local-quickstart)
+- [SDK 参考](#sdk-reference)
+- [API 参考](#api-reference)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -845,7 +854,7 @@ Julep 带有许多内置集成（如下节所述）。`集成` 工具直接在 j
 
 julep 后端附带来自以下提供商的集成第三方工具：
 - [composio](https://composio.dev) \*\*
-- [匿名]（https://anon.com）\*\*
+- [匿名](https://anon.com) \*\*
 - [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)。计划支持 _Github、Gitlab、Gmail、Jira、MultiOn、Slack_ 工具包。
 
 \*\* 由于 _composio_ 和 _anon_ 是第三方提供商，因此他们的工具需要设置帐户链接。
@@ -1067,3 +1076,11 @@ API 参考
 - [代理 API](https://api.julep.ai/api/docs#tag/agents)
 - [任务 API](https://api.julep.ai/api/docs#tag/tasks)
 - [执行 API](https://api.julep.ai/api/docs#tag/executions)
+
+
+  <div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>
+</div>
+
