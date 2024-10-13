@@ -752,7 +752,7 @@ paths:
           content:
             text/event-stream:
               schema:
-                $ref: '#/components/schemas/Executions.TransitionEvent'
+                type: string
   /jobs/{id}:
     get:
       operationId: JobRoute_get
@@ -979,6 +979,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Entries.History'
+  /tasks/{id}:
+    get:
+      operationId: TasksGetRoute_get
+      description: Get a task by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the resource
+          schema:
+            $ref: '#/components/schemas/Common.uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tasks.Task'
   /tasks/{id}/executions:
     post:
       operationId: TaskExecutionsRoute_create
@@ -3875,7 +3893,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
           description: The steps to run if the condition is true
     Tasks.CaseThenUpdateItem:
@@ -3903,7 +3920,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
           description: The steps to run if the condition is true
     Tasks.CreateTaskRequest:
@@ -3935,7 +3951,6 @@ components:
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
               - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-              - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.WaitForInputStep'
               - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
               - $ref: '#/components/schemas/Tasks.SwitchStep'
@@ -4031,7 +4046,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
             - $ref: '#/components/schemas/Tasks.SwitchStep'
@@ -4306,7 +4320,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
           description: The steps to run if the condition is true
         else:
@@ -4321,7 +4334,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
           nullable: true
           description: The steps to run if the condition is false
@@ -4363,7 +4375,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
           description: The steps to run if the condition is true
         else:
@@ -4378,7 +4389,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
           nullable: true
           description: The steps to run if the condition is false
@@ -4508,7 +4518,6 @@ components:
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
               - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-              - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.WaitForInputStep'
               - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
               - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
@@ -4592,7 +4601,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStepUpdateItem'
             - $ref: '#/components/schemas/Tasks.SwitchStepUpdateItem'
@@ -5118,7 +5126,6 @@ components:
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
               - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-              - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.WaitForInputStep'
               - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
               - $ref: '#/components/schemas/Tasks.SwitchStep'
@@ -5228,7 +5235,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
             - $ref: '#/components/schemas/Tasks.SwitchStep'
@@ -5396,7 +5402,6 @@ components:
               - $ref: '#/components/schemas/Tasks.ReturnStep'
               - $ref: '#/components/schemas/Tasks.SleepStep'
               - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-              - $ref: '#/components/schemas/Tasks.YieldStep'
               - $ref: '#/components/schemas/Tasks.WaitForInputStep'
               - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
               - $ref: '#/components/schemas/Tasks.SwitchStep'
@@ -5492,7 +5497,6 @@ components:
             - $ref: '#/components/schemas/Tasks.ReturnStep'
             - $ref: '#/components/schemas/Tasks.SleepStep'
             - $ref: '#/components/schemas/Tasks.ErrorWorkflowStep'
-            - $ref: '#/components/schemas/Tasks.YieldStep'
             - $ref: '#/components/schemas/Tasks.WaitForInputStep'
             - $ref: '#/components/schemas/Tasks.IfElseWorkflowStep'
             - $ref: '#/components/schemas/Tasks.SwitchStep'

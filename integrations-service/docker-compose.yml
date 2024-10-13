@@ -6,6 +6,7 @@ x--shared-environment: &shared-environment
 
 services:
   integrations:
+    image: julepai/integrations:${TAG:-dev}
     environment:
       <<: *shared-environment
     

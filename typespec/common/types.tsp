@@ -1,6 +1,8 @@
+import "@typespec/events";
 import "@typespec/http";
 import "@typespec/openapi";
 
+using TypeSpec.Events;
 using TypeSpec.Http;
 using TypeSpec.OpenAPI;
 
@@ -51,4 +53,9 @@ model PaginationOptions {
 
     /** Object to filter results by metadata */
     @query metadata_filter: MetadataFilter,
+}
+
+@events
+union StreamEvent<T> {
+    T;
 }

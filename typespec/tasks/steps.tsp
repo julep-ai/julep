@@ -59,7 +59,6 @@ alias NonConditionalWorkflowStep =
     | ReturnStep
     | SleepStep
     | ErrorWorkflowStep
-    | YieldStep
     | WaitForInputStep;
 
 alias ConditionalStep = IfElseWorkflowStep | SwitchStep;
