@@ -29,7 +29,7 @@
 *****
 
 > [!NOTE]
-> 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
+> 👨‍💻 Here for the devfest.ai event ? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
 
 <details>
 <summary><b>🌟 Contributors and DevFest.AI Participants</b> (Click to expand)</summary>
