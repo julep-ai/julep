@@ -5,7 +5,7 @@ labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
-      value: We value your time and your efforts to submit this bug report is appreciated. 🙏
+      value: We value your time and your efforts to submit this feature request is appreciated. 🙏
   - type: textarea
     id: feature-description
     validations:
