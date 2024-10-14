@@ -1,16 +1,16 @@
 from functools import cache, lru_cache
 
-from beartype import beartype
 import boto3
 import botocore
+from beartype import beartype
 from xxhash import xxh3_64_hexdigest as xxhash_key
 
 from ..env import (
+    blob_store_bucket,
+    blob_store_cutoff_kb,
     s3_access_key,
     s3_endpoint,
     s3_secret_key,
-    blob_store_bucket,
-    blob_store_cutoff_kb,
 )
 
 

@@ -23,8 +23,7 @@ from temporalio.converter import (
 )
 
 from ..clients import s3
-from ..env import use_blob_store_for_temporal, blob_store_cutoff_kb
-
+from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
 
 if use_blob_store_for_temporal:
     s3.setup()
