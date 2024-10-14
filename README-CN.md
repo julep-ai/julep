@@ -842,7 +842,7 @@ Julep 带有许多内置集成（如下节所述）。`集成` 工具直接在 j
 
 julep 后端附带来自以下提供商的集成第三方工具：
 - [composio](https://composio.dev) \*\*
-- [匿名]（https://anon.com）\*\*
+- [匿名](https://anon.com）\*\*
 - [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)。计划支持 _Github、Gitlab、Gmail、Jira、MultiOn、Slack_ 工具包。
 
 \*\* 由于 _composio_ 和 _anon_ 是第三方提供商，因此他们的工具需要设置帐户链接。
