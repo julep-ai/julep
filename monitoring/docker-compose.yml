@@ -1,39 +1,39 @@
 name: julep-monitoring
 
 services:
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
-    restart: unless-stopped
-    ports:
-      - "9000:8000"
-      - "9443:9443"
-    volumes:
-      - portainer_data:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-    restart: unless-stopped
+    profiles:
+      - multi-tenant
+
     volumes:
-      - ./prometheus:/etc/prometheus
-      - prom_data:/prometheus
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    
+    depends_on:
+      agents-api-multi-tenant:
+        condition: service_started
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
 
   grafana:
     image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
     container_name: grafana
     ports:
       - 3000:3000
-    restart: unless-stopped
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     volumes:
-      - ./grafana:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning
+    profiles:
+      - multi-tenant
 
 volumes:
-  prom_data:
-  portainer_data:
+  prometheus_data:
+    external: true
+  grafana_data:
+    external: true
