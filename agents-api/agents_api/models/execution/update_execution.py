@@ -14,6 +14,7 @@ from ...common.protocol.tasks import (
     valid_previous_statuses as valid_previous_statuses_map,
 )
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -41,6 +42,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("update_execution")
 @beartype
 def update_execution(
     *,
