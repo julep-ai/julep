@@ -41,6 +41,10 @@ model BaseWorkflowStep<T extends WorkflowStepKind> {
     kind_: T;
 }
 
+alias SequentialWorkflowStep =
+    | WaitForInputStep
+    | MappableWorkflowStep;
+
 alias MappableWorkflowStep =
     | EvaluateStep
     | ToolCallStep
@@ -48,8 +52,6 @@ alias MappableWorkflowStep =
     | GetStep
     | SetStep
     | LogStep
-    | EmbedStep
-    | SearchStep
     | YieldStep;
 
 alias NonConditionalWorkflowStep =
@@ -57,7 +59,6 @@ alias NonConditionalWorkflowStep =
     | ReturnStep
     | SleepStep
     | ErrorWorkflowStep
-    | YieldStep
     | WaitForInputStep;
 
 alias ConditionalStep = IfElseWorkflowStep | SwitchStep;
@@ -82,7 +83,7 @@ model ToolCallStepDef {
     tool: validPythonIdentifier;
 
     /** The input parameters for the tool (defaults to last step output) */
-    arguments: ExpressionObject<unknown> | "_" = "_";
+    arguments: NestedExpressionObject<unknown> | "_" = "_";
 }
 
 model PromptStep extends BaseWorkflowStep<"prompt"> {
@@ -159,34 +160,6 @@ model LogStepDef {
     log: JinjaTemplate;
 }
 
-////////////////////////
-/// Doc search steps ///
-////////////////////////
-
-model EmbedStep extends BaseWorkflowStep<"embed"> {
-    @visibility("read")
-    kind_: "embed" = "embed";
-
-    ...EmbedStepDef;
-}
-
-model EmbedStepDef {
-    /** The text to embed */
-    embed: EmbedQueryRequest;
-}
-
-model SearchStep extends BaseWorkflowStep<"search"> {
-    @visibility("read")
-    kind_: "search" = "search";
-
-    ...SearchStepDef;
-}
-
-model SearchStepDef {
-    /** The search query */
-    search: DocSearchRequest;
-}
-
 ///////////////////////
 /// Key-value steps ///
 ///////////////////////
@@ -238,7 +211,7 @@ model ForeachDo {
     in: TypedExpression<Array<unknown>>;
 
     /** The steps to run for each iteration */
-    do: MappableWorkflowStep;
+    do: SequentialWorkflowStep;
 }
 
 model ForeachStep extends BaseWorkflowStep<"foreach"> {

@@ -83,7 +83,11 @@ def create_or_update_agent(
     data.default_settings = data.default_settings or {}
 
     agent_data = data.model_dump()
-    default_settings = agent_data.pop("default_settings")
+    default_settings = (
+        data.default_settings.model_dump(exclude_none=True)
+        if data.default_settings
+        else {}
+    )
 
     settings_cols, settings_vals = cozo_process_mutate_data(
         {
@@ -136,6 +140,7 @@ def create_or_update_agent(
             input[_agent_id, developer_id, model, name, about, metadata, instructions, updated_at],
             *agents{
                 agent_id,
+                developer_id,
                 created_at,
             },
             agent_id = to_uuid(_agent_id),
@@ -144,6 +149,7 @@ def create_or_update_agent(
             input[_agent_id, developer_id, model, name, about, metadata, instructions, updated_at],
             not *agents{
                 agent_id,
+                developer_id,
             }, created_at = now(),
             agent_id = to_uuid(_agent_id),
 

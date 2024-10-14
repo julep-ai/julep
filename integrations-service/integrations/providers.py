@@ -7,6 +7,9 @@ from .models import (
     BrowserBaseLoadArguments,
     BrowserBaseLoadOutput,
     BrowserBaseSetup,
+    EmailArguments,
+    EmailOutput,
+    EmailSetup,
     HackerNewsFetchArguments,
     HackerNewsFetchOutput,
     ProviderInfo,
@@ -134,6 +137,22 @@ browserbase = BaseProvider(
     ),
 )
 
+email = BaseProvider(
+    provider="email",
+    setup=EmailSetup,
+    methods=[
+        BaseProviderMethod(
+            method="send",
+            description="Send an email",
+            arguments=EmailArguments,
+            output=EmailOutput,
+        ),
+    ],
+    info=ProviderInfo(
+        friendly_name="Email",
+    ),
+)
+
 providers = {
     "wikipedia": wikipedia,
     "weather": weather,
@@ -141,4 +160,5 @@ providers = {
     "spider": spider,
     "brave": brave,
     "browserbase": browserbase,
+    "email": email,
 }

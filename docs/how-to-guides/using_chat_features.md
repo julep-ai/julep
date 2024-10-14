@@ -1,5 +1,12 @@
 # Using Chat Features
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This guide covers how to use the chat features in Julep for dynamic interactions with agents.
 
 ## Starting a Chat Session

@@ -26,9 +26,21 @@ T = TypeVar("T")
 
 @rewrap_exceptions(
     {
-        QueryException: partialclass(HTTPException, status_code=400),
-        ValidationError: partialclass(HTTPException, status_code=400),
-        TypeError: partialclass(HTTPException, status_code=400),
+        QueryException: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A database query failed to return the expected results. This might occur if the requested resource doesn't exist or your query parameters are incorrect.",
+        ),
+        ValidationError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="Input validation failed. Please check the provided data for missing or incorrect fields, and ensure it matches the required format.",
+        ),
+        TypeError: partialclass(
+            HTTPException,
+            status_code=400,
+            detail="A type mismatch occurred. This likely means the data provided is of an incorrect type (e.g., string instead of integer). Please review the input and try again.",
+        ),
     }
 )
 @wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
@@ -70,6 +82,7 @@ def create_or_update_user(
         ?[user_id, developer_id, name, about, metadata, created_at, updated_at] :=
             input[_user_id, developer_id, name, about, metadata, updated_at],
             *users{
+                developer_id,
                 user_id,
                 created_at,
             },
@@ -78,6 +91,7 @@ def create_or_update_user(
         ?[user_id, developer_id, name, about, metadata, created_at, updated_at] :=
             input[_user_id, developer_id, name, about, metadata, updated_at],
             not *users{
+                developer_id,
                 user_id,
             }, created_at = now(),
             user_id = to_uuid(_user_id),

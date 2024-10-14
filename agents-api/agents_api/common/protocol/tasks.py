@@ -118,7 +118,8 @@ transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
 }  # type: ignore
 
 
-PartialTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+class PartialTransition(create_partial_model(CreateTransitionRequest)):
+    user_state: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExecutionInput(BaseModel):

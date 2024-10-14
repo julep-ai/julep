@@ -1,5 +1,12 @@
 # Managing Sessions
 
+*****
+> ### This docs site is currently under construction although this github README below should suffice for now.
+
+![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
+*****
+
+
 This tutorial will guide you through creating and managing sessions with your Julep agents.
 
 ## Creating a Session

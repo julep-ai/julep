@@ -7,6 +7,8 @@ namespace Common;
 @format("uuid")
 scalar uuid extends string;
 
+alias concreteType = numeric | string | boolean | null;
+
 /**
  * For Unicode character safety
  * See: https://unicode.org/reports/tr31/
@@ -53,19 +55,3 @@ scalar PyExpression extends string;
 
 /** A valid jinja template. */
 scalar JinjaTemplate extends string;
-
-/** Integration provider name */
-alias integrationProvider = (
-    | "dummy"
-    | "hacker_news"
-    | "weather"
-    | "wikipedia"
-    | "spider"
-    | "brave"
-    | "browserbase"
-    // | "dalle_image_generator"
-    // | "duckduckgo_search"
-    // | "twitter"
-    // | "webpage"
-    // | "requests"
-);

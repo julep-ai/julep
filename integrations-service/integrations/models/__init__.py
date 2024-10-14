@@ -12,6 +12,7 @@ from .browserbase import (
     BrowserBaseLoadOutput,
     BrowserBaseSetup,
 )
+from .email import EmailArguments, EmailOutput, EmailSetup
 from .hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
 from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
 from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup

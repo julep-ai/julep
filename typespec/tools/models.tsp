@@ -8,6 +8,23 @@ namespace Tools;
 // TOOL MODELS
 //
 
+// TODO: Split these into different files
+
+/** A valid HTTP method */
+alias httpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "CONNECT" | "TRACE";
+
+/** Integration provider name */
+alias integrationProvider = (
+    | "dummy"
+    | "hacker_news"
+    | "weather"
+    | "wikipedia"
+    | "spider"
+    | "brave"
+    | "browserbase"
+    | "email"
+);
+
 enum ToolType {
     /** A tool that emulates a function call */
     function,
@@ -34,13 +51,15 @@ model FunctionDef {
     /** DO NOT USE: This will be overriden by the tool name. Here only for compatibility reasons. */
     name?: null = null;
 
-    /** Description of the function  */
-    description?: string;
+    /** DO NOT USE: This will be overriden by the tool description. Here only for compatibility reasons. */
+    description?: null = null;
 
     /** The parameters the function accepts */
     parameters?: FunctionParameters;
 
 }
+
+// TODO: Add granular definitions for each integration
 
 /** Integration definition */
 model IntegrationDef {
@@ -50,9 +69,6 @@ model IntegrationDef {
     /** The specific method of the integration to call */
     method?: string;
 
-    /** Optional description of the integration */
-    description?: string;
-
     /** The setup parameters the integration accepts */
     setup?: FunctionParameters;
 
@@ -60,28 +76,114 @@ model IntegrationDef {
     arguments?: FunctionParameters;
 }
 
+//
+// SYSTEM TOOL MODELS
+//
+
+alias resourceType = (
+    | "agent"
+    | "user"
+    | "task"
+    | "execution"
+    | "doc"
+    | "session"
+    | "job"
+);
+
+alias subresourceType = (
+    | "tool"
+    | "doc"
+    | "execution"
+    | "transition"
+);
+
+alias operationType = (
+    | "create"
+    | "update"
+    | "patch"
+    | "create_or_update"
+    | "embed"
+    | "change_status"
+    | "search"
+    | "chat"
+    | "history"
+    | "delete"
+    | "get"
+    | "list"
+);
+
+// TODO: Add granular definitions for each system call
+
 /** System definition */
 model SystemDef {
-    /** The name of the system call */
-    call: string;
+    /** Resource is the name of the resource to use */
+    resource: resourceType;
 
-    /** Optional description of the system call */
-    description?: string;
+    /** Operation is the name of the operation to perform */
+    operation: operationType;
+
+    /** Resource id (if applicable) */
+    resource_id?: uuid;
+
+    /** Sub-resource type (if applicable) */
+    subresource?: subresourceType;
 
     /** The arguments to pre-apply to the system call */
     arguments?: FunctionParameters;
 }
 
-// TODO: We should use this model for all tools, not just functions and discriminate on the type
+/** API call definition */
+model ApiCallDef {
+    /** The HTTP method to use */
+    method: httpMethod;
+
+    /** The URL to call */
+    url: url;
+
+    /** The headers to send with the request */
+    headers?: Record<string>;
+
+    /** The content as base64 to send with the request */
+    content?: string;
+
+    /** The data to send as form data */
+    data?: Record<unknown>;
+
+    /** JSON body to send with the request */
+    json?: Record<unknown>;
+
+    /** Cookies */
+    cookies?: Record<string>;
+
+    /** The parameters to send with the request */
+    params?: string | Record<unknown>;
+
+    /** Follow redirects */
+    follow_redirects?: boolean;
+
+    /** The timeout for the request */
+    timeout?: uint8;
+}
+
+
 model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
 
+    /** Description of the tool */
+    description?: string;
+
     /** The function to call */
     function?: FunctionDef;
+
+    /** The integration to call */
     integration?: IntegrationDef;
+
+    /** The system to call */
     system?: SystemDef;
-    api_call?: never; // TODO: Implement
+
+    /** The API call to make */
+    api_call?: ApiCallDef;
 
     ...HasTimestamps;
     ...HasId;
@@ -94,9 +196,9 @@ model FunctionCallOption {
 
 model NamedToolChoice {
     function?: FunctionCallOption;
-    integration?: never; // TODO: Implement
-    system?: never; // TODO: Implement
-    api_call?: never; // TODO: Implement
+    integration?: never;
+    system?: never;
+    api_call?: never;
 }
 
 model ToolResponse {
@@ -128,9 +230,9 @@ model ChosenToolCall {
     type: ToolType;
 
     function?: FunctionCallOption;
-    integration?: never; // TODO: Implement
-    system?: never; // TODO: Implement
-    api_call?: never; // TODO: Implement
+    integration?: never;
+    system?: never;
+    api_call?: never;
 
     ...HasId;
 }

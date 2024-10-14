@@ -24,7 +24,7 @@ x--shared-environment: &shared-environment
   WORKER_URL: ${WORKER_URL:-temporal:7233}
 
 x--base-agents-api: &base-agents-api
-  image: julepai/agents-api:${TAG}
+  image: julepai/agents-api:${TAG:-dev}
   depends_on:
     worker:
       condition: service_started
@@ -67,7 +67,7 @@ services:
       AGENTS_API_PREFIX: "/api"
 
   worker:
-    image: julepai/worker:${TAG}
+    image: julepai/worker:${TAG:-dev}
     environment:
       <<: *shared-environment
     build:
@@ -87,7 +87,7 @@ services:
           path: Dockerfile.worker
 
   cozo-migrate:
-    image: julepai/cozo-migrate:${TAG}
+    image: julepai/cozo-migrate:${TAG:-dev}
     container_name: cozo-migrate
     build:
       context: .
