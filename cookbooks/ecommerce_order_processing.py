@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import uuid
 import yaml
@@ -93,6 +92,7 @@ main:
         Send notifications if needed.
     unwrap: true
 """)
+
 
 task = client.tasks.create_or_update(
     task_id=TASK_UUID,
