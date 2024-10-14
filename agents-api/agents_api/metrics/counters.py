@@ -16,7 +16,7 @@ def increase_counter(metric_label: str, id_field_name: str = "developer_id"):
         )
 
         @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             metric.labels(kwargs.get(id_field_name, "not_set")).inc()
             return func(*args, **kwargs)
 
