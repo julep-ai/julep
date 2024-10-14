@@ -39,7 +39,6 @@ def serialize(x: Any) -> bytes:
     data_size = sys.getsizeof(data)
 
     if use_blob_store_for_temporal and data_size > blob_store_cutoff_kb * 1024:
-
         key = s3.add_object_with_hash(data)
         return serialize(RemoteObject(key=key))
 
