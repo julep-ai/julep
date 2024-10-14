@@ -8,7 +8,7 @@ T = TypeVar("T")
 
 
 def increase_counter(metric_label: str, id_field_name: str = "developer_id"):
-    def decor(func: Callable[P, T] | None = None):
+    def decor(func: Callable[P, T]):
         metric = Counter(
             metric_label,
             f"Number of {metric_label} calls",
