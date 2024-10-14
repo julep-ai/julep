@@ -1,26 +1,26 @@
-## Contributing
+## Contributing to Julep
 
-We welcome contributions to this project! There are several ways you can contribute:
+We welcome and appreciate contributions to the Julep project! There are several ways you can get involved:
 
 ### Reporting Issues
 
-If you find a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please include:
-- Steps to reproduce the issue
-- Expected behavior
-- Actual behavior
-- Screenshots if applicable 
+If you encounter a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please provide as much detail as possible, including:
+
+- **Steps to Reproduce:** Clearly outline the steps taken before the issue occurred.
+- **Expected Behavior:** Describe what you expected to happen.
+- **Actual Behavior:** Explain what actually happened, including any error messages.
+- **Screenshots:** If applicable, provide screenshots or screen recordings to illustrate the issue.
 
 ### Submitting Pull Requests
 
-To contribute code changes:
+To contribute code changes, please follow these steps:
 
-1. Fork the repository 
-2. Create a new branch for your changes
-3. Make your changes and commit them with descriptive messages
-4. Push your changes to your fork
-5. Open a pull request to the main repository
-
-Please ensure your code follows the existing style and passes all tests.
+1. **Fork the Repository:** Click the "Fork" button at the top right corner of the repository page to create your copy.
+2. **Create a New Branch:** Use a descriptive name for your branch that reflects the changes you're making (e.g., `feature/add-new-feature` or `bugfix/fix-issue`).
+3. **Make Your Changes:** Implement your changes, ensuring that you maintain the existing code style.
+4. **Commit Your Changes:** Commit your changes with clear, descriptive messages that explain what you’ve done and why. For example, “Fix typo in README” or “Add validation to user input”.
+5. **Push Your Changes:** Push your branch to your forked repository.
+6. **Open a Pull Request:** Navigate to the main repository and click on the “New Pull Request” button. Select your branch and provide a clear description of the changes you've made.
 
 ## Project Overview and Architecture
 
@@ -117,7 +117,7 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 4. **Test Your Changes**
    - Run existing tests
    - Add new tests for new functionality
-   - Ensure all tests pass before submitting your changes
+   - Ensure all tests pass before  your changes
 
 5. **Submit a Pull Request**
    - Provide a clear description of your changes
