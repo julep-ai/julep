@@ -1,6 +1,6 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md) </sup>
 
-<div align="center">
+<div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
@@ -66,6 +66,8 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 <details>
 <summary><h3>📖 Table of Contents</h3></summary>
 
+- [🌟 Call for Contributors!](#-call-for-contributors)
+  - [🎉 DevFest.AI October 2024](#-devfestai-october-2024)
 - [Introduction](#introduction)
 - [Quick Example](#quick-example)
 - [Key Features](#key-features)
@@ -89,6 +91,11 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 - [Concepts](#concepts)
 - [Understanding Tasks](#understanding-tasks)
   - [Types of Workflow Steps](#types-of-workflow-steps)
+    - [Common Steps](#common-steps)
+    - [Key-Value Steps](#key-value-steps)
+    - [Iteration Steps](#iteration-steps)
+    - [Conditional Steps](#conditional-steps)
+    - [Other Control Flow](#other-control-flow)
 - [Tool Types](#tool-types)
   - [User-defined `function`s](#user-defined-functions)
   - [`system` tools](#system-tools)
@@ -1078,7 +1085,7 @@ Explore our comprehensive API documentation to learn more about agents, tasks, a
 - [Executions API](https://api.julep.ai/api/docs#tag/executions)
 
 
-  <div align="center">
+<div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
     </a>
