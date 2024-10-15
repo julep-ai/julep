@@ -49,7 +49,7 @@ async def execute_api_call(
             "headers": dict(response.headers),
             "content": content_base64,
         }
-            
+
         try:
             response_dict["json"] = response.json()
         except BaseException as e:

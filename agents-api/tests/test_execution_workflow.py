@@ -567,7 +567,7 @@ async def _(
     agent=test_agent,
 ):
     data = CreateExecutionRequest(input={"test": "input"})
-    status_codes_to_retry = ','.join(str(code) for code in (408, 429, 503, 504))
+    status_codes_to_retry = ",".join(str(code) for code in (408, 429, 503, 504))
 
     task = create_task(
         developer_id=developer_id,
@@ -626,10 +626,9 @@ async def _(
 
         # NOTE: super janky but works
         events_strings = [json.dumps(event) for event in events]
-        num_retries = len([
-            event for event in events_strings
-            if "execute_api_call" in event
-        ])
+        num_retries = len(
+            [event for event in events_strings if "execute_api_call" in event]
+        )
 
         assert num_retries >= 2
 
