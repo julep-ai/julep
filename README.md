@@ -28,7 +28,7 @@
 ---
 
 > [!NOTE]
-> 👨‍💻 Here for the devfest.ai event ? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
+> 👨‍💻 Here for the devfest.ai event? Join our [Discord](https://discord.com/invite/JTSBGRZrzj) and check out the details below.
 >
 > Get your API key [here](https://dashboard-dev.julep.ai).
 
@@ -119,7 +119,7 @@ It supports:
 - Dynamic decision-making
 - Parallel execution
 
-> [!]
+> [!TIP]
 > Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.
 
 ## Key Features
