@@ -154,6 +154,7 @@ def search_docs_by_text(
             distance,
             title,
         ] := 
+            candidate[id],
             input[owner_type, owner_id],
             m[
                 id,
