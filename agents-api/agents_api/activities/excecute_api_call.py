@@ -1,15 +1,13 @@
 import base64
-from typing import Annotated, Any, Optional, TypedDict, Union
+from typing import Any, Optional, TypedDict, Union
 
 import httpx
 from beartype import beartype
-from pydantic import Field
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
 
 # from ..clients import integrations
-from ..common.protocol.tasks import StepContext
 from ..env import testing
 
 # from ..models.tools import get_tool_args_from_metadata

@@ -9,20 +9,18 @@ import statistics
 import string
 import time
 import urllib.parse
-from typing import Any, Callable, ParamSpec, Type, TypeVar, cast
+from typing import Any, Callable, ParamSpec, TypeVar
 
 import re2
-import yaml
 import zoneinfo
 from beartype import beartype
 from simpleeval import EvalWithCompoundTypes, SimpleEval
-from yaml import CSafeDumper, CSafeLoader
+
+from ..common.utils import yaml
 
 T = TypeVar("T")
-
-
-P = ParamSpec("P")
 R = TypeVar("R")
+P = ParamSpec("P")
 
 
 # TODO: We need to make sure that we dont expose any security issues
@@ -51,7 +49,7 @@ ALLOWED_FUNCTIONS = {
     "zip": zip,
     "search_regex": lambda pattern, string: re2.search(pattern, string),
     "load_json": json.loads,
-    "load_yaml": lambda string: yaml.load(string, Loader=CSafeLoader),
+    "load_yaml": yaml.load,
     "match_regex": lambda pattern, string: bool(re2.fullmatch(pattern, string)),
 }
 
@@ -74,8 +72,8 @@ class stdlib_json:
 
 
 class stdlib_yaml:
-    load = lambda string: yaml.load(string, Loader=CSafeLoader)  # noqa: E731
-    dump = lambda value: yaml.dump(value, Dumper=CSafeDumper)  # noqa: E731
+    load = yaml.load
+    dump = yaml.dump
 
 
 class stdlib_time:
