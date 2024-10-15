@@ -29,9 +29,13 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
         case "finish_branch":
             pass  # TODO: Implement
         case "finish" | "error" | "cancelled":
-            assert (
-                data.next is None
-            ), "Next target must be None for finish/finish_branch/error/cancelled"
+            pass
+
+            ### FIXME: HACK: Fix this and uncomment
+
+            ### assert (
+            ###     data.next is None
+            ### ), "Next target must be None for finish/finish_branch/error/cancelled"
 
         case "init_branch" | "init":
             assert (

@@ -51,8 +51,10 @@ async def execute_system(
 
     # Unbox all the arguments
     for key, value in arguments.items():
-        if isinstance(value, Box) or isinstance(value, BoxList):
+        if isinstance(value, Box):
             arguments[key] = value.to_dict()
+        elif isinstance(value, BoxList):
+            arguments[key] = value.to_list()
 
     # Convert all UUIDs to UUID objects
     if "agent_id" in arguments:
