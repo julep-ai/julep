@@ -10,8 +10,10 @@
 # 7. Execute the document search task
 # 8. Display the search results
 
+# UNDER CONSTRUCTION - YAML is working but the flow is not correct yet
+
 import uuid
-import yaml
+import yaml,time
 from julep import Client
 
 # Global UUID is generated for agent and tasks
@@ -43,21 +45,32 @@ input_schema:
       items:
         type: object
         properties:
+          tile:  
+            type: string
           content: 
             type: string
           metadata:
             type: object
+                                 
+tools:
+- name: document_create
+  system:
+    resource: agent
+    subresource: doc
+    operation: create                             
 
 main:
 - over: inputs[0].documents
   map:
     tool: document_upload
     arguments:
+      agent_id: "'{agent.id}'"
+      title: _.title
       content: _.content
       metadata: _.metadata
 
 - prompt:
-    role: system
+  - role: system
     content: >-
       You have successfully uploaded and indexed {{len(outputs[0])}} documents.
       Provide a summary of the uploaded documents.
@@ -82,14 +95,22 @@ input_schema:
     filters:
       type: object
 
+tools:
+- name: document_search
+  system:
+    resource: agent
+    subresource: doc
+    operation: search
+                                     
 main:
 - tool: document_search
   arguments:
-    query: inputs[0].query
-    filters: inputs[0].filters
+    agent_id: "'{agent.id}'"
+    text: inputs[0].query
+    metadata_filters: inputs[0].filters
 
 - prompt:
-    role: system
+  - role: system
     content: >-
       Based on the search results, provide a summary of the most relevant documents found.
       Search query: {{inputs[0].query}}
@@ -97,6 +118,7 @@ main:
       
       Results:
       {{outputs[0]}}
+  unwrap: true
 """)
 
 # Creating the search task
@@ -109,14 +131,17 @@ search_task = client.tasks.create_or_update(
 # Sample documents
 sample_documents = [
     {
+        "Title": "The Impact of Technology on Society",
         "content": "Artificial Intelligence (AI) is revolutionizing various industries, including healthcare, finance, and transportation.",
         "metadata": {"category": "technology", "author": "John Doe"}
     },
     {
+        "Title": "Climate Change and Global Warming",
         "content": "Climate change is a pressing global issue that requires immediate action from governments, businesses, and individuals.",
         "metadata": {"category": "environment", "author": "Jane Smith"}
     },
     {
+        "Title": "Remote Work and Digital Transformation",
         "content": "The COVID-19 pandemic has accelerated the adoption of remote work and digital technologies across many organizations.",
         "metadata": {"category": "business", "author": "Alice Johnson"}
     }
@@ -129,8 +154,12 @@ upload_execution = client.executions.create(
 )
 
 print("Uploading and indexing documents...")
+# Wait for the execution to complete
+time.sleep(5)
 upload_result = client.executions.get(upload_execution.id)
-print(upload_result.output)
+upload_response = client.executions.transitions.list(upload_execution.id).items[0].output
+print("Upload Result:")
+print(upload_response)
 
 # Execute the document search task
 search_execution = client.executions.create(
@@ -142,9 +171,9 @@ search_execution = client.executions.create(
 )
 
 print("\nSearching documents...")
+# Wait for the execution to complete
+time.sleep(5)
 search_result = client.executions.get(search_execution.id)
-print(search_result.output)
-
 # Display the search results
 print("\nSearch Results:")
 for transition in client.executions.transitions.list(execution_id=search_execution.id).items:
@@ -153,4 +182,5 @@ for transition in client.executions.transitions.list(execution_id=search_executi
             print(f"- {doc['content']} (Score: {doc['score']})")
 
 print("\nSearch Summary:")
-print(search_result.output)
+search_response = client.executions.transitions.list(search_result.id).items[0].output
+print(search_response)

@@ -1,0 +1,33 @@
+{
+  "identities": [
+    {
+      "name": "anonymous",
+      "actions": [
+        "Read"
+      ]
+    },
+    {
+      "name": "julep",
+      "credentials": [
+        {
+          "accessKey": "${S3_ACCESS_KEY}",
+          "secretKey": "${S3_SECRET_KEY}"
+        }
+      ],
+      "actions": [
+        "Admin",
+        "Read",
+        "List",
+        "Tagging",
+        "Write"
+      ]
+    }
+  ],
+  "accounts": [
+      {
+        "id" : "julep",
+        "displayName": "Julep",
+        "emailAddress": "developers@julep.ai"
+      }
+  ]
+}

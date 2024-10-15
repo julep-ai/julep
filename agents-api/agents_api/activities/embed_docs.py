@@ -1,3 +1,8 @@
+import asyncio
+import operator
+from functools import reduce
+from itertools import batched
+
 from beartype import beartype
 from temporalio import activity
 
@@ -8,18 +13,27 @@ from .types import EmbedDocsPayload
 
 
 @beartype
-async def embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
+async def embed_docs(
+    payload: EmbedDocsPayload, cozo_client=None, max_batch_size: int = 100
+) -> None:
     indices, snippets = list(zip(*enumerate(payload.content)))
+    batched_snippets = batched(snippets, max_batch_size)
     embed_instruction: str = payload.embed_instruction or ""
     title: str = payload.title or ""
 
-    embeddings = await litellm.aembedding(
-        inputs=[
-            (
-                embed_instruction + (title + "\n\n" + snippet) if title else snippet
-            ).strip()
-            for snippet in snippets
-        ]
+    async def embed_batch(snippets):
+        return await litellm.aembedding(
+            inputs=[
+                (
+                    embed_instruction + (title + "\n\n" + snippet) if title else snippet
+                ).strip()
+                for snippet in snippets
+            ]
+        )
+
+    embeddings = reduce(
+        operator.add,
+        await asyncio.gather(*[embed_batch(snippets) for snippets in batched_snippets]),
     )
 
     embed_snippets_query(
@@ -31,7 +45,9 @@ async def embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
     )
 
 
-async def mock_embed_docs(payload: EmbedDocsPayload, cozo_client=None) -> None:
+async def mock_embed_docs(
+    payload: EmbedDocsPayload, cozo_client=None, max_batch_size=100
+) -> None:
     # Does nothing
     return None
 
