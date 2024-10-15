@@ -109,6 +109,8 @@ def search_docs_by_embedding(
                 index: index2,
                 embedding: embedding2
             }},
+            is_null(embedding1) == false,
+            is_null(embedding2) == false,
             index1 < index2,
             dist = cos_dist(embedding1, embedding2)
 
