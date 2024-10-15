@@ -1,40 +1,40 @@
 ## Contributing to Julep
 
-We welcome and appreciate contributions to the Julep project! There are several ways you can get involved:
+We welcome and appreciate contributions to the Julep project! There are several ways you can contribute:
 
 ### Reporting Issues
 
-If you encounter a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please provide as much detail as possible, including:
+If you encounter a bug or have a feature request, please submit an issue on the [GitHub Issues](https://github.com/julep-ai/julep/issues) page. When reporting a bug, please provide as much details as possible, including:
 
-- **Steps to Reproduce:** Clearly outline the steps taken before the issue occurred.
-- **Expected Behavior:** Describe what you expected to happen.
-- **Actual Behavior:** Explain what actually happened, including any error messages.
-- **Screenshots:** If applicable, provide screenshots or screen recordings to illustrate the issue.
+- **Steps to Reproduce:** Clearly outline the steps taken before the issue occurred
+- **Expected Behavior:** Describe what you expected to happen
+- **Actual Behavior:** Explain what actually happened, including any error messages
+- **Screenshots:** If applicable, provide screenshots or screen recordings to illustrate the issue
 
 ### Submitting Pull Requests
 
-To contribute code changes, please follow these steps:
+To contribute, please follow these steps:
 
-1. **Fork the Repository:** Click the "Fork" button at the top right corner of the repository page to create your copy.
-2. **Create a New Branch:** Use a descriptive name for your branch that reflects the changes you're making (e.g., `feature/add-new-feature` or `bugfix/fix-issue`).
-3. **Make Your Changes:** Implement your changes, ensuring that you maintain the existing code style.
-4. **Commit Your Changes:** Commit your changes with clear, descriptive messages that explain what you’ve done and why. For example, “Fix typo in README” or “Add validation to user input”.
-5. **Push Your Changes:** Push your branch to your forked repository.
-6. **Open a Pull Request:** Navigate to the main repository and click on the “New Pull Request” button. Select your branch and provide a clear description of the changes you've made.
+1. **Fork the Repository:** Create a copy of repository by forking it
+2. **Create a New Branch:** Use a descriptive name for your branch that reflects the changes you're making (e.g., `feature/add-new-feature` or `bugfix/fix-issue`)
+3. **Make Your Changes:** Implement your changes, make sure that you follow the existing code format
+4. **Commit Your Changes:** Commit your changes with clear, descriptive messages that explain what you’ve done and why. For example, “Fix typo in README” or “Add validation to user input”
+5. **Push Your Changes:** Push the branch to your forked repository
+6. **Open a Pull Request:** Navigate to the main repository and click on the “New Pull Request” button. Select your branch and provide a clear description of the changes you have made
 
 ## Project Overview and Architecture
 
 ### Key Components
 
-1. **agents-api**: The core API service for Julep.
-2. **typespec**: API specifications and contracts.
-3. **integrations-service**: Handles external integrations.
-4. **embedding-service**: Manages text embeddings.
-5. **memory-store**: Handles persistent storage.
-6. **llm-proxy**: Proxy for language model interactions.
-7. **scheduler**: Manages task scheduling.
-8. **gateway**: API gateway and routing.
-9. **monitoring**: System monitoring and metrics.
+1. **agents-api**: The core API service for Julep
+2. **typespec**: API specifications and contracts
+3. **integrations-service**: Handles external integrations
+4. **embedding-service**: Manages text embeddings
+5. **memory-store**: Handles persistent storage
+6. **llm-proxy**: Proxy for language model interactions
+7. **scheduler**: Manages task scheduling
+8. **gateway**: API gateway and routing
+9. **monitoring**: System monitoring and metrics
 
 ### Technology Stack
 
@@ -46,15 +46,15 @@ To contribute code changes, please follow these steps:
 
 ### Relationships Between Components
 
-The `agents-api` serves as the central component, interacting with most other services:
-- It uses `typespec` definitions for API contracts.
-- Communicates with `integrations-service` for external tool interactions.
-- Utilizes `embedding-service` for text processing.
-- Stores data in `memory-store`.
-- Interacts with language models through `llm-proxy`.
-- Uses `scheduler` for task management.
-- All API requests pass through the `gateway`.
-- `monitoring` observes the entire system.
+The `agents-api` serves as the central component, interacting with various other services:
+- It uses `typespec` definitions for API contracts
+- Communicates with `integrations-service` for external tool interactions
+- Utilizes `embedding-service` for text processing
+- Stores data in `memory-store`
+- Interacts with language models through `llm-proxy`
+- Uses `scheduler` for task management
+- All API requests pass through the `gateway`
+- `monitoring` observes the entire system
 
 ## Understanding the Codebase
 
@@ -66,31 +66,31 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 
 2. **System Architecture**
    - Examine `docker-compose.yml` in the root directory
-   - Review `deploy/` directory for different deployment configurations
+   - Checkout `deploy/` directory for different deployment configurations
 
 3. **API Specifications**
-   - Learn about TypeSpec: https://typespec.io/docs/
+   - Learn about TypeSpec: [https://typespec.io/docs/](https://typespec.io/docs/)
    - Explore `typespec/` directory:
      - Start with `common/` folder
-     - Review `main.tsp`
+     - Read `main.tsp`
      - Examine each module sequentially
 
 4. **Core API Implementation**
-   - Learn about FastAPI: https://fastapi.tiangolo.com/
+   - Learn about FastAPI: [https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)
    - Explore `agents-api/` directory:
-     - Review `README.md` for an overview
+     - Read `README.md` for an overview
      - Examine `routers/` for API endpoints
      - Look into `models/` for data models
 
 5. **Database and Storage**
-   - Learn about Cozo: https://docs.cozodb.org/en/latest/tutorial.html
-   - Review `agents-api/README.md` for database schema
+   - Learn about Cozo: [https://docs.cozodb.org/en/latest/tutorial.html](https://docs.cozodb.org/en/latest/tutorial.html)
+   - Read `agents-api/README.md` for database schema
    - Explore `agents-api/models/` for database queries
 
 6. **Workflow Management**
-   - Learn about Temporal: https://docs.temporal.io/develop/python
+   - Learn about Temporal: [https://docs.temporal.io/develop/python](https://docs.temporal.io/develop/python)
    - Explore `agents-api/activities/` for individual workflow steps
-   - Review `agents-api/workflows/task_execution/` for main workflow logic
+   - Read `agents-api/workflows/task_execution/` for main workflow logic
 
 7. **Testing**
    - Examine `agents-api/tests/` for test cases
@@ -117,7 +117,7 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 4. **Test Your Changes**
    - Run existing tests
    - Add new tests for new functionality
-   - Ensure all tests pass before  your changes
+   - Ensure all tests pass before your changes
 
 5. **Submit a Pull Request**
    - Provide a clear description of your changes
@@ -131,13 +131,13 @@ To get a comprehensive understanding of Julep, we recommend exploring the codeba
 7. **Merge**
    - Once approved, your changes will be merged into the main branch
 
-### Documentation Improvements 
+### Documentation Contributions
 
-Improvements to documentation are always appreciated! If you see areas that could be clarified or expanded, feel free to make the changes and submit a pull request.
+Contributions to documentation are always appreciated! If you see any space for improvements, feel free to make the changes and submit a pull request.
 
 ### Sharing Feedback and Ideas
 
-We'd love to hear your feedback and ideas for the project! Feel free to submit an issue or contact the maintainers directly to share your thoughts. Your input is very valuable in shaping the future direction of the project.
+We would love to hear your feedback and ideas for the project! Feel free to submit an issue or contact the maintainers directly to share your thoughts. Your inputs are valuable in shaping the future direction of the project.
 
 ### Setup Instructions
 
@@ -156,9 +156,9 @@ cd <repository_root>
 ```
 
 ##### 3. Set Up Environment Variables
-- Create a `.env` file in the root directory.
-- Refer to the `.env.example` file for a list of required variables.
-- Ensure that all necessary variables are set in the `.env` file.
+- Create a `.env` file in the root directory
+- Refer to the `.env.example` file for a list of required variables
+- Ensure that all necessary variables are set in the `.env` file
 
 ##### 4. Create a Docker Volume for Backup
 Create a Docker volume named `cozo_backup`:
@@ -201,13 +201,13 @@ jwt encode --secret JWT_SHARED_KEY --alg HS512 --exp=$(date -j -v +10d +%s) --su
 This command generates a JWT token that will be valid for 10 days.
 
 ##### 7. Access and Interact
-- **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file.
-- **API Interactions**: Depending on the chosen mode, interact with the setup using the provided endpoints.
+- **Temporal UI**: You can access the Temporal UI through the specified port in your `.env` file
+- **API Interactions**: Depending on the chosen mode, interact with the setup using the provided endpoints
 
 ##### Troubleshooting
-- Ensure that all required Docker images are available.
-- Check for missing environment variables in the `.env` file.
-- Use the `docker compose logs` command to view detailed logs for debugging.
+- Ensure that all required Docker images are available
+- Check for missing environment variables in the `.env` file
+- Use the `docker compose logs` command to view detailed logs for debugging
 
 
-Remember, contributions aren't limited to code. Documentation improvements, bug reports, and feature suggestions are also valuable contributions to the project.
+Remember, contributions are not limited to code. Documentation contributions, bug reports, and feature suggestions are also valuable contributions to the project.
