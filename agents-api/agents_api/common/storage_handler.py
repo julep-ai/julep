@@ -35,14 +35,18 @@ def load_from_blob_store_if_remote(x: Any) -> Any:
 # 1. store in blob store if the output of a function is large
 # 2. load from blob store if the input is a RemoteObject
 
+
 def auto_blob_store(f: Callable) -> Callable:
-    def load_args(args: list[Any], kwargs: dict[str, Any]) -> tuple[list[Any], dict[str, Any]]:
+    def load_args(
+        args: list[Any], kwargs: dict[str, Any]
+    ) -> tuple[list[Any], dict[str, Any]]:
         new_args = [load_from_blob_store_if_remote(arg) for arg in args]
         new_kwargs = {k: load_from_blob_store_if_remote(v) for k, v in kwargs.items()}
 
         return new_args, new_kwargs
 
     if inspect.iscoroutinefunction(f):
+
         @wraps(f)
         async def async_wrapper(*args, **kwargs) -> Any:
             new_args, new_kwargs = load_args(args, kwargs)
@@ -53,6 +57,7 @@ def auto_blob_store(f: Callable) -> Callable:
         return async_wrapper if use_blob_store_for_temporal else f
 
     else:
+
         @wraps(f)
         def wrapper(*args, **kwargs) -> Any:
             new_args, new_kwargs = load_args(args, kwargs)
@@ -61,4 +66,3 @@ def auto_blob_store(f: Callable) -> Callable:
             return store_in_blob_store_if_large(output)
 
         return wrapper if use_blob_store_for_temporal else f
-
