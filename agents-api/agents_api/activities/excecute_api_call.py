@@ -29,7 +29,7 @@ async def execute_api_call(
     request_args: RequestArgs,
 ) -> Any:
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             arg_url = request_args.pop("url", None)
             arg_headers = request_args.pop("headers", None)
 
