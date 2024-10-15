@@ -24,57 +24,6 @@ body:
         3. Scroll down to '....'
         4. See error"
 
-  - type: textarea
-    id: expected-behavior
-    attributes:
-      label: "👍 Expected behavior"
-      description: "What did you think should happen?"
-      placeholder: "It should ..."
-
-  - type: textarea
-    id: actual-behavior
-    attributes:
-      label: "👎 Actual Behavior with Screenshots"
-      description: "What did actually happen? Add screenshots, if applicable."
-      placeholder: "It actually ..."
-
-  - type: dropdown
-    id: operating-system
-    attributes:
-      label: "💻 Operating system"
-      description: "What OS is your app running on?"
-      options:
-        - Linux
-        - MacOS
-        - Windows
-        - Something else
-
-  - type: dropdown
-    id: browsers
-    attributes:
-      label: What browsers are you seeing the problem on?
-      multiple: true
-      options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
-        - Something else
-
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: "📃 Provide any additional context for the Bug."
-      description: "Add any other context about the problem here."
-      placeholder: "It actually ..."
-
-  - type: textarea
-    id: logs
-    attributes:
-      label: 📖 Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
-      render: shell
-
   - type: checkboxes
     id: no-duplicate-issues
     attributes:
@@ -82,20 +31,5 @@ body:
       options:
         - label: "I checked and didn't find similar issue"
 
-  - type: dropdown
-    id: willing-to-submit-pr
-    attributes:
-      label: 🔗 Are you willing to submit PR?
-      description: This is absolutely not required, but we are happy to guide you in the contribution process.
-      options: # Added options key
-        - "Yes, I am willing to submit a PR!"
-        - "No"
-
-
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: 🧑‍⚖️ Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/julep-ai/julep/blob/dev/.github/CODE_OF_CONDUCT.md)
-      options:
-        - label: I agree to follow this project's Code of Conduct
+    validations:
+      required: true
