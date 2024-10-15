@@ -127,7 +127,7 @@ async def execute_system(
                     )
 
             # NO SUBRESOURCE
-            elif system.subresource == None:
+            elif system.subresource is None:
                 if system.operation == "list":
                     return list_agents_query(**arguments)
                 elif system.operation == "get":
@@ -196,7 +196,7 @@ async def execute_system(
                     )
 
             # NO SUBRESOURCE
-            elif system.subresource == None:
+            elif system.subresource is None:
                 if system.operation == "list":
                     return list_users_query(**arguments)
                 elif system.operation == "get":

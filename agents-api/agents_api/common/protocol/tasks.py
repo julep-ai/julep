@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Type
+from typing import Annotated, Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, computed_field
