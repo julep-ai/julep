@@ -19,6 +19,8 @@ import pydantic
 import requests
 import temporalio.exceptions
 
+### FIXME: This should be the opposite. We should retry on only known errors
+
 # List of error types that should not be retried
 NON_RETRYABLE_ERROR_TYPES = (
     # Temporal-specific errors
@@ -56,8 +58,6 @@ NON_RETRYABLE_ERROR_TYPES = (
     # HTTP and API-related errors
     fastapi.exceptions.HTTPException,
     fastapi.exceptions.RequestValidationError,
-    httpx.RequestError,
-    httpx.HTTPStatusError,
     #
     # Asynchronous programming errors
     asyncio.CancelledError,
@@ -102,6 +102,7 @@ NON_RETRYABLE_ERROR_TYPES = (
 )
 
 
+### FIXME: This should be the opposite. So `is_retryable_error` instead of `is_non_retryable_error`
 def is_non_retryable_error(error: BaseException) -> bool:
     """
     Determines if the given error is non-retryable.
@@ -115,4 +116,13 @@ def is_non_retryable_error(error: BaseException) -> bool:
     Returns:
         bool: True if the error is non-retryable, False otherwise.
     """
-    return isinstance(error, NON_RETRYABLE_ERROR_TYPES)
+    if isinstance(error, NON_RETRYABLE_ERROR_TYPES):
+        return True
+
+    # Check for specific HTTP errors (status code == 429)
+    if isinstance(error, httpx.HTTPStatusError):
+        if error.response.status_code in (408, 429, 503, 504):
+            return False
+
+    # If we don't know about the error, we should not retry
+    return True
