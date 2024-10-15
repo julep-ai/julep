@@ -30,6 +30,4 @@ body:
       label: "👀 Have you spent some time to check if this bug has been raised before?"
       options:
         - label: "I checked and didn't find similar issue"
-
-    validations:
-      required: true
+          required: true
