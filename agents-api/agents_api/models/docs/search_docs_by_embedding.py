@@ -99,6 +99,7 @@ def search_docs_by_embedding(
             index1,
             min(dist)
         ] :=
+            candidate[doc_id],
             *snippets {{
                 doc_id,
                 index: index1,
@@ -109,19 +110,24 @@ def search_docs_by_embedding(
                 index: index2,
                 embedding: embedding2
             }},
+            is_null(embedding1) == false,
+            is_null(embedding2) == false,
             index1 < index2,
             dist = cos_dist(embedding1, embedding2)
 
         doclength[doc_id, max(index)] :=
+            candidate[doc_id],
             *snippets {{
                 doc_id,
                 index,
             }}
 
         get_intersnippet[doc_id, index, distance] :=
+            candidate[doc_id],
             intersnippet_distance[doc_id, _, distance]
 
         get_intersnippet[doc_id, index, distance] :=
+            candidate[doc_id],
             not intersnippet_distance[doc_id, _, distance],
             distance = 0.0
 
@@ -151,6 +157,7 @@ def search_docs_by_embedding(
             distance,
             mmr_score,
         ] :=
+            candidate[doc_id],
             search_result[doc_id, content, index, distance],
             get_intersnippet[doc_id, index, intersnippet_distance],
             mmr_score = {mmr_lambda} * (distance - (1.0 - {mmr_lambda}) * intersnippet_distance),
@@ -165,6 +172,7 @@ def search_docs_by_embedding(
             mmr_score,
             title,
         ] := 
+            candidate[doc_id],
             *docs {{
                 owner_type,
                 owner_id,
