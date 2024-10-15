@@ -31,7 +31,7 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a task for managing user context
-task_def = yaml.safe_load("""
+task_def = yaml.safe_load(f"""
 name: Manage User Context
 
 input_schema:

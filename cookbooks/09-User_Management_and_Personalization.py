@@ -33,7 +33,7 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a task for user registration and profile creation
-registration_task_def = yaml.safe_load("""
+registration_task_def = yaml.safe_load(f"""
 name: User Registration and Profile Creation
 
 input_schema:
@@ -75,7 +75,7 @@ registration_task = client.tasks.create_or_update(
 )
 
 # Defining a task for personalized content recommendation
-recommendation_task_def = yaml.safe_load("""
+recommendation_task_def = yaml.safe_load(f"""
 name: Personalized Content Recommendation
 
 input_schema:
