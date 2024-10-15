@@ -34,7 +34,7 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a task for document upload and indexing
-upload_task_def = yaml.safe_load("""
+upload_task_def = yaml.safe_load(f"""
 name: Document Upload and Indexing
 
 input_schema:
@@ -62,13 +62,14 @@ tools:
 main:
 - over: inputs[0].documents
   map:
-    tool: document_upload
+    tool: document_create
     arguments:
       agent_id: "'{agent.id}'"
-      title: _.title
-      content: _.content
-      metadata: _.metadata
-
+      data:
+        title: _.title
+        content: _.content
+        metadata: _.metadata
+                                 
 - prompt:
   - role: system
     content: >-
@@ -84,7 +85,7 @@ upload_task = client.tasks.create_or_update(
 )
 
 # Defining a task for document search
-search_task_def = yaml.safe_load("""
+search_task_def = yaml.safe_load(f"""
 name: Document Search
 
 input_schema:
@@ -131,17 +132,17 @@ search_task = client.tasks.create_or_update(
 # Sample documents
 sample_documents = [
     {
-        "Title": "The Impact of Technology on Society",
+        "title": "The Impact of Technology on Society",
         "content": "Artificial Intelligence (AI) is revolutionizing various industries, including healthcare, finance, and transportation.",
         "metadata": {"category": "technology", "author": "John Doe"}
     },
     {
-        "Title": "Climate Change and Global Warming",
+        "title": "Climate Change and Global Warming",
         "content": "Climate change is a pressing global issue that requires immediate action from governments, businesses, and individuals.",
         "metadata": {"category": "environment", "author": "Jane Smith"}
     },
     {
-        "Title": "Remote Work and Digital Transformation",
+        "title": "Remote Work and Digital Transformation",
         "content": "The COVID-19 pandemic has accelerated the adoption of remote work and digital technologies across many organizations.",
         "metadata": {"category": "business", "author": "Alice Johnson"}
     }
