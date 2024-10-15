@@ -1,6 +1,7 @@
 # Tests for task queries
 
 import asyncio
+import json
 from unittest.mock import patch
 
 import yaml
@@ -557,6 +558,79 @@ async def _(
 
         result = await handle.result()
         assert result["hello"] == data.input["test"]
+
+
+@test("workflow: tool call api_call test retry")
+async def _(
+    client=cozo_client,
+    developer_id=test_developer_id,
+    agent=test_agent,
+):
+    data = CreateExecutionRequest(input={"test": "input"})
+    status_codes_to_retry = ",".join(str(code) for code in (408, 429, 503, 504))
+
+    task = create_task(
+        developer_id=developer_id,
+        agent_id=agent.id,
+        data=CreateTaskRequest(
+            **{
+                "name": "test task",
+                "description": "test task about",
+                "input_schema": {"type": "object", "additionalProperties": True},
+                "tools": [
+                    {
+                        "type": "api_call",
+                        "name": "hello",
+                        "api_call": {
+                            "method": "GET",
+                            "url": f"https://httpbin.org/status/{status_codes_to_retry}",
+                        },
+                    }
+                ],
+                "main": [
+                    {
+                        "tool": "hello",
+                        "arguments": {
+                            "params": {"test": "_.test"},
+                        },
+                    },
+                ],
+            }
+        ),
+        client=client,
+    )
+
+    async with patch_testing_temporal() as (_, mock_run_task_execution_workflow):
+        execution, handle = await start_execution(
+            developer_id=developer_id,
+            task_id=task.id,
+            data=data,
+            client=client,
+        )
+
+        assert handle is not None
+        mock_run_task_execution_workflow.assert_called_once()
+
+        # Let it run for a bit
+        result_coroutine = handle.result()
+        task = asyncio.create_task(result_coroutine)
+        try:
+            await asyncio.wait_for(task, timeout=3)
+        except BaseException:
+            task.cancel()
+
+        # Get the history
+        history = await handle.fetch_history()
+        events = [MessageToDict(e) for e in history.events]
+        assert len(events) > 0
+
+        # NOTE: super janky but works
+        events_strings = [json.dumps(event) for event in events]
+        num_retries = len(
+            [event for event in events_strings if "execute_api_call" in event]
+        )
+
+        assert num_retries >= 2
 
 
 @test("workflow: tool call integration dummy")

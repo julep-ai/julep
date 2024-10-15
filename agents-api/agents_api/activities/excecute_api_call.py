@@ -41,14 +41,20 @@ async def execute_api_call(
                 **request_args,
             )
 
+        response.raise_for_status()
         content_base64 = base64.b64encode(response.content).decode("ascii")
 
         response_dict = {
             "status_code": response.status_code,
             "headers": dict(response.headers),
             "content": content_base64,
-            "json": response.json(),
         }
+
+        try:
+            response_dict["json"] = response.json()
+        except BaseException as e:
+            response_dict["json"] = None
+            activity.logger.debug(f"Failed to parse JSON response: {e}")
 
         return response_dict
 
