@@ -1,17 +1,20 @@
 from functools import cache, lru_cache
 
-import boto3
-import botocore
 from beartype import beartype
-from xxhash import xxh3_64_hexdigest as xxhash_key
+from temporalio import workflow
 
-from ..env import (
-    blob_store_bucket,
-    blob_store_cutoff_kb,
-    s3_access_key,
-    s3_endpoint,
-    s3_secret_key,
-)
+with workflow.unsafe.imports_passed_through():
+    import boto3
+    import botocore
+    from xxhash import xxh3_64_hexdigest as xxhash_key
+
+    from ..env import (
+        blob_store_bucket,
+        blob_store_cutoff_kb,
+        s3_access_key,
+        s3_endpoint,
+        s3_secret_key,
+    )
 
 
 @cache

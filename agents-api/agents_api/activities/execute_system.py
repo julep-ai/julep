@@ -14,6 +14,7 @@ from ..autogen.Docs import (
 )
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
+from ..common.storage_handler import auto_blob_store
 from ..env import testing
 from ..models.agent.create_agent import create_agent as create_agent_query
 from ..models.agent.delete_agent import delete_agent as delete_agent_query
@@ -41,6 +42,7 @@ from ..routers.docs.create_doc import create_agent_doc, create_user_doc
 from ..routers.docs.search_docs import search_agent_docs, search_user_docs
 
 
+@auto_blob_store
 @beartype
 async def execute_system(
     context: StepContext,

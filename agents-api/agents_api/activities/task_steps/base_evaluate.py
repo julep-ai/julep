@@ -6,10 +6,12 @@ from box import Box
 from openai import BaseModel
 from temporalio import activity
 
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from ..utils import get_evaluator
 
 
+@auto_blob_store
 @beartype
 async def base_evaluate(
     exprs: str | list[str] | dict[str, str] | dict[str, dict[str, str]],

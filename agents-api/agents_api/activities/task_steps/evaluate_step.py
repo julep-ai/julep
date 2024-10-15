@@ -5,9 +5,11 @@ from temporalio import activity
 
 from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 
 
+@auto_blob_store
 @beartype
 async def evaluate_step(
     context: StepContext,

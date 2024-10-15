@@ -22,34 +22,17 @@ from temporalio.converter import (
     EncodingPayloadConverter,
 )
 
-from ..clients import s3
-from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
-
-if use_blob_store_for_temporal:
-    s3.setup()
-
-
-@dataclasses.dataclass
-class RemoteObject:
-    key: str
-
 
 def serialize(x: Any) -> bytes:
-    data = compress(pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL))
-    data_size = sys.getsizeof(data)
+    pickled = pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL)
+    compressed = compress(pickled)
 
-    if use_blob_store_for_temporal and data_size > blob_store_cutoff_kb * 1024:
-        key = s3.add_object_with_hash(data)
-        return serialize(RemoteObject(key=key))
-
-    return data
+    return compressed
 
 
 def deserialize(b: bytes) -> Any:
-    object = pickle.loads(decompress(b))
-
-    if isinstance(object, RemoteObject):
-        return deserialize(s3.get_object(object.key))
+    decompressed = decompress(b)
+    object = pickle.loads(decompressed)
 
     return object
 
