@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request
 from google.protobuf import json_format
 from temporalio.api.common.v1 import Payloads
 
