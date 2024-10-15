@@ -34,7 +34,7 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a task for document upload and indexing
-upload_task_def = yaml.safe_load("""
+upload_task_def = yaml.safe_load(f"""
 name: Document Upload and Indexing
 
 input_schema:
@@ -68,8 +68,8 @@ main:
       data:
         title: _.title
         content: _.content
-        metadata: _.metadataetadata
-
+        metadata: _.metadata
+                                 
 - prompt:
   - role: system
     content: >-
@@ -85,7 +85,7 @@ upload_task = client.tasks.create_or_update(
 )
 
 # Defining a task for document search
-search_task_def = yaml.safe_load("""
+search_task_def = yaml.safe_load(f"""
 name: Document Search
 
 input_schema:
