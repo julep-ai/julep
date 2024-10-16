@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ...autogen.openapi_model import Agent, CreateOrUpdateAgentRequest
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -48,6 +49,7 @@ T = TypeVar("T")
     Agent, one=True, transform=lambda d: {"id": UUID(d.pop("agent_id")), **d}
 )
 @cozo_query
+@increase_counter("create_or_update_agent")
 @beartype
 def create_or_update_agent(
     *,

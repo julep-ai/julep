@@ -12,6 +12,7 @@ from ...autogen.openapi_model import (
 )
 from ...common.protocol.tasks import transition_to_execution_status, valid_transitions
 from ...common.utils.cozo import cozo_process_mutate_data
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -76,6 +77,7 @@ def validate_transition_targets(data: CreateTransitionRequest) -> None:
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("create_execution_transition")
 @beartype
 def create_execution_transition(
     *,
