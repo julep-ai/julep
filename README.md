@@ -1268,6 +1268,43 @@ Explore our comprehensive API documentation to learn more about agents, tasks, a
 - [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
 - [Executions API](https://api.julep.ai/api/docs#tag/executions)
 
+*****
+
+## Why Julep vs. LangChain?
+
+### Different Use Cases
+
+Think of LangChain and Julep as tools with different focuses within the AI development stack.
+
+LangChain is great for creating sequences of prompts and managing interactions with LLMs. It has a large ecosystem with lots of pre-built integrations, which makes it convenient if you want to get something up and running quickly. LangChain fits well with simple use cases that involve a linear chain of prompts and API calls.
+
+Julep, on the other hand, is more about building persistent AI agents that can maintain context over long-term interactions. It shines when you need complex workflows that involve multi-step tasks, conditional logic, and integration with various tools or APIs directly within the agent's process. It's designed from the ground up to manage persistent sessions and complex workflows.
+
+Use Julep if you imagine building a complex AI assistant that needs to:
+
+- Keep track of user interactions over days or weeks.
+- Perform scheduled tasks, like sending daily summaries or monitoring data sources.
+- Make decisions based on prior interactions or stored data.
+- Interact with multiple external services as part of its workflow.
+
+Then Julep provides the infrastructure to support all that without you having to build it from scratch.
+
+### Different Form Factor
+
+Julep is a **platform** that includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform. In order to build something with Julep, you write a description of the workflow in `YAML`, and then run the workflow in the cloud.
+
+Julep is built for heavy-lifting, multi-step, and long-running workflows and there's no limit to how complex the workflow can be.
+
+LangChain is a **library** that includes a few tools and a framework for building linear chains of prompts and tools. In order to build something with LangChain, you typically write Python code that configures and runs the model chains you want to use.
+
+LangChain might be sufficient and quicker to implement for simple use cases that involve a linear chain of prompts and API calls.
+
+### In Summary
+
+Use LangChain when you need to manage LLM interactions and prompt sequences in a stateless or short-term context.
+
+Choose Julep when you need a robust framework for stateful agents with advanced workflow capabilities, persistent sessions, and complex task orchestration.
+
 <div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
