@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 
 MIGRATION_ID = "tweak_proximity_indices"
 CREATED_AT = 1729114011.022733

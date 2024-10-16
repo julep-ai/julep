@@ -71,7 +71,9 @@ def find_keyword_positions(doc, keyword: str) -> list[int]:
     return positions
 
 
-def find_proximity_groups(text: str, keywords: list[str], n: int = 10) -> list[set[str]]:
+def find_proximity_groups(
+    text: str, keywords: list[str], n: int = 10
+) -> list[set[str]]:
     """
     Groups keywords that appear within n words of each other.
 
@@ -209,9 +211,6 @@ def paragraph_to_custom_queries(paragraph: str) -> list[str]:
         List[str]: The list of custom query strings.
     """
 
-    queries = [
-        text_to_custom_query(sentence.text)
-        for sentence in nlp(paragraph).sents
-    ]
+    queries = [text_to_custom_query(sentence.text) for sentence in nlp(paragraph).sents]
 
     return queries
