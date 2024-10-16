@@ -34,7 +34,7 @@ async def update_execution(
                     *get_temporal_workflow_data(execution_id=execution_id)
                 )
                 await wf_handle.cancel()
-            except Exception as e:
+            except Exception:
                 raise HTTPException(status_code=500, detail="Failed to stop execution")
 
         case ResumeExecutionRequest():
@@ -59,7 +59,7 @@ async def update_execution(
                 )
             try:
                 await act_handle.complete(data.input)
-            except Exception as e:
+            except Exception:
                 raise HTTPException(
                     status_code=500, detail="Failed to resume execution"
                 )

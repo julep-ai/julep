@@ -4,3 +4,6 @@
 [submodule "sdks/python-sdk"]
 	path = sdks/python-sdk
 	url = https://github.com/julep-ai/python-sdk.git
+[submodule "code-interpreter/vendor/cohere-ai/cohere-terrarium"]
+	path = code-interpreter/vendor/cohere-ai/cohere-terrarium
+	url = https://github.com/cohere-ai/cohere-terrarium.git

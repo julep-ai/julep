@@ -1,17 +1,19 @@
 import base64
+from typing import Any
 
+from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest
-from ...common.protocol.tasks import (
-    StepContext,
-    StepOutcome,
-)
+from ...common.protocol.tasks import StepContext
+from ...common.storage_handler import auto_blob_store
 from .transition_step import original_transition_step
 
 
 @activity.defn
-async def raise_complete_async(context: StepContext, output: StepOutcome) -> None:
+@auto_blob_store
+@beartype
+async def raise_complete_async(context: StepContext, output: Any) -> None:
     activity_info = activity.info()
 
     captured_token = base64.b64encode(activity_info.task_token).decode("ascii")
