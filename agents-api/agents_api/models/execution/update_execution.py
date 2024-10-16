@@ -23,6 +23,7 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -50,7 +51,7 @@ def update_execution(
     task_id: UUID,
     execution_id: UUID,
     data: UpdateExecutionRequest,
-    output: dict | None = None,
+    output: dict | Any | None = None,
     error: str | None = None,
 ) -> tuple[list[str], dict]:
     developer_id = str(developer_id)
@@ -62,6 +63,9 @@ def update_execution(
     )
 
     execution_data: dict = data.model_dump(exclude_none=True)
+
+    if output is not None and not isinstance(output, dict):
+        output: dict = {OUTPUT_UNNEST_KEY: output}
 
     columns, values = cozo_process_mutate_data(
         {
