@@ -126,14 +126,6 @@ class TaskExecutionWorkflow:
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
         previous_inputs: list[Any] = [],
     ) -> Any:
-        # Add metadata to the workflow run
-        workflow.upsert_search_attributes(
-            {
-                "task_id": execution_input.task.id,
-                "execution_id": execution_input.execution.id,
-            }
-        )
-
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
