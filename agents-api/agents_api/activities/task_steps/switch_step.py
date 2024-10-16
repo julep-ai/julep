@@ -6,10 +6,12 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from ..utils import get_evaluator
 
 
+@auto_blob_store
 @beartype
 async def switch_step(context: StepContext) -> StepOutcome:
     try:
@@ -36,8 +38,6 @@ async def switch_step(context: StepContext) -> StepOutcome:
         return StepOutcome(error=str(e))
 
 
-# Note: This is here just for clarity. We could have just imported switch_step directly
-# They do the same thing, so we dont need to mock the switch_step function
 mock_switch_step = switch_step
 
 switch_step = activity.defn(name="switch_step")(

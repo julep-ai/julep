@@ -7,11 +7,13 @@ from beartype import beartype
 from temporalio import activity
 
 from ..clients import cozo, litellm
+from ..common.storage_handler import auto_blob_store
 from ..env import testing
 from ..models.docs.embed_snippets import embed_snippets as embed_snippets_query
 from .types import EmbedDocsPayload
 
 
+@auto_blob_store
 @beartype
 async def embed_docs(
     payload: EmbedDocsPayload, cozo_client=None, max_batch_size: int = 100

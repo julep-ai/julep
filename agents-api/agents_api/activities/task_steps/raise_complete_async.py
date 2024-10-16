@@ -1,5 +1,6 @@
 import base64
 
+from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import CreateTransitionRequest
@@ -7,10 +8,13 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.storage_handler import auto_blob_store
 from .transition_step import original_transition_step
 
 
 @activity.defn
+@auto_blob_store
+@beartype
 async def raise_complete_async(context: StepContext, output: StepOutcome) -> None:
     activity_info = activity.info()
 

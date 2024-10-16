@@ -22,6 +22,12 @@ x--shared-environment: &shared-environment
   TEMPORAL_WORKER_URL: ${TEMPORAL_WORKER_URL:-temporal:7233}
   TRUNCATE_EMBED_TEXT: ${TRUNCATE_EMBED_TEXT:-True}
   WORKER_URL: ${WORKER_URL:-temporal:7233}
+  USE_BLOB_STORE_FOR_TEMPORAL: ${USE_BLOB_STORE_FOR_TEMPORAL:-false}
+  BLOB_STORE_CUTOFF_KB: ${BLOB_STORE_CUTOFF_KB:-1024}
+  BLOB_STORE_BUCKET: ${BLOB_STORE_BUCKET:-agents-api}
+  S3_ENDPOINT: ${S3_ENDPOINT:-http://seaweedfs:8333}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+  S3_SECRET_KEY: ${S3_SECRET_KEY}
 
 x--base-agents-api: &base-agents-api
   image: julepai/agents-api:${TAG:-dev}
