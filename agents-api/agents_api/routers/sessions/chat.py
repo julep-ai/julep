@@ -20,6 +20,7 @@ from ...dependencies.developer_id import get_developer_data
 from ...models.chat.gather_messages import gather_messages
 from ...models.chat.prepare_chat_context import prepare_chat_context
 from ...models.entry.create_entries import create_entries
+from .metrics import total_tokens_per_user
 from .router import router
 
 
@@ -164,6 +165,10 @@ async def chat(
         docs=doc_references,
         usage=model_response.usage.model_dump(),
         choices=[choice.model_dump() for choice in model_response.choices],
+    )
+
+    total_tokens_per_user.labels(str(developer.id)).inc(
+        amount=chat_response.usage.total_tokens or 0
     )
 
     return chat_response

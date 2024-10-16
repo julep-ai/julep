@@ -2,6 +2,11 @@ from datetime import timedelta
 from uuid import UUID
 
 from temporalio.client import Client, TLSConfig
+from temporalio.common import (
+    SearchAttributeKey,
+    SearchAttributePair,
+    TypedSearchAttributes,
+)
 
 from ..autogen.openapi_model import TransitionTarget
 from ..common.protocol.tasks import ExecutionInput
@@ -48,6 +53,7 @@ async def run_task_execution_workflow(
     from ..workflows.task_execution import TaskExecutionWorkflow
 
     client = client or (await get_client())
+    execution_id_key = SearchAttributeKey.for_keyword("CustomStringField")
 
     return await client.start_workflow(
         TaskExecutionWorkflow.run,
@@ -56,7 +62,13 @@ async def run_task_execution_workflow(
         id=str(job_id),
         run_timeout=timedelta(days=31),
         retry_policy=DEFAULT_RETRY_POLICY,
-        # TODO: Should add search_attributes for queryability
+        search_attributes=TypedSearchAttributes(
+            [
+                SearchAttributePair(
+                    execution_id_key, str(execution_input.execution.id)
+                ),
+            ]
+        ),
     )
 
 

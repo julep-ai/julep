@@ -24,11 +24,17 @@ from temporalio.converter import (
 
 
 def serialize(x: Any) -> bytes:
-    return compress(pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL))
+    pickled = pickle.dumps(x, protocol=pickle.HIGHEST_PROTOCOL)
+    compressed = compress(pickled)
+
+    return compressed
 
 
 def deserialize(b: bytes) -> Any:
-    return pickle.loads(decompress(b))
+    decompressed = decompress(b)
+    object = pickle.loads(decompressed)
+
+    return object
 
 
 def from_payload_data(data: bytes, type_hint: Optional[Type] = None) -> Any:

@@ -1,11 +1,15 @@
+from beartype import beartype
 from temporalio import activity
 
 from ...autogen.openapi_model import WaitForInputStep
 from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from .base_evaluate import base_evaluate
 
 
+@auto_blob_store
+@beartype
 async def wait_for_input_step(context: StepContext) -> StepOutcome:
     try:
         assert isinstance(context.current_step, WaitForInputStep)
@@ -21,8 +25,6 @@ async def wait_for_input_step(context: StepContext) -> StepOutcome:
         return StepOutcome(error=str(e))
 
 
-# Note: This is here just for clarity. We could have just imported wait_for_input_step directly
-# They do the same thing, so we dont need to mock the wait_for_input_step function
 mock_wait_for_input_step = wait_for_input_step
 
 wait_for_input_step = activity.defn(name="wait_for_input_step")(

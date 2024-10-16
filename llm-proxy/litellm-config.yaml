@@ -31,6 +31,18 @@ model_list:
     tags: ["paid"]
     api_key: os.environ/OPENAI_API_KEY
 
+- model_name: o1-mini
+  litellm_params:
+    model: openai/o1-mini
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
+- model_name: o1-preview
+  litellm_params:
+    model: openai/o1-preview
+    api_key: os.environ/OPENAI_API_KEY
+    tags: ["paid"]
+
 # Anthropic models
 - model_name: "claude-3.5-sonnet"
   litellm_params:
