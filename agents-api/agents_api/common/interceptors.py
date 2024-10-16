@@ -4,12 +4,10 @@ The main purpose of these interceptors is to handle errors and prevent retrying
 certain types of errors that are known to be non-retryable.
 """
 
-from temporalio.workflow import ContinueAsNewError, ReadOnlyContextError, NondeterminismError
-from temporalio.service import RPCError
-from temporalio.exceptions import TemporalError, FailureError
 from typing import Optional, Type
 
-from temporalio.exceptions import ApplicationError
+from temporalio.exceptions import ApplicationError, FailureError, TemporalError
+from temporalio.service import RPCError
 from temporalio.worker import (
     ActivityInboundInterceptor,
     ExecuteActivityInput,
@@ -17,6 +15,11 @@ from temporalio.worker import (
     Interceptor,
     WorkflowInboundInterceptor,
     WorkflowInterceptorClassInput,
+)
+from temporalio.workflow import (
+    ContinueAsNewError,
+    NondeterminismError,
+    ReadOnlyContextError,
 )
 
 from .exceptions.tasks import is_non_retryable_error
@@ -34,7 +37,14 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput):
         try:
             return await super().execute_activity(input)
-        except (ContinueAsNewError, ReadOnlyContextError, NondeterminismError, RPCError,  TemporalError, FailureError):
+        except (
+            ContinueAsNewError,
+            ReadOnlyContextError,
+            NondeterminismError,
+            RPCError,
+            TemporalError,
+            FailureError,
+        ):
             raise
         except BaseException as e:
             if is_non_retryable_error(e):
@@ -58,7 +68,14 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
     async def execute_workflow(self, input: ExecuteWorkflowInput):
         try:
             return await super().execute_workflow(input)
-        except (ContinueAsNewError, ReadOnlyContextError, NondeterminismError, RPCError,  TemporalError, FailureError):
+        except (
+            ContinueAsNewError,
+            ReadOnlyContextError,
+            NondeterminismError,
+            RPCError,
+            TemporalError,
+            FailureError,
+        ):
             raise
         except BaseException as e:
             if is_non_retryable_error(e):
