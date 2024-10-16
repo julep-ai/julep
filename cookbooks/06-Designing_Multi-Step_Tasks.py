@@ -43,7 +43,7 @@ client.agents.tools.create(
 )
 
 # Defining a Task with various step types
-task_def = yaml.safe_load(f"""
+task_def = yaml.safe_load("""
 name: Multi-Step Task Demonstration
 
 input_schema:
