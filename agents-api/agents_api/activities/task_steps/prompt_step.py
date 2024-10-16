@@ -64,7 +64,13 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         direction="desc",
     )
 
+    ### [Function(...), ApiCall(...), Integration(...)]
+    ### -> [{"type": "function", "function": {...}}, {"type": "api_call", "api_call": {...}}, {"type": "integration", "integration": {...}}]
+    ### -> [{"type": "function", "function": {...}}]
+    ### -> openai
+
     # Format agent_tools for litellm
+    # COMMENT(oct-16): Format the tools for openai api here (api_call | integration | system) -> function
     formatted_agent_tools = [
         format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
     ]
@@ -102,6 +108,17 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             raise ApplicationError("Tool calls cannot be unwrapped")
 
         response = response.choices[0].message.content
+
+    ### response.choices[0].finish_reason == "tool_calls"
+    ### -> response.choices[0].message.tool_calls
+    ### -> [{"id": "call_abc", "name": "my_function", "arguments": "..."}, ...]
+    ###    (cross-reference with original agent_tools list to get the original tool)
+    ###
+    ### -> FunctionCall(...) | ApiCall(...) | IntegrationCall(...) | SystemCall(...)
+    ### -> set this on response.choices[0].tool_calls
+
+    # COMMENT(oct-16): Reference the original tool from tools passed to the activity
+    #                  if openai chooses to use a tool (finish_reason == "tool_calls")
 
     return StepOutcome(
         output=response.model_dump() if hasattr(response, "model_dump") else response,

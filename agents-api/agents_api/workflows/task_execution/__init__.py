@@ -395,6 +395,17 @@ class TaskExecutionWorkflow:
                 message = response["choices"][0]["message"]
                 tool_calls_input = message["tool_calls"]
 
+                ### COMMENT(oct-16): do a match-case on tool_calls_input.type
+                ### -> FunctionCall(...), ApiCall(...), IntegrationCall(...), SystemCall(...)
+                ### -> if api_call:
+                ###     => execute_api_call(api_call)
+                ### -> if integration_call:
+                ###     => execute_integration(integration_call)
+                ### -> if system_call:
+                ###     => execute_system(system_call)
+                ### -> else:
+                ###     => wait for input
+
                 # Enter a wait-for-input step to ask the developer to run the tool calls
                 tool_calls_results = await workflow.execute_activity(
                     task_steps.raise_complete_async,
@@ -402,6 +413,8 @@ class TaskExecutionWorkflow:
                     schedule_to_close_timeout=timedelta(days=31),
                     retry_policy=DEFAULT_RETRY_POLICY,
                 )
+
+                ### COMMENT(oct-16): Continue as usual. Feed the tool call results back to the model
 
                 # Feed the tool call results back to the model
                 context.current_step.prompt.append(message)
