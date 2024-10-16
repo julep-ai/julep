@@ -97,6 +97,10 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! ðŸ—“ï¸
 - [Local Quickstart](#local-quickstart)
 - [SDK Reference](#sdk-reference)
 - [API Reference](#api-reference)
+- [Why Julep vs. LangChain?](#why-julep-vs-langchain)
+  - [Different Use Cases](#different-use-cases)
+  - [Different Form Factor](#different-form-factor)
+  - [In Summary](#in-summary)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
