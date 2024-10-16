@@ -4,6 +4,9 @@ The main purpose of these interceptors is to handle errors and prevent retrying
 certain types of errors that are known to be non-retryable.
 """
 
+from temporalio.workflow import ContinueAsNewError, ReadOnlyContextError, NondeterminismError
+from temporalio.service import RPCError
+from temporalio.exceptions import TemporalError, FailureError
 from typing import Optional, Type
 
 from temporalio.exceptions import ApplicationError
@@ -31,6 +34,8 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput):
         try:
             return await super().execute_activity(input)
+        except (ContinueAsNewError, ReadOnlyContextError, NondeterminismError, RPCError,  TemporalError, FailureError):
+            raise
         except BaseException as e:
             if is_non_retryable_error(e):
                 raise ApplicationError(
@@ -53,6 +58,8 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
     async def execute_workflow(self, input: ExecuteWorkflowInput):
         try:
             return await super().execute_workflow(input)
+        except (ContinueAsNewError, ReadOnlyContextError, NondeterminismError, RPCError,  TemporalError, FailureError):
+            raise
         except BaseException as e:
             if is_non_retryable_error(e):
                 raise ApplicationError(
