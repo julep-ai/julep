@@ -14,6 +14,7 @@ include:
   - ./integrations-service/docker-compose.yml
   - ./monitoring/docker-compose.yml
   - ./blob-store/docker-compose.yml
+  - ./code-interpreter/docker-compose.yml
 
   # TODO: Enable after testing
   # - ./monitoring/docker-compose.yml
@@ -23,7 +24,7 @@ include:
 # - agents-api runs under two modes:
 #   + single-tenant: `SKIP_CHECK_DEVELOPER_HEADERS=True` and `AGENTS_API_KEY` is required
 #     [user] --{Authorization: Bearer $api-key}--> [agents-api]
-#   + multi-tenant: 
+#   + multi-tenant:
 #     `SKIP_CHECK_DEVELOPER_HEADERS=False` and requests must have a valid `X-Developer-Id` header
 #     [user]
 #       --{Authorization: Bearer $JWT}--> [gateway]
