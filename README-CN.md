@@ -63,33 +63,44 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 目录</h3></summary>
 
-- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9)
-- [Node.js 快速入门 🟩](#nodejs-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86-1)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9-1)
-  - [心智模型](#%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B)
-- [概念](#%E6%A6%82%E5%BF%B5)
-- [理解任务](#%E7%90%86%E8%A7%A3%E4%BB%BB%E5%8A%A1)
-  - [工作流步骤的类型](#%E5%B7%A5%E4%BD%9C%E6%B5%81%E6%AD%A5%E9%AA%A4%E7%9A%84%E7%B1%BB%E5%9E%8B)
-- [工具类型](#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%9E%8B)
-  - [用户定义的函数](#%E7%94%A8%E6%88%B7%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%BD%E6%95%B0)
-  - [`系统` 工具](#%E7%B3%BB%E7%BB%9F-%E5%B7%A5%E5%85%B7)
-  - [内置“集成”](#%E5%86%85%E7%BD%AE%E9%9B%86%E6%88%90)
-  - [直接 `api_calls`](#%E7%9B%B4%E6%8E%A5-api_calls)
-- [集成](#%E9%9B%86%E6%88%90)
-  - [向代理添加工具](#%E5%90%91%E4%BB%A3%E7%90%86%E6%B7%BB%E5%8A%A0%E5%B7%A5%E5%85%B7)
-  - [管理会话和用户](#%E7%AE%A1%E7%90%86%E4%BC%9A%E8%AF%9D%E5%92%8C%E7%94%A8%E6%88%B7)
-  - [文档集成与搜索](#%E6%96%87%E6%A1%A3%E9%9B%86%E6%88%90%E4%B8%8E%E6%90%9C%E7%B4%A2)
-- [本地快速启动](#%E6%9C%AC%E5%9C%B0%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8)
-- [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
+- [简介](#introduction)
+- [主要特点](#key-features)
+- [快速示例](#quick-example)
+- [安装](#安装)
+- [Python 快速入门 🐍](#python-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [步骤 3：执行任务](#step-3-execute-the-task)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent)
+- [Node.js 快速入门🟩](#nodejs-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent-1)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [步骤 3：执行任务](#step-3-execute-the-task-1)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent-1)
+- [组件](#components)
+- [心智模型](#mental-model)
+- [概念](#concepts)
+- [理解任务](#understanding-tasks)
+- [工作流步骤的类型](#types-of-workflow-steps)
+- [工具类型](#tool-types)
+- [用户定义的`函数`](#user-defined-functions)
+- [`系统` 工具](#system-tools)
+- [内置 `integrations`](#built-in-integrations)
+-[直接`api_calls`]（#direct-api_calls）
+- [集成](#integrations)
+- [其他功能](#other-features)
+- [向代理添加工具](#adding-tools-to-agents)
+- [管理会话和用户](#managing-sessions-and-users)
+- [文档集成与搜索](#document-integration-and-search)
+- [本地快速启动](#local-quickstart)
+- [SDK 参考](#sdk-reference)
+- [API 参考](#api-reference)
+- [为什么 Julep 与 LangChain？](#why-julep-vs-langchain)
+- [不同用例](#different-use-cases)
+- [不同的外形尺寸](#different-form-factor)
+- [总结](#in-summary)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -111,9 +122,9 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 > [!提示]
 > 想象一下，您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务，记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。
 
-主要特点
+## 主要特点
 
-1. 🧠 **持久 AI 代理**：在长期交互​​中记住背景和信息。
+1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
 2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
 3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
 4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
@@ -989,7 +1000,7 @@ Julep 带有许多内置集成（如下节所述）。`集成` 工具直接在 j
 
 julep 后端附带来自以下提供商的集成第三方工具：
 
-- [组合](https://composio.dev)
+- [合成](https://composio.dev)
 - [匿名](https://anon.com)
 - [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)
 
@@ -1260,6 +1271,43 @@ API 参考
 - [代理 API](https://api.julep.ai/api/docs#tag/agents)
 - [任务 API](https://api.julep.ai/api/docs#tag/tasks)
 - [执行 API](https://api.julep.ai/api/docs#tag/executions)
+
+*****
+
+## 为什么选择 Julep 而不是 LangChain？
+
+### 不同的用例
+
+可以将 LangChain 和 Julep 视为 AI 开发堆栈中具有不同重点的工具。
+
+LangChain 非常适合创建提示序列和管理与 LLM 的交互。它拥有庞大的生态系统，包含大量预构建的集成，如果您想快速启动和运行某些功能，这会非常方便。LangChain 非常适合涉及线性提示链和 API 调用的简单用例。
+
+另一方面，Julep 更侧重于构建持久的 AI 代理，这些代理可以在长期交互​​中保持上下文。当您需要涉及多步骤任务、条件逻辑以及在代理流程中直接与各种工具或 API 集成的复杂工作流时，它会大放异彩。它从头开始设计，以管理持久会话和复杂的工作流。
+
+如果您想构建一个需要执行以下操作的复杂 AI 助手，请使用 Julep：
+
+- 跟踪几天或几周内的用户互动。
+- 执行计划任务，例如发送每日摘要或监控数据源。
+- 根据之前的互动或存储的数据做出决策。
+- 作为其工作流程的一部分与多个外部服务进行交互。
+
+然后 Julep 提供支持所有这些的基础设施，而无需您从头开始构建。
+
+### 不同的外形尺寸
+
+Julep 是一个**平台**，其中包括用于描述工作流的语言、用于运行这些工作流的服务器以及用于与平台交互的 SDK。要使用 Julep 构建某些东西，您需要在“YAML”中编写工作流描述，然后在云中运行工作流。
+
+Julep 专为繁重、多步骤和长时间运行的工作流程而构建，并且工作流程的复杂程度没有限制。
+
+LangChain 是一个**库**，其中包含一些工具和一个用于构建线性提示和工具链的框架。为了使用 LangChain 构建某些东西，您通常需要编写 Python 代码来配置和运行要使用的模型链。
+
+对于涉及线性提示和 API 调用链的简单用例，LangChain 可能足够并且能够更快地实现。
+
+＃＃＃ 总之
+
+当您需要在无状态或短期环境中管理 LLM 交互和提示序列时，请使用 LangChain。
+
+当您需要一个具有高级工作流功能、持久会话和复杂任务编排的状态代理的强大框架时，请选择 Julep。
 
 <div align="center">
     <a href="#top">

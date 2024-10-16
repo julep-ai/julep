@@ -63,40 +63,44 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 Table des matières</h3></summary>
 
-- [Introduction](#introduction)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Exemple rapide](#exemple-rapide)
+- [Présentation](#introduction)
+- [Caractéristiques principales](#key-features)
+- [Exemple rapide](#quick-example)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent)
-- [Démarrage rapide de Node.js 🟩](#d%C3%A9marrage-rapide-de-nodejs-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent-1)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e-1)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che-1)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent-1)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent-1)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task-1)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent-1)
 - [Composants](#composants)
-  - [Modèle mental](#mod%C3%A8le-mental)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Comprendre les tâches](#comprendre-les-t%C3%A2ches)
-  - [Types d'étapes de flux de travail](#types-d%C3%A9tapes-de-flux-de-travail)
-- [Types d'outils](#types-doutils)
-  - [Fonctions définies par l'utilisateur](#fonctions-d%C3%A9finies-par-lutilisateur)
-  - [outils `système`](#outils-syst%C3%A8me)
-  - [« Intégrations » intégrées](#%C2%AB%C2%A0int%C3%A9grations%C2%A0%C2%BB-int%C3%A9gr%C3%A9es)
-  - [Appels directs `api_calls`](#appels-directs-api_calls)
-- [Intégrations](#int%C3%A9grations)
-- [Autres fonctionnalités](#autres-fonctionnalit%C3%A9s)
-  - [Ajout d'outils aux agents](#ajout-doutils-aux-agents)
-  - [Gestion des sessions et des utilisateurs](#gestion-des-sessions-et-des-utilisateurs)
-  - [Intégration et recherche de documents](#int%C3%A9gration-et-recherche-de-documents)
-- [Démarrage rapide local](#d%C3%A9marrage-rapide-local)
-- [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-- [Référence API](#r%C3%A9f%C3%A9rence-api)
+- [Comprendre les tâches](#understanding-tasks)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Types d'outils](#types-d'outils)
+- [`Fonctions` définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [`Intégrations` intégrées](#integrations-integrées)
+- [Appels directs `api_calls`](#appels directs-api_calls)
+- [Intégrations](#intégrations)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Démarrage rapide local](#local-quickstart)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
+- [Pourquoi Julep contre LangChain ?](#pourquoi-julep-vs-langchain)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -657,7 +661,7 @@ Effectuer des calculs ou manipuler des données
 <tr>
 <td>Attendre l'entrée</td>
 <td>
-Suspendre le flux de travail jusqu'à ce que l'entrée soit reçue
+Suspendre le flux de travail jusqu'à ce que les données soient reçues
 
 </td>
 
@@ -1267,6 +1271,43 @@ Explorez notre documentation API complète pour en savoir plus sur les agents, l
 - [API des agents](https://api.julep.ai/api/docs#tag/agents)
 - [API des tâches](https://api.julep.ai/api/docs#tag/tasks)
 - [API d'exécution](https://api.julep.ai/api/docs#tag/executions)
+
+*****
+
+## Pourquoi Julep vs. LangChain ?
+
+### Différents cas d'utilisation
+
+Considérez LangChain et Julep comme des outils avec des objectifs différents au sein de la pile de développement de l’IA.
+
+LangChain est idéal pour créer des séquences d'invites et gérer les interactions avec les LLM. Il dispose d'un vaste écosystème avec de nombreuses intégrations prédéfinies, ce qui le rend pratique si vous souhaitez mettre en place quelque chose rapidement. LangChain s'adapte bien aux cas d'utilisation simples qui impliquent une chaîne linéaire d'invites et d'appels d'API.
+
+Julep, en revanche, s'intéresse davantage à la création d'agents d'IA persistants capables de conserver le contexte lors d'interactions à long terme. Il est idéal lorsque vous avez besoin de flux de travail complexes impliquant des tâches en plusieurs étapes, une logique conditionnelle et une intégration avec divers outils ou API directement dans le processus de l'agent. Il est conçu dès le départ pour gérer les sessions persistantes et les flux de travail complexes.
+
+Utilisez Julep si vous imaginez créer un assistant IA complexe qui doit :
+
+- Suivez les interactions des utilisateurs sur plusieurs jours ou semaines.
+- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance de sources de données.
+- Prendre des décisions basées sur des interactions antérieures ou des données stockées.
+- Interagir avec plusieurs services externes dans le cadre de son flux de travail.
+
+Ensuite, Julep fournit l’infrastructure pour prendre en charge tout cela sans que vous ayez à le construire à partir de zéro.
+
+### Facteur de forme différent
+
+Julep est une **plateforme** qui comprend un langage pour décrire les workflows, un serveur pour exécuter ces workflows et un SDK pour interagir avec la plateforme. Pour créer quelque chose avec Julep, vous écrivez une description du workflow en YAML, puis vous exécutez le workflow dans le cloud.
+
+Julep est conçu pour les flux de travail lourds, en plusieurs étapes et de longue durée, et il n'y a aucune limite à la complexité du flux de travail.
+
+LangChain est une **bibliothèque** qui inclut quelques outils et un framework pour créer des chaînes linéaires d'invites et d'outils. Pour créer quelque chose avec LangChain, vous écrivez généralement du code Python qui configure et exécute les chaînes de modèles que vous souhaitez utiliser.
+
+LangChain pourrait être suffisant et plus rapide à mettre en œuvre pour les cas d'utilisation simples impliquant une chaîne linéaire d'invites et d'appels d'API.
+
+### En résumé
+
+Utilisez LangChain lorsque vous devez gérer les interactions LLM et les séquences d'invite dans un contexte sans état ou à court terme.
+
+Choisissez Julep lorsque vous avez besoin d'un framework robuste pour les agents avec état avec des capacités de workflow avancées, des sessions persistantes et une orchestration de tâches complexes.
 
 <div align="center">
     <a href="#top">
