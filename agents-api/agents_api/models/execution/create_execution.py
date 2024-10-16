@@ -18,6 +18,7 @@ from ..utils import (
     verify_developer_owns_resource_query,
     wrap_in_class,
 )
+from .constants import OUTPUT_UNNEST_KEY
 
 ModelT = TypeVar("ModelT", bound=Any)
 T = TypeVar("T")
@@ -58,6 +59,9 @@ def create_execution(
     else:
         data["metadata"] = data.get("metadata", {})
         execution_data = data
+
+    if execution_data["output"] is not None and not isinstance(execution_data["output"], dict):
+        execution_data["output"] = {OUTPUT_UNNEST_KEY: execution_data["output"]}
 
     columns, values = cozo_process_mutate_data(
         {

@@ -25,6 +25,7 @@ api_prefix: str = env.str("AGENTS_API_PREFIX", default="")
 # -----
 task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=100)
 
+
 # Blob Store
 # ----------
 use_blob_store_for_temporal: bool = env.bool(
@@ -36,6 +37,7 @@ blob_store_cutoff_kb: int = env.int("BLOB_STORE_CUTOFF_KB", default=1024)
 s3_endpoint: str = env.str("S3_ENDPOINT", default="http://seaweedfs:8333")
 s3_access_key: str | None = env.str("S3_ACCESS_KEY", default=None)
 s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)
+
 
 # Debug
 # -----
