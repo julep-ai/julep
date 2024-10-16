@@ -23,7 +23,7 @@ agent = client.agents.create_or_update(
 )
 
 # Defining a Task with various step types
-task_def = yaml.safe_load(f"""
+task_def = yaml.safe_load("""
 name: Comprehensive Analysis Report
 
 input_schema:

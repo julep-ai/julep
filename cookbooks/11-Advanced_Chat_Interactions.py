@@ -51,7 +51,7 @@ client.agents.tools.create(
 )
 
 # Defining a task for handling complex conversations
-chat_task_def = yaml.safe_load(f"""
+chat_task_def = yaml.safe_load("""
 name: Advanced Chat Interaction
 
 input_schema:
