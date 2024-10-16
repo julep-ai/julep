@@ -107,6 +107,7 @@ async def execute_system(
                         search_params = HybridDocSearchRequest(
                             text=arguments.pop("text"),
                             vector=arguments.pop("vector"),
+                            confidence=arguments.pop("confidence", 0.7),
                             limit=arguments.get("limit", 10),
                         )
 
@@ -118,6 +119,7 @@ async def execute_system(
                     elif "vector" in arguments:
                         search_params = VectorDocSearchRequest(
                             vector=arguments.pop("vector"),
+                            confidence=arguments.pop("confidence", 0.7),
                             limit=arguments.get("limit", 10),
                         )
 
