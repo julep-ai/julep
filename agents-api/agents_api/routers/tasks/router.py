@@ -1,8 +1,9 @@
 from typing import Callable
 
-import yaml
 from fastapi import APIRouter, Request, Response
 from fastapi.routing import APIRoute
+
+from ...common.utils import yaml
 
 
 class YamlRequest(Request):

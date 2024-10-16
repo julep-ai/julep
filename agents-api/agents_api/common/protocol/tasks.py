@@ -1,4 +1,5 @@
-from typing import Annotated, Any, Type
+from dataclasses import dataclass
+from typing import Annotated, Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, computed_field
@@ -213,6 +214,11 @@ class StepOutcome(BaseModel):
     error: str | None = None
     output: Any = None
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
+
+
+@dataclass
+class RemoteObject:
+    key: str
 
 
 def task_to_spec(

@@ -2,6 +2,7 @@ from typing import Any
 from uuid import UUID
 
 from beartype import beartype
+from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
@@ -13,15 +14,14 @@ from ..autogen.Docs import (
 )
 from ..autogen.Tools import SystemDef
 from ..common.protocol.tasks import StepContext
+from ..common.storage_handler import auto_blob_store
 from ..env import testing
 from ..models.agent.create_agent import create_agent as create_agent_query
 from ..models.agent.delete_agent import delete_agent as delete_agent_query
 from ..models.agent.get_agent import get_agent as get_agent_query
 from ..models.agent.list_agents import list_agents as list_agents_query
 from ..models.agent.update_agent import update_agent as update_agent_query
-from ..models.docs.create_doc import create_doc as create_doc_query
 from ..models.docs.delete_doc import delete_doc as delete_doc_query
-from ..models.docs.get_doc import get_doc as get_doc_query
 from ..models.docs.list_docs import list_docs as list_docs_query
 from ..models.session.create_session import create_session as create_session_query
 from ..models.session.delete_session import delete_session as delete_session_query
@@ -42,6 +42,7 @@ from ..routers.docs.create_doc import create_agent_doc, create_user_doc
 from ..routers.docs.search_docs import search_agent_docs, search_user_docs
 
 
+@auto_blob_store
 @beartype
 async def execute_system(
     context: StepContext,
@@ -49,6 +50,13 @@ async def execute_system(
 ) -> Any:
     arguments = system.arguments
     arguments["developer_id"] = context.execution_input.developer_id
+
+    # Unbox all the arguments
+    for key, value in arguments.items():
+        if isinstance(value, Box):
+            arguments[key] = value.to_dict()
+        elif isinstance(value, BoxList):
+            arguments[key] = value.to_list()
 
     # Convert all UUIDs to UUID objects
     if "agent_id" in arguments:
@@ -101,6 +109,7 @@ async def execute_system(
                         search_params = HybridDocSearchRequest(
                             text=arguments.pop("text"),
                             vector=arguments.pop("vector"),
+                            confidence=arguments.pop("confidence", 0.7),
                             limit=arguments.get("limit", 10),
                         )
 
@@ -112,6 +121,7 @@ async def execute_system(
                     elif "vector" in arguments:
                         search_params = VectorDocSearchRequest(
                             vector=arguments.pop("vector"),
+                            confidence=arguments.pop("confidence", 0.7),
                             limit=arguments.get("limit", 10),
                         )
 
@@ -121,7 +131,7 @@ async def execute_system(
                     )
 
             # NO SUBRESOURCE
-            elif system.subresource == None:
+            elif system.subresource is None:
                 if system.operation == "list":
                     return list_agents_query(**arguments)
                 elif system.operation == "get":
@@ -190,7 +200,7 @@ async def execute_system(
                     )
 
             # NO SUBRESOURCE
-            elif system.subresource == None:
+            elif system.subresource is None:
                 if system.operation == "list":
                     return list_users_query(**arguments)
                 elif system.operation == "get":

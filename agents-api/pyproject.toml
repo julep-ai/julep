@@ -32,14 +32,16 @@ pydantic-partial = "^0.5.5"
 simpleeval = "^0.9.13"
 lz4 = "^4.3.3"
 
-pyyaml = "^6.0.2"
 google-re2 = "^1.1.20240702"
 scalar-fastapi = "^1.0.3"
 sse-starlette = "^2.1.3"
 anyio = "^4.4.0"
-python-box = {extras = ["toml"], version = "^7.2.0"}
+python-box = {extras = [], version = "^7.2.0"}
 prometheus-fastapi-instrumentator = "^7.0.0"
 prometheus-client = "^0.21.0"
+boto3 = "^1.35.39"
+xxhash = "^3.5.0"
+
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 ruff = "^0.5.5"

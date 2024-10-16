@@ -1,0 +1,22 @@
+name: julep-code-interpreter
+
+services:
+  code-interpreter:
+    image: julepai/code-interpreter:${TAG:-dev}
+
+    build:
+      context: ./vendor/cohere-ai/cohere-terrarium
+      dockerfile: Dockerfile
+
+    volumes:
+      # See: https://github.com/cohere-ai/cohere-terrarium/blob/8df9169dac19199c9eb4091c232c2687d27bbc15/src/services/python-interpreter/service.ts#L9
+      - code_interpreter_data:/usr/src/app/default_python_home
+
+    profiles:
+      - code-interpreter
+
+    ports:
+      - "9090:8080"  # Binding to 9090, since 8080 is taken
+
+volumes:
+  code_interpreter_data:

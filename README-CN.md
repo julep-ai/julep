@@ -1,6 +1,6 @@
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md)</sup>
 
-<div align="center">
+<div align="center" id="top">
  <img src="https://socialify.git.ci/julep-ai/julep/image?description=1&descriptionEditable=API%20for%20AI%20agents%20and%20multi-step%20tasks&forks=1&name=1&owner=1&pattern=Solid&stargazers=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fjulep-ai%2Fjulep%2Fdev%2F.github%2Fjulep-logo.svg&theme=Auto" alt="julep" width="640" height="320" />
 </div>
 
@@ -15,7 +15,6 @@
   <a href="https://www.linkedin.com/company/julep-ai" rel="dofollow">LinkedIn</a>
 </p>
 
-
 <p align="center">
     <a href="https://www.npmjs.com/package/@julep/sdk"><img src="https://img.shields.io/npm/v/%40julep%2Fsdk?style=social&amp;logo=npm&amp;link=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2F%40julep%2Fsdk" alt="NPM Version"></a>
     <span>&nbsp;</span>
@@ -26,12 +25,12 @@
     <a href="https://choosealicense.com/licenses/apache/"><img src="https://img.shields.io/github/license/julep-ai/julep" alt="GitHub License"></a>
 </p>
 
-*****
+---
 
 > [!注意]
 > 👨‍💻 来参加 devfest.ai 活动了吗？加入我们的 [Discord](https://discord.com/invite/JTSBGRZrzj) 并查看以下详细信息。
-> 
-> 从 [此处](https://dashboard-dev.julep.ai) 获取您的 API 密钥。
+>
+> 从[此处](https://dashboard-dev.julep.ai)获取您的 API 密钥。
 
 <details>
 <summary><b>🌟 贡献者和 DevFest.AI 参与者</b>（点击展开）</summary>
@@ -64,38 +63,44 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 <details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<summary><h3>📖 目录</h3></summary>
 
-- [为什么选择 Julep 而不是 LangChain？](#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-julep-%E8%80%8C%E4%B8%8D%E6%98%AF-langchain)
-  - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
-  - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
-- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9)
-- [Node.js 快速入门 🟩](#nodejs-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86-1)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9-1)
-  - [心智模型](#%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B)
-- [概念](#%E6%A6%82%E5%BF%B5)
-- [理解任务](#%E7%90%86%E8%A7%A3%E4%BB%BB%E5%8A%A1)
-  - [工作流步骤的类型](#%E5%B7%A5%E4%BD%9C%E6%B5%81%E6%AD%A5%E9%AA%A4%E7%9A%84%E7%B1%BB%E5%9E%8B)
-- [工具类型](#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%9E%8B)
-  - [用户定义的函数](#%E7%94%A8%E6%88%B7%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%BD%E6%95%B0)
-  - [`系统` 工具](#%E7%B3%BB%E7%BB%9F-%E5%B7%A5%E5%85%B7)
-  - [内置“集成”](#%E5%86%85%E7%BD%AE%E9%9B%86%E6%88%90)
-  - [直接 `api_call`](#%E7%9B%B4%E6%8E%A5-api_call)
-- [集成](#%E9%9B%86%E6%88%90)
-  - [勇敢搜索](#%E5%8B%87%E6%95%A2%E6%90%9C%E7%B4%A2)
-  - [浏览器基础](#%E6%B5%8F%E8%A7%88%E5%99%A8%E5%9F%BA%E7%A1%80)
-  - [向代理添加工具](#%E5%90%91%E4%BB%A3%E7%90%86%E6%B7%BB%E5%8A%A0%E5%B7%A5%E5%85%B7)
-  - [管理会话和用户](#%E7%AE%A1%E7%90%86%E4%BC%9A%E8%AF%9D%E5%92%8C%E7%94%A8%E6%88%B7)
-  - [文档集成与搜索](#%E6%96%87%E6%A1%A3%E9%9B%86%E6%88%90%E4%B8%8E%E6%90%9C%E7%B4%A2)
-- [本地快速启动](#%E6%9C%AC%E5%9C%B0%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8)
-- [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
+- [简介](#introduction)
+- [主要特点](#key-features)
+- [快速示例](#quick-example)
+- [安装](#安装)
+- [Python 快速入门 🐍](#python-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [步骤 3：执行任务](#step-3-execute-the-task)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent)
+- [Node.js 快速入门🟩](#nodejs-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent-1)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [步骤 3：执行任务](#step-3-execute-the-task-1)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent-1)
+- [组件](#components)
+- [心智模型](#mental-model)
+- [概念](#concepts)
+- [理解任务](#understanding-tasks)
+- [工作流步骤的类型](#types-of-workflow-steps)
+- [工具类型](#tool-types)
+- [用户定义的`函数`](#user-defined-functions)
+- [`系统` 工具](#system-tools)
+- [内置 `integrations`](#built-in-integrations)
+-[直接`api_calls`]（#direct-api_calls）
+- [集成](#integrations)
+- [其他功能](#other-features)
+- [向代理添加工具](#adding-tools-to-agents)
+- [管理会话和用户](#managing-sessions-and-users)
+- [文档集成与搜索](#document-integration-and-search)
+- [本地快速启动](#local-quickstart)
+- [SDK 参考](#sdk-reference)
+- [API 参考](#api-reference)
+- [为什么 Julep 与 LangChain？](#why-julep-vs-langchain)
+- [不同用例](#different-use-cases)
+- [不同的外形尺寸](#different-form-factor)
+- [总结](#in-summary)
 
 </details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -109,6 +114,7 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 虽然许多人工智能应用程序仅限于简单、线性的提示链和 API 调用，并且分支很少，但 Julep 可以处理更复杂的场景。
 
 它支持：
+
 - 复杂、多步骤的流程
 - 动态决策
 - 并行执行
@@ -116,9 +122,22 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 > [!提示]
 > 想象一下，您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务，记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。
 
+## 主要特点
+
+1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
+2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
+3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
+4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
+5.🛠️**内置工具**：在您的任务中使用内置工具和外部 API。
+6. 🔧 **自我修复**：Julep 将自动重试失败的步骤、重新发送消息，并确保您的任务顺利运行。
+7. 📚 **RAG**：使用 Julep 的文档存储构建一个用于检索和使用您自己的数据的系统。
+
+Julep 非常适合需要超越简单的提示响应模型的 AI 用例的应用程序。
+
 快速示例
 
 想象一下一个可以执行以下操作的研究 AI 代理：
+
 1. 选择一个主题，
 2. 针对该主题提出 100 个搜索查询，
 3. 同时进行网页搜索，
@@ -140,20 +159,20 @@ input_schema:
 
 # Define the tools that the agent can use
 tools:
-- name: web_search
-  type: integration
-  integration:
-    provider: brave
-    setup:
-      api_key: "YOUR_BRAVE_API_KEY"
+  - name: web_search
+    type: integration
+    integration:
+      provider: brave
+      setup:
+        api_key: "YOUR_BRAVE_API_KEY"
 
-- name: discord_webhook
-  type: api_call
-  api_call:
-    url: "YOUR_DISCORD_WEBHOOK_URL"
-    method: POST
-    headers:
-      Content-Type: application/json
+  - name: discord_webhook
+    type: api_call
+    api_call:
+      url: "YOUR_DISCORD_WEBHOOK_URL"
+      method: POST
+      headers:
+        Content-Type: application/json
 
 # Special variables:
 # - inputs: for accessing the input to the task
@@ -162,101 +181,51 @@ tools:
 
 # Define the main workflow
 main:
-- prompt:
-    - role: system
-      content: >-
-        You are a research assistant.
-        Generate 100 diverse search queries related to the topic:
-        {{inputs[0].topic}}
+  - prompt:
+      - role: system
+        content: >-
+          You are a research assistant.
+          Generate 100 diverse search queries related to the topic:
+          {{inputs[0].topic}}
 
-        Write one query per line.
-  unwrap: true
+          Write one query per line.
+    unwrap: true
 
-# Evaluate the search queries using a simple python expression
-- evaluate:
-    search_queries: "_.split('\n')"
+  # Evaluate the search queries using a simple python expression
+  - evaluate:
+      search_queries: "_.split('\n')"
 
-# Run the web search in parallel for each query
-- over: "_.search_queries"
-  map:
-    tool: web_search
+  # Run the web search in parallel for each query
+  - over: "_.search_queries"
+    map:
+      tool: web_search
+      arguments:
+        query: "_"
+    parallelism: 100
+
+  # Collect the results from the web search
+  - evaluate:
+      results: "'\n'.join([item.result for item in _])"
+
+  # Summarize the results
+  - prompt:
+      - role: system
+        content: >
+          You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
+          The summary should be well-structured, informative, and highlight key findings and insights:
+          {{_.results}}
+    unwrap: true
+
+  # Send the summary to Discord
+  - tool: discord_webhook
     arguments:
-      query: "_"
-  parallelism: 100
-
-# Collect the results from the web search
-- evaluate:
-    results: "'\n'.join([item.result for item in _])"
-
-# Summarize the results
-- prompt:
-    - role: system
       content: >
-        You are a research summarizer. Create a comprehensive summary of the following research results on the topic {{inputs[0].topic}}.
-        The summary should be well-structured, informative, and highlight key findings and insights:
-        {{_.results}}
-  unwrap: true
+        **Research Summary for {{inputs[0].topic}}**
 
-# Send the summary to Discord
-- tool: discord_webhook
-  arguments:
-    content: >
-      **Research Summary for {{inputs[0].topic}}**
-
-      {{_}}
+        {{_}}
 ```
 
-> [!提示]
-> 当您想要构建能够在长期交互​​中保持上下文和状态的 AI 代理时，Julep 非常有用。它非常适合设计复杂的多步骤工作流程，并将各种工具和 API 直接集成到代理的流程中。
->
-> 在此示例中，Julep 将自动管理并行执行，重试失败的步骤，重新发送 API 请求，并保持任务可靠运行直至完成。
-
-主要特点
-
-1. 🧠 **持久 AI 代理**：在长期交互​​中记住背景和信息。
-2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
-3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
-4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
-5.🛠️**内置工具**：在您的任务中使用内置工具和外部 API。
-6. 🔧 **自我修复**：Julep 将自动重试失败的步骤、重新发送消息，并确保您的任务顺利运行。
-7. 📚 **RAG**：使用 Julep 的文档存储构建一个用于检索和使用您自己的数据的系统。
-
-Julep 非常适合需要超越简单的提示响应模型的 AI 用例的应用程序。
-
-## 为什么选择 Julep 而不是 LangChain？
-
-### 不同的用例
-
-可以将 LangChain 和 Julep 视为 AI 开发堆栈中具有不同重点的工具。
-
-LangChain 非常适合创建提示序列和管理与 AI 模型的交互。它拥有庞大的生态系统，包含大量预构建的集成，如果您想快速启动和运行某些功能，这会非常方便。LangChain 非常适合涉及线性提示链和 API 调用的简单用例。
-
-另一方面，Julep 更注重构建持久的 AI 代理，这些代理可以在长期交互​​中记住事物。当您需要涉及多个步骤、决策以及在代理流程中直接与各种工具或 API 集成的复杂任务时，它会大放异彩。它从头开始设计，以管理持久会话和复杂任务。
-
-如果您想构建一个需要执行以下操作的复杂 AI 助手，请使用 Julep：
-
-- 跟踪几天或几周内的用户互动。
-- 执行计划任务，例如发送每日摘要或监控数据源。
-- 根据之前的互动或存储的数据做出决策。
-- 作为其任务的一部分，与多个外部服务进行交互。
-
-然后 Julep 提供支持所有这些的基础设施，而无需您从头开始构建。
-
-### 不同的外形尺寸
-
-Julep 是一个**平台**，其中包括用于描述任务的语言、用于运行这些任务的服务器以及用于与平台交互的 SDK。要使用 Julep 构建某些东西，您需要在“YAML”中编写任务描述，然后在云中运行该任务。
-
-Julep 专为繁重、多步骤和长时间运行的任务而设计，并且对任务的复杂程度没有限制。
-
-LangChain 是一个**库**，其中包含一些工具和一个用于构建线性提示和工具链的框架。要使用 LangChain 构建某些东西，您通常需要编写 Python 代码来配置和运行要使用的模型链。
-
-对于涉及线性提示和 API 调用链的简单用例，LangChain 可能足够并且能够更快地实现。
-
-＃＃＃ 总之
-
-当您需要在无状态或短期环境中管理 AI 模型交互和提示序列时，请使用 LangChain。
-
-当您需要一个具有高级任务功能、持久会话和复杂任务管理的状态代理的强大框架时，请选择 Julep。
+在这个例子中，Julep 将自动管理并行执行，重试失败的步骤，重新发送 API 请求，并保持任务可靠运行直到完成。
 
 ＃＃ 安装
 
@@ -273,7 +242,7 @@ pip install julep
 ```
 
 > [!注意]
-> 从 [此处](https://dashboard-dev.julep.ai) 获取您的 API 密钥。
+> 从[此处](https://dashboard-dev.julep.ai)获取您的 API 密钥。
 >
 > 虽然我们处于测试阶段，但您也可以通过 [Discord](https://discord.com/invite/JTSBGRZrzj) 联系，以解除 API 密钥的速率限制。
 
@@ -406,25 +375,24 @@ while (message := input("Enter a message: ")) != "quit":
     print(response)
 ```
 
-> [!提示]
-> 您可以在[这里](example.py)找到完整的 python 示例。
-
+您可以在[这里](example.py)找到完整的python示例。
 
 ## Node.js 快速入门 🟩
 
 ### 步骤 1：创建代理
 
 ```javascript
-import { Julep } from '@julep/sdk';
-import yaml from 'js-yaml';
+import { Julep } from "@julep/sdk";
+import yaml from "js-yaml";
 
-const client = new Julep({ apiKey: 'your_julep_api_key' });
+const client = new Julep({ apiKey: "your_julep_api_key" });
 
 async function createAgent() {
   const agent = await client.agents.create({
     name: "Storytelling Agent",
     model: "gpt-4",
-    about: "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+    about:
+      "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
   });
 
   // 🛠️ Add an image generation tool (DALL·E) to the agent
@@ -504,11 +472,13 @@ async function createTask(agent) {
 ```javascript
 async function executeTask(task) {
   const execution = await client.executions.create(task.id, {
-    input: { idea: "A cat who learns to fly" }
+    input: { idea: "A cat who learns to fly" },
   });
 
   // 🎉 Watch as the story and comic panels are generated
-  for await (const transition of client.executions.transitions.stream(execution.id)) {
+  for await (const transition of client.executions.transitions.stream(
+    execution.id
+  )) {
     console.log(transition);
   }
 
@@ -527,12 +497,12 @@ async function chatWithAgent(agent) {
   // 💬 Send messages to the agent
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   const chat = async () => {
     rl.question("Enter a message (or 'quit' to exit): ", async (message) => {
-      if (message.toLowerCase() === 'quit') {
+      if (message.toLowerCase() === "quit") {
         rl.close();
         return;
       }
@@ -558,8 +528,7 @@ async function runExample() {
 runExample().catch(console.error);
 ```
 
-> [!提示]
-> 您可以在[这里](example.js)找到完整的 Node.js 示例。
+您可以在[这里](example.js)找到完整的 Node.js 示例。
 
 ＃＃ 成分
 
@@ -578,21 +547,18 @@ Julep 由以下成分组成：
 您可以将 Julep 视为一个结合了客户端和服务器端组件的平台，以帮助您构建高级 AI 代理。以下是它的可视化方法：
 
 1. **您的申请代码：**
+
 - 您可以在应用程序中使用 Julep SDK 来定义代理、任务和工作流。
 - SDK 提供的函数和类使得设置和管理这些组件变得容易。
 
 2. **Julep 后端服务：**
+
 - SDK 通过网络与 Julep 后端通信。
 - 后端处理任务的执行，维护会话状态，存储文档并协调工作流程。
 
 3. **与工具和 API 集成：**
 - 在您的工作流程中，您可以集成外部工具和服务。
 - 后端促进这些集成，因此您的代理可以执行网络搜索、访问数据库或调用第三方 API。
-
-简单来说：
-- Julep 是一个用于构建有状态 AI 代理的平台。
-- 您在代码中使用 SDK（类似工具包）来定义代理的功能。
-- 后端服务（您可以将其视为引擎）运行这些定义、管理状态并处理复杂性。
 
 ## 概念
 
@@ -624,7 +590,7 @@ graph TD
 - **文档**：与代理或用户相关的文本或数据对象，矢量化并存储以用于语义搜索和检索。
 - **执行**：通过特定输入启动的任务实例，具有自己的生命周期和状态机。
 
-有关这些概念及其相互作用的更详细说明，请参阅我们的[概念文档]（https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md）。
+有关更详细的解释，请参阅我们的[概念文档]（https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md）。
 
 ## 理解任务
 
@@ -636,138 +602,328 @@ graph TD
 
 ### 工作流步骤的类型
 
-Julep 中的任务可以包含各种类型的步骤，让您可以创建复杂而强大的工作流程。以下是按类别组织的可用步骤类型的概述：
+Julep 中的任务可以包含各种类型的步骤，让您可以创建复杂而强大的工作流程。以下是可用步骤类型的概述：
 
 #### 常见步骤
 
-1. **提示**：向AI模型发送消息并收到回复。
-   ```yaml
-   - prompt: "Analyze the following data: {{data}}"
-   ```
+<table>
+<tr>
+<td>姓名</td> <td>关于</td><td>句法</td>
+</tr>
+<tr>
+<td>迅速的</td>
+<td>
+向 AI 模型发送消息并接收响应
 
-2. **工具调用**：执行集成的工具或API。
-   ```yaml
-   - tool: web_search
-     arguments:
-       query: "Latest AI developments"
-   ```
+</td>
 
-3. **评估**：执行计算或处理数据。
-   ```yaml
-   - evaluate:
-       average_score: "sum(scores) / len(scores)"
-   ```
+<td>
 
-4. **等待输入**：暂停工作流程，直到收到输入。
-   ```yaml
-   - wait_for_input:
-       info:
-         message: "Please provide additional information."
-   ```
+```yaml
+- prompt: "Analyze the following data: {{data}}"
+```
 
-5. **日志**：记录指定的值或消息。
-   ```yaml
-   - log: "Processing completed for item {{item_id}}"
-   ```
+</td>
+</tr>
+<tr>
+<td>工具调用</td>
+<td>
+执行集成工具或 API
+
+</td>
+
+<td>
+
+```yaml
+- tool: web_search
+  arguments:
+    query: "Latest AI developments"
+```
+
+</td>
+</tr>
+<tr>
+<td>评价</td>
+<td>
+执行计算或处理数据
+
+</td>
+
+<td>
+
+```yaml
+- evaluate:
+    average_score: "sum(scores) / len(scores)"
+```
+
+</td>
+</tr>
+<tr>
+<td>等待输入</td>
+<td>
+暂停工作流程直到收到输入
+
+</td>
+
+<td>
+
+```yaml
+- wait_for_input:
+    info:
+      message: "Please provide additional information."
+```
+
+</td>
+</tr>
+<tr>
+<td>日志</td>
+<td>
+记录指定的值或消息
+
+</td>
+
+<td>
+
+```yaml
+- log: "Processing completed for item {{item_id}}"
+```
+
+</td>
+</tr>
+</table>
 
 #### 键值步骤
 
-6. **获取**：从键值存储中检索值。
-   ```yaml
-   - get: "user_preference"
-   ```
+<table>
+<tr>
+<td>姓名</td> <td>关于</td><td>句法</td>
+</tr>
+<tr>
+<td>得到</td>
+<td>
+从键值存储中检索值
 
-7. **设置**：为键值存储中的键分配一个值。
-   ```yaml
-   - set:
-       user_preference: "dark_mode"
-   ```
+</td>
+
+<td>
+
+```yaml
+- get: "user_preference"
+```
+
+</td>
+</tr>
+<tr>
+<td>放</td>
+<td>
+为键值存储中的键分配值
+
+</td>
+
+<td>
+
+```yaml
+- set:
+    user_preference: "dark_mode"
+```
+
+</td>
+</tr>
+</table>
 
 #### 迭代步骤
 
-8. **Foreach**：遍历集合并对每个项目执行步骤。
-   ```yaml
-   - foreach:
-       in: "data_list"
-       do:
-         - log: "Processing item {{_}}"
-   ```
+<table>
+<tr>
+<td>姓名</td> <td>关于</td><td>句法</td>
+</tr>
+<tr>
+<td>Foreach</td>
+<td>
+遍历集合并对每个项目执行步骤
 
-9. **Map-Reduce**：对集合进行映射并减少结果。
-   ```yaml
-   - map_reduce:
-       over: "numbers"
-       map:
-         - evaluate:
-             squared: "_ ** 2"
-       reduce: "sum(results)"
-   ```
+</td>
 
-10.**并行**：并行运行多个步骤。
-    ```yaml
-    - parallel:
-        - tool: web_search
-          arguments:
-            query: "AI news"
-        - tool: weather_check
-          arguments:
-            location: "New York"
-    ```
+<td>
+
+```yaml
+- foreach:
+    in: "data_list"
+    do:
+      - log: "Processing item {{_}}"
+```
+
+</td>
+</tr>
+<tr>
+<td>Map-Reduce</td>
+<td>
+对集合进行映射并减少结果
+
+</td>
+
+<td>
+
+```yaml
+- map_reduce:
+    over: "numbers"
+    map:
+      - evaluate:
+          squared: "_ ** 2"
+    reduce: "sum(results)"
+```
+
+</td>
+</tr>
+<tr>
+<td>平行线</td>
+<td>
+并行运行多个步骤
+
+</td>
+
+<td>
+
+```yaml
+- parallel:
+    - tool: web_search
+      arguments:
+        query: "AI news"
+    - tool: weather_check
+      arguments:
+        location: "New York"
+```
+
+</td>
+</tr>
+</table>
 
 #### 条件步骤
 
-11. **If-Else**：条件执行步骤。
-    ```yaml
-    - if: "score > 0.8"
-      then:
-        - log: "High score achieved"
-      else:
-        - log: "Score needs improvement"
-    ```
+<table>
+<tr>
+<td>姓名</td> <td>关于</td><td>句法</td>
+</tr>
+<tr>
+<td>如果-否则</td>
+<td>
+有条件地执行步骤
 
-12.**Switch**：根据多种条件执行步骤。
-    ```yaml
-    - switch:
-        - case: "category == 'A'"
-          then:
-            - log: "Category A processing"
-        - case: "category == 'B'"
-          then:
-            - log: "Category B processing"
-        - case: "_"  # Default case
-          then:
-            - log: "Unknown category"
-    ```
+</td>
+
+<td>
+
+```yaml
+- if: "score > 0.8"
+  then:
+    - log: "High score achieved"
+  else:
+    - log: "Score needs improvement"
+```
+
+</td>
+</tr>
+<tr>
+<td>转变</td>
+<td>
+根据多个条件执行步骤
+
+</td>
+
+<td>
+
+```yaml
+- switch:
+    - case: "category == 'A'"
+      then:
+        - log: "Category A processing"
+    - case: "category == 'B'"
+      then:
+        - log: "Category B processing"
+    - case: "_" # Default case
+      then:
+        - log: "Unknown category"
+```
+
+</td>
+</tr>
+</table>
 
 #### 其他控制流
 
-13. **睡眠**：暂停工作流一段指定的时间。
-    ```yaml
-    - sleep:
-        seconds: 30
-    ```
+<table>
+<tr>
+<td>姓名</td> <td>关于</td><td>句法</td>
+</tr>
+<tr>
+<td>睡觉</td>
+<td>
+暂停工作流一段指定的时间
 
-14. **返回**：从工作流返回一个值。
-    ```yaml
-    - return:
-        result: "Task completed successfully"
-    ```
+</td>
 
-15. **收益**：运行子工作流并等待其完成。
-    ```yaml
-    - yield:
-        workflow: "data_processing_subflow"
-        arguments:
-          input_data: "{{raw_data}}"
-    ```
+<td>
 
-16.**错误**：通过指定错误消息来处理错误。
-    ```yaml
-    - error: "Invalid input provided"
-    ```
+```yaml
+- sleep:
+    seconds: 30
+```
+
+</td>
+</tr>
+<tr>
+<td>返回</td>
+<td>
+从工作流返回值
+
+</td>
+
+<td>
+
+```yaml
+- return:
+    result: "Task completed successfully"
+```
+
+</td>
+</tr>
+<tr>
+<td>屈服</td>
+<td>
+运行子工作流并等待其完成
+
+</td>
+
+<td>
+
+```yaml
+- yield:
+    workflow: "data_processing_subflow"
+    arguments:
+      input_data: "{{raw_data}}"
+```
+
+</td>
+</tr>
+</tr>
+<tr>
+<td>错误</td>
+<td>
+通过指定错误消息来处理错误
+
+</td>
+
+<td>
+
+```yaml
+- error: "Invalid input provided"
+```
+
+</td>
+</tr>
+</table>
 
 每种步骤类型在构建复杂的 AI 工作流中都有特定的用途。此分类有助于理解 Julep 任务中可用的各种控制流程和操作。
-
 
 ## 工具类型
 
@@ -781,200 +937,249 @@ julep 中的工具可以是以下之一：
 
 这些是您可以为模型提供的函数签名，类似于 [openai] 的函数调用工作方式。例如：
 
-```yaml    
-    name: Example system tool task
-    description: List agents using system call
+```yaml
+name: Example system tool task
+description: List agents using system call
 
-    tools:
-    - name: send_notification
-      description: Send a notification to the user
-      type: function
-      function:
-        parameters:
-          type: object
-          properties:
-            text:
-              type: string
-              description: Content of the notification
+tools:
+  - name: send_notification
+    description: Send a notification to the user
+    type: function
+    function:
+      parameters:
+        type: object
+        properties:
+          text:
+            type: string
+            description: Content of the notification
 
-    main:
-    - tool: send_notification
-      arguments:
-        content: hi
+main:
+  - tool: send_notification
+    arguments:
+      content: hi
 ```
-  
+
 每当 julep 遇到_用户定义函数_时，它就会暂停，将控制权交还给客户端，并等待客户端运行函数调用并将结果返回给 julep。
 
 > [!提示]
 > **示例食谱**：[cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
 ### `系统` 工具
+
 内置工具可用于调用 julep API 本身，例如触发任务执行、附加到元数据字段等。
 “系统”工具内置于后端。它们会在需要时自动执行。它们不需要客户端的任何操作。
- 
-例如，
-  
-  ```yaml
-    name: Example system tool task
-    description: List agents using system call
 
-    tools:
-    - name: list_agents
-      description: List all agents
-      type: system
-      system:
-        resource: agent
-        operation: list
-    main:
-    - tool: list_agents
-      arguments:
-        limit: 10
-  ```
+例如，
+
+```yaml
+name: Example system tool task
+description: List agents using system call
+
+tools:
+  - name: list_agents
+    description: List all agents
+    type: system
+    system:
+      resource: agent
+      operation: list
+main:
+  - tool: list_agents
+    arguments:
+      limit: 10
+```
 
 > [!提示]
 > **示例食谱**：[cookbooks/10-Document_Management_and_Search.py​​](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py​​)
- 
+
 ### 内置“集成”
+
 Julep 带有许多内置集成（如下节所述）。`集成` 工具直接在 julep 后端执行。它们在运行时所需的任何其他参数都可以在代理/会话/用户的 `元数据` 字段中设置。
 
 > [!提示]
 > **示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 julep 后端附带来自以下提供商的集成第三方工具：
-- [composio](https://composio.dev) \*\*
-- [匿名](https://anon.com) \*\*
-- [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)。计划支持 _Github、Gitlab、Gmail、Jira、MultiOn、Slack_ 工具包。
 
-\*\* 由于 _composio_ 和 _anon_ 是第三方提供商，因此他们的工具需要设置帐户链接。
+- [合成](https://composio.dev)
+- [匿名](https://anon.com)
+- [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)
 
+计划支持_Github、Gitlab、Gmail、Jira、MultiOn、Slack_工具包。
 
-### 直接 `api_call`
+由于_composio_和_anon_是第三方提供商，因此他们的工具需要设置帐户链接。
+
+### 直接 `api_calls`
 
 julep 还可以在工作流执行期间直接以工具调用的形式进行 api 调用。与“集成”相同，其他运行时参数从“元数据”字段加载。
-  
+
 例如，
-  
-  ```yaml
-    name: Example api_call task
-    tools:
-    - type: api_call
-      name: hello
-      api_call:
-        method: GET
-        url: https://httpbin.org/get
-    main:
-    - tool: hello
-      arguments:
-        params:
-          test: _.input
-  ```
+
+```yaml
+name: Example api_call task
+tools:
+  - type: api_call
+    name: hello
+    api_call:
+      method: GET
+      url: https://httpbin.org/get
+main:
+  - tool: hello
+    arguments:
+      params:
+        test: _.input
+```
 
 ## 集成
 
 Julep 支持各种集成，可以扩展您的 AI 代理的功能。以下是可用集成及其支持的参数的列表：
 
-### 勇敢搜索
+<table>
+
+<tr>
+<td>勇敢搜索</td>
+<td>
 
 ```yaml
 setup:
-  api_key: string  # The API key for Brave Search
+  api_key: string # The API key for Brave Search
 
 arguments:
-  query: string  # The search query for searching with Brave
+  query: string # The search query for searching with Brave
 
 output:
-  result: string  # The result of the Brave Search
+  result: string # The result of the Brave Search
 ```
 
-> [!提示]
-> **示例食谱**：[cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+</td>
 
-### 浏览器基础
+<td>
+
+**示例食谱**：[cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+
+</td>
+</tr>
+<tr>
+<td>浏览器基础</td>
+<td>
 
 ```yaml
 setup:
-  api_key: string       # The API key for BrowserBase
-  project_id: string    # The project ID for BrowserBase
-  session_id: string    # (Optional) The session ID for BrowserBase
+  api_key: string # The API key for BrowserBase
+  project_id: string # The project ID for BrowserBase
+  session_id: string # (Optional) The session ID for BrowserBase
 
 arguments:
-  urls: list[string]    # The URLs for loading with BrowserBase
+  urls: list[string] # The URLs for loading with BrowserBase
 
 output:
-  documents: list       # The documents loaded from the URLs
+  documents: list # The documents loaded from the URLs
 ```
 
-＃＃＃ 电子邮件
+</td>
+
+</tr>
+<tr>
+<td>电子邮件</td>
+<td>
 
 ```yaml
 setup:
-  host: string      # The host of the email server
-  port: integer     # The port of the email server
-  user: string      # The username of the email server
-  password: string  # The password of the email server
+  host: string # The host of the email server
+  port: integer # The port of the email server
+  user: string # The username of the email server
+  password: string # The password of the email server
 
 arguments:
-  to: string        # The email address to send the email to
-  from: string      # The email address to send the email from
-  subject: string   # The subject of the email
-  body: string      # The body of the email
+  to: string # The email address to send the email to
+  from: string # The email address to send the email from
+  subject: string # The subject of the email
+  body: string # The body of the email
 
 output:
-  success: boolean  # Whether the email was sent successfully
+  success: boolean # Whether the email was sent successfully
 ```
 
-> [!提示]
-> **示例食谱**：[cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+</td>
 
-＃＃＃ 蜘蛛
+<td>
+
+**示例食谱**：[cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+
+</td>
+</tr>
+<tr>
+<td>蜘蛛</td>
+<td>
 
 ```yaml
 setup:
-  spider_api_key: string  # The API key for Spider
+  spider_api_key: string # The API key for Spider
 
 arguments:
-  url: string             # The URL for which to fetch data
-  mode: string            # The type of crawlers (default: "scrape")
-  params: dict            # (Optional) The parameters for the Spider API
+  url: string # The URL for which to fetch data
+  mode: string # The type of crawlers (default: "scrape")
+  params: dict # (Optional) The parameters for the Spider API
 
 output:
-  documents: list         # The documents returned from the spider
+  documents: list # The documents returned from the spider
 ```
 
-> [!提示]
-> **示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+</td>
 
-＃＃＃ 天气
+<td>
+
+**示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+</td>
+</tr>
+<tr>
+<td>天气</td>
+<td>
 
 ```yaml
 setup:
-  openweathermap_api_key: string  # The API key for OpenWeatherMap
+  openweathermap_api_key: string # The API key for OpenWeatherMap
 
 arguments:
-  location: string                # The location for which to fetch weather data
+  location: string # The location for which to fetch weather data
 
 output:
-  result: string                  # The weather data for the specified location
+  result: string # The weather data for the specified location
 ```
 
-> [!提示]
-> **示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+</td>
 
-维基百科
+<td>
+
+**示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+</td>
+</tr>
+</tr>
+<tr>
+<td>维基百科</td>
+<td>
 
 ```yaml
 arguments:
-  query: string           # The search query string
-  load_max_docs: integer  # Maximum number of documents to load (default: 2)
+  query: string # The search query string
+  load_max_docs: integer # Maximum number of documents to load (default: 2)
 
 output:
-  documents: list         # The documents returned from the Wikipedia search
+  documents: list # The documents returned from the Wikipedia search
 ```
 
-> [!提示]
-> **示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+</td>
 
-这些集成可用于您的任务中，以扩展您的 AI 代理的功能。有关如何在您的工作流程中使用这些集成的详细信息，请参阅我们的 [集成文档](https://docs.julep.ai/integrations)。
+<td>
+
+**示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+
+</td>
+</tr>
+</table>
+
+有关更多详细信息，请参阅我们的 [集成文档](https://docs.julep.ai/integrations)。
 
 其他功能
 
@@ -1042,9 +1247,11 @@ results = client.agents.docs.search(
 ## 本地快速启动
 
 **要求**：
+
 - 安装了最新的docker compose
 
 **步骤**：
+
 1. `git 克隆 https://github.com/julep-ai/julep.git`
 2. `cd julep`
 3. `docker 卷创建 cozo_backup`
@@ -1065,10 +1272,45 @@ API 参考
 - [任务 API](https://api.julep.ai/api/docs#tag/tasks)
 - [执行 API](https://api.julep.ai/api/docs#tag/executions)
 
+*****
 
-  <div align="center">
+## 为什么选择 Julep 而不是 LangChain？
+
+### 不同的用例
+
+可以将 LangChain 和 Julep 视为 AI 开发堆栈中具有不同重点的工具。
+
+LangChain 非常适合创建提示序列和管理与 LLM 的交互。它拥有庞大的生态系统，包含大量预构建的集成，如果您想快速启动和运行某些功能，这会非常方便。LangChain 非常适合涉及线性提示链和 API 调用的简单用例。
+
+另一方面，Julep 更侧重于构建持久的 AI 代理，这些代理可以在长期交互​​中保持上下文。当您需要涉及多步骤任务、条件逻辑以及在代理流程中直接与各种工具或 API 集成的复杂工作流时，它会大放异彩。它从头开始设计，以管理持久会话和复杂的工作流。
+
+如果您想构建一个需要执行以下操作的复杂 AI 助手，请使用 Julep：
+
+- 跟踪几天或几周内的用户互动。
+- 执行计划任务，例如发送每日摘要或监控数据源。
+- 根据之前的互动或存储的数据做出决策。
+- 作为其工作流程的一部分与多个外部服务进行交互。
+
+然后 Julep 提供支持所有这些的基础设施，而无需您从头开始构建。
+
+### 不同的外形尺寸
+
+Julep 是一个**平台**，其中包括用于描述工作流的语言、用于运行这些工作流的服务器以及用于与平台交互的 SDK。要使用 Julep 构建某些东西，您需要在“YAML”中编写工作流描述，然后在云中运行工作流。
+
+Julep 专为繁重、多步骤和长时间运行的工作流程而构建，并且工作流程的复杂程度没有限制。
+
+LangChain 是一个**库**，其中包含一些工具和一个用于构建线性提示和工具链的框架。为了使用 LangChain 构建某些东西，您通常需要编写 Python 代码来配置和运行要使用的模型链。
+
+对于涉及线性提示和 API 调用链的简单用例，LangChain 可能足够并且能够更快地实现。
+
+＃＃＃ 总之
+
+当您需要在无状态或短期环境中管理 LLM 交互和提示序列时，请使用 LangChain。
+
+当您需要一个具有高级工作流功能、持久会话和复杂任务编排的状态代理的强大框架时，请选择 Julep。
+
+<div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
     </a>
 </div>
-

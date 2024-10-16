@@ -1,18 +1,13 @@
 import base64
-from typing import Annotated, Any, Optional, TypedDict, Union
+from typing import Any, Optional, TypedDict, Union
 
 import httpx
 from beartype import beartype
-from pydantic import Field
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
-
-# from ..clients import integrations
-from ..common.protocol.tasks import StepContext
+from ..common.storage_handler import auto_blob_store
 from ..env import testing
-
-# from ..models.tools import get_tool_args_from_metadata
 
 
 class RequestArgs(TypedDict):
@@ -25,13 +20,14 @@ class RequestArgs(TypedDict):
     headers: Optional[dict[str, str]]
 
 
+@auto_blob_store
 @beartype
 async def execute_api_call(
     api_call: ApiCallDef,
     request_args: RequestArgs,
 ) -> Any:
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             arg_url = request_args.pop("url", None)
             arg_headers = request_args.pop("headers", None)
 
@@ -43,14 +39,20 @@ async def execute_api_call(
                 **request_args,
             )
 
+        response.raise_for_status()
         content_base64 = base64.b64encode(response.content).decode("ascii")
 
         response_dict = {
             "status_code": response.status_code,
             "headers": dict(response.headers),
             "content": content_base64,
-            "json": response.json(),
         }
+
+        try:
+            response_dict["json"] = response.json()
+        except BaseException as e:
+            response_dict["json"] = None
+            activity.logger.debug(f"Failed to parse JSON response: {e}")
 
         return response_dict
 

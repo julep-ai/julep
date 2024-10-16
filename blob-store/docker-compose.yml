@@ -22,7 +22,7 @@ services:
       # - 19333:19333  # master grpc port
       # - 18081:18080  # volume grpc port
       # - 18888:18888  # filer grpc port
-    command: "-filer -s3 -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0 -metricsPort=9321 -master.raftBootstrap=false -master.port=9333 -master.resumeState=true -volume.port=28080 -volume.index=leveldb -filer.port=8888 -s3.port=8333"
+    command: "-volume -volume.dir.idx /data -filer -s3 -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0 -metricsPort=9321 -master.raftBootstrap=false -master.port=9333 -volume.port=28080 -volume.index=leveldb -filer.port=8888 -s3.port=8333"
     healthcheck:
       test: [ "CMD", "wget", "-qSO", "-", "http://0.0.0.0:9333/cluster/healthz" ]
       interval: 60s
