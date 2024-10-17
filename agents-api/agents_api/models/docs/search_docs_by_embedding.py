@@ -47,8 +47,8 @@ def search_docs_by_embedding(
     owners: list[tuple[Literal["user", "agent"], UUID]],
     query_embedding: list[float],
     k: int = 3,
-    confidence: float = 0.7,
-    ef: int = 128,
+    confidence: float = 0.5,
+    ef: int = 32,
     mmr_lambda: float = 0.25,
     embedding_size: int = 1024,
 ) -> tuple[list[str], dict]:
