@@ -32,7 +32,9 @@ T = TypeVar("T")
     one=True,
     transform=lambda d: {
         **d,
-        "output": d["output"][OUTPUT_UNNEST_KEY] if OUTPUT_UNNEST_KEY in d["output"] else d["output"],
+        "output": d["output"][OUTPUT_UNNEST_KEY]
+        if OUTPUT_UNNEST_KEY in d["output"]
+        else d["output"],
     },
 )
 @cozo_query
