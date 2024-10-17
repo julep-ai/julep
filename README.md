@@ -961,7 +961,7 @@ main:
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP]
+> [!TIP] 
 > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
 ### `system` tools
@@ -988,14 +988,14 @@ main:
       limit: 10
 ```
 
-> [!TIP]
+> [!TIP] 
 > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
 ### Built-in `integrations`
 
 Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
 
-> [!TIP]
+> [!TIP] 
 > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 julep backend ships with integrated third party tools from the following providers:
