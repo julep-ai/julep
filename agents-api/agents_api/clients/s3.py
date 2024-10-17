@@ -71,7 +71,7 @@ def add_object(key: str, body: bytes, replace: bool = False) -> None:
     client.put_object(Bucket=blob_store_bucket, Key=key, Body=body)
 
 
-@lru_cache(maxsize=256 * 1024 // blob_store_cutoff_kb)  # 256mb in cache
+@lru_cache(maxsize=256 * 1024 // max(1, blob_store_cutoff_kb))  # 256mb in cache
 @beartype
 def get_object(key: str) -> bytes:
     client = get_s3_client()

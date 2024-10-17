@@ -1,31 +1,34 @@
-from dataclasses import dataclass
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, computed_field
-from pydantic_partial import create_partial_model
+from temporalio import workflow
 
-from ...autogen.openapi_model import (
-    Agent,
-    CreateTaskRequest,
-    CreateTransitionRequest,
-    Execution,
-    ExecutionStatus,
-    PartialTaskSpecDef,
-    PatchTaskRequest,
-    Session,
-    Task,
-    TaskSpec,
-    TaskSpecDef,
-    TaskToolDef,
-    Tool,
-    TransitionTarget,
-    TransitionType,
-    UpdateTaskRequest,
-    User,
-    Workflow,
-    WorkflowStep,
-)
+with workflow.unsafe.imports_passed_through():
+    from pydantic import BaseModel, Field, computed_field
+    from pydantic_partial import create_partial_model
+
+    from ...autogen.openapi_model import (
+        Agent,
+        CreateTaskRequest,
+        CreateTransitionRequest,
+        Execution,
+        ExecutionStatus,
+        PartialTaskSpecDef,
+        PatchTaskRequest,
+        Session,
+        Task,
+        TaskSpec,
+        TaskSpecDef,
+        TaskToolDef,
+        Tool,
+        TransitionTarget,
+        TransitionType,
+        UpdateTaskRequest,
+        User,
+        Workflow,
+        WorkflowStep,
+    )
+    from .remote import BaseRemoteModel, RemoteObject
 
 # TODO: Maybe we should use a library for this
 
@@ -136,9 +139,9 @@ class ExecutionInput(BaseModel):
     session: Session | None = None
 
 
-class StepContext(BaseModel):
-    execution_input: ExecutionInput
-    inputs: list[Any]
+class StepContext(BaseRemoteModel):
+    execution_input: ExecutionInput | RemoteObject
+    inputs: list[Any] | RemoteObject
     cursor: TransitionTarget
 
     @computed_field
@@ -214,11 +217,6 @@ class StepOutcome(BaseModel):
     error: str | None = None
     output: Any = None
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
-
-
-@dataclass
-class RemoteObject:
-    key: str
 
 
 def task_to_spec(
