@@ -4,16 +4,18 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
+    from pydantic import RootModel
+
     from ...activities import task_steps
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
+    from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
         ErrorWorkflowStep,
@@ -39,6 +41,7 @@ with workflow.unsafe.imports_passed_through():
         YieldStep,
     )
     from ...autogen.Tools import SystemDef
+    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         PartialTransition,
@@ -124,7 +127,7 @@ class TaskExecutionWorkflow:
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-        previous_inputs: list[Any] = [],
+        previous_inputs: RemoteList | None = None,
     ) -> Any:
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
@@ -132,7 +135,7 @@ class TaskExecutionWorkflow:
         )
 
         # 0. Prepare context
-        previous_inputs = previous_inputs or [execution_input.arguments]
+        previous_inputs = previous_inputs or RemoteList([execution_input.arguments])
 
         context = StepContext(
             execution_input=execution_input,
@@ -144,8 +147,10 @@ class TaskExecutionWorkflow:
 
         # ---
 
+        continued_as_new = workflow.info().continued_run_id is not None
+
         # 1. Transition to starting if not done yet
-        if context.is_first_step:
+        if context.is_first_step and not continued_as_new:
             await transition(
                 context,
                 type="init" if context.is_main else "init_branch",
@@ -189,6 +194,13 @@ class TaskExecutionWorkflow:
 
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
+
+        [outcome] = await workflow.execute_local_activity(
+            load_inputs_remote,
+            args=[[outcome]],
+            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            retry_policy=DEFAULT_RETRY_POLICY,
+        )
 
         match context.current_step, outcome:
             # Handle errors (activity returns None)
@@ -558,10 +570,20 @@ class TaskExecutionWorkflow:
             f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
         )
 
+        # Save the final output to the blob store
+        [final_output] = await workflow.execute_local_activity(
+            save_inputs_remote,
+            args=[[final_state.output]],
+            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            retry_policy=DEFAULT_RETRY_POLICY,
+        )
+
+        previous_inputs.append(final_output)
+
         # Continue as a child workflow
         return await continue_as_child(
             context.execution_input,
             start=final_state.next,
-            previous_inputs=previous_inputs + [final_state.output],
+            previous_inputs=previous_inputs,
             user_state=state.user_state,
         )
