@@ -1,3 +1,7 @@
+<a name="top"></a>
+<h1 align="center">
+  mistral.rs
+</h1>
 <sup>[English](README.md) | [中文翻译](README-CN.md) | [日本語翻訳](README-JA.md) | [French](README-FR.md) </sup>
 
 <div align="center" id="top">
@@ -1314,3 +1318,6 @@ Choose Julep when you need a robust framework for stateful agents with advanced 
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
     </a>
 </div>
+<p align="centre">
+  <a href="#top">⬆️ Back to Top</a>
+</p>
