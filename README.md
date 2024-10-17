@@ -1318,6 +1318,6 @@ Choose Julep when you need a robust framework for stateful agents with advanced 
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
     </a>
 </div>
-<p align="centre">
+<p align="center">
   <a href="#top">⬆️ Back to Top</a>
 </p>
