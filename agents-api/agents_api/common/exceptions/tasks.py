@@ -5,6 +5,7 @@ Temporal interceptors to prevent unnecessary retries of certain error types.
 """
 
 import asyncio
+from typing import cast
 
 import beartype
 import beartype.roar
@@ -121,12 +122,8 @@ def is_non_retryable_error(error: BaseException) -> bool:
 
     # Check for specific HTTP errors (status code == 429)
     if isinstance(error, httpx.HTTPStatusError):
-        if error.response.status_code in (
-            408,
-            429,
-            503,
-            504,
-        ):  # pytype: disable=attribute-error
+        error = cast(httpx.HTTPStatusError, error)
+        if error.response.status_code in (408, 429, 503, 504):
             return False
 
     # If we don't know about the error, we should not retry
