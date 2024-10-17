@@ -46,7 +46,7 @@ async def execute_system(
     context: StepContext,
     system: SystemDef,
 ) -> Any:
-    arguments = system.arguments
+    arguments = system.arguments or {}
     arguments["developer_id"] = context.execution_input.developer_id
 
     # Unbox all the arguments
