@@ -88,19 +88,19 @@ main:
 
 - if: "search_regex('weather', inputs[0].user_input)"
   then:
-    tool: weather_api
-    arguments:
-      location: "NEW YORK"
+    # tool: weather_api
+    # arguments:
+    #   location: "NEW YORK"
     prompt:
       - role: system
         content: >-            
           You are an advanced chat assistant. Here's a summary of the recent conversation:
           {{outputs[0].summarized_history}}
                                
-          The user mentioned weather. Here's the current weather information for NEW YORK
-          Incorporate this information into your response.
+          # The user mentioned weather. Here's the current weather information for NEW YORK
+          # Incorporate this information into your response.
                                
-          {{outputs[1]}}
+          # {{outputs[1]}}
       
           Now, respond to the user's latest input: {{inputs[0].user_input}}
   else:
