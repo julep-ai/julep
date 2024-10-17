@@ -14,17 +14,20 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         StepContext,
     )
+    from ...common.storage_handler import auto_blob_store_workflow
     from ...env import task_max_parallelism
 
 
+@auto_blob_store_workflow
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     info = workflow.info()
@@ -47,13 +50,14 @@ async def continue_as_child(
     )
 
 
+@auto_blob_store_workflow
 async def execute_switch_branch(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     switch: list,
     index: int,
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Switch step: Chose branch {index}")
@@ -77,6 +81,7 @@ async def execute_switch_branch(
     )
 
 
+@auto_blob_store_workflow
 async def execute_if_else_branch(
     *,
     context: StepContext,
@@ -84,7 +89,7 @@ async def execute_if_else_branch(
     then_branch: WorkflowStep,
     else_branch: WorkflowStep,
     condition: bool,
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"If-Else step: Condition evaluated to {condition}")
@@ -109,13 +114,14 @@ async def execute_if_else_branch(
     )
 
 
+@auto_blob_store_workflow
 async def execute_foreach_step(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     do_step: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
@@ -143,13 +149,14 @@ async def execute_foreach_step(
     return results
 
 
+@auto_blob_store_workflow
 async def execute_map_reduce_step(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
     reduce: str | None = None,
     initial: Any = [],
@@ -186,13 +193,14 @@ async def execute_map_reduce_step(
     return result
 
 
+@auto_blob_store_workflow
 async def execute_map_reduce_step_parallel(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
     initial: Any = [],
     reduce: str | None = None,
