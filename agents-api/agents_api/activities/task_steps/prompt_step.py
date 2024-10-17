@@ -1,5 +1,4 @@
 from beartype import beartype
-from litellm.types.utils import Function
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
@@ -114,13 +113,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         direction="desc",
     )
 
-    ### [Function(...), ApiCall(...), Integration(...)]
-    ### -> [{"type": "function", "function": {...}}, {"type": "api_call", "api_call": {...}}, {"type": "integration", "integration": {...}}]
-    ### -> [{"type": "function", "function": {...}}]
-    ### -> openai
-
-    # Format agent_tools for litellm
-    # COMMENT(oct-16): Format the tools for openai api here (api_call | integration | system) -> function
     formatted_agent_tools = [
         func_call for tool in agent_tools if (func_call := make_function_call(tool))
     ]
@@ -165,30 +157,10 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         response = choice.message.content
 
     if choice.finish_reason == "tool_calls":
-        choice.message.tool_calls = [
-            call if isinstance(tc.function, dict) else tc.function.name
-            for tc in choice.message.tool_calls
-            if (
-                call := (
-                    tools_mapping.get(
-                        tc.function["name"]
-                        if isinstance(tc.function, dict)
-                        else tc.function.name
-                    )
-                )
-            )
-        ]
-
-    ### response.choices[0].finish_reason == "tool_calls"
-    ### -> response.choices[0].message.tool_calls
-    ### -> [{"id": "call_abc", "name": "my_function", "arguments": "..."}, ...]
-    ###    (cross-reference with original agent_tools list to get the original tool)
-    ###
-    ### -> FunctionCall(...) | ApiCall(...) | IntegrationCall(...) | SystemCall(...)
-    ### -> set this on response.choices[0].tool_calls
-
-    # COMMENT(oct-16): Reference the original tool from tools passed to the activity
-    #                  if openai chooses to use a tool (finish_reason == "tool_calls")
+        tc = choice.message.tool_calls[0]
+        choice.message.tool_calls = tools_mapping.get(
+            tc.function["name"] if isinstance(tc.function, dict) else tc.function.name
+        )
 
     return StepOutcome(
         output=response.model_dump() if hasattr(response, "model_dump") else response,

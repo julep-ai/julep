@@ -119,6 +119,82 @@ GenericStep = RootModel[WorkflowStep]
 #       Probably can be implemented much more efficiently
 
 
+async def run_api_call(tool_call: dict, context: StepContext):
+    call = tool_call["api_call"]
+    tool_name = call["name"]
+    arguments = call["arguments"]
+    apicall_spec = next((t for t in context.tools if t.name == tool_name), None)
+
+    if apicall_spec is None:
+        raise ApplicationError(f"Integration {tool_name} not found")
+
+    api_call = ApiCallDef(
+        method=apicall_spec.spec["method"],
+        url=apicall_spec.spec["url"],
+        headers=apicall_spec.spec["headers"],
+        follow_redirects=apicall_spec.spec["follow_redirects"],
+    )
+
+    if "json_" in arguments:
+        arguments["json"] = arguments["json_"]
+        del arguments["json_"]
+
+    return await workflow.execute_activity(
+        execute_api_call,
+        args=[
+            api_call,
+            arguments,
+        ],
+        schedule_to_close_timeout=timedelta(seconds=30 if debug or testing else 600),
+    )
+
+
+async def run_integration_call(tool_call: dict, context: StepContext):
+    call = tool_call["integration"]
+    tool_name = call["name"]
+    arguments = call["arguments"]
+    integration_spec = next((t for t in context.tools if t.name == tool_name), None)
+
+    if integration_spec is None:
+        raise ApplicationError(f"Integration {tool_name} not found")
+    
+    # FIXME: Refactor this
+    # Tools that are not defined in the task spec have a different format
+    if isinstance(integration_spec, TaskToolDef):
+        provider = integration_spec.spec["provider"]
+        setup = integration_spec.spec["setup"]
+        method = integration_spec.spec["method"]
+    else:
+        provider = integration_spec.integration.provider
+        setup = integration_spec.integration.setup.model_dump()
+        method = integration_spec.integration.method
+
+    integration = BaseIntegrationDef(
+        provider=provider,
+        setup=setup,
+        method=method,
+        arguments=arguments,
+    )
+
+    return await workflow.execute_activity(
+        execute_integration,
+        args=[context, tool_name, integration, arguments],
+        schedule_to_close_timeout=timedelta(seconds=30 if debug or testing else 600),
+        retry_policy=DEFAULT_RETRY_POLICY,
+    )
+
+
+async def run_system_call(tool_call: dict, context: StepContext):
+    call = tool_call.get("system")
+
+    system_call = SystemDef(**call)
+    return await workflow.execute_activity(
+        execute_system,
+        args=[context, system_call],
+        schedule_to_close_timeout=timedelta(seconds=30 if debug or testing else 600),
+    )
+
+
 # Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
@@ -395,26 +471,23 @@ class TaskExecutionWorkflow:
                 message = response["choices"][0]["message"]
                 tool_calls_input = message["tool_calls"]
 
-                ### COMMENT(oct-16): do a match-case on tool_calls_input.type
-                ### -> FunctionCall(...), ApiCall(...), IntegrationCall(...), SystemCall(...)
-                ### -> if api_call:
-                ###     => execute_api_call(api_call)
-                ### -> if integration_call:
-                ###     => execute_integration(integration_call)
-                ### -> if system_call:
-                ###     => execute_system(system_call)
-                ### -> else:
-                ###     => wait for input
-
-                # Enter a wait-for-input step to ask the developer to run the tool calls
-                tool_calls_results = await workflow.execute_activity(
-                    task_steps.raise_complete_async,
-                    args=[context, tool_calls_input],
-                    schedule_to_close_timeout=timedelta(days=31),
-                    retry_policy=DEFAULT_RETRY_POLICY,
-                )
-
-                ### COMMENT(oct-16): Continue as usual. Feed the tool call results back to the model
+                if tool_calls_input.get("api_call"):
+                    tool_calls_results = await run_api_call(tool_calls_input, context)
+                elif tool_calls_input.get("integration"):
+                    tool_calls_results = await run_integration_call(
+                        tool_calls_input, context
+                    )
+                elif tool_calls_input.get("system"):
+                    tool_calls_results = await run_system_call(
+                        tool_calls_input, context
+                    )
+                else:
+                    tool_calls_results = await workflow.execute_activity(
+                        task_steps.raise_complete_async,
+                        args=[context, tool_calls_input],
+                        schedule_to_close_timeout=timedelta(days=31),
+                        retry_policy=DEFAULT_RETRY_POLICY,
+                    )
 
                 # Feed the tool call results back to the model
                 context.current_step.prompt.append(message)
@@ -466,96 +539,19 @@ class TaskExecutionWorkflow:
             case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
                 "type"
             ] == "integration":
-                call = tool_call["integration"]
-                tool_name = call["name"]
-                arguments = call["arguments"]
-                integration_spec = next(
-                    (t for t in context.tools if t.name == tool_name), None
-                )
-
-                if integration_spec is None:
-                    raise ApplicationError(f"Integration {tool_name} not found")
-
-                # FIXME: Refactor this
-                # Tools that are not defined in the task spec have a different format
-                if isinstance(integration_spec, TaskToolDef):
-                    provider = integration_spec.spec["provider"]
-                    setup = integration_spec.spec["setup"]
-                    method = integration_spec.spec["method"]
-                else:
-                    provider = integration_spec.integration.provider
-                    setup = integration_spec.integration.setup.model_dump()
-                    method = integration_spec.integration.method
-
-                integration = BaseIntegrationDef(
-                    provider=provider,
-                    setup=setup,
-                    method=method,
-                    arguments=arguments,
-                )
-
-                tool_call_response = await workflow.execute_activity(
-                    execute_integration,
-                    args=[context, tool_name, integration, arguments],
-                    schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
-                    ),
-                    retry_policy=DEFAULT_RETRY_POLICY,
-                )
-
+                tool_call_response = await run_integration_call(tool_call, context)
                 state = PartialTransition(output=tool_call_response)
 
             case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
                 "type"
             ] == "api_call":
-                call = tool_call["api_call"]
-                tool_name = call["name"]
-                arguments = call["arguments"]
-                apicall_spec = next(
-                    (t for t in context.tools if t.name == tool_name), None
-                )
-
-                if apicall_spec is None:
-                    raise ApplicationError(f"Integration {tool_name} not found")
-
-                api_call = ApiCallDef(
-                    method=apicall_spec.spec["method"],
-                    url=apicall_spec.spec["url"],
-                    headers=apicall_spec.spec["headers"],
-                    follow_redirects=apicall_spec.spec["follow_redirects"],
-                )
-
-                if "json_" in arguments:
-                    arguments["json"] = arguments["json_"]
-                    del arguments["json_"]
-
-                # Execute the API call using the `execute_api_call` function
-                tool_call_response = await workflow.execute_activity(
-                    execute_api_call,
-                    args=[
-                        api_call,
-                        arguments,
-                    ],
-                    schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
-                    ),
-                )
-
+                tool_call_response = await run_api_call(tool_call, context)
                 state = PartialTransition(output=tool_call_response)
 
             case ToolCallStep(), StepOutcome(output=tool_call) if tool_call[
                 "type"
             ] == "system":
-                call = tool_call.get("system")
-
-                system_call = SystemDef(**call)
-                tool_call_response = await workflow.execute_activity(
-                    execute_system,
-                    args=[context, system_call],
-                    schedule_to_close_timeout=timedelta(
-                        seconds=30 if debug or testing else 600
-                    ),
-                )
+                tool_call_response = await run_system_call(tool_call, context)
 
                 state = PartialTransition(output=tool_call_response)
 
