@@ -6,10 +6,12 @@ from temporalio import activity
 from ..autogen.openapi_model import IntegrationDef
 from ..clients import integrations
 from ..common.protocol.tasks import StepContext
+from ..common.storage_handler import auto_blob_store
 from ..env import testing
 from ..models.tools import get_tool_args_from_metadata
 
 
+@auto_blob_store
 @beartype
 async def execute_integration(
     context: StepContext,

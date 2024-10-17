@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from ...autogen.openapi_model import PatchUserRequest, ResourceUpdatedResponse
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -50,6 +51,7 @@ T = TypeVar("T")
     _kind="inserted",
 )
 @cozo_query
+@increase_counter("patch_user")
 @beartype
 def patch_user(
     *,

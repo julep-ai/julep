@@ -5,11 +5,13 @@ from temporalio import activity
 
 from ...activities.utils import simple_eval_dict
 from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 
 
 # TODO: We should use this step to signal to the parent workflow and set the value on the workflow context
 # SCRUM-2
+@auto_blob_store
 @beartype
 async def set_value_step(
     context: StepContext,

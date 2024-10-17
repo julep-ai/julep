@@ -6,11 +6,8 @@ from beartype import beartype
 from temporalio import activity
 
 from ..autogen.openapi_model import ApiCallDef
-
-# from ..clients import integrations
+from ..common.storage_handler import auto_blob_store
 from ..env import testing
-
-# from ..models.tools import get_tool_args_from_metadata
 
 
 class RequestArgs(TypedDict):
@@ -23,6 +20,7 @@ class RequestArgs(TypedDict):
     headers: Optional[dict[str, str]]
 
 
+@auto_blob_store
 @beartype
 async def execute_api_call(
     api_call: ApiCallDef,

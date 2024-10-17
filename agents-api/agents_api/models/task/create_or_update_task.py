@@ -18,6 +18,7 @@ from ...autogen.openapi_model import (
 from ...common.protocol.tasks import task_to_spec
 from ...common.utils.cozo import cozo_process_mutate_data
 from ...common.utils.datetime import utcnow
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -49,6 +50,7 @@ T = TypeVar("T")
     },
 )
 @cozo_query
+@increase_counter("create_or_update_task")
 @beartype
 def create_or_update_task(
     *,
