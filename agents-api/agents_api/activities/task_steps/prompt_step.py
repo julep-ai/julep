@@ -2,7 +2,7 @@ from beartype import beartype
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from ...autogen.Tools import ApiCallDef, Tool
+from ...autogen.Tools import Tool
 from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
@@ -33,44 +33,120 @@ def make_function_call(tool: Tool) -> dict | None:
                     "name": tool.name,
                     "description": tool.description,
                     "parameters": {
-                        k.rstrip("_"): getattr(tool.api_call, k)
-                        for k in ApiCallDef.model_fields.keys()
+                        "type": "object",
+                        "properties": {
+                            "method": {
+                                "type": "string",
+                                "description": "The HTTP method to use",
+                            },
+                            "url": {
+                                "type": "string",
+                                "description": "The URL to call",
+                            },
+                            "headers": {
+                                "type": "object",
+                                "description": "The headers to send with the request",
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "The content as base64 to send with the request",
+                            },
+                            "data": {
+                                "type": "object",
+                                "description": "The data to send as form data",
+                            },
+                            "json": {
+                                "type": "object",
+                                "description": "JSON body to send with the request",
+                            },
+                            "cookies": {
+                                "type": "object",
+                                "description": "Cookies",
+                            },
+                            "params": {
+                                "type": "object",
+                                "description": "The parameters to send with the request",
+                            },
+                            "follow_redirects": {
+                                "type": "bool",
+                                "description": "Follow redirects",
+                            },
+                            "timeout": {
+                                "type": "int",
+                                "description": "The timeout for the request",
+                            },
+                        },
+                        "required": ["method", "url"],
+                        "additionalProperties": False,
                     },
                 },
             }
         )
     elif tool.system:
-        parameters = {
-            "resource_id": tool.system.resource_id,
-            "subresource": tool.system.subresource,
-        }
-        if tool.system.arguments:
-            parameters.update({"arguments": tool.system.arguments})
-
         result.update(
             {
                 "function": {
                     "name": f"{tool.system.resource}.{tool.system.operation}",
                     "description": f"{tool.system.operation} a {tool.system.resource}",
-                    "parameters": parameters,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "resource": {
+                                "type": "string",
+                                "description": "Resource is the name of the resource to use, one of: agent, user, task, execution, doc, session, job",
+                            },
+                            "operation": {
+                                "type": "string",
+                                "description": "Operation is the name of the operation to perform, one of: create, update, patch, create_or_update, embed, change_status, search, chat, history, delete, get, list",
+                            },
+                            "resource_id": {
+                                "type": "string",
+                                "description": "Resource id",
+                            },
+                            "subresource": {
+                                "type": "string",
+                                "description": "Sub-resource type, one of: tool, doc, execution, transition",
+                            },
+                            "arguments": {
+                                "type": "object",
+                                "description": "The arguments to pre-apply to the system call",
+                            },
+                        },
+                        "required": ["resource", "operation"],
+                        "additionalProperties": False,
+                    },
                 }
             }
         )
     elif tool.integration:
-        parameters = {}
-        if tool.integration.method:
-            parameters.update({"method": tool.integration.method})
-        if tool.integration.setup:
-            parameters.update({"setup": tool.integration.setup})
-        if tool.integration.arguments:
-            parameters.update({"arguments": tool.integration.arguments})
-
         result.update(
             {
                 "function": {
                     "name": tool.name,
                     "description": f"{tool.integration.provider} integration",
-                    "parameters": parameters,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "provider": {
+                                "type": "string",
+                                "description": "The provider of the integration",
+                            },
+                            "method": {
+                                "type": "string",
+                                "description": "The specific method of the integration to call",
+                            },
+                            "setup": {
+                                "type": "object",
+                                "description": "The setup parameters the integration accepts",
+                            },
+                            "arguments": {
+                                "type": "object",
+                                "description": "The arguments to pre-apply to the integration call",
+                            },
+                        },
+                        "required": ["provider"],
+                        "additionalProperties": False,
+                    },
                 }
             }
         )
