@@ -109,7 +109,8 @@ async def execute_system(
                         search_params = HybridDocSearchRequest(
                             text=arguments.pop("text"),
                             vector=arguments.pop("vector"),
-                            confidence=arguments.pop("confidence", 0.7),
+                            alpha=arguments.pop("alpha", 0.75),
+                            confidence=arguments.pop("confidence", 0.5),
                             limit=arguments.get("limit", 10),
                         )
 
