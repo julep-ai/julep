@@ -33,7 +33,7 @@ use_blob_store_for_temporal: bool = env.bool(
 )
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")
-blob_store_cutoff_kb: int = env.int("BLOB_STORE_CUTOFF_KB", default=1024)
+blob_store_cutoff_kb: int = env.int("BLOB_STORE_CUTOFF_KB", default=64)
 s3_endpoint: str = env.str("S3_ENDPOINT", default="http://seaweedfs:8333")
 s3_access_key: str | None = env.str("S3_ACCESS_KEY", default=None)
 s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)

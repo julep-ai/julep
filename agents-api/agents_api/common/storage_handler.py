@@ -1,18 +1,22 @@
 import inspect
 import sys
+from datetime import timedelta
 from functools import wraps
 from typing import Any, Callable
 
-from ..clients import s3
-from ..common.protocol.tasks import RemoteObject
-from ..env import blob_store_cutoff_kb, use_blob_store_for_temporal
-from ..worker.codec import deserialize, serialize
+from temporalio import workflow
 
-if use_blob_store_for_temporal:
-    s3.setup()
+from ..activities.sync_items_remote import load_inputs_remote
+from ..clients import s3
+from ..common.protocol.remote import BaseRemoteModel, RemoteList, RemoteObject
+from ..common.retry_policies import DEFAULT_RETRY_POLICY
+from ..env import blob_store_cutoff_kb, debug, testing, use_blob_store_for_temporal
+from ..worker.codec import deserialize, serialize
 
 
 def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
+    s3.setup()
+
     serialized = serialize(x)
     data_size = sys.getsizeof(serialized)
 
@@ -23,7 +27,9 @@ def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
     return x
 
 
-def load_from_blob_store_if_remote(x: Any) -> Any:
+def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
+    s3.setup()
+
     if isinstance(x, RemoteObject):
         fetched = s3.get_object(x.key)
         return deserialize(fetched)
@@ -45,6 +51,12 @@ def auto_blob_store(f: Callable) -> Callable:
 
         return new_args, new_kwargs
 
+    def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
+        if isinstance(x, (BaseRemoteModel, RemoteList)):
+            x.unload_all()
+
+        return store_in_blob_store_if_large(x)
+
     if inspect.iscoroutinefunction(f):
 
         @wraps(f)
@@ -52,7 +64,7 @@ def auto_blob_store(f: Callable) -> Callable:
             new_args, new_kwargs = load_args(args, kwargs)
             output = await f(*new_args, **new_kwargs)
 
-            return store_in_blob_store_if_large(output)
+            return unload_return_value(output)
 
         return async_wrapper if use_blob_store_for_temporal else f
 
@@ -63,6 +75,29 @@ def auto_blob_store(f: Callable) -> Callable:
             new_args, new_kwargs = load_args(args, kwargs)
             output = f(*new_args, **new_kwargs)
 
-            return store_in_blob_store_if_large(output)
+            return unload_return_value(output)
 
         return wrapper if use_blob_store_for_temporal else f
+
+
+def auto_blob_store_workflow(f: Callable) -> Callable:
+    @wraps(f)
+    async def wrapper(*args, **kwargs) -> Any:
+        keys = kwargs.keys()
+        values = [kwargs[k] for k in keys]
+
+        loaded = await workflow.execute_local_activity(
+            load_inputs_remote,
+            args=[[*args, *values]],
+            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            retry_policy=DEFAULT_RETRY_POLICY,
+        )
+
+        loaded_args = loaded[: len(args)]
+        loaded_kwargs = dict(zip(keys, loaded[len(args) :]))
+
+        result = await f(*loaded_args, **loaded_kwargs)
+
+        return result
+
+    return wrapper
