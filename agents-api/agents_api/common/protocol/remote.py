@@ -75,6 +75,18 @@ class BaseRemoteModel(BaseModel):
             cache = self.__dict__.get("_remote_cache", {})
             cache.pop(name, None)
 
+    def load_all(self) -> None:
+        for name in self.model_fields_set:
+            self.__getattribute__(name)
+
+    def model_dump(
+        self, *args, include_remote: bool = False, **kwargs
+    ) -> dict[str, Any]:
+        if include_remote:
+            self.load_all()
+
+        return super().model_dump(*args, **kwargs)
+
     def unload_attribute(self, name: str) -> None:
         if name in self._remote_cache:
             data = self._remote_cache.pop(name)
