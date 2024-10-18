@@ -1,5 +1,6 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
+import re
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
@@ -64,7 +65,9 @@ def search_docs_by_text(
 
     # Need to use NEAR/3($query) to search for arbitrary text within 3 words of each other
     # See: https://docs.cozodb.org/en/latest/vector.html#full-text-search-fts
-    fts_queries = paragraph_to_custom_queries(query)
+    fts_queries = paragraph_to_custom_queries(query) or [
+        re.sub(r"[^\w\s\-_]+", "", query)
+    ]
 
     # Construct the datalog query for searching document snippets
     search_query = f"""
