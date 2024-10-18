@@ -41,8 +41,8 @@ from ..models.user.update_user import update_user as update_user_query
 from ..routers.docs.create_doc import create_agent_doc, create_user_doc
 from ..routers.docs.search_docs import search_agent_docs, search_user_docs
 
-
 # FIXME: This is a total mess. Should be refactored.
+
 
 @auto_blob_store
 @beartype
