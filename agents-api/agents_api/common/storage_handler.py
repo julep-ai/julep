@@ -51,8 +51,8 @@ def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
 def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callable:
     def auto_blob_store_decorator(f: Callable) -> Callable:
         def load_args(
-            args: list[Any], kwargs: dict[str, Any]
-        ) -> tuple[list[Any], dict[str, Any]]:
+            args: list | tuple, kwargs: dict[str, Any]
+        ) -> tuple[list | tuple, dict[str, Any]]:
             new_args = [load_from_blob_store_if_remote(arg) for arg in args]
             new_kwargs = {
                 k: load_from_blob_store_if_remote(v) for k, v in kwargs.items()
