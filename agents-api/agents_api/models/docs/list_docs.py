@@ -34,7 +34,11 @@ T = TypeVar("T")
     Doc,
     transform=lambda d: {
         "content": [s[1] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
-        "embeddings": [s[2] for s in sorted(d["snippet_data"], key=lambda x: x[0])],
+        "embeddings": [
+            s[2]
+            for s in sorted(d["snippet_data"], key=lambda x: x[0])
+            if s[2] is not None
+        ],
         **d,
     },
 )

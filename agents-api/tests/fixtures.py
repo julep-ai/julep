@@ -1,3 +1,4 @@
+import time
 from uuid import UUID, uuid4
 
 from cozo_migrate.api import apply, init
@@ -176,6 +177,8 @@ def test_doc(
         data=CreateDocRequest(title="Hello", content=["World"]),
         client=client,
     )
+
+    time.sleep(0.1)
 
     yield doc
 

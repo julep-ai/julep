@@ -33,8 +33,8 @@ T = TypeVar("T")
     transform=lambda d: {
         **d,
         "output": d["output"][OUTPUT_UNNEST_KEY]
-        if OUTPUT_UNNEST_KEY in d["output"]
-        else d["output"],
+        if isinstance(d.get("output"), dict) and OUTPUT_UNNEST_KEY in d["output"]
+        else d.get("output"),
     },
 )
 @cozo_query
@@ -58,6 +58,7 @@ def list_executions(
         task_id,
         status,
         input,
+        output,
         session_id,
         metadata,
         created_at,
@@ -68,6 +69,7 @@ def list_executions(
             execution_id: id,
             status,
             input,
+            output,
             session_id,
             metadata,
             created_at,

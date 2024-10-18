@@ -23,7 +23,6 @@ async def create_task(
 ) -> ResourceCreatedResponse:
     # TODO: Do thorough validation of the task spec
     # SCRUM-10
-    # TODO: Validate the jinja templates
 
     # Validate the input schema
     try:

@@ -15,6 +15,9 @@ from ..worker.codec import deserialize, serialize
 
 
 def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
+    if not use_blob_store_for_temporal:
+        return x
+
     s3.setup()
 
     serialized = serialize(x)
@@ -28,6 +31,9 @@ def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
 
 
 def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
+    if not use_blob_store_for_temporal:
+        return x
+
     s3.setup()
 
     if isinstance(x, RemoteObject):
@@ -45,8 +51,8 @@ def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
 def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callable:
     def auto_blob_store_decorator(f: Callable) -> Callable:
         def load_args(
-            args: list[Any], kwargs: dict[str, Any]
-        ) -> tuple[list[Any], dict[str, Any]]:
+            args: list | tuple, kwargs: dict[str, Any]
+        ) -> tuple[list | tuple, dict[str, Any]]:
             new_args = [load_from_blob_store_if_remote(arg) for arg in args]
             new_kwargs = {
                 k: load_from_blob_store_if_remote(v) for k, v in kwargs.items()
@@ -143,4 +149,4 @@ def auto_blob_store_workflow(f: Callable) -> Callable:
 
         return result
 
-    return wrapper
+    return wrapper if use_blob_store_for_temporal else f

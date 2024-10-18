@@ -8,7 +8,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ..common.utils.cozo import uuid_int_list_to_uuid4
-from ..env import debug, do_verify_developer, do_verify_developer_owns_resource
+from ..env import do_verify_developer, do_verify_developer_owns_resource
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -185,8 +185,8 @@ def make_cozo_json_query(fields):
 
 def cozo_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
-    debug: bool | None = debug,
-    only_on_error: bool = True,
+    debug: bool | None = None,
+    only_on_error: bool = False,
 ):
     def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """

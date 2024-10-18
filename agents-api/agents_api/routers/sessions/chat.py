@@ -168,7 +168,9 @@ async def chat(
     )
 
     total_tokens_per_user.labels(str(developer.id)).inc(
-        amount=chat_response.usage.total_tokens or 0
+        amount=chat_response.usage.total_tokens
+        if chat_response.usage is not None
+        else 0
     )
 
     return chat_response

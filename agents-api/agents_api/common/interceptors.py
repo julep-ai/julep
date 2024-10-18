@@ -6,6 +6,7 @@ certain types of errors that are known to be non-retryable.
 
 from typing import Optional, Type
 
+from temporalio.activity import _CompleteAsyncError as CompleteAsyncError
 from temporalio.exceptions import ApplicationError, FailureError, TemporalError
 from temporalio.service import RPCError
 from temporalio.worker import (
@@ -42,6 +43,7 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
             ReadOnlyContextError,
             NondeterminismError,
             RPCError,
+            CompleteAsyncError,
             TemporalError,
             FailureError,
         ):
@@ -73,6 +75,7 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
             ReadOnlyContextError,
             NondeterminismError,
             RPCError,
+            CompleteAsyncError,
             TemporalError,
             FailureError,
         ):

@@ -1,6 +1,6 @@
 # Tests for entry queries
 
-from ward import skip, test
+from ward import test
 
 from agents_api.autogen.openapi_model import CreateDocRequest
 from agents_api.models.docs.create_doc import create_doc
@@ -41,7 +41,6 @@ def _(
     )
 
 
-@skip("Execute embedding workflow to fix this test and other docs tests")
 @test("model: get docs")
 def _(client=cozo_client, doc=test_doc, developer_id=test_developer_id):
     get_doc(
@@ -79,6 +78,7 @@ def _(
         owner_type="agent",
         owner_id=agent.id,
         client=client,
+        include_without_embeddings=True,
     )
 
     assert len(result) >= 1

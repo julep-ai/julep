@@ -33,7 +33,7 @@ T = TypeVar("T")
     transform=lambda d: {
         **d,
         "output": d["output"][OUTPUT_UNNEST_KEY]
-        if OUTPUT_UNNEST_KEY in d["output"]
+        if isinstance(d["output"], dict) and OUTPUT_UNNEST_KEY in d["output"]
         else d["output"],
     },
 )

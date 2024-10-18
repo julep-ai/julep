@@ -29,10 +29,6 @@ async def create_or_update_task(
     # TODO: Do thorough validation of the task spec
     # SCRUM-10
 
-    # FIXME: There is also some subtle bug here that prevents us from
-    #        starting executions from tasks created via this endpoint
-    # SCRUM-9
-
     # Validate the input schema
     try:
         if data.input_schema is not None:
