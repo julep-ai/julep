@@ -1,7 +1,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
-from temporalio import workflow
+from temporalio import activity, workflow
 
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel, Field, computed_field
@@ -28,6 +28,7 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...common.storage_handler import load_from_blob_store_if_remote
     from .remote import BaseRemoteModel, RemoteObject
 
 # TODO: Maybe we should use a library for this
@@ -199,11 +200,14 @@ class StepContext(BaseRemoteModel):
         return self.cursor.workflow == "main"
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        current_input = self.current_input
+        if activity.in_activity():
+            current_input = load_from_blob_store_if_remote(current_input)
+
         dump = super().model_dump(*args, **kwargs)
 
         # Merge execution inputs into the dump dict
         execution_input: dict = dump.pop("execution_input")
-        current_input: Any = dump.pop("current_input")
         dump = {
             **dump,
             **execution_input,
