@@ -7,6 +7,7 @@ from ...clients import (
     litellm,  # We dont directly import `acompletion` so we can mock it
 )
 from ...common.protocol.tasks import StepContext, StepOutcome
+from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...models.tools.list_tools import list_tools
 
@@ -28,6 +29,7 @@ def format_agent_tool(tool: Tool) -> dict:
 
 
 @activity.defn
+@auto_blob_store
 @beartype
 async def prompt_step(context: StepContext) -> StepOutcome:
     # Get context data

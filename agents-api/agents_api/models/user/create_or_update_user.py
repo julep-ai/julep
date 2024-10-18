@@ -12,6 +12,7 @@ from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import CreateOrUpdateUserRequest, User
+from ...metrics.counters import increase_counter
 from ..utils import (
     cozo_query,
     partialclass,
@@ -45,6 +46,7 @@ T = TypeVar("T")
 )
 @wrap_in_class(User, one=True, transform=lambda d: {"id": UUID(d.pop("user_id")), **d})
 @cozo_query
+@increase_counter("create_or_update_user")
 @beartype
 def create_or_update_user(
     *,

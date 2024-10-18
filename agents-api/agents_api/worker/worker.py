@@ -21,7 +21,9 @@ def create_worker(client: Client) -> Any:
     from ..activities.mem_mgmt import mem_mgmt
     from ..activities.mem_rating import mem_rating
     from ..activities.summarization import summarization
+    from ..activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ..activities.truncation import truncation
+    from ..common.interceptors import CustomInterceptor
     from ..env import (
         temporal_task_queue,
     )
@@ -60,7 +62,10 @@ def create_worker(client: Client) -> Any:
             mem_rating,
             summarization,
             truncation,
+            save_inputs_remote,
+            load_inputs_remote,
         ],
+        interceptors=[CustomInterceptor()],
     )
 
     return worker

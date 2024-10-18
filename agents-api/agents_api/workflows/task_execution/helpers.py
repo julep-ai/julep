@@ -14,39 +14,51 @@ with workflow.unsafe.imports_passed_through():
         Workflow,
         WorkflowStep,
     )
+    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         StepContext,
     )
+    from ...common.storage_handler import auto_blob_store_workflow
     from ...env import task_max_parallelism
 
 
+@auto_blob_store_workflow
 async def continue_as_child(
     execution_input: ExecutionInput,
     start: TransitionTarget,
-    previous_inputs: list[Any],
+    previous_inputs: RemoteList | list[Any],
     user_state: dict[str, Any] = {},
 ) -> Any:
-    return await workflow.execute_child_workflow(
-        "TaskExecutionWorkflow",
+    info = workflow.info()
+
+    if info.is_continue_as_new_suggested():
+        run = workflow.continue_as_new
+    else:
+        run = lambda *args, **kwargs: workflow.execute_child_workflow(  # noqa: E731
+            info.workflow_type, *args, **kwargs
+        )
+
+    return await run(
         args=[
             execution_input,
             start,
             previous_inputs,
-            user_state,
         ],
         retry_policy=DEFAULT_RETRY_POLICY,
+        memo=workflow.memo() | user_state,
     )
 
 
+@auto_blob_store_workflow
 async def execute_switch_branch(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     switch: list,
     index: int,
-    previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    previous_inputs: RemoteList | list[Any],
+    user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Switch step: Chose branch {index}")
     chosen_branch = switch[index]
@@ -69,6 +81,7 @@ async def execute_switch_branch(
     )
 
 
+@auto_blob_store_workflow
 async def execute_if_else_branch(
     *,
     context: StepContext,
@@ -76,8 +89,8 @@ async def execute_if_else_branch(
     then_branch: WorkflowStep,
     else_branch: WorkflowStep,
     condition: bool,
-    previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    previous_inputs: RemoteList | list[Any],
+    user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"If-Else step: Condition evaluated to {condition}")
     chosen_branch = then_branch if condition else else_branch
@@ -101,14 +114,15 @@ async def execute_if_else_branch(
     )
 
 
+@auto_blob_store_workflow
 async def execute_foreach_step(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     do_step: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    previous_inputs: RemoteList | list[Any],
+    user_state: dict[str, Any] = {},
 ) -> Any:
     workflow.logger.info(f"Foreach step: Iterating over {len(items)} items")
     results = []
@@ -135,14 +149,15 @@ async def execute_foreach_step(
     return results
 
 
+@auto_blob_store_workflow
 async def execute_map_reduce_step(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    previous_inputs: RemoteList | list[Any],
+    user_state: dict[str, Any] = {},
     reduce: str | None = None,
     initial: Any = [],
 ) -> Any:
@@ -178,14 +193,15 @@ async def execute_map_reduce_step(
     return result
 
 
+@auto_blob_store_workflow
 async def execute_map_reduce_step_parallel(
     *,
     context: StepContext,
     execution_input: ExecutionInput,
     map_defn: WorkflowStep,
     items: list[Any],
-    previous_inputs: list[Any],
-    user_state: dict[str, Any],
+    previous_inputs: RemoteList | list[Any],
+    user_state: dict[str, Any] = {},
     initial: Any = [],
     reduce: str | None = None,
     parallelism: int = task_max_parallelism,

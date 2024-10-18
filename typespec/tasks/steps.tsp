@@ -41,6 +41,10 @@ model BaseWorkflowStep<T extends WorkflowStepKind> {
     kind_: T;
 }
 
+alias SequentialWorkflowStep =
+    | WaitForInputStep
+    | MappableWorkflowStep;
+
 alias MappableWorkflowStep =
     | EvaluateStep
     | ToolCallStep
@@ -55,7 +59,6 @@ alias NonConditionalWorkflowStep =
     | ReturnStep
     | SleepStep
     | ErrorWorkflowStep
-    | YieldStep
     | WaitForInputStep;
 
 alias ConditionalStep = IfElseWorkflowStep | SwitchStep;
@@ -208,7 +211,7 @@ model ForeachDo {
     in: TypedExpression<Array<unknown>>;
 
     /** The steps to run for each iteration */
-    do: MappableWorkflowStep;
+    do: SequentialWorkflowStep;
 }
 
 model ForeachStep extends BaseWorkflowStep<"foreach"> {

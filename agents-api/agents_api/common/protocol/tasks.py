@@ -1,30 +1,34 @@
-from typing import Annotated, Any, Type
+from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, computed_field
-from pydantic_partial import create_partial_model
+from temporalio import workflow
 
-from ...autogen.openapi_model import (
-    Agent,
-    CreateTaskRequest,
-    CreateTransitionRequest,
-    Execution,
-    ExecutionStatus,
-    PartialTaskSpecDef,
-    PatchTaskRequest,
-    Session,
-    Task,
-    TaskSpec,
-    TaskSpecDef,
-    TaskToolDef,
-    Tool,
-    TransitionTarget,
-    TransitionType,
-    UpdateTaskRequest,
-    User,
-    Workflow,
-    WorkflowStep,
-)
+with workflow.unsafe.imports_passed_through():
+    from pydantic import BaseModel, Field, computed_field
+    from pydantic_partial import create_partial_model
+
+    from ...autogen.openapi_model import (
+        Agent,
+        CreateTaskRequest,
+        CreateTransitionRequest,
+        Execution,
+        ExecutionStatus,
+        PartialTaskSpecDef,
+        PatchTaskRequest,
+        Session,
+        Task,
+        TaskSpec,
+        TaskSpecDef,
+        TaskToolDef,
+        Tool,
+        TransitionTarget,
+        TransitionType,
+        UpdateTaskRequest,
+        User,
+        Workflow,
+        WorkflowStep,
+    )
+    from .remote import BaseRemoteModel, RemoteObject
 
 # TODO: Maybe we should use a library for this
 
@@ -118,7 +122,8 @@ transition_to_execution_status: dict[TransitionType | None, ExecutionStatus] = {
 }  # type: ignore
 
 
-PartialTransition: Type[BaseModel] = create_partial_model(CreateTransitionRequest)
+class PartialTransition(create_partial_model(CreateTransitionRequest)):
+    user_state: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExecutionInput(BaseModel):
@@ -134,9 +139,9 @@ class ExecutionInput(BaseModel):
     session: Session | None = None
 
 
-class StepContext(BaseModel):
-    execution_input: ExecutionInput
-    inputs: list[Any]
+class StepContext(BaseRemoteModel):
+    execution_input: ExecutionInput | RemoteObject
+    inputs: list[Any] | RemoteObject
     cursor: TransitionTarget
 
     @computed_field

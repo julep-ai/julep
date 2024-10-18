@@ -5,3 +5,8 @@ The `agents_api` module serves as the foundation of the agent management system 
 #################################
 ## Do NOT put any imports here ##
 #################################
+# Failed decoding arguments fixture
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    import msgpack as msgpack

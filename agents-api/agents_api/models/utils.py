@@ -186,6 +186,7 @@ def make_cozo_json_query(fields):
 def cozo_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
     debug: bool | None = None,
+    only_on_error: bool = False,
 ):
     def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """
@@ -209,8 +210,8 @@ def cozo_query(
                 query = "}\n\n{\n".join(queries)
                 query = f"{{ {query} }}"
 
-            debug and print(query)
-            debug and pprint(
+            not only_on_error and debug and print(query)
+            not only_on_error and debug and pprint(
                 dict(
                     variables=variables,
                 )
@@ -224,13 +225,17 @@ def cozo_query(
                 result = client.run(query, variables)
 
             except Exception as e:
+                if only_on_error and debug:
+                    print(query)
+                    pprint(variables)
+
                 debug and print(repr(getattr(e, "__cause__", None) or e))
                 raise
 
             # Need to fix the UUIDs in the result
             result = result.map(fix_uuid_if_present)
 
-            debug and pprint(
+            not only_on_error and debug and pprint(
                 dict(
                     result=result.to_dict(orient="records"),
                 )
