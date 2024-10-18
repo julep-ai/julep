@@ -15,6 +15,9 @@ from ..worker.codec import deserialize, serialize
 
 
 def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
+    if not use_blob_store_for_temporal:
+        return x
+
     s3.setup()
 
     serialized = serialize(x)
@@ -28,6 +31,9 @@ def store_in_blob_store_if_large(x: Any) -> RemoteObject | Any:
 
 
 def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
+    if not use_blob_store_for_temporal:
+        return x
+
     s3.setup()
 
     if isinstance(x, RemoteObject):
@@ -143,4 +149,4 @@ def auto_blob_store_workflow(f: Callable) -> Callable:
 
         return result
 
-    return wrapper
+    return wrapper if use_blob_store_for_temporal else f
