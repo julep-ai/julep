@@ -41,7 +41,7 @@ def extract_keywords(text: str, top_n: int = 10, clean: bool = True) -> list[str
     combined = entities + nouns
 
     # Normalize and count frequency
-    normalized = [re.sub(r"\s+", " ", kw).strip().lower() for kw in combined]
+    normalized = [re.sub(r"\s+", " ", kw).strip() for kw in combined]
     freq = Counter(normalized)
 
     # Get top_n keywords
