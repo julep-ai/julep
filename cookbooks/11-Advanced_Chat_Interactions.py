@@ -75,7 +75,7 @@ tools:
   integration:
     provider: weather
     setup:
-      api_key: "API_KEY"
+      api_key: "YOUR_WEATHER_API_KEY"
 
 main:
 - if: "len(inputs[0].chat_history) > 5"
@@ -85,22 +85,31 @@ main:
   else:
     evaluate:
       summarized_history: str(inputs[0].chat_history)
-
+                               
 - if: "search_regex('weather', inputs[0].user_input)"
   then:
-    # tool: weather_api
-    # arguments:
-    #   location: "NEW YORK"
+    tool: weather_api
+    arguments:
+      location: "'NEW YORK'"
+  else:
+    evaluate:
+      weather: "'No weather information requested'"
+                        
+- evaluate:
+    weather: outputs[1]
+                               
+- if: "search_regex('weather', inputs[0].user_input)"
+  then:
     prompt:
       - role: system
         content: >-            
           You are an advanced chat assistant. Here's a summary of the recent conversation:
           {{outputs[0].summarized_history}}
                                
-          # The user mentioned weather. Here's the current weather information for NEW YORK
-          # Incorporate this information into your response.
+          The user mentioned weather. Here's the current weather information for NEW YORK
+          Incorporate this information into your response.
                                
-          # {{outputs[1]}}
+          {{_.weather}}
       
           Now, respond to the user's latest input: {{inputs[0].user_input}}
   else:
