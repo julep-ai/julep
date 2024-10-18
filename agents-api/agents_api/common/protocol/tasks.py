@@ -29,7 +29,6 @@ with workflow.unsafe.imports_passed_through():
         WorkflowStep,
     )
     from ...common.storage_handler import load_from_blob_store_if_remote
-
     from .remote import BaseRemoteModel, RemoteObject
 
 # TODO: Maybe we should use a library for this

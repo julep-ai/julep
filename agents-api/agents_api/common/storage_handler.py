@@ -76,7 +76,6 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                 new_kwargs = {}
 
                 for k, v in kwargs.items():
-
                     if isinstance(v, list):
                         new_kwargs[k] = [
                             load_from_blob_store_if_remote(item) for item in v
@@ -92,7 +91,6 @@ def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callabl
                         new_kwargs[k] = v
 
             return new_args, new_kwargs
-
 
         def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
             if isinstance(x, (BaseRemoteModel, RemoteList)):
