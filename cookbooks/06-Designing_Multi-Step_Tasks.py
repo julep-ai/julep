@@ -126,7 +126,7 @@ time.sleep(10)
 # Getting the execution details
 execution = client.executions.get(execution.id)
 print("Execution Output:")
-print(client.executions.transitions.list(execution_id=execution.id).items[0].output) 
+print(client.executions.transitions.list(execution_id=execution.id).items[0].output)
 
 # Listing all the steps of a defined task
 transitions = client.executions.transitions.list(execution_id=execution.id).items
