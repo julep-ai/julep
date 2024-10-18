@@ -15,7 +15,7 @@ You are {{agent.name}}.{{" "}}
 {%- endif -%}
 
 {%- if agent.about -%}
-About you: {{agent.name}}.{{" "}}
+About you: {{agent.about}}.{{" "}}
 {%- endif -%}
 
 {%- if user -%}
