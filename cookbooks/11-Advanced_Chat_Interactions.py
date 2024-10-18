@@ -134,8 +134,6 @@ def run_chat_session():
     chat_history = []
     print("Starting advanced chat session. Type 'exit' to end the conversation.")
     
-    session = client.sessions.create(agent=AGENT_UUID)
-    
     while True:
         user_input = get_user_input()
         if user_input.lower() == 'exit':
