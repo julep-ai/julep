@@ -95,6 +95,16 @@ def create_execution_transition(
     data.metadata = data.metadata or {}
     data.execution_id = execution_id
 
+    # Dump to json
+    if isinstance(data.output, list):
+        data.output = [
+            item.model_dump(mode="json") if hasattr(item, "model_dump") else item
+            for item in data.output
+        ]
+
+    elif hasattr(data.output, "model_dump"):
+        data.output = data.output.model_dump(mode="json")
+
     # TODO: This is a hack to make sure the transition is valid
     #       (parallel transitions are whack, we should do something better)
     is_parallel = data.current.workflow.startswith("PAR:")
