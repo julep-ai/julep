@@ -26,6 +26,7 @@ async def transition(
             state.type = "finish_branch"
         case _, _:
             state.type = "step"
+
     transition_request = CreateTransitionRequest(
         current=context.cursor,
         **{
@@ -35,7 +36,8 @@ async def transition(
                 workflow=context.cursor.workflow, step=context.cursor.step + 1
             ),
             "metadata": {"step_type": type(context.current_step).__name__},
-            **state.model_dump(exclude_unset=True),
+            "output": state.output,
+            **state.model_dump(exclude_unset=True, exclude={"output"}),
             **kwargs,  # Override with any additional kwargs
         },
     )

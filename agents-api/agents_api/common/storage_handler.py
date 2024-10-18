@@ -42,42 +42,85 @@ def load_from_blob_store_if_remote(x: Any | RemoteObject) -> Any:
 # 2. load from blob store if the input is a RemoteObject
 
 
-def auto_blob_store(f: Callable) -> Callable:
-    def load_args(
-        args: list[Any], kwargs: dict[str, Any]
-    ) -> tuple[list[Any], dict[str, Any]]:
-        new_args = [load_from_blob_store_if_remote(arg) for arg in args]
-        new_kwargs = {k: load_from_blob_store_if_remote(v) for k, v in kwargs.items()}
+def auto_blob_store(f: Callable | None = None, *, deep: bool = False) -> Callable:
+    def auto_blob_store_decorator(f: Callable) -> Callable:
+        def load_args(
+            args: list[Any], kwargs: dict[str, Any]
+        ) -> tuple[list[Any], dict[str, Any]]:
+            new_args = [load_from_blob_store_if_remote(arg) for arg in args]
+            new_kwargs = {
+                k: load_from_blob_store_if_remote(v) for k, v in kwargs.items()
+            }
 
-        return new_args, new_kwargs
+            if deep:
+                args = new_args
+                kwargs = new_kwargs
 
-    def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
-        if isinstance(x, (BaseRemoteModel, RemoteList)):
-            x.unload_all()
+                new_args = []
 
-        return store_in_blob_store_if_large(x)
+                for arg in args:
+                    if isinstance(arg, list):
+                        new_args.append(
+                            [load_from_blob_store_if_remote(item) for item in arg]
+                        )
+                    elif isinstance(arg, dict):
+                        new_args.append(
+                            {
+                                key: load_from_blob_store_if_remote(value)
+                                for key, value in arg.items()
+                            }
+                        )
+                    else:
+                        new_args.append(arg)
 
-    if inspect.iscoroutinefunction(f):
+                new_kwargs = {}
 
-        @wraps(f)
-        async def async_wrapper(*args, **kwargs) -> Any:
-            new_args, new_kwargs = load_args(args, kwargs)
-            output = await f(*new_args, **new_kwargs)
+                for k, v in kwargs.items():
+                    if isinstance(v, list):
+                        new_kwargs[k] = [
+                            load_from_blob_store_if_remote(item) for item in v
+                        ]
 
-            return unload_return_value(output)
+                    elif isinstance(v, dict):
+                        new_kwargs[k] = {
+                            key: load_from_blob_store_if_remote(value)
+                            for key, value in v.items()
+                        }
 
-        return async_wrapper if use_blob_store_for_temporal else f
+                    else:
+                        new_kwargs[k] = v
 
-    else:
+            return new_args, new_kwargs
 
-        @wraps(f)
-        def wrapper(*args, **kwargs) -> Any:
-            new_args, new_kwargs = load_args(args, kwargs)
-            output = f(*new_args, **new_kwargs)
+        def unload_return_value(x: Any | BaseRemoteModel | RemoteList) -> Any:
+            if isinstance(x, (BaseRemoteModel, RemoteList)):
+                x.unload_all()
 
-            return unload_return_value(output)
+            return store_in_blob_store_if_large(x)
 
-        return wrapper if use_blob_store_for_temporal else f
+        if inspect.iscoroutinefunction(f):
+
+            @wraps(f)
+            async def async_wrapper(*args, **kwargs) -> Any:
+                new_args, new_kwargs = load_args(args, kwargs)
+                output = await f(*new_args, **new_kwargs)
+
+                return unload_return_value(output)
+
+            return async_wrapper if use_blob_store_for_temporal else f
+
+        else:
+
+            @wraps(f)
+            def wrapper(*args, **kwargs) -> Any:
+                new_args, new_kwargs = load_args(args, kwargs)
+                output = f(*new_args, **new_kwargs)
+
+                return unload_return_value(output)
+
+            return wrapper if use_blob_store_for_temporal else f
+
+    return auto_blob_store_decorator(f) if f else auto_blob_store_decorator
 
 
 def auto_blob_store_workflow(f: Callable) -> Callable:

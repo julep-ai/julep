@@ -8,13 +8,14 @@ spacy.prefer_gpu()
 nlp = spacy.load("en_core_web_sm")
 
 
-def extract_keywords(text: str, top_n: int = 10) -> list[str]:
+def extract_keywords(text: str, top_n: int = 10, clean: bool = True) -> list[str]:
     """
     Extracts significant keywords and phrases from the text.
 
     Args:
         text (str): The input text to process.
         top_n (int): Number of top keywords to extract based on frequency.
+        clean (bool): Strip non-alphanumeric characters from keywords.
 
     Returns:
         List[str]: A list of extracted keywords/phrases.
@@ -45,6 +46,9 @@ def extract_keywords(text: str, top_n: int = 10) -> list[str]:
 
     # Get top_n keywords
     keywords = [item for item, count in freq.most_common(top_n)]
+
+    if clean:
+        keywords = [re.sub(r"[^\w\s\-_]+", "", kw) for kw in keywords]
 
     return keywords
 
@@ -212,5 +216,6 @@ def paragraph_to_custom_queries(paragraph: str) -> list[str]:
     """
 
     queries = [text_to_custom_query(sentence.text) for sentence in nlp(paragraph).sents]
+    queries = [q for q in queries if q]
 
     return queries

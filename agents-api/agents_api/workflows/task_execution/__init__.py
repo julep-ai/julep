@@ -532,14 +532,7 @@ class TaskExecutionWorkflow:
                     ),
                 )
 
-                # FIXME: This is a hack to make the output of the system call match
-                #  the expected output format (convert uuid/datetime to strings)
-                def model_dump(obj):
-                    if isinstance(obj, list):
-                        return [model_dump(item) for item in obj]
-                    return obj.model_dump(mode="json")
-
-                state = PartialTransition(output=model_dump(tool_call_response))
+                state = PartialTransition(output=tool_call_response)
 
             case _:
                 workflow.logger.error(
