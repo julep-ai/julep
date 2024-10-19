@@ -10,8 +10,6 @@
 # 7. Execute the document search task
 # 8. Display the search results
 
-# UNDER CONSTRUCTION - YAML is working but the flow is not correct yet
-
 import uuid
 import yaml,time
 from julep import Client
@@ -93,8 +91,6 @@ input_schema:
   properties:
     query:
       type: string
-    filters:
-      type: object
 
 tools:
 - name: document_search
@@ -108,18 +104,16 @@ main:
   arguments:
     agent_id: "'{agent.id}'"
     text: inputs[0].query
-    metadata_filters: inputs[0].filters
 
 - prompt:
   - role: system
     content: >-
       Based on the search results, provide a summary of the most relevant documents found.
-      Search query: {{inputs[0].query}}
+      Search query: {{{{inputs[0].query}}}}
       Number of results: {{len(outputs[0])}}
       
       Results:
-      {{outputs[0]}}
-  unwrap: true
+      {{{{outputs[0]}}}}
 """)
 
 # Creating the search task
@@ -166,8 +160,7 @@ print(upload_response)
 search_execution = client.executions.create(
     task_id=SEARCH_TASK_UUID,
     input={
-        "query": "impact of technology on society",
-        "filters": {"category": "technology"}
+        "query": "technology"
     }
 )
 
@@ -178,10 +171,14 @@ search_result = client.executions.get(search_execution.id)
 # Display the search results
 print("\nSearch Results:")
 for transition in client.executions.transitions.list(execution_id=search_execution.id).items:
-    if transition.type == "tool_call" and transition.tool == "document_search":
-        for doc in transition.output:
-            print(f"- {doc['content']} (Score: {doc['score']})")
+    if transition.type == "step" and transition.metadata['step_type'] == "ToolCallStep":
+        doc_output = transition.output['docs']
+        for doc in doc_output:
+            print(f"Owner: {doc['owner']}")
+            print(f"Title: {doc['title']}")
+            print(f"Distance: {doc['distance']}")
+            print(f"Content: {doc['snippets']}")
 
 print("\nSearch Summary:")
-search_response = client.executions.transitions.list(search_result.id).items[0].output
+search_response = client.executions.transitions.list(search_result.id).items[0].output['choices'][0]['message']['content']
 print(search_response)

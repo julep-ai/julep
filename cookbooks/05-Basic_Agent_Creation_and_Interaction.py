@@ -1,4 +1,4 @@
-# UNDER CONSTRUCTION - NOT WORKING YET
+# BASIC AGENT CREATION AND INTERACTION
 
 import uuid
 from julep import Client
@@ -35,8 +35,7 @@ print(f"Agent created with ID: {agent.id}")
 
 # Create a session for interaction
 session = client.sessions.create(
-    agent=agent.id,
-    context_overflow="adaptive"
+    agent=agent.id
 )
 
 print(f"Session created with ID: {session.id}")
@@ -47,7 +46,6 @@ def chat_with_agent(message):
         "role": "user",
         "content": message,
     }
-    # TODO: message validation error
     response = client.sessions.chat(
         session_id=session.id,
         messages=[message],
@@ -67,7 +65,6 @@ while True:
     print(f"Agent: {response}")
 
 # Optional: Retrieve chat history
-history = client.sessions.messages.list(session_id=session.id)
+history = client.sessions.get(session_id=session.id)
 print("\nChat History:")
-for message in history.items:
-    print(f"{message.role}: {message.content}")
+print(history)
