@@ -1,16 +1,15 @@
 name: Translate ReadME
 
-on:
-  push:
-    paths:
-      - "README.md"
+on: push
 
 jobs:
   readme-translator:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Python v3.10.12
         uses: actions/setup-python@v5
         with:
@@ -39,7 +38,7 @@ jobs:
           title: "Translate README.md"
           body: "This PR updates the translated versions of README.md"
           branch: "translate-readme"
-          base: dev
+          delete-branch: true
           add-paths: |
             README.md
             README-*.md
