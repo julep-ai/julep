@@ -307,7 +307,7 @@ pip install julep
 import yaml
 from julep import Julep # or AsyncJulep
 
-client = Julep(api_key="your_julep_api_key")
+client = Julep(api_key="your_julep_api_key", environment=“dev”)
 
 agent = client.agents.create(
     name="Storytelling Agent",
@@ -434,7 +434,7 @@ while (message := input("Enter a message: ")) != "quit":
 import { Julep } from "@julep/sdk";
 import yaml from "js-yaml";
 
-const client = new Julep({ apiKey: "your_julep_api_key" });
+const client = new Julep({ apiKey: "your_julep_api_key",environment:“dev” });
 
 async function createAgent() {
   const agent = await client.agents.create({
@@ -967,6 +967,6 @@ These integrations can be used within your tasks to extend the capabilities of y
 
 Explore our comprehensive API documentation to learn more about agents, tasks, and executions:
 
-- [Agents API](https://api.julep.ai/api/docs#tag/agents)
-- [Tasks API](https://api.julep.ai/api/docs#tag/tasks)
-- [Executions API](https://api.julep.ai/api/docs#tag/executions)
+- [Agents API](https://dev.julep.ai/api/docs#tag/agents)
+- [Tasks API](https://dev.julep.ai/api/docs#tag/tasks)
+- [Executions API](https://dev.julep.ai/api/docs#tag/executions)

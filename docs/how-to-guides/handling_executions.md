@@ -1,12 +1,5 @@
 # Handling Executions
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 This guide covers how to manage and monitor task executions in Julep.
 
 ## Starting an Execution
@@ -14,7 +7,7 @@ This guide covers how to manage and monitor task executions in Julep.
 To start a new execution of a task:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/tasks/YOUR_TASK_ID/executions" \
+curl -X POST "https://dev.julep.ai/api/tasks/YOUR_TASK_ID/executions" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -31,7 +24,7 @@ curl -X POST "https://api.julep.ai/api/tasks/YOUR_TASK_ID/executions" \
 To check the status of an execution:
 
 ```bash
-curl -X GET "https://api.julep.ai/api/executions/YOUR_EXECUTION_ID" \
+curl -X GET "https://dev.julep.ai/api/executions/YOUR_EXECUTION_ID" \
      -H "Authorization: Bearer $JULEP_API_KEY"
 ```
 
@@ -40,7 +33,7 @@ curl -X GET "https://api.julep.ai/api/executions/YOUR_EXECUTION_ID" \
 If an execution is in the "awaiting_input" state, you can resume it with:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/executions/resume" \
+curl -X POST "https://dev.julep.ai/api/executions/resume" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -56,7 +49,7 @@ curl -X POST "https://api.julep.ai/api/executions/resume" \
 To cancel a running execution:
 
 ```bash
-curl -X PUT "https://api.julep.ai/api/executions/YOUR_EXECUTION_ID" \
+curl -X PUT "https://dev.julep.ai/api/executions/YOUR_EXECUTION_ID" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -70,7 +63,7 @@ To stream events from an execution in real-time:
 
 ```bash
 curl -N -H "Authorization: Bearer $JULEP_API_KEY" \
-     "https://api.julep.ai/api/executions/YOUR_EXECUTION_ID/transitions/stream"
+     "https://dev.julep.ai/api/executions/YOUR_EXECUTION_ID/transitions/stream"
 ```
 
 ## Next Steps
