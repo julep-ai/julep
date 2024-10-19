@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow"><strong>Explorer les documents</strong></a>
+  <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discorde</a>
   ·
@@ -62,44 +62,44 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 Table des matières</h3>
 
-- [Introduction](#introduction)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Exemple rapide](#exemple-rapide)
+- [Présentation](#introduction)
+- [Caractéristiques principales](#key-features)
+- [Exemple rapide](#quick-example)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent)
-- [Démarrage rapide de Node.js 🟩](#d%C3%A9marrage-rapide-de-nodejs-)
-  - [Étape 1 : Créer un agent](#%C3%89tape-1%C2%A0-cr%C3%A9er-un-agent-1)
-  - [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#%C3%89tape-2%C2%A0-cr%C3%A9er-une-t%C3%A2che-qui-g%C3%A9n%C3%A8re-une-histoire-et-une-bande-dessin%C3%A9e-1)
-  - [Étape 3 : Exécuter la tâche](#%C3%89tape-3%C2%A0-ex%C3%A9cuter-la-t%C3%A2che-1)
-  - [Étape 4 : Discuter avec l'agent](#%C3%89tape-4%C2%A0-discuter-avec-lagent-1)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent-1)
+- [Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [Étape 3 : Exécuter la tâche](#step-3-execute-the-task-1)
+- [Étape 4 : discuter avec l'agent](#step-4-chat-with-the-agent-1)
 - [Composants](#composants)
-  - [Modèle mental](#mod%C3%A8le-mental)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Comprendre les tâches](#comprendre-les-t%C3%A2ches)
-  - [Types d'étapes de flux de travail](#types-d%C3%A9tapes-de-flux-de-travail)
-- [Types d'outils](#types-doutils)
-  - [Fonctions définies par l'utilisateur](#fonctions-d%C3%A9finies-par-lutilisateur)
-  - [outils `système`](#outils-syst%C3%A8me)
-  - [« Intégrations » intégrées](#%C2%AB%C2%A0int%C3%A9grations%C2%A0%C2%BB-int%C3%A9gr%C3%A9es)
-  - [Appels directs `api_calls`](#appels-directs-api_calls)
-- [Intégrations](#int%C3%A9grations)
-- [Autres fonctionnalités](#autres-fonctionnalit%C3%A9s)
-  - [Ajout d'outils aux agents](#ajout-doutils-aux-agents)
-  - [Gestion des sessions et des utilisateurs](#gestion-des-sessions-et-des-utilisateurs)
-  - [Intégration et recherche de documents](#int%C3%A9gration-et-recherche-de-documents)
-- [Démarrage rapide local](#d%C3%A9marrage-rapide-local)
-- [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-- [Référence API](#r%C3%A9f%C3%A9rence-api)
-- [Pourquoi Julep vs. LangChain ?](#pourquoi-julep-vs-langchain%C2%A0)
-  - [Différents cas d'utilisation](#diff%C3%A9rents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
-  - [En résumé](#en-r%C3%A9sum%C3%A9)
+- [Comprendre les tâches](#understanding-tasks)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Types d'outils](#types-d'outils)
+- [`Fonctions` définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [`Intégrations` intégrées](#integrations-integrées)
+- [Appels directs `api_calls`](#appels directs-api_calls)
+- [Intégrations](#intégrations)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Démarrage rapide local](#local-quickstart)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
+- [Pourquoi Julep contre LangChain ?](#pourquoi-julep-vs-langchain)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -109,16 +109,16 @@ Julep est une plateforme permettant de créer des agents IA qui se souviennent d
 
 Julep permet la création de tâches en plusieurs étapes intégrant la prise de décision, les boucles, le traitement parallèle et l'intégration avec de nombreux outils et API externes.
 
-Alors que de nombreuses applications d’IA se limitent à des chaînes simples et linéaires d’invites et d’appels d’API avec une ramification minimale, Julep est conçu pour gérer des scénarios plus complexes.
+Alors que de nombreuses applications d'IA se limitent à des chaînes simples et linéaires d'invites et d'appels d'API avec une ramification minimale, Julep est conçu pour gérer des scénarios plus complexes qui :
 
-Il prend en charge :
-
-- Processus complexes en plusieurs étapes
-- Prise de décision dynamique
-- Exécution parallèle
+- comporter plusieurs étapes,
+- prendre des décisions basées sur les résultats du modèle,
+- générer des branches parallèles,
+- utiliser beaucoup d'outils, et
+- courir pendant une longue période.
 
 > [!TIP]
-> Imaginez que vous souhaitiez créer un agent d'IA capable de faire plus que simplement répondre à des questions simples : il doit gérer des tâches complexes, se souvenir des interactions passées et peut-être même utiliser d'autres outils ou API. C'est là qu'intervient Julep.
+> Imaginez que vous souhaitiez créer un agent d'IA capable de faire plus que simplement répondre à des questions simples : il doit gérer des tâches complexes, mémoriser des interactions passées et peut-être même utiliser d'autres outils ou API. C'est là qu'intervient Julep. Lisez [Comprendre les tâches](#understanding-tasks) pour en savoir plus.
 
 ## Principales caractéristiques
 
@@ -130,19 +130,25 @@ Il prend en charge :
 6. 🔧 **Auto-réparation** : Julep réessaiera automatiquement les étapes ayant échoué, renverra les messages et assurera généralement le bon déroulement de vos tâches.
 7. 📚 **RAG** ​​: Utilisez le magasin de documents de Julep pour créer un système permettant de récupérer et d'utiliser vos propres données.
 
-Julep est idéal pour les applications qui nécessitent des cas d’utilisation de l’IA au-delà des simples modèles de réponse rapide.
+![fonctionnalités](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
+
+> [!TIP]
+> Julep est idéal pour les applications qui nécessitent des cas d’utilisation de l’IA au-delà des simples modèles de réponse rapide.
 
 ## Exemple rapide
 
 Imaginez un agent d’IA de recherche capable d’effectuer les opérations suivantes :
 
-1. Prenez un sujet,
-2. Proposez 100 requêtes de recherche pour ce sujet,
-3. Effectuez ces recherches sur le Web en parallèle,
-4. Résumez les résultats,
-5. Envoyez le résumé sur Discord
+1. **Prenez un sujet**,
+2. **Proposez 100 requêtes de recherche** pour ce sujet,
+3. Effectuez ces **recherches Web en parallèle**,
+4. **Résumez** les résultats,
+5. Envoyez le **résumé à Discord**.
 
-Dans Julep, ce serait une tâche unique sous<b>80 lignes de code</b>et courir<b>entièrement géré</b>tout seul. Toutes les étapes sont exécutées sur les propres serveurs de Julep et vous n'avez pas besoin de lever le petit doigt. Voici un exemple fonctionnel :
+> [!REMARQUE]
+> Dans Julep, ce serait une tâche unique sous<b>80 lignes de code</b>et courir<b>entièrement géré</b>tout seul. Toutes les étapes sont exécutées sur les propres serveurs de Julep et vous n'avez pas besoin de lever le petit doigt.
+
+Voici un exemple fonctionnel :
 
 ```yaml
 name: Research Agent
@@ -162,12 +168,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: "YOUR_BRAVE_API_KEY"
+        api_key: BSAqES7dj9d...  # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: "YOUR_DISCORD_WEBHOOK_URL"
+      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -199,7 +205,7 @@ main:
       tool: web_search
       arguments:
         query: "_"
-    parallelism: 100
+    parallelism: 10
 
   # Collect the results from the web search
   - evaluate:
@@ -213,28 +219,74 @@ main:
           The summary should be well-structured, informative, and highlight key findings and insights:
           {{_.results}}
     unwrap: true
+    settings:
+      model: gpt-4o-mini
 
   # Send the summary to Discord
   - tool: discord_webhook
     arguments:
-      content: >
-        **Research Summary for {{inputs[0].topic}}**
+      content: |-
+        f'''
+        **Research Summary for {inputs[0].topic}**
 
-        {{_}}
+        {_}
+        '''
 ```
 
 Dans cet exemple, Julep gérera automatiquement les exécutions parallèles, réessayera les étapes ayant échoué, renverra les requêtes API et maintiendra les tâches en cours d'exécution de manière fiable jusqu'à leur achèvement.
+
+> Cela s'exécute en moins de 30 secondes et renvoie le résultat suivant :
+
+<details>
+<summary><b>Résumé de la recherche sur l'IA</b> <i>(Cliquez pour agrandir)</i></summary>
+
+> **Résumé de la recherche sur l'IA**
+> 
+> ### Résumé des résultats de recherche sur l'intelligence artificielle (IA)
+> 
+> #### Présentation
+> Le domaine de l’intelligence artificielle (IA) a connu des avancées significatives ces dernières années, marquées par le développement de méthodes et de technologies permettant aux machines de percevoir leur environnement, d’apprendre à partir de données et de prendre des décisions. L’objectif principal de ce résumé est de présenter les enseignements tirés de divers résultats de recherche liés à l’IA.
+> 
+> #### Principales conclusions
+> 
+> 1. **Définition et portée de l’IA** :
+> - L'IA est définie comme une branche de l'informatique axée sur la création de systèmes capables d'effectuer des tâches nécessitant une intelligence humaine, notamment l'apprentissage, le raisonnement et la résolution de problèmes (Wikipedia).
+> - Il englobe divers sous-domaines, notamment l’apprentissage automatique, le traitement du langage naturel, la robotique et la vision par ordinateur.
+> 
+> 2. **Impact et applications** :
+> - Les technologies d'IA sont intégrées dans de nombreux secteurs, améliorant l'efficacité et la productivité. Les applications vont des véhicules autonomes et des diagnostics de santé à l'automatisation du service client et aux prévisions financières (OpenAI).
+> - L'engagement de Google à rendre l'IA bénéfique pour tous met en évidence son potentiel à améliorer considérablement la vie quotidienne en améliorant l'expérience utilisateur sur diverses plateformes (Google AI).
+> 
+> 3. **Considérations éthiques** :
+> - Un débat est en cours sur les implications éthiques de l'IA, notamment sur les préoccupations relatives à la confidentialité, aux préjugés et à la responsabilité dans les processus de prise de décision. La nécessité d'un cadre garantissant l'utilisation sûre et responsable des technologies de l'IA est soulignée (OpenAI).
+> 
+> 4. **Mécanismes d’apprentissage** :
+> - Les systèmes d'IA utilisent différents mécanismes d'apprentissage, tels que l'apprentissage supervisé, l'apprentissage non supervisé et l'apprentissage par renforcement. Ces méthodes permettent à l'IA d'améliorer ses performances au fil du temps en apprenant des expériences et des données passées (Wikipedia).
+> - La distinction entre l’apprentissage supervisé et non supervisé est essentielle ; l’apprentissage supervisé s’appuie sur des données étiquetées, tandis que l’apprentissage non supervisé identifie des modèles sans étiquettes prédéfinies (non supervisé).
+> 
+> 5. **Orientations futures**:
+> - Les futurs développements de l’IA devraient se concentrer sur l’amélioration de l’interprétabilité et de la transparence des systèmes d’IA, garantissant qu’ils peuvent fournir des décisions et des actions justifiables (OpenAI).
+> - On observe également une volonté de rendre les systèmes d’IA plus accessibles et plus conviviaux, encourageant une adoption plus large dans différents groupes démographiques et secteurs (Google AI).
+> 
+> #### Conclusion
+> L’IA représente une force de transformation dans de nombreux domaines, promettant de remodeler les industries et d’améliorer la qualité de vie. Cependant, à mesure que ses capacités se développent, il est essentiel de tenir compte des implications éthiques et sociétales qui en découlent. La poursuite des recherches et de la collaboration entre les technologues, les éthiciens et les décideurs politiques sera essentielle pour s’orienter dans le futur paysage de l’IA.
+
+</details>
 
 ## Installation
 
 Pour commencer à utiliser Julep, installez-le en utilisant [npm](https://www.npmjs.com/package/@julep/sdk) ou [pip](https://pypi.org/project/julep/) :
 
+**Node.js**:
 ```bash
 npm install @julep/sdk
+
+# or
+
+bun add @julep/sdk
 ```
 
-ou
-
+**Python**:
 ```bash
 pip install julep
 ```
@@ -251,996 +303,1218 @@ pip install julep
 
 ## Démarrage rapide de Python 🐍
 
-### Étape 1 : Créer un agent
-
 ```python
+### Step 0: Setup
+
+import time
 import yaml
 from julep import Julep # or AsyncJulep
 
 client = Julep(api_key="your_julep_api_key")
 
+### Step 1: Create an Agent
+
 agent = client.agents.create(
     name="Storytelling Agent",
-    model="gpt-4o",
-    about="You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+    model="claude-3.5-sonnet",
+    about="You are a creative storyteller that crafts engaging stories on a myriad of topics.",
 )
 
-# 🛠️ Add an image generation tool (DALL·E) to the agent
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="image_generator",
-    description="Use this tool to generate images based on descriptions.",
-    integration={
-        "provider": "dalle",
-        "method": "generate_image",
-        "setup": {
-            "api_key": "your_openai_api_key",
-        },
-    },
-)
-```
+### Step 2: Create a Task that generates a story and comic strip
 
-### Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée
-
-Définissons une tâche en plusieurs étapes pour créer une histoire et générer une bande dessinée à panneaux basée sur une idée d'entrée :
-
-```python
-# 📋 Task
-# Create a task that takes an idea and creates a story and a 4-panel comic strip
 task_yaml = """
-name: Story and Comic Creator
-description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+name: Storyteller
+description: Create a story based on an idea.
+
+tools:
+  - name: research_wikipedia
+    integration:
+      provider: wikipedia
+      method: search
 
 main:
-  # Step 1: Generate a story and outline into 4 panels
+  # Step 1: Generate plot idea
   - prompt:
       - role: system
         content: You are {{agent.name}}. {{agent.about}}
       - role: user
         content: >
-          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
-          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
-    unwrap: true
+          Based on the idea '{{_.idea}}', generate a list of 5 plot ideas. Go crazy and be as creative as possible. Return your output as a list of long strings inside ```balises yaml à la fin de votre réponse.
+déballer : vrai
 
-  # Step 2: Extract the panel descriptions and story
+- évaluer:
+plot_ideas : load_yaml(_.split('```yaml')[1].split('```')[0].strip())
+
+# Étape 2 : Extraire les domaines de recherche des idées de l'intrigue
+- rapide:
+- rôle : système
+contenu : Vous êtes {{agent.name}}. {{agent.about}}
+- rôle : utilisateur
+contenu : >
+Voici quelques idées d’intrigue pour une histoire :
+{% pour l'idée dans _.plot_ideas %}
+- {{idée}}
+{% fin de %}
+
+Pour développer l’histoire, nous devons rechercher les idées d’intrigue.
+Sur quoi devrions-nous faire des recherches ? Notez les requêtes de recherche Wikipédia pour les idées d'intrigue que vous trouvez intéressantes.
+Renvoyez votre sortie sous forme de liste yaml à l'intérieur```yaml tags at the end of your response.
+    unwrap: true
+    settings:
+      model: gpt-4o-mini
+      temperature: 0.7
+
   - evaluate:
-      story: _.split('1. ')[0].strip()
-      panels: re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)
+      research_queries: load_yaml(_.split('```yaml')[1].split('```')[0].strip())
 
-  # Step 3: Generate images for each panel using the image generator tool
+  # Step 3: Research each plot idea
   - foreach:
-      in: _.panels
+      in: _.research_queries
       do:
-        tool: image_generator
+        tool: research_wikipedia
         arguments:
-          description: _
+          query: _
 
-  # Step 4: Generate a catchy title for the story
+  - evaluate:
+      wikipedia_results: 'NEWLINE.join([f"- {doc.metadata.title}: {doc.metadata.summary}" for item in _ for doc in item.documents])'
+
+  # Step 4: Think and deliberate
   - prompt:
       - role: system
         content: You are {{agent.name}}. {{agent.about}}
       - role: user
-        content: >
-          Based on the story below, generate a catchy title.
+        content: |-
+          Before we write the story, let's think and deliberate. Here are some plot ideas:
+          {% for idea in outputs[1].plot_ideas %}
+          - {{idea}}
+          {% endfor %}
+          
+          Here are the results from researching the plot ideas on Wikipedia:
+          {{_.wikipedia_results}}
 
-          Story: {{outputs[1].story}}
-    unwrap: true
+          Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
+          Write down all your notes and thoughts.
+          Then finally write the plot as a yaml object inside ```balises yaml à la fin de votre réponse. L'objet yaml doit avoir la structure suivante :
 
-  # Step 5: Return the story, the generated images, and the title
-  - return:
-      title: outputs[3]
-      story: outputs[1].story
-      comic_panels: "[output.image.url for output in outputs[2]]"
+          ```yaml
+          title: "<string>"
+          characters:
+          - name: "<string>"
+            about: "<string>"
+          synopsis: "<string>"
+          scenes:
+          - title: "<string>"
+            description: "<string>"
+            characters:
+            - name: "<string>"
+              role: "<string>"
+            plotlines:
+            - "<string>"```
+
+Assurez-vous que le fichier YAML est valide et que les caractères et les scènes ne sont pas vides. Faites également attention aux points-virgules et autres problèmes liés à l'écriture du fichier YAML.
+déballer : vrai
+
+- évaluer:
+intrigue : « load_yaml(_.split('```yaml')[1].split('```')[0].strip())"
 """
 
-task = client.tasks.create(
-    agent_id=agent.id,
-    **yaml.safe_load(task_yaml)
+tâche = client.tasks.create(
+agent_id=agent.id,
+**yaml.safe_load(tâche_yaml)
 )
-```
 
 ### Étape 3 : Exécuter la tâche
 
-```python
-# 🚀 Execute the task with an input idea
-execution = client.executions.create(
-    task_id=task.id,
-    input={"idea": "A cat who learns to fly"}
+exécution = client.executions.create(
+task_id=task.id,
+input={"idea": "Un chat qui apprend à voler"}
 )
 
-# 🎉 Watch as the story and comic panels are generated
-for transition in client.executions.transitions.stream(execution_id=execution.id):
-    print(transition)
+# 🎉 Regardez l'histoire et les panneaux de bandes dessinées se générer
+while (result := client.executions.get(execution.id)).status n'est pas dans ['réussi', 'échec'] :
+print(résultat.statut, résultat.sortie)
+heure.sommeil(1)
 
-# 📦 Once the execution is finished, retrieve the results
-result = client.executions.get(execution_id=execution.id)
+# 📦 Une fois l'exécution terminée, récupérez les résultats
+si result.status == "réussi" :
+imprimer(résultat.sortie)
+autre:
+déclencher une exception (résultat.erreur)
 ```
 
-### Étape 4 : Discuter avec l'agent
+You can find the full python example [here](example.py).
 
-Démarrez une session de chat interactive avec l'agent :
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-```python
-session = client.sessions.create(agent_id=agent.id)
+## Node.js Quick Start 🟩
 
-# 💬 Send messages to the agent
-while (message := input("Enter a message: ")) != "quit":
-    response = client.sessions.chat(
-        session_id=session.id,
-        message=message,
-    )
-
-    print(response)
-```
-
-Vous pouvez trouver l'exemple Python complet [ici](example.py).
-
-## Démarrage rapide de Node.js 🟩
-
-### Étape 1 : Créer un agent
+### Step 1: Create an Agent
 
 ```javascript
-import { Julep } from "@julep/sdk";
-import yaml from "js-yaml";
+// Étape 0 : Configuration
+const dotenv = require('dotenv');
+const { Julep } = require('@julep/sdk');
+const yaml = require('yaml');
 
-const client = new Julep({ apiKey: "your_julep_api_key" });
+dotenv.config();
 
-async function createAgent() {
-  const agent = await client.agents.create({
-    name: "Storytelling Agent",
-    model: "gpt-4",
-    about:
-      "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+const client = new Julep({ apiKey: process.env.JULEP_API_KEY, environnement: process.env.JULEP_ENVIRONMENT || "production" });
+
+/* Étape 1 : Créer un agent */
+
+fonction asynchrone createAgent() {
+agent constant = attendez que le client.agents.create({
+nom : « Agent de narration »,
+modèle : "claude-3.5-sonnet",
+à propos de : « Vous êtes un conteur créatif qui crée des histoires captivantes sur une myriade de sujets. »,
   });
-
-  // 🛠️ Add an image generation tool (DALL·E) to the agent
-  await client.agents.tools.create(agent.id, {
-    name: "image_generator",
-    description: "Use this tool to generate images based on descriptions.",
-    integration: {
-      provider: "dalle",
-      method: "generate_image",
-      setup: {
-        api_key: "your_openai_api_key",
-      },
-    },
-  });
-
-  return agent;
+agent de retour;
 }
-```
 
-### Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée
+/* Étape 2 : Créer une tâche qui génère une histoire et une bande dessinée */
 
-```javascript
-const taskYaml = `
-name: Story and Comic Creator
-description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+const tâcheYaml = `
+nom : Conteur
+description : Créez une histoire basée sur une idée.
 
-main:
-  # Step 1: Generate a story and outline into 4 panels
-  - prompt:
-      - role: system
-        content: You are {{agent.name}}. {{agent.about}}
-      - role: user
-        content: >
-          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
-          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
-    unwrap: true
+outils:
+- nom : research_wikipedia
+intégration:
+fournisseur : wikipedia
+méthode : recherche
 
-  # Step 2: Extract the panel descriptions and story
-  - evaluate:
-      story: _.split('1. ')[0].trim()
-      panels: _.match(/\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)/g)
+principal:
+# Étape 1 : Générer une idée d'intrigue
+- rapide:
+- rôle : système
+contenu : Vous êtes {{agent.name}}. {{agent.about}}
+- rôle : utilisateur
+contenu : >
+En vous basant sur l'idée « {{_.idea}} », générez une liste de 5 idées d'intrigue. Laissez libre cours à votre créativité. Renvoyez votre résultat sous forme de liste de longues chaînes à l'intérieur des balises \`\`\`yaml à la fin de votre réponse.
+déballer : vrai
 
-  # Step 3: Generate images for each panel using the image generator tool
-  - foreach:
-      in: _.panels
-      do:
-        tool: image_generator
-        arguments:
-          description: _
+- évaluer:
+plot_ideas: load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
 
-  # Step 4: Generate a catchy title for the story
-  - prompt:
-      - role: system
-        content: You are {{agent.name}}. {{agent.about}}
-      - role: user
-        content: >
-          Based on the story below, generate a catchy title.
+# Étape 2 : Extraire les domaines de recherche des idées de l'intrigue
+- rapide:
+- rôle : système
+contenu : Vous êtes {{agent.name}}. {{agent.about}}
+- rôle : utilisateur
+contenu : >
+Voici quelques idées d’intrigue pour une histoire :
+{% pour l'idée dans _.plot_ideas %}
+- {{idée}}
+{% fin de %}
 
-          Story: {{outputs[1].story}}
-    unwrap: true
+Pour développer l’histoire, nous devons rechercher les idées d’intrigue.
+Sur quoi devrions-nous faire des recherches ? Notez les requêtes de recherche Wikipédia pour les idées d'intrigue que vous trouvez intéressantes.
+Renvoyez votre sortie sous forme de liste yaml à l'intérieur des balises \`\`\`yaml à la fin de votre réponse.
+déballer : vrai
+paramètres:
+modèle: gpt-4o-mini
+température: 0,7
 
-  # Step 5: Return the story, the generated images, and the title
-  - return:
-      title: outputs[3]
-      story: outputs[1].story
-      comic_panels: outputs[2].map(output => output.image.url)
+- évaluer:
+requêtes de recherche : load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
+
+# Étape 3 : Recherchez chaque idée d'intrigue
+- pour chaque :
+dans : _.research_queries
+faire:
+outil : research_wikipedia
+Arguments:
+requête: _
+
+- évaluer:
+wikipedia_results: 'NEWLINE.join([f"- {doc.metadata.title}: {doc.metadata.summary}" pour l'élément dans _ pour le document dans l'élément.documents])'
+
+# Étape 4 : Réfléchir et délibérer
+- rapide:
+- rôle : système
+contenu : Vous êtes {{agent.name}}. {{agent.about}}
+- rôle : utilisateur
+contenu: |-
+Avant d'écrire l'histoire, réfléchissons et délibérons. Voici quelques idées d'intrigue :
+{% pour l'idée dans les sorties[1].plot_ideas %}
+- {{idée}}
+{% fin de %}
+
+Voici les résultats de la recherche d'idées d'intrigue sur Wikipédia :
+{{_.wikipedia_results}}
+
+Réfléchissez aux idées de l'intrigue de manière critique. Combinez les idées de l'intrigue avec les résultats de Wikipédia pour créer une intrigue détaillée pour une histoire.
+Écrivez toutes vos notes et vos pensées.
+Ensuite, écrivez enfin le tracé sous forme d'objet yaml à l'intérieur des balises \`\`\`yaml à la fin de votre réponse. L'objet yaml doit avoir la structure suivante :
+
+\`\`\`yaml
+titre: "<string>"
+personnages:
+- nom: "<string>"
+à propos de: "<string>"
+résumé: "<string>"
+scènes:
+- titre: "<string>"
+description: "<string>"
+personnages:
+- nom: "<string>"
+rôle: "<string>"
+intrigues:
+            - "<string>"\`\`\`
+
+Assurez-vous que le fichier YAML est valide et que les caractères et les scènes ne sont pas vides. Faites également attention aux points-virgules et autres problèmes liés à l'écriture du fichier YAML.
+déballer : vrai
+
+- évaluer:
+tracé : « load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip()) »
 `;
 
-async function createTask(agent) {
-  const task = await client.tasks.create(agent.id, yaml.load(taskYaml));
-  return task;
+fonction asynchrone createTask(agentId) {
+const tâche = attendre client.tasks.create(
+identifiant de l'agent,
+yaml.parse(tâcheYaml)
+  );
+tâche de retour;
 }
-```
 
-### Étape 3 : Exécuter la tâche
+/* Étape 3 : Exécuter la tâche */
 
-```javascript
-async function executeTask(task) {
-  const execution = await client.executions.create(task.id, {
-    input: { idea: "A cat who learns to fly" },
+fonction asynchrone executeTask(taskId) {
+const exécution = attendre client.executions.create(taskId, {
+entrée : { idée : "Un chat qui apprend à voler" }
   });
 
-  // 🎉 Watch as the story and comic panels are generated
-  for await (const transition of client.executions.transitions.stream(
-    execution.id
-  )) {
-    console.log(transition);
-  }
+// 🎉 Regardez comment l'histoire et les panneaux de bande dessinée sont générés
+tandis que (vrai) {
+const résultat = wait client.executions.get(execution.id);
+console.log(résultat.status, résultat.output);
 
-  // 📦 Once the execution is finished, retrieve the results
-  const result = await client.executions.get(execution.id);
-  return result;
-}
-```
-
-### Étape 4 : Discuter avec l'agent
-
-```javascript
-async function chatWithAgent(agent) {
-  const session = await client.sessions.create({ agent_id: agent.id });
-
-  // 💬 Send messages to the agent
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const chat = async () => {
-    rl.question("Enter a message (or 'quit' to exit): ", async (message) => {
-      if (message.toLowerCase() === "quit") {
-        rl.close();
-        return;
+si (résultat.status === 'réussi' || résultat.status === 'échec') {
+// 📦 Une fois l'exécution terminée, récupérez les résultats
+si (résultat.status === "réussi") {
+console.log(résultat.sortie);
+} autre {
+lancer une nouvelle erreur (résultat.erreur);
       }
+casser;
+    }
 
-      const response = await client.sessions.chat(session.id, { message });
-      console.log(response);
-      chat();
-    });
-  };
-
-  chat();
+attendre une nouvelle promesse (résolution => setTimeout (résolution, 1000));
+  }
 }
 
-// Run the example
-async function runExample() {
-  const agent = await createAgent();
-  const task = await createTask(agent);
-  const result = await executeTask(task);
-  console.log("Task Result:", result);
-  await chatWithAgent(agent);
+// Fonction principale pour exécuter l'exemple
+fonction asynchrone main() {
+essayer {
+agent constant = wait createAgent();
+const tâche = wait createTask(agent.id);
+attendre executeTask(task.id);
+} catch (erreur) {
+console.error("Une erreur s'est produite :", error);
+  }
 }
 
-runExample().catch(console.error);
+main().then(() => console.log("Terminé")).catch(console.error);
 ```
 
-Vous pouvez trouver l'exemple complet de Node.js [ici](example.js).
+You can find the full Node.js example [here](example.js).
 
-## Composants
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep est composé des éléments suivants :
+## Components
 
-- **Plateforme Julep** : la plateforme Julep est un service cloud qui exécute vos workflows. Elle comprend un langage pour décrire les workflows, un serveur pour exécuter ces workflows et un SDK pour interagir avec la plateforme.
-- **SDK Julep** : les SDK Julep sont un ensemble de bibliothèques permettant de créer des workflows. Il existe des SDK pour Python et JavaScript, et d'autres sont en cours de développement.
-- **API Julep** : L'API Julep est une API RESTful que vous pouvez utiliser pour interagir avec la plateforme Julep.
+Julep is made up of the following components:
 
-### Modèle mental
+- **Julep Platform**: The Julep platform is a cloud service that runs your workflows. It includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform.
+- **Julep SDKs**: Julep SDKs are a set of libraries for building workflows. There are SDKs for Python and JavaScript, with more on the way.
+- **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
+
+### Mental Model
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" />
 </div>
 
-Considérez Julep comme une plateforme qui combine des composants côté client et côté serveur pour vous aider à créer des agents d'IA avancés. Voici comment le visualiser :
+Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
 
-1. **Votre code d'application :**
+1. **Your Application Code:**
 
-- Vous pouvez utiliser le SDK Julep dans votre application pour définir des agents, des tâches et des workflows.
-- Le SDK fournit des fonctions et des classes qui facilitent la configuration et la gestion de ces composants.
+   - You can use the Julep SDK in your application to define agents, tasks, and workflows.
+   - The SDK provides functions and classes that make it easy to set up and manage these components.
 
-2. **Service back-end Julep :**
+2. **Julep Backend Service:**
 
-- Le SDK communique avec le backend Julep via le réseau.
-- Le backend gère l'exécution des tâches, maintient l'état de la session, stocke les documents et orchestre les flux de travail.
+   - The SDK communicates with the Julep backend over the network.
+   - The backend handles execution of tasks, maintains session state, stores documents, and orchestrates workflows.
 
-3. **Intégration avec les outils et les API :**
-- Au sein de vos workflows, vous pouvez intégrer des outils et services externes.
-- Le backend facilite ces intégrations, afin que vos agents puissent, par exemple, effectuer des recherches sur le Web, accéder à des bases de données ou appeler des API tierces.
+3. **Integration with Tools and APIs:**
+   - Within your workflows, you can integrate external tools and services.
+   - The backend facilitates these integrations, so your agents can, for example, perform web searches, access databases, or call third-party APIs.
 
 ## Concepts
 
-Julep s'appuie sur plusieurs composants techniques clés qui fonctionnent ensemble pour créer de puissants flux de travail d'IA :
+Julep is built on several key technical components that work together to create powerful AI workflows:
 
-```mermaid
-graph TD
-    User[User] ==> Session[Session]
-    Session --> Agent[Agent]
-    Agent --> Tasks[Tasks]
-    Agent --> LLM[Large Language Model]
-    Tasks --> Tools[Tools]
-    Agent --> Documents[Documents]
-    Documents --> VectorDB[Vector Database]
-    Tasks --> Executions[Executions]
+```sirène
+graphique TD
+Utilisateur[Utilisateur] ==> Session[Session]
+Session --> Agent[Agent]
+Agent --> Tâches[Tâches]
+Agent --> LLM [Modèle de langage étendu]
+Tâches --> Outils[Outils]
+Agent --> Documents[Documents]
+Documents --> VectorDB[Base de données vectorielles]
+Tâches --> Exécutions[Exécutions]
 
-    classDef client fill:#9ff,stroke:#333,stroke-width:1px;
-    class User client;
+client classDef remplissage : #9ff, trait : #333, largeur du trait : 1 px ;
+classe Utilisateur client ;
 
-    classDef core fill:#f9f,stroke:#333,stroke-width:2px;
-    class Agent,Tasks,Session core;
+classDef core fill:#f9f,trait:#333,largeur-trait:2px;
+classe Agent,Tâches,Session core;
 ```
 
-- **Agents** : entités alimentées par l'IA et soutenues par de grands modèles linguistiques (LLM) qui exécutent des tâches et interagissent avec les utilisateurs.
-- **Utilisateurs** : entités qui interagissent avec les agents via des sessions.
-- **Sessions** : interactions avec état entre agents et utilisateurs, maintenant le contexte sur plusieurs échanges.
-- **Tâches** : flux de travail programmatiques en plusieurs étapes que les agents peuvent exécuter, y compris différents types d'étapes telles que des invites, des appels d'outils et une logique conditionnelle.
-- **Outils** : intégrations qui étendent les capacités d'un agent, y compris les fonctions définies par l'utilisateur, les outils système ou les intégrations d'API tierces.
-- **Documents** : Objets textes ou données associés à des agents ou utilisateurs, vectorisés et stockés pour la recherche et la récupération sémantiques.
-- **Exécutions** : instances de tâches qui ont été initiées avec des entrées spécifiques, avec leur propre cycle de vie et leur propre machine d'état.
+- **Agents**: AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users.
+- **Users**: Entities that interact with agents through sessions.
+- **Sessions**: Stateful interactions between agents and users, maintaining context across multiple exchanges.
+- **Tasks**: Multi-step, programmatic workflows that agents can execute, including various types of steps like prompts, tool calls, and conditional logic.
+- **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
+- **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
+- **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
 
-Pour une explication plus détaillée, reportez-vous à notre [Documentation des concepts](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md).
 
-## Comprendre les tâches
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Les tâches sont au cœur du système de workflow de Julep. Elles vous permettent de définir des workflows IA complexes en plusieurs étapes que vos agents peuvent exécuter. Voici un bref aperçu des composants des tâches :
+## Understanding Tasks
 
-- **Nom et description** : Chaque tâche a un nom et une description uniques pour une identification facile.
-- **Étapes principales** : Le cœur d’une tâche, définissant la séquence d’actions à effectuer.
-- **Outils** : intégrations facultatives qui étendent les capacités de votre agent pendant l'exécution des tâches.
+Tasks are the core of Julep's workflow system. They allow you to define complex, multi-step AI workflows that your agents can execute. Here's a brief overview of task components:
 
-### Types d'étapes de flux de travail
+- **Name, Description and Input Schema**: Each task has a unique name and description for easy identification. An input schema (optional) that is used to validate the input to the task.
+- **Main Steps**: The core of a task, defining the sequence of actions to be performed. Each step can be a prompt, tool call, evaluate, wait_for_input, log, get, set, foreach, map_reduce, if-else, switch, sleep, or return. (See [Types of Workflow Steps](#types-of-workflow-steps) for more details)
+- **Tools**: Optional integrations that extend the capabilities of your agent during task execution.
 
-Les tâches dans Julep peuvent inclure différents types d'étapes, ce qui vous permet de créer des flux de travail complexes et puissants. Voici un aperçu des types d'étapes disponibles :
+### Lifecycle of a Task
 
-#### Étapes courantes
+You create a task using the Julep SDK and specify the main steps that the agent will execute. When you execute a task, the following lifecycle happens:
+
+```sirène
+Diagramme de séquence
+participant D comme votre code
+participant C en tant que client Julep
+participant S en tant que serveur Julep
+
+D->>C : Créer une tâche
+C->>S : Soumettre l'exécution
+Remarque sur S : Exécuter la tâche
+Remarque sur S : Gérer l'état
+S-->>C : Événements d'exécution
+C-->>D : Mises à jour de la progression
+S->>C : Fin de l'exécution
+C->>D : Résultat final
+```
+
+### Types of Workflow Steps
+
+Tasks in Julep can include various types of steps, allowing you to create complex and powerful workflows. Here's an overview of the available step types:
+
+#### Common Steps
 
 <table>
 <tr>
-<td>Nom</td> <td>À propos</td><td>Syntaxe</td>
+    <th>Name</th>
+    <th>About</th>
+    <th>Syntax</th>
 </tr>
 <tr>
-<td>Rapide</td>
+<td> <b>Prompt</b> </td>
 <td>
-Envoyez un message au modèle d'IA et recevez une réponse
-
+Send a message to the AI model and receive a response
+<br><br><b>Note:</b> The prompt step uses Jinja templates and you can access context variables in them.
 </td>
 
 <td>
 
-```yaml
-- prompt: "Analyze the following data: {{data}}"
+```YAML
+- invite : « Analyser les données suivantes : {{agent.name}} » # <-- ceci est un modèle jinja
+```
+
+```YAML
+- rapide:
+- rôle : système
+contenu : « Vous êtes {{agent.name}}. {{agent.about}} »
+- rôle : utilisateur
+contenu : « Analysez les données suivantes : {{_.data}} »
 ```
 
 </td>
 </tr>
 <tr>
-<td>Appel d'outil</td>
+<td> <b>Tool Call</b> </td>
 <td>
-Exécuter un outil intégré ou une API
+Execute an integrated tool or API that you have previously declared in the task.
+<br><br><b>Note:</b> The tool call step uses Python expressions inside the arguments.
 
 </td>
 
 <td>
 
-```yaml
-- tool: web_search
-  arguments:
-    query: "Latest AI developments"
+```YAML
+- outil : recherche_sur_le_web
+Arguments:
+requête : « Derniers développements de l'IA » # <-- il s'agit d'une expression Python (remarquez les guillemets)
+num_results: len(_.topics) # <-- expression python pour accéder à la longueur d'une liste
 ```
 
 </td>
 </tr>
 <tr>
-<td>Évaluer</td>
+<td> <b>Evaluate</b> </td>
 <td>
-Effectuer des calculs ou manipuler des données
-
+Perform calculations or manipulate data
+<br><br><b>Note:</b> The evaluate step uses Python expressions.
 </td>
 
 <td>
 
-```yaml
-- evaluate:
-    average_score: "sum(scores) / len(scores)"
+```YAML
+- évaluer:
+average_score : somme(scores) / len(scores)
 ```
 
 </td>
 </tr>
 <tr>
-<td>Attendre l'entrée</td>
+<td> <b>Wait for Input</b> </td>
 <td>
-Suspendre le flux de travail jusqu'à ce que les données soient reçues
+Pause workflow until input is received. It accepts an `info` field that can be used by your application to collect input from the user.
+
+<br><br><b>Note:</b> The wait_for_input step is useful when you want to pause the workflow and wait for user input e.g. to collect a response to a prompt.
 
 </td>
 
 <td>
 
-```yaml
-- wait_for_input:
-    info:
-      message: "Please provide additional information."
+```YAML
+- attendre_la_saisie :
+info:
+message : « Veuillez fournir des informations supplémentaires sur {_.required_info}. » # <-- expression Python pour accéder à la variable de contexte
 ```
 
 </td>
 </tr>
 <tr>
-<td>Enregistrer</td>
+<td> <b>Log</b> </td>
 <td>
-Enregistrer une valeur ou un message spécifié
+Log a specified value or message.
+
+<br><br><b>Note:</b> The log step uses Jinja templates and you can access context variables in them.
 
 </td>
 
 <td>
 
-```yaml
-- log: "Processing completed for item {{item_id}}"
+```YAML
+- log : « Traitement terminé pour l'élément {{_.item_id}} » # <-- modèle jinja pour accéder à la variable de contexte
 ```
 
 </td>
 </tr>
 </table>
 
-#### Étapes clé-valeur
+#### Key-Value Steps
 
 <table>
 <tr>
-<td>Nom</td> <td>À propos</td><td>Syntaxe</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>Obtenir</td>
+<td> <b>Get</b> </td>
 <td>
-Récupérer une valeur d'un magasin clé-valeur
+Retrieve a value from the execution's key-value store.
 
 </td>
 
 <td>
 
-```yaml
-- get: "user_preference"
+```YAML
+- obtenir : préférences_utilisateur
 ```
 
 </td>
 </tr>
 <tr>
-<td>Ensemble</td>
+<td> <b>Set</b> </td>
 <td>
-Attribuer une valeur à une clé dans un magasin clé-valeur
+Assign a value to a key in the execution's key-value store.
 
+<br><br><b>Note:</b> The set step uses Python expressions.
 </td>
 
 <td>
 
-```yaml
-- set:
-    user_preference: "dark_mode"
+```YAML
+- ensemble:
+préférence_utilisateur : '"dark_mode"' # <-- expression python
 ```
 
 </td>
 </tr>
 </table>
 
-#### Étapes d'itération
+#### Iteration Steps
 
 <table>
 <tr>
-<td>Nom</td> <td>À propos</td><td>Syntaxe</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>Pour chaque</td>
+<td> <b>Foreach</b> </td>
 <td>
-Itérer sur une collection et effectuer des étapes pour chaque élément
+Iterate over a collection and perform steps for each item
 
 </td>
 
 <td>
 
-```yaml
-- foreach:
-    in: "data_list"
-    do:
-      - log: "Processing item {{_}}"
+```YAML
+- pour chaque :
+dans : _.data_list # <-- expression python pour accéder à la variable de contexte
+faire:
+- log : « Traitement de l'élément {{_.item}} » # <-- modèle jinja pour accéder à la variable de contexte
 ```
 
 </td>
 </tr>
 <tr>
-<td>Carte-Réduction</td>
+<td> <b>Map-Reduce</b> </td>
 <td>
-Cartographier une collection et réduire les résultats
+Map over a collection and reduce the results
 
 </td>
 
 <td>
 
-```yaml
+```YAML
 - map_reduce:
-    over: "numbers"
-    map:
-      - evaluate:
-          squared: "_ ** 2"
-    reduce: "sum(results)"
+over: _.numbers # <-- expression python pour accéder à la variable de contexte
+carte:
+- évaluer:
+au carré : "_ ** 2"
+réduire : résultats + [_] # <-- (facultatif) expression Python pour réduire les résultats. Il s'agit de la valeur par défaut si elle est omise.
+```
+
+```YAML
+- map_reduce:
+plus de: _.topics
+carte:
+- invite : Rédigez un essai sur {{_}}
+parallélisme : 10
 ```
 
 </td>
 </tr>
 <tr>
-<td>Parallèle</td>
+<td> <b>Parallel</b> </td>
 <td>
-Exécuter plusieurs étapes en parallèle
+Run multiple steps in parallel
 
 </td>
 
 <td>
 
-```yaml
-- parallel:
-    - tool: web_search
-      arguments:
-        query: "AI news"
-    - tool: weather_check
-      arguments:
-        location: "New York"
+```YAML
+- parallèle:
+- outil : recherche_sur_le_web
+Arguments:
+requête : « Actualités sur l'IA »
+- outil : weather_check
+Arguments:
+Lieu : « New York »
 ```
 
 </td>
 </tr>
 </table>
 
-#### Étapes conditionnelles
+#### Conditional Steps
 
 <table>
 <tr>
-<td>Nom</td> <td>À propos</td><td>Syntaxe</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>Si-Sinon</td>
+<td> <b>If-Else</b> </td>
 <td>
-Exécution conditionnelle des étapes
+Conditional execution of steps
 
 </td>
 
 <td>
 
-```yaml
-- if: "score > 0.8"
-  then:
-    - log: "High score achieved"
-  else:
-    - log: "Score needs improvement"
+```YAML
+- si : _.score > 0.8 # <-- expression python
+alors:
+- log : score élevé atteint
+autre:
+- erreur : le score doit être amélioré
 ```
 
 </td>
 </tr>
 <tr>
-<td>Changer</td>
+<td> <b>Switch</b> </td>
 <td>
-Exécuter des étapes en fonction de plusieurs conditions
+Execute steps based on multiple conditions
 
 </td>
 
 <td>
 
-```yaml
-- switch:
-    - case: "category == 'A'"
-      then:
-        - log: "Category A processing"
-    - case: "category == 'B'"
-      then:
-        - log: "Category B processing"
-    - case: "_" # Default case
-      then:
-        - log: "Unknown category"
+```YAML
+- changer:
+- cas : _.category == 'A'
+alors:
+- log : « Traitement de catégorie A »
+- cas : _.category == 'B'
+alors:
+- log : « Traitement de catégorie B »
+- case: _ # Cas par défaut
+alors:
+- erreur : catégorie inconnue
 ```
 
 </td>
 </tr>
 </table>
 
-#### Autre flux de contrôle
+#### Other Control Flow
 
 <table>
 <tr>
-<td>Nom</td> <td>À propos</td><td>Syntaxe</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>Dormir</td>
+<td> <b>Sleep</b> </td>
 <td>
-Suspendre le flux de travail pendant une durée spécifiée
+Pause the workflow for a specified duration
 
 </td>
 
 <td>
 
-```yaml
-- sleep:
-    seconds: 30
+```YAML
+- dormir:
+secondes: 30
+# minutes: 1
+# heures: 1
+# jours: 1
 ```
 
 </td>
 </tr>
 <tr>
-<td>Retour</td>
+<td> <b>Return</b> </td>
 <td>
-Renvoyer une valeur du workflow
+Return a value from the workflow
+
+<br><br><b>Note:</b> The return step uses Python expressions.
 
 </td>
 
 <td>
 
-```yaml
-- return:
-    result: "Task completed successfully"
+```YAML
+- retour:
+résultat : " Tâche terminée avec succès " # <-- expression python
+heure : datetime.now().isoformat() # <-- expression python
 ```
 
 </td>
 </tr>
 <tr>
-<td>Rendement</td>
+<td> <b>Yield</b> </td>
 <td>
-Exécuter un sous-workflow et attendre sa fin
+Run a subworkflow and await its completion
 
 </td>
 
 <td>
 
-```yaml
-- yield:
-    workflow: "data_processing_subflow"
-    arguments:
-      input_data: "{{raw_data}}"
+```YAML
+- rendement:
+flux de travail : données_de_processus
+Arguments:
+données d'entrée : _. données brutes # <-- expression Python
 ```
 
 </td>
 </tr>
 </tr>
 <tr>
-<td>Erreur</td>
+<td> <b>Error</b> </td>
 <td>
-Gérer les erreurs en spécifiant un message d'erreur
+Handle errors by specifying an error message
 
 </td>
 
 <td>
 
-```yaml
-- error: "Invalid input provided"
+```YAML
+- erreur : « Entrée non valide fournie » # <-- Chaînes uniquement
 ```
 
 </td>
 </tr>
 </table>
 
-Chaque type d'étape remplit un objectif spécifique dans la création de workflows d'IA sophistiqués. Cette catégorisation permet de comprendre les différents flux de contrôle et opérations disponibles dans les tâches Julep.
+Each step type serves a specific purpose in building sophisticated AI workflows. This categorization helps in understanding the various control flows and operations available in Julep tasks.
 
-## Types d'outils
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Les agents peuvent avoir accès à un certain nombre d'« outils » : toute interface de programmation qu'un modèle de base peut « appeler » avec un ensemble d'entrées pour atteindre un objectif. Par exemple, il peut utiliser un outil « web_search(query) » pour rechercher des informations sur Internet.
+## Tool Types
 
-Contrairement aux frameworks d'agents, Julep est un backend qui gère l'exécution des agents. Les clients peuvent interagir avec les agents à l'aide de nos SDK. Julep s'occupe de l'exécution des tâches et de l'exécution des intégrations.
+Agents can be given access to a number of "tools" -- any programmatic interface that a foundation model can "call" with a set of inputs to achieve a goal. For example, it might use a `web_search(query)` tool to search the Internet for some information.
 
-Les outils du julep peuvent être l’un des suivants :
+Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
-### Fonctions définies par l'utilisateur
+Tools in julep can be one of:
+1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
+2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
+4. **`api_calls`**: Direct api calls during workflow executions as tool calls.
 
-Il s'agit de signatures de fonctions que vous pouvez attribuer au modèle pour qu'il puisse choisir, de la même manière que fonctionne l'appel de fonctions d'[openai]. Un exemple :
+### User-defined `functions`
 
-```yaml
-name: Example system tool task
-description: List agents using system call
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
 
-tools:
-  - name: send_notification
-    description: Send a notification to the user
-    type: function
-    function:
-      parameters:
-        type: object
-        properties:
-          text:
-            type: string
-            description: Content of the notification
+```YAML
+nom : Exemple de tâche d'outil système
+description : Lister les agents à l'aide d'un appel système
 
-main:
-  - tool: send_notification
-    arguments:
-      content: hi
+outils:
+- nom : send_notification
+description : Envoyer une notification à l'utilisateur
+type : fonction
+fonction:
+paramètres:
+type: objet
+propriétés:
+texte:
+type : chaîne
+description : Contenu de la notification
+
+principal:
+- outil : send_notification
+Arguments:
+contenu : '"salut"' # <-- expression python
 ```
 
-Chaque fois que julep rencontre une _fonction définie par l'utilisateur_, il s'arrête, rend le contrôle au client et attend que le client exécute l'appel de fonction et renvoie les résultats à julep.
+Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
 > [!TIP]
-> **Exemple de livre de recettes** : [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
-### outils `système`
+### `system` tools
 
-Outils intégrés qui peuvent être utilisés pour appeler les API julep elles-mêmes, comme déclencher l'exécution d'une tâche, ajouter à un champ de métadonnées, etc.
-Les outils « système » sont intégrés au backend. Ils sont exécutés automatiquement lorsque cela est nécessaire. Ils ne nécessitent aucune action du côté client.
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
 
-Par exemple,
+`system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
-```yaml
-name: Example system tool task
-description: List agents using system call
+For example,
 
-tools:
-  - name: list_agents
-    description: List all agents
-    type: system
-    system:
-      resource: agent
-      operation: list
-main:
-  - tool: list_agents
-    arguments:
-      limit: 10
+```YAML
+nom : Exemple de tâche d'outil système
+description : Lister les agents à l'aide d'un appel système
+
+outils:
+- nom : list_agent_docs
+description : Liste tous les documents pour l'agent donné
+type : système
+système:
+ressource : agent
+sous-ressource : doc
+opération : liste
+
+principal:
+- outil : list_agents
+Arguments:
+limite : 10 # <-- expression python
 ```
 
+#### Available `system` resources and operations
+
+- `agent`:
+  - `list`: List all agents.
+  - `get`: Get a single agent by id.
+  - `create`: Create a new agent.
+  - `update`: Update an existing agent.
+  - `delete`: Delete an existing agent.
+
+- `user`:
+  - `list`: List all users.
+  - `get`: Get a single user by id.
+  - `create`: Create a new user.
+  - `update`: Update an existing user.
+  - `delete`: Delete an existing user.
+
+- `session`:
+  - `list`: List all sessions.
+  - `get`: Get a single session by id.
+  - `create`: Create a new session.
+  - `update`: Update an existing session.
+  - `delete`: Delete an existing session.
+  - `chat`: Chat with a session.
+  - `history`: Get the chat history with a session.
+
+- `task`:
+  - `list`: List all tasks.
+  - `get`: Get a single task by id.
+  - `create`: Create a new task.
+  - `update`: Update an existing task.
+  - `delete`: Delete an existing task.
+
+- `doc` (subresource for `agent` and `user`):
+  - `list`: List all documents.
+  - `create`: Create a new document.
+  - `delete`: Delete an existing document.
+  - `search`: Search for documents.
+
+Additional operations available for some resources:
+- `embed`: Embed a resource (specific resources not specified in the provided code).
+- `change_status`: Change the status of a resource (specific resources not specified in the provided code).
+- `chat`: Chat with a resource (specific resources not specified in the provided code).
+- `history`: Get the chat history with a resource (specific resources not specified in the provided code).
+- `create_or_update`: Create a new resource or update an existing one (specific resources not specified in the provided code).
+
+Note: The availability of these operations may vary depending on the specific resource and implementation details.
+
 > [!TIP]
-> **Exemple de livre de recettes** : [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
-### « Intégrations » intégrées
+### Built-in `integrations`
 
-Julep est livré avec un certain nombre d'intégrations intégrées (comme décrit dans la section ci-dessous). Les outils « d'intégration » sont directement exécutés sur le backend de Julep. Tous les paramètres supplémentaires dont ils ont besoin au moment de l'exécution peuvent être définis dans les champs « métadonnées » de l'agent/session/utilisateur.
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+
+See [Integrations](#integrations) for details on the available integrations.
 
 > [!TIP]
-> **Exemple de livre de recettes** : [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
-Le backend Julep est livré avec des outils tiers intégrés provenant des fournisseurs suivants :
 
-- [composio](https://composio.dev)
-- [anonyme](https://anon.com)
-- [boîtes à outils langchain](https://python.langchain.com/v0.2/docs/integrations/toolkits/)
+### Direct `api_calls`
 
-La prise en charge des boîtes à outils _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ est prévue.
+julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
 
-Étant donné que _composio_ et _anon_ sont des fournisseurs tiers, leurs outils nécessitent la configuration d'une liaison de compte.
+For example,
 
-### Appels directs `api_calls`
+```YAML
+nom : Exemple de tâche api_call
+outils:
+- type : api_call
+nom : bonjour
+appel_API :
+méthode : GET
+URL: https://httpbin.org/get
 
-julep peut également effectuer directement des appels d'API lors des exécutions de workflows sous forme d'appels d'outils. Comme pour `integration`, des paramètres d'exécution supplémentaires sont chargés à partir des champs `metadata`.
-
-Par exemple,
-
-```yaml
-name: Example api_call task
-tools:
-  - type: api_call
-    name: hello
-    api_call:
-      method: GET
-      url: https://httpbin.org/get
-main:
-  - tool: hello
-    arguments:
-      params:
-        test: _.input
+principal:
+- outil : bonjour
+Arguments:
+json:
+test: _.input # <-- expression python
 ```
 
-## Intégrations
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep prend en charge diverses intégrations qui étendent les capacités de vos agents IA. Voici une liste des intégrations disponibles et de leurs arguments pris en charge :
+## Integrations
+
+Julep supports various integrations that extend the capabilities of your AI agents. Here's a list of available integrations and their supported arguments:
 
 <table>
 
 <tr>
-<td>Recherche courageuse</td>
+<td> <b>Brave Search</b> </td>
 <td>
 
-```yaml
-setup:
-  api_key: string # The API key for Brave Search
+```YAML
+installation:
+api_key : chaîne # La clé API pour Brave Search
 
-arguments:
-  query: string # The search query for searching with Brave
+Arguments:
+requête : chaîne # La requête de recherche pour rechercher avec Brave
 
-output:
-  result: string # The result of the Brave Search
+sortir:
+résultat : chaîne # Le résultat de la recherche Brave
 ```
 
 </td>
 
 <td>
 
-**Exemple de livre de recettes** : [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>Base de navigateur</td>
+<td> <b>BrowserBase</b> </td>
 <td>
 
-```yaml
-setup:
-  api_key: string # The API key for BrowserBase
-  project_id: string # The project ID for BrowserBase
-  session_id: string # (Optional) The session ID for BrowserBase
+```YAML
+installation:
+api_key : chaîne # La clé API pour BrowserBase
+project_id : chaîne # L'ID de projet pour BrowserBase
+session_id : chaîne # (facultatif) L'ID de session pour BrowserBase
 
-arguments:
-  urls: list[string] # The URLs for loading with BrowserBase
+Arguments:
+urls : liste[chaîne] # Les URL pour le chargement avec BrowserBase
 
-output:
-  documents: list # The documents loaded from the URLs
+sortir:
+documents : liste # Les documents chargés à partir des URL
 ```
 
 </td>
 
 </tr>
 <tr>
-<td>E-mail</td>
+<td> <b>Email</b> </td>
 <td>
 
-```yaml
-setup:
-  host: string # The host of the email server
-  port: integer # The port of the email server
-  user: string # The username of the email server
-  password: string # The password of the email server
+```YAML
+installation:
+hôte : chaîne # L'hôte du serveur de messagerie
+port : entier # Le port du serveur de messagerie
+utilisateur : chaîne # Le nom d'utilisateur du serveur de messagerie
+mot de passe : chaîne # Le mot de passe du serveur de messagerie
 
-arguments:
-  to: string # The email address to send the email to
-  from: string # The email address to send the email from
-  subject: string # The subject of the email
-  body: string # The body of the email
+Arguments:
+à : chaîne # L'adresse e-mail à laquelle envoyer l'e-mail
+de : chaîne # L'adresse e-mail à partir de laquelle envoyer l'e-mail
+objet : chaîne # L'objet de l'e-mail
+corps : chaîne # Le corps de l'e-mail
 
-output:
-  success: boolean # Whether the email was sent successfully
+sortir:
+succès : booléen # Indique si l'e-mail a été envoyé avec succès
 ```
 
 </td>
 
 <td>
 
-**Exemple de livre de recettes** : [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+**Example cookbook**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>Araignée</td>
+<td> <b>Spider</b> </td>
 <td>
 
-```yaml
-setup:
-  spider_api_key: string # The API key for Spider
+```YAML
+installation:
+spider_api_key : chaîne # La clé API pour Spider
 
-arguments:
-  url: string # The URL for which to fetch data
-  mode: string # The type of crawlers (default: "scrape")
-  params: dict # (Optional) The parameters for the Spider API
+Arguments:
+url : chaîne # L'URL pour laquelle récupérer les données
+mode : chaîne # Le type de robots d'exploration (par défaut : « scrape »)
+paramètres : dict # (facultatif) Les paramètres de l'API Spider
 
-output:
-  documents: list # The documents returned from the spider
+sortir:
+documents : liste # Les documents renvoyés par l'araignée
 ```
 
 </td>
 
 <td>
 
-**Exemple de livre de recettes** : [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>Météo</td>
+<td> <b>Weather</b> </td>
 <td>
 
-```yaml
-setup:
-  openweathermap_api_key: string # The API key for OpenWeatherMap
+```YAML
+installation:
+openweathermap_api_key : chaîne # La clé API pour OpenWeatherMap
 
-arguments:
-  location: string # The location for which to fetch weather data
+Arguments:
+emplacement : chaîne # L'emplacement pour lequel récupérer les données météorologiques
 
-output:
-  result: string # The weather data for the specified location
+sortir:
+résultat : chaîne # Les données météorologiques pour l'emplacement spécifié
 ```
 
 </td>
 
 <td>
 
-**Exemple de livre de recettes** : [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 </td>
 </tr>
 </tr>
 <tr>
-<td>Wikipédia</td>
+<td> <b>Wikipedia</b> </td>
 <td>
 
-```yaml
-arguments:
-  query: string # The search query string
-  load_max_docs: integer # Maximum number of documents to load (default: 2)
+```YAML
+Arguments:
+requête : chaîne # La chaîne de requête de recherche
+load_max_docs : entier # Nombre maximal de documents à charger (par défaut : 2)
 
-output:
-  documents: list # The documents returned from the Wikipedia search
+sortir:
+documents : liste # Les documents renvoyés par la recherche sur Wikipédia
 ```
 
 </td>
 
 <td>
 
-**Exemple de livre de recettes** : [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 </td>
 </tr>
 </table>
 
-Pour plus de détails, reportez-vous à notre [Documentation sur les intégrations](https://docs.julep.ai/integrations).
+For more details, refer to our [Integrations Documentation](#integrations).
 
-## Autres fonctionnalités
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep propose une gamme de fonctionnalités avancées pour améliorer vos flux de travail d'IA :
+## Other Features
 
-### Ajout d'outils aux agents
+Julep offers a range of advanced features to enhance your AI workflows:
 
-Étendez les capacités de votre agent en intégrant des outils et des API externes :
+### Adding Tools to Agents
+
+Extend your agent's capabilities by integrating external tools and APIs:
 
 ```python
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="web_search",
-    description="Search the web for information.",
-    integration={
-        "provider": "brave",
-        "method": "search",
-        "setup": {"api_key": "your_brave_api_key"},
+client.agents.outils.créer(
+agent_id=agent.id,
+nom="recherche_sur_le_web",
+description="Rechercher des informations sur le Web.",
+intégration={
+"fournisseur": "courageux",
+"méthode": "recherche",
+"setup": {"api_key": "votre_brave_api_key"},
     },
 )
 ```
 
-### Gestion des sessions et des utilisateurs
+### Managing Sessions and Users
 
-Julep fournit une gestion de session robuste pour les interactions persistantes :
+Julep provides robust session management for persistent interactions:
 
 ```python
 session = client.sessions.create(
-    agent_id=agent.id,
-    user_id=user.id,
-    context_overflow="adaptive"
+agent_id=agent.id,
+user_id=utilisateur.id,
+context_overflow="adaptatif"
 )
 
-# Continue conversation in the same session
-response = client.sessions.chat(
-    session_id=session.id,
-    messages=[
+# Poursuivre la conversation dans la même session
+réponse = client.sessions.chat(
+session_id=session.id,
+messages=[
       {
-        "role": "user",
-        "content": "Follow up on the previous conversation."
+"rôle": "utilisateur",
+« contenu » : « Suivi de la conversation précédente. »
       }
     ]
 )
 ```
 
-### Intégration et recherche de documents
+### Document Integration and Search
 
-Gérez et recherchez facilement des documents pour vos agents :
+Easily manage and search through documents for your agents:
 
 ```python
-# Upload a document
+# Télécharger un document
 document = client.agents.docs.create(
-    title="AI advancements",
-    content="AI is changing the world...",
-    metadata={"category": "research_paper"}
+titre="Progrès de l'IA",
+content="L'IA change le monde...",
+métadonnées={"category": "article_de_recherche"}
 )
 
-# Search documents
-results = client.agents.docs.search(
-    text="AI advancements",
-    metadata_filter={"category": "research_paper"}
+# Rechercher des documents
+résultats = client.agents.docs.search(
+texte="Progrès de l'IA",
+metadata_filter={"category": "article_de_recherche"}
 )
 ```
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+## Référence
+
+### Référence du SDK
+
+- **Node.js** [Référence SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md) | [Package NPM](https://www.npmjs.com/package/@julep/sdk)
+- **Python** [Référence SDK](https://github.com/julep-ai/python-sdk/blob/main/api.md) | [Package PyPI](https://pypi.org/project/julep/)
+
+### Référence API
+
+Explorez notre documentation API pour en savoir plus sur les agents, les tâches et les exécutions :
+
+- [API des agents](https://dev.julep.ai/api/docs#tag/agents)
+- [API des tâches](https://dev.julep.ai/api/docs#tag/tasks)
+- [API d'exécution](https://dev.julep.ai/api/docs#tag/executions)
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
 ## Démarrage rapide local
 
@@ -1257,22 +1531,19 @@ results = client.agents.docs.search(
 5. `cp .env.example .env # <-- Modifier ce fichier`
 6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 
-## Référence du SDK
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-- [Kit de développement logiciel Node.js](https://github.com/julep-ai/node-sdk/blob/main/api.md)
-- [SDK Python](https://github.com/julep-ai/python-sdk/blob/main/api.md)
-
-## Référence API
-
-Explorez notre documentation API complète pour en savoir plus sur les agents, les tâches et les exécutions :
-
-- [API des agents](https://api.julep.ai/api/docs#tag/agents)
-- [API des tâches](https://api.julep.ai/api/docs#tag/tasks)
-- [API d'exécution](https://api.julep.ai/api/docs#tag/executions)
 
 *****
 
-## Pourquoi Julep vs. LangChain ?
+## Quelle est la différence entre Julep et LangChain etc ?
 
 ### Différents cas d'utilisation
 
@@ -1310,5 +1581,8 @@ Choisissez Julep lorsque vous avez besoin d'un framework robuste pour les agents
 <div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
     </a>
 </div>

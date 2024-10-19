@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow"><strong>探索文档</strong></a>
+  <a href="https://docs.julep.ai" rel="dofollow">探索文档</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和谐</a>
   ·
@@ -62,37 +62,44 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 目录</h3>
 
-- [主要特点](#%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9)
-- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9)
-- [Node.js 快速入门 🟩](#nodejs-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-)
-  - [步骤 1：创建代理](#%E6%AD%A5%E9%AA%A4-1%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86-1)
-  - [步骤 2：创建一个生成故事和漫画的任务](#%E6%AD%A5%E9%AA%A4-2%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E6%95%85%E4%BA%8B%E5%92%8C%E6%BC%AB%E7%94%BB%E7%9A%84%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 3：执行任务](#%E6%AD%A5%E9%AA%A4-3%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1-1)
-  - [步骤 4：与代理聊天](#%E6%AD%A5%E9%AA%A4-4%E4%B8%8E%E4%BB%A3%E7%90%86%E8%81%8A%E5%A4%A9-1)
-  - [心智模型](#%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B)
-- [概念](#%E6%A6%82%E5%BF%B5)
-- [理解任务](#%E7%90%86%E8%A7%A3%E4%BB%BB%E5%8A%A1)
-  - [工作流步骤的类型](#%E5%B7%A5%E4%BD%9C%E6%B5%81%E6%AD%A5%E9%AA%A4%E7%9A%84%E7%B1%BB%E5%9E%8B)
-- [工具类型](#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%9E%8B)
-  - [用户定义的函数](#%E7%94%A8%E6%88%B7%E5%AE%9A%E4%B9%89%E7%9A%84%E5%87%BD%E6%95%B0)
-  - [`系统` 工具](#%E7%B3%BB%E7%BB%9F-%E5%B7%A5%E5%85%B7)
-  - [内置“集成”](#%E5%86%85%E7%BD%AE%E9%9B%86%E6%88%90)
-  - [直接 `api_calls`](#%E7%9B%B4%E6%8E%A5-api_calls)
-- [集成](#%E9%9B%86%E6%88%90)
-  - [向代理添加工具](#%E5%90%91%E4%BB%A3%E7%90%86%E6%B7%BB%E5%8A%A0%E5%B7%A5%E5%85%B7)
-  - [管理会话和用户](#%E7%AE%A1%E7%90%86%E4%BC%9A%E8%AF%9D%E5%92%8C%E7%94%A8%E6%88%B7)
-  - [文档集成与搜索](#%E6%96%87%E6%A1%A3%E9%9B%86%E6%88%90%E4%B8%8E%E6%90%9C%E7%B4%A2)
-- [本地快速启动](#%E6%9C%AC%E5%9C%B0%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8)
-- [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
-- [为什么选择 Julep 而不是 LangChain？](#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89%E6%8B%A9-julep-%E8%80%8C%E4%B8%8D%E6%98%AF-langchain)
-  - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
-  - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
+- [简介](#introduction)
+- [主要特点](#key-features)
+- [快速示例](#quick-example)
+- [安装](#安装)
+- [Python 快速入门 🐍](#python-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip)
+- [步骤 3：执行任务](#step-3-execute-the-task)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent)
+- [Node.js 快速入门🟩](#nodejs-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent-1)
+- [步骤 2：创建一个生成故事和漫画的任务](#step-2-create-a-task-that-generates-a-story-and-comic-strip-1)
+- [步骤 3：执行任务](#step-3-execute-the-task-1)
+- [步骤 4：与代理聊天](#step-4-chat-with-the-agent-1)
+- [组件](#components)
+- [心智模型](#mental-model)
+- [概念](#concepts)
+- [理解任务](#understanding-tasks)
+- [工作流步骤的类型](#types-of-workflow-steps)
+- [工具类型](#tool-types)
+- [用户定义的`函数`](#user-defined-functions)
+- [`系统` 工具](#system-tools)
+- [内置 `integrations`](#built-in-integrations)
+-[直接`api_calls`]（#direct-api_calls）
+- [集成](#integrations)
+- [其他功能](#other-features)
+- [向代理添加工具](#adding-tools-to-agents)
+- [管理会话和用户](#managing-sessions-and-users)
+- [文档集成与搜索](#document-integration-and-search)
+- [本地快速启动](#local-quickstart)
+- [SDK 参考](#sdk-reference)
+- [API 参考](#api-reference)
+- [为什么 Julep 与 LangChain？](#why-julep-vs-langchain)
+- [不同用例](#different-use-cases)
+- [不同的外形尺寸](#different-form-factor)
+- [总结](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -102,40 +109,46 @@ Julep 是一个用于创建 AI 代理的平台，这些代理可以记住过去�
 
 Julep 支持创建多步骤任务，包括决策、循环、并行处理以及与众多外部工具和 API 的集成。
 
-虽然许多人工智能应用程序仅限于简单、线性的提示链和 API 调用，并且分支很少，但 Julep 可以处理更复杂的场景。
+尽管许多 AI 应用程序仅限于简单、线性的提示和 API 调用链，并且分支很少，但 Julep 可以处理更复杂的场景，这些场景包括：
 
-它支持：
-
-- 复杂、多步骤的流程
-- 动态决策
-- 并行执行
+- 有多个步骤，
+- 根据模型输出做出决策，
+- 产生并行分支，
+- 使用多种工具，并且
+- 长时间运行。
 
 > [!提示]
-> 想象一下，您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务，记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。
+> 想象一下，您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务、记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。阅读 [了解任务](#understanding-tasks) 了解更多信息。
 
 ## 主要特点
 
 1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
 2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
-3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
+3. 🔄 **多步骤任务**：通过循环和决策构建复杂的多步骤流程。
 4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
 5.🛠️**内置工具**：在您的任务中使用内置工具和外部 API。
 6. 🔧 **自我修复**：Julep 将自动重试失败的步骤、重新发送消息，并确保您的任务顺利运行。
 7. 📚 **RAG**：使用 Julep 的文档存储构建一个用于检索和使用您自己的数据的系统。
 
-Julep 非常适合需要超越简单的提示响应模型的 AI 用例的应用程序。
+![功能](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
+
+> [!提示]
+> Julep 非常适合需要超越简单的提示响应模型的 AI 用例的应用程序。
 
 快速示例
 
 想象一下一个可以执行以下操作的研究 AI 代理：
 
-1. 选择一个主题，
+1. **选择一个主题**，
 2. 针对该主题提出 100 个搜索查询，
 3. 同时进行网页搜索，
-4. 总结结果，
-5. 将摘要发送至 Discord
+4. **总结**结果，
+5. 将**摘要发送至 Discord**。
 
-在 Julep 中，这将是一个单一的任务<b>80行代码</b>然后运行<b>完全托管</b>一切都是独立的。所有步骤都在 Julep 自己的服务器上执行，您无需动手。这是一个工作示例：
+> [!注意]
+> 在 Julep 中，这将是一项单独的任务<b>80行代码</b>然后运行<b>完全托管</b>全部独立完成。所有步骤都在 Julep 自己的服务器上执行，您无需动手。
+
+这是一个有效的例子：
 
 ```yaml
 name: Research Agent
@@ -155,12 +168,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: "YOUR_BRAVE_API_KEY"
+        api_key: BSAqES7dj9d...  # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: "YOUR_DISCORD_WEBHOOK_URL"
+      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -192,7 +205,7 @@ main:
       tool: web_search
       arguments:
         query: "_"
-    parallelism: 100
+    parallelism: 10
 
   # Collect the results from the web search
   - evaluate:
@@ -206,28 +219,74 @@ main:
           The summary should be well-structured, informative, and highlight key findings and insights:
           {{_.results}}
     unwrap: true
+    settings:
+      model: gpt-4o-mini
 
   # Send the summary to Discord
   - tool: discord_webhook
     arguments:
-      content: >
-        **Research Summary for {{inputs[0].topic}}**
+      content: |-
+        f'''
+        **Research Summary for {inputs[0].topic}**
 
-        {{_}}
+        {_}
+        '''
 ```
 
 在这个例子中，Julep 将自动管理并行执行，重试失败的步骤，重新发送 API 请求，并保持任务可靠运行直到完成。
+
+> 这在 30 秒内运行并返回以下输出：
+
+<details>
+<summary><b>人工智能研究摘要</b> <i>（点击展开）</i></summary>
+
+> **人工智能研究摘要**
+> 
+>###人工智能（AI）研究成果摘要
+> 
+> #### 简介
+> 近年来，人工智能 (AI) 领域取得了重大进展，其特点是方法和技术的发展，使机器能够感知环境、从数据中学习并做出决策。本摘要主要关注从与 AI 相关的各种研究成果中获得的见解。
+> 
+> #### 主要发现
+> 
+> 1. **人工智能的定义和范围**：
+> - 人工智能被定义为计算机科学的一个分支，专注于创建能够执行需要类似人类智能的任务的系统，包括学习、推理和解决问题（维基百科）。
+>——它涵盖了各种子领域，包括机器学习、自然语言处理、机器人和计算机视觉。
+> 
+> 2. **影响与应用**：
+> - AI 技术正在融入众多领域，提高效率和生产力。应用范围从自动驾驶汽车和医疗诊断到客户服务自动化和财务预测（OpenAI）。
+> - 谷歌致力于让人工智能造福每个人，这凸显了其通过增强各个平台的用户体验（谷歌人工智能）显著改善日常生活的潜力。
+> 
+> 3. **道德考虑**：
+> - 关于人工智能的伦理影响的讨论一直在进行中，包括对隐私、偏见和决策过程中的责任的担忧。强调需要一个确保安全和负责任地使用人工智能技术的框架（OpenAI）。
+> 
+> 4. **学习机制**：
+> - AI 系统利用不同的学习机制，例如监督学习、无监督学习和强化学习。这些方法允许 AI 通过从过去的经验和数据中学习来提高性能（维基百科）。
+> - 监督学习和无监督学习之间的区别至关重要；监督学习依赖于标记数据，而无监督学习则识别没有预定义标签的模式（无监督）。
+> 
+> 5. **未来方向**：
+> - 未来人工智能的发展预计将专注于增强人工智能系统的可解释性和透明度，确保它们能够提供合理的决策和行动（OpenAI）。
+> - 人们还在努力使人工智能系统更易于访问和用户友好，鼓励不同人群和行业更广泛地采用它（谷歌人工智能）。
+> 
+> #### 结论
+> 人工智能代表着跨多个领域的变革力量，有望重塑行业并改善生活质量。然而，随着其能力的扩展，解决随之而来的伦理和社会影响至关重要。技术专家、伦理学家和政策制定者之间的持续研究和合作对于驾驭人工智能的未来格局至关重要。
+
+</details>
 
 ＃＃ 安装
 
 要开始使用 Julep，请使用 [npm](https://www.npmjs.com/package/@julep/sdk) 或 [pip](https://pypi.org/project/julep/) 安装它：
 
+**Node.js**：
 ```bash
 npm install @julep/sdk
+
+# or
+
+bun add @julep/sdk
 ```
 
-或者
-
+**Python**：
 ```bash
 pip install julep
 ```
@@ -244,996 +303,1218 @@ pip install julep
 
 ## Python 快速入门🐍
 
-### 步骤 1：创建代理
-
 ```python
+### Step 0: Setup
+
+import time
 import yaml
 from julep import Julep # or AsyncJulep
 
 client = Julep(api_key="your_julep_api_key")
 
+### Step 1: Create an Agent
+
 agent = client.agents.create(
     name="Storytelling Agent",
-    model="gpt-4o",
-    about="You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+    model="claude-3.5-sonnet",
+    about="You are a creative storyteller that crafts engaging stories on a myriad of topics.",
 )
 
-# 🛠️ Add an image generation tool (DALL·E) to the agent
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="image_generator",
-    description="Use this tool to generate images based on descriptions.",
-    integration={
-        "provider": "dalle",
-        "method": "generate_image",
-        "setup": {
-            "api_key": "your_openai_api_key",
-        },
-    },
-)
-```
+### Step 2: Create a Task that generates a story and comic strip
 
-### 步骤 2：创建一个生成故事和漫画的任务
-
-让我们定义一个多步骤任务来创建一个故事并根据输入的想法生成面板漫画：
-
-```python
-# 📋 Task
-# Create a task that takes an idea and creates a story and a 4-panel comic strip
 task_yaml = """
-name: Story and Comic Creator
-description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+name: Storyteller
+description: Create a story based on an idea.
+
+tools:
+  - name: research_wikipedia
+    integration:
+      provider: wikipedia
+      method: search
 
 main:
-  # Step 1: Generate a story and outline into 4 panels
+  # Step 1: Generate plot idea
   - prompt:
       - role: system
         content: You are {{agent.name}}. {{agent.about}}
       - role: user
         content: >
-          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
-          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
-    unwrap: true
+          Based on the idea '{{_.idea}}', generate a list of 5 plot ideas. Go crazy and be as creative as possible. Return your output as a list of long strings inside ```yaml 标签位于您的回复末尾。
+展开：true
 
-  # Step 2: Extract the panel descriptions and story
+- 评价：
+情节想法：load_yaml（_.split（'```yaml')[1].split('```')[0].strip())
+
+# 第二步：从情节思路中提取研究领域
+- 迅速的：
+- 角色：系统
+内容：您是 {{agent.name}}。{{agent.about}}
+- 角色：用户
+内容: >
+以下是一些故事情节的想法：
+{% 表示 _.plot_ideas 中的想法 %}
+- {{主意}}
+{% 结束 %}
+
+为了发展故事情节，我们需要研究情节思路。
+我们应该研究什么？写下你认为有趣的情节想法的维基百科搜索查询。
+将输出作为 yaml 列表返回```yaml tags at the end of your response.
+    unwrap: true
+    settings:
+      model: gpt-4o-mini
+      temperature: 0.7
+
   - evaluate:
-      story: _.split('1. ')[0].strip()
-      panels: re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)
+      research_queries: load_yaml(_.split('```yaml')[1].split('```')[0].strip())
 
-  # Step 3: Generate images for each panel using the image generator tool
+  # Step 3: Research each plot idea
   - foreach:
-      in: _.panels
+      in: _.research_queries
       do:
-        tool: image_generator
+        tool: research_wikipedia
         arguments:
-          description: _
+          query: _
 
-  # Step 4: Generate a catchy title for the story
+  - evaluate:
+      wikipedia_results: 'NEWLINE.join([f"- {doc.metadata.title}: {doc.metadata.summary}" for item in _ for doc in item.documents])'
+
+  # Step 4: Think and deliberate
   - prompt:
       - role: system
         content: You are {{agent.name}}. {{agent.about}}
       - role: user
-        content: >
-          Based on the story below, generate a catchy title.
+        content: |-
+          Before we write the story, let's think and deliberate. Here are some plot ideas:
+          {% for idea in outputs[1].plot_ideas %}
+          - {{idea}}
+          {% endfor %}
+          
+          Here are the results from researching the plot ideas on Wikipedia:
+          {{_.wikipedia_results}}
 
-          Story: {{outputs[1].story}}
-    unwrap: true
+          Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
+          Write down all your notes and thoughts.
+          Then finally write the plot as a yaml object inside ```yaml 标签位于响应末尾。yaml 对象应具有以下结构：
 
-  # Step 5: Return the story, the generated images, and the title
-  - return:
-      title: outputs[3]
-      story: outputs[1].story
-      comic_panels: "[output.image.url for output in outputs[2]]"
+          ```yaml
+          title: "<string>"
+          characters:
+          - name: "<string>"
+            about: "<string>"
+          synopsis: "<string>"
+          scenes:
+          - title: "<string>"
+            description: "<string>"
+            characters:
+            - name: "<string>"
+              role: "<string>"
+            plotlines:
+            - "<string>"```
+
+确保 yaml 有效，且角色和场景不为空。还要注意分号和编写 yaml 的其他问题。
+展开：true
+
+- 评价：
+情节：“load_yaml（_.split（'```yaml')[1].split('```')[0].strip())”
 """
 
-task = client.tasks.create(
-    agent_id=agent.id,
-    **yaml.safe_load(task_yaml)
+任务 = 客户端.任务.创建（
+agent_id=代理.id，
+**yaml.safe_load（任务_yaml）
 )
-```
 
 ### 步骤 3：执行任务
 
-```python
-# 🚀 Execute the task with an input idea
-execution = client.executions.create(
-    task_id=task.id,
-    input={"idea": "A cat who learns to fly"}
+执行 = 客户端.执行.创建（
+任务ID=任务ID，
+输入={“idea”：“一只学飞的猫”}
 )
 
-# 🎉 Watch as the story and comic panels are generated
-for transition in client.executions.transitions.stream(execution_id=execution.id):
-    print(transition)
+# 🎉 观看故事和漫画面板的生成
+while (result := client.executions.get(execution.id)).status 不在 ['成功', '失败'] 中：
+打印（结果.状态，结果.输出）
+时间.睡眠(1)
 
-# 📦 Once the execution is finished, retrieve the results
-result = client.executions.get(execution_id=execution.id)
+# 📦执行完成后，检索结果
+如果 result.status ==“成功”：
+打印（结果.输出）
+别的：
+引发异常（结果.错误）
 ```
 
-### 步骤 4：与代理聊天
+You can find the full python example [here](example.py).
 
-开始与代理进行交互式聊天会话：
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-```python
-session = client.sessions.create(agent_id=agent.id)
+## Node.js Quick Start 🟩
 
-# 💬 Send messages to the agent
-while (message := input("Enter a message: ")) != "quit":
-    response = client.sessions.chat(
-        session_id=session.id,
-        message=message,
-    )
+### Step 1: Create an Agent
 
-    print(response)
-```
+```JavaScript的
+// 步骤 0：设置
+const dotenv = require（'dotenv'）；
+const { Julep } = require('@julep/sdk');
+const yaml = require（'yaml'）；
 
-您可以在[这里](example.py)找到完整的python示例。
+dotenv.配置（）；
 
-## Node.js 快速入门 🟩
+const 客户端 = new Julep（{ apiKey：process.env.JULEP_API_KEY， 环境：process.env.JULEP_ENVIRONMENT || “生产” }）；
 
-### 步骤 1：创建代理
+/* 步骤 1：创建代理 */
 
-```javascript
-import { Julep } from "@julep/sdk";
-import yaml from "js-yaml";
-
-const client = new Julep({ apiKey: "your_julep_api_key" });
-
-async function createAgent() {
-  const agent = await client.agents.create({
-    name: "Storytelling Agent",
-    model: "gpt-4",
-    about:
-      "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+异步函数 createAgent() {
+const 代理 = 等待客户端.代理.创建（{
+名称：“讲故事特工”，
+模型：“claude-3.5-sonnet”，
+关于：“您是一位富有创意的讲故事者，能够就无数主题创作引人入胜的故事。”，
   });
-
-  // 🛠️ Add an image generation tool (DALL·E) to the agent
-  await client.agents.tools.create(agent.id, {
-    name: "image_generator",
-    description: "Use this tool to generate images based on descriptions.",
-    integration: {
-      provider: "dalle",
-      method: "generate_image",
-      setup: {
-        api_key: "your_openai_api_key",
-      },
-    },
-  });
-
-  return agent;
+回報代理；
 }
-```
 
-### 步骤 2：创建一个生成故事和漫画的任务
+/* 步骤 2：创建一个生成故事和漫画的任务 */
 
-```javascript
 const taskYaml = `
-name: Story and Comic Creator
-description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+名称：讲故事的人
+描述：根据一个想法创建一个故事。
 
-main:
-  # Step 1: Generate a story and outline into 4 panels
-  - prompt:
-      - role: system
-        content: You are {{agent.name}}. {{agent.about}}
-      - role: user
-        content: >
-          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
-          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
-    unwrap: true
+工具：
+- 名称：research_wikipedia
+一体化：
+提供者：维基百科
+方法：搜索
 
-  # Step 2: Extract the panel descriptions and story
-  - evaluate:
-      story: _.split('1. ')[0].trim()
-      panels: _.match(/\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)/g)
+主要的：
+# 步骤 1：产生情节想法
+- 迅速的：
+- 角色：系统
+内容：您是 {{agent.name}}。{{agent.about}}
+- 角色：用户
+内容: >
+根据想法“{{_.idea}}”，生成 5 个情节想法的列表。尽情发挥你的想象力和创造力。将输出作为响应末尾的 \`\`\`yaml 标签内的长字符串列表返回。
+展开：true
 
-  # Step 3: Generate images for each panel using the image generator tool
-  - foreach:
-      in: _.panels
-      do:
-        tool: image_generator
-        arguments:
-          description: _
+- 评价：
+plot_ideas：load_yaml（_.split（'\`\`\`yaml'）[1].split（'\`\`\`'）[0].strip（））
 
-  # Step 4: Generate a catchy title for the story
-  - prompt:
-      - role: system
-        content: You are {{agent.name}}. {{agent.about}}
-      - role: user
-        content: >
-          Based on the story below, generate a catchy title.
+# 第二步：从情节思路中提取研究领域
+- 迅速的：
+- 角色：系统
+内容：您是 {{agent.name}}。{{agent.about}}
+- 角色：用户
+内容: >
+以下是一些故事情节的想法：
+{% 表示 _.plot_ideas 中的想法 %}
+- {{主意}}
+{% 结束 %}
 
-          Story: {{outputs[1].story}}
-    unwrap: true
+为了发展故事情节，我们需要研究情节思路。
+我们应该研究什么？写下你认为有趣的情节想法的维基百科搜索查询。
+将您的输出作为 yaml 列表返回到响应末尾的 \`\`\`yaml 标签内。
+展开：true
+设置：
+型号：gpt-4o-mini
+温度：0.7
 
-  # Step 5: Return the story, the generated images, and the title
-  - return:
-      title: outputs[3]
-      story: outputs[1].story
-      comic_panels: outputs[2].map(output => output.image.url)
+- 评价：
+research_queries：load_yaml（_.split（'\`\`\`yaml'）[1].split（'\`\`\`'）[0].strip（））
+
+# 步骤 3：研究每个情节构思
+- foreach：
+在：_.research_queries
+做：
+工具：research_wikipedia
+参数：
+询问： _
+
+- 评价：
+wikipedia_results：'NEWLINE.join（[f“- {doc.metadata.title}：{doc.metadata.summary}”用于 item in _ for doc in item.documents]）'
+
+# 第 4 步：思考和深思
+- 迅速的：
+- 角色：系统
+内容：您是 {{agent.name}}。{{agent.about}}
+- 角色：用户
+内容：|-
+在写故事之前，让我们先思考一下。以下是一些情节构思：
+{% for idea in output[1].plot_ideas %}
+- {{主意}}
+{% 结束 %}
+
+以下是在维基百科上研究情节思路的结果：
+{{_.wikipedia_results}}
+
+认真思考故事情节。将故事情节与维基百科搜索结果相结合，为故事创建详细情节。
+写下你所有的笔记和想法。
+最后，将图表作为 yaml 对象写入响应末尾的 \`\`\`yaml 标签内。yaml 对象应具有以下结构：
+
+\`\`\`yaml
+标题： ”<string>"
+人物：
+- 姓名： ”<string>"
+关于： ”<string>"
+概要：”<string>"
+场景：
+- 标题： ”<string>"
+描述： ”<string>"
+人物：
+- 姓名： ”<string>"
+角色： ”<string>"
+故事情节：
+-”<string>“\`\`\`
+
+确保 yaml 有效，且角色和场景不为空。还要注意分号和编写 yaml 的其他问题。
+展开：true
+
+- 评价：
+情节：“load_yaml（_。split（'\`\`\`yaml'）[1].split（'\`\`\`'）[0].strip（））”
 `;
 
-async function createTask(agent) {
-  const task = await client.tasks.create(agent.id, yaml.load(taskYaml));
-  return task;
+异步函数 createTask（agentId）{
+const task = await 客户端.tasks.create(
+代理人编号，
+yaml.解析（taskYaml）
+（英文）：
+返回任务；
 }
-```
 
-### 步骤 3：执行任务
+/* 步骤 3：执行任务 */
 
-```javascript
-async function executeTask(task) {
-  const execution = await client.executions.create(task.id, {
-    input: { idea: "A cat who learns to fly" },
+异步函数 executeTask (taskId) {
+const 执行 = 等待客户端.执行.创建（taskId，{
+输入：{ 想法：“一只学飞的猫” }
   });
 
-  // 🎉 Watch as the story and comic panels are generated
-  for await (const transition of client.executions.transitions.stream(
-    execution.id
-  )) {
-    console.log(transition);
-  }
+// 🎉 观看故事和漫画面板的生成
+while (真) {
+const result = 等待客户端.executions.get（execution.id）;
+控制台.log（结果.状态，结果.输出）；
 
-  // 📦 Once the execution is finished, retrieve the results
-  const result = await client.executions.get(execution.id);
-  return result;
-}
-```
-
-### 步骤 4：与代理聊天
-
-```javascript
-async function chatWithAgent(agent) {
-  const session = await client.sessions.create({ agent_id: agent.id });
-
-  // 💬 Send messages to the agent
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const chat = async () => {
-    rl.question("Enter a message (or 'quit' to exit): ", async (message) => {
-      if (message.toLowerCase() === "quit") {
-        rl.close();
-        return;
+if (result.status === '成功' || result.status === '失败') {
+// 📦执行完成后，检索结果
+如果 (result.status === "成功") {
+控制台.log（结果.输出）；
+} 别的 {
+抛出新的错误（result.error）；
       }
+休息;
+    }
 
-      const response = await client.sessions.chat(session.id, { message });
-      console.log(response);
-      chat();
-    });
-  };
-
-  chat();
+等待新的 Promise（resolve => setTimeout（resolve，1000））；
+  }
 }
 
-// Run the example
-async function runExample() {
-  const agent = await createAgent();
-  const task = await createTask(agent);
-  const result = await executeTask(task);
-  console.log("Task Result:", result);
-  await chatWithAgent(agent);
+// 运行示例的主函数
+异步函数 main() {
+尝试 {
+const agent = await createAgent();
+const task = await createTask(agent.id);
+等待执行任务（任务id）；
+} 捕获 (错误) {
+console.error("发生错误：", error);
+  }
 }
 
-runExample().catch(console.error);
+main().then(() => console.log("完成")).catch(console.error);
 ```
 
-您可以在[这里](example.js)找到完整的 Node.js 示例。
+You can find the full Node.js example [here](example.js).
 
-＃＃ 成分
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep 由以下成分组成：
+## Components
 
-- **Julep 平台**：Julep 平台是运行您的工作流程的云服务。它包括用于描述工作流程的语言、用于运行这些工作流程的服务器以及用于与平台交互的 SDK。
-- **Julep SDKs**：Julep SDKs 是一组用于构建工作流的库。目前有适用于 Python 和 JavaScript 的 SDKs，还有更多 SDKs 正在开发中。
-- **Julep API**：Julep API 是一个 RESTful API，您可以使用它与 Julep 平台进行交互。
+Julep is made up of the following components:
 
-### 心智模型
+- **Julep Platform**: The Julep platform is a cloud service that runs your workflows. It includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform.
+- **Julep SDKs**: Julep SDKs are a set of libraries for building workflows. There are SDKs for Python and JavaScript, with more on the way.
+- **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
+
+### Mental Model
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" />
 </div>
 
-您可以将 Julep 视为一个结合了客户端和服务器端组件的平台，以帮助您构建高级 AI 代理。以下是它的可视化方法：
+Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
 
-1. **您的申请代码：**
+1. **Your Application Code:**
 
-- 您可以在应用程序中使用 Julep SDK 来定义代理、任务和工作流。
-- SDK 提供的函数和类使得设置和管理这些组件变得容易。
+   - You can use the Julep SDK in your application to define agents, tasks, and workflows.
+   - The SDK provides functions and classes that make it easy to set up and manage these components.
 
-2. **Julep 后端服务：**
+2. **Julep Backend Service:**
 
-- SDK 通过网络与 Julep 后端通信。
-- 后端处理任务的执行，维护会话状态，存储文档并协调工作流程。
+   - The SDK communicates with the Julep backend over the network.
+   - The backend handles execution of tasks, maintains session state, stores documents, and orchestrates workflows.
 
-3. **与工具和 API 集成：**
-- 在您的工作流程中，您可以集成外部工具和服务。
-- 后端促进这些集成，因此您的代理可以执行网络搜索、访问数据库或调用第三方 API。
+3. **Integration with Tools and APIs:**
+   - Within your workflows, you can integrate external tools and services.
+   - The backend facilitates these integrations, so your agents can, for example, perform web searches, access databases, or call third-party APIs.
 
-## 概念
+## Concepts
 
-Julep 基于几个关键技术组件构建，这些组件共同协作以创建强大的 AI 工作流程：
+Julep is built on several key technical components that work together to create powerful AI workflows:
 
-```mermaid
-graph TD
-    User[User] ==> Session[Session]
-    Session --> Agent[Agent]
-    Agent --> Tasks[Tasks]
-    Agent --> LLM[Large Language Model]
-    Tasks --> Tools[Tools]
-    Agent --> Documents[Documents]
-    Documents --> VectorDB[Vector Database]
-    Tasks --> Executions[Executions]
+```美人鱼
+图 TD
+用户[用户] ==> 会话[会话]
+会话-->代理[代理]
+代理-->任务[任务]
+代理——> LLM[大型语言模型]
+任务 --> 工具[工具]
+代理人 --> 文件[文件]
+文档 --> VectorDB[矢量数据库]
+任务 --> 执行[执行]
 
-    classDef client fill:#9ff,stroke:#333,stroke-width:1px;
-    class User client;
+classDef 客户端填充：#9ff，描边：#333，描边宽度：1px；
+用户客户端类；
 
-    classDef core fill:#f9f,stroke:#333,stroke-width:2px;
-    class Agent,Tasks,Session core;
+classDef 核心填充：#f9f，描边：#333，描边宽度：2px；
+类代理、任务、会话核心；
 ```
 
-- **代理**：由大型语言模型（LLM）支持的人工智能实体，可执行任务并与用户交互。
-- **用户**：通过会话与代理交互的实体。
-- **会话**：代理和用户之间的状态交互，在多个交换之间维护上下文。
-- **任务**：代理可以执行的多步骤、程序化工作流，包括提示、工具调用和条件逻辑等各种类型的步骤。
-- **工具**：扩展代理功能的集成，包括用户定义的函数、系统工具或第三方 API 集成。
-- **文档**：与代理或用户相关的文本或数据对象，矢量化并存储以用于语义搜索和检索。
-- **执行**：通过特定输入启动的任务实例，具有自己的生命周期和状态机。
+- **Agents**: AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users.
+- **Users**: Entities that interact with agents through sessions.
+- **Sessions**: Stateful interactions between agents and users, maintaining context across multiple exchanges.
+- **Tasks**: Multi-step, programmatic workflows that agents can execute, including various types of steps like prompts, tool calls, and conditional logic.
+- **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
+- **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
+- **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
 
-有关更详细的解释，请参阅我们的[概念文档]（https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md）。
 
-## 理解任务
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-任务是 Julep 工作流系统的核心。它们允许您定义代理可以执行的复杂、多步骤 AI 工作流。以下是任务组件的简要概述：
+## Understanding Tasks
 
-- **名称和描述**：每个任务都有唯一的名称和描述，以便于识别。
-- **主要步骤**：任务的核心，定义要执行的操作顺序。
-- **工具**：可选集成，可在任务执行期间扩展代理的功能。
+Tasks are the core of Julep's workflow system. They allow you to define complex, multi-step AI workflows that your agents can execute. Here's a brief overview of task components:
 
-### 工作流步骤的类型
+- **Name, Description and Input Schema**: Each task has a unique name and description for easy identification. An input schema (optional) that is used to validate the input to the task.
+- **Main Steps**: The core of a task, defining the sequence of actions to be performed. Each step can be a prompt, tool call, evaluate, wait_for_input, log, get, set, foreach, map_reduce, if-else, switch, sleep, or return. (See [Types of Workflow Steps](#types-of-workflow-steps) for more details)
+- **Tools**: Optional integrations that extend the capabilities of your agent during task execution.
 
-Julep 中的任务可以包含各种类型的步骤，让您可以创建复杂而强大的工作流程。以下是可用步骤类型的概述：
+### Lifecycle of a Task
 
-#### 常见步骤
+You create a task using the Julep SDK and specify the main steps that the agent will execute. When you execute a task, the following lifecycle happens:
+
+```美人鱼
+顺序图
+参与者 D 作为您的代码
+参与者 C 作为 Julep 客户
+参与者 S 担任 Julep 服务器
+
+D->>C：创建任务
+C->>S：提交执行
+注意 S：执行任务
+S 注释：管理状态
+S-->>C：执行事件
+C-->>D：进度更新
+S->>C：执行完成
+C->>D：最终结果
+```
+
+### Types of Workflow Steps
+
+Tasks in Julep can include various types of steps, allowing you to create complex and powerful workflows. Here's an overview of the available step types:
+
+#### Common Steps
 
 <table>
 <tr>
-<td>姓名</td> <td>关于</td><td>句法</td>
+    <th>Name</th>
+    <th>About</th>
+    <th>Syntax</th>
 </tr>
 <tr>
-<td>迅速的</td>
+<td> <b>Prompt</b> </td>
 <td>
-向 AI 模型发送消息并接收响应
-
+Send a message to the AI model and receive a response
+<br><br><b>Note:</b> The prompt step uses Jinja templates and you can access context variables in them.
 </td>
 
 <td>
 
 ```yaml
-- prompt: "Analyze the following data: {{data}}"
+- prompt: "分析以下数据：{{agent.name}}" # <-- 这是一个 jinja 模板
+```
+
+```yaml
+- 迅速的：
+- 角色：系统
+内容：“您是 {{agent.name}}。 {{agent.about}}”
+- 角色：用户
+内容：“分析以下数据：{{_.data}}”
 ```
 
 </td>
 </tr>
 <tr>
-<td>工具调用</td>
+<td> <b>Tool Call</b> </td>
 <td>
-执行集成工具或 API
+Execute an integrated tool or API that you have previously declared in the task.
+<br><br><b>Note:</b> The tool call step uses Python expressions inside the arguments.
 
 </td>
 
 <td>
 
 ```yaml
-- tool: web_search
-  arguments:
-    query: "Latest AI developments"
+- 工具：web_search
+参数：
+查询：“最新的 AI 发展”#<- 这是一个 Python 表达式（注意引号）
+num_results: len(_.topics) # <-- 用于访问列表长度的 Python 表达式
 ```
 
 </td>
 </tr>
 <tr>
-<td>评价</td>
+<td> <b>Evaluate</b> </td>
 <td>
-执行计算或处理数据
-
+Perform calculations or manipulate data
+<br><br><b>Note:</b> The evaluate step uses Python expressions.
 </td>
 
 <td>
 
 ```yaml
-- evaluate:
-    average_score: "sum(scores) / len(scores)"
+- 评价：
+平均分数：总分（分数）/长度（分数）
 ```
 
 </td>
 </tr>
 <tr>
-<td>等待输入</td>
+<td> <b>Wait for Input</b> </td>
 <td>
-暂停工作流程直到收到输入
+Pause workflow until input is received. It accepts an `info` field that can be used by your application to collect input from the user.
+
+<br><br><b>Note:</b> The wait_for_input step is useful when you want to pause the workflow and wait for user input e.g. to collect a response to a prompt.
 
 </td>
 
 <td>
 
 ```yaml
-- wait_for_input:
-    info:
-      message: "Please provide additional information."
+-等待输入：
+信息：
+消息：'“请提供有关 {_.required_info} 的其他信息。”' # <-- 用于访问上下文变量的 python 表达式
 ```
 
 </td>
 </tr>
 <tr>
-<td>日志</td>
+<td> <b>Log</b> </td>
 <td>
-记录指定的值或消息
+Log a specified value or message.
+
+<br><br><b>Note:</b> The log step uses Jinja templates and you can access context variables in them.
 
 </td>
 
 <td>
 
 ```yaml
-- log: "Processing completed for item {{item_id}}"
+- log：“项目 {{_.item_id}} 的处理已完成”#<-- jinja 模板用于访问上下文变量
 ```
 
 </td>
 </tr>
 </table>
 
-#### 键值步骤
+#### Key-Value Steps
 
 <table>
 <tr>
-<td>姓名</td> <td>关于</td><td>句法</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>得到</td>
+<td> <b>Get</b> </td>
 <td>
-从键值存储中检索值
+Retrieve a value from the execution's key-value store.
 
 </td>
 
 <td>
 
 ```yaml
-- get: "user_preference"
+- 获取：用户偏好
 ```
 
 </td>
 </tr>
 <tr>
-<td>放</td>
+<td> <b>Set</b> </td>
 <td>
-为键值存储中的键分配值
+Assign a value to a key in the execution's key-value store.
 
+<br><br><b>Note:</b> The set step uses Python expressions.
 </td>
 
 <td>
 
 ```yaml
-- set:
-    user_preference: "dark_mode"
+- 放：
+user_preference: '"dark_mode"' # <-- python 表达式
 ```
 
 </td>
 </tr>
 </table>
 
-#### 迭代步骤
+#### Iteration Steps
 
 <table>
 <tr>
-<td>姓名</td> <td>关于</td><td>句法</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>Foreach</td>
+<td> <b>Foreach</b> </td>
 <td>
-遍历集合并对每个项目执行步骤
+Iterate over a collection and perform steps for each item
 
 </td>
 
 <td>
 
 ```yaml
-- foreach:
-    in: "data_list"
-    do:
-      - log: "Processing item {{_}}"
+- foreach：
+in: _.data_list # <-- 用于访问上下文变量的 python 表达式
+做：
+- log: "处理项目 {{_.item}}" # <-- jinja 模板访问上下文变量
 ```
 
 </td>
 </tr>
 <tr>
-<td>Map-Reduce</td>
+<td> <b>Map-Reduce</b> </td>
 <td>
-对集合进行映射并减少结果
+Map over a collection and reduce the results
 
 </td>
 
 <td>
 
 ```yaml
-- map_reduce:
-    over: "numbers"
-    map:
-      - evaluate:
-          squared: "_ ** 2"
-    reduce: "sum(results)"
+- 映射_减少：
+over: _.numbers # <-- 用于访问上下文变量的 python 表达式
+地图：
+- 评价：
+平方：“_ ** 2”
+reduce：results + [_] # <--（可选）python 表达式以减少结果。如果省略，则为默认值。
+```
+
+```yaml
+- 映射_减少：
+结束：_.topics
+地图：
+- 提示：写一篇关于{{__}}的文章
+并行度：10
 ```
 
 </td>
 </tr>
 <tr>
-<td>平行线</td>
+<td> <b>Parallel</b> </td>
 <td>
-并行运行多个步骤
+Run multiple steps in parallel
 
 </td>
 
 <td>
 
 ```yaml
-- parallel:
-    - tool: web_search
-      arguments:
-        query: "AI news"
-    - tool: weather_check
-      arguments:
-        location: "New York"
+- 平行线：
+- 工具：web_search
+参数：
+查询：“AI 新闻”
+- 工具：weather_check
+参数：
+地点：“纽约”
 ```
 
 </td>
 </tr>
 </table>
 
-#### 条件步骤
+#### Conditional Steps
 
 <table>
 <tr>
-<td>姓名</td> <td>关于</td><td>句法</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>如果-否则</td>
+<td> <b>If-Else</b> </td>
 <td>
-有条件地执行步骤
+Conditional execution of steps
 
 </td>
 
 <td>
 
 ```yaml
-- if: "score > 0.8"
-  then:
-    - log: "High score achieved"
-  else:
-    - log: "Score needs improvement"
+- if: _.score > 0.8 # <-- python 表达式
+然后：
+- 日志：取得高分
+别的：
+- 错误：分数需要提高
 ```
 
 </td>
 </tr>
 <tr>
-<td>转变</td>
+<td> <b>Switch</b> </td>
 <td>
-根据多个条件执行步骤
+Execute steps based on multiple conditions
 
 </td>
 
 <td>
 
 ```yaml
-- switch:
-    - case: "category == 'A'"
-      then:
-        - log: "Category A processing"
-    - case: "category == 'B'"
-      then:
-        - log: "Category B processing"
-    - case: "_" # Default case
-      then:
-        - log: "Unknown category"
+- 转变：
+- 案例：_.category =='A'
+然后：
+- 日志：“A 类处理”
+- 案例：_.category =='B'
+然后：
+- 日志：“B类处理”
+- case: _ # 默认情况
+然后：
+- 错误：未知类别
 ```
 
 </td>
 </tr>
 </table>
 
-#### 其他控制流
+#### Other Control Flow
 
 <table>
 <tr>
-<td>姓名</td> <td>关于</td><td>句法</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>睡觉</td>
+<td> <b>Sleep</b> </td>
 <td>
-暂停工作流一段指定的时间
+Pause the workflow for a specified duration
 
 </td>
 
 <td>
 
 ```yaml
-- sleep:
-    seconds: 30
+- 睡觉：
+秒：30
+# 分钟：1
+#小时数：1
+#天数：1
 ```
 
 </td>
 </tr>
 <tr>
-<td>返回</td>
+<td> <b>Return</b> </td>
 <td>
-从工作流返回值
+Return a value from the workflow
+
+<br><br><b>Note:</b> The return step uses Python expressions.
 
 </td>
 
 <td>
 
 ```yaml
-- return:
-    result: "Task completed successfully"
+- 返回：
+result: '“任务成功完成”' #<-- python 表达式
+时间：datetime.now().isoformat() # <-- python 表达式
 ```
 
 </td>
 </tr>
 <tr>
-<td>屈服</td>
+<td> <b>Yield</b> </td>
 <td>
-运行子工作流并等待其完成
+Run a subworkflow and await its completion
 
 </td>
 
 <td>
 
 ```yaml
-- yield:
-    workflow: "data_processing_subflow"
-    arguments:
-      input_data: "{{raw_data}}"
+- 屈服：
+工作流程：process_data
+参数：
+输入数据：_.raw_data # <-- python 表达式
 ```
 
 </td>
 </tr>
 </tr>
 <tr>
-<td>错误</td>
+<td> <b>Error</b> </td>
 <td>
-通过指定错误消息来处理错误
+Handle errors by specifying an error message
 
 </td>
 
 <td>
 
 ```yaml
-- error: "Invalid input provided"
+- 错误：“提供的输入无效”#<-- 仅限字符串
 ```
 
 </td>
 </tr>
 </table>
 
-每种步骤类型在构建复杂的 AI 工作流中都有特定的用途。此分类有助于理解 Julep 任务中可用的各种控制流程和操作。
+Each step type serves a specific purpose in building sophisticated AI workflows. This categorization helps in understanding the various control flows and operations available in Julep tasks.
 
-## 工具类型
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-代理可以访问许多“工具”——基础模型可以使用一组输入“调用”的任何编程接口来实现目标。例如，它可以使用“web_search(query)”工具在互联网上搜索一些信息。
+## Tool Types
 
-与代理框架不同，julep 是管理代理执行的后端。客户端可以使用我们的 SDK 与代理进行交互。julep 负责执行任务和运行集成。
+Agents can be given access to a number of "tools" -- any programmatic interface that a foundation model can "call" with a set of inputs to achieve a goal. For example, it might use a `web_search(query)` tool to search the Internet for some information.
 
-julep 中的工具可以是以下之一：
+Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
-### 用户定义的函数
+Tools in julep can be one of:
+1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
+2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
+4. **`api_calls`**: Direct api calls during workflow executions as tool calls.
 
-这些是您可以为模型提供的函数签名，类似于 [openai] 的函数调用工作方式。例如：
+### User-defined `functions`
 
-```yaml
-name: Example system tool task
-description: List agents using system call
-
-tools:
-  - name: send_notification
-    description: Send a notification to the user
-    type: function
-    function:
-      parameters:
-        type: object
-        properties:
-          text:
-            type: string
-            description: Content of the notification
-
-main:
-  - tool: send_notification
-    arguments:
-      content: hi
-```
-
-每当 julep 遇到_用户定义函数_时，它就会暂停，将控制权交还给客户端，并等待客户端运行函数调用并将结果返回给 julep。
-
-> [!提示]
-> **示例食谱**：[cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
-
-### `系统` 工具
-
-内置工具可用于调用 julep API 本身，例如触发任务执行、附加到元数据字段等。
-“系统”工具内置于后端。它们会在需要时自动执行。它们不需要客户端的任何操作。
-
-例如，
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
 
 ```yaml
-name: Example system tool task
-description: List agents using system call
+名称：示例系统工具任务
+描述：使用系统调用列出代理
 
-tools:
-  - name: list_agents
-    description: List all agents
-    type: system
-    system:
-      resource: agent
-      operation: list
-main:
-  - tool: list_agents
-    arguments:
-      limit: 10
+工具：
+- 名称：send_notification
+描述：向用户发送通知
+类型：函数
+功能：
+参数：
+类型：对象
+特性：
+文本：
+类型：字符串
+描述：通知内容
+
+主要的：
+- 工具：send_notification
+参数：
+内容：'“hi”'#<--python 表达式
 ```
 
-> [!提示]
-> **示例食谱**：[cookbooks/10-Document_Management_and_Search.py​​](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py​​)
+Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-### 内置“集成”
+> [!TIP]
+> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
-Julep 带有许多内置集成（如下节所述）。`集成` 工具直接在 julep 后端执行。它们在运行时所需的任何其他参数都可以在代理/会话/用户的 `元数据` 字段中设置。
+### `system` tools
 
-> [!提示]
-> **示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
 
-julep 后端附带来自以下提供商的集成第三方工具：
+`system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
-- [合成](https://composio.dev)
-- [匿名](https://anon.com)
-- [langchain 工具包](https://python.langchain.com/v0.2/docs/integrations/toolkits/)
-
-计划支持_Github、Gitlab、Gmail、Jira、MultiOn、Slack_工具包。
-
-由于_composio_和_anon_是第三方提供商，因此他们的工具需要设置帐户链接。
-
-### 直接 `api_calls`
-
-julep 还可以在工作流执行期间直接以工具调用的形式进行 api 调用。与“集成”相同，其他运行时参数从“元数据”字段加载。
-
-例如，
+For example,
 
 ```yaml
-name: Example api_call task
-tools:
-  - type: api_call
-    name: hello
-    api_call:
-      method: GET
-      url: https://httpbin.org/get
-main:
-  - tool: hello
-    arguments:
-      params:
-        test: _.input
+名称：示例系统工具任务
+描述：使用系统调用列出代理
+
+工具：
+- 名称：list_agent_docs
+描述：列出给定代理的所有文档
+类型：系统
+系统：
+资源：代理
+子资源：doc
+操作：列表
+
+主要的：
+- 工具：list_agents
+参数：
+限制：10 #<-- python 表达式
 ```
 
-## 集成
+#### Available `system` resources and operations
 
-Julep 支持各种集成，可以扩展您的 AI 代理的功能。以下是可用集成及其支持的参数的列表：
+- `agent`:
+  - `list`: List all agents.
+  - `get`: Get a single agent by id.
+  - `create`: Create a new agent.
+  - `update`: Update an existing agent.
+  - `delete`: Delete an existing agent.
+
+- `user`:
+  - `list`: List all users.
+  - `get`: Get a single user by id.
+  - `create`: Create a new user.
+  - `update`: Update an existing user.
+  - `delete`: Delete an existing user.
+
+- `session`:
+  - `list`: List all sessions.
+  - `get`: Get a single session by id.
+  - `create`: Create a new session.
+  - `update`: Update an existing session.
+  - `delete`: Delete an existing session.
+  - `chat`: Chat with a session.
+  - `history`: Get the chat history with a session.
+
+- `task`:
+  - `list`: List all tasks.
+  - `get`: Get a single task by id.
+  - `create`: Create a new task.
+  - `update`: Update an existing task.
+  - `delete`: Delete an existing task.
+
+- `doc` (subresource for `agent` and `user`):
+  - `list`: List all documents.
+  - `create`: Create a new document.
+  - `delete`: Delete an existing document.
+  - `search`: Search for documents.
+
+Additional operations available for some resources:
+- `embed`: Embed a resource (specific resources not specified in the provided code).
+- `change_status`: Change the status of a resource (specific resources not specified in the provided code).
+- `chat`: Chat with a resource (specific resources not specified in the provided code).
+- `history`: Get the chat history with a resource (specific resources not specified in the provided code).
+- `create_or_update`: Create a new resource or update an existing one (specific resources not specified in the provided code).
+
+Note: The availability of these operations may vary depending on the specific resource and implementation details.
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+
+### Built-in `integrations`
+
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+
+See [Integrations](#integrations) for details on the available integrations.
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+
+### Direct `api_calls`
+
+julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
+
+For example,
+
+```yaml
+名称：示例 api_call 任务
+工具：
+- 类型：api_call
+名字：你好
+API调用：
+方法：GET
+网址：https://httpbin.org/get
+
+主要的：
+- 工具：你好
+参数：
+json：
+测试：_.input#<--python 表达式
+```
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+## Integrations
+
+Julep supports various integrations that extend the capabilities of your AI agents. Here's a list of available integrations and their supported arguments:
 
 <table>
 
 <tr>
-<td>勇敢搜索</td>
+<td> <b>Brave Search</b> </td>
 <td>
 
 ```yaml
-setup:
-  api_key: string # The API key for Brave Search
+设置：
+api_key: string # Brave Search 的 API 密钥
 
-arguments:
-  query: string # The search query for searching with Brave
+参数：
+query: string # 使用 Brave 搜索的搜索查询
 
-output:
-  result: string # The result of the Brave Search
+输出：
+result: string # Brave Search 的结果
 ```
 
 </td>
 
 <td>
 
-**示例食谱**：[cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>浏览器基础</td>
+<td> <b>BrowserBase</b> </td>
 <td>
 
 ```yaml
-setup:
-  api_key: string # The API key for BrowserBase
-  project_id: string # The project ID for BrowserBase
-  session_id: string # (Optional) The session ID for BrowserBase
+设置：
+api_key: string # BrowserBase 的 API 密钥
+project_id: string # BrowserBase 的项目 ID
+session_id: string #（可选）BrowserBase 的会话 ID
 
-arguments:
-  urls: list[string] # The URLs for loading with BrowserBase
+参数：
+urls: list[string] # 使用 BrowserBase 加载的 URL
 
-output:
-  documents: list # The documents loaded from the URLs
+输出：
+documents: list # 从 URL 加载的文档
 ```
 
 </td>
 
 </tr>
 <tr>
-<td>电子邮件</td>
+<td> <b>Email</b> </td>
 <td>
 
 ```yaml
-setup:
-  host: string # The host of the email server
-  port: integer # The port of the email server
-  user: string # The username of the email server
-  password: string # The password of the email server
+设置：
+host: string # 电子邮件服务器的主机
+port: integer # 电子邮件服务器的端口
+用户：string#电子邮件服务器的用户名
+password: string # 邮件服务器的密码
 
-arguments:
-  to: string # The email address to send the email to
-  from: string # The email address to send the email from
-  subject: string # The subject of the email
-  body: string # The body of the email
+参数：
+to: string # 要发送电子邮件到的电子邮件地址
+from: string # 发送电子邮件的电子邮件地址
+subject: string # 电子邮件的主题
+body: string # 电子邮件正文
 
-output:
-  success: boolean # Whether the email was sent successfully
+输出：
+success: boolean # 邮件是否发送成功
 ```
 
 </td>
 
 <td>
 
-**示例食谱**：[cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+**Example cookbook**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>蜘蛛</td>
+<td> <b>Spider</b> </td>
 <td>
 
 ```yaml
-setup:
-  spider_api_key: string # The API key for Spider
+设置：
+spider_api_key: string # Spider 的 API 密钥
 
-arguments:
-  url: string # The URL for which to fetch data
-  mode: string # The type of crawlers (default: "scrape")
-  params: dict # (Optional) The parameters for the Spider API
+参数：
+url: string # 获取数据的 URL
+mode: string # 爬虫的类型（默认值：“scrape”）
+params: dict # （可选）Spider API 的参数
 
-output:
-  documents: list # The documents returned from the spider
+输出：
+documents: list # 蜘蛛返回的文档
 ```
 
 </td>
 
 <td>
 
-**示例食谱**：[cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>天气</td>
+<td> <b>Weather</b> </td>
 <td>
 
 ```yaml
-setup:
-  openweathermap_api_key: string # The API key for OpenWeatherMap
+设置：
+openweathermap_api_key: string # OpenWeatherMap 的 API 密钥
 
-arguments:
-  location: string # The location for which to fetch weather data
+参数：
+location: string # 获取天气数据的位置
 
-output:
-  result: string # The weather data for the specified location
+输出：
+result: string # 指定位置的天气数据
 ```
 
 </td>
 
 <td>
 
-**示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 </td>
 </tr>
 </tr>
 <tr>
-<td>维基百科</td>
+<td> <b>Wikipedia</b> </td>
 <td>
 
 ```yaml
-arguments:
-  query: string # The search query string
-  load_max_docs: integer # Maximum number of documents to load (default: 2)
+参数：
+query: string # 搜索查询字符串
+load_max_docs：整数#要加载的最大文档数（默认值：2）
 
-output:
-  documents: list # The documents returned from the Wikipedia search
+输出：
+documents: list # 从 Wikipedia 搜索返回的文档
 ```
 
 </td>
 
 <td>
 
-**示例食谱**：[cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 </td>
 </tr>
 </table>
 
-有关更多详细信息，请参阅我们的 [集成文档](https://docs.julep.ai/integrations)。
+For more details, refer to our [Integrations Documentation](#integrations).
 
-其他功能
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep 提供一系列高级功能来增强您的 AI 工作流程：
+## Other Features
 
-### 向代理添加工具
+Julep offers a range of advanced features to enhance your AI workflows:
 
-通过集成外部工具和 API 来扩展代理的功能：
+### Adding Tools to Agents
 
-```python
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="web_search",
-    description="Search the web for information.",
-    integration={
-        "provider": "brave",
-        "method": "search",
-        "setup": {"api_key": "your_brave_api_key"},
-    },
+Extend your agent's capabilities by integrating external tools and APIs:
+
+```Python
+客户端.代理.工具.创建（
+agent_id=代理.id，
+名称="web_search",
+description="在网络上搜索信息。",
+积分={
+“提供者”：“勇敢”，
+“方法”：“搜索”，
+“设置”：{“api_key”：“你的brave_api_key”}，
+}，
 )
 ```
 
-### 管理会话和用户
+### Managing Sessions and Users
 
-Julep 为持久交互提供了强大的会话管理：
+Julep provides robust session management for persistent interactions:
 
-```python
-session = client.sessions.create(
-    agent_id=agent.id,
-    user_id=user.id,
-    context_overflow="adaptive"
+```Python
+会话 = 客户端.会话.创建（
+agent_id=代理.id，
+用户 ID=用户 ID，
+context_overflow="自适应"
 )
 
-# Continue conversation in the same session
-response = client.sessions.chat(
-    session_id=session.id,
-    messages=[
+# 在同一会话中继续对话
+响应 = 客户端.会话.聊天（
+session_id=会话id，
+消息=[
       {
-        "role": "user",
-        "content": "Follow up on the previous conversation."
+“角色”：“用户”，
+"content": "跟进之前的对话。"
       }
     ]
 )
 ```
 
-### 文档集成与搜索
+### Document Integration and Search
 
-轻松管理和搜索代理的文档：
+Easily manage and search through documents for your agents:
 
-```python
-# Upload a document
-document = client.agents.docs.create(
-    title="AI advancements",
-    content="AI is changing the world...",
-    metadata={"category": "research_paper"}
+```Python
+# 上传文档
+文档 = 客户端.代理.docs.创建（
+title="人工智能进步",
+content="人工智能正在改变世界...",
+元数据={“category”：“research_paper”}
 )
 
-# Search documents
-results = client.agents.docs.search(
-    text="AI advancements",
-    metadata_filter={"category": "research_paper"}
+# 搜索文档
+结果 = 客户端.代理.docs.搜索（
+text="AI 进步",
+metadata_filter={“category”：“research_paper”}
 )
 ```
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+＃＃ 参考
+
+### SDK 参考
+
+- **Node.js** [SDK 参考](https://github.com/julep-ai/node-sdk/blob/main/api.md) | [NPM 包](https://www.npmjs.com/package/@julep/sdk)
+- **Python** [SDK 参考](https://github.com/julep-ai/python-sdk/blob/main/api.md) | [PyPI 包](https://pypi.org/project/julep/)
+
+### API 参考
+
+浏览我们的 API 文档以了解有关代理、任务和执行的更多信息：
+
+- [代理 API](https://dev.julep.ai/api/docs#tag/agents)
+- [任务 API]（https://dev.julep.ai/api/docs#tag/tasks）
+- [执行 API](https://dev.julep.ai/api/docs#tag/executions)
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
 ## 本地快速启动
 
@@ -1250,22 +1531,19 @@ results = client.agents.docs.search(
 5. `cp .env.example .env # <-- 编辑此文件`
 6. `docker compose --env-file .env --profile temporary-ui --profile single-tenant --profile self-hosted-db up --build`
 
-## SDK 参考
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-- [Node.js SDK]（https://github.com/julep-ai/node-sdk/blob/main/api.md）
-- [Python SDK]（https://github.com/julep-ai/python-sdk/blob/main/api.md）
-
-API 参考
-
-浏览我们全面的 API 文档，了解有关代理、任务和执行的更多信息：
-
-- [代理 API](https://api.julep.ai/api/docs#tag/agents)
-- [任务 API](https://api.julep.ai/api/docs#tag/tasks)
-- [执行 API](https://api.julep.ai/api/docs#tag/executions)
 
 *****
 
-## 为什么选择 Julep 而不是 LangChain？
+## Julep 和 LangChain 等有什么区别？
 
 ### 不同的用例
 
@@ -1303,5 +1581,8 @@ LangChain 是一个**库**，其中包含一些工具和一个用于构建线性
 <div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
     </a>
 </div>
