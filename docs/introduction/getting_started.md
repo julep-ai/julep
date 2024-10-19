@@ -1,12 +1,5 @@
 # Getting Started with Julep
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 This guide will help you set up and start using the Julep API.
 
 ## Prerequisites
@@ -27,7 +20,7 @@ export JULEP_API_KEY=your_api_key_here
 3. Test your setup with a simple API call:
 
 ```bash
-curl -H "Authorization: Bearer $JULEP_API_KEY" https://api.julep.ai/api/agents
+curl -H "Authorization: Bearer $JULEP_API_KEY" https://dev.julep.ai/api/agents
 ```
 
 If successful, you should receive a list of agents (or an empty list if you haven't created any yet).

@@ -1,11 +1,5 @@
 # Task Workflows in Julep
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
 
 Tasks in Julep are powerful, Github Actions-style workflows that define long-running, multi-step actions. They allow for complex operations by defining steps and have access to all Julep integrations.
 

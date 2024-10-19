@@ -143,7 +143,7 @@ Imagine a Research AI agent that can do the following:
 > [!NOTE]
 > In Julep, this would be a single task under <b>80 lines of code</b> and run <b>fully managed</b> all on its own. All of the steps are executed on Julep's own servers and you don't need to lift a finger.
 
-Here's a working example:  
+Here's a working example:
 
 ```yaml
 name: Research Agent
@@ -163,12 +163,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d...  # dummy key
+        api_key: BSAqES7dj9d... # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
+      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -236,34 +236,40 @@ In this example, Julep will automatically manage parallel executions, retry fail
 <summary><b>Research Summary for AI</b> <i>(Click to expand)</i></summary>
 
 > **Research Summary for AI**
-> 
+>
 > ### Summary of Research Results on Artificial Intelligence (AI)
-> 
+>
 > #### Introduction
+>
 > The field of Artificial Intelligence (AI) has seen significant advancements in recent years, marked by the development of methods and technologies that enable machines to perceive their environment, learn from data, and make decisions. The primary focus of this summary is on the insights derived from various research findings related to AI.
-> 
+>
 > #### Key Findings
-> 
+>
 > 1. **Definition and Scope of AI**:
+>
 >    - AI is defined as a branch of computer science focused on creating systems that can perform tasks requiring human-like intelligence, including learning, reasoning, and problem-solving (Wikipedia).
 >    - It encompasses various subfields, including machine learning, natural language processing, robotics, and computer vision.
-> 
+>
 > 2. **Impact and Applications**:
+>
 >    - AI technologies are being integrated into numerous sectors, improving efficiency and productivity. Applications range from autonomous vehicles and healthcare diagnostics to customer service automation and financial forecasting (OpenAI).
 >    - Google's commitment to making AI beneficial for everyone highlights its potential to significantly improve daily life by enhancing user experiences across various platforms (Google AI).
-> 
+>
 > 3. **Ethical Considerations**:
+>
 >    - There is an ongoing discourse regarding the ethical implications of AI, including concerns about privacy, bias, and accountability in decision-making processes. The need for a framework that ensures the safe and responsible use of AI technologies is emphasized (OpenAI).
-> 
+>
 > 4. **Learning Mechanisms**:
+>
 >    - AI systems utilize different learning mechanisms, such as supervised learning, unsupervised learning, and reinforcement learning. These methods allow AI to improve performance over time by learning from past experiences and data (Wikipedia).
 >    - The distinction between supervised and unsupervised learning is critical; supervised learning relies on labeled data, while unsupervised learning identifies patterns without predefined labels (Unsupervised).
-> 
+>
 > 5. **Future Directions**:
 >    - Future AI developments are expected to focus on enhancing the interpretability and transparency of AI systems, ensuring that they can provide justifiable decisions and actions (OpenAI).
 >    - There is also a push towards making AI systems more accessible and user-friendly, encouraging broader adoption across different demographics and industries (Google AI).
-> 
+>
 > #### Conclusion
+>
 > AI represents a transformative force across multiple domains, promising to reshape industries and improve quality of life. However, as its capabilities expand, it is crucial to address the ethical and societal implications that arise. Continued research and collaboration among technologists, ethicists, and policymakers will be essential in navigating the future landscape of AI.
 
 </details>
@@ -272,7 +278,8 @@ In this example, Julep will automatically manage parallel executions, retry fail
 
 To get started with Julep, install it using [npm](https://www.npmjs.com/package/@julep/sdk) or [pip](https://pypi.org/project/julep/):
 
-**Node.js**:  
+**Node.js**:
+
 ```bash
 npm install @julep/sdk
 
@@ -281,7 +288,8 @@ npm install @julep/sdk
 bun add @julep/sdk
 ```
 
-**Python**:  
+**Python**:
+
 ```bash
 pip install julep
 ```
@@ -298,7 +306,7 @@ pip install julep
 
 ## Python Quick Start 🐍
 
-```python
+````python
 ### Step 0: Setup
 
 import time
@@ -383,7 +391,7 @@ main:
           {% for idea in outputs[1].plot_ideas %}
           - {{idea}}
           {% endfor %}
-          
+
           Here are the results from researching the plot ideas on Wikipedia:
           {{_.wikipedia_results}}
 
@@ -435,7 +443,7 @@ if result.status == "succeeded":
     print(result.output)
 else:
     raise Exception(result.error)
-```
+````
 
 You can find the full python example [here](example.py).
 
@@ -454,13 +462,16 @@ You can find the full python example [here](example.py).
 
 ```javascript
 // Step 0: Setup
-const dotenv = require('dotenv');
-const { Julep } = require('@julep/sdk');
-const yaml = require('yaml');
+const dotenv = require("dotenv");
+const { Julep } = require("@julep/sdk");
+const yaml = require("yaml");
 
 dotenv.config();
 
-const client = new Julep({ apiKey: process.env.JULEP_API_KEY, environment: process.env.JULEP_ENVIRONMENT || "production" });
+const client = new Julep({
+  apiKey: process.env.JULEP_API_KEY,
+  environment: process.env.JULEP_ENVIRONMENT || "production",
+});
 
 /* Step 1: Create an Agent */
 
@@ -468,7 +479,8 @@ async function createAgent() {
   const agent = await client.agents.create({
     name: "Storytelling Agent",
     model: "claude-3.5-sonnet",
-    about: "You are a creative storyteller that crafts engaging stories on a myriad of topics.",
+    about:
+      "You are a creative storyteller that crafts engaging stories on a myriad of topics.",
   });
   return agent;
 }
@@ -572,10 +584,7 @@ main:
 `;
 
 async function createTask(agentId) {
-  const task = await client.tasks.create(
-    agentId,
-    yaml.parse(taskYaml)
-  );
+  const task = await client.tasks.create(agentId, yaml.parse(taskYaml));
   return task;
 }
 
@@ -583,7 +592,7 @@ async function createTask(agentId) {
 
 async function executeTask(taskId) {
   const execution = await client.executions.create(taskId, {
-    input: { idea: "A cat who learns to fly" }
+    input: { idea: "A cat who learns to fly" },
   });
 
   // 🎉 Watch as the story and comic panels are generated
@@ -591,7 +600,7 @@ async function executeTask(taskId) {
     const result = await client.executions.get(execution.id);
     console.log(result.status, result.output);
 
-    if (result.status === 'succeeded' || result.status === 'failed') {
+    if (result.status === "succeeded" || result.status === "failed") {
       // 📦 Once the execution is finished, retrieve the results
       if (result.status === "succeeded") {
         console.log(result.output);
@@ -601,7 +610,7 @@ async function executeTask(taskId) {
       break;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 
@@ -616,7 +625,9 @@ async function main() {
   }
 }
 
-main().then(() => console.log("Done")).catch(console.error);
+main()
+  .then(() => console.log("Done"))
+  .catch(console.error);
 ```
 
 You can find the full Node.js example [here](example.js).
@@ -690,7 +701,6 @@ graph TD
 - **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
 - **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
 
-
 <div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
@@ -750,15 +760,15 @@ Send a message to the AI model and receive a response
 <td>
 
 ```yaml
-- prompt: "Analyze the following data: {{agent.name}}"  # <-- this is a jinja template
+- prompt: "Analyze the following data: {{agent.name}}" # <-- this is a jinja template
 ```
 
 ```yaml
 - prompt:
-  - role: system
-    content: "You are {{agent.name}}. {{agent.about}}"
-  - role: user
-    content: "Analyze the following data: {{_.data}}"
+    - role: system
+      content: "You are {{agent.name}}. {{agent.about}}"
+    - role: user
+      content: "Analyze the following data: {{_.data}}"
 ```
 
 </td>
@@ -776,8 +786,8 @@ Execute an integrated tool or API that you have previously declared in the task.
 ```yaml
 - tool: web_search
   arguments:
-    query: '"Latest AI developments"'  # <-- this is a python expression (notice the quotes)
-    num_results: len(_.topics)         # <-- python expression to access the length of a list
+    query: '"Latest AI developments"' # <-- this is a python expression (notice the quotes)
+    num_results: len(_.topics) # <-- python expression to access the length of a list
 ```
 
 </td>
@@ -812,7 +822,7 @@ Pause workflow until input is received. It accepts an `info` field that can be u
 ```yaml
 - wait_for_input:
     info:
-      message: '"Please provide additional information about {_.required_info}."'  # <-- python expression to access the context variable
+      message: '"Please provide additional information about {_.required_info}."' # <-- python expression to access the context variable
 ```
 
 </td>
@@ -829,7 +839,7 @@ Log a specified value or message.
 <td>
 
 ```yaml
-- log: "Processing completed for item {{_.item_id}}"  # <-- jinja template to access the context variable
+- log: "Processing completed for item {{_.item_id}}" # <-- jinja template to access the context variable
 ```
 
 </td>
@@ -863,13 +873,14 @@ Retrieve a value from the execution's key-value store.
 Assign a value to a key in the execution's key-value store.
 
 <br><br><b>Note:</b> The set step uses Python expressions.
+
 </td>
 
 <td>
 
 ```yaml
 - set:
-    user_preference: '"dark_mode"'  # <-- python expression
+    user_preference: '"dark_mode"' # <-- python expression
 ```
 
 </td>
@@ -893,9 +904,9 @@ Iterate over a collection and perform steps for each item
 
 ```yaml
 - foreach:
-    in: _.data_list  # <-- python expression to access the context variable
+    in: _.data_list # <-- python expression to access the context variable
     do:
-      - log: "Processing item {{_.item}}"  # <-- jinja template to access the context variable
+      - log: "Processing item {{_.item}}" # <-- jinja template to access the context variable
 ```
 
 </td>
@@ -911,11 +922,11 @@ Map over a collection and reduce the results
 
 ```yaml
 - map_reduce:
-    over: _.numbers  # <-- python expression to access the context variable
+    over: _.numbers # <-- python expression to access the context variable
     map:
       - evaluate:
           squared: "_ ** 2"
-    reduce: results + [_]  # <-- (optional) python expression to reduce the results. This is the default if omitted.
+    reduce: results + [_] # <-- (optional) python expression to reduce the results. This is the default if omitted.
 ```
 
 ```yaml
@@ -967,7 +978,7 @@ Conditional execution of steps
 <td>
 
 ```yaml
-- if: _.score > 0.8  # <-- python expression 
+- if: _.score > 0.8 # <-- python expression
   then:
     - log: High score achieved
   else:
@@ -993,7 +1004,7 @@ Execute steps based on multiple conditions
     - case: _.category == 'B'
       then:
         - log: "Category B processing"
-    - case: _  # Default case
+    - case: _ # Default case
       then:
         - error: Unknown category
 ```
@@ -1040,8 +1051,8 @@ Return a value from the workflow
 
 ```yaml
 - return:
-    result: '"Task completed successfully"'  # <-- python expression
-    time: datetime.now().isoformat()  # <-- python expression
+    result: '"Task completed successfully"' # <-- python expression
+    time: datetime.now().isoformat() # <-- python expression
 ```
 
 </td>
@@ -1059,7 +1070,7 @@ Run a subworkflow and await its completion
 - yield:
     workflow: process_data
     arguments:
-      input_data: _.raw_data  # <-- python expression 
+      input_data: _.raw_data # <-- python expression
 ```
 
 </td>
@@ -1075,7 +1086,7 @@ Handle errors by specifying an error message
 <td>
 
 ```yaml
-- error: "Invalid input provided"  # <-- Strings only
+- error: "Invalid input provided" # <-- Strings only
 ```
 
 </td>
@@ -1100,6 +1111,7 @@ Agents can be given access to a number of "tools" -- any programmatic interface 
 Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
 Tools in julep can be one of:
+
 1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
 2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
@@ -1128,17 +1140,16 @@ tools:
 main:
   - tool: send_notification
     arguments:
-      content: '"hi"'  # <-- python expression
+      content: '"hi"' # <-- python expression
 ```
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
 ### `system` tools
 
-Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
 `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
@@ -1160,12 +1171,13 @@ tools:
 main:
   - tool: list_agents
     arguments:
-      limit: 10  # <-- python expression
+      limit: 10 # <-- python expression
 ```
 
 #### Available `system` resources and operations
 
 - `agent`:
+
   - `list`: List all agents.
   - `get`: Get a single agent by id.
   - `create`: Create a new agent.
@@ -1173,6 +1185,7 @@ main:
   - `delete`: Delete an existing agent.
 
 - `user`:
+
   - `list`: List all users.
   - `get`: Get a single user by id.
   - `create`: Create a new user.
@@ -1180,6 +1193,7 @@ main:
   - `delete`: Delete an existing user.
 
 - `session`:
+
   - `list`: List all sessions.
   - `get`: Get a single session by id.
   - `create`: Create a new session.
@@ -1189,6 +1203,7 @@ main:
   - `history`: Get the chat history with a session.
 
 - `task`:
+
   - `list`: List all tasks.
   - `get`: Get a single task by id.
   - `create`: Create a new task.
@@ -1202,6 +1217,7 @@ main:
   - `search`: Search for documents.
 
 Additional operations available for some resources:
+
 - `embed`: Embed a resource (specific resources not specified in the provided code).
 - `change_status`: Change the status of a resource (specific resources not specified in the provided code).
 - `chat`: Chat with a resource (specific resources not specified in the provided code).
@@ -1210,8 +1226,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
 ### Built-in `integrations`
 
@@ -1219,9 +1234,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
-
+> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 ### Direct `api_calls`
 
@@ -1242,7 +1255,7 @@ main:
   - tool: hello
     arguments:
       json:
-        test: _.input  # <-- python expression
+        test: _.input # <-- python expression
 ```
 
 <div align="center">
@@ -1535,8 +1548,7 @@ Explore our API documentation to learn more about agents, tasks, and executions:
     </a>
 </div>
 
-
-*****
+---
 
 ## What's the difference between Julep and LangChain etc?
 

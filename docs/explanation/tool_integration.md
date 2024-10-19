@@ -1,12 +1,5 @@
 # Tool Integration in Julep
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 Julep provides a flexible system for integrating various types of tools that agents can use during interactions. These tools enable agents to perform actions, retrieve information, or interact with external systems.
 
 ## Types of Tools

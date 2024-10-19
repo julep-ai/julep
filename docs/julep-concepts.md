@@ -1,4 +1,5 @@
 # Julep Concepts
+
 <details>
   <summary>
     <h4>Table of Contents</h4>
@@ -49,11 +50,11 @@
   - [Execution Endpoints](#execution-endpoints)
   - [Execution Models](#execution-models)
   - [Execution State Transitions](#execution-state-transitions)
-</details>
+  </details>
 
-*****
+---
 
-**New feature announced! _🌟Tasks🌟_**  
+**New feature announced! _🌟Tasks🌟_**
 
 <div>
     <a href="https://www.loom.com/share/c5cda67936254465aaff4548245b3e13">
@@ -64,7 +65,7 @@
     </a>
   </div>
 
-*****
+---
 
 ## Agent
 
@@ -114,14 +115,16 @@ Additionally, there are related endpoints for managing agent documents, tools, a
 Here are some curl command examples for the main Agent endpoints:
 
 1. List Agents (paginated):
+
 ```bash
-curl -X GET "https://api.julep.ai/api/agents?limit=10&offset=0" \
+curl -X GET "https://dev.julep.ai/api/agents?limit=10&offset=0" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 2. Create a new Agent:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/agents" \
+curl -X POST "https://dev.julep.ai/api/agents" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -133,14 +136,16 @@ curl -X POST "https://api.julep.ai/api/agents" \
 ```
 
 3. Get an Agent by id:
+
 ```bash
-curl -X GET "https://api.julep.ai/api/agents/YOUR_AGENT_ID" \
+curl -X GET "https://dev.julep.ai/api/agents/YOUR_AGENT_ID" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 4. Update an existing Agent by id (PUT):
+
 ```bash
-curl -X PUT "https://api.julep.ai/api/agents/YOUR_AGENT_ID" \
+curl -X PUT "https://dev.julep.ai/api/agents/YOUR_AGENT_ID" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -152,8 +157,9 @@ curl -X PUT "https://api.julep.ai/api/agents/YOUR_AGENT_ID" \
 ```
 
 5. Update an existing Agent by id (PATCH):
+
 ```bash
-curl -X PATCH "https://api.julep.ai/api/agents/YOUR_AGENT_ID" \
+curl -X PATCH "https://dev.julep.ai/api/agents/YOUR_AGENT_ID" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -162,14 +168,15 @@ curl -X PATCH "https://api.julep.ai/api/agents/YOUR_AGENT_ID" \
 ```
 
 6. Delete Agent by id:
+
 ```bash
-curl -X DELETE "https://api.julep.ai/api/agents/YOUR_AGENT_ID" \
+curl -X DELETE "https://dev.julep.ai/api/agents/YOUR_AGENT_ID" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 Remember to replace `YOUR_API_KEY` with your actual Julep API key and `YOUR_AGENT_ID` with the specific agent ID you're working with.
 
-*****
+---
 
 ## User
 
@@ -204,14 +211,16 @@ Additionally, there are related endpoints for managing user documents:
 Here are some curl command examples for the main User endpoints:
 
 1. List Users (paginated):
+
 ```bash
-curl -X GET "https://api.julep.ai/api/users?limit=10&offset=0" \
+curl -X GET "https://dev.julep.ai/api/users?limit=10&offset=0" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 2. Create a new User:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/users" \
+curl -X POST "https://dev.julep.ai/api/users" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -221,14 +230,16 @@ curl -X POST "https://api.julep.ai/api/users" \
 ```
 
 3. Get a User by id:
+
 ```bash
-curl -X GET "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X GET "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 4. Update an existing User by id (PUT):
+
 ```bash
-curl -X PUT "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X PUT "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -238,8 +249,9 @@ curl -X PUT "https://api.julep.ai/api/users/YOUR_USER_ID" \
 ```
 
 5. Update an existing User by id (PATCH):
+
 ```bash
-curl -X PATCH "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X PATCH "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -248,24 +260,26 @@ curl -X PATCH "https://api.julep.ai/api/users/YOUR_USER_ID" \
 ```
 
 6. Delete User by id:
+
 ```bash
-curl -X DELETE "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X DELETE "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 Remember to replace `YOUR_API_KEY` with your actual Julep API key and `YOUR_USER_ID` with the specific user ID you're working with.
 
-*****
+---
 
 ## Session
 
 `Session` is the main workhorse for julep apps:
+
 - You interact with agents inside sessions. You can create multiple sessions per agent.
 - Each session maintains its own context for sending to the agent's model.
-- A session can have *one or more* agents and *zero or more* users associated with it.
+- A session can have _one or more_ agents and _zero or more_ users associated with it.
 - You can control what happens when the history exceeds the context window limit using `context_overflow` setting.
 
-A `Session` consists of:  
+A `Session` consists of:
 
 | **Field**          | **Description**                                                                                                                                                        |
 | :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -294,14 +308,16 @@ The Session API provides the following endpoints:
 Here are some curl command examples for the main Session endpoints:
 
 1. List Sessions (paginated):
+
 ```bash
-curl -X GET "https://api.julep.ai/api/sessions?limit=10&offset=0" \
+curl -X GET "https://dev.julep.ai/api/sessions?limit=10&offset=0" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 2. Create a new Session:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions" \
+curl -X POST "https://dev.julep.ai/api/sessions" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -314,14 +330,16 @@ curl -X POST "https://api.julep.ai/api/sessions" \
 ```
 
 3. Get a Session by id:
+
 ```bash
-curl -X GET "https://api.julep.ai/api/sessions/YOUR_SESSION_ID" \
+curl -X GET "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 4. Update an existing Session by id:
+
 ```bash
-curl -X PUT "https://api.julep.ai/api/sessions/YOUR_SESSION_ID" \
+curl -X PUT "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -332,20 +350,23 @@ curl -X PUT "https://api.julep.ai/api/sessions/YOUR_SESSION_ID" \
 ```
 
 5. Delete Session by id:
+
 ```bash
-curl -X DELETE "https://api.julep.ai/api/sessions/YOUR_SESSION_ID" \
+curl -X DELETE "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 6. Get Session Messages:
+
 ```bash
-curl -X GET "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
+curl -X GET "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 7. Create a new Message in a Session:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
+curl -X POST "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -355,8 +376,9 @@ curl -X POST "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/messages" \
 ```
 
 8. Get Session Tools:
+
 ```bash
-curl -X GET "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/tools" \
+curl -X GET "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/tools" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
@@ -365,6 +387,7 @@ Remember to replace `YOUR_API_KEY`, `YOUR_AGENT_ID`, `YOUR_USER_ID`, and `YOUR_S
 ### `metadata` precedence order
 
 In julep, the following objects can have `metadata` added to them:
+
 - `Agent`
 - `User`
 - `Session`
@@ -373,19 +396,21 @@ In julep, the following objects can have `metadata` added to them:
 - `Execution`
 
 Whenever multiple objects with the same `metadata` field are present in a scope, the value takes the following precedence (from highest to lowest):
+
 - In a session: `session > user > agent`
 - During a task execution: `execution > task > agent`
 
 ### Context overflow
 
 Whenever the context size grows beyond the `token_budget` or the model's input limit, the backend figures out what to do next based on the `context_overflow` setting:
+
 - `null`: Raise an exception. The client is responsible for creating a new session or clearing the history for the current one.
 - `"truncate"`: Truncate the context from the top except the for system prompt until the size falls below the budget. Raises an error if system prompt and last message combined exceed the budget.
 - `"adaptive"`: Whenever the context size reaches `75%` of the `token_budget`, a background task is created to compress the information by summarizing, merging and clipping messages in the context. This is done on a best effort basis. Requests might fail if the context wasn't compressed enough or on time.
 
 ### Default system template
 
-```jinja  
+```jinja
 {%- if agent.name -%}
 You are {{agent.name}}.{{" "}}
 {%- endif -%}
@@ -447,6 +472,7 @@ Relevant documents:{{"\n"}}
 ## Multi-agent sessions
 
 There are different types of sessions based on the number of agents and users:
+
 - Single agent: No user, single user, or multiple users
 - Multiple agents: No user, single user, or multiple users
 
@@ -462,7 +488,7 @@ A session can have more than one agents or users. The session's behavior changes
 
 **Multiple agents**: When a message is received by the session, each agent is called one after another in the order they were defined in the session. You can also specify which `agent` to use in a request, in which case, just that agent will be used.
 
-*****
+---
 
 ## Chat
 
@@ -497,7 +523,8 @@ Additional settings are available for fine-tuning the output, such as `temperatu
 
 The chat response can be either streamed or returned as a complete message:
 
-1. **Streamed Response**: 
+1. **Streamed Response**:
+
    - Content-Type: `text/event-stream`
    - Body: A stream of `ChatOutputChunk` objects.
 
@@ -506,6 +533,7 @@ The chat response can be either streamed or returned as a complete message:
    - Body: A `MessageChatResponse` object containing the full generated message(s).
 
 Both response types include:
+
 - `usage`: Token usage statistics.
 - `jobs`: Background job IDs spawned from this interaction.
 - `docs`: Documents referenced for this request (for citation purposes).
@@ -546,7 +574,7 @@ This endpoint allows you to send messages to an agent and receive responses.
 Here's a basic curl command to interact with the chat endpoint:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions/{SESSION_ID}/chat" \
+curl -X POST "https://dev.julep.ai/api/sessions/{SESSION_ID}/chat" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -563,7 +591,7 @@ curl -X POST "https://api.julep.ai/api/sessions/{SESSION_ID}/chat" \
 
 Remember to replace `{SESSION_ID}` with your actual session ID and `YOUR_API_KEY` with your Julep API key.
 
-*****
+---
 
 ## Tool
 
@@ -572,40 +600,42 @@ Agents can be given access to a number of "tools" -- any programmatic interface 
 Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
 Tools in julep can be one of:
+
 1. User-defined `function`s  
-	These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:  
-	```yaml    
-	name: send_text_message
-	description: Send a text message to a recipient.
-	parameters:
-	  type: object
-	  properties:
-	  	to:
-	  		type: string
-	  		description: Phone number of recipient.
-	  	text:
-	  		type: string
-	  		description: Content of the message.
-	```    
+   These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
+
+   ```yaml
+   name: send_text_message
+   description: Send a text message to a recipient.
+   parameters:
+     type: object
+     properties:
+     	to:
+     		type: string
+     		description: Phone number of recipient.
+     	text:
+     		type: string
+     		description: Content of the message.
+   ```
 
 2. `system` tools (upcoming)  
-	Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
-	
-	`system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
-  
+   Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+
+   `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
+
 3. Built-in `integration`s (upcoming)  
-	julep backend ships with integrated third party tools from the following providers:
-	- [composio](https://composio.dev) \*\*
-	- [anon](https://anon.com) \*\*
-	- [langchain toolkits](https://python.langchain.com/v0.2/docs/integrations/toolkits/). Support for _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ toolkits is planned.
+   julep backend ships with integrated third party tools from the following providers:
 
-		\*\* Since _composio_ and _anon_ are third-party providers, their tools require setting up account linking.
+   - [composio](https://composio.dev) \*\*
+   - [anon](https://anon.com) \*\*
+   - [langchain toolkits](https://python.langchain.com/v0.2/docs/integrations/toolkits/). Support for _Github, Gitlab, Gmail, Jira, MultiOn, Slack_ toolkits is planned.
 
-	`integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
+     \*\* Since _composio_ and _anon_ are third-party providers, their tools require setting up account linking.
+
+   `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
 
 4. Webhooks & `api_call`s (upcoming)  
-	julep can build natural-language tools from openapi specs. Under the hood, we use [langchain's NLA toolkit](https://python.langchain.com/v0.2/docs/integrations/toolkits/openapi_nla/) for this. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
-
+   julep can build natural-language tools from openapi specs. Under the hood, we use [langchain's NLA toolkit](https://python.langchain.com/v0.2/docs/integrations/toolkits/openapi_nla/) for this. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
 
 ### Tool Endpoints
 
@@ -622,14 +652,16 @@ The Tool API provides the following endpoints for managing tools associated with
 Here are some curl command examples for the main Tool endpoints:
 
 1. List Tools (paginated):
+
 ```bash
-curl -X GET "https://api.julep.ai/api/agents/{agent_id}/tools?limit=10&offset=0" \
+curl -X GET "https://dev.julep.ai/api/agents/{agent_id}/tools?limit=10&offset=0" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 2. Create a new Tool:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/agents/{agent_id}/tools" \
+curl -X POST "https://dev.julep.ai/api/agents/{agent_id}/tools" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -652,8 +684,9 @@ curl -X POST "https://api.julep.ai/api/agents/{agent_id}/tools" \
 ```
 
 3. Update an existing Tool (PUT):
+
 ```bash
-curl -X PUT "https://api.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
+curl -X PUT "https://dev.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -680,8 +713,9 @@ curl -X PUT "https://api.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
 ```
 
 4. Update an existing Tool (PATCH):
+
 ```bash
-curl -X PATCH "https://api.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
+curl -X PATCH "https://dev.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -692,18 +726,19 @@ curl -X PATCH "https://api.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
 ```
 
 5. Delete Tool:
+
 ```bash
-curl -X DELETE "https://api.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
+curl -X DELETE "https://dev.julep.ai/api/agents/{agent_id}/tools/{tool_id}" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 Remember to replace `YOUR_API_KEY`, `{agent_id}`, and `{tool_id}` with your actual Julep API key, agent ID, and tool ID respectively.
 
-
 ### Partial application of arguments to tools
 
 Often, it's necessary to _partial_ some arguments of a particular tool. You can do that by setting the `x-integration-args` field on the `metadata` of the required scope. For instance, say you have the following user-defined function tool:
-```yaml  
+
+```yaml
 name: check_account_status
 description: Get the account status for a customer
 parameters:
@@ -715,6 +750,7 @@ parameters:
 ```
 
 When chatting with a particular user, the `customer_id` field is expected to be fixed. In this case, you can set it on the `User` using:
+
 ```json
 {
   "metadata": {
@@ -733,6 +769,7 @@ The convention for naming the fields for that object is `"<tool-type>:<tool-name
 ### Resolving parameters with the same name
 
 This follows the precedence order of `metadata` fields. For example, say you are interacting with the following session:
+
 ```yaml
 user:
   id: 11
@@ -745,10 +782,10 @@ agent:
     x-integration-args:
       favorite: Emma Watson
   tools:
-  - type: function
-    name: send_fan_mail
-    parameters:
-    # ... favorite: ...
+    - type: function
+      name: send_fan_mail
+      parameters:
+      # ... favorite: ...
 session:
   id: 123
   metadata:
@@ -758,11 +795,12 @@ session:
 
 Then, the `send_fan_mail` will be called with the value of `favorite` set to the session's `metadata` (as dictated by the precedence order) to `"Emma Stone"`.
 
-*****
+---
 
 ## Doc
 
 `Doc`s are collection of text snippets (image support planned) that are indexed into a built-in vector database:
+
 - They can be scoped to an agent or a user.
 - Snippets are recalled inside sessions on the fly.
 - The retrieval pipeline is optimized for general-purpose use cases.
@@ -772,6 +810,7 @@ Then, the `send_fan_mail` will be called with the value of `favorite` set to the
 - For advanced use cases, it might be necessary to roll your own. The pros of using julep are speed and automatic updates.
 
 You can use the `Doc`s by:
+
 - Searching using a query or embedding directly, or
 - When they are recalled within `Session`s based on the context.
 
@@ -797,14 +836,16 @@ The Doc API provides the following endpoints:
 Here are some curl command examples for the main Doc endpoints:
 
 1. List Docs owned by a User (paginated):
+
 ```bash
-curl -X GET "https://api.julep.ai/api/users/{user_id}/docs?limit=10&offset=0" \
+curl -X GET "https://dev.julep.ai/api/users/{user_id}/docs?limit=10&offset=0" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 2. Create a Doc for a User:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/users/{user_id}/docs" \
+curl -X POST "https://dev.julep.ai/api/users/{user_id}/docs" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -814,14 +855,16 @@ curl -X POST "https://api.julep.ai/api/users/{user_id}/docs" \
 ```
 
 3. Get Doc by id:
+
 ```bash
-curl -X GET "https://api.julep.ai/api/docs/{doc_id}" \
+curl -X GET "https://dev.julep.ai/api/docs/{doc_id}" \
      -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 4. Search Docs owned by an Agent:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/agents/{agent_id}/search" \
+curl -X POST "https://dev.julep.ai/api/agents/{agent_id}/search" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -832,8 +875,9 @@ curl -X POST "https://api.julep.ai/api/agents/{agent_id}/search" \
 ```
 
 5. Embed a query for search:
+
 ```bash
-curl -X POST "https://api.julep.ai/api/embed" \
+curl -X POST "https://dev.julep.ai/api/embed" \
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -843,7 +887,7 @@ curl -X POST "https://api.julep.ai/api/embed" \
 
 Remember to replace `YOUR_API_KEY` with your actual Julep API key, and `{user_id}`, `{agent_id}`, and `{doc_id}` with the specific IDs you're working with.
 
-*****
+---
 
 ## Tasks
 
@@ -863,6 +907,7 @@ A `Task` is a workflow owned by an `Agent`. It consists of the following fields:
 | `inherit_tools` | `boolean`               | Whether to inherit tools from the parent agent (default: true).  |
 
 Additionally, a `Task` includes:
+
 - An `id` (UUID, read-only)
 - Timestamps (`created_at` and `updated_at`, read-only)
 - Metadata (key-value pairs)
@@ -872,9 +917,9 @@ Additionally, a `Task` includes:
 
 A `TaskTool` extends the `CreateToolRequest` and includes:
 
-| **Field**    | **Type**    | **Description**                                            |
-|:-------------|:------------|:-----------------------------------------------------------|
-| `inherited`  | `boolean`   | Whether the tool was inherited (read-only, default: false) |
+| **Field**   | **Type**  | **Description**                                            |
+| :---------- | :-------- | :--------------------------------------------------------- |
+| `inherited` | `boolean` | Whether the tool was inherited (read-only, default: false) |
 
 ### Example task definition
 
@@ -899,51 +944,52 @@ input_schema:
   required: ["about_user", "topics", "user_email"]
 
 tools:
-- function:
-    name: send_email
-    description: Sends an email to the user
-    parameters:
-      type: object
-      properties:
-        subject:
-          type: string
-        content:
-          type: string
-        recipient:
-          type: string
-      required: ["subject", "content", "recipient"]
+  - function:
+      name: send_email
+      description: Sends an email to the user
+      parameters:
+        type: object
+        properties:
+          subject:
+            type: string
+          content:
+            type: string
+          recipient:
+            type: string
+        required: ["subject", "content", "recipient"]
 
 main:
-# Pick a random topic.
-# `evaluate` step takes a key-value object where the values are valid python *expressions*.
-- evaluate:
-    chosen_topic: _["topics"][randint(len(_["topics"]))]
-    
-# Think about what support the user might need.
-# Note: `inputs` and `outputs` are globals.
-- prompt: You are a motivational coach and you are coaching someone who is {{inputs[0]["about_user"]}}. Think of the challenges they might be facing on the {{_["chosen_topic"]}} topic and what to do about them. Write down your answer as a bulleted list.
+  # Pick a random topic.
+  # `evaluate` step takes a key-value object where the values are valid python *expressions*.
+  - evaluate:
+      chosen_topic: _["topics"][randint(len(_["topics"]))]
 
-# Write a poem about it.
-# Note: `_` stands for `outputs[-1]` i.e. the last step's output
-- prompt: Write a short motivational poem about {{_["choices"][0].content}}
+  # Think about what support the user might need.
+  # Note: `inputs` and `outputs` are globals.
+  - prompt: You are a motivational coach and you are coaching someone who is {{inputs[0]["about_user"]}}. Think of the challenges they might be facing on the {{_["chosen_topic"]}} topic and what to do about them. Write down your answer as a bulleted list.
 
-# Manually call the send_email function.
-# `arguments` is an object where values are python expressions.
-- tool:
-    name: send_email
-    arguments:
-      subject: '"Daily Motivation"'
-      content: _["choices"][0].content
-      
-# Sleep for a day
-- sleep: 24*3600  
+  # Write a poem about it.
+  # Note: `_` stands for `outputs[-1]` i.e. the last step's output
+  - prompt: Write a short motivational poem about {{_["choices"][0].content}}
 
-# Start all over again
-- workflow: main  
-  arguments: inputs[0]
+  # Manually call the send_email function.
+  # `arguments` is an object where values are python expressions.
+  - tool:
+      name: send_email
+      arguments:
+        subject: '"Daily Motivation"'
+        content: _["choices"][0].content
+
+  # Sleep for a day
+  - sleep: 24*3600
+
+  # Start all over again
+  - workflow: main
+    arguments: inputs[0]
 ```
 
 This example demonstrates a daily motivation task that:
+
 1. Selects a random topic and gets the current date.
 2. Generates motivational content based on the user's profile and chosen topic.
 3. Creates a motivational poem based on the generated content.
@@ -952,43 +998,46 @@ This example demonstrates a daily motivation task that:
 
 ### Types of workflow steps
 
-| **Step Type**   | **Description**                                                                                                                                     |
-|:----------------| :----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Tool Call       | Runs a specified tool with given arguments.                                                                                                          |
-| Prompt          | Runs a prompt using a model. You can override settings and interpolate variables using [jinja](https://jinja.palletsprojects.com/) templates.       |
-| Evaluate        | Accepts an object with values that are valid python expressions. The step runs the expressions and the result becomes the output of this step.      |
-| Wait for input  | Suspends the execution and waits for the caller to resume execution with an input.                                                                   |
-| Log             | Logs information during the workflow execution.                                                                                                      |
-| Embed           | Embeds text for semantic operations.                                                                                                                 |
-| Search          | Searches for documents in the agent's doc store.                                                                                                     |
-| Set             | Sets a value in the workflow's key-value store.                                                                                                      |
-| Get             | Retrieves a value from the workflow's key-value store.                                                                                               |
-| Foreach         | Runs a step for every value from a list in serial order.                                                                                             |
-| Map-reduce      | Runs a step for every value of the input list in parallel. Requires a reduce expression to collect the results.                                      |
-| Parallel        | Executes multiple steps in parallel.                                                                                                                 |
-| Switch          | Executes different steps based on a condition, similar to a switch statement in programming.                                                         |
-| If-else         | Conditional step where the `if` field expression is evaluated. If the output is truthy then the `then` branch is executed, otherwise `else` branch. |
-| Sleep           | Pauses the workflow execution for a specified number of seconds.                                                                                     |
-| Return          | Ends the current workflow and optionally returns a value.                                                                                            |
-| Yield           | Switches to another named workflow. Can add custom inputs (Default: output of previous steps).                                                       |
-| Error           | Throws an error with the provided message and exits the workflow.                                                                                    |
+| **Step Type**  | **Description**                                                                                                                                     |
+| :------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tool Call      | Runs a specified tool with given arguments.                                                                                                         |
+| Prompt         | Runs a prompt using a model. You can override settings and interpolate variables using [jinja](https://jinja.palletsprojects.com/) templates.       |
+| Evaluate       | Accepts an object with values that are valid python expressions. The step runs the expressions and the result becomes the output of this step.      |
+| Wait for input | Suspends the execution and waits for the caller to resume execution with an input.                                                                  |
+| Log            | Logs information during the workflow execution.                                                                                                     |
+| Embed          | Embeds text for semantic operations.                                                                                                                |
+| Search         | Searches for documents in the agent's doc store.                                                                                                    |
+| Set            | Sets a value in the workflow's key-value store.                                                                                                     |
+| Get            | Retrieves a value from the workflow's key-value store.                                                                                              |
+| Foreach        | Runs a step for every value from a list in serial order.                                                                                            |
+| Map-reduce     | Runs a step for every value of the input list in parallel. Requires a reduce expression to collect the results.                                     |
+| Parallel       | Executes multiple steps in parallel.                                                                                                                |
+| Switch         | Executes different steps based on a condition, similar to a switch statement in programming.                                                        |
+| If-else        | Conditional step where the `if` field expression is evaluated. If the output is truthy then the `then` branch is executed, otherwise `else` branch. |
+| Sleep          | Pauses the workflow execution for a specified number of seconds.                                                                                    |
+| Return         | Ends the current workflow and optionally returns a value.                                                                                           |
+| Yield          | Switches to another named workflow. Can add custom inputs (Default: output of previous steps).                                                      |
+| Error          | Throws an error with the provided message and exits the workflow.                                                                                   |
 
 #### Tool Call
+
 Runs a specified tool with given arguments.
 
 ```yaml
 tool: send_email
 arguments:
-  subject: "f'Daily Motivation: {_[\"chosen_topic\"]}'"
+  subject: 'f''Daily Motivation: {_["chosen_topic"]}'''
   content: "_['choices'][0].content"
   recipient: "inputs['user_email']"
 ```
 
 In this example:
+
 - `tool` is a string reference to the tool to be called.
 - `arguments` is an object where each value is a Python expression (TypedExpression<unknown>). These expressions are evaluated at runtime.
 
 #### Prompt
+
 Runs a prompt using a model. You can override settings and interpolate variables using [jinja](https://jinja.palletsprojects.com/) templates.
 
 ```yaml
@@ -999,10 +1048,12 @@ settings:
 ```
 
 This example shows:
+
 - A `prompt` using Jinja template syntax for variable interpolation.
 - `settings` to override default chat parameters for this specific prompt.
 
 #### Evaluate
+
 Accepts an object with values that are valid Python expressions. The step runs the expressions and the result becomes the output of this step.
 
 ```yaml
@@ -1015,6 +1066,7 @@ evaluate:
 Each value in the `evaluate` object is a Python expression (TypedExpression<unknown>) that gets evaluated.
 
 #### Wait for input
+
 Suspends the execution and waits for the caller to resume execution with an input.
 
 ```yaml
@@ -1028,6 +1080,7 @@ wait_for_input:
 The `info` object contains expressions that will be evaluated and provided to the user interface.
 
 #### Log
+
 Logs information during the workflow execution.
 
 ```yaml
@@ -1037,6 +1090,7 @@ log: "Generated motivation for topic: {{_['chosen_topic']}}"
 The `log` field uses a Jinja template for variable interpolation.
 
 #### Embed
+
 Embeds text for semantic operations.
 
 ```yaml
@@ -1048,6 +1102,7 @@ embed:
 This step embeds the content generated in a previous step.
 
 #### Search
+
 Searches for documents in the agent's doc store.
 
 ```yaml
@@ -1059,6 +1114,7 @@ search:
 This step searches for documents related to the chosen topic.
 
 #### Set
+
 Sets a value in the workflow's key-value store.
 
 ```yaml
@@ -1070,6 +1126,7 @@ set:
 This step sets or updates values in the workflow's key-value store.
 
 #### Get
+
 Retrieves a value from the workflow's key-value store.
 
 ```yaml
@@ -1079,6 +1136,7 @@ get: last_topic
 This step retrieves the value of "last_topic" from the key-value store.
 
 #### Foreach
+
 Runs a step for every value from a list in serial order.
 
 ```yaml
@@ -1091,6 +1149,7 @@ foreach:
 This step iterates over the input topics, generating a tip for each one.
 
 #### Map-reduce
+
 Runs a step for every value of the input list in parallel. Requires a reduce expression to collect the results.
 
 ```yaml
@@ -1105,6 +1164,7 @@ parallelism: 5
 This step generates quotes for multiple topics in parallel and then combines them into a single string.
 
 #### Parallel
+
 Executes multiple steps in parallel.
 
 ```yaml
@@ -1118,6 +1178,7 @@ parallel:
 This step runs a prompt and a tool call in parallel.
 
 #### Switch
+
 Executes different steps based on a condition, similar to a switch statement in programming.
 
 ```yaml
@@ -1136,6 +1197,7 @@ switch:
 This step chooses different actions based on the number of previous responses.
 
 #### If-else
+
 Conditional step where the `if` field expression is evaluated. If the output is truthy then the `then` branch is executed, otherwise `else` branch.
 
 ```yaml
@@ -1149,6 +1211,7 @@ else:
 This step chooses different prompts based on the user's mood.
 
 #### Sleep
+
 Pauses the workflow execution for a specified number of seconds.
 
 ```yaml
@@ -1162,6 +1225,7 @@ sleep:
 This step pauses the workflow for 24 hours.
 
 #### Return
+
 Ends the current workflow and optionally returns a value.
 
 ```yaml
@@ -1173,6 +1237,7 @@ return:
 This step ends the workflow and returns the generated motivation message along with a timestamp.
 
 #### Yield
+
 Switches to another named workflow. Can add custom inputs (Default: output of previous steps).
 
 ```yaml
@@ -1185,6 +1250,7 @@ arguments:
 This step switches to a "generate_weekly_summary" workflow, passing in recent topics and the user profile.
 
 #### Error
+
 Throws an error with the provided message and exits the workflow.
 
 ```yaml
@@ -1195,7 +1261,7 @@ This step throws an error and terminates the workflow execution.
 
 These expanded examples provide a more comprehensive look at how each task step can be used in a Julep workflow, showcasing the flexibility and power of the task system.
 
-*****
+---
 
 ## Execution
 
@@ -1268,8 +1334,8 @@ stateDiagram-v2
      |           +-------------+
      +---------->|   running   |
                  +-------------+
-                      |   | 
-                      |   | 
+                      |   |
+                      |   |
                  +----v---v----+
                  |  succeeded  |
                  +-------------+
@@ -1353,4 +1419,4 @@ Each transition type corresponds to a specific execution status:
 
 This state transition model ensures that executions follow a consistent and predictable flow, allowing for complex workflows while maintaining clear status tracking.
 
-*****
+---
