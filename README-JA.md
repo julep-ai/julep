@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow"><strong>ドキュメントを見る</strong></a>
+  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを見る</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和</a>
   ·
@@ -62,42 +62,39 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 目次</h3>
 
-- [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
-- [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
-- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
-- [Python クイックスタート 🐍](#python-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-  - [ステップ 1: エージェントを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%97-1-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B)
-  - [ステップ2: ストーリーと漫画を生成するタスクを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%972-%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%A8%E6%BC%AB%E7%94%BB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B)
-  - [ステップ3: タスクを実行する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973-%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B)
-  - [ステップ4: エージェントとチャットする](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%974-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A8%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%E3%81%99%E3%82%8B)
-- [Node.js クイックスタート 🟩](#nodejs-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-  - [ステップ 1: エージェントを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%97-1-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-1)
-  - [ステップ2: ストーリーと漫画を生成するタスクを作成する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%972-%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AA%E3%83%BC%E3%81%A8%E6%BC%AB%E7%94%BB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E4%BD%9C%E6%88%90%E3%81%99%E3%82%8B-1)
-  - [ステップ3: タスクを実行する](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%973-%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B-1)
-  - [ステップ4: エージェントとチャットする](#%E3%82%B9%E3%83%86%E3%83%83%E3%83%974-%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%A8%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%E3%81%99%E3%82%8B-1)
-- [コンポーネント](#%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88)
-  - [メンタルモデル](#%E3%83%A1%E3%83%B3%E3%82%BF%E3%83%AB%E3%83%A2%E3%83%87%E3%83%AB)
-- [コンセプト](#%E3%82%B3%E3%83%B3%E3%82%BB%E3%83%97%E3%83%88)
-- [タスクを理解する](#%E3%82%BF%E3%82%B9%E3%82%AF%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B)
-  - [ワークフローステップの種類](#%E3%83%AF%E3%83%BC%E3%82%AF%E3%83%95%E3%83%AD%E3%83%BC%E3%82%B9%E3%83%86%E3%83%83%E3%83%97%E3%81%AE%E7%A8%AE%E9%A1%9E)
-- [ツールの種類](#%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AE%E7%A8%AE%E9%A1%9E)
-  - [ユーザー定義の `functions`](#%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E5%AE%9A%E7%BE%A9%E3%81%AE-functions)
-  - [`システム` ツール](#%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0-%E3%83%84%E3%83%BC%E3%83%AB)
-  - [組み込みの `integrations`](#%E7%B5%84%E3%81%BF%E8%BE%BC%E3%81%BF%E3%81%AE-integrations)
-  - [直接の `api_calls`](#%E7%9B%B4%E6%8E%A5%E3%81%AE-api_calls)
-- [統合](#%E7%B5%B1%E5%90%88)
-- [その他の機能](#%E3%81%9D%E3%81%AE%E4%BB%96%E3%81%AE%E6%A9%9F%E8%83%BD)
-  - [エージェントへのツールの追加](#%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%81%B8%E3%81%AE%E3%83%84%E3%83%BC%E3%83%AB%E3%81%AE%E8%BF%BD%E5%8A%A0)
-  - [セッションとユーザーの管理](#%E3%82%BB%E3%83%83%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%A8%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%81%AE%E7%AE%A1%E7%90%86)
-  - [ドキュメントの統合と検索](#%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88%E3%81%AE%E7%B5%B1%E5%90%88%E3%81%A8%E6%A4%9C%E7%B4%A2)
-- [ローカルクイックスタート](#%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88)
-- [SDK リファレンス](#sdk-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [APIリファレンス](#api%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [Julep と LangChain を比較する理由](#julep-%E3%81%A8-langchain-%E3%82%92%E6%AF%94%E8%BC%83%E3%81%99%E3%82%8B%E7%90%86%E7%94%B1)
-  - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
-  - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
+- [はじめに](#introduction)
+- [主な特徴](#key-features)
+- [簡単な例](#quick-example)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [タスクのライフサイクル](#lifecycle-of-a-task)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `functions`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [組み込みの `integrations`](#built-in-integrations)
+- [直接の `api_calls`](#direct-api_calls)
+- [統合](#integrations)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [参考](#reference)
+- [SDKリファレンス](#sdk-reference)
+- [APIリファレンス](#api-reference)
+- [ローカルクイックスタート](#local-quickstart)
+- [Julep と LangChain などの違いは何ですか?](#whats-the-difference-between-julep-and-langchain-etc)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -107,40 +104,46 @@ Julep は、過去のやり取りを記憶し、複雑なタスクを実行で�
 
 Julep を使用すると、意思決定、ループ、並列処理、多数の外部ツールや API との統合を組み込んだ複数ステップのタスクを作成できます。
 
-多くの AI アプリケーションは、分岐が最小限の、プロンプトと API 呼び出しの単純な線形チェーンに制限されていますが、Julep はより複雑なシナリオを処理できるように構築されています。
+多くの AI アプリケーションは、最小限の分岐によるプロンプトと API 呼び出しの単純な線形チェーンに制限されていますが、Julep は次のようなより複雑なシナリオを処理できるように構築されています。
 
-サポート対象:
-
-- 複雑で多段階のプロセス
-- ダイナミックな意思決定
-- 並列実行
+- 複数のステップがある、
+- モデルの出力に基づいて意思決定を行う
+- 平行枝を生成し、
+- たくさんのツールを使い、
+- 長時間走る。
 
 > [!ヒント]
-> 単純な質問に答えるだけでなく、複雑なタスクを処理し、過去のやり取りを記憶し、場合によっては他のツールや API も使用できる AI エージェントを構築したいとします。そこで Julep の出番です。
+> 単純な質問に答えるだけでなく、複雑なタスクを処理し、過去のやり取りを記憶し、場合によっては他のツールや API も使用できる AI エージェントを構築したいとします。そこで Julep の出番です。詳細については、[タスクの理解](#understanding-tasks) をお読みください。
 
 ## 主な特徴
 
 1. 🧠 **永続的な AI エージェント**: 長期にわたるやり取りを通じてコン​​テキストと情報を記憶します。
 2. 💾 **ステートフル セッション**: 過去のやり取りを追跡して、パーソナライズされた応答を提供します。
-3. 🔄 **複数ステップのタスク**: ループと意思決定を使用して、複雑な複数ステップのプロセスを構築します。
+3. 🔄 **複数ステップのタスク**: ループと意思決定を含む複雑な複数ステップのプロセスを構築します。
 4. ⏳ **タスク管理**: 無期限に実行される可能性のある長時間実行タスクを処理します。
 5. 🛠️ **組み込みツール**: タスクで組み込みツールと外部 API を使用します。
 6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
 7. 📚 **RAG**: Julep のドキュメント ストアを使用して、独自のデータを取得して使用するためのシステムを構築します。
 
-Julep は、単純なプロンプト応答モデルを超えた AI ユースケースを必要とするアプリケーションに最適です。
+![機能](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
+
+> [!ヒント]
+> Julep は、単純なプロンプト応答モデルを超えた AI ユースケースを必要とするアプリケーションに最適です。
 
 ## 簡単な例
 
 次のことができる研究 AI エージェントを想像してください。
 
-1. トピックを取り上げ、
-2. そのトピックについて100個の検索クエリを考えます。
+1. **トピックを選ぶ**、
+2. そのトピックについて**100個の検索クエリを考え出す**
 3. ウェブ検索を並行して実行する
-4. 結果をまとめる
-5.要約をDiscordに送信する
+4. 結果を**要約**します。
+5. **要約を Discord に送信**します。
 
-Julepでは、これは単一のタスクになります<b>80行のコード</b>そして走る<b>完全に管理された</b>すべては Julep のサーバー上で実行されます。すべての手順は Julep のサーバー上で実行されるため、何もする必要はありません。次に動作例を示します。
+> [!注意]
+> Julepでは、これは単一のタスクになります<b>80行のコード</b>そして走る<b>完全に管理された</b>すべて自動的に行われます。すべての手順は Julep の独自のサーバー上で実行されるため、何もする必要はありません。
+
+実際の例を次に示します。
 
 ```yaml
 name: Research Agent
@@ -160,12 +163,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: "YOUR_BRAVE_API_KEY"
+        api_key: BSAqES7dj9d...  # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: "YOUR_DISCORD_WEBHOOK_URL"
+      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -197,7 +200,7 @@ main:
       tool: web_search
       arguments:
         query: "_"
-    parallelism: 100
+    parallelism: 10
 
   # Collect the results from the web search
   - evaluate:
@@ -211,28 +214,74 @@ main:
           The summary should be well-structured, informative, and highlight key findings and insights:
           {{_.results}}
     unwrap: true
+    settings:
+      model: gpt-4o-mini
 
   # Send the summary to Discord
   - tool: discord_webhook
     arguments:
-      content: >
-        **Research Summary for {{inputs[0].topic}}**
+      content: |-
+        f'''
+        **Research Summary for {inputs[0].topic}**
 
-        {{_}}
+        {_}
+        '''
 ```
 
 この例では、Julep は並列実行を自動的に管理し、失敗したステップを再試行し、API リクエストを再送信し、タスクが完了するまで確実に実行し続けます。
+
+> これは 30 秒以内に実行され、次の出力を返します。
+
+<details>
+<summary><b>AIに関する研究概要</b> <i>（クリックして拡大）</i></summary>
+
+> **AIに関する研究概要**
+> 
+> ### 人工知能（AI）に関する研究成果の概要
+> 
+> #### はじめに
+> 人工知能 (AI) の分野は近年、機械が環境を認識し、データから学習し、意思決定を行える方法とテクノロジーの開発により、大きな進歩を遂げています。この概要では、AI に関連するさまざまな研究結果から得られた洞察に主に焦点を当てています。
+> 
+> #### 主な調査結果
+> 
+> 1. **AIの定義と範囲**:
+> - AI は、学習、推論、問題解決など、人間のような知能を必要とするタスクを実行できるシステムの作成に重点を置いたコンピューター サイエンスの分野として定義されています (Wikipedia)。
+> - 機械学習、自然言語処理、ロボット工学、コンピュータービジョンなど、さまざまなサブフィールドを網羅しています。
+> 
+> 2. **影響と応用**:
+> - AI テクノロジーはさまざまな分野に統合され、効率性と生産性を向上させています。その応用範囲は、自律走行車やヘルスケア診断から顧客サービスの自動化や財務予測まで多岐にわたります (OpenAI)。
+> - AI をすべての人にとって有益なものにするという Google の取り組みは、さまざまなプラットフォームでユーザー エクスペリエンスを強化することで日常生活を大幅に改善する可能性を強調しています (Google AI)。
+> 
+> 3. **倫理的配慮**:
+> - プライバシー、偏見、意思決定プロセスの説明責任に関する懸念など、AI の倫理的影響に関する議論が続いています。AI 技術の安全で責任ある使用を保証するフレームワークの必要性が強調されています (OpenAI)。
+> 
+> 4. **学習メカニズム**:
+> - AI システムは、教師あり学習、教師なし学習、強化学習などのさまざまな学習メカニズムを活用します。これらの方法により、AI は過去の経験やデータから学習することで、時間の経過とともにパフォーマンスを向上させることができます (Wikipedia)。
+> - 教師あり学習と教師なし学習の区別は重要です。教師あり学習はラベル付きデータに依存しますが、教師なし学習は事前定義されたラベルなしでパターンを識別します (教師なし)。
+> 
+> 5. **今後の方向性**:
+> - 今後の AI 開発では、AI システムの解釈可能性と透明性を高め、正当な判断と行動を提供できるようにすることに重点が置かれると予想されます (OpenAI)。
+> - AI システムをよりアクセスしやすく、ユーザーフレンドリーなものにし、さまざまな人口統計や業界での幅広い導入を促進する動きもあります (Google AI)。
+> 
+> #### 結論
+> AI は複数の領域に変革をもたらす力を持ち、産業の再構築や生活の質の向上が期待されています。しかし、AI の機能が拡大するにつれて、倫理的および社会的影響に対処することが極めて重要になります。AI の将来像を見据えるには、技術者、倫理学者、政策立案者による継続的な研究と協力が不可欠です。
+
+</details>
 
 ## インストール
 
 Julep を使い始めるには、[npm](https://www.npmjs.com/package/@julep/sdk) または [pip](https://pypi.org/project/julep/) を使用してインストールします。
 
+**Node.js**:
 ```bash
 npm install @julep/sdk
+
+# or
+
+bun add @julep/sdk
 ```
 
-または
-
+**Python**:
 ```bash
 pip install julep
 ```
@@ -249,996 +298,1218 @@ pip install julep
 
 ## Python クイックスタート 🐍
 
-### ステップ 1: エージェントを作成する
-
 ```python
+### Step 0: Setup
+
+import time
 import yaml
 from julep import Julep # or AsyncJulep
 
 client = Julep(api_key="your_julep_api_key")
 
+### Step 1: Create an Agent
+
 agent = client.agents.create(
     name="Storytelling Agent",
-    model="gpt-4o",
-    about="You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+    model="claude-3.5-sonnet",
+    about="You are a creative storyteller that crafts engaging stories on a myriad of topics.",
 )
 
-# 🛠️ Add an image generation tool (DALL·E) to the agent
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="image_generator",
-    description="Use this tool to generate images based on descriptions.",
-    integration={
-        "provider": "dalle",
-        "method": "generate_image",
-        "setup": {
-            "api_key": "your_openai_api_key",
-        },
-    },
-)
-```
+### Step 2: Create a Task that generates a story and comic strip
 
-### ステップ2: ストーリーと漫画を生成するタスクを作成する
-
-入力されたアイデアに基づいてストーリーを作成し、パネル化された漫画を生成するためのマルチステップタスクを定義しましょう。
-
-```python
-# 📋 Task
-# Create a task that takes an idea and creates a story and a 4-panel comic strip
 task_yaml = """
-name: Story and Comic Creator
-description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+name: Storyteller
+description: Create a story based on an idea.
+
+tools:
+  - name: research_wikipedia
+    integration:
+      provider: wikipedia
+      method: search
 
 main:
-  # Step 1: Generate a story and outline into 4 panels
+  # Step 1: Generate plot idea
   - prompt:
       - role: system
         content: You are {{agent.name}}. {{agent.about}}
       - role: user
         content: >
-          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
-          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
-    unwrap: true
+          Based on the idea '{{_.idea}}', generate a list of 5 plot ideas. Go crazy and be as creative as possible. Return your output as a list of long strings inside ```応答の最後に yaml タグを追加します。
+アンラップ: true
 
-  # Step 2: Extract the panel descriptions and story
+- 評価する：
+plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].ストリップ())
+
+# ステップ2: プロットのアイデアから研究分野を抽出する
+- プロンプト：
+- 役割: システム
+内容: あなたは {{agent.name}} です。 {{agent.about}}
+- 役割: ユーザー
+内容: >
+ストーリーのプロットのアイデアをいくつか紹介します。
+{% for idea in _.plot_ideas %}
+- {{アイデア}}
+{% endfor %}
+
+ストーリーを展開するには、プロットのアイデアをリサーチする必要があります。
+何を研究すべきでしょうか? 興味深いと思うプロットのアイデアについて、Wikipedia の検索クエリを書き留めてください。
+出力をyamlリストとして返します```yaml tags at the end of your response.
+    unwrap: true
+    settings:
+      model: gpt-4o-mini
+      temperature: 0.7
+
   - evaluate:
-      story: _.split('1. ')[0].strip()
-      panels: re.findall(r'\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)', _)
+      research_queries: load_yaml(_.split('```yaml')[1].split('```')[0].strip())
 
-  # Step 3: Generate images for each panel using the image generator tool
+  # Step 3: Research each plot idea
   - foreach:
-      in: _.panels
+      in: _.research_queries
       do:
-        tool: image_generator
+        tool: research_wikipedia
         arguments:
-          description: _
+          query: _
 
-  # Step 4: Generate a catchy title for the story
+  - evaluate:
+      wikipedia_results: 'NEWLINE.join([f"- {doc.metadata.title}: {doc.metadata.summary}" for item in _ for doc in item.documents])'
+
+  # Step 4: Think and deliberate
   - prompt:
       - role: system
         content: You are {{agent.name}}. {{agent.about}}
       - role: user
-        content: >
-          Based on the story below, generate a catchy title.
+        content: |-
+          Before we write the story, let's think and deliberate. Here are some plot ideas:
+          {% for idea in outputs[1].plot_ideas %}
+          - {{idea}}
+          {% endfor %}
+          
+          Here are the results from researching the plot ideas on Wikipedia:
+          {{_.wikipedia_results}}
 
-          Story: {{outputs[1].story}}
-    unwrap: true
+          Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
+          Write down all your notes and thoughts.
+          Then finally write the plot as a yaml object inside ```応答の最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
 
-  # Step 5: Return the story, the generated images, and the title
-  - return:
-      title: outputs[3]
-      story: outputs[1].story
-      comic_panels: "[output.image.url for output in outputs[2]]"
+          ```yaml
+          title: "<string>"
+          characters:
+          - name: "<string>"
+            about: "<string>"
+          synopsis: "<string>"
+          scenes:
+          - title: "<string>"
+            description: "<string>"
+            characters:
+            - name: "<string>"
+              role: "<string>"
+            plotlines:
+            - "<string>"```
+
+yaml が有効であり、文字とシーンが空でないことを確認してください。また、セミコロンや yaml の記述に関するその他の注意点にも注意してください。
+アンラップ: true
+
+- 評価する：
+プロット: "load_yaml(_.split('```yaml')[1].split('```')[0].strip())"
 """
 
-task = client.tasks.create(
-    agent_id=agent.id,
-    **yaml.safe_load(task_yaml)
+タスク = client.tasks.create(
+エージェントID=エージェントID、
+**yaml.safe_load(タスクyaml)
 )
-```
 
 ### ステップ3: タスクを実行する
 
-```python
-# 🚀 Execute the task with an input idea
-execution = client.executions.create(
-    task_id=task.id,
-    input={"idea": "A cat who learns to fly"}
+実行 = client.executions.create(
+タスクID=タスクID、
+input={"idea": "飛ぶことを学ぶ猫"}
 )
 
-# 🎉 Watch as the story and comic panels are generated
-for transition in client.executions.transitions.stream(execution_id=execution.id):
-    print(transition)
+# 🎉 ストーリーと漫画パネルが生成される様子をご覧ください
+while (result := client.executions.get(execution.id)).status が ['succeeded', 'failed'] の範囲外です:
+print(結果.ステータス、結果.出力)
+時間.睡眠(1)
 
-# 📦 Once the execution is finished, retrieve the results
-result = client.executions.get(execution_id=execution.id)
+# 📦 実行が完了したら、結果を取得します
+result.status == "成功"の場合:
+print(結果.出力)
+それ以外：
+例外(結果.エラー)を発生させる
 ```
 
-### ステップ4: エージェントとチャットする
+You can find the full python example [here](example.py).
 
-エージェントとの対話型チャット セッションを開始します。
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-```python
-session = client.sessions.create(agent_id=agent.id)
+## Node.js Quick Start 🟩
 
-# 💬 Send messages to the agent
-while (message := input("Enter a message: ")) != "quit":
-    response = client.sessions.chat(
-        session_id=session.id,
-        message=message,
-    )
+### Step 1: Create an Agent
 
-    print(response)
-```
+```ジャバスクリプト
+// ステップ 0: セットアップ
+定数dotenv = require('dotenv');
+Julep のクラスを '@julep/sdk' として定義します。
+yaml を require('yaml');
 
-完全な Python の例は [ここ](example.py) にあります。
+config() を呼び出します。
 
-## Node.js クイックスタート 🟩
+const client = new Julep({ apiKey: process.env.JULEP_API_KEY, 環境: process.env.JULEP_ENVIRONMENT || "production" });
 
-### ステップ 1: エージェントを作成する
+/* ステップ 1: エージェントを作成する */
 
-```javascript
-import { Julep } from "@julep/sdk";
-import yaml from "js-yaml";
-
-const client = new Julep({ apiKey: "your_julep_api_key" });
-
-async function createAgent() {
-  const agent = await client.agents.create({
-    name: "Storytelling Agent",
-    model: "gpt-4",
-    about:
-      "You are a creative storytelling agent that can craft engaging stories and generate comic panels based on ideas.",
+非同期関数createAgent() {
+const エージェント = クライアント.エージェント.作成を待機します({
+名前: 「ストーリーテリングエージェント」
+モデル: "claude-3.5-sonnet",
+概要: 「あなたは、さまざまなトピックについて魅力的なストーリーを作り上げることができるクリエイティブなストーリーテラーです。」
   });
-
-  // 🛠️ Add an image generation tool (DALL·E) to the agent
-  await client.agents.tools.create(agent.id, {
-    name: "image_generator",
-    description: "Use this tool to generate images based on descriptions.",
-    integration: {
-      provider: "dalle",
-      method: "generate_image",
-      setup: {
-        api_key: "your_openai_api_key",
-      },
-    },
-  });
-
-  return agent;
+返品エージェント;
 }
-```
 
-### ステップ2: ストーリーと漫画を生成するタスクを作成する
+/* ステップ 2: ストーリーと漫画を生成するタスクを作成する */
 
-```javascript
-const taskYaml = `
-name: Story and Comic Creator
-description: Create a story based on an idea and generate a 4-panel comic strip illustrating the story.
+const タスクYaml = `
+名前: ストーリーテラー
+説明: アイデアに基づいてストーリーを作成します。
 
-main:
-  # Step 1: Generate a story and outline into 4 panels
-  - prompt:
-      - role: system
-        content: You are {{agent.name}}. {{agent.about}}
-      - role: user
-        content: >
-          Based on the idea '{{_.idea}}', write a short story suitable for a 4-panel comic strip.
-          Provide the story and a numbered list of 4 brief descriptions for each panel illustrating key moments in the story.
-    unwrap: true
+ツール:
+- 名前: research_wikipedia
+統合：
+提供元: wikipedia
+方法: 検索
 
-  # Step 2: Extract the panel descriptions and story
-  - evaluate:
-      story: _.split('1. ')[0].trim()
-      panels: _.match(/\\d+\\.\\s*(.*?)(?=\\d+\\.\\s*|$)/g)
+主要：
+# ステップ1: プロットのアイデアを生み出す
+- プロンプト：
+- 役割: システム
+内容: あなたは {{agent.name}} です。 {{agent.about}}
+- 役割: ユーザー
+内容: >
+アイデア「{{_.idea}}」に基づいて、5 つのプロット アイデアのリストを生成します。自由に創造的に考えてください。出力は、応答の最後に \`\`\`yaml タグ内の長い文字列のリストとして返されます。
+アンラップ: true
 
-  # Step 3: Generate images for each panel using the image generator tool
-  - foreach:
-      in: _.panels
-      do:
-        tool: image_generator
-        arguments:
-          description: _
+- 評価する：
+plot_ideas: load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
 
-  # Step 4: Generate a catchy title for the story
-  - prompt:
-      - role: system
-        content: You are {{agent.name}}. {{agent.about}}
-      - role: user
-        content: >
-          Based on the story below, generate a catchy title.
+# ステップ2: プロットのアイデアから研究分野を抽出する
+- プロンプト：
+- 役割: システム
+内容: あなたは {{agent.name}} です。 {{agent.about}}
+- 役割: ユーザー
+内容: >
+ストーリーのプロットのアイデアをいくつか紹介します。
+{% for idea in _.plot_ideas %}
+- {{アイデア}}
+{% endfor %}
 
-          Story: {{outputs[1].story}}
-    unwrap: true
+ストーリーを展開するには、プロットのアイデアをリサーチする必要があります。
+何を研究すべきでしょうか? 興味深いと思うプロットのアイデアについて、Wikipedia の検索クエリを書き留めてください。
+応答の最後に、\`\`\`yaml タグ内の yaml リストとして出力を返します。
+アンラップ: true
+設定：
+モデル: gpt-4o-mini
+温度: 0.7
 
-  # Step 5: Return the story, the generated images, and the title
-  - return:
-      title: outputs[3]
-      story: outputs[1].story
-      comic_panels: outputs[2].map(output => output.image.url)
+- 評価する：
+リサーチクエリ: load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())
+
+# ステップ3: 各プロットのアイデアをリサーチする
+- 各:
+in: _.research_queries
+する：
+ツール: research_wikipedia
+引数:
+クエリ: _
+
+- 評価する：
+wikipedia_results: 'NEWLINE.join([f"- {doc.metadata.title}: {doc.metadata.summary}" for item in _ for doc in item.documents])'
+
+# ステップ4: 考えて熟考する
+- プロンプト：
+- 役割: システム
+内容: あなたは {{agent.name}} です。 {{agent.about}}
+- 役割: ユーザー
+内容: |-
+物語を書く前に、考え、熟考してみましょう。ここにいくつかのプロットのアイデアがあります:
+{% 出力[1].plot_ideas のアイデア %}
+- {{アイデア}}
+{% endfor %}
+
+Wikipedia でプロットのアイデアを調査した結果は次のとおりです。
+{{_.wikipedia_results}}
+
+プロットのアイデアを批判的に考えます。プロットのアイデアと Wikipedia の結果を組み合わせて、ストーリーの詳細なプロットを作成します。
+メモや考えをすべて書き留めてください。
+最後に、レスポンスの最後にある \`\`\`yaml タグ内に yaml オブジェクトとしてプロットを記述します。yaml オブジェクトの構造は次のようになります。
+
+\`\`\`yaml
+タイトル： "<string>"
+文字:
+- 名前： "<string>"
+について： "<string>"
+概要: "<string>"
+シーン:
+- タイトル： "<string>"
+説明： "<string>"
+文字:
+- 名前： "<string>"
+役割： "<string>"
+ストーリーライン:
+            - "<string>「\`\`\`
+
+yaml が有効であり、文字とシーンが空でないことを確認してください。また、セミコロンや yaml の記述に関するその他の注意点にも注意してください。
+アンラップ: true
+
+- 評価する：
+プロット: "load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip())"
 `;
 
-async function createTask(agent) {
-  const task = await client.tasks.create(agent.id, yaml.load(taskYaml));
-  return task;
+非同期関数createTask(agentId) {
+const タスク = クライアント.タスク.作成を待機します(
+エージェントID、
+yaml.parse(タスクYaml)
+  );
+タスクを返す。
 }
-```
 
-### ステップ3: タスクを実行する
+/* ステップ 3: タスクを実行する */
 
-```javascript
-async function executeTask(task) {
-  const execution = await client.executions.create(task.id, {
-    input: { idea: "A cat who learns to fly" },
+非同期関数executeTask(taskId) {
+const 実行 = クライアント.実行.作成(taskId, {
+入力: { アイデア: 「飛ぶことを学ぶ猫」 }
   });
 
-  // 🎉 Watch as the story and comic panels are generated
-  for await (const transition of client.executions.transitions.stream(
-    execution.id
-  )) {
-    console.log(transition);
-  }
+// 🎉 ストーリーと漫画パネルが生成される様子をご覧ください
+（真）の間{
+const 結果 = client.executions.get(execution.id); を待機します。
+console.log(結果のステータス、結果の出力);
 
-  // 📦 Once the execution is finished, retrieve the results
-  const result = await client.executions.get(execution.id);
-  return result;
-}
-```
-
-### ステップ4: エージェントとチャットする
-
-```javascript
-async function chatWithAgent(agent) {
-  const session = await client.sessions.create({ agent_id: agent.id });
-
-  // 💬 Send messages to the agent
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const chat = async () => {
-    rl.question("Enter a message (or 'quit' to exit): ", async (message) => {
-      if (message.toLowerCase() === "quit") {
-        rl.close();
-        return;
+if (result.status === '成功' || result.status === '失敗') {
+// 📦 実行が終了したら、結果を取得します
+if (result.status === "成功") {
+console.log(結果の出力);
+} それ以外 {
+新しいエラーをスローします(result.error);
       }
+壊す;
+    }
 
-      const response = await client.sessions.chat(session.id, { message });
-      console.log(response);
-      chat();
-    });
-  };
-
-  chat();
+新しい Promise(resolve => setTimeout(resolve, 1000)) を待機します。
+  }
 }
 
-// Run the example
-async function runExample() {
-  const agent = await createAgent();
-  const task = await createTask(agent);
-  const result = await executeTask(task);
-  console.log("Task Result:", result);
-  await chatWithAgent(agent);
+// 例を実行するためのメイン関数
+非同期関数main() {
+試す {
+const エージェント = createAgent() を待機します。
+const タスク = createTask(agent.id);
+タスクの実行を待機します(task.id);
+} キャッチ（エラー）{
+console.error("エラーが発生しました:", error);
+  }
 }
 
-runExample().catch(console.error);
+main().then(() => console.log("完了")).catch(console.error);
 ```
 
-完全な Node.js の例は [ここ](example.js) にあります。
+You can find the full Node.js example [here](example.js).
 
-## コンポーネント
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep は次のコンポーネントで構成されています。
+## Components
 
-- **Julep プラットフォーム**: Julep プラットフォームは、ワークフローを実行するクラウド サービスです。ワークフローを記述するための言語、ワークフローを実行するためのサーバー、プラットフォームと対話するための SDK が含まれています。
-- **Julep SDK**: Julep SDK は、ワークフローを構築するためのライブラリのセットです。Python 用と JavaScript 用の SDK があり、今後さらに追加される予定です。
-- **Julep API**: Julep API は、Julep プラットフォームと対話するために使用できる RESTful API です。
+Julep is made up of the following components:
 
-### メンタルモデル
+- **Julep Platform**: The Julep platform is a cloud service that runs your workflows. It includes a language for describing workflows, a server for running those workflows, and an SDK for interacting with the platform.
+- **Julep SDKs**: Julep SDKs are a set of libraries for building workflows. There are SDKs for Python and JavaScript, with more on the way.
+- **Julep API**: The Julep API is a RESTful API that you can use to interact with the Julep platform.
+
+### Mental Model
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/38420b5d-9342-4c8d-bae9-b47c28ae45af" height="360" />
 </div>
 
-Julep は、クライアント側とサーバー側の両方のコンポーネントを組み合わせて、高度な AI エージェントの構築を支援するプラットフォームと考えてください。これを視覚化する方法は次のとおりです。
+Think of Julep as a platform that combines both client-side and server-side components to help you build advanced AI agents. Here's how to visualize it:
 
-1. **アプリケーションコード:**
+1. **Your Application Code:**
 
-- アプリケーションで Julep SDK を使用して、エージェント、タスク、ワークフローを定義できます。
-- SDK は、これらのコンポーネントのセットアップと管理を容易にする関数とクラスを提供します。
+   - You can use the Julep SDK in your application to define agents, tasks, and workflows.
+   - The SDK provides functions and classes that make it easy to set up and manage these components.
 
-2. **Julep バックエンド サービス:**
+2. **Julep Backend Service:**
 
-- SDK はネットワーク経由で Julep バックエンドと通信します。
-- バックエンドは、タスクの実行を処理し、セッション状態を維持し、ドキュメントを保存し、ワークフローを調整します。
+   - The SDK communicates with the Julep backend over the network.
+   - The backend handles execution of tasks, maintains session state, stores documents, and orchestrates workflows.
 
-3. **ツールとAPIとの統合:**
-- ワークフロー内で、外部ツールやサービスを統合できます。
-- バックエンドはこれらの統合を容易にするため、エージェントは、たとえば、Web 検索を実行したり、データベースにアクセスしたり、サードパーティの API を呼び出したりすることができます。
+3. **Integration with Tools and APIs:**
+   - Within your workflows, you can integrate external tools and services.
+   - The backend facilitates these integrations, so your agents can, for example, perform web searches, access databases, or call third-party APIs.
 
-## コンセプト
+## Concepts
 
-Julep は、強力な AI ワークフローを作成するために連携するいくつかの主要な技術コンポーネントに基づいて構築されています。
+Julep is built on several key technical components that work together to create powerful AI workflows:
 
-```mermaid
-graph TD
-    User[User] ==> Session[Session]
-    Session --> Agent[Agent]
-    Agent --> Tasks[Tasks]
-    Agent --> LLM[Large Language Model]
-    Tasks --> Tools[Tools]
-    Agent --> Documents[Documents]
-    Documents --> VectorDB[Vector Database]
-    Tasks --> Executions[Executions]
+```マーメイド
+グラフTD
+ユーザー[ユーザー] ==> セッション[セッション]
+セッション --> エージェント[エージェント]
+エージェント --> タスク[タスク]
+エージェント --> LLM[大規模言語モデル]
+タスク --> ツール[ツール]
+エージェント --> ドキュメント[ドキュメント]
+ドキュメント --> VectorDB[ベクターデータベース]
+タスク --> 実行[実行]
 
-    classDef client fill:#9ff,stroke:#333,stroke-width:1px;
-    class User client;
+classDef client fill:#9ff、stroke:#333、stroke-width:1px;
+クラス User クライアント;
 
-    classDef core fill:#f9f,stroke:#333,stroke-width:2px;
-    class Agent,Tasks,Session core;
+classDef core fill:#f9f、stroke:#333、stroke-width:2px;
+クラス Agent、Tasks、Session コア;
 ```
 
-- **エージェント**: タスクを実行し、ユーザーと対話する大規模言語モデル (LLM) を搭載した AI 搭載エンティティ。
-- **ユーザー**: セッションを通じてエージェントと対話するエンティティ。
-- **セッション**: エージェントとユーザー間のステートフルなやり取り。複数のやり取りにわたってコンテキストを維持します。
-- **タスク**: プロンプト、ツール呼び出し、条件付きロジックなどのさまざまな種類のステップを含む、エージェントが実行できる複数ステップのプログラム ワークフロー。
-- **ツール**: ユーザー定義関数、システム ツール、サードパーティ API 統合など、エージェントの機能を拡張する統合。
-- **ドキュメント**: エージェントまたはユーザーに関連付けられたテキストまたはデータ オブジェクト。セマンティック検索と取得のためにベクトル化され、保存されます。
-- **実行**: 特定の入力で開始され、独自のライフサイクルとステート マシンを持つタスクのインスタンス。
+- **Agents**: AI-powered entities backed by large language models (LLMs) that execute tasks and interact with users.
+- **Users**: Entities that interact with agents through sessions.
+- **Sessions**: Stateful interactions between agents and users, maintaining context across multiple exchanges.
+- **Tasks**: Multi-step, programmatic workflows that agents can execute, including various types of steps like prompts, tool calls, and conditional logic.
+- **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
+- **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
+- **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
 
-より詳細な説明については、[コンセプトのドキュメント](https://github.com/julep-ai/julep/blob/dev/docs/julep-concepts.md)を参照してください。
 
-## タスクを理解する
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-タスクは Julep のワークフロー システムの中核です。タスクを使用すると、エージェントが実行できる複雑な複数ステップの AI ワークフローを定義できます。タスク コンポーネントの概要は次のとおりです。
+## Understanding Tasks
 
-- **名前と説明**: 各タスクには、簡単に識別できるように一意の名前と説明が付いています。
-- **メインステップ**: タスクの中核であり、実行されるアクションのシーケンスを定義します。
-- **ツール**: タスク実行中にエージェントの機能を拡張するオプションの統合。
+Tasks are the core of Julep's workflow system. They allow you to define complex, multi-step AI workflows that your agents can execute. Here's a brief overview of task components:
 
-### ワークフローステップの種類
+- **Name, Description and Input Schema**: Each task has a unique name and description for easy identification. An input schema (optional) that is used to validate the input to the task.
+- **Main Steps**: The core of a task, defining the sequence of actions to be performed. Each step can be a prompt, tool call, evaluate, wait_for_input, log, get, set, foreach, map_reduce, if-else, switch, sleep, or return. (See [Types of Workflow Steps](#types-of-workflow-steps) for more details)
+- **Tools**: Optional integrations that extend the capabilities of your agent during task execution.
 
-Julep のタスクにはさまざまな種類のステップを含めることができるため、複雑で強力なワークフローを作成できます。利用可能なステップの種類の概要は次のとおりです。
+### Lifecycle of a Task
 
-#### 一般的な手順
+You create a task using the Julep SDK and specify the main steps that the agent will execute. When you execute a task, the following lifecycle happens:
+
+```マーメイド
+シーケンス図
+参加者Dをあなたのコードとして
+参加者C（ジュレップクライアント）
+参加者Sはジュレップサーバーとして
+
+D->>C: タスクの作成
+C->>S: 実行を送信
+Sの上のメモ: タスクの実行
+Sに関する注意: 状態の管理
+S-->>C: 実行イベント
+C-->>D: 進捗状況の更新
+S->>C: 実行完了
+C->>D: 最終結果
+```
+
+### Types of Workflow Steps
+
+Tasks in Julep can include various types of steps, allowing you to create complex and powerful workflows. Here's an overview of the available step types:
+
+#### Common Steps
 
 <table>
 <tr>
-<td>名前</td> <td>について</td><td>構文</td>
+    <th>Name</th>
+    <th>About</th>
+    <th>Syntax</th>
 </tr>
 <tr>
-<td>プロンプト</td>
+<td> <b>Prompt</b> </td>
 <td>
-AIモデルにメッセージを送信し、応答を受け取る
-
+Send a message to the AI model and receive a response
+<br><br><b>Note:</b> The prompt step uses Jinja templates and you can access context variables in them.
 </td>
 
 <td>
 
-```yaml
-- prompt: "Analyze the following data: {{data}}"
+```ヤム
+- プロンプト: 「次のデータを分析してください: {{agent.name}}」 # <-- これは jinja テンプレートです
+```
+
+```ヤム
+- プロンプト：
+- 役割: システム
+内容: 「あなたは {{agent.name}} です。 {{agent.about}}」
+- 役割: ユーザー
+内容: 「次のデータを分析します: {{_.data}}」
 ```
 
 </td>
 </tr>
 <tr>
-<td>ツールコール</td>
+<td> <b>Tool Call</b> </td>
 <td>
-統合ツールまたはAPIを実行する
+Execute an integrated tool or API that you have previously declared in the task.
+<br><br><b>Note:</b> The tool call step uses Python expressions inside the arguments.
 
 </td>
 
 <td>
 
-```yaml
-- tool: web_search
-  arguments:
-    query: "Latest AI developments"
+```ヤム
+- ツール: web_search
+引数:
+クエリ: '"最新の AI 開発"' # <-- これは Python 式です (引用符に注意してください)
+num_results: len(_.topics) # <-- リストの長さにアクセスするための Python 式
 ```
 
 </td>
 </tr>
 <tr>
-<td>評価する</td>
+<td> <b>Evaluate</b> </td>
 <td>
-計算を実行したりデータを操作したりする
-
+Perform calculations or manipulate data
+<br><br><b>Note:</b> The evaluate step uses Python expressions.
 </td>
 
 <td>
 
-```yaml
-- evaluate:
-    average_score: "sum(scores) / len(scores)"
+```ヤム
+- 評価する：
+average_score: 合計(スコア) / 長さ(スコア)
 ```
 
 </td>
 </tr>
 <tr>
-<td>入力を待つ</td>
+<td> <b>Wait for Input</b> </td>
 <td>
-入力を受信するまでワークフローを一時停止する
+Pause workflow until input is received. It accepts an `info` field that can be used by your application to collect input from the user.
+
+<br><br><b>Note:</b> The wait_for_input step is useful when you want to pause the workflow and wait for user input e.g. to collect a response to a prompt.
 
 </td>
 
 <td>
 
-```yaml
-- wait_for_input:
-    info:
-      message: "Please provide additional information."
+```ヤム
+- 入力待ち:
+情報：
+メッセージ: '"{_.required_info} に関する追加情報を提供してください。"' # <-- コンテキスト変数にアクセスするための Python 式
 ```
 
 </td>
 </tr>
 <tr>
-<td>ログ</td>
+<td> <b>Log</b> </td>
 <td>
-指定された値またはメッセージをログに記録する
+Log a specified value or message.
+
+<br><br><b>Note:</b> The log step uses Jinja templates and you can access context variables in them.
 
 </td>
 
 <td>
 
-```yaml
-- log: "Processing completed for item {{item_id}}"
+```ヤム
+- ログ: "アイテム {{_.item_id}} の処理が完了しました" # <-- コンテキスト変数にアクセスするための jinja テンプレート
 ```
 
 </td>
 </tr>
 </table>
 
-#### キー値ステップ
+#### Key-Value Steps
 
 <table>
 <tr>
-<td>名前</td> <td>について</td><td>構文</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>得る</td>
+<td> <b>Get</b> </td>
 <td>
-キーバリューストアから値を取得する
+Retrieve a value from the execution's key-value store.
 
 </td>
 
 <td>
 
-```yaml
-- get: "user_preference"
+```ヤム
+- 取得: user_preference
 ```
 
 </td>
 </tr>
 <tr>
-<td>セット</td>
+<td> <b>Set</b> </td>
 <td>
-キーバリューストア内のキーに値を割り当てる
+Assign a value to a key in the execution's key-value store.
 
+<br><br><b>Note:</b> The set step uses Python expressions.
 </td>
 
 <td>
 
-```yaml
-- set:
-    user_preference: "dark_mode"
+```ヤム
+- セット：
+user_preference: '"dark_mode"' # <-- python 式
 ```
 
 </td>
 </tr>
 </table>
 
-#### 反復ステップ
+#### Iteration Steps
 
 <table>
 <tr>
-<td>名前</td> <td>について</td><td>構文</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>フォア</td>
+<td> <b>Foreach</b> </td>
 <td>
-コレクションを反復処理し、各アイテムに対して手順を実行します。
+Iterate over a collection and perform steps for each item
 
 </td>
 
 <td>
 
-```yaml
-- foreach:
-    in: "data_list"
-    do:
-      - log: "Processing item {{_}}"
+```ヤム
+- 各:
+in: _.data_list # <-- コンテキスト変数にアクセスするための Python 式
+する：
+- ログ: "アイテム {{_.item}} を処理しています" # <-- コンテキスト変数にアクセスするための jinja テンプレート
 ```
 
 </td>
 </tr>
 <tr>
-<td>マップリデュース</td>
+<td> <b>Map-Reduce</b> </td>
 <td>
-コレクションをマップして結果を減らす
+Map over a collection and reduce the results
 
 </td>
 
 <td>
 
-```yaml
-- map_reduce:
-    over: "numbers"
-    map:
-      - evaluate:
-          squared: "_ ** 2"
-    reduce: "sum(results)"
+```ヤム
+- マップリデュース:
+over: _.numbers # <-- コンテキスト変数にアクセスするための Python 式
+地図：
+- 評価する：
+二乗: "_ ** 2"
+Reduce: 結果 + [_] # <-- (オプション) 結果を削減する Python 式。省略した場合、これがデフォルトになります。
+```
+
+```ヤム
+- マップリデュース:
+以上: _.topics
+地図：
+- プロンプト: {{_}} に関するエッセイを書く
+並列度: 10
 ```
 
 </td>
 </tr>
 <tr>
-<td>平行</td>
+<td> <b>Parallel</b> </td>
 <td>
-複数のステップを並行して実行する
+Run multiple steps in parallel
 
 </td>
 
 <td>
 
-```yaml
-- parallel:
-    - tool: web_search
-      arguments:
-        query: "AI news"
-    - tool: weather_check
-      arguments:
-        location: "New York"
+```ヤム
+- 平行：
+- ツール: web_search
+引数:
+クエリ: 「AI ニュース」
+- ツール: weather_check
+引数:
+場所: '"ニューヨーク"'
 ```
 
 </td>
 </tr>
 </table>
 
-#### 条件付きステップ
+#### Conditional Steps
 
 <table>
 <tr>
-<td>名前</td> <td>について</td><td>構文</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>If-Else</td>
+<td> <b>If-Else</b> </td>
 <td>
-ステップの条件付き実行
+Conditional execution of steps
 
 </td>
 
 <td>
 
-```yaml
-- if: "score > 0.8"
-  then:
-    - log: "High score achieved"
-  else:
-    - log: "Score needs improvement"
+```ヤム
+- if: _.score > 0.8 # <-- Python 式
+それから：
+- ログ: 高得点を達成
+それ以外：
+- エラー: スコアの改善が必要です
 ```
 
 </td>
 </tr>
 <tr>
-<td>スイッチ</td>
+<td> <b>Switch</b> </td>
 <td>
-複数の条件に基づいてステップを実行する
+Execute steps based on multiple conditions
 
 </td>
 
 <td>
 
-```yaml
-- switch:
-    - case: "category == 'A'"
-      then:
-        - log: "Category A processing"
-    - case: "category == 'B'"
-      then:
-        - log: "Category B processing"
-    - case: "_" # Default case
-      then:
-        - log: "Unknown category"
+```ヤム
+- スイッチ:
+- ケース: _.category == 'A'
+それから：
+- ログ: 「カテゴリー A 処理」
+- ケース: _.category == 'B'
+それから：
+- ログ: 「カテゴリー B 処理」
+- case: _ # デフォルトのケース
+それから：
+- エラー: 不明なカテゴリ
 ```
 
 </td>
 </tr>
 </table>
 
-#### その他の制御フロー
+#### Other Control Flow
 
 <table>
 <tr>
-<td>名前</td> <td>について</td><td>構文</td>
+<th> Name </th> <th> About </th><th>Syntax</th>
 </tr>
 <tr>
-<td>寝る</td>
+<td> <b>Sleep</b> </td>
 <td>
-指定した期間ワークフローを一時停止する
+Pause the workflow for a specified duration
 
 </td>
 
 <td>
 
-```yaml
-- sleep:
-    seconds: 30
+```ヤム
+- 寝る：
+秒: 30
+分数: 1
+時間数: 1
+日数: 1
 ```
 
 </td>
 </tr>
 <tr>
-<td>戻る</td>
+<td> <b>Return</b> </td>
 <td>
-ワークフローから値を返す
+Return a value from the workflow
+
+<br><br><b>Note:</b> The return step uses Python expressions.
 
 </td>
 
 <td>
 
-```yaml
-- return:
-    result: "Task completed successfully"
+```ヤム
+- 戻る：
+結果: '"タスクは正常に完了しました"' # <-- Python 式
+time: datetime.now().isoformat() # <-- python 式
 ```
 
 </td>
 </tr>
 <tr>
-<td>収率</td>
+<td> <b>Yield</b> </td>
 <td>
-サブワークフローを実行し、完了を待ちます
+Run a subworkflow and await its completion
 
 </td>
 
 <td>
 
-```yaml
-- yield:
-    workflow: "data_processing_subflow"
-    arguments:
-      input_data: "{{raw_data}}"
+```ヤム
+- 収率：
+ワークフロー: process_data
+引数:
+input_data: _.raw_data # <-- Python式
 ```
 
 </td>
 </tr>
 </tr>
 <tr>
-<td>エラー</td>
+<td> <b>Error</b> </td>
 <td>
-エラーメッセージを指定してエラーを処理する
+Handle errors by specifying an error message
 
 </td>
 
 <td>
 
-```yaml
-- error: "Invalid input provided"
+```ヤム
+- エラー:「無効な入力が提供されています」# <-- 文字列のみ
 ```
 
 </td>
 </tr>
 </table>
 
-各ステップ タイプは、高度な AI ワークフローを構築する上で特定の目的を果たします。この分類は、Julep タスクで使用できるさまざまな制御フローと操作を理解するのに役立ちます。
+Each step type serves a specific purpose in building sophisticated AI workflows. This categorization helps in understanding the various control flows and operations available in Julep tasks.
 
-## ツールの種類
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-エージェントには、さまざまな「ツール」へのアクセスを許可できます。これは、基盤モデルが一連の入力を使用して「呼び出す」ことができるプログラム インターフェイスです。たとえば、インターネットで何らかの情報を検索するには、`web_search(query)` ツールを使用します。
+## Tool Types
 
-エージェント フレームワークとは異なり、julep はエージェントの実行を管理する _バックエンド_ です。クライアントは SDK を使用してエージェントと対話できます。julep はタスクの実行と統合の実行を担当します。
+Agents can be given access to a number of "tools" -- any programmatic interface that a foundation model can "call" with a set of inputs to achieve a goal. For example, it might use a `web_search(query)` tool to search the Internet for some information.
 
-julep のツールは次のいずれかになります。
+Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
-### ユーザー定義の `functions`
+Tools in julep can be one of:
+1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
+2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
+3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
+4. **`api_calls`**: Direct api calls during workflow executions as tool calls.
 
-これらは、[openai] の関数呼び出しの仕組みと同様に、モデルに選択させることができる関数シグネチャです。例:
+### User-defined `functions`
 
-```yaml
-name: Example system tool task
-description: List agents using system call
+These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. An example:
 
-tools:
-  - name: send_notification
-    description: Send a notification to the user
-    type: function
-    function:
-      parameters:
-        type: object
-        properties:
-          text:
-            type: string
-            description: Content of the notification
+```ヤム
+名前: システムツールタスクの例
+説明: システムコールを使用してエージェントを一覧表示する
 
-main:
-  - tool: send_notification
-    arguments:
-      content: hi
+ツール:
+- 名前: send_notification
+説明: ユーザーに通知を送信する
+タイプ: 関数
+関数：
+パラメータ:
+タイプ: オブジェクト
+プロパティ:
+文章：
+タイプ: 文字列
+説明: 通知の内容
+
+主要：
+- ツール: send_notification
+引数:
+内容: '"hi"' # <-- Python 式
 ```
 
-julep は、_ユーザー定義関数_ に遭遇するたびに一時停止し、クライアントに制御を戻し、クライアントが関数呼び出しを実行して結果を julep に返すのを待ちます。
+Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!ヒント]
-> **サンプルクックブック**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+> [!TIP]
+> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
-### `システム` ツール
+### `system` tools
 
-タスク実行のトリガー、メタデータ フィールドへの追加など、julep API 自体を呼び出すために使用できる組み込みツール。
-`system` ツールはバックエンドに組み込まれています。必要に応じて自動的に実行されます。クライアント側からのアクションは必要ありません。
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
 
-例えば、
+`system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
-```yaml
-name: Example system tool task
-description: List agents using system call
+For example,
 
-tools:
-  - name: list_agents
-    description: List all agents
-    type: system
-    system:
-      resource: agent
-      operation: list
-main:
-  - tool: list_agents
-    arguments:
-      limit: 10
+```ヤム
+名前: システムツールタスクの例
+説明: システムコールを使用してエージェントを一覧表示する
+
+ツール:
+- 名前: list_agent_docs
+説明: 指定されたエージェントのすべてのドキュメントを一覧表示します
+タイプ: システム
+システム：
+リソース: エージェント
+サブリソース: doc
+操作: リスト
+
+主要：
+- ツール: list_agents
+引数:
+制限: 10 # <-- Python式
 ```
 
-> [!ヒント]
-> **サンプルクックブック**: [cookbooks/10-Document_Management_and_Search.py​​](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py​​)
+#### Available `system` resources and operations
 
-### 組み込みの `integrations`
+- `agent`:
+  - `list`: List all agents.
+  - `get`: Get a single agent by id.
+  - `create`: Create a new agent.
+  - `update`: Update an existing agent.
+  - `delete`: Delete an existing agent.
 
-Julep には、いくつかの組み込み統合が付属しています (以下のセクションで説明)。`integration` ツールは、julep バックエンドで直接実行されます。実行時に必要な追加パラメータは、エージェント/セッション/ユーザーの `metadata` フィールドで設定できます。
+- `user`:
+  - `list`: List all users.
+  - `get`: Get a single user by id.
+  - `create`: Create a new user.
+  - `update`: Update an existing user.
+  - `delete`: Delete an existing user.
 
-> [!ヒント]
-> **サンプルクックブック**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+- `session`:
+  - `list`: List all sessions.
+  - `get`: Get a single session by id.
+  - `create`: Create a new session.
+  - `update`: Update an existing session.
+  - `delete`: Delete an existing session.
+  - `chat`: Chat with a session.
+  - `history`: Get the chat history with a session.
 
-julep バックエンドには、次のプロバイダーからの統合サードパーティ ツールが付属しています。
+- `task`:
+  - `list`: List all tasks.
+  - `get`: Get a single task by id.
+  - `create`: Create a new task.
+  - `update`: Update an existing task.
+  - `delete`: Delete an existing task.
 
-- [composio](https://composio.dev)
-- [匿名](https://anon.com)
-- [langchain ツールキット](https://python.langchain.com/v0.2/docs/integrations/toolkits/)
+- `doc` (subresource for `agent` and `user`):
+  - `list`: List all documents.
+  - `create`: Create a new document.
+  - `delete`: Delete an existing document.
+  - `search`: Search for documents.
 
-_Github、Gitlab、Gmail、Jira、MultiOn、Slack_ ツールキットのサポートが計画されています。
+Additional operations available for some resources:
+- `embed`: Embed a resource (specific resources not specified in the provided code).
+- `change_status`: Change the status of a resource (specific resources not specified in the provided code).
+- `chat`: Chat with a resource (specific resources not specified in the provided code).
+- `history`: Get the chat history with a resource (specific resources not specified in the provided code).
+- `create_or_update`: Create a new resource or update an existing one (specific resources not specified in the provided code).
 
-_composio_ と _anon_ はサードパーティプロバイダーであるため、それらのツールではアカウントリンクを設定する必要があります。
+Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-### 直接の `api_calls`
+> [!TIP]
+> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
-julep は、ワークフロー実行中にツール呼び出しとして直接 API 呼び出しを行うこともできます。`integration` と同様に、追加のランタイム パラメータは `metadata` フィールドから読み込まれます。
+### Built-in `integrations`
 
-例えば、
+Julep comes with a number of built-in integrations (as described in the section below). `integration` tools are directly executed on the julep backend. Any additional parameters needed by them at runtime can be set in the agent/session/user's `metadata` fields.
 
-```yaml
-name: Example api_call task
-tools:
-  - type: api_call
-    name: hello
-    api_call:
-      method: GET
-      url: https://httpbin.org/get
-main:
-  - tool: hello
-    arguments:
-      params:
-        test: _.input
+See [Integrations](#integrations) for details on the available integrations.
+
+> [!TIP]
+> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+
+
+### Direct `api_calls`
+
+julep can also directly make api calls during workflow executions as tool calls. Same as `integration`s, additional runtime parameters are loaded from `metadata` fields.
+
+For example,
+
+```ヤム
+名前: api_callタスクの例
+ツール:
+- タイプ: api_call
+名前: こんにちは
+API呼び出し:
+メソッド: GET
+URL: https://httpbin.org/get
+
+主要：
+- ツール: こんにちは
+引数:
+書式:
+test: _.input # <-- Python式
 ```
 
-## 統合
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep は、AI エージェントの機能を拡張するさまざまな統合をサポートしています。利用可能な統合とサポートされている引数のリストは次のとおりです。
+## Integrations
+
+Julep supports various integrations that extend the capabilities of your AI agents. Here's a list of available integrations and their supported arguments:
 
 <table>
 
 <tr>
-<td>勇敢な検索</td>
+<td> <b>Brave Search</b> </td>
 <td>
 
-```yaml
-setup:
-  api_key: string # The API key for Brave Search
+```ヤム
+設定：
+api_key: 文字列 # Brave SearchのAPIキー
 
-arguments:
-  query: string # The search query for searching with Brave
+引数:
+query: 文字列 # Braveで検索するための検索クエリ
 
-output:
-  result: string # The result of the Brave Search
+出力：
+result: 文字列 # Brave Searchの結果
 ```
 
 </td>
 
 <td>
 
-**サンプルクックブック**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
+**Example cookbook**: [cookbooks/03-SmartResearcher_With_WebSearch.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/03-SmartResearcher_With_WebSearch.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>ブラウザベース</td>
+<td> <b>BrowserBase</b> </td>
 <td>
 
-```yaml
-setup:
-  api_key: string # The API key for BrowserBase
-  project_id: string # The project ID for BrowserBase
-  session_id: string # (Optional) The session ID for BrowserBase
+```ヤム
+設定：
+api_key: 文字列 # BrowserBaseのAPIキー
+project_id: 文字列 # BrowserBase のプロジェクト ID
+session_id: 文字列 # (オプション) BrowserBaseのセッションID
 
-arguments:
-  urls: list[string] # The URLs for loading with BrowserBase
+引数:
+urls: list[string] # BrowserBaseで読み込むURL
 
-output:
-  documents: list # The documents loaded from the URLs
+出力：
+documents: list # URLから読み込まれたドキュメント
 ```
 
 </td>
 
 </tr>
 <tr>
-<td>メール</td>
+<td> <b>Email</b> </td>
 <td>
 
-```yaml
-setup:
-  host: string # The host of the email server
-  port: integer # The port of the email server
-  user: string # The username of the email server
-  password: string # The password of the email server
+```ヤム
+設定：
+ホスト: 文字列 # メールサーバーのホスト
+port: 整数 # メールサーバーのポート
+user: 文字列 # メールサーバーのユーザー名
+パスワード: 文字列 # メールサーバーのパスワード
 
-arguments:
-  to: string # The email address to send the email to
-  from: string # The email address to send the email from
-  subject: string # The subject of the email
-  body: string # The body of the email
+引数:
+to: 文字列 # メールを送信するメールアドレス
+from: 文字列 # メールを送信するメールアドレス
+subject: 文字列 # メールの件名
+body: 文字列 # メールの本文
 
-output:
-  success: boolean # Whether the email was sent successfully
+出力：
+success: boolean # メールが正常に送信されたかどうか
 ```
 
 </td>
 
 <td>
 
-**サンプルクックブック**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
+**Example cookbook**: [cookbooks/00-Devfest-Email-Assistant.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/00-Devfest-Email-Assistant.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>スパイダー</td>
+<td> <b>Spider</b> </td>
 <td>
 
-```yaml
-setup:
-  spider_api_key: string # The API key for Spider
+```ヤム
+設定：
+spider_api_key: 文字列 # SpiderのAPIキー
 
-arguments:
-  url: string # The URL for which to fetch data
-  mode: string # The type of crawlers (default: "scrape")
-  params: dict # (Optional) The parameters for the Spider API
+引数:
+url: 文字列 # データを取得するURL
+mode: 文字列 # クローラーのタイプ (デフォルト: "scrape")
+params: dict # (オプション) Spider APIのパラメータ
 
-output:
-  documents: list # The documents returned from the spider
+出力：
+ドキュメント: リスト # スパイダーから返されたドキュメント
 ```
 
 </td>
 
 <td>
 
-**サンプルクックブック**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
+**Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 </td>
 </tr>
 <tr>
-<td>天気</td>
+<td> <b>Weather</b> </td>
 <td>
 
-```yaml
-setup:
-  openweathermap_api_key: string # The API key for OpenWeatherMap
+```ヤム
+設定：
+openweathermap_api_key: 文字列 # OpenWeatherMapのAPIキー
 
-arguments:
-  location: string # The location for which to fetch weather data
+引数:
+location: 文字列 # 気象データを取得する場所
 
-output:
-  result: string # The weather data for the specified location
+出力：
+結果: 文字列 # 指定された場所の天気データ
 ```
 
 </td>
 
 <td>
 
-**サンプルクックブック**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 </td>
 </tr>
 </tr>
 <tr>
-<td>ウィキペディア</td>
+<td> <b>Wikipedia</b> </td>
 <td>
 
-```yaml
-arguments:
-  query: string # The search query string
-  load_max_docs: integer # Maximum number of documents to load (default: 2)
+```ヤム
+引数:
+query: 文字列 # 検索クエリ文字列
+load_max_docs: 整数 # 読み込むドキュメントの最大数 (デフォルト: 2)
 
-output:
-  documents: list # The documents returned from the Wikipedia search
+出力：
+ドキュメント: リスト # Wikipedia 検索から返されたドキュメント
 ```
 
 </td>
 
 <td>
 
-**サンプルクックブック**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
+**Example cookbook**: [cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/04-TripPlanner_With_Weather_And_WikiInfo.ipynb)
 
 </td>
 </tr>
 </table>
 
-詳細については、[統合ドキュメント](https://docs.julep.ai/integrations)を参照してください。
+For more details, refer to our [Integrations Documentation](#integrations).
 
-## その他の機能
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-Julep は、AI ワークフローを強化するためのさまざまな高度な機能を提供します。
+## Other Features
 
-### エージェントへのツールの追加
+Julep offers a range of advanced features to enhance your AI workflows:
 
-外部ツールと API を統合してエージェントの機能を拡張します。
+### Adding Tools to Agents
 
-```python
-client.agents.tools.create(
-    agent_id=agent.id,
-    name="web_search",
-    description="Search the web for information.",
-    integration={
-        "provider": "brave",
-        "method": "search",
-        "setup": {"api_key": "your_brave_api_key"},
+Extend your agent's capabilities by integrating external tools and APIs:
+
+```パイソン
+クライアント.エージェント.ツール.作成(
+エージェントID=エージェントID、
+名前="ウェブ検索",
+description="Web で情報を検索します。",
+統合={
+「プロバイダー」：「勇敢な」、
+"メソッド": "検索",
+"セットアップ": {"api_key": "your_brave_api_key"},
     },
 )
 ```
 
-### セッションとユーザーの管理
+### Managing Sessions and Users
 
-Julep は、永続的なインタラクションのための堅牢なセッション管理を提供します。
+Julep provides robust session management for persistent interactions:
 
-```python
-session = client.sessions.create(
-    agent_id=agent.id,
-    user_id=user.id,
-    context_overflow="adaptive"
+```パイソン
+セッション = client.sessions.create(
+エージェントID=エージェントID、
+user_id=ユーザーID、
+context_overflow="適応型"
 )
 
-# Continue conversation in the same session
-response = client.sessions.chat(
-    session_id=session.id,
-    messages=[
+# 同じセッションで会話を続ける
+レスポンス = client.sessions.chat(
+session_id=セッションID、
+メッセージ=[
       {
-        "role": "user",
-        "content": "Follow up on the previous conversation."
+「役割」: 「ユーザー」、
+"content": "前回の会話をフォローアップします。"
       }
     ]
 )
 ```
 
-### ドキュメントの統合と検索
+### Document Integration and Search
 
-エージェントのドキュメントを簡単に管理および検索できます。
+Easily manage and search through documents for your agents:
 
-```python
-# Upload a document
-document = client.agents.docs.create(
-    title="AI advancements",
-    content="AI is changing the world...",
-    metadata={"category": "research_paper"}
+```パイソン
+# ドキュメントをアップロードする
+ドキュメント = client.agents.docs.create(
+title="AIの進歩",
+content="AI は世界を変えています...",
+メタデータ = {"カテゴリ": "研究論文"}
 )
 
-# Search documents
-results = client.agents.docs.search(
-    text="AI advancements",
-    metadata_filter={"category": "research_paper"}
+# ドキュメントを検索
+結果 = client.agents.docs.search(
+text="AIの進歩",
+metadata_filter={"category": "研究論文"}
 )
 ```
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
+
+＃＃ 参照
+
+### SDK リファレンス
+
+- **Node.js** [SDK リファレンス](https://github.com/julep-ai/node-sdk/blob/main/api.md) | [NPM パッケージ](https://www.npmjs.com/package/@julep/sdk)
+- **Python** [SDK リファレンス](https://github.com/julep-ai/python-sdk/blob/main/api.md) | [PyPI パッケージ](https://pypi.org/project/julep/)
+
+### API リファレンス
+
+エージェント、タスク、実行の詳細については、API ドキュメントをご覧ください。
+
+- [エージェント API](https://dev.julep.ai/api/docs#tag/agents)
+- [タスク API](https://dev.julep.ai/api/docs#tag/tasks)
+- [実行API](https://dev.julep.ai/api/docs#tag/executions)
+
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
 ## ローカルクイックスタート
 
@@ -1251,26 +1522,23 @@ results = client.agents.docs.search(
 1. `git clone https://github.com/julep-ai/julep.git`
 2. `cd ジュレップ`
 3. `docker volume create cozo_backup`
-4. `docker volume create cozo_data`
+4. docker ボリュームを作成します cozo_data
 5. `cp .env.example .env # <-- このファイルを編集します`
 6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 
-## SDK リファレンス
+<div align="center">
+    <a href="#top">
+        <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
+    </a>
+</div>
 
-- [Node.js SDK](https://github.com/julep-ai/node-sdk/blob/main/api.md)
-- [Python SDK](https://github.com/julep-ai/python-sdk/blob/main/api.md)
-
-## APIリファレンス
-
-エージェント、タスク、実行の詳細については、包括的な API ドキュメントをご覧ください。
-
-- [エージェント API](https://api.julep.ai/api/docs#tag/agents)
-- [タスク API](https://api.julep.ai/api/docs#tag/tasks)
-- [実行API](https://api.julep.ai/api/docs#tag/executions)
 
 *****
 
-## Julep と LangChain を比較する理由
+## Julep と LangChain などの違いは何ですか?
 
 ### さまざまなユースケース
 
@@ -1308,5 +1576,8 @@ LangChain は、プロンプトと API 呼び出しの線形チェーンを含�
 <div align="center">
     <a href="#top">
         <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" alt="Back to Top">
+    </a>&nbsp;|&nbsp;
+    <a href="#-table-of-contents">
+        <img src="https://img.shields.io/badge/Table%20of%20Contents-000000?style=for-the-badge&logo=github&logoColor=white" alt="Table of Contents">
     </a>
 </div>
