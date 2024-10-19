@@ -21,6 +21,7 @@ spider-client = "^0.0.70"
 browserbase = "^0.3.0"
 setuptools = "^75.1.0"
 beartype = "^0.19.0"
+tenacity = "^9.0.0"
 
 [tool.poe.tasks]
 format = "ruff format"

@@ -75,6 +75,18 @@ class BaseRemoteModel(BaseModel):
             cache = self.__dict__.get("_remote_cache", {})
             cache.pop(name, None)
 
+    def load_all(self) -> None:
+        for name in self.model_fields_set:
+            self.__getattribute__(name)
+
+    def model_dump(
+        self, *args, include_remote: bool = False, **kwargs
+    ) -> dict[str, Any]:
+        if include_remote:
+            self.load_all()
+
+        return super().model_dump(*args, **kwargs)
+
     def unload_attribute(self, name: str) -> None:
         if name in self._remote_cache:
             data = self._remote_cache.pop(name)
@@ -112,7 +124,9 @@ class RemoteList(list):
 
         return store_in_blob_store_if_large(item)
 
-    def __getitem__(self, index: int | slice) -> Any:
+    def __getitem__(
+        self, index: int | slice
+    ) -> Any:  # pytype: disable=signature-mismatch
         if isinstance(index, slice):
             # Obtain the slice without triggering __getitem__ recursively
             sliced_items = super().__getitem__(
@@ -150,7 +164,9 @@ class RemoteList(list):
         """
         super().extend(items)
 
-    def __setitem__(self, index: int | slice, value: Any) -> None:
+    def __setitem__(
+        self, index: int | slice, value: Any
+    ) -> None:  # pytype: disable=signature-mismatch
         if isinstance(index, slice):
             # Handle slice assignment without processing existing RemoteObjects
             processed_values = [self.__save_item(v) for v in value]
@@ -219,7 +235,7 @@ class RemoteList(list):
         for item in iterable:
             self.append(item)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[Any]:  # pytype: disable=signature-mismatch
         for index in range(len(self)):
             yield self.__getitem__(index)
 

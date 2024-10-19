@@ -1,5 +1,3 @@
-from typing import List
-
 from ...providers import providers
 from .router import router
 

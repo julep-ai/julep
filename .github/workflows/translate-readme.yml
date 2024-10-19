@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Python v3.10.12
         uses: actions/setup-python@v5
         with:
@@ -24,15 +26,15 @@ jobs:
       - name: Run translator script
         run: python scripts/readme_translator.py
 
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add README-*.md
-          git commit -m "chore(readme): translate README.md"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@v0.6.0
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(readme): translate README.md"
+          title: "Translate README.md"
+          body: "This PR updates the translated versions of README.md"
+          branch: "translate-readme"
+          delete-branch: true
+          add-paths: |
+            README.md
+            README-*.md
