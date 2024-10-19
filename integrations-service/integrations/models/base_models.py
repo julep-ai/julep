@@ -1,6 +1,6 @@
-from typing import Annotated, Any, Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 from pydantic_core import Url
 
 IdentifierName = Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]

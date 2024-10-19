@@ -46,6 +46,7 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
             CompleteAsyncError,
             TemporalError,
             FailureError,
+            ApplicationError,
         ):
             raise
         except BaseException as e:
@@ -78,6 +79,7 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
             CompleteAsyncError,
             TemporalError,
             FailureError,
+            ApplicationError,
         ):
             raise
         except BaseException as e:

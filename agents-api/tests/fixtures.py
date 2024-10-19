@@ -178,7 +178,7 @@ def test_doc(
         client=client,
     )
 
-    time.sleep(0.1)
+    time.sleep(0.5)
 
     yield doc
 

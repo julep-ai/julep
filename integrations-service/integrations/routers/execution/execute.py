@@ -20,13 +20,13 @@ async def execute(
 
 
 @router.post("/execute/{provider}/{method}", tags=["execution"])
-def execute(
+async def execute(
     provider: IdentifierName,
     method: IdentifierName,
     data: ExecutionRequest,
 ) -> ExecutionResponse:
     try:
-        return execute_integration(
+        return await execute_integration(
             provider=provider, arguments=data.arguments, setup=data.setup, method=method
         )
     except ValueError as e:
