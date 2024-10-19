@@ -62,8 +62,7 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<h3>📖 Table of Contents</h3>
 
 - [主要特点](#%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9)
 - [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
@@ -95,7 +94,6 @@
   - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
   - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
 
-</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ＃＃ 介绍
