@@ -43,7 +43,7 @@ Nous sommes ravis d'accueillir de nouveaux contributeurs au projet Julep ! Nous 
 2. Parcourez nos [bons premiers numéros](https://github.com/julep-ai/julep/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour trouver une tâche qui vous intéresse.
 3. Si vous avez des questions ou avez besoin d'aide, n'hésitez pas à nous contacter sur notre chaîne [Discord](https://discord.com/invite/JTSBGRZrzj).
 
-Vos contributions, grandes ou petites, nous sont précieuses. Construisons ensemble quelque chose d'extraordinaire ! 🚀
+Vos contributions, grandes ou petites, sont précieuses pour nous. Construisons ensemble quelque chose d'extraordinaire ! 🚀
 
 ### 🎉 DevFest.AI octobre 2024
 
@@ -163,12 +163,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d...  # dummy key
+        api_key: BSAqES7dj9d... # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
+      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -236,34 +236,40 @@ Dans cet exemple, Julep gérera automatiquement les exécutions parallèles, ré
 <summary><b>Résumé de la recherche sur l'IA</b> <i>(Cliquez pour agrandir)</i></summary>
 
 > **Résumé de la recherche sur l'IA**
-> 
+>
 > ### Résumé des résultats de recherche sur l'intelligence artificielle (IA)
-> 
+>
 > #### Présentation
+>
 > Le domaine de l’intelligence artificielle (IA) a connu des avancées significatives ces dernières années, marquées par le développement de méthodes et de technologies permettant aux machines de percevoir leur environnement, d’apprendre à partir de données et de prendre des décisions. L’objectif principal de ce résumé est de présenter les enseignements tirés de divers résultats de recherche liés à l’IA.
-> 
+>
 > #### Principales conclusions
-> 
+>
 > 1. **Définition et portée de l’IA** :
+>
 > - L'IA est définie comme une branche de l'informatique axée sur la création de systèmes capables d'effectuer des tâches nécessitant une intelligence humaine, notamment l'apprentissage, le raisonnement et la résolution de problèmes (Wikipedia).
 > - Il englobe divers sous-domaines, notamment l’apprentissage automatique, le traitement du langage naturel, la robotique et la vision par ordinateur.
-> 
+>
 > 2. **Impact et applications** :
+>
 > - Les technologies d'IA sont intégrées dans de nombreux secteurs, améliorant l'efficacité et la productivité. Les applications vont des véhicules autonomes et des diagnostics de santé à l'automatisation du service client et aux prévisions financières (OpenAI).
 > - L'engagement de Google à rendre l'IA bénéfique pour tous met en évidence son potentiel à améliorer considérablement la vie quotidienne en améliorant l'expérience utilisateur sur diverses plateformes (Google AI).
-> 
+>
 > 3. **Considérations éthiques** :
+>
 > - Un débat est en cours sur les implications éthiques de l'IA, notamment sur les préoccupations relatives à la confidentialité, aux préjugés et à la responsabilité dans les processus de prise de décision. La nécessité d'un cadre garantissant l'utilisation sûre et responsable des technologies de l'IA est soulignée (OpenAI).
-> 
+>
 > 4. **Mécanismes d’apprentissage** :
+>
 > - Les systèmes d'IA utilisent différents mécanismes d'apprentissage, tels que l'apprentissage supervisé, l'apprentissage non supervisé et l'apprentissage par renforcement. Ces méthodes permettent à l'IA d'améliorer ses performances au fil du temps en apprenant des expériences et des données passées (Wikipedia).
 > - La distinction entre l’apprentissage supervisé et non supervisé est essentielle ; l’apprentissage supervisé s’appuie sur des données étiquetées, tandis que l’apprentissage non supervisé identifie des modèles sans étiquettes prédéfinies (non supervisé).
-> 
+>
 > 5. **Orientations futures**:
 > - Les futurs développements de l’IA devraient se concentrer sur l’amélioration de l’interprétabilité et de la transparence des systèmes d’IA, garantissant qu’ils peuvent fournir des décisions et des actions justifiables (OpenAI).
 > - On observe également une volonté de rendre les systèmes d’IA plus accessibles et plus conviviaux, encourageant une adoption plus large dans différents groupes démographiques et secteurs (Google AI).
-> 
+>
 > #### Conclusion
+>
 > L’IA représente une force de transformation dans de nombreux domaines, promettant de remodeler les industries et d’améliorer la qualité de vie. Cependant, à mesure que ses capacités se développent, il est essentiel de tenir compte des implications éthiques et sociétales qui en découlent. La poursuite des recherches et de la collaboration entre les technologues, les éthiciens et les décideurs politiques sera essentielle pour s’orienter dans le futur paysage de l’IA.
 
 </details>
@@ -273,6 +279,7 @@ Dans cet exemple, Julep gérera automatiquement les exécutions parallèles, ré
 Pour commencer à utiliser Julep, installez-le en utilisant [npm](https://www.npmjs.com/package/@julep/sdk) ou [pip](https://pypi.org/project/julep/) :
 
 **Node.js**:
+
 ```bash
 npm install @julep/sdk
 
@@ -282,6 +289,7 @@ bun add @julep/sdk
 ```
 
 **Python**:
+
 ```bash
 pip install julep
 ```
@@ -298,7 +306,7 @@ pip install julep
 
 ## Démarrage rapide de Python 🐍
 
-```python
+````python
 ### Step 0: Setup
 
 import time
@@ -383,7 +391,7 @@ Renvoyez votre sortie sous forme de liste yaml à l'intérieur```yaml tags at th
           {% for idea in outputs[1].plot_ideas %}
           - {{idea}}
           {% endfor %}
-          
+
           Here are the results from researching the plot ideas on Wikipedia:
           {{_.wikipedia_results}}
 
@@ -435,7 +443,7 @@ si result.status == "réussi" :
 imprimer(résultat.sortie)
 autre:
 déclencher une exception (résultat.erreur)
-```
+````
 
 You can find the full python example [here](example.py).
 
@@ -454,13 +462,16 @@ You can find the full python example [here](example.py).
 
 ```javascript
 // Étape 0 : Configuration
-const dotenv = require('dotenv');
-const { Julep } = require('@julep/sdk');
-const yaml = require('yaml');
+const dotenv = require("dotenv");
+const { Julep } = require("@julep/sdk");
+const yaml = require("yaml");
 
 dotenv.config();
 
-const client = new Julep({ apiKey: process.env.JULEP_API_KEY, environnement: process.env.JULEP_ENVIRONMENT || "production" });
+const client = nouveau Julep({
+Clé API : processus.env.JULEP_API_KEY,
+environnement : process.env.JULEP_ENVIRONMENT || "production",
+});
 
 /* Étape 1 : Créer un agent */
 
@@ -468,7 +479,8 @@ fonction asynchrone createAgent() {
 agent constant = attendez que le client.agents.create({
 nom : « Agent de narration »,
 modèle : "claude-3.5-sonnet",
-à propos de : « Vous êtes un conteur créatif qui crée des histoires captivantes sur une myriade de sujets. »,
+à propos de:
+« Vous êtes un conteur créatif qui crée des histoires captivantes sur une myriade de sujets. »,
   });
 agent de retour;
 }
@@ -572,10 +584,7 @@ tracé : « load_yaml(_.split('\`\`\`yaml')[1].split('\`\`\`')[0].strip()) »
 `;
 
 fonction asynchrone createTask(agentId) {
-const tâche = attendre client.tasks.create(
-identifiant de l'agent,
-yaml.parse(tâcheYaml)
-  );
+const tâche = wait client.tasks.create(agentId, yaml.parse(taskYaml));
 tâche de retour;
 }
 
@@ -583,7 +592,7 @@ tâche de retour;
 
 fonction asynchrone executeTask(taskId) {
 const exécution = attendre client.executions.create(taskId, {
-entrée : { idée : "Un chat qui apprend à voler" }
+entrée : { idée : "Un chat qui apprend à voler" },
   });
 
 // 🎉 Regardez comment l'histoire et les panneaux de bande dessinée sont générés
@@ -591,7 +600,7 @@ tandis que (vrai) {
 const résultat = wait client.executions.get(execution.id);
 console.log(résultat.status, résultat.output);
 
-si (résultat.status === 'réussi' || résultat.status === 'échec') {
+si (résultat.status === "réussi" || résultat.status === "échec") {
 // 📦 Une fois l'exécution terminée, récupérez les résultats
 si (résultat.status === "réussi") {
 console.log(résultat.sortie);
@@ -601,7 +610,7 @@ lancer une nouvelle erreur (résultat.erreur);
 casser;
     }
 
-attendre une nouvelle promesse (résolution => setTimeout (résolution, 1000));
+attendre une nouvelle promesse((résolution) => setTimeout(résolution, 1000));
   }
 }
 
@@ -616,7 +625,9 @@ console.error("Une erreur s'est produite :", error);
   }
 }
 
-main().then(() => console.log("Terminé")).catch(console.error);
+principal()
+.then(() => console.log("Terminé"))
+.catch(console.erreur);
 ```
 
 You can find the full Node.js example [here](example.js).
@@ -689,7 +700,6 @@ classe Agent,Tâches,Session core;
 - **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
 - **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
 - **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
-
 
 <div align="center">
     <a href="#top">
@@ -863,6 +873,7 @@ Retrieve a value from the execution's key-value store.
 Assign a value to a key in the execution's key-value store.
 
 <br><br><b>Note:</b> The set step uses Python expressions.
+
 </td>
 
 <td>
@@ -1059,7 +1070,7 @@ Run a subworkflow and await its completion
 - rendement:
 flux de travail : données_de_processus
 Arguments:
-données d'entrée : _. données brutes # <-- expression Python
+données_d'entrée : _. données_raw # <-- expression python
 ```
 
 </td>
@@ -1100,6 +1111,7 @@ Agents can be given access to a number of "tools" -- any programmatic interface 
 Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
 Tools in julep can be one of:
+
 1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
 2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
@@ -1133,12 +1145,11 @@ contenu : '"salut"' # <-- expression python
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
 ### `system` tools
 
-Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
 `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
@@ -1166,6 +1177,7 @@ limite : 10 # <-- expression python
 #### Available `system` resources and operations
 
 - `agent`:
+
   - `list`: List all agents.
   - `get`: Get a single agent by id.
   - `create`: Create a new agent.
@@ -1173,6 +1185,7 @@ limite : 10 # <-- expression python
   - `delete`: Delete an existing agent.
 
 - `user`:
+
   - `list`: List all users.
   - `get`: Get a single user by id.
   - `create`: Create a new user.
@@ -1180,6 +1193,7 @@ limite : 10 # <-- expression python
   - `delete`: Delete an existing user.
 
 - `session`:
+
   - `list`: List all sessions.
   - `get`: Get a single session by id.
   - `create`: Create a new session.
@@ -1189,6 +1203,7 @@ limite : 10 # <-- expression python
   - `history`: Get the chat history with a session.
 
 - `task`:
+
   - `list`: List all tasks.
   - `get`: Get a single task by id.
   - `create`: Create a new task.
@@ -1202,6 +1217,7 @@ limite : 10 # <-- expression python
   - `search`: Search for documents.
 
 Additional operations available for some resources:
+
 - `embed`: Embed a resource (specific resources not specified in the provided code).
 - `change_status`: Change the status of a resource (specific resources not specified in the provided code).
 - `chat`: Chat with a resource (specific resources not specified in the provided code).
@@ -1210,8 +1226,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
 ### Built-in `integrations`
 
@@ -1219,9 +1234,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
-
+> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 ### Direct `api_calls`
 
@@ -1343,7 +1356,7 @@ spider_api_key : chaîne # La clé API pour Spider
 Arguments:
 url : chaîne # L'URL pour laquelle récupérer les données
 mode : chaîne # Le type de robots d'exploration (par défaut : « scrape »)
-paramètres : dict # (facultatif) Les paramètres de l'API Spider
+paramètres : dict # (facultatif) Les paramètres de l'API Spider
 
 sortir:
 documents : liste # Les documents renvoyés par l'araignée
@@ -1535,8 +1548,7 @@ Explorez notre documentation API pour en savoir plus sur les agents, les tâches
     </a>
 </div>
 
-
-*****
+---
 
 ## Quelle est la différence entre Julep et LangChain etc ?
 
@@ -1551,7 +1563,7 @@ Julep, en revanche, s'intéresse davantage à la création d'agents d'IA persist
 Utilisez Julep si vous imaginez créer un assistant IA complexe qui doit :
 
 - Suivez les interactions des utilisateurs sur plusieurs jours ou semaines.
-- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance de sources de données.
+- Exécutez des tâches planifiées, comme l'envoi de résumés quotidiens ou la surveillance des sources de données.
 - Prendre des décisions basées sur des interactions antérieures ou des données stockées.
 - Interagir avec plusieurs services externes dans le cadre de son flux de travail.
 

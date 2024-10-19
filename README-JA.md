@@ -119,7 +119,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 3. 🔄 **複数ステップのタスク**: ループと意思決定を含む複雑な複数ステップのプロセスを構築します。
 4. ⏳ **タスク管理**: 無期限に実行される可能性のある長時間実行タスクを処理します。
 5. 🛠️ **組み込みツール**: タスクで組み込みツールと外部 API を使用します。
-6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
+6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、タスクがスムーズに実行されるようにします。
 7. 📚 **RAG**: Julep のドキュメント ストアを使用して、独自のデータを取得して使用するためのシステムを構築します。
 
 ![機能](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
@@ -160,12 +160,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d...  # dummy key
+        api_key: BSAqES7dj9d... # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
+      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -233,34 +233,40 @@ main:
 <summary><b>AIに関する研究概要</b> <i>（クリックして拡大）</i></summary>
 
 > **AIに関する研究概要**
-> 
+>
 > ### 人工知能（AI）に関する研究成果の概要
-> 
+>
 > #### はじめに
+>
 > 人工知能 (AI) の分野は近年、機械が環境を認識し、データから学習し、意思決定を行える方法とテクノロジーの開発により、大きな進歩を遂げています。この概要では、AI に関連するさまざまな研究結果から得られた洞察に主に焦点を当てています。
-> 
+>
 > #### 主な調査結果
-> 
+>
 > 1. **AIの定義と範囲**:
+>
 > - AI は、学習、推論、問題解決など、人間のような知能を必要とするタスクを実行できるシステムの作成に重点を置いたコンピューター サイエンスの分野として定義されています (Wikipedia)。
 > - 機械学習、自然言語処理、ロボット工学、コンピュータービジョンなど、さまざまなサブフィールドを網羅しています。
-> 
+>
 > 2. **影響と応用**:
+>
 > - AI テクノロジーはさまざまな分野に統合され、効率性と生産性を向上させています。その応用範囲は、自律走行車やヘルスケア診断から顧客サービスの自動化や財務予測まで多岐にわたります (OpenAI)。
 > - AI をすべての人にとって有益なものにするという Google の取り組みは、さまざまなプラットフォームでユーザー エクスペリエンスを強化することで日常生活を大幅に改善する可能性を強調しています (Google AI)。
-> 
+>
 > 3. **倫理的配慮**:
+>
 > - プライバシー、偏見、意思決定プロセスの説明責任に関する懸念など、AI の倫理的影響に関する議論が続いています。AI 技術の安全で責任ある使用を保証するフレームワークの必要性が強調されています (OpenAI)。
-> 
+>
 > 4. **学習メカニズム**:
+>
 > - AI システムは、教師あり学習、教師なし学習、強化学習などのさまざまな学習メカニズムを活用します。これらの方法により、AI は過去の経験やデータから学習することで、時間の経過とともにパフォーマンスを向上させることができます (Wikipedia)。
 > - 教師あり学習と教師なし学習の区別は重要です。教師あり学習はラベル付きデータに依存しますが、教師なし学習は事前定義されたラベルなしでパターンを識別します (教師なし)。
-> 
+>
 > 5. **今後の方向性**:
 > - 今後の AI 開発では、AI システムの解釈可能性と透明性を高め、正当な判断と行動を提供できるようにすることに重点が置かれると予想されます (OpenAI)。
 > - AI システムをよりアクセスしやすく、ユーザーフレンドリーなものにし、さまざまな人口統計や業界での幅広い導入を促進する動きもあります (Google AI)。
-> 
+>
 > #### 結論
+>
 > AI は複数の領域に変革をもたらす力を持ち、産業の再構築や生活の質の向上が期待されています。しかし、AI の機能が拡大するにつれて、倫理的および社会的影響に対処することが極めて重要になります。AI の将来像を見据えるには、技術者、倫理学者、政策立案者による継続的な研究と協力が不可欠です。
 
 </details>
@@ -270,6 +276,7 @@ main:
 Julep を使い始めるには、[npm](https://www.npmjs.com/package/@julep/sdk) または [pip](https://pypi.org/project/julep/) を使用してインストールします。
 
 **Node.js**:
+
 ```bash
 npm install @julep/sdk
 
@@ -279,6 +286,7 @@ bun add @julep/sdk
 ```
 
 **Python**:
+
 ```bash
 pip install julep
 ```
@@ -295,7 +303,7 @@ pip install julep
 
 ## Python クイックスタート 🐍
 
-```python
+````python
 ### Step 0: Setup
 
 import time
@@ -380,13 +388,13 @@ plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].ストリップ())
           {% for idea in outputs[1].plot_ideas %}
           - {{idea}}
           {% endfor %}
-          
+
           Here are the results from researching the plot ideas on Wikipedia:
           {{_.wikipedia_results}}
 
           Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
           Write down all your notes and thoughts.
-          Then finally write the plot as a yaml object inside ```応答の最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
+          Then finally write the plot as a yaml object inside ```レスポンスの最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
 
           ```yaml
           title: "<string>"
@@ -432,7 +440,7 @@ result.status == "成功"の場合:
 print(結果.出力)
 それ以外：
 例外(結果.エラー)を発生させる
-```
+````
 
 You can find the full python example [here](example.py).
 
@@ -451,13 +459,16 @@ You can find the full python example [here](example.py).
 
 ```ジャバスクリプト
 // ステップ 0: セットアップ
-定数dotenv = require('dotenv');
-Julep のクラスを '@julep/sdk' として定義します。
-yaml を require('yaml');
+dotenv は、次のコードで定義されます。
+Julep の SDK を実装するには、次の手順に従ってください。
+yaml を require します。
 
 config() を呼び出します。
 
-const client = new Julep({ apiKey: process.env.JULEP_API_KEY, 環境: process.env.JULEP_ENVIRONMENT || "production" });
+constクライアント = 新しいジュレップ({
+APIキー: process.env.JULEP_API_KEY、
+環境: process.env.JULEP_ENVIRONMENT || "production",
+});
 
 /* ステップ 1: エージェントを作成する */
 
@@ -465,7 +476,8 @@ const client = new Julep({ apiKey: process.env.JULEP_API_KEY, 環境: process.en
 const エージェント = クライアント.エージェント.作成を待機します({
 名前: 「ストーリーテリングエージェント」
 モデル: "claude-3.5-sonnet",
-概要: 「あなたは、さまざまなトピックについて魅力的なストーリーを作り上げることができるクリエイティブなストーリーテラーです。」
+について：
+「あなたは、さまざまなトピックについて魅力的なストーリーを作り上げることができる創造的なストーリーテラーです。」
   });
 返品エージェント;
 }
@@ -569,18 +581,15 @@ yaml が有効であり、文字とシーンが空でないことを確認して
 `;
 
 非同期関数createTask(agentId) {
-const タスク = クライアント.タスク.作成を待機します(
-エージェントID、
-yaml.parse(タスクYaml)
-  );
+const タスク = client.tasks.create(agentId, yaml.parse(taskYaml)) を待機します。
 タスクを返す。
 }
 
 /* ステップ 3: タスクを実行する */
 
 非同期関数executeTask(taskId) {
-const 実行 = クライアント.実行.作成(taskId, {
-入力: { アイデア: 「飛ぶことを学ぶ猫」 }
+const 実行 = クライアントの実行の作成を待機します(taskId、{
+入力: { アイデア: 「飛ぶことを学ぶ猫」 },
   });
 
 // 🎉 ストーリーと漫画パネルが生成される様子をご覧ください
@@ -588,7 +597,7 @@ const 実行 = クライアント.実行.作成(taskId, {
 const 結果 = client.executions.get(execution.id); を待機します。
 console.log(結果のステータス、結果の出力);
 
-if (result.status === '成功' || result.status === '失敗') {
+if (result.status === "成功" || result.status === "失敗") {
 // 📦 実行が終了したら、結果を取得します
 if (result.status === "成功") {
 console.log(結果の出力);
@@ -598,7 +607,7 @@ console.log(結果の出力);
 壊す;
     }
 
-新しい Promise(resolve => setTimeout(resolve, 1000)) を待機します。
+新しい Promise((resolve) => setTimeout(resolve, 1000)) を待機します。
   }
 }
 
@@ -613,7 +622,9 @@ console.error("エラーが発生しました:", error);
   }
 }
 
-main().then(() => console.log("完了")).catch(console.error);
+主要（）
+.then(() => console.log("完了"))
+.catch(コンソール.エラー);
 ```
 
 You can find the full Node.js example [here](example.js).
@@ -686,7 +697,6 @@ classDef core fill:#f9f、stroke:#333、stroke-width:2px;
 - **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
 - **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
 - **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
-
 
 <div align="center">
     <a href="#top">
@@ -860,6 +870,7 @@ Retrieve a value from the execution's key-value store.
 Assign a value to a key in the execution's key-value store.
 
 <br><br><b>Note:</b> The set step uses Python expressions.
+
 </td>
 
 <td>
@@ -1097,6 +1108,7 @@ Agents can be given access to a number of "tools" -- any programmatic interface 
 Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
 Tools in julep can be one of:
+
 1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
 2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
@@ -1130,12 +1142,11 @@ These are function signatures that you can give the model to choose from, simila
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
 ### `system` tools
 
-Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
 `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
@@ -1163,6 +1174,7 @@ For example,
 #### Available `system` resources and operations
 
 - `agent`:
+
   - `list`: List all agents.
   - `get`: Get a single agent by id.
   - `create`: Create a new agent.
@@ -1170,6 +1182,7 @@ For example,
   - `delete`: Delete an existing agent.
 
 - `user`:
+
   - `list`: List all users.
   - `get`: Get a single user by id.
   - `create`: Create a new user.
@@ -1177,6 +1190,7 @@ For example,
   - `delete`: Delete an existing user.
 
 - `session`:
+
   - `list`: List all sessions.
   - `get`: Get a single session by id.
   - `create`: Create a new session.
@@ -1186,6 +1200,7 @@ For example,
   - `history`: Get the chat history with a session.
 
 - `task`:
+
   - `list`: List all tasks.
   - `get`: Get a single task by id.
   - `create`: Create a new task.
@@ -1199,6 +1214,7 @@ For example,
   - `search`: Search for documents.
 
 Additional operations available for some resources:
+
 - `embed`: Embed a resource (specific resources not specified in the provided code).
 - `change_status`: Change the status of a resource (specific resources not specified in the provided code).
 - `chat`: Chat with a resource (specific resources not specified in the provided code).
@@ -1207,8 +1223,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
 ### Built-in `integrations`
 
@@ -1216,9 +1231,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
-
+> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 ### Direct `api_calls`
 
@@ -1294,7 +1307,7 @@ session_id: 文字列 # (オプション) BrowserBaseのセッションID
 urls: list[string] # BrowserBaseで読み込むURL
 
 出力：
-documents: list # URLから読み込まれたドキュメント
+ドキュメント: リスト # URLから読み込まれたドキュメント
 ```
 
 </td>
@@ -1446,7 +1459,7 @@ context_overflow="適応型"
 
 # 同じセッションで会話を続ける
 レスポンス = client.sessions.chat(
-session_id=セッションID、
+セッションID=セッションID、
 メッセージ=[
       {
 「役割」: 「ユーザー」、
@@ -1519,7 +1532,7 @@ metadata_filter={"category": "研究論文"}
 1. `git clone https://github.com/julep-ai/julep.git`
 2. `cd ジュレップ`
 3. `docker volume create cozo_backup`
-4. docker ボリュームを作成します cozo_data
+4. `docker volume create cozo_data`
 5. `cp .env.example .env # <-- このファイルを編集します`
 6. `docker compose --env-file .env --profile temporal-ui --profile single-tenant --profile self-hosted-db up --build`
 
@@ -1532,8 +1545,7 @@ metadata_filter={"category": "研究論文"}
     </a>
 </div>
 
-
-*****
+---
 
 ## Julep と LangChain などの違いは何ですか?
 

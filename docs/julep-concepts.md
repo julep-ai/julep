@@ -897,14 +897,14 @@ See [loom video](https://www.loom.com/embed/c5cda67936254465aaff4548245b3e13?hid
 
 A `Task` is a workflow owned by an `Agent`. It consists of the following fields:
 
-| **Field**       | **Type**                | **Description**                                                  |
-|:----------------|:------------------------|:-----------------------------------------------------------------|
-| `name`          | `string`                | The name of the task (required for creation).                    |
-| `description`   | `string`                | A description of the task (default: "").                         |
-| `main`          | `WorkflowStep[]`        | The main workflow steps (required, minimum 1 item).              |
-| `input_schema`  | `Record<unknown> | null` | JSON schema to validate input when executing the task (default: null). |
-| `tools`         | `TaskTool[]`            | Additional tools specific to this task (default: empty array).   |
-| `inherit_tools` | `boolean`               | Whether to inherit tools from the parent agent (default: true).  |
+| **Field**       | **Type**         | **Description**                                                 |
+| :-------------- | :--------------- | :-------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `name`          | `string`         | The name of the task (required for creation).                   |
+| `description`   | `string`         | A description of the task (default: "").                        |
+| `main`          | `WorkflowStep[]` | The main workflow steps (required, minimum 1 item).             |
+| `input_schema`  | `Record<unknown> | null`                                                           | JSON schema to validate input when executing the task (default: null). |
+| `tools`         | `TaskTool[]`     | Additional tools specific to this task (default: empty array).  |
+| `inherit_tools` | `boolean`        | Whether to inherit tools from the parent agent (default: true). |
 
 Additionally, a `Task` includes:
 
