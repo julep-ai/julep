@@ -62,7 +62,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<details>
+<details open>
 <summary><h3>📖 Table of Contents</h3></summary>
 
 - [Introduction](#introduction)
@@ -111,16 +111,16 @@ Julep is a platform for creating AI agents that remember past interactions and c
 
 Julep enables the creation of multi-step tasks incorporating decision-making, loops, parallel processing, and integration with numerous external tools and APIs.
 
-While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios.
+While many AI applications are limited to simple, linear chains of prompts and API calls with minimal branching, Julep is built to handle more complex scenarios which:
 
-It supports:
-
-- Intricate, multi-step processes
-- Dynamic decision-making
-- Parallel execution
+- have multiple steps,
+- make decisions based on model outputs,
+- spawn parallel branches,
+- use lots of tools, and
+- run for a long time.
 
 > [!TIP]
-> Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in.
+> Imagine you want to build an AI agent that can do more than just answer simple questions—it needs to handle complex tasks, remember past interactions, and maybe even use other tools or APIs. That's where Julep comes in. Read [Understanding Tasks](#understanding-tasks) to learn more.
 
 ## Key Features
 
@@ -132,7 +132,10 @@ It supports:
 6. 🔧 **Self-Healing**: Julep will automatically retry failed steps, resend messages, and generally keep your tasks running smoothly.
 7. 📚 **RAG**: Use Julep's document store to build a system for retrieving and using your own data.
 
-Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
+![features](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
+
+> [!TIP]
+> Julep is ideal for applications that require AI use cases beyond simple prompt-response models.
 
 ## Quick Example
 
@@ -599,6 +602,22 @@ Tasks are the core of Julep's workflow system. They allow you to define complex,
 - **Name and Description**: Each task has a unique name and description for easy identification.
 - **Main Steps**: The core of a task, defining the sequence of actions to be performed.
 - **Tools**: Optional integrations that extend the capabilities of your agent during task execution.
+
+```mermaid
+sequenceDiagram
+    participant D as Your Code
+    participant C as Julep Client
+    participant S as Julep Server
+
+    D->>C: Create Task
+    C->>S: Submit Execution
+    Note over S: Execute Task
+    Note over S: Manage State
+    S-->>C: Execution Events
+    C-->>D: Progress Updates
+    S->>C: Execution Completion
+    C->>D: Final Result
+```
 
 ### Types of Workflow Steps
 
