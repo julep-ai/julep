@@ -62,8 +62,7 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<h3>📖 Table of Contents</h3>
 
 - [Introduction](#introduction)
 - [Key Features](#key-features)
@@ -102,7 +101,6 @@ Exciting news! We're participating in DevFest.AI throughout October 2024! 🗓�
   - [Different Form Factor](#different-form-factor)
   - [In Summary](#in-summary)
 
-</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Introduction

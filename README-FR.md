@@ -62,8 +62,7 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<h3>📖 Table of Contents</h3>
 
 - [Introduction](#introduction)
 - [Principales caractéristiques](#principales-caract%C3%A9ristiques)
@@ -102,7 +101,6 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
   - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
   - [En résumé](#en-r%C3%A9sum%C3%A9)
 
-</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Introduction

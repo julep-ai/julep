@@ -62,8 +62,7 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<details>
-<summary><h3>📖 Table of Contents</h3></summary>
+<h3>📖 Table of Contents</h3>
 
 - [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
 - [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
@@ -100,7 +99,6 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
   - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
   - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
 
-</details>
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ＃＃ 導入
