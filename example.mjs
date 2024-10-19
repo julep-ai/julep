@@ -1,7 +1,7 @@
 // Step 0: Setup
-const dotenv = require('dotenv');
-const { Julep } = require('@julep/sdk');
-const yaml = require('yaml');
+import dotenv from 'dotenv';
+import { Julep } from '@julep/sdk';
+import yaml from 'yaml';
 
 dotenv.config();
 

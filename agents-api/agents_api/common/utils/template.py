@@ -37,7 +37,7 @@ jinja_env.globals["arrow"] = arrow
 jinja_env.globals["true"] = True
 jinja_env.globals["false"] = False
 jinja_env.globals["null"] = None
-
+jinja_env.globals["NEWLINE"] = "\n"
 
 simple_jinja_regex = re.compile(r"{{|{%.+}}|%}", re.DOTALL)
 

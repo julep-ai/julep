@@ -1,9 +1,17 @@
 from langchain_community.document_loaders import SpiderLoader
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...models import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
 
 
-async def crawl(setup: SpiderSetup, arguments: SpiderFetchArguments) -> SpiderFetchOutput:
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    reraise=True,
+    stop=stop_after_attempt(4),
+)
+async def crawl(
+    setup: SpiderSetup, arguments: SpiderFetchArguments
+) -> SpiderFetchOutput:
     """
     Fetches data from a specified URL.
     """

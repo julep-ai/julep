@@ -12,7 +12,7 @@
 #    d. Integrating external information during the conversation
 # 6. Display the chat history and any relevant metrics
 
-# UNDER CONSTRUCTION - YAML is working but the flow is not correct yet
+# UNDER CONSTRUCTION - Dynamic weather integration is not yet implemented, rest of the code is functional
 
 import uuid
 import yaml
@@ -75,49 +75,51 @@ tools:
   integration:
     provider: weather
     setup:
-      api_key: "API_KEY"
+      api_key: "YOUR_WEATHER_API_KEY"
 
 main:
-- evaluate:
-    context_length: len(inputs[0].chat_history)
-
-- if: "_.context_length > '10'"
+- if: "len(inputs[0].chat_history) > 5"
   then:
     evaluate:
-        summarized_history: str(inputs[0].chat_history[-10:])
+      summarized_history: str(inputs[0].chat_history[-5:])
+  else:
+    evaluate:
+      summarized_history: str(inputs[0].chat_history)
+                               
+- if: "search_regex('weather', inputs[0].user_input)"
+  then:
+    tool: weather_api
+    arguments:
+      location: "'NEW YORK'"
+  else:
+    evaluate:
+      weather: "'No weather information requested'"
+                        
+- evaluate:
+    weather: outputs[1]
+                               
+- if: "search_regex('weather', inputs[0].user_input)"
+  then:
     prompt:
       - role: system
-        content: >-
+        content: >-            
           You are an advanced chat assistant. Here's a summary of the recent conversation:
-          {{outputs[1].summarized_history}}
-          
+          {{outputs[0].summarized_history}}
+                               
+          The user mentioned weather. Here's the current weather information for NEW YORK
+          Incorporate this information into your response.
+                               
+          {{_.weather}}
+      
           Now, respond to the user's latest input: {{inputs[0].user_input}}
-    unwrap: true
   else:
     prompt:
       - role: system
         content: >-
-          You are an advanced chat assistant. Here's the conversation history:
-          {{inputs[0].chat_history}}
-          
+          You are an advanced chat assistant. Here's a summary of the recent conversation:
+          {{outputs[0].summarized_history}}
+      
           Now, respond to the user's latest input: {{inputs[0].user_input}}
-    unwrap: true
-
-- if: "'weather' in inputs[0].user_input.lower()"
-  then:
-    tool: weather_api
-    arguments:
-      location: inputs[0].user_input.lower.split('weather')[1].strip()
-    prompt:
-      - role: system
-        content: >-
-          The user mentioned weather. Here's the current weather information for {{inputs[0].user_input.lower.split('weather')[1].strip()}}
-          
-          Incorporate this information into your response.
-    unwrap: true
-                               
-- return:
-    summary: _
 """)
 
 # Creating the chat task
@@ -141,8 +143,6 @@ def run_chat_session():
     chat_history = []
     print("Starting advanced chat session. Type 'exit' to end the conversation.")
     
-    session = client.sessions.create(agent=AGENT_UUID)
-    
     while True:
         user_input = get_user_input()
         if user_input.lower() == 'exit':
@@ -158,17 +158,17 @@ def run_chat_session():
             }
         )
         # Wait for the execution to complete
-        time.sleep(3)
+        time.sleep(5)
         result = client.executions.get(execution.id)
         print(client.executions.transitions.list(execution.id).items)
         print(f"Execution result: {result.output}")
-        assistant_response = result.output
+        assistant_response = result.output['choices'][0]['message']['content']
         
         chat_history.append({"role": "assistant", "content": assistant_response})
-        print(f"Assistant: {assistant_response}")
+        print(f"Assistant: { assistant_response}")
         
         # Simulate a delay for a more natural conversation flow
-        time.sleep(1)
+        print("----------------------")
     
     print("\nChat session ended. Here's the complete chat history:")
     display_chat_history(chat_history)

@@ -1,31 +1,35 @@
-from dataclasses import dataclass
 from typing import Annotated, Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, computed_field
-from pydantic_partial import create_partial_model
+from temporalio import activity, workflow
 
-from ...autogen.openapi_model import (
-    Agent,
-    CreateTaskRequest,
-    CreateTransitionRequest,
-    Execution,
-    ExecutionStatus,
-    PartialTaskSpecDef,
-    PatchTaskRequest,
-    Session,
-    Task,
-    TaskSpec,
-    TaskSpecDef,
-    TaskToolDef,
-    Tool,
-    TransitionTarget,
-    TransitionType,
-    UpdateTaskRequest,
-    User,
-    Workflow,
-    WorkflowStep,
-)
+with workflow.unsafe.imports_passed_through():
+    from pydantic import BaseModel, Field, computed_field
+    from pydantic_partial import create_partial_model
+
+    from ...autogen.openapi_model import (
+        Agent,
+        CreateTaskRequest,
+        CreateTransitionRequest,
+        Execution,
+        ExecutionStatus,
+        PartialTaskSpecDef,
+        PatchTaskRequest,
+        Session,
+        Task,
+        TaskSpec,
+        TaskSpecDef,
+        TaskToolDef,
+        Tool,
+        TransitionTarget,
+        TransitionType,
+        UpdateTaskRequest,
+        User,
+        Workflow,
+        WorkflowStep,
+    )
+    from ...common.storage_handler import load_from_blob_store_if_remote
+    from .remote import BaseRemoteModel, RemoteObject
 
 # TODO: Maybe we should use a library for this
 
@@ -136,9 +140,9 @@ class ExecutionInput(BaseModel):
     session: Session | None = None
 
 
-class StepContext(BaseModel):
-    execution_input: ExecutionInput
-    inputs: list[Any]
+class StepContext(BaseRemoteModel):
+    execution_input: ExecutionInput | RemoteObject
+    inputs: list[Any] | RemoteObject
     cursor: TransitionTarget
 
     @computed_field
@@ -196,11 +200,14 @@ class StepContext(BaseModel):
         return self.cursor.workflow == "main"
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        current_input = self.current_input
+        if activity.in_activity():
+            current_input = load_from_blob_store_if_remote(current_input)
+
         dump = super().model_dump(*args, **kwargs)
 
         # Merge execution inputs into the dump dict
         execution_input: dict = dump.pop("execution_input")
-        current_input: Any = dump.pop("current_input")
         dump = {
             **dump,
             **execution_input,
@@ -214,11 +221,6 @@ class StepOutcome(BaseModel):
     error: str | None = None
     output: Any = None
     transition_to: tuple[TransitionType, TransitionTarget] | None = None
-
-
-@dataclass
-class RemoteObject:
-    key: str
 
 
 def task_to_spec(

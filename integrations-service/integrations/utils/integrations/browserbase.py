@@ -1,8 +1,14 @@
 from langchain_community.document_loaders import BrowserbaseLoader
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...models import BrowserBaseLoadArguments, BrowserBaseLoadOutput, BrowserBaseSetup
 
 
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    reraise=True,
+    stop=stop_after_attempt(3),
+)
 async def load(
     setup: BrowserBaseSetup, arguments: BrowserBaseLoadArguments
 ) -> BrowserBaseLoadOutput:

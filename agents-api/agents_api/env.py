@@ -33,7 +33,7 @@ use_blob_store_for_temporal: bool = env.bool(
 )
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")
-blob_store_cutoff_kb: int = env.int("BLOB_STORE_CUTOFF_KB", default=1024)
+blob_store_cutoff_kb: int = env.int("BLOB_STORE_CUTOFF_KB", default=64)
 s3_endpoint: str = env.str("S3_ENDPOINT", default="http://seaweedfs:8333")
 s3_access_key: str | None = env.str("S3_ACCESS_KEY", default=None)
 s3_secret_key: str | None = env.str("S3_SECRET_KEY", default=None)
@@ -118,6 +118,12 @@ environment: Dict[str, Any] = dict(
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
     embedding_model_id=embedding_model_id,
+    use_blob_store_for_temporal=use_blob_store_for_temporal,
+    blob_store_bucket=blob_store_bucket,
+    blob_store_cutoff_kb=blob_store_cutoff_kb,
+    s3_endpoint=s3_endpoint,
+    s3_access_key=s3_access_key,
+    s3_secret_key=s3_secret_key,
     testing=testing,
 )
 

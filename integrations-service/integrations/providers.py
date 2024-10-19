@@ -10,8 +10,6 @@ from .models import (
     EmailArguments,
     EmailOutput,
     EmailSetup,
-    HackerNewsFetchArguments,
-    HackerNewsFetchOutput,
     ProviderInfo,
     SpiderFetchArguments,
     SpiderFetchOutput,
@@ -58,25 +56,6 @@ weather = BaseProvider(
         docs="https://www.weatherapi.com/docs/",
         icon="https://www.weatherapi.com/favicon.ico",
         friendly_name="Weather API",
-    ),
-)
-
-hacker_news = BaseProvider(
-    provider="hacker_news",
-    setup=None,
-    methods=[
-        BaseProviderMethod(
-            method="fetch",
-            description="Get the top stories from Hacker News",
-            arguments=HackerNewsFetchArguments,
-            output=HackerNewsFetchOutput,
-        ),
-    ],
-    info=ProviderInfo(
-        url="https://news.ycombinator.com/",
-        docs="https://news.ycombinator.com/newsguidelines.html",
-        icon="https://news.ycombinator.com/favicon.ico",
-        friendly_name="Hacker News",
     ),
 )
 
@@ -156,7 +135,6 @@ email = BaseProvider(
 providers = {
     "wikipedia": wikipedia,
     "weather": weather,
-    "hacker_news": hacker_news,
     "spider": spider,
     "brave": brave,
     "browserbase": browserbase,
