@@ -1,6 +1,9 @@
 name: Translate ReadME
 
-on: push
+on:
+  push:
+    paths:
+      - "README.md"
 
 jobs:
   readme-translator:
@@ -22,13 +25,6 @@ jobs:
 
       - name: Run translator script
         run: python scripts/readme_translator.py
-
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add README-*.md
-          git commit -m "chore(readme): translate README.md"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
