@@ -201,13 +201,18 @@ stdlib = {
     "statistics": stdlib_statistics,
 }
 
+constants = {
+    "NEWLINE": "\n",
+}
+
 
 @beartype
 def get_evaluator(
     names: dict[str, Any], extra_functions: dict[str, Callable] | None = None
 ) -> SimpleEval:
     evaluator = EvalWithCompoundTypes(
-        names=names | stdlib, functions=ALLOWED_FUNCTIONS | (extra_functions or {})
+        names=names | stdlib | constants,
+        functions=ALLOWED_FUNCTIONS | (extra_functions or {}),
     )
 
     return evaluator

@@ -16,7 +16,9 @@ class EmailSetup(BaseSetup):
 
 class EmailArguments(BaseArguments):
     to: EmailStr = Field(..., description="The email address to send the email to")
-    from_: EmailStr = Field(..., alias="from", description="The email address to send the email from")
+    from_: EmailStr = Field(
+        ..., alias="from", description="The email address to send the email from"
+    )
     subject: str = Field(..., description="The subject of the email")
     body: str = Field(..., description="The body of the email")
 

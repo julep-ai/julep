@@ -1,12 +1,5 @@
 # Managing Users
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 This guide covers how to create, update, and delete users in Julep.
 
 ## Creating a User
@@ -14,7 +7,7 @@ This guide covers how to create, update, and delete users in Julep.
 To create a new user:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/users" \
+curl -X POST "https://dev.julep.ai/api/users" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -28,7 +21,7 @@ curl -X POST "https://api.julep.ai/api/users" \
 To update an existing user:
 
 ```bash
-curl -X PUT "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X PUT "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -42,7 +35,7 @@ curl -X PUT "https://api.julep.ai/api/users/YOUR_USER_ID" \
 To delete a user:
 
 ```bash
-curl -X DELETE "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X DELETE "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer $JULEP_API_KEY"
 ```
 
@@ -51,7 +44,7 @@ curl -X DELETE "https://api.julep.ai/api/users/YOUR_USER_ID" \
 To get information about a specific user:
 
 ```bash
-curl -X GET "https://api.julep.ai/api/users/YOUR_USER_ID" \
+curl -X GET "https://dev.julep.ai/api/users/YOUR_USER_ID" \
      -H "Authorization: Bearer $JULEP_API_KEY"
 ```
 

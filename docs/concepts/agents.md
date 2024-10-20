@@ -2,13 +2,6 @@
 description: A fundamental building block of an AI app built using Julep.
 ---
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 # 🤖 Agents
 
 ## What is an Agent?
