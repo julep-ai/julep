@@ -458,8 +458,6 @@ You can find the full python example [here](example.py).
 
 ## Node.js Quick Start 🟩
 
-### Step 1: Create an Agent
-
 ```javascript
 // Step 0: Setup
 const dotenv = require("dotenv");
