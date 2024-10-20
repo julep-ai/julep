@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを見る</a>
+  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを探索 (wip)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和</a>
   ·
