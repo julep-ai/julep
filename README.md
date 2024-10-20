@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">Explore Docs</a>
+  <a href="https://docs.julep.ai" rel="dofollow">Explore Docs (wip)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discord</a>
   ·
