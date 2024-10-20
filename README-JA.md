@@ -62,36 +62,39 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 目次</h3>
 
-- [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
-- [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
-- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
-- [Python クイックスタート 🐍](#python-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
-- [Components](#components)
-  - [Mental Model](#mental-model)
-- [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-  - [SDK リファレンス](#sdk-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-  - [API リファレンス](#api-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [ローカルクイックスタート](#%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88)
-- [Julep と LangChain などの違いは何ですか?](#julep-%E3%81%A8-langchain-%E3%81%AA%E3%81%A9%E3%81%AE%E9%81%95%E3%81%84%E3%81%AF%E4%BD%95%E3%81%A7%E3%81%99%E3%81%8B)
-  - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
-  - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
+- [はじめに](#introduction)
+- [主な特徴](#key-features)
+- [簡単な例](#quick-example)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [タスクのライフサイクル](#lifecycle-of-a-task)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `functions`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [組み込みの `integrations`](#built-in-integrations)
+- [直接の `api_calls`](#direct-api_calls)
+- [統合](#integrations)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [参考](#reference)
+- [SDKリファレンス](#sdk-reference)
+- [APIリファレンス](#api-reference)
+- [ローカルクイックスタート](#local-quickstart)
+- [Julep と LangChain などの違いは何ですか?](#whats-the-difference-between-julep-and-langchain-etc)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -454,8 +457,6 @@ You can find the full python example [here](example.py).
 </div>
 
 ## Node.js Quick Start 🟩
-
-### Step 1: Create an Agent
 
 ```ジャバスクリプト
 // ステップ 0: セットアップ
