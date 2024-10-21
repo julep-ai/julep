@@ -27,6 +27,10 @@ async def _(
     content = ["content 1"]
     include_title = True
 
+    # QUESTION[@Bhabuk10]: Why is the `include_title` flag set to True in this test case? 
+    # Is there a scenario where embedding behavior would change based on this flag's value? 
+    # It may be useful to add a test case that explicitly verifies this.
+
     await embed_docs(
         EmbedDocsPayload(
             developer_id=developer_id,
@@ -39,6 +43,9 @@ async def _(
         cozo_client,
     )
 
+    # FEEDBACK[@Bhabuk10]: It would be beneficial to include assertions here that verify the 
+    # expected outcome after calling `embed_docs`. This could be checking that the document was 
+    # embedded correctly or validating the result in some way to ensure that the function works as intended.
 
 @test("activity: call demo workflow via temporal client")
 async def _():
@@ -54,4 +61,12 @@ async def _():
         )
 
         assert result == 3
+
+        # FEEDBACK[@Bhabuk10]: Consider adding a comment explaining why the expected result is 3. 
+        # Including a brief description of how `DemoWorkflow` works can make the test more understandable to others.
+
         mock_get_client.assert_called_once()
+
+        # FEEDBACK[@Bhabuk10]: Good practice in verifying that the temporal client was called once. 
+        # You may also want to test edge cases like invalid input arguments or failure scenarios to 
+        # increase the coverage of the test suite.

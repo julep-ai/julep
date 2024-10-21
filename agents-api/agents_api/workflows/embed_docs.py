@@ -21,3 +21,9 @@ class EmbedDocsWorkflow:
             schedule_to_close_timeout=timedelta(seconds=600),
             retry_policy=DEFAULT_RETRY_POLICY,
         )
+        # FEEDBACK[@Bhabuk10]: The timeout of 600 seconds (10 minutes) seems quite large for a document embedding task. 
+        # Consider adding a comment explaining why this particular timeout was chosen, or if it's meant to accommodate 
+        # a wide range of document sizes. Additionally, adding a configurable timeout could give more flexibility 
+        # depending on the nature of the document being embedded.
+
+     
