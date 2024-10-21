@@ -1,5 +1,6 @@
 # Tool Endpoints
 
+
 This document provides a reference for all Tool API endpoints in Julep.
 
 ## List Tools for an Agent

@@ -1,5 +1,6 @@
 # User Endpoints
 
+
 This document provides a reference for all User API endpoints in Julep.
 
 ## List Users

@@ -1,8 +1,9 @@
 from typing import Callable
 
-import yaml
 from fastapi import APIRouter, Request, Response
 from fastapi.routing import APIRoute
+
+from ...common.utils import yaml
 
 
 class YamlRequest(Request):
@@ -15,7 +16,7 @@ class YamlRequest(Request):
                 "application/yaml",
                 "text/yaml",
             ]:
-                body = yaml.load(body, yaml.CSafeLoader)
+                body = yaml.load(body)
 
             self._body = body
 

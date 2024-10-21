@@ -1,6 +1,6 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
-import json
+import re
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
@@ -10,6 +10,7 @@ from pycozo.client import QueryException
 from pydantic import ValidationError
 
 from ...autogen.openapi_model import DocReference
+from ...common.nlp import paragraph_to_custom_queries
 from ..utils import (
     cozo_query,
     partialclass,
@@ -62,9 +63,10 @@ def search_docs_by_text(
         [owner_type, str(owner_id)] for owner_type, owner_id in owners
     ]
 
-    # Need to use NEAR/3($query) to search for arbitrary text within 3 words of each other
     # See: https://docs.cozodb.org/en/latest/vector.html#full-text-search-fts
-    query = f"NEAR/3({json.dumps(query)})"
+    fts_queries = paragraph_to_custom_queries(query) or [
+        re.sub(r"[^\w\s\-_]+", "", query)
+    ]
 
     # Construct the datalog query for searching document snippets
     search_query = f"""
@@ -112,11 +114,12 @@ def search_docs_by_text(
                 index,
                 content
                 |
-                query: $query,
+                query: query,
                 k: {k},
                 score_kind: 'tf_idf',
                 bind_score: score,
             }},
+            query in $fts_queries,
             distance = -score,
             snippet_data = [index, content]
 
@@ -154,6 +157,7 @@ def search_docs_by_text(
             distance,
             title,
         ] := 
+            candidate[id],
             input[owner_type, owner_id],
             m[
                 id,
@@ -182,5 +186,5 @@ def search_docs_by_text(
 
     return (
         queries,
-        {"owners": owners, "query": query},
+        {"owners": owners, "query": query, "fts_queries": fts_queries},
     )

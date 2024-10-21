@@ -4,16 +4,18 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from pydantic import RootModel
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
 # Import necessary modules and types
 with workflow.unsafe.imports_passed_through():
+    from pydantic import RootModel
+
     from ...activities import task_steps
     from ...activities.excecute_api_call import execute_api_call
     from ...activities.execute_integration import execute_integration
     from ...activities.execute_system import execute_system
+    from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
         ErrorWorkflowStep,
@@ -39,6 +41,7 @@ with workflow.unsafe.imports_passed_through():
         YieldStep,
     )
     from ...autogen.Tools import SystemDef
+    from ...common.protocol.remote import RemoteList
     from ...common.protocol.tasks import (
         ExecutionInput,
         PartialTransition,
@@ -118,49 +121,21 @@ GenericStep = RootModel[WorkflowStep]
 # Main workflow definition
 @workflow.defn
 class TaskExecutionWorkflow:
-    user_state: dict[str, Any] = {}
-
-    def __init__(self) -> None:
-        self.user_state = {}
-
-    # TODO: Add endpoints for getting and setting user state for an execution
-    # Query methods for user state
-    @workflow.query
-    def get_user_state(self) -> dict[str, Any]:
-        return self.user_state
-
-    @workflow.query
-    def get_user_state_by_key(self, key: str) -> Any:
-        return self.user_state.get(key)
-
-    # Signal methods for updating user state
-    @workflow.signal
-    def set_user_state(self, key: str, value: Any) -> None:
-        self.user_state[key] = value
-
-    @workflow.signal
-    def update_user_state(self, values: dict[str, Any]) -> None:
-        self.user_state.update(values)
-
     # Main workflow run method
     @workflow.run
     async def run(
         self,
         execution_input: ExecutionInput,
         start: TransitionTarget = TransitionTarget(workflow="main", step=0),
-        previous_inputs: list[Any] = [],
-        user_state: dict[str, Any] = {},
+        previous_inputs: RemoteList | None = None,
     ) -> Any:
-        # Set the initial user state
-        self.user_state = user_state
-
         workflow.logger.info(
             f"TaskExecutionWorkflow for task {execution_input.task.id}"
             f" [LOC {start.workflow}.{start.step}]"
         )
 
         # 0. Prepare context
-        previous_inputs = previous_inputs or [execution_input.arguments]
+        previous_inputs = previous_inputs or RemoteList([execution_input.arguments])
 
         context = StepContext(
             execution_input=execution_input,
@@ -172,8 +147,10 @@ class TaskExecutionWorkflow:
 
         # ---
 
+        continued_as_new = workflow.info().continued_run_id is not None
+
         # 1. Transition to starting if not done yet
-        if context.is_first_step:
+        if context.is_first_step and not continued_as_new:
             await transition(
                 context,
                 type="init" if context.is_main else "init_branch",
@@ -218,6 +195,13 @@ class TaskExecutionWorkflow:
         # 3. Then, based on the outcome and step type, decide what to do next
         workflow.logger.info(f"Processing outcome for step {context.cursor.step}")
 
+        [outcome] = await workflow.execute_local_activity(
+            load_inputs_remote,
+            args=[[outcome]],
+            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            retry_policy=DEFAULT_RETRY_POLICY,
+        )
+
         match context.current_step, outcome:
             # Handle errors (activity returns None)
             case step, StepOutcome(error=error) if error is not None:
@@ -258,7 +242,6 @@ class TaskExecutionWorkflow:
                     switch=switch,
                     index=index,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -276,7 +259,6 @@ class TaskExecutionWorkflow:
                     else_branch=else_branch,
                     condition=condition,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -288,7 +270,6 @@ class TaskExecutionWorkflow:
                     do_step=do_step,
                     items=items,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -303,7 +284,6 @@ class TaskExecutionWorkflow:
                     reduce=reduce,
                     initial=initial,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                 )
                 state = PartialTransition(output=result)
 
@@ -316,7 +296,6 @@ class TaskExecutionWorkflow:
                     map_defn=map_defn,
                     items=items,
                     previous_inputs=previous_inputs,
-                    user_state=self.user_state,
                     initial=initial,
                     reduce=reduce,
                     parallelism=parallelism,
@@ -376,7 +355,6 @@ class TaskExecutionWorkflow:
                     context,
                     start=yield_next_target,
                     previous_inputs=[output],
-                    user_state=self.user_state,
                 )
 
                 state = PartialTransition(output=result)
@@ -439,14 +417,15 @@ class TaskExecutionWorkflow:
 
             case SetStep(), StepOutcome(output=evaluated_output):
                 workflow.logger.info("Set step: Updating user state")
-                self.update_user_state(evaluated_output)
 
                 # Pass along the previous output unchanged
-                state = PartialTransition(output=context.current_input)
+                state = PartialTransition(
+                    output=context.current_input, user_state=evaluated_output
+                )
 
             case GetStep(get=key), _:
                 workflow.logger.info(f"Get step: Fetching '{key}' from user state")
-                value = self.get_user_state_by_key(key)
+                value = workflow.memo_value(key, default=None)
                 workflow.logger.debug(f"Retrieved value: {value}")
 
                 state = PartialTransition(output=value)
@@ -553,14 +532,7 @@ class TaskExecutionWorkflow:
                     ),
                 )
 
-                # FIXME: This is a hack to make the output of the system call match
-                #  the expected output format (convert uuid/datetime to strings)
-                def model_dump(obj):
-                    if isinstance(obj, list):
-                        return [model_dump(item) for item in obj]
-                    return obj.model_dump(mode="json")
-
-                state = PartialTransition(output=model_dump(tool_call_response))
+                state = PartialTransition(output=tool_call_response)
 
             case _:
                 workflow.logger.error(
@@ -591,10 +563,20 @@ class TaskExecutionWorkflow:
             f"Continuing to next step: {final_state.next.workflow}.{final_state.next.step}"
         )
 
+        # Save the final output to the blob store
+        [final_output] = await workflow.execute_local_activity(
+            save_inputs_remote,
+            args=[[final_state.output]],
+            schedule_to_close_timeout=timedelta(seconds=10 if debug or testing else 60),
+            retry_policy=DEFAULT_RETRY_POLICY,
+        )
+
+        previous_inputs.append(final_output)
+
         # Continue as a child workflow
         return await continue_as_child(
             context.execution_input,
             start=final_state.next,
-            previous_inputs=previous_inputs + [final_state.output],
-            user_state=self.user_state,
+            previous_inputs=previous_inputs,
+            user_state=state.user_state,
         )

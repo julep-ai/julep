@@ -20,7 +20,7 @@ export JULEP_API_KEY=your_api_key_here
 3. Test your setup with a simple API call:
 
 ```bash
-curl -H "Authorization: Bearer $JULEP_API_KEY" https://api.julep.ai/api/agents
+curl -H "Authorization: Bearer $JULEP_API_KEY" https://dev.julep.ai/api/agents
 ```
 
 If successful, you should receive a list of agents (or an empty list if you haven't created any yet).

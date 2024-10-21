@@ -2,7 +2,7 @@ name: julep-gateway
 
 services:
   gateway:
-    image: julepai/gateway:${TAG}
+    image: julepai/gateway:${TAG:-dev}
     environment:
       - GATEWAY_PORT=80
       - JWT_SHARED_KEY=${JWT_SHARED_KEY}

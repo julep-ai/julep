@@ -20,7 +20,7 @@ Decide on the basic properties of your agent:
 Use the following curl command to create your agent:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/agents" \
+curl -X POST "https://dev.julep.ai/api/agents" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -36,7 +36,7 @@ curl -X POST "https://api.julep.ai/api/agents" \
 Check if your agent was created successfully:
 
 ```bash
-curl -X GET "https://api.julep.ai/api/agents" \
+curl -X GET "https://dev.julep.ai/api/agents" \
      -H "Authorization: Bearer $JULEP_API_KEY"
 ```
 

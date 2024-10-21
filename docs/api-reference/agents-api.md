@@ -1,7 +1,6 @@
 ---
 description: API for creating and modifying Agents
 ---
-
 # Agents
 
 ## List agents

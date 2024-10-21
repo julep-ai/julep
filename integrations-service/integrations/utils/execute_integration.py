@@ -30,7 +30,7 @@ async def execute_integration(
             setup = setup_class(**setup.model_dump())
 
     arguments_class = next(m for m in provider.methods if m.method == method).arguments
-    
+
     if not isinstance(arguments, arguments_class):
         parsed_arguments = arguments_class(**arguments.model_dump())
     else:

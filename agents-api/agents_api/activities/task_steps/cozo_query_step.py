@@ -4,9 +4,11 @@ from beartype import beartype
 from temporalio import activity
 
 from ... import models
+from ...common.storage_handler import auto_blob_store
 from ...env import testing
 
 
+@auto_blob_store
 @beartype
 async def cozo_query_step(
     query_name: str,

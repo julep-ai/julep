@@ -6,10 +6,12 @@ from ...common.protocol.tasks import (
     StepContext,
     StepOutcome,
 )
+from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import testing
 
 
+@auto_blob_store
 @beartype
 async def log_step(context: StepContext) -> StepOutcome:
     # NOTE: This activity is only for logging, so we just evaluate the expression
@@ -19,7 +21,9 @@ async def log_step(context: StepContext) -> StepOutcome:
 
         template: str = context.current_step.log
         output = await render_template(
-            template, context.model_dump(), skip_vars=["developer_id"]
+            template,
+            context.model_dump(include_remote=True),
+            skip_vars=["developer_id"],
         )
 
         result = StepOutcome(output=output)

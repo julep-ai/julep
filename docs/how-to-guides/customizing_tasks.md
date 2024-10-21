@@ -7,7 +7,7 @@ This guide covers how to define and customize tasks for agents in Julep.
 Here's an example of creating a simple daily motivation task:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/agents/YOUR_AGENT_ID/tasks" \
+curl -X POST "https://dev.julep.ai/api/agents/YOUR_AGENT_ID/tasks" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
