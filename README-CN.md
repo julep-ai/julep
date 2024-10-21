@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">探索文档</a>
+  <a href="https://docs.julep.ai" rel="dofollow">探索文档（正在开发中）</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和谐</a>
   ·
