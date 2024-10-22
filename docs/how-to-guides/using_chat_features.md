@@ -1,12 +1,5 @@
 # Using Chat Features
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 This guide covers how to use the chat features in Julep for dynamic interactions with agents.
 
 ## Starting a Chat Session
@@ -14,7 +7,7 @@ This guide covers how to use the chat features in Julep for dynamic interactions
 To start a new chat session:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions" \
+curl -X POST "https://dev.julep.ai/api/sessions" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -28,7 +21,7 @@ curl -X POST "https://api.julep.ai/api/sessions" \
 To send a message in a chat session:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/chat" \
+curl -X POST "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/chat" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
@@ -59,7 +52,7 @@ curl -N -H "Authorization: Bearer $JULEP_API_KEY" \
            ],
            "stream": true
          }' \
-     "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/chat"
+     "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/chat"
 ```
 
 ## Using Tools in Chat
@@ -67,7 +60,7 @@ curl -N -H "Authorization: Bearer $JULEP_API_KEY" \
 To use a tool during a chat session:
 
 ```bash
-curl -X POST "https://api.julep.ai/api/sessions/YOUR_SESSION_ID/chat" \
+curl -X POST "https://dev.julep.ai/api/sessions/YOUR_SESSION_ID/chat" \
      -H "Authorization: Bearer $JULEP_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{

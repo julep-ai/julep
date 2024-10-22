@@ -1,12 +1,5 @@
 # Overview of Julep
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 Julep is a powerful backend system for managing agent execution and interactions. It provides a comprehensive set of features for creating and managing agents, users, sessions, tools, documents, tasks, and executions.
 
 ## Key Features
