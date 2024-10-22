@@ -33,6 +33,9 @@ model Doc {
 @withVisibility("create")
 model CreateDocRequest {
     ...Doc;
+
+    /** Instruction for the embedding model. */
+    embed_instruction: string | null = null;
 }
 
 model DocOwner {
@@ -62,6 +65,9 @@ model DocReference {
 model EmbedQueryRequest {
     /** Text or texts to embed */
     text: string | string[];
+
+    /** Instruction for the embedding model. */
+    embed_instruction: string = "";
 }
 
 model EmbedQueryResponse {
