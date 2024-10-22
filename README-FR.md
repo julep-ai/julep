@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents</a>
+  <a href="https://docs.julep.ai" rel="dofollow">Explorer les documents (en cours)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">Discorde</a>
   ·
@@ -62,39 +62,39 @@ Des nouvelles passionnantes ! Nous participons au DevFest.AI tout au long du moi
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 Table des matières</h3>
 
-- [Introduction](#introduction)
-- [Principales caractéristiques](#principales-caract%C3%A9ristiques)
-- [Exemple rapide](#exemple-rapide)
+- [Présentation](#introduction)
+- [Caractéristiques principales](#key-features)
+- [Exemple rapide](#quick-example)
 - [Installation](#installation)
-- [Démarrage rapide de Python 🐍](#d%C3%A9marrage-rapide-de-python-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
-- [Components](#components)
-  - [Mental Model](#mental-model)
+- [Démarrage rapide de Python 🐍](#python-quick-start-)
+- [Démarrage rapide de Node.js 🟩](#nodejs-quick-start-)
+- [Étape 1 : Créer un agent](#step-1-create-an-agent)
+- [Composants](#composants)
+- [Modèle mental](#mental-model)
 - [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-- [Référence](#r%C3%A9f%C3%A9rence)
-  - [Référence du SDK](#r%C3%A9f%C3%A9rence-du-sdk)
-  - [Référence API](#r%C3%A9f%C3%A9rence-api)
-- [Démarrage rapide local](#d%C3%A9marrage-rapide-local)
-- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-diff%C3%A9rence-entre-julep-et-langchain-etc-)
-  - [Différents cas d'utilisation](#diff%C3%A9rents-cas-dutilisation)
-  - [Facteur de forme différent](#facteur-de-forme-diff%C3%A9rent)
-  - [En résumé](#en-r%C3%A9sum%C3%A9)
+- [Comprendre les tâches](#understanding-tasks)
+- [Cycle de vie d'une tâche](#cycle-de-vie-d-une-tâche)
+- [Types d'étapes de flux de travail](#types-of-workflow-steps)
+- [Types d'outils](#types-d'outils)
+- [`Fonctions` définies par l'utilisateur](#user-defined-functions)
+- [outils système](#outils-système)
+- [`Intégrations` intégrées](#integrations-integrées)
+- [Appels directs `api_calls`](#appels directs-api_calls)
+- [Intégrations](#intégrations)
+- [Autres fonctionnalités](#other-features)
+- [Ajout d'outils aux agents](#adding-tools-to-agents)
+- [Gestion des sessions et des utilisateurs](#managing-sessions-and-users)
+- [Intégration et recherche de documents](#document-integration-and-search)
+- [Référence](#référence)
+- [Référence SDK](#sdk-reference)
+- [Référence API](#api-reference)
+- [Démarrage rapide local](#local-quickstart)
+- [Quelle est la différence entre Julep et LangChain etc ?](#quelle-est-la-différence-entre-julep-et-langchain-etc)
+- [Différents cas d'utilisation](#different-use-cases)
+- [Facteur de forme différent](#different-form-factor)
+- [En résumé](#en-resumé)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -433,7 +433,7 @@ task_id=task.id,
 input={"idea": "Un chat qui apprend à voler"}
 )
 
-# 🎉 Regardez l'histoire et les panneaux de bande dessinée se générer
+# 🎉 Regardez l'histoire et les panneaux de bandes dessinées se générer
 while (result := client.executions.get(execution.id)).status n'est pas dans ['réussi', 'échec'] :
 print(résultat.statut, résultat.sortie)
 heure.sommeil(1)
@@ -1159,7 +1159,7 @@ description : Lister les agents à l'aide d'un appel système
 
 outils:
 - nom : list_agent_docs
-description : Liste tous les documents pour l'agent donné
+description : liste tous les documents pour l'agent donné
 type : système
 système:
 ressource : agent
@@ -1354,7 +1354,7 @@ spider_api_key : chaîne # La clé API pour Spider
 Arguments:
 url : chaîne # L'URL pour laquelle récupérer les données
 mode : chaîne # Le type de robots d'exploration (par défaut : « scrape »)
-paramètres : dict # (facultatif) Les paramètres de l'API Spider
+paramètres : dict # (facultatif) Les paramètres de l'API Spider
 
 sortir:
 documents : liste # Les documents renvoyés par l'araignée
