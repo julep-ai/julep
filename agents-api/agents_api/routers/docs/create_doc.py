@@ -75,6 +75,7 @@ async def create_user_doc(
         doc_id=doc.id,
         title=doc.title,
         content=doc.content,
+        embed_instruction=data.embed_instruction,
         job_id=embed_job_id,
         background_tasks=background_tasks,
     )
@@ -105,6 +106,7 @@ async def create_agent_doc(
         doc_id=doc.id,
         title=doc.title,
         content=doc.content,
+        embed_instruction=data.embed_instruction,
         job_id=embed_job_id,
         background_tasks=background_tasks,
     )
