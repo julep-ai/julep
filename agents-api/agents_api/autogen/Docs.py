@@ -117,7 +117,7 @@ class EmbedQueryRequest(BaseModel):
     """
     Text or texts to embed
     """
-    embed_instruction: str | None = None
+    embed_instruction: str = ""
     """
     Instruction for the embedding model.
     """

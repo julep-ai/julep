@@ -2588,9 +2588,8 @@ components:
           description: Text or texts to embed
         embed_instruction:
           type: string
-          nullable: true
           description: Instruction for the embedding model.
-          default: null
+          default: ''
     Docs.EmbedQueryResponse:
       type: object
       required:

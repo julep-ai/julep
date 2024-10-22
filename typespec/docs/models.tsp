@@ -67,7 +67,7 @@ model EmbedQueryRequest {
     text: string | string[];
 
     /** Instruction for the embedding model. */
-    embed_instruction: string | null = null;
+    embed_instruction: string = "";
 }
 
 model EmbedQueryResponse {
