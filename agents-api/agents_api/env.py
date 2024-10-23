@@ -118,6 +118,12 @@ environment: Dict[str, Any] = dict(
     temporal_worker_url=temporal_worker_url,
     temporal_namespace=temporal_namespace,
     embedding_model_id=embedding_model_id,
+    use_blob_store_for_temporal=use_blob_store_for_temporal,
+    blob_store_bucket=blob_store_bucket,
+    blob_store_cutoff_kb=blob_store_cutoff_kb,
+    s3_endpoint=s3_endpoint,
+    s3_access_key=s3_access_key,
+    s3_secret_key=s3_secret_key,
     testing=testing,
 )
 

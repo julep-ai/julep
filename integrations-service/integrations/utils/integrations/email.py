@@ -1,15 +1,17 @@
 from email.message import EmailMessage
 from smtplib import SMTP
 
-from beartype import beartype
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ...models import EmailArguments, EmailOutput, EmailSetup
 
 
-# @beartype
-async def send(
-    setup: EmailSetup, arguments: EmailArguments
-) -> EmailOutput:
+@retry(
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    reraise=True,
+    stop=stop_after_attempt(4),
+)
+async def send(setup: EmailSetup, arguments: EmailArguments) -> EmailOutput:
     """
     Sends an email with the provided details.
     """

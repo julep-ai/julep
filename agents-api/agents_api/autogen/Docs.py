@@ -37,6 +37,10 @@ class CreateDocRequest(BaseModel):
     """
     Contents of the document
     """
+    embed_instruction: str | None = None
+    """
+    Instruction for the embedding model.
+    """
 
 
 class Doc(BaseModel):
@@ -112,6 +116,10 @@ class EmbedQueryRequest(BaseModel):
     text: str | list[str]
     """
     Text or texts to embed
+    """
+    embed_instruction: str = ""
+    """
+    Instruction for the embedding model.
     """
 
 

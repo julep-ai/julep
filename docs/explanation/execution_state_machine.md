@@ -1,12 +1,5 @@
 # Execution State Machine in Julep
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 In Julep, an Execution represents an instance of a Task that has been started with some input. The Execution follows a specific state machine model, ensuring consistent and predictable behavior throughout its lifecycle.
 
 ## Execution States

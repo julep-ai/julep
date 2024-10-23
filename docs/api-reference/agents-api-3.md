@@ -2,13 +2,6 @@
 description: API for accessing Agent Memories
 ---
 
-*****
-> ### This docs site is currently under construction although this github README below should suffice for now.
-
-![](https://i.giphy.com/vR1dPIYzQmkRzLZk2w.webp)
-*****
-
-
 # Memories
 
 ## Get an agent's memories

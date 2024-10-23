@@ -2443,6 +2443,7 @@ components:
       required:
         - title
         - content
+        - embed_instruction
       properties:
         metadata:
           type: object
@@ -2458,6 +2459,11 @@ components:
               items:
                 type: string
           description: Contents of the document
+        embed_instruction:
+          type: string
+          nullable: true
+          description: Instruction for the embedding model.
+          default: null
       description: Payload for creating a doc
     Docs.Doc:
       type: object
@@ -2571,6 +2577,7 @@ components:
       type: object
       required:
         - text
+        - embed_instruction
       properties:
         text:
           anyOf:
@@ -2579,6 +2586,10 @@ components:
               items:
                 type: string
           description: Text or texts to embed
+        embed_instruction:
+          type: string
+          description: Instruction for the embedding model.
+          default: ''
     Docs.EmbedQueryResponse:
       type: object
       required:
