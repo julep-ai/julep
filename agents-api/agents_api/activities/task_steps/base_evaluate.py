@@ -9,7 +9,19 @@ from temporalio import activity
 from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from ..utils import get_evaluator
+from thefuzz import fuzz
 
+class EvaluateError(Exception):
+    def __init__(self, error, expression, values):
+        message = error.message
+        if "unhashable" in error.message and "{{" in expression:
+            message += "\nSuggestion: It seems like you used a jinja template, did you mean to use a python expression?"
+        if isinstance(error, NameError):
+            misspelledName = error.message.split("'")[1]
+            for variableName in values.keys():
+                if fuzz.ratio(variableName, misspelledName) >= 95.0:
+                    message += f"\nDid you mean {variableName} instead of {misspelledName}?"
+        super().__init__(message)
 
 @auto_blob_store
 @beartype
@@ -47,22 +59,32 @@ async def base_evaluate(
 
     evaluator = get_evaluator(names=values, extra_functions=extra_lambdas)
 
+    chosen_expression = None
+
     try:
         result = None
         match exprs:
             case str():
+                chosen_expression = exprs
                 result = evaluator.eval(exprs)
             case list():
-                result = [evaluator.eval(expr) for expr in exprs]
+                result = []
+                for expr in exprs:
+                    chosen_expression = expr
+                    result.append(evaluator.eval(expr))
             case dict() as d if all(
                 isinstance(v, dict) or isinstance(v, str) for v in d.values()
             ):
-                result = {
-                    k: {ik: evaluator.eval(iv) for ik, iv in v.items()}
-                    if isinstance(v, dict)
-                    else evaluator.eval(v)
-                    for k, v in d.items()
-                }
+                result = {}
+                for k, v in d.items():
+                    if isinstance(v, str):
+                        chosen_expression = v
+                        result[k] = evaluator.eval(v)
+                    else:
+                        result[k] = {}
+                        for k1, v1 in v.items():
+                            chosen_expression = v1
+                            result[k][k1] = evaluator.eval(v1)
             case _:
                 raise ValueError(f"Invalid expression: {exprs}")
 
@@ -71,7 +93,8 @@ async def base_evaluate(
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in base_evaluate: {e}")
-        raise
+        newException = EvaluateError(e, chosen_expression, values)
+        raise newException from e
 
 
 # Note: This is here just for clarity. We could have just imported base_evaluate directly
