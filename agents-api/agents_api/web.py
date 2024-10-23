@@ -2,6 +2,8 @@
 This module initializes the FastAPI application, registers routes, sets up middleware, and configures exception handlers.
 """
 
+import asyncio
+import uvloop
 import logging
 from typing import Any, Callable
 
@@ -207,6 +209,4 @@ def main(
     )
 
 
-# Check if the script is being run directly and, if so, start the Uvicorn server with the specified configuration.
-if __name__ == "__main__":
-    fire.Fire(main)
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
