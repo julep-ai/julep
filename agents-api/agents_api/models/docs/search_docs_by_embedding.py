@@ -48,8 +48,8 @@ def search_docs_by_embedding(
     query_embedding: list[float],
     k: int = 3,
     confidence: float = 0.5,
-    ef: int = 32,
-    mmr_lambda: float = 0.25,
+    ef: int = 50,
+    mmr_lambda: float = 0.5,
     embedding_size: int = 1024,
 ) -> tuple[list[str], dict]:
     """
