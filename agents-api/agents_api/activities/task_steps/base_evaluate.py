@@ -19,7 +19,7 @@ class EvaluateError(Exception):
         if isinstance(error, NameError):
             misspelledName = error.message.split("'")[1]
             for variableName in values.keys():
-                if fuzz.ratio(variableName, misspelledName) >= 95.0:
+                if fuzz.ratio(variableName, misspelledName) >= 90.0:
                     message += f"\nDid you mean {variableName} instead of {misspelledName}?"
         super().__init__(message)
 
