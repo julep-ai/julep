@@ -6,20 +6,20 @@ authors = ["Your Name <your.email@example.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-langchain-community = "^0.3.0"
-fastapi = "^0.115.0"
-uvicorn = "^0.30.6"
-langchain = "^0.3.0"
+langchain-community = "^0.3.3"
+langchain = "^0.3.4"
+fastapi = "^0.115.3"
+uvicorn = "^0.32.0"
 pydantic = {extras = ["email"], version = "^2.9.2"}
-duckduckgo-search = "^6.2.13"
-openai = "^1.47.1"
+duckduckgo-search = "^6.3.2"
+openai = "^1.52.2"
 tweepy = "^4.14.0"
 wikipedia = "^1.4.0"
-fire = "^0.6.0"
+fire = "^0.7.0"
 pyowm = "^3.3.0"
-spider-client = "^0.0.70"
-browserbase = "^0.3.0"
-setuptools = "^75.1.0"
+spider-client = "^0.0.72"
+browserbase = "^0.3.3"
+setuptools = "^75.2.0"
 beartype = "^0.19.0"
 tenacity = "^9.0.0"
 
@@ -34,9 +34,9 @@ check = [
 ]
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
-pytype = "^2024.9.13"
-ruff = "^0.6.8"
+pytest = "^8.3.3"
+pytype = "^2024.10.11"
+ruff = "^0.7.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
