@@ -13,7 +13,7 @@ class BaseDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    limit: Annotated[int, Field(10, ge=1, le=100)]
+    limit: Annotated[int, Field(10, ge=1, le=50)]
     lang: Literal["en-US"] = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
@@ -109,20 +109,6 @@ class DocSearchResponse(BaseModel):
     """
 
 
-class EmbedQueryRequest(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    text: str | list[str]
-    """
-    Text or texts to embed
-    """
-    embed_instruction: str = ""
-    """
-    Instruction for the embedding model.
-    """
-
-
 class EmbedQueryResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -152,6 +138,34 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     vector: list[float]
     """
     Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
+    """
+
+
+class MultipleEmbedQueryRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: Annotated[list[str], Field(max_length=100, min_length=1)]
+    """
+    Texts to embed
+    """
+    embed_instruction: str = ""
+    """
+    Instruction for the embedding model.
+    """
+
+
+class SingleEmbedQueryRequest(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    text: str
+    """
+    Text to embed
+    """
+    embed_instruction: str = ""
+    """
+    Instruction for the embedding model.
     """
 
 
