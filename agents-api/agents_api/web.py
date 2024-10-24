@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any, Callable
 
-import fire
 import sentry_sdk
 import uvicorn
 import uvloop
