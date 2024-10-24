@@ -45,6 +45,8 @@ xxhash = "^3.5.0"
 spacy = "^3.8.2"
 en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"}
 msgpack = "^1.1.0"
+gunicorn = "^23.0.0"
+uvloop = "^0.21.0"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 ruff = "^0.5.5"
