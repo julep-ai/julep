@@ -5,17 +5,17 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install Poetry
-RUN pip install poetry
+# Install Poetry globally without cache to reduce image size
+RUN pip install --no-cache-dir poetry
 
 # Copy only requirements to cache them in docker layer
 COPY pyproject.toml poetry.lock* /app/
 
-# Project initialization:
+# Project initialization: 
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
-# Copy project
+# Copy the entire project directory
 COPY . ./
 
 # Run the application
