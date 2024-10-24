@@ -3,13 +3,13 @@ This module initializes the FastAPI application, registers routes, sets up middl
 """
 
 import asyncio
-import uvloop
 import logging
 from typing import Any, Callable
 
 import fire
 import sentry_sdk
 import uvicorn
+import uvloop
 from fastapi import APIRouter, Depends, FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
