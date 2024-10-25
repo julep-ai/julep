@@ -1,4 +1,4 @@
-name: Typecheck agents-api
+name: Generate OpenAPI code
 run-name: ${{ github.actor }} is typechecking the code
 
 on:
