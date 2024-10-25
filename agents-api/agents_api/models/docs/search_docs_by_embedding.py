@@ -1,5 +1,6 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
+import json
 from typing import Any, Literal, TypeVar
 from uuid import UUID
 
@@ -51,6 +52,7 @@ def search_docs_by_embedding(
     ef: int = 50,
     mmr_lambda: float = 0.5,
     embedding_size: int = 1024,
+    metadata_filter: dict[str, Any] = {},
 ) -> tuple[list[str], dict]:
     """
     Searches for document snippets in CozoDB by embedding query.
@@ -62,10 +64,19 @@ def search_docs_by_embedding(
         k (int, optional): The number of nearest neighbors to retrieve. Defaults to 3.
         confidence (float, optional): The confidence threshold for filtering results. Defaults to 0.8.
         mmr_lambda (float, optional): The lambda parameter for MMR. Defaults to 0.25.
+        embedding_size (int): Embedding vector length
+        metadata_filter (dict[str, Any]): Dictionary to filter agents based on metadata.
     """
 
     assert len(query_embedding) == embedding_size
     assert sum(query_embedding)
+
+    metadata_filter_str = ", ".join(
+        [
+            f"metadata->{json.dumps(k)} == {json.dumps(v)}"
+            for k, v in metadata_filter.items()
+        ]
+    )
 
     owners: list[list[str]] = [
         [owner_type, str(owner_id)] for owner_type, owner_id in owners
@@ -92,7 +103,8 @@ def search_docs_by_embedding(
                 owner_type,
                 owner_id,
                 doc_id
-            }}
+            }},
+            {metadata_filter_str}
 
         intersnippet_distance[
             doc_id,
