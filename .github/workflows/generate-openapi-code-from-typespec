@@ -2,12 +2,12 @@ name: Generate OpenAPI code
 run-name: ${{ github.actor }} is typechecking the code
 
 on:
-  pull_request: {}
-#    paths:
-#      - 'typespec/**'
-  push: {}
-#    paths:
-#      - 'typespec/**'
+  pull_request:
+    paths:
+      - '**' # 'typespec/**'
+  push: 
+    paths:
+      - '**' # 'typespec/**'
 
 jobs:
   Typecheck:
