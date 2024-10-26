@@ -94,6 +94,7 @@ model BaseDocSearchRequest {
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
     lang: "en-US" = "en-US";
+    metadata_filter: MetadataFilter,
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {

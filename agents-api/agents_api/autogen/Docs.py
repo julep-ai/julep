@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool
 
 
 class BaseDocSearchRequest(BaseModel):
@@ -18,6 +18,7 @@ class BaseDocSearchRequest(BaseModel):
     """
     The language to be used for text-only search. Support for other languages coming soon.
     """
+    metadata_filter: dict[str, float | str | StrictBool | None]
 
 
 class CreateDocRequest(BaseModel):

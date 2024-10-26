@@ -2427,6 +2427,7 @@ components:
       required:
         - limit
         - lang
+        - metadata_filter
       properties:
         limit:
           type: integer
@@ -2440,6 +2441,14 @@ components:
             - en-US
           description: The language to be used for text-only search. Support for other languages coming soon.
           default: en-US
+        metadata_filter:
+          type: object
+          additionalProperties:
+            anyOf:
+              - type: number
+              - type: string
+              - type: boolean
+            nullable: true
     Docs.CreateDocRequest:
       type: object
       required:
