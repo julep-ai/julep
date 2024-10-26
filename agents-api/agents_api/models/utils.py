@@ -238,10 +238,9 @@ def cozo_query(
                     print(query)
                     pprint(variables)
 
-                e = getattr(e, "__cause__", None) or e
                 debug and print(repr(e))
 
-                if "busy" in str(e).lower():
+                if "busy" in str(getattr(e, "resp", e)).lower():
                     raise HTTPException(
                         status_code=429, detail="Resource busy. Please try again later."
                     ) from e
