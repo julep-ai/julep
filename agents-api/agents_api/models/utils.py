@@ -1,8 +1,11 @@
 import inspect
+import time
 import re
 from functools import partialmethod, wraps
 from typing import Any, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
+
+from fastapi import HTTPException
 
 import pandas as pd
 from pydantic import BaseModel
@@ -187,6 +190,7 @@ def cozo_query(
     func: Callable[P, tuple[str | list[str | None], dict]] | None = None,
     debug: bool | None = None,
     only_on_error: bool = False,
+    timeit: bool = False,
 ):
     def cozo_query_dec(func: Callable[P, tuple[str | list[Any], dict]]):
         """
@@ -222,14 +226,26 @@ def cozo_query(
 
             try:
                 client = client or cozo.get_cozo_client()
+
+                start = timeit and time.perf_counter()
                 result = client.run(query, variables)
+                end = timeit and time.perf_counter()
+
+                timeit and print(f"Cozo query time: {end - start:.2f} seconds")
 
             except Exception as e:
                 if only_on_error and debug:
                     print(query)
                     pprint(variables)
 
-                debug and print(repr(getattr(e, "__cause__", None) or e))
+                e = getattr(e, "__cause__", None) or e
+                debug and print(repr(e))
+
+                if "busy" in str(e).lower():
+                    raise HTTPException(
+                        status_code=429, detail="Resource busy. Please try again later."
+                    ) from e
+
                 raise
 
             # Need to fix the UUIDs in the result
