@@ -62,13 +62,25 @@ model DocReference {
     distance: float | null = null;
 }
 
-model EmbedQueryRequest {
-    /** Text or texts to embed */
-    text: string | string[];
+model SingleEmbedQueryRequest {
+    /** Text to embed */
+    text: string;
 
     /** Instruction for the embedding model. */
     embed_instruction: string = "";
 }
+
+model MultipleEmbedQueryRequest {
+    /** Texts to embed */
+    @minItems(1)
+    @maxItems(100)
+    text: string[];
+
+    /** Instruction for the embedding model. */
+    embed_instruction: string = "";
+}
+
+alias EmbedQueryRequest = SingleEmbedQueryRequest | MultipleEmbedQueryRequest;
 
 model EmbedQueryResponse {
     /** The embedded vectors */
@@ -77,11 +89,12 @@ model EmbedQueryResponse {
 
 model BaseDocSearchRequest {
     @minValue(1)
-    @maxValue(100)
+    @maxValue(50)
     limit: uint16 = 10;
 
     /** The language to be used for text-only search. Support for other languages coming soon. */
     lang: "en-US" = "en-US";
+    metadata_filter: MetadataFilter = #{},
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {

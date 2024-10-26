@@ -25,21 +25,28 @@ def get_search_fn_and_params(
     search_fn, params = None, None
 
     match search_params:
-        case TextOnlyDocSearchRequest(text=query, limit=k):
+        case TextOnlyDocSearchRequest(
+            text=query, limit=k, metadata_filter=metadata_filter
+        ):
             search_fn = search_docs_by_text
             params = dict(
                 query=query,
                 k=k,
+                metadata_filter=metadata_filter,
             )
 
         case VectorDocSearchRequest(
-            vector=query_embedding, limit=k, confidence=confidence
+            vector=query_embedding,
+            limit=k,
+            confidence=confidence,
+            metadata_filter=metadata_filter,
         ):
             search_fn = search_docs_by_embedding
             params = dict(
                 query_embedding=query_embedding,
                 k=k,
                 confidence=confidence,
+                metadata_filter=metadata_filter,
             )
 
         case HybridDocSearchRequest(
@@ -48,6 +55,7 @@ def get_search_fn_and_params(
             limit=k,
             confidence=confidence,
             alpha=alpha,
+            metadata_filter=metadata_filter,
         ):
             search_fn = search_docs_hybrid
             params = dict(
@@ -56,6 +64,7 @@ def get_search_fn_and_params(
                 k=k,
                 embed_search_options=dict(confidence=confidence),
                 alpha=alpha,
+                metadata_filter=metadata_filter,
             )
 
     return search_fn, params

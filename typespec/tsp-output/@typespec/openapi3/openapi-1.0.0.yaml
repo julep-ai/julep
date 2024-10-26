@@ -617,7 +617,9 @@ paths:
               type: object
               properties:
                 body:
-                  $ref: '#/components/schemas/Docs.EmbedQueryRequest'
+                  anyOf:
+                    - $ref: '#/components/schemas/Docs.SingleEmbedQueryRequest'
+                    - $ref: '#/components/schemas/Docs.MultipleEmbedQueryRequest'
               required:
                 - body
   /executions:
@@ -2425,12 +2427,13 @@ components:
       required:
         - limit
         - lang
+        - metadata_filter
       properties:
         limit:
           type: integer
           format: uint16
           minimum: 1
-          maximum: 100
+          maximum: 50
           default: 10
         lang:
           type: string
@@ -2438,6 +2441,15 @@ components:
             - en-US
           description: The language to be used for text-only search. Support for other languages coming soon.
           default: en-US
+        metadata_filter:
+          type: object
+          additionalProperties:
+            anyOf:
+              - type: number
+              - type: string
+              - type: boolean
+            nullable: true
+          default: {}
     Docs.CreateDocRequest:
       type: object
       required:
@@ -2573,23 +2585,6 @@ components:
           minimum: 0
           exclusiveMinimum: true
           description: The time taken to search in seconds
-    Docs.EmbedQueryRequest:
-      type: object
-      required:
-        - text
-        - embed_instruction
-      properties:
-        text:
-          anyOf:
-            - type: string
-            - type: array
-              items:
-                type: string
-          description: Text or texts to embed
-        embed_instruction:
-          type: string
-          description: Instruction for the embedding model.
-          default: ''
     Docs.EmbedQueryResponse:
       type: object
       required:
@@ -2632,6 +2627,36 @@ components:
           description: Vector to use in the search. Must be the same dimensions as the embedding model or else an error will be thrown.
       allOf:
         - $ref: '#/components/schemas/Docs.BaseDocSearchRequest'
+    Docs.MultipleEmbedQueryRequest:
+      type: object
+      required:
+        - text
+        - embed_instruction
+      properties:
+        text:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+          description: Texts to embed
+        embed_instruction:
+          type: string
+          description: Instruction for the embedding model.
+          default: ''
+    Docs.SingleEmbedQueryRequest:
+      type: object
+      required:
+        - text
+        - embed_instruction
+      properties:
+        text:
+          type: string
+          description: Text to embed
+        embed_instruction:
+          type: string
+          description: Instruction for the embedding model.
+          default: ''
     Docs.Snippet:
       type: object
       required:

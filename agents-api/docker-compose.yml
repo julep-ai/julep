@@ -52,6 +52,11 @@ x--base-agents-api: &base-agents-api
         target: /app/agents_api
         ignore:
           - ./**/*.pyc
+      - action: sync+restart
+        path: ./gunicorn_conf.py
+        target: /app/gunicorn_conf.py
+        ignore:
+          - ./gunicorn_conf.pyc
       - action: rebuild
         path: poetry.lock
       - action: rebuild
