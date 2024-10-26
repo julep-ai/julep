@@ -1,13 +1,12 @@
 import inspect
-import time
 import re
+import time
 from functools import partialmethod, wraps
 from typing import Any, Callable, ParamSpec, Type, TypeVar
 from uuid import UUID
 
-from fastapi import HTTPException
-
 import pandas as pd
+from fastapi import HTTPException
 from pydantic import BaseModel
 
 from ..common.utils.cozo import uuid_int_list_to_uuid4
