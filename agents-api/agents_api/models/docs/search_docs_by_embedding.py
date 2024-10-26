@@ -98,8 +98,9 @@ def search_docs_by_embedding(
                 owner_type,
                 owner_id,
                 doc_id: item,
-            }},
-            {metadata_filter_str}
+                metadata,
+            }}
+            {', ' + metadata_filter_str if metadata_filter_str.strip() else ''}
 
         ?[use_ann] := 
             snippet_counter[count],

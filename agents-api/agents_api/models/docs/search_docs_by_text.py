@@ -92,9 +92,10 @@ def search_docs_by_text(
             *docs {{
                 owner_type,
                 owner_id,
-                doc_id
-            }},
-            {metadata_filter_str}
+                doc_id,
+                metadata,
+            }}
+            {', ' + metadata_filter_str if metadata_filter_str.strip() else ''}
 
         search_result[
             doc_id,

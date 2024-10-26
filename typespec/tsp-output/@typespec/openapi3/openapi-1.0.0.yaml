@@ -2449,6 +2449,7 @@ components:
               - type: string
               - type: boolean
             nullable: true
+          default: {}
     Docs.CreateDocRequest:
       type: object
       required:
