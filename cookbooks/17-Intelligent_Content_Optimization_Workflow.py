@@ -1,3 +1,4 @@
+import os
 import uuid
 import yaml
 import time
@@ -13,10 +14,11 @@ AGENT_UUID = uuid.uuid4()
 ANALYZE_CONTENT_TASK_UUID = uuid.uuid4()
 OPTIMIZE_CONTENT_TASK_UUID = uuid.uuid4()
 PUBLISH_CONTENT_TASK_UUID = uuid.uuid4()
-SLEEP_DURATION = 2  # Configurable sleep duration
+SLEEP_DURATION = 5  # Configurable sleep duration
 
 # Initialize client
-api_key = "your_actual_api_key_here"  # Replace with your actual API key
+api_key = os.getenv("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzUxOTIxMzYsImlhdCI6MTczMDAwODEzNiwic3ViIjoiZmUwZDg5MTItN2NmZS01OTdlLWJiYzctN2U4MjM2ODk5OTU1In0.4flX0m7v-GU5khibVVmfYPIqYg78_6fZ04aiR13skZWVtflw6ebOGyD6d7lFZtRSO75JQquuJUpmW4xlelyGCg")
+
 client = Client(api_key=api_key, environment="dev")
 
 # Create or update agent
