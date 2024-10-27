@@ -23,7 +23,7 @@ Each notebook explores a unique use case, demonstrating different aspects of Jul
 | `11-Advanced_Chat_Interactions.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/11-Advanced_Chat_Interactions.ipynb)           | Covers advanced chat features and context handling.               | No |
 | `12-Monitoring_Task_Executions.ipynb`            | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/12-Monitoring_Task_Executions.ipynb)           | Shows how to monitor and manage task executions.                  | No |
 | `13-Error_Handling_and_Recovery.ipynb`           | [Colab Link](https://colab.research.google.com/github/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.ipynb)           | Demonstrates implementing error handling and recovery in tasks.   | No |
-
+| `17-Intelligent_Content_Optimization_Worflow.ipynb`           | [Colab Link](https://colab.research.google.com/github/RoushniSinha/julep/blob/17-Intelligent_Content_Optimization_Workflow/cookbooks/17-Intelligent_Content_Optimization_Workflow.ipynb)           | demonstrates an intelligent content optimization workflow.   | No |
 ## Potential Cookbooks for Contributors
 
 We welcome contributions to expand our cookbook collection. Here are some ideas for new cookbooks that showcase various Julep features and use cases:
