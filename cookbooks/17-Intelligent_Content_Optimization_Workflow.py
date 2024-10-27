@@ -16,7 +16,7 @@ PUBLISH_CONTENT_TASK_UUID = uuid.uuid4()
 SLEEP_DURATION = 2  # Configurable sleep duration
 
 # Initialize client
-api_key = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzUxOTIxMzYsImlhdCI6MTczMDAwODEzNiwic3ViIjoiZmUwZDg5MTItN2NmZS01OTdlLWJiYzctN2U4MjM2ODk5OTU1In0.4flX0m7v-GU5khibVVmfYPIqYg78_6fZ04aiR13skZWVtflw6ebOGyD6d7lFZtRSO75JQquuJUpmW4xlelyGCg"  # Replace with your actual API key
+api_key = "YOUR_API_KEY"  # Replace with your actual API key
 client = Client(api_key=api_key, environment="dev")
 
 # Create or update agent
