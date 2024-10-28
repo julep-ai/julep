@@ -8,12 +8,13 @@ x--shared-environment: &shared-environment
 services:
   integrations:
     image: julepai/integrations:${TAG:-dev}
+    build: .
+    
     environment:
       <<: *shared-environment
-
-    build: .
+    
     ports:
-      - "${INTEGRATIONS_SERVICE_PORT}:${INTEGRATIONS_SERVICE_PORT}"
+      - "${INTEGRATIONS_SERVICE_PORT:-8000}:${INTEGRATIONS_SERVICE_PORT:-8000}" # map host to container port
 
     develop:
       watch:
