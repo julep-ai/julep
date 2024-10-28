@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">探索文档</a>
+  <a href="https://docs.julep.ai" rel="dofollow">探索文档（正在开发中）</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和谐</a>
   ·
@@ -62,34 +62,39 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 目录</h3>
 
-- [主要特点](#%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9)
-- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
-- [Components](#components)
-  - [Mental Model](#mental-model)
-- [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-  - [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
-  - [API 参考](#api-%E5%8F%82%E8%80%83)
-- [本地快速启动](#%E6%9C%AC%E5%9C%B0%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8)
-- [Julep 和 LangChain 等有什么区别？](#julep-%E5%92%8C-langchain-%E7%AD%89%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
-  - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
-  - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
+- [简介](#introduction)
+- [主要特点](#key-features)
+- [快速示例](#quick-example)
+- [安装](#安装)
+- [Python 快速入门 🐍](#python-quick-start-)
+- [Node.js 快速入门🟩](#nodejs-quick-start-)
+- [步骤 1：创建代理](#step-1-create-an-agent)
+- [组件](#components)
+- [心智模型](#mental-model)
+- [概念](#concepts)
+- [理解任务](#understanding-tasks)
+- [任务的生命周期](#lifecycle-of-a-task)
+- [工作流步骤的类型](#types-of-workflow-steps)
+- [工具类型](#tool-types)
+- [用户定义的`函数`](#user-defined-functions)
+- [`系统` 工具](#system-tools)
+- [内置 `integrations`](#built-in-integrations)
+-[直接`api_calls`]（#direct-api_calls）
+- [集成](#integrations)
+- [其他功能](#other-features)
+- [向代理添加工具](#adding-tools-to-agents)
+- [管理会话和用户](#managing-sessions-and-users)
+- [文档集成与搜索](#document-integration-and-search)
+- [参考](#reference)
+- [SDK 参考](#sdk-reference)
+- [API 参考](#api-reference)
+- [本地快速启动](#local-quickstart)
+- [Julep 和 LangChain 等有什么区别？](#julep 和 langchain 等之间有什么区别)
+- [不同用例](#different-use-cases)
+- [不同的外形尺寸](#different-form-factor)
+- [总结](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -108,11 +113,11 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 - 长时间运行。
 
 > [!提示]
-> 想象一下，您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务、记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。阅读 [了解任务](#understanding-tasks) 了解更多信息。
+> 假设您想要构建一个 AI 代理，它不仅可以回答简单的问题，还可以处理复杂的任务、记住过去的交互，甚至可能使用其他工具或 API。这就是 Julep 的作用所在。阅读 [了解任务](#understanding-tasks) 了解更多信息。
 
 ## 主要特点
 
-1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
+1. 🧠 **持久 AI 代理**：在长期交互​​中记住背景和信息。
 2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
 3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
 4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
@@ -356,7 +361,7 @@ main:
 
 为了发展故事情节，我们需要研究情节思路。
 我们应该研究什么？写下你认为有趣的情节想法的维基百科搜索查询。
-将输出作为 yaml 列表返回```yaml tags at the end of your response.
+将您的输出作为 yaml 列表返回```yaml tags at the end of your response.
     unwrap: true
     settings:
       model: gpt-4o-mini
@@ -491,7 +496,7 @@ const taskYaml = `
 方法：搜索
 
 主要的：
-# 步骤 1：产生情节想法
+# 步骤 1：生成情节想法
 - 迅速的：
 - 角色：系统
 内容：您是 {{agent.name}}。{{agent.about}}
@@ -594,7 +599,7 @@ const result = 等待客户端.executions.get（execution.id）;
 控制台.log（结果.状态，结果.输出）；
 
 if (result.status === "成功" || result.status === "失败") {
-// 📦执行完成后，检索结果
+// 📦 执行完成后，检索结果
 如果 (result.status === "成功") {
 控制台.log（结果.输出）；
 } 别的 {
@@ -1026,7 +1031,7 @@ Pause the workflow for a specified duration
 秒：30
 # 分钟：1
 #小时数：1
-#天数：1
+# 天数：1
 ```
 
 </td>
