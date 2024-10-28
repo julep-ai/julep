@@ -246,7 +246,7 @@ def search_docs_by_embedding(
 
         # Sort the results by distance to find the closest matches
         :sort -mmr_score
-        :limit {k*(3 if mmr_strength else 1)},   # Get more candidates for diversity
+        :limit {k*(3 if mmr_strength else 1)}   # Get more candidates for diversity
 
         :create _interim {{
             owner_type,
