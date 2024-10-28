@@ -292,7 +292,7 @@ _CreateTaskRequest = CreateTaskRequest
 
 class CreateTaskRequest(_CreateTaskRequest):
     @model_validator(mode="after")
-    def validate_task_request(self) -> 'CreateTaskRequest':
+    def validate_task_request(self) -> "CreateTaskRequest":
         workflows = {
             k: v
             for k, v in self.model_dump().items()
@@ -308,7 +308,9 @@ class CreateTaskRequest(_CreateTaskRequest):
                 raise ValueError(f"Invalid workflow '{
                                  workflow_name}': {str(e)}")
         return self
+
     pass
+
 
 def validate_workflow_steps(steps):
     for index, step in enumerate(steps):
@@ -317,7 +319,7 @@ def validate_workflow_steps(steps):
         print(f"STEP TYPE: {step_type}")
         print(f"STEP CONTENT: {step_content}")
         print("STEP ITEMS ARE:")
-        step_type = step.get('kind_')
+        step_type = step.get("kind_")
         step_content = step[step_type]
         for k, v in step.items():
             print(f"{k}: {v}")
@@ -328,6 +330,7 @@ def validate_workflow_steps(steps):
         except ValueError as e:
             raise ValueError(f"Error in step {index}: {str(e)}")
         print("FINISHED VALIDATING STEP")
+
 
 # Mapping between step types and their corresponding classes
 step_type_to_class = {
@@ -346,8 +349,9 @@ step_type_to_class = {
     "switch": SwitchStep,
     "foreach": ForeachStep,
     "parallel": ParallelStep,
-    "map": MapReduceStep
+    "map": MapReduceStep,
 }
+
 
 # Update the validate_step function to use this mapping
 def validate_step(step_type, step_content):
@@ -355,15 +359,11 @@ def validate_step(step_type, step_content):
     if step_class:
         try:
             # TODO: Add support for other fields (eg. map step needs additional 'over' field)
-            step_class(**{
-                step_type: step_content
-            })
+            step_class(**{step_type: step_content})
         except ValidationError as e:
             raise ValueError(f"Validation error for '{step_type}' step: {str(e)}")
     else:
         raise ValueError(f"Unknown step type '{step_type}'")
-
-
 
 
 # Custom types (not generated correctly)
