@@ -51,7 +51,7 @@ uvloop = "^0.21.0"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 ruff = "^0.5.5"
-datamodel-code-generator = "^0.25.9"
+datamodel-code-generator = "^0.26.2"
 cozo-migrate = "^0.2.0"
 poethepoet = "^0.25.1"
 pytype = ">=2024.10.11"
@@ -105,8 +105,11 @@ datamodel-codegen \
   --use-exact-imports \
   --use-standard-collections \
   --use-non-positive-negative-number-constrained-types \
-  --target-python-version 3.11 \
+  --target-python-version 3.12 \
+  --treat-dot-as-module \
+  --use-title-as-name \
   --collapse-root-models \
+  --output-datetime-class AwareDatetime \
   --openapi-scopes schemas \
   --keep-model-order \
   --disable-timestamp"""

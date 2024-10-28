@@ -76,6 +76,14 @@ class InputChatMLMessage(Message):
     pass
 
 
+IntegrationDef = (
+    BraveIntegrationDef
+    | EmailIntegrationDef
+    | SpiderIntegrationDef
+    | WikipediaIntegrationDef
+    | WeatherIntegrationDef
+)
+
 # Patches
 # -------
 

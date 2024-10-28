@@ -101,7 +101,7 @@ class Session(BaseModel):
     """
     A specific situation that sets the background for this session
     """
-    summary: Annotated[str | None, Field(None, json_schema_extra={"readOnly": True})]
+    summary: Annotated[str | None, Field(json_schema_extra={"readOnly": True})] = None
     """
     Summary (null at the beginning) - generated automatically after every interaction
     """

@@ -25,11 +25,10 @@ class JobStatus(BaseModel):
     name: Annotated[
         str,
         Field(
-            "",
             max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
-    ]
+    ] = ""
     """
     Name of the job
     """
@@ -41,7 +40,7 @@ class JobStatus(BaseModel):
     """
     Whether this Job supports progress updates
     """
-    progress: Annotated[float, Field(0, ge=0.0, le=100.0)]
+    progress: Annotated[float, Field(ge=0.0, le=100.0)] = 0
     """
     Progress percentage
     """

@@ -18,13 +18,13 @@ with workflow.unsafe.imports_passed_through():
     from ...activities.sync_items_remote import load_inputs_remote, save_inputs_remote
     from ...autogen.openapi_model import (
         ApiCallDef,
+        BaseIntegrationDef,
         ErrorWorkflowStep,
         EvaluateStep,
         ForeachDo,
         ForeachStep,
         GetStep,
         IfElseWorkflowStep,
-        IntegrationDef,
         LogStep,
         MapReduceStep,
         ParallelStep,
@@ -462,7 +462,7 @@ class TaskExecutionWorkflow:
                 if integration_spec is None:
                     raise ApplicationError(f"Integration {tool_name} not found")
 
-                integration = IntegrationDef(
+                integration = BaseIntegrationDef(
                     provider=integration_spec.spec["provider"],
                     setup=integration_spec.spec["setup"],
                     method=integration_spec.spec["method"],

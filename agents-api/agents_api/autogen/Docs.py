@@ -13,7 +13,7 @@ class BaseDocSearchRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    limit: Annotated[int, Field(10, ge=1, le=50)]
+    limit: Annotated[int, Field(ge=1, le=50)] = 10
     lang: Literal["en-US"] = "en-US"
     """
     The language to be used for text-only search. Support for other languages coming soon.
@@ -64,8 +64,8 @@ class Doc(BaseModel):
     """
     embeddings: Annotated[
         list[float] | list[list[float]] | None,
-        Field(None, json_schema_extra={"readOnly": True}),
-    ]
+        Field(json_schema_extra={"readOnly": True}),
+    ] = None
     """
     Embeddings for the document
     """
@@ -124,11 +124,11 @@ class HybridDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
+    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """
-    alpha: Annotated[float, Field(0.75, ge=0.0, le=1.0)]
+    alpha: Annotated[float, Field(ge=0.0, le=1.0)] = 0.75
     """
     The weight to apply to BM25 vs Vector search results. 0 => pure BM25; 1 => pure vector;
     """
@@ -192,7 +192,7 @@ class VectorDocSearchRequest(BaseDocSearchRequest):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    confidence: Annotated[float, Field(0.5, ge=0.0, le=1.0)]
+    confidence: Annotated[float, Field(ge=0.0, le=1.0)] = 0.5
     """
     The confidence cutoff level
     """

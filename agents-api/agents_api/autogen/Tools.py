@@ -39,7 +39,7 @@ class ApiCallDef(BaseModel):
     """
     The data to send as form data
     """
-    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
+    json_: Annotated[dict[str, Any] | None, Field(alias="json")] = None
     """
     JSON body to send with the request
     """
@@ -102,7 +102,7 @@ class ApiCallDefUpdate(BaseModel):
     """
     The data to send as form data
     """
-    json_: Annotated[dict[str, Any] | None, Field(None, alias="json")]
+    json_: Annotated[dict[str, Any] | None, Field(alias="json")] = None
     """
     JSON body to send with the request
     """
@@ -121,6 +121,173 @@ class ApiCallDefUpdate(BaseModel):
     timeout: int | None = None
     """
     The timeout for the request
+    """
+
+
+class BaseIntegrationDef(BaseModel):
+    """
+    Integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal[
+        "dummy", "weather", "wikipedia", "spider", "brave", "browserbase", "email"
+    ]
+    """
+    The provider of the integration
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: Any | None = None
+    """
+    The setup parameters the integration accepts
+    """
+    arguments: Any | None = None
+    """
+    The arguments to pre-apply to the integration call
+    """
+
+
+class BaseIntegrationDefUpdate(BaseModel):
+    """
+    Integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: (
+        Literal[
+            "dummy", "weather", "wikipedia", "spider", "brave", "browserbase", "email"
+        ]
+        | None
+    ) = None
+    """
+    The provider of the integration
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: Any | None = None
+    """
+    The setup parameters the integration accepts
+    """
+    arguments: Any | None = None
+    """
+    The arguments to pre-apply to the integration call
+    """
+
+
+class BraveIntegrationDef(BaseIntegrationDef):
+    """
+    Brave integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["brave"] = "brave"
+    """
+    The provider must be "brave"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: BraveSearchSetup | None = None
+    """
+    The setup parameters for Brave
+    """
+    arguments: BraveSearchArguments | None = None
+    """
+    The arguments for Brave Search
+    """
+
+
+class BraveIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Brave integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["brave"] = "brave"
+    """
+    The provider must be "brave"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: BraveSearchSetupUpdate | None = None
+    """
+    The setup parameters for Brave
+    """
+    arguments: BraveSearchArgumentsUpdate | None = None
+    """
+    The arguments for Brave Search
+    """
+
+
+class BraveSearchArguments(BaseModel):
+    """
+    Arguments for Brave Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    query: str
+    """
+    The search query for searching with Brave
+    """
+
+
+class BraveSearchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Brave Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    query: str | None = None
+    """
+    The search query for searching with Brave
+    """
+
+
+class BraveSearchSetup(BaseModel):
+    """
+    Integration definition for Brave Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api_key: str
+    """
+    The api key for Brave Search
+    """
+
+
+class BraveSearchSetupUpdate(BaseModel):
+    """
+    Integration definition for Brave Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api_key: str | None = None
+    """
+    The api key for Brave Search
     """
 
 
@@ -160,7 +327,15 @@ class CreateToolRequest(BaseModel):
     """
     The function to call
     """
-    integration: IntegrationDef | None = None
+    integration: (
+        DummyIntegrationDef
+        | BraveIntegrationDef
+        | EmailIntegrationDef
+        | SpiderIntegrationDef
+        | WikipediaIntegrationDef
+        | WeatherIntegrationDef
+        | None
+    ) = None
     """
     The integration to call
     """
@@ -171,6 +346,176 @@ class CreateToolRequest(BaseModel):
     api_call: ApiCallDef | None = None
     """
     The API call to make
+    """
+
+
+class DummyIntegrationDef(BaseIntegrationDef):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["dummy"] = "dummy"
+
+
+class DummyIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["dummy"] = "dummy"
+
+
+class EmailArguments(BaseModel):
+    """
+    Arguments for Email sending
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    to: str
+    """
+    The email address to send the email to
+    """
+    from_: Annotated[str, Field(alias="from")]
+    """
+    The email address to send the email from
+    """
+    subject: str
+    """
+    The subject of the email
+    """
+    body: str
+    """
+    The body of the email
+    """
+
+
+class EmailArgumentsUpdate(BaseModel):
+    """
+    Arguments for Email sending
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    to: str | None = None
+    """
+    The email address to send the email to
+    """
+    from_: Annotated[str | None, Field(alias="from")] = None
+    """
+    The email address to send the email from
+    """
+    subject: str | None = None
+    """
+    The subject of the email
+    """
+    body: str | None = None
+    """
+    The body of the email
+    """
+
+
+class EmailIntegrationDef(BaseIntegrationDef):
+    """
+    Email integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["email"] = "email"
+    """
+    The provider must be "email"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: EmailSetup | None = None
+    """
+    The setup parameters for Email
+    """
+    arguments: EmailArguments | None = None
+    """
+    The arguments for Email sending
+    """
+
+
+class EmailIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Email integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["email"] = "email"
+    """
+    The provider must be "email"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: EmailSetupUpdate | None = None
+    """
+    The setup parameters for Email
+    """
+    arguments: EmailArgumentsUpdate | None = None
+    """
+    The arguments for Email sending
+    """
+
+
+class EmailSetup(BaseModel):
+    """
+    Setup parameters for Email integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    host: str
+    """
+    The host of the email server
+    """
+    port: int
+    """
+    The port of the email server
+    """
+    user: str
+    """
+    The username of the email server
+    """
+    password: str
+    """
+    The password of the email server
+    """
+
+
+class EmailSetupUpdate(BaseModel):
+    """
+    Setup parameters for Email integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    host: str | None = None
+    """
+    The host of the email server
+    """
+    port: int | None = None
+    """
+    The port of the email server
+    """
+    user: str | None = None
+    """
+    The username of the email server
+    """
+    password: str | None = None
+    """
+    The password of the email server
     """
 
 
@@ -206,83 +551,6 @@ class FunctionDef(BaseModel):
     """
 
 
-class IntegrationDef(BaseModel):
-    """
-    Integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    provider: (
-        Literal[
-            "dummy",
-            "hacker_news",
-            "weather",
-            "wikipedia",
-            "spider",
-            "brave",
-            "browserbase",
-            "email",
-        ]
-        | str
-    )
-    """
-    The provider of the integration
-    """
-    method: str | None = None
-    """
-    The specific method of the integration to call
-    """
-    setup: dict[str, Any] | None = None
-    """
-    The setup parameters the integration accepts
-    """
-    arguments: dict[str, Any] | None = None
-    """
-    The arguments to pre-apply to the integration call
-    """
-
-
-class IntegrationDefUpdate(BaseModel):
-    """
-    Integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    provider: (
-        Literal[
-            "dummy",
-            "hacker_news",
-            "weather",
-            "wikipedia",
-            "spider",
-            "brave",
-            "browserbase",
-            "email",
-        ]
-        | str
-        | None
-    ) = None
-    """
-    The provider of the integration
-    """
-    method: str | None = None
-    """
-    The specific method of the integration to call
-    """
-    setup: dict[str, Any] | None = None
-    """
-    The setup parameters the integration accepts
-    """
-    arguments: dict[str, Any] | None = None
-    """
-    The arguments to pre-apply to the integration call
-    """
-
-
 class NamedToolChoice(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -298,7 +566,7 @@ class PatchToolRequest(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    name: Annotated[str | None, Field(None, max_length=40, pattern="^[^\\W0-9]\\w*$")]
+    name: Annotated[str | None, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")] = None
     """
     Name of the tool (must be unique for this agent and a valid python identifier string )
     """
@@ -310,7 +578,15 @@ class PatchToolRequest(BaseModel):
     """
     The function to call
     """
-    integration: IntegrationDefUpdate | None = None
+    integration: (
+        DummyIntegrationDefUpdate
+        | BraveIntegrationDefUpdate
+        | EmailIntegrationDefUpdate
+        | SpiderIntegrationDefUpdate
+        | WikipediaIntegrationDefUpdate
+        | WeatherIntegrationDefUpdate
+        | None
+    ) = None
     """
     The integration to call
     """
@@ -321,6 +597,130 @@ class PatchToolRequest(BaseModel):
     api_call: ApiCallDefUpdate | None = None
     """
     The API call to make
+    """
+
+
+class SpiderFetchArguments(BaseModel):
+    """
+    Arguments for Spider integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    url: AnyUrl
+    """
+    The URL to fetch data from
+    """
+    mode: Literal["scrape"] = "scrape"
+    """
+    The type of crawler to use
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters for the Spider API
+    """
+
+
+class SpiderFetchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Spider integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    url: AnyUrl | None = None
+    """
+    The URL to fetch data from
+    """
+    mode: Literal["scrape"] = "scrape"
+    """
+    The type of crawler to use
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters for the Spider API
+    """
+
+
+class SpiderIntegrationDef(BaseIntegrationDef):
+    """
+    Spider integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["spider"] = "spider"
+    """
+    The provider must be "spider"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: SpiderSetup | None = None
+    """
+    The setup parameters for Spider
+    """
+    arguments: SpiderFetchArguments | None = None
+    """
+    The arguments for Spider
+    """
+
+
+class SpiderIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Spider integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["spider"] = "spider"
+    """
+    The provider must be "spider"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: SpiderSetupUpdate | None = None
+    """
+    The setup parameters for Spider
+    """
+    arguments: SpiderFetchArgumentsUpdate | None = None
+    """
+    The arguments for Spider
+    """
+
+
+class SpiderSetup(BaseModel):
+    """
+    Setup parameters for Spider integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spider_api_key: str
+    """
+    The API key for Spider
+    """
+
+
+class SpiderSetupUpdate(BaseModel):
+    """
+    Setup parameters for Spider integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    spider_api_key: str | None = None
+    """
+    The API key for Spider
     """
 
 
@@ -431,7 +831,15 @@ class Tool(BaseModel):
     """
     The function to call
     """
-    integration: IntegrationDef | None = None
+    integration: (
+        DummyIntegrationDef
+        | BraveIntegrationDef
+        | EmailIntegrationDef
+        | SpiderIntegrationDef
+        | WikipediaIntegrationDef
+        | WeatherIntegrationDef
+        | None
+    ) = None
     """
     The integration to call
     """
@@ -485,7 +893,15 @@ class UpdateToolRequest(BaseModel):
     """
     The function to call
     """
-    integration: IntegrationDef | None = None
+    integration: (
+        DummyIntegrationDef
+        | BraveIntegrationDef
+        | EmailIntegrationDef
+        | SpiderIntegrationDef
+        | WikipediaIntegrationDef
+        | WeatherIntegrationDef
+        | None
+    ) = None
     """
     The integration to call
     """
@@ -497,6 +913,212 @@ class UpdateToolRequest(BaseModel):
     """
     The API call to make
     """
+
+
+class WeatherGetArguments(BaseModel):
+    """
+    Arguments for Weather
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    location: str
+    """
+    The location for which to fetch weather data
+    """
+
+
+class WeatherGetArgumentsUpdate(BaseModel):
+    """
+    Arguments for Weather
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    location: str | None = None
+    """
+    The location for which to fetch weather data
+    """
+
+
+class WeatherIntegrationDef(BaseIntegrationDef):
+    """
+    Weather integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["weather"] = "weather"
+    """
+    The provider must be "weather"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: WeatherSetup | None = None
+    """
+    The setup parameters for Weather
+    """
+    arguments: WeatherGetArguments | None = None
+    """
+    The arguments for Weather
+    """
+
+
+class WeatherIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Weather integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["weather"] = "weather"
+    """
+    The provider must be "weather"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: WeatherSetupUpdate | None = None
+    """
+    The setup parameters for Weather
+    """
+    arguments: WeatherGetArgumentsUpdate | None = None
+    """
+    The arguments for Weather
+    """
+
+
+class WeatherSetup(BaseModel):
+    """
+    Integration definition for Weather
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    openweathermap_api_key: str
+    """
+    The api key for OpenWeatherMap
+    """
+
+
+class WeatherSetupUpdate(BaseModel):
+    """
+    Integration definition for Weather
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    openweathermap_api_key: str | None = None
+    """
+    The api key for OpenWeatherMap
+    """
+
+
+class WikipediaIntegrationDef(BaseIntegrationDef):
+    """
+    Wikipedia integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["wikipedia"] = "wikipedia"
+    """
+    The provider must be "wikipedia"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: WikipediaSearchSetup | None = None
+    """
+    The setup parameters for Wikipedia
+    """
+    arguments: WikipediaSearchArguments | None = None
+    """
+    The arguments for Wikipedia Search
+    """
+
+
+class WikipediaIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    Wikipedia integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["wikipedia"] = "wikipedia"
+    """
+    The provider must be "wikipedia"
+    """
+    method: str | None = None
+    """
+    The specific method of the integration to call
+    """
+    setup: WikipediaSearchSetup | None = None
+    """
+    The setup parameters for Wikipedia
+    """
+    arguments: WikipediaSearchArgumentsUpdate | None = None
+    """
+    The arguments for Wikipedia Search
+    """
+
+
+class WikipediaSearchArguments(BaseModel):
+    """
+    Arguments for Wikipedia Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    query: str
+    """
+    The search query string
+    """
+    load_max_docs: Annotated[int, Field(ge=1, le=10)] = 2
+    """
+    Maximum number of documents to load
+    """
+
+
+class WikipediaSearchArgumentsUpdate(BaseModel):
+    """
+    Arguments for Wikipedia Search
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    query: str | None = None
+    """
+    The search query string
+    """
+    load_max_docs: Annotated[int, Field(ge=1, le=10)] = 2
+    """
+    Maximum number of documents to load
+    """
+
+
+class WikipediaSearchSetup(BaseModel):
+    """
+    Integration setup for Wikipedia
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
 
 class ChosenFunctionCall(ChosenToolCall):

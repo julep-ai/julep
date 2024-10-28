@@ -28,11 +28,10 @@ class Agent(BaseModel):
     name: Annotated[
         str,
         Field(
-            "",
             max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
-    ]
+    ] = ""
     """
     Name of the agent
     """
@@ -66,11 +65,10 @@ class CreateAgentRequest(BaseModel):
     name: Annotated[
         str,
         Field(
-            "",
             max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
-    ]
+    ] = ""
     """
     Name of the agent
     """
@@ -101,11 +99,10 @@ class CreateOrUpdateAgentRequest(CreateAgentRequest):
     name: Annotated[
         str,
         Field(
-            "",
             max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
-    ]
+    ] = ""
     """
     Name of the agent
     """
@@ -139,11 +136,10 @@ class PatchAgentRequest(BaseModel):
     name: Annotated[
         str,
         Field(
-            "",
             max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
-    ]
+    ] = ""
     """
     Name of the agent
     """
@@ -177,11 +173,10 @@ class UpdateAgentRequest(BaseModel):
     name: Annotated[
         str,
         Field(
-            "",
             max_length=120,
             pattern="^[\\p{L}\\p{Nl}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]+[\\p{ID_Start}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{Pattern_Syntax}\\p{Pattern_White_Space}]*$",
         ),
-    ]
+    ] = ""
     """
     Name of the agent
     """
