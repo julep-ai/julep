@@ -47,6 +47,25 @@ http:
       service: service-agents-api
       priority: 3
 
+    temporal-ui-public:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/tasks-ui{path:.*}`)
+      middlewares:
+        - corsHeaders
+        - temporal-ui-strip-prefix
+      service: service-temporal-ui-public
+      priority: 1
+
+    temporal-ui-public-assets:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/_app`)
+      middlewares:
+        - corsHeaders
+      service: service-temporal-ui-public
+      priority: 2
+
   middlewares:
     corsHeaders:
       headers:
@@ -92,6 +111,12 @@ http:
           JwtHeaders:
             X-Developer-Id: sub
           OpaHttpStatusField: allow_status_code
+    
+    temporal-ui-strip-prefix:
+      stripprefix:
+        prefixes:
+          - /tasks-ui
+        forceSlash: false
 
   services:
     service-agents-api:
@@ -99,7 +124,13 @@ http:
         passHostHeader: false
         servers:
           - url: $AGENTS_API_URL
-          
+
+    service-temporal-ui-public:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+          - url: $TEMPORAL_UI_PUBLIC_URL
+
 experimental:
   localPlugins:
     jwt:
