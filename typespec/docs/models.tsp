@@ -95,6 +95,11 @@ model BaseDocSearchRequest {
     /** The language to be used for text-only search. Support for other languages coming soon. */
     lang: "en-US" = "en-US";
     metadata_filter: MetadataFilter = #{},
+
+    /** MMR Strength (mmr_strength = 1 - mmr_lambda) */
+    @minValue(0)
+    @maxValueExclusive(1)
+    mmr_strength?: float = 0.0;
 }
 
 model VectorDocSearchRequest extends BaseDocSearchRequest {
@@ -107,6 +112,8 @@ model VectorDocSearchRequest extends BaseDocSearchRequest {
     vector: float[];
 
     text?: never;
+
+    mmr_strength?: never;
 }
 
 model TextOnlyDocSearchRequest extends BaseDocSearchRequest {
