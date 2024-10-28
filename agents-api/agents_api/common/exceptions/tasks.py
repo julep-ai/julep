@@ -19,7 +19,6 @@ import pydantic
 import requests
 import temporalio.exceptions
 
-
 # List of error types that should not be retried
 NON_RETRYABLE_ERROR_TYPES = (
     # Temporal-specific errors
@@ -125,6 +124,7 @@ RETRYABLE_ERROR_TYPES = (
 )
 
 RETRYABLE_HTTP_STATUS_CODES = (408, 429, 503, 504)
+
 
 def is_retryable_error(error: BaseException) -> bool:
     """
