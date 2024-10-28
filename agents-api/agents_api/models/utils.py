@@ -201,7 +201,16 @@ def cozo_query(
         """
 
         from pprint import pprint
+        from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
+        def is_resource_busy(e: Exception) -> bool:
+            return isinstance(e, HTTPException) and e.status_code == 429
+
+        @retry(
+            stop=stop_after_attempt(2),
+            wait=wait_exponential(multiplier=1, min=4, max=10),
+            retry=retry_if_exception(is_resource_busy)
+        )
         @wraps(func)
         def wrapper(*args: P.args, client=None, **kwargs: P.kwargs) -> pd.DataFrame:
             queries, variables = func(*args, **kwargs)

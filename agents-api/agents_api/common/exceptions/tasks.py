@@ -19,7 +19,6 @@ import pydantic
 import requests
 import temporalio.exceptions
 
-### FIXME: This should be the opposite. We should retry on only known errors
 
 # List of error types that should not be retried
 NON_RETRYABLE_ERROR_TYPES = (
@@ -56,7 +55,6 @@ NON_RETRYABLE_ERROR_TYPES = (
     UnicodeTranslateError,
     #
     # HTTP and API-related errors
-    fastapi.exceptions.HTTPException,
     fastapi.exceptions.RequestValidationError,
     #
     # Asynchronous programming errors
@@ -98,36 +96,61 @@ NON_RETRYABLE_ERROR_TYPES = (
     litellm.exceptions.AuthenticationError,
     litellm.exceptions.ServiceUnavailableError,
     litellm.exceptions.OpenAIError,
-    litellm.exceptions.APIError,
 )
 
+RETRYABLE_ERROR_TYPES = (
+    # LiteLLM exceptions
+    litellm.exceptions.RateLimitError,
+    litellm.exceptions.APIError,  # Added to retry on "APIError: OpenAIException - Connection error"
+    #
+    # HTTP/Network related errors
+    requests.exceptions.ConnectionError,
+    requests.exceptions.Timeout,
+    requests.exceptions.ConnectTimeout,
+    requests.exceptions.ReadTimeout,
+    httpx.ConnectError,
+    httpx.ConnectTimeout,
+    httpx.ReadTimeout,
+    httpx.WriteTimeout,
+    httpx.PoolTimeout,
+    #
+    # Standard library errors that are typically transient
+    ConnectionError,
+    TimeoutError,
+    OSError,  # Covers many IO-related errors that may be transient
+    IOError,
+    #
+    # Database/storage related
+    asyncio.TimeoutError,
+)
 
-### FIXME: This should be the opposite. So `is_retryable_error` instead of `is_non_retryable_error`
-def is_non_retryable_error(error: BaseException) -> bool:
+RETRYABLE_HTTP_STATUS_CODES = (408, 429, 503, 504)
+
+def is_retryable_error(error: BaseException) -> bool:
     """
-    Determines if the given error is non-retryable.
-
-    This function checks if the error is an instance of any of the error types
-    defined in NON_RETRYABLE_ERROR_TYPES.
+    Determines if the given error should be retried or not.
 
     Args:
         error (Exception): The error to check.
 
     Returns:
-        bool: True if the error is non-retryable, False otherwise.
+        bool: True if the error is retryable, False otherwise.
     """
+
     if isinstance(error, NON_RETRYABLE_ERROR_TYPES):
+        return False
+
+    if isinstance(error, RETRYABLE_ERROR_TYPES):
         return True
 
-    # Check for specific HTTP errors (status code == 429)
+    # Check for specific HTTP errors that should be retried
+    if isinstance(error, fastapi.exceptions.HTTPException):
+        if error.status_code in RETRYABLE_HTTP_STATUS_CODES:
+            return True
+
     if isinstance(error, httpx.HTTPStatusError):
-        if error.response.status_code in (
-            408,
-            429,
-            503,
-            504,
-        ):  # pytype: disable=attribute-error
-            return False
+        if error.response.status_code in RETRYABLE_HTTP_STATUS_CODES:
+            return True
 
     # If we don't know about the error, we should not retry
-    return True
+    return False

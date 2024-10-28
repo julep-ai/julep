@@ -23,7 +23,7 @@ from temporalio.workflow import (
     ReadOnlyContextError,
 )
 
-from .exceptions.tasks import is_non_retryable_error
+from .exceptions.tasks import is_retryable_error
 
 
 class CustomActivityInterceptor(ActivityInboundInterceptor):
@@ -50,7 +50,7 @@ class CustomActivityInterceptor(ActivityInboundInterceptor):
         ):
             raise
         except BaseException as e:
-            if is_non_retryable_error(e):
+            if not is_retryable_error(e):
                 raise ApplicationError(
                     str(e),
                     type=type(e).__name__,
@@ -83,7 +83,7 @@ class CustomWorkflowInterceptor(WorkflowInboundInterceptor):
         ):
             raise
         except BaseException as e:
-            if is_non_retryable_error(e):
+            if not is_retryable_error(e):
                 raise ApplicationError(
                     str(e),
                     type=type(e).__name__,
