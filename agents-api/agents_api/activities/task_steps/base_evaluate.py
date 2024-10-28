@@ -4,13 +4,14 @@ from typing import Any
 from beartype import beartype
 from box import Box
 from openai import BaseModel
+from simpleeval import NameNotDefined
 from temporalio import activity
+from thefuzz import fuzz
 
 from ...common.storage_handler import auto_blob_store
 from ...env import testing
 from ..utils import get_evaluator
-from simpleeval import NameNotDefined
-from thefuzz import fuzz
+
 
 class EvaluateError(Exception):
     def __init__(self, error, expression, values):
@@ -20,7 +21,7 @@ class EvaluateError(Exception):
         # Catch a possible jinja template error
         if "unhashable" in error_message and "{{" in expression:
             message += "\nSuggestion: It seems like you used a jinja template, did you mean to use a python expression?"
-        
+
         # Catch a possible misspell in a variable name
         if isinstance(error, NameNotDefined):
             misspelledName = error_message.split("'")[1]
@@ -28,6 +29,7 @@ class EvaluateError(Exception):
                 if fuzz.ratio(variableName, misspelledName) >= 90.0:
                     message += f"\nDid you mean '{variableName}' instead of '{misspelledName}'?"
         super().__init__(message)
+
 
 @auto_blob_store
 @beartype
@@ -65,7 +67,7 @@ async def base_evaluate(
 
     evaluator = get_evaluator(names=values, extra_functions=extra_lambdas)
 
-    chosen_expression = None
+    chosen_expression = ""
 
     try:
         result = None
