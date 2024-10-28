@@ -1,15 +1,15 @@
+import asyncio
 import logging
 from typing import Any, Callable
 
 import fire
 import uvicorn
+import uvloop
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
-import uvloop
 
 from .routers import execution_router, integrations_router
-import asyncio
 
 app: FastAPI = FastAPI()
 

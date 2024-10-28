@@ -4,9 +4,6 @@ from .models import (
     BraveSearchArguments,
     BraveSearchOutput,
     BraveSearchSetup,
-    BrowserBaseLoadArguments,
-    BrowserBaseLoadOutput,
-    BrowserBaseSetup,
     EmailArguments,
     EmailOutput,
     EmailSetup,
@@ -97,25 +94,6 @@ brave = BaseProvider(
     ),
 )
 
-browserbase = BaseProvider(
-    provider="browserbase",
-    setup=BrowserBaseSetup,
-    methods=[
-        BaseProviderMethod(
-            method="load",
-            description="Load documents from the provided urls",
-            arguments=BrowserBaseLoadArguments,
-            output=BrowserBaseLoadOutput,
-        ),
-    ],
-    info=ProviderInfo(
-        url="https://browserbase.com/",
-        docs="https://browserbase.com/docs/",
-        icon="https://browserbase.com/favicon.ico",
-        friendly_name="BrowserBase",
-    ),
-)
-
 email = BaseProvider(
     provider="email",
     setup=EmailSetup,
@@ -137,6 +115,5 @@ providers = {
     "weather": weather,
     "spider": spider,
     "brave": brave,
-    "browserbase": browserbase,
     "email": email,
 }

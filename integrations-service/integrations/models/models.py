@@ -2,27 +2,15 @@ from typing import Literal, Union
 
 from pydantic import BaseModel
 
-from .dalle_image_generator import (
-    DalleImageGeneratorArguments,
-    DalleImageGeneratorSetup,
-)
-from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
-from .hacker_news import HackerNewsExecutionArguments
 from .weather import WeatherExecutionArguments, WeatherExecutionSetup
 from .wikipedia import WikipediaExecutionArguments
 
 ExecuteIntegrationArguments = Union[
     WikipediaExecutionArguments,
-    DuckDuckGoSearchExecutionArguments,
-    DalleImageGeneratorArguments,
     WeatherExecutionArguments,
-    HackerNewsExecutionArguments,
 ]
 
-ExecuteIntegrationSetup = Union[
-    DalleImageGeneratorSetup,
-    WeatherExecutionSetup,
-]
+ExecuteIntegrationSetup = Union[WeatherExecutionSetup,]
 
 
 class IntegrationExecutionRequest(BaseModel):
@@ -47,9 +35,6 @@ class IntegrationDef(BaseModel):
     provider: (
         Literal[
             "dummy",
-            "dalle_image_generator",
-            "duckduckgo_search",
-            "hacker_news",
             "weather",
             "wikipedia",
             "twitter",
