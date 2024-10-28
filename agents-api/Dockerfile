@@ -41,4 +41,4 @@ RUN poetry install --no-dev --no-root
 
 COPY . ./
 
-ENTRYPOINT ["python", "-m", "agents_api.web", "--host", "0.0.0.0", "--port", "8080"]
+ENTRYPOINT ["gunicorn", "agents_api.web:app", "-c", "gunicorn_conf.py"]

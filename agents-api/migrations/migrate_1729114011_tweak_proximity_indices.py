@@ -12,6 +12,45 @@ def run(client, *queries):
     client.run(query)
 
 
+# See: https://github.com/nmslib/hnswlib/blob/master/ALGO_PARAMS.md
+drop_snippets_hnsw_index = dict(
+    down="""
+    ::hnsw create snippets:embedding_space {
+        fields: [embedding],
+        filter: !is_null(embedding),
+        dim: 1024,
+        distance: Cosine,
+        m: 64,
+        ef_construction: 256,
+        extend_candidates: true,
+        keep_pruned_connections: false,
+    }
+    """,
+    up="""
+    ::hnsw drop snippets:embedding_space
+    """,
+)
+
+
+# See: https://github.com/nmslib/hnswlib/blob/master/ALGO_PARAMS.md
+snippets_hnsw_index = dict(
+    up="""
+    ::hnsw create snippets:embedding_space {
+        fields: [embedding],
+        filter: !is_null(embedding),
+        dim: 1024,
+        distance: Cosine,
+        m: 64,
+        ef_construction: 800,
+        extend_candidates: false,
+        keep_pruned_connections: false,
+    }
+    """,
+    down="""
+    ::hnsw drop snippets:embedding_space
+    """,
+)
+
 drop_snippets_lsh_index = dict(
     up="""
     ::lsh drop snippets:lsh
@@ -77,8 +116,10 @@ snippets_fts_index = dict(
 )
 
 queries_to_run = [
+    drop_snippets_hnsw_index,
     drop_snippets_lsh_index,
     drop_snippets_fts_index,
+    snippets_hnsw_index,
     snippets_lsh_index,
     snippets_fts_index,
 ]
