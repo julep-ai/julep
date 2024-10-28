@@ -62,39 +62,34 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 目录</h3>
+<h3>📖 Table of Contents</h3>
 
-- [简介](#introduction)
-- [主要特点](#key-features)
-- [快速示例](#quick-example)
-- [安装](#安装)
-- [Python 快速入门 🐍](#python-quick-start-)
-- [Node.js 快速入门🟩](#nodejs-quick-start-)
-- [步骤 1：创建代理](#step-1-create-an-agent)
-- [组件](#components)
-- [心智模型](#mental-model)
-- [概念](#concepts)
-- [理解任务](#understanding-tasks)
-- [任务的生命周期](#lifecycle-of-a-task)
-- [工作流步骤的类型](#types-of-workflow-steps)
-- [工具类型](#tool-types)
-- [用户定义的`函数`](#user-defined-functions)
-- [`系统` 工具](#system-tools)
-- [内置 `integrations`](#built-in-integrations)
--[直接`api_calls`]（#direct-api_calls）
-- [集成](#integrations)
-- [其他功能](#other-features)
-- [向代理添加工具](#adding-tools-to-agents)
-- [管理会话和用户](#managing-sessions-and-users)
-- [文档集成与搜索](#document-integration-and-search)
-- [参考](#reference)
-- [SDK 参考](#sdk-reference)
-- [API 参考](#api-reference)
-- [本地快速启动](#local-quickstart)
-- [Julep 和 LangChain 等有什么区别？](#julep 和 langchain 等之间有什么区别)
-- [不同用例](#different-use-cases)
-- [不同的外形尺寸](#different-form-factor)
-- [总结](#in-summary)
+- [主要特点](#%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9)
+- [Python 快速入门🐍](#python-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8)
+- [Node.js Quick Start 🟩](#nodejs-quick-start-)
+  - [Step 1: Create an Agent](#step-1-create-an-agent)
+- [Components](#components)
+  - [Mental Model](#mental-model)
+- [Concepts](#concepts)
+- [Understanding Tasks](#understanding-tasks)
+  - [Lifecycle of a Task](#lifecycle-of-a-task)
+  - [Types of Workflow Steps](#types-of-workflow-steps)
+- [Tool Types](#tool-types)
+  - [User-defined `functions`](#user-defined-functions)
+  - [`system` tools](#system-tools)
+  - [Built-in `integrations`](#built-in-integrations)
+  - [Direct `api_calls`](#direct-api_calls)
+- [Integrations](#integrations)
+- [Other Features](#other-features)
+  - [Adding Tools to Agents](#adding-tools-to-agents)
+  - [Managing Sessions and Users](#managing-sessions-and-users)
+  - [Document Integration and Search](#document-integration-and-search)
+  - [SDK 参考](#sdk-%E5%8F%82%E8%80%83)
+  - [API 参考](#api-%E5%8F%82%E8%80%83)
+- [本地快速启动](#%E6%9C%AC%E5%9C%B0%E5%BF%AB%E9%80%9F%E5%90%AF%E5%8A%A8)
+- [Julep 和 LangChain 等有什么区别？](#julep-%E5%92%8C-langchain-%E7%AD%89%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
+  - [不同的用例](#%E4%B8%8D%E5%90%8C%E7%9A%84%E7%94%A8%E4%BE%8B)
+  - [不同的外形尺寸](#%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%96%E5%BD%A2%E5%B0%BA%E5%AF%B8)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -119,7 +114,7 @@ Julep 支持创建多步骤任务，包括决策、循环、并行处理以及�
 
 1. 🧠 **持久 AI 代理**：在长期交互​​中记住上下文和信息。
 2. 💾 **状态会话**：跟踪过去的互动以获得个性化回应。
-3. 🔄 **多步骤任务**：通过循环和决策构建复杂的多步骤流程。
+3. 🔄 **多步骤任务**：使用循环和决策构建复杂的多步骤流程。
 4. ⏳ **任务管理**：处理可以无限期运行的长时间运行的任务。
 5.🛠️**内置工具**：在您的任务中使用内置工具和外部 API。
 6. 🔧 **自我修复**：Julep 将自动重试失败的步骤、重新发送消息，并确保您的任务顺利运行。
@@ -163,12 +158,12 @@ tools:
     integration:
       provider: brave
       setup:
-        api_key: BSAqES7dj9d...  # dummy key
+        api_key: BSAqES7dj9d... # dummy key
 
   - name: discord_webhook
     type: api_call
     api_call:
-      url: https://eobuxj02se0n.m.pipedream.net  # dummy requestbin
+      url: https://eobuxj02se0n.m.pipedream.net # dummy requestbin
       method: POST
       headers:
         Content-Type: application/json
@@ -236,34 +231,40 @@ main:
 <summary><b>人工智能研究摘要</b> <i>（点击展开）</i></summary>
 
 > **人工智能研究摘要**
-> 
+>
 >###人工智能（AI）研究成果摘要
-> 
+>
 > #### 简介
+>
 > 近年来，人工智能 (AI) 领域取得了重大进展，其特点是方法和技术的发展，使机器能够感知环境、从数据中学习并做出决策。本摘要主要关注从与 AI 相关的各种研究成果中获得的见解。
-> 
+>
 > #### 主要发现
-> 
+>
 > 1. **人工智能的定义和范围**：
+>
 > - 人工智能被定义为计算机科学的一个分支，专注于创建能够执行需要类似人类智能的任务的系统，包括学习、推理和解决问题（维基百科）。
 >——它涵盖了各种子领域，包括机器学习、自然语言处理、机器人和计算机视觉。
-> 
+>
 > 2. **影响与应用**：
+>
 > - AI 技术正在融入众多领域，提高效率和生产力。应用范围从自动驾驶汽车和医疗诊断到客户服务自动化和财务预测（OpenAI）。
 > - 谷歌致力于让人工智能造福每个人，这凸显了其通过增强各个平台的用户体验（谷歌人工智能）显著改善日常生活的潜力。
-> 
+>
 > 3. **道德考虑**：
+>
 > - 关于人工智能的伦理影响的讨论一直在进行中，包括对隐私、偏见和决策过程中的责任的担忧。强调需要一个确保安全和负责任地使用人工智能技术的框架（OpenAI）。
-> 
+>
 > 4. **学习机制**：
+>
 > - AI 系统利用不同的学习机制，例如监督学习、无监督学习和强化学习。这些方法允许 AI 通过从过去的经验和数据中学习来提高性能（维基百科）。
 > - 监督学习和无监督学习之间的区别至关重要；监督学习依赖于标记数据，而无监督学习则识别没有预定义标签的模式（无监督）。
-> 
+>
 > 5. **未来方向**：
 > - 未来人工智能的发展预计将专注于增强人工智能系统的可解释性和透明度，确保它们能够提供合理的决策和行动（OpenAI）。
 > - 人们还在努力使人工智能系统更易于访问和用户友好，鼓励不同人群和行业更广泛地采用它（谷歌人工智能）。
-> 
+>
 > #### 结论
+>
 > 人工智能代表着跨多个领域的变革力量，有望重塑行业并改善生活质量。然而，随着其能力的扩展，解决随之而来的伦理和社会影响至关重要。技术专家、伦理学家和政策制定者之间的持续研究和合作对于驾驭人工智能的未来格局至关重要。
 
 </details>
@@ -273,6 +274,7 @@ main:
 要开始使用 Julep，请使用 [npm](https://www.npmjs.com/package/@julep/sdk) 或 [pip](https://pypi.org/project/julep/) 安装它：
 
 **Node.js**：
+
 ```bash
 npm install @julep/sdk
 
@@ -282,6 +284,7 @@ bun add @julep/sdk
 ```
 
 **Python**：
+
 ```bash
 pip install julep
 ```
@@ -298,7 +301,7 @@ pip install julep
 
 ## Python 快速入门🐍
 
-```python
+````python
 ### Step 0: Setup
 
 import time
@@ -383,7 +386,7 @@ main:
           {% for idea in outputs[1].plot_ideas %}
           - {{idea}}
           {% endfor %}
-          
+
           Here are the results from researching the plot ideas on Wikipedia:
           {{_.wikipedia_results}}
 
@@ -435,7 +438,7 @@ while (result := client.executions.get(execution.id)).status 不在 ['成功', '
 打印（结果.输出）
 别的：
 引发异常（结果.错误）
-```
+````
 
 You can find the full python example [here](example.py).
 
@@ -450,17 +453,18 @@ You can find the full python example [here](example.py).
 
 ## Node.js Quick Start 🟩
 
-### Step 1: Create an Agent
-
 ```JavaScript的
 // 步骤 0：设置
-const dotenv = require（'dotenv'）；
-const { Julep } = require('@julep/sdk');
-const yaml = require（'yaml'）；
+const dotenv = require（“dotenv”）；
+const { Julep } = require（“@julep/sdk”）；
+const yaml = require(“yaml”);
 
 dotenv.配置（）；
 
-const 客户端 = new Julep（{ apiKey：process.env.JULEP_API_KEY， 环境：process.env.JULEP_ENVIRONMENT || “生产” }）；
+const 客户端 = new Julep({
+apiKey：process.env.JULEP_API_KEY，
+环境：process.env.JULEP_ENVIRONMENT || “生产”，
+});
 
 /* 步骤 1：创建代理 */
 
@@ -468,7 +472,8 @@ const 客户端 = new Julep（{ apiKey：process.env.JULEP_API_KEY， 环境：p
 const 代理 = 等待客户端.代理.创建（{
 名称：“讲故事特工”，
 模型：“claude-3.5-sonnet”，
-关于：“您是一位富有创意的讲故事者，能够就无数主题创作引人入胜的故事。”，
+关于：
+“您是一位富有创意的讲故事者，能就无数主题创作出引人入胜的故事。”
   });
 回報代理；
 }
@@ -572,10 +577,7 @@ wikipedia_results：'NEWLINE.join（[f“- {doc.metadata.title}：{doc.metadata.
 `;
 
 异步函数 createTask（agentId）{
-const task = await 客户端.tasks.create(
-代理人编号，
-yaml.解析（taskYaml）
-（英文）：
+const task = 等待客户端.tasks.创建（agentId， yaml.parse(taskYaml)）;
 返回任务；
 }
 
@@ -583,7 +585,7 @@ yaml.解析（taskYaml）
 
 异步函数 executeTask (taskId) {
 const 执行 = 等待客户端.执行.创建（taskId，{
-输入：{ 想法：“一只学飞的猫” }
+输入：{想法：“一只学飞的猫”}，
   });
 
 // 🎉 观看故事和漫画面板的生成
@@ -591,7 +593,7 @@ while (真) {
 const result = 等待客户端.executions.get（execution.id）;
 控制台.log（结果.状态，结果.输出）；
 
-if (result.status === '成功' || result.status === '失败') {
+if (result.status === "成功" || result.status === "失败") {
 // 📦执行完成后，检索结果
 如果 (result.status === "成功") {
 控制台.log（结果.输出）；
@@ -601,7 +603,7 @@ if (result.status === '成功' || result.status === '失败') {
 休息;
     }
 
-等待新的 Promise（resolve => setTimeout（resolve，1000））；
+等待新的Promise（（resolve）=> setTimeout（resolve，1000））；
   }
 }
 
@@ -616,7 +618,9 @@ console.error("发生错误：", error);
   }
 }
 
-main().then(() => console.log("完成")).catch(console.error);
+主要的（）
+.then(() => console.log("完成"))
+.catch（控制台.错误）；
 ```
 
 You can find the full Node.js example [here](example.js).
@@ -689,7 +693,6 @@ classDef 核心填充：#f9f，描边：#333，描边宽度：2px；
 - **Tools**: Integrations that extend an agent's capabilities, including user-defined functions, system tools, or third-party API integrations.
 - **Documents**: Text or data objects associated with agents or users, vectorized and stored for semantic search and retrieval.
 - **Executions**: Instances of tasks that have been initiated with specific inputs, with their own lifecycle and state machine.
-
 
 <div align="center">
     <a href="#top">
@@ -863,6 +866,7 @@ Retrieve a value from the execution's key-value store.
 Assign a value to a key in the execution's key-value store.
 
 <br><br><b>Note:</b> The set step uses Python expressions.
+
 </td>
 
 <td>
@@ -1100,6 +1104,7 @@ Agents can be given access to a number of "tools" -- any programmatic interface 
 Unlike agent frameworks, julep is a _backend_ that manages agent execution. Clients can interact with agents using our SDKs. julep takes care of executing tasks and running integrations.
 
 Tools in julep can be one of:
+
 1. **User-defined `functions`**: These are function signatures that you can give the model to choose from, similar to how [openai]'s function-calling works. They need to be handled by the client. The workflow will pause until the client calls the function and gives the results back to julep.
 2. **`system` tools**: Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 3. **`integrations`**: Built-in third party tools that can be used to extend the capabilities of your agents.
@@ -1133,12 +1138,11 @@ These are function signatures that you can give the model to choose from, simila
 
 Whenever julep encounters a _user-defined function_, it pauses, giving control back to the client and waits for the client to run the function call and give the results back to julep.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
+> [!TIP] > **Example cookbook**: [cookbooks/13-Error_Handling_and_Recovery.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/13-Error_Handling_and_Recovery.py)
 
 ### `system` tools
 
-Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.  
+Built-in tools that can be used to call the julep APIs themselves, like triggering a task execution, appending to a metadata field, etc.
 
 `system` tools are built into the backend. They get executed automatically when needed. They do _not_ require any action from the client-side.
 
@@ -1166,6 +1170,7 @@ For example,
 #### Available `system` resources and operations
 
 - `agent`:
+
   - `list`: List all agents.
   - `get`: Get a single agent by id.
   - `create`: Create a new agent.
@@ -1173,6 +1178,7 @@ For example,
   - `delete`: Delete an existing agent.
 
 - `user`:
+
   - `list`: List all users.
   - `get`: Get a single user by id.
   - `create`: Create a new user.
@@ -1180,6 +1186,7 @@ For example,
   - `delete`: Delete an existing user.
 
 - `session`:
+
   - `list`: List all sessions.
   - `get`: Get a single session by id.
   - `create`: Create a new session.
@@ -1189,6 +1196,7 @@ For example,
   - `history`: Get the chat history with a session.
 
 - `task`:
+
   - `list`: List all tasks.
   - `get`: Get a single task by id.
   - `create`: Create a new task.
@@ -1202,6 +1210,7 @@ For example,
   - `search`: Search for documents.
 
 Additional operations available for some resources:
+
 - `embed`: Embed a resource (specific resources not specified in the provided code).
 - `change_status`: Change the status of a resource (specific resources not specified in the provided code).
 - `chat`: Chat with a resource (specific resources not specified in the provided code).
@@ -1210,8 +1219,7 @@ Additional operations available for some resources:
 
 Note: The availability of these operations may vary depending on the specific resource and implementation details.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
+> [!TIP] > **Example cookbook**: [cookbooks/10-Document_Management_and_Search.py](https://github.com/julep-ai/julep/blob/dev/cookbooks/10-Document_Management_and_Search.py)
 
 ### Built-in `integrations`
 
@@ -1219,9 +1227,7 @@ Julep comes with a number of built-in integrations (as described in the section 
 
 See [Integrations](#integrations) for details on the available integrations.
 
-> [!TIP]
-> **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
-
+> [!TIP] > **Example cookbook**: [cookbooks/01-Website_Crawler_using_Spider.ipynb](https://github.com/julep-ai/julep/blob/dev/cookbooks/01-Website_Crawler_using_Spider.ipynb)
 
 ### Direct `api_calls`
 
@@ -1291,7 +1297,7 @@ result: string # Brave Search 的结果
 设置：
 api_key: string # BrowserBase 的 API 密钥
 project_id: string # BrowserBase 的项目 ID
-session_id: string #（可选）BrowserBase 的会话 ID
+session_id: string # （可选）BrowserBase 的会话 ID
 
 参数：
 urls: list[string] # 使用 BrowserBase 加载的 URL
@@ -1535,8 +1541,7 @@ metadata_filter={“category”：“research_paper”}
     </a>
 </div>
 
-
-*****
+---
 
 ## Julep 和 LangChain 等有什么区别？
 

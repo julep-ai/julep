@@ -6,7 +6,7 @@ from starlette.status import HTTP_201_CREATED
 from temporalio.client import Client as TemporalClient
 
 from ...activities.types import EmbedDocsPayload
-from ...autogen.openapi_model import CreateDocRequest, ResourceCreatedResponse
+from ...autogen.openapi_model import CreateDocRequest, Doc, ResourceCreatedResponse
 from ...clients import temporal
 from ...common.retry_policies import DEFAULT_RETRY_POLICY
 from ...dependencies.developer_id import get_developer_id
@@ -21,6 +21,7 @@ async def run_embed_docs_task(
     doc_id: UUID,
     title: str,
     content: list[str],
+    embed_instruction: str | None = None,
     job_id: UUID,
     background_tasks: BackgroundTasks,
     client: TemporalClient | None = None,
@@ -34,7 +35,7 @@ async def run_embed_docs_task(
         doc_id=doc_id,
         content=content,
         title=title,
-        embed_instruction=None,
+        embed_instruction=embed_instruction,
     )
 
     handle = await client.start_workflow(
@@ -60,7 +61,7 @@ async def create_user_doc(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
-    doc = create_doc_query(
+    doc: Doc = create_doc_query(
         developer_id=x_developer_id,
         owner_type="user",
         owner_id=user_id,
@@ -74,6 +75,7 @@ async def create_user_doc(
         doc_id=doc.id,
         title=doc.title,
         content=doc.content,
+        embed_instruction=data.embed_instruction,
         job_id=embed_job_id,
         background_tasks=background_tasks,
     )
@@ -90,7 +92,7 @@ async def create_agent_doc(
     x_developer_id: Annotated[UUID, Depends(get_developer_id)],
     background_tasks: BackgroundTasks,
 ) -> ResourceCreatedResponse:
-    doc = create_doc_query(
+    doc: Doc = create_doc_query(
         developer_id=x_developer_id,
         owner_type="agent",
         owner_id=agent_id,
@@ -104,6 +106,7 @@ async def create_agent_doc(
         doc_id=doc.id,
         title=doc.title,
         content=doc.content,
+        embed_instruction=data.embed_instruction,
         job_id=embed_job_id,
         background_tasks=background_tasks,
     )
