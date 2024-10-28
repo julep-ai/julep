@@ -6,7 +6,7 @@
 
 <p align="center">
   <br />
-  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを見る</a>
+  <a href="https://docs.julep.ai" rel="dofollow">ドキュメントを探索 (wip)</a>
   ·
   <a href="https://discord.com/invite/JTSBGRZrzj" rel="dofollow">不和</a>
   ·
@@ -62,36 +62,39 @@ Julep プロジェクトに新しい貢献者を迎えられることを嬉し�
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-<h3>📖 Table of Contents</h3>
+<h3>📖 目次</h3>
 
-- [主な特徴](#%E4%B8%BB%E3%81%AA%E7%89%B9%E5%BE%B4)
-- [簡単な例](#%E7%B0%A1%E5%8D%98%E3%81%AA%E4%BE%8B)
-- [インストール](#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB)
-- [Python クイックスタート 🐍](#python-%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88-)
-- [Node.js Quick Start 🟩](#nodejs-quick-start-)
-  - [Step 1: Create an Agent](#step-1-create-an-agent)
-- [Components](#components)
-  - [Mental Model](#mental-model)
-- [Concepts](#concepts)
-- [Understanding Tasks](#understanding-tasks)
-  - [Lifecycle of a Task](#lifecycle-of-a-task)
-  - [Types of Workflow Steps](#types-of-workflow-steps)
-- [Tool Types](#tool-types)
-  - [User-defined `functions`](#user-defined-functions)
-  - [`system` tools](#system-tools)
-  - [Built-in `integrations`](#built-in-integrations)
-  - [Direct `api_calls`](#direct-api_calls)
-- [Integrations](#integrations)
-- [Other Features](#other-features)
-  - [Adding Tools to Agents](#adding-tools-to-agents)
-  - [Managing Sessions and Users](#managing-sessions-and-users)
-  - [Document Integration and Search](#document-integration-and-search)
-  - [SDK リファレンス](#sdk-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-  - [API リファレンス](#api-%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)
-- [ローカルクイックスタート](#%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%82%AF%E3%82%A4%E3%83%83%E3%82%AF%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88)
-- [Julep と LangChain などの違いは何ですか?](#julep-%E3%81%A8-langchain-%E3%81%AA%E3%81%A9%E3%81%AE%E9%81%95%E3%81%84%E3%81%AF%E4%BD%95%E3%81%A7%E3%81%99%E3%81%8B)
-  - [さまざまなユースケース](#%E3%81%95%E3%81%BE%E3%81%96%E3%81%BE%E3%81%AA%E3%83%A6%E3%83%BC%E3%82%B9%E3%82%B1%E3%83%BC%E3%82%B9)
-  - [異なるフォームファクタ](#%E7%95%B0%E3%81%AA%E3%82%8B%E3%83%95%E3%82%A9%E3%83%BC%E3%83%A0%E3%83%95%E3%82%A1%E3%82%AF%E3%82%BF)
+- [はじめに](#introduction)
+- [主な特徴](#key-features)
+- [簡単な例](#quick-example)
+- [インストール](#installation)
+- [Python クイックスタート 🐍](#python-quick-start-)
+- [Node.js クイック スタート 🟩](#nodejs-quick-start-)
+- [ステップ 1: エージェントを作成する](#step-1-create-an-agent)
+- [コンポーネント](#components)
+- [メンタルモデル](#mental-model)
+- [コンセプト](#concepts)
+- [タスクの理解](#understanding-tasks)
+- [タスクのライフサイクル](#lifecycle-of-a-task)
+- [ワークフロー ステップの種類](#types-of-workflow-steps)
+- [ツールの種類](#tool-types)
+- [ユーザー定義の `functions`](#user-defined-functions)
+- [`システム` ツール](#system-tools)
+- [組み込みの `integrations`](#built-in-integrations)
+- [直接の `api_calls`](#direct-api_calls)
+- [統合](#integrations)
+- [その他の機能](#other-features)
+- [エージェントへのツールの追加](#adding-tools-to-agents)
+- [セッションとユーザーの管理](#managing-sessions-and-users)
+- [ドキュメントの統合と検索](#document-integration-and-search)
+- [参考](#reference)
+- [SDKリファレンス](#sdk-reference)
+- [APIリファレンス](#api-reference)
+- [ローカルクイックスタート](#local-quickstart)
+- [Julep と LangChain などの違いは何ですか?](#whats-the-difference-between-julep-and-langchain-etc)
+- [さまざまなユースケース](#different-use-cases)
+- [異なるフォームファクター](#different-form-factor)
+- [要約](#in-summary)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -107,7 +110,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 - モデルの出力に基づいて意思決定を行う
 - 平行枝を生成し、
 - たくさんのツールを使い、
-- 長時間走る。
+- 長時間実行します。
 
 > [!ヒント]
 > 単純な質問に答えるだけでなく、複雑なタスクを処理し、過去のやり取りを記憶し、場合によっては他のツールや API も使用できる AI エージェントを構築したいとします。そこで Julep の出番です。詳細については、[タスクの理解](#understanding-tasks) をお読みください。
@@ -119,7 +122,7 @@ Julep を使用すると、意思決定、ループ、並列処理、多数の�
 3. 🔄 **複数ステップのタスク**: ループと意思決定を含む複雑な複数ステップのプロセスを構築します。
 4. ⏳ **タスク管理**: 無期限に実行される可能性のある長時間実行タスクを処理します。
 5. 🛠️ **組み込みツール**: タスクで組み込みツールと外部 API を使用します。
-6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、タスクがスムーズに実行されるようにします。
+6. 🔧 **自己修復**: Julep は失敗したステップを自動的に再試行し、メッセージを再送信し、一般的にタスクがスムーズに実行されるようにします。
 7. 📚 **RAG**: Julep のドキュメント ストアを使用して、独自のデータを取得して使用するためのシステムを構築します。
 
 ![機能](https://github.com/user-attachments/assets/4355cbae-fcbd-4510-ac0d-f8f77b73af70)
@@ -394,7 +397,7 @@ plot_ideas: load_yaml(_.split('```yaml')[1].split('```')[0].ストリップ())
 
           Think about the plot ideas critically. Combine the plot ideas with the results from Wikipedia to create a detailed plot for a story.
           Write down all your notes and thoughts.
-          Then finally write the plot as a yaml object inside ```レスポンスの最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
+          Then finally write the plot as a yaml object inside ```応答の最後に yaml タグを追加します。yaml オブジェクトの構造は次のようになります。
 
           ```yaml
           title: "<string>"
@@ -1457,7 +1460,7 @@ context_overflow="適応型"
 
 # 同じセッションで会話を続ける
 レスポンス = client.sessions.chat(
-セッションID=セッションID、
+session_id=セッションID、
 メッセージ=[
       {
 「役割」: 「ユーザー」、
