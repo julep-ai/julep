@@ -34,6 +34,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
 
     # FEEDBACK[@Bhabuk10]: Consider adding an assertion after the agent creation to verify that the agent was actually created and persisted in the database. This would improve test coverage.
 
+
 @test("model: create agent with instructions")
 def _(client=cozo_client, developer_id=test_developer_id):
     create_agent(
@@ -48,6 +49,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
     )
 
     # FEEDBACK[@Bhabuk10]: As with the previous test, it would be beneficial to add an assertion here to validate that the agent with instructions has been created correctly. Testing the `instructions` field would ensure it's properly handled.
+
 
 @test("model: create or update agent")
 def _(client=cozo_client, developer_id=test_developer_id):
@@ -65,6 +67,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
 
     # QUESTION[@Bhabuk10]: What is the expected behavior if an agent with the given `agent_id` already exists? Should it update the existing agent or throw an error? It might be worth testing both cases to ensure that the function works correctly in both scenarios.
 
+
 @test("model: get agent not exists")
 def _(client=cozo_client, developer_id=test_developer_id):
     agent_id = uuid4()
@@ -74,6 +77,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
 
     # FEEDBACK[@Bhabuk10]: Good use of `raises(Exception)` to test the absence of an agent. It might help to make the exception more specific (if possible) to avoid catching unintended exceptions.
 
+
 @test("model: get agent exists")
 def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     result = get_agent(agent_id=agent.id, developer_id=developer_id, client=client)
@@ -82,6 +86,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     assert isinstance(result, Agent)
 
     # FEEDBACK[@Bhabuk10]: You could also add assertions that check the specific values in the `Agent` object to ensure that the data is being fetched correctly.
+
 
 @test("model: delete agent")
 def _(client=cozo_client, developer_id=test_developer_id):
@@ -104,6 +109,7 @@ def _(client=cozo_client, developer_id=test_developer_id):
         get_agent(agent_id=temp_agent.id, developer_id=developer_id, client=client)
 
     # QUESTION[@Bhabuk10]: What happens if you try to delete an agent that doesn't exist? Should this raise an exception, or is there a different expected behavior? Consider testing that scenario as well.
+
 
 @test("model: update agent")
 def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
@@ -159,6 +165,7 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
 
     # QUESTION[@Bhabuk10]: Does patching overwrite or merge existing fields? It might be helpful to add a test case that ensures the correct behavior when patching fields that already exist in the agent.
 
+
 @test("model: list agents")
 def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
     """Tests listing all agents associated with a developer in the database. Verifies that the correct list of agents is retrieved."""
@@ -167,4 +174,3 @@ def _(client=cozo_client, developer_id=test_developer_id, agent=test_agent):
 
     assert isinstance(result, list)
     assert all(isinstance(agent, Agent) for agent in result)
-
