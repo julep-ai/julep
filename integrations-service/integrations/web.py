@@ -6,8 +6,10 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
+import uvloop
 
 from .routers import execution_router, integrations_router
+import asyncio
 
 app: FastAPI = FastAPI()
 
@@ -79,5 +81,4 @@ def main(
     )
 
 
-if __name__ == "__main__":
-    fire.Fire(main)
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
