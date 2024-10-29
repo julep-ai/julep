@@ -213,6 +213,8 @@ def search_docs_by_embedding(
                 distance = cos_dist(query, embedding),
                 distance <= {radius}
 
+            :limit {k*(3 if mmr_strength else 1)}   # Get more candidates for diversity
+
             :create _search_result {{
                 doc_id,
                 index,
@@ -244,7 +246,7 @@ def search_docs_by_embedding(
 
         # Sort the results by distance to find the closest matches
         :sort -mmr_score
-        :limit {k}
+        :limit {k*(3 if mmr_strength else 1)}   # Get more candidates for diversity
 
         :create _interim {{
             owner_type,
