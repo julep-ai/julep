@@ -2677,7 +2677,6 @@ components:
       required:
         - index
         - content
-        - embedding
       properties:
         index:
           type: integer

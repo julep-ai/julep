@@ -46,7 +46,7 @@ model DocOwner {
 model Snippet {
     index: uint16;
     content: string;
-    embedding: float[];
+    embedding?: float[];
 }
 
 model DocReference {
