@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         run: |
           cd integrations-service
-          poetry run poe test --fail-limit 1
+          poetry run poe test
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }} 
