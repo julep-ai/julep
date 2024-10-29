@@ -293,7 +293,7 @@ main:
           Use information gathered from the following data sources to gather the most relevant information:
 
           Search Results: {{{{_['caption']}}}}
-          Viraity Score: {{{{_['virality_score']}}}}
+          Virality Score: {{{{_['virality_score']}}}}
           Enagement Score: {{{{_['engagement_score']}}}}
 
           Provide a json repsonse containing the caption, virality score, enagement score and one-liner description for the reel.
