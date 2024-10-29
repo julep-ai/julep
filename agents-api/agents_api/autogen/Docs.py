@@ -180,6 +180,7 @@ class Snippet(BaseModel):
     )
     index: int
     content: str
+    embedding: list[float]
 
 
 class TextOnlyDocSearchRequest(BaseDocSearchRequest):

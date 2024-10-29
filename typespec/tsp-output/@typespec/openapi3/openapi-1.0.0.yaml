@@ -2677,12 +2677,17 @@ components:
       required:
         - index
         - content
+        - embedding
       properties:
         index:
           type: integer
           format: uint16
         content:
           type: string
+        embedding:
+          type: array
+          items:
+            type: number
     Docs.TextOnlyDocSearchRequest:
       type: object
       required:
