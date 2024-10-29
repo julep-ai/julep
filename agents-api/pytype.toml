@@ -8,7 +8,9 @@ exclude = [
 
 # Space-separated list of files or directories to process.
 inputs = [
-    '.',
+    'agents_api',
+    'migrations',
+    'tests',
 ]
 
 # Keep going past errors to analyze as many files as possible.
