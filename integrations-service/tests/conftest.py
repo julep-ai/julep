@@ -12,9 +12,7 @@ from .mocks.wikipedia import MockWikipediaClient
 @pytest.fixture(autouse=True)
 def mock_external_services():
     """Automatically mock all external service clients"""
-    with patch(
-        "langchain_community.tools.BraveSearch", MockBraveSearchClient
-    ), patch(
+    with patch("langchain_community.tools.BraveSearch", MockBraveSearchClient), patch(
         "smtplib.SMTP", MockEmailClient
     ), patch(
         "langchain_community.document_loaders.SpiderLoader", MockSpiderClient

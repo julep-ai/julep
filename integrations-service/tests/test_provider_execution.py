@@ -19,10 +19,12 @@ def test_wikipedia_search(wikipedia_provider):
     provider = available_providers["wikipedia"]
     method = provider.methods[0]
 
-    result = method.output(documents=[
-        {"page_content": "test query content", "metadata": {}},
-        {"page_content": "other content", "metadata": {}}
-    ])
+    result = method.output(
+        documents=[
+            {"page_content": "test query content", "metadata": {}},
+            {"page_content": "other content", "metadata": {}},
+        ]
+    )
     assert len(result.documents) == 2
     assert "test query" in result.documents[0].page_content
 
@@ -44,10 +46,12 @@ def test_spider_crawl(spider_provider):
     provider = available_providers["spider"]
     method = provider.methods[0]
 
-    result = method.output(documents=[
-        {"page_content": "Mock crawled content 1", "metadata": {}},
-        {"page_content": "Mock crawled content 2", "metadata": {}}
-    ])
+    result = method.output(
+        documents=[
+            {"page_content": "Mock crawled content 1", "metadata": {}},
+            {"page_content": "Mock crawled content 2", "metadata": {}},
+        ]
+    )
     assert len(result.documents) == 2
     assert all("Mock crawled content" in doc.page_content for doc in result.documents)
 
