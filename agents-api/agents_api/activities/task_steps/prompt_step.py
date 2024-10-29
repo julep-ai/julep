@@ -29,42 +29,27 @@ def format_agent_tool(tool: Tool) -> dict:
                 "parameters": tool.function.parameters,
             },
         }
+    elif tool.computer_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+            "display_width_px": tool.display_width_px,
+            "display_height_px": tool.display_height_px,
+            "display_number": tool.display_number,
+        }
+    elif tool.bash_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+        }
+    elif tool.text_editor_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+        }
     # TODO: Add integration | system | api_call tool types
     else:
         return {}
-
-
-def format_anthropic_tools(tools: list[Tool]) -> list[dict]:
-    # Include all three Anthropic tools
-    formatted_tools = []
-
-    for tool in tools:
-        if tool.computer_20241022:
-            formatted_tools.append(
-                {
-                    "type": tool.computer_20241022.type,
-                    "name": tool.computer_20241022.name,
-                    "display_width_px": tool.computer_20241022.display_width_px,
-                    "display_height_px": tool.computer_20241022.display_height_px,
-                    "display_number": tool.computer_20241022.display_number,
-                }
-            )
-        if tool.text_editor_20241022:
-            formatted_tools.append(
-                {
-                    "type": tool.text_editor_20241022.type,
-                    "name": tool.text_editor_20241022.name,
-                }
-            )
-        if tool.bash_20241022:
-            formatted_tools.append(
-                {
-                    "type": tool.bash_20241022.type,
-                    "name": tool.bash_20241022.name,
-                }
-            )
-
-    return formatted_tools
 
 
 @activity.defn
@@ -113,15 +98,22 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     if isinstance(prompt, str):
         prompt = [{"role": "user", "content": prompt}]
 
+    # Format agent_tools for litellm
+    formatted_agent_tools = [
+        format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
+    ]
+
     # Check if the model is Anthropic
     if "claude-3.5-sonnet-20241022" == agent_model.lower():
         # Retrieve the API key from the environment variable
         betas = [COMPUTER_USE_BETA_FLAG]
-        api_key = os.getenv("ANTHROPIC_API_KEY") or raise ValueError("API key is not set.")
-        # Format all three Anthropic tools
-        formatted_agent_tools = format_anthropic_tools(agent_tools)
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("API key is not set.")
+
         # Use Anthropic API directly
         client = Anthropic(api_key=api_key)
+
         # Claude Response
         response = await client.beta.messages.create(
             model=agent_model,
@@ -138,10 +130,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             next=None,
         )
     else:
-        # Format agent_tools for litellm
-        formatted_agent_tools = [
-            format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
-        ]
         # Use litellm for other models
         completion_data: dict = {
             "model": agent_model,
