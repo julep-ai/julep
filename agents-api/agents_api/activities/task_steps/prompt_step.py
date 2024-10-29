@@ -9,6 +9,7 @@ from ...clients import (
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
+from ...env import debug
 from ...models.tools.list_tools import list_tools
 
 
@@ -87,8 +88,13 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         **passed_settings,
     }
 
+    extra_body = {  # OpenAI python accepts extra args in extra_body
+        "cache": {"no-cache": debug},  # will not return a cached response
+    }
+
     response = await litellm.acompletion(
         **completion_data,
+        extra_body=extra_body,
     )
 
     if context.current_step.unwrap:

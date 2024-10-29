@@ -1,7 +1,7 @@
 """This module contains functions for searching documents in the CozoDB based on embedding queries."""
 
 from statistics import mean, stdev
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from beartype import beartype
@@ -100,6 +100,7 @@ def search_docs_hybrid(
     alpha: float = 0.7,  # Weight of the embedding search results (this is a good default)
     embed_search_options: dict = {},
     text_search_options: dict = {},
+    metadata_filter: dict[str, Any] = {},
 ) -> list[DocReference]:
     # TODO: We should probably parallelize these queries
     text_results = search_docs_by_text(
@@ -107,6 +108,7 @@ def search_docs_hybrid(
         owners=owners,
         query=query,
         k=2 * k,
+        metadata_filter=metadata_filter,
         **text_search_options,
     )
 
@@ -115,6 +117,7 @@ def search_docs_hybrid(
         owners=owners,
         query_embedding=query_embedding,
         k=2 * k,
+        metadata_filter=metadata_filter,
         **embed_search_options,
     )
 

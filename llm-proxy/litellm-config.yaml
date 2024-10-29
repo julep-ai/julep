@@ -44,9 +44,15 @@ model_list:
     tags: ["paid"]
 
 # Anthropic models
-- model_name: "claude-3.5-sonnet"
+- model_name: "claude-3.5-sonnet-20240620"
   litellm_params:
     model: "claude-3-5-sonnet-20240620"
+    tags: ["paid"]
+    api_key: os.environ/ANTHROPIC_API_KEY
+
+- model_name: "claude-3.5-sonnet"
+  litellm_params:
+    model: "claude-3-5-sonnet-20241022"
     tags: ["paid"]
     api_key: os.environ/ANTHROPIC_API_KEY
 
