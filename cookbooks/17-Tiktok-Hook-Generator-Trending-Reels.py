@@ -294,7 +294,7 @@ main:
 
           Search Results: {{{{_['caption']}}}}
           Virality Score: {{{{_['virality_score']}}}}
-          Enagement Score: {{{{_['engagement_score']}}}}
+          Engagement Score: {{{{_['engagement_score']}}}}
 
           Provide a json repsonse containing the caption, virality score, enagement score and one-liner description for the reel.
     unwrap: true   
@@ -325,7 +325,7 @@ main:
           Caption: {{{{_['caption']}}}}
           Description: {{{{_['description']}}}}
           Virality Score: {{{{_['virality_score']}}}}
-          Enagement Score: {{{{_['engagement_score']}}}}
+          Engagement Score: {{{{_['engagement_score']}}}}
 
           Your task is to generate 3 hooks (for the reel) by adapting the most suitable templates from the document. Each hook should be no more than 1 sentence long and directly relate to its corresponding idea.
           
