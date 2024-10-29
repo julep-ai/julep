@@ -39,6 +39,8 @@ async def execute_integration(
 
     execution_function = getattr(provider_module, method)
 
+    setup_obj = setup
+
     if setup is not None:
         setup_class = provider_obj.setup
 
@@ -54,7 +56,7 @@ async def execute_integration(
     else:
         parsed_arguments = arguments
 
-    if setup:
+    if setup_obj:
         return await execution_function(setup=setup_obj, arguments=parsed_arguments)
     else:
         return execution_function(arguments=parsed_arguments)
