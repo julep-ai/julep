@@ -1,0 +1,57 @@
+name: Lint integrations-service
+run-name: ${{ github.actor }} is linting the code
+
+on:
+  pull_request:
+    paths:
+      - 'integrations-service/**'
+  push:
+    paths:
+      - 'integrations-service/**'
+
+jobs:
+  Lint-And-Format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Configure Poetry to use .venv
+        run: |
+          cd integrations-service
+          poetry config virtualenvs.in-project true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: integrations-service/.venv
+          key: ${{ runner.os }}-integrations-service-poetry-${{ hashFiles('integrations-service/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-integrations-service-poetry-
+
+      - name: Install dependencies
+        run: |
+          cd integrations-service
+          poetry install
+
+      - name: Lint and format
+        run: |
+          cd integrations-service
+          poetry run poe format
+          poetry run poe lint
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "refactor: Lint integrations-service (CI)"
+          branch: ${{ github.head_ref }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }} 

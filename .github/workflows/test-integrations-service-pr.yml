@@ -1,0 +1,50 @@
+name: Test integrations-service
+run-name: ${{ github.actor }} is testing the code
+
+on:
+  pull_request:
+    paths:
+      - 'integrations-service/**'
+  push:
+    paths:
+      - 'integrations-service/**'
+
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Configure Poetry to use .venv
+        run: |
+          cd integrations-service
+          poetry config virtualenvs.in-project true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: integrations-service/.venv
+          key: ${{ runner.os }}-integrations-service-poetry-${{ hashFiles('integrations-service/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-integrations-service-poetry-
+
+      - name: Install dependencies
+        run: |
+          cd integrations-service
+          poetry install
+
+      - name: Run tests
+        run: |
+          cd integrations-service
+          poetry run poe test --fail-limit 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }} 
