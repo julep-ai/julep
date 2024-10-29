@@ -29,4 +29,28 @@ model WeatherIntegrationDef extends BaseIntegrationDef {
     
     /** The arguments for Weather */
     arguments?: WeatherGetArguments;
+}
+
+/** Weather Provider Card */
+model WeatherProviderCard extends BaseProviderCard {
+    provider: "weather" = "weather";
+    setup: WeatherSetup;
+    methods: ProviderMethod<WeatherGetArguments, WeatherGetOutput>[] = #[
+        #{
+            method: "get",
+            description: "Get the current weather for a city",
+        }
+    ];
+    info: ProviderInfo = #{
+        url: "https://www.weatherapi.com/",
+        docs: "https://www.weatherapi.com/docs/",
+        icon: "https://www.weatherapi.com/favicon.ico",
+        friendly_name: "Weather API",
+    };
+}
+
+/** Weather Get Output */
+model WeatherGetOutput {
+    /** The weather data for the specified location */
+    result: string;
 } 

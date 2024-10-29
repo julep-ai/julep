@@ -47,4 +47,28 @@ model EmailIntegrationDef extends BaseIntegrationDef {
     
     /** The arguments for Email sending */
     arguments?: EmailArguments;
+}
+
+/** Email Provider Card */
+model EmailProviderCard extends BaseProviderCard {
+    provider: "email" = "email";
+    setup: EmailSetup;
+    methods: ProviderMethod<EmailArguments, EmailOutput>[] = #[
+        #{
+            method: "send",
+            description: "Send an email",
+        }
+    ];
+    info: ProviderInfo = #{
+        url: "https://emailservice.com/",
+        docs: "https://emailservice.com/docs/",
+        icon: "https://emailservice.com/favicon.ico",
+        friendly_name: "Email Service",
+    };
+}
+
+/** Email Output */
+model EmailOutput {
+    /** Whether the email was sent successfully */
+    success: boolean;
 } 

@@ -35,4 +35,35 @@ model SpiderIntegrationDef extends BaseIntegrationDef {
     
     /** The arguments for Spider */
     arguments?: SpiderFetchArguments;
+}
+
+/** Spider Provider Card */
+model SpiderProviderCard extends BaseProviderCard {
+    provider: "spider" = "spider";
+    setup: SpiderSetup;
+    methods: ProviderMethod<SpiderFetchArguments, SpiderFetchOutput>[] = #[
+        #{
+            method: "crawl",
+            description: "Crawl a website and extract data",
+        }
+    ];
+    info: ProviderInfo = #{
+        url: "https://spider.com/",
+        docs: "https://spider.com/docs/",
+        icon: "https://spider.com/favicon.ico",
+        friendly_name: "Spider",
+    };
+}
+
+/** Spider Fetch Output */
+model SpiderFetchOutput {
+    /** The documents returned from the spider */
+    documents: SpiderDocument[];
+}
+
+/** Represents a document with text content */
+model SpiderDocument {
+    // Using string for now since we need to represent langchain Document
+    page_content: string;
+    metadata: Record<unknown>;
 } 

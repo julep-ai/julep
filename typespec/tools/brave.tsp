@@ -30,3 +30,25 @@ model BraveIntegrationDef extends BaseIntegrationDef {
     /** The arguments for Brave Search */
     arguments?: BraveSearchArguments;
 } 
+
+/** The result of the Brave Search */
+model BraveSearchOutput {
+    result: string;
+}
+
+model BraveProviderCard extends BaseProviderCard {
+    provider: "brave" = "brave";
+    setup: BraveSearchSetup;
+    methods: ProviderMethod<BraveSearchArguments, BraveSearchOutput>[] = #[
+        #{
+            method: "search",
+            description: "Search with Brave",
+        }
+    ];
+    info: ProviderInfo = #{
+        url: "https://brave.com/",
+        docs: "https://brave.com/docs/",
+        icon: "https://brave.com/favicon.ico",
+        friendly_name: "Brave Search",
+    };
+}

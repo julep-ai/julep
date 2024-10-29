@@ -33,4 +33,35 @@ model WikipediaIntegrationDef extends BaseIntegrationDef {
     
     /** The arguments for Wikipedia Search */
     arguments?: WikipediaSearchArguments;
+}
+
+/** Wikipedia Provider Card */
+model WikipediaProviderCard extends BaseProviderCard {
+    provider: "wikipedia" = "wikipedia";
+    setup: WikipediaSearchSetup;
+    methods: ProviderMethod<WikipediaSearchArguments, WikipediaSearchOutput>[] = #[
+        #{
+            method: "search",
+            description: "Search for a page on Wikipedia",
+        }
+    ];
+    info: ProviderInfo = #{
+        url: "https://www.wikipedia.org/",
+        docs: "https://www.wikipedia.org/wiki/Main_Page",
+        icon: "https://www.wikipedia.org/static/favicon/wikipedia.ico",
+        friendly_name: "Wikipedia",
+    };
+}
+
+/** Represents a document with text content */
+model WikipediaDocument {
+    // Using string for now since we need to represent langchain Document
+    page_content: string;
+    metadata: Record<unknown>;
 } 
+
+/** Wikipedia Search Output */
+model WikipediaSearchOutput {
+    /** The documents returned from the Wikipedia search */
+    documents: WikipediaDocument[];
+}
