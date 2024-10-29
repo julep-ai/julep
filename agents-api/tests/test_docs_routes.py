@@ -1,3 +1,5 @@
+import asyncio
+
 from ward import test
 
 from tests.fixtures import (
@@ -135,6 +137,7 @@ def _(make_request=make_request, agent=test_agent):
 # TODO: Fix this test. It fails sometimes and sometimes not.
 @test("route: search agent docs")
 async def _(make_request=make_request, agent=test_agent, doc=test_doc):
+    await asyncio.sleep(0.5)
     search_params = dict(
         text=doc.content[0],
         limit=1,
@@ -155,7 +158,8 @@ async def _(make_request=make_request, agent=test_agent, doc=test_doc):
 
 
 @test("route: search user docs")
-def _(make_request=make_request, user=test_user, doc=test_user_doc):
+async def _(make_request=make_request, user=test_user, doc=test_user_doc):
+    await asyncio.sleep(0.5)
     search_params = dict(
         text=doc.content[0],
         limit=1,

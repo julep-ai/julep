@@ -320,13 +320,13 @@ CreateTaskRequest.validate_subworkflows = validate_subworkflows
 ChatMLContent = (
     list[ChatMLTextContentPart | ChatMLImageContentPart]
     | Tool
-    | ChosenToolCall
+    | BaseChosenToolCall
     | str
     | ToolResponse
     | list[
         list[ChatMLTextContentPart | ChatMLImageContentPart]
         | Tool
-        | ChosenToolCall
+        | BaseChosenToolCall
         | str
         | ToolResponse
     ]
