@@ -117,7 +117,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     if "claude-3.5-sonnet-20241022" == agent_model.lower():
         # Retrieve the API key from the environment variable
         betas = [COMPUTER_USE_BETA_FLAG]
-        api_key = os.getenv("ANTHROPIC_API_KEY")
+        api_key = os.getenv("ANTHROPIC_API_KEY") or raise ValueError("API key is not set.")
         # Format all three Anthropic tools
         formatted_agent_tools = format_anthropic_tools(agent_tools)
         # Use Anthropic API directly
