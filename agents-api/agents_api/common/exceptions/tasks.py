@@ -1,7 +1,12 @@
 """
-This module defines non-retryable error types and provides a function to check
-if a given error is non-retryable. These are used in conjunction with custom
-Temporal interceptors to prevent unnecessary retries of certain error types.
+🎯 Error Handling: The Art of Knowing When to Try Again
+
+This module is like a bouncer at an error club - it decides which errors get a
+second chance and which ones are permanently banned. Some errors are just having
+a bad day (like network timeouts), while others are fundamentally problematic
+(like trying to divide by zero... seriously, who does that?).
+
+Remember: To err is human, to retry divine... but only if it makes sense!
 """
 
 import asyncio
@@ -19,21 +24,20 @@ import pydantic
 import requests
 import temporalio.exceptions
 
-### FIXME: This should be the opposite. We should retry on only known errors
-
-# List of error types that should not be retried
+# 🚫 The "No Second Chances" Club - errors that we won't retry
+# Because sometimes, no means no!
 NON_RETRYABLE_ERROR_TYPES = (
-    # Temporal-specific errors
+    # Temporal-specific errors (when time itself says no)
     temporalio.exceptions.WorkflowAlreadyStartedError,
     temporalio.exceptions.TerminatedError,
     temporalio.exceptions.CancelledError,
     #
-    # Built-in Python exceptions
+    # Built-in Python exceptions (the classics that never go out of style)
     TypeError,
     AssertionError,
     SyntaxError,
     ValueError,
-    ZeroDivisionError,
+    ZeroDivisionError,  # Because dividing by zero is still not cool
     IndexError,
     AttributeError,
     LookupError,
@@ -42,29 +46,28 @@ NON_RETRYABLE_ERROR_TYPES = (
     KeyError,
     NameError,
     NotImplementedError,
-    RecursionError,
+    RecursionError,  # When your code goes down the rabbit hole too deep
     RuntimeError,
     StopIteration,
     StopAsyncIteration,
-    IndentationError,
+    IndentationError,  # Spaces vs tabs: the eternal debate
     TabError,
     #
-    # Unicode-related errors
+    # Unicode-related errors (when characters misbehave)
     UnicodeError,
     UnicodeEncodeError,
     UnicodeDecodeError,
     UnicodeTranslateError,
     #
-    # HTTP and API-related errors
-    fastapi.exceptions.HTTPException,
+    # HTTP and API-related errors (when the web says "nope")
     fastapi.exceptions.RequestValidationError,
     #
-    # Asynchronous programming errors
+    # Asynchronous programming errors (async/await gone wrong)
     asyncio.CancelledError,
     asyncio.InvalidStateError,
     GeneratorExit,
     #
-    # Third-party library exceptions
+    # Third-party library exceptions (when other people's code says no)
     jinja2.exceptions.TemplateSyntaxError,
     jinja2.exceptions.TemplateNotFound,
     jsonschema.exceptions.ValidationError,
@@ -72,12 +75,12 @@ NON_RETRYABLE_ERROR_TYPES = (
     requests.exceptions.InvalidURL,
     requests.exceptions.MissingSchema,
     #
-    # Box exceptions
+    # Box exceptions (when your box is broken)
     box.exceptions.BoxKeyError,
     box.exceptions.BoxTypeError,
     box.exceptions.BoxValueError,
     #
-    # Beartype exceptions
+    # Beartype exceptions (when your types are unbearable)
     beartype.roar.BeartypeException,
     beartype.roar.BeartypeDecorException,
     beartype.roar.BeartypeDecorHintException,
@@ -92,42 +95,93 @@ NON_RETRYABLE_ERROR_TYPES = (
     beartype.roar.BeartypeDecorHintParamDefaultViolation,
     beartype.roar.BeartypeDoorHintViolation,
     #
-    # LiteLLM exceptions
+    # LiteLLM exceptions (when AI has a bad day)
     litellm.exceptions.NotFoundError,
     litellm.exceptions.InvalidRequestError,
     litellm.exceptions.AuthenticationError,
     litellm.exceptions.ServiceUnavailableError,
     litellm.exceptions.OpenAIError,
-    litellm.exceptions.APIError,
+)
+
+# 🔄 The "Try Again" Club - errors that deserve another shot
+# Because everyone deserves a second chance... or third... or fourth...
+RETRYABLE_ERROR_TYPES = (
+    # LiteLLM exceptions (when AI needs a coffee break)
+    litellm.exceptions.RateLimitError,
+    litellm.exceptions.APIError,  # Added to retry on "APIError: OpenAIException - Connection error"
+    #
+    # HTTP/Network related errors (internet having a bad hair day)
+    requests.exceptions.ConnectionError,
+    requests.exceptions.Timeout,
+    requests.exceptions.ConnectTimeout,
+    requests.exceptions.ReadTimeout,
+    httpx.ConnectError,
+    httpx.ConnectTimeout,
+    httpx.ReadTimeout,
+    httpx.WriteTimeout,
+    httpx.PoolTimeout,
+    #
+    # Standard library errors that are typically transient (like a bad mood)
+    ConnectionError,
+    TimeoutError,
+    OSError,  # Covers many IO-related errors that may be transient
+    IOError,
+    #
+    # Database/storage related (when the database needs a nap)
+    asyncio.TimeoutError,
+)
+
+# HTTP status codes that say "maybe try again later?"
+RETRYABLE_HTTP_STATUS_CODES = (
+    408,  # Request Timeout (server needs a coffee break)
+    429,  # Too Many Requests (slow down, speedster!)
+    503,  # Service Unavailable (server is having a moment)
+    504,  # Gateway Timeout (the internet took a detour)
 )
 
 
-### FIXME: This should be the opposite. So `is_retryable_error` instead of `is_non_retryable_error`
-def is_non_retryable_error(error: BaseException) -> bool:
+def is_retryable_error(error: BaseException) -> bool:
     """
-    Determines if the given error is non-retryable.
+    The Great Error Judge: Decides if an error deserves another chance at life.
 
-    This function checks if the error is an instance of any of the error types
-    defined in NON_RETRYABLE_ERROR_TYPES.
+    Think of this function as a very understanding but firm teacher - some mistakes
+    get a do-over, others are learning opportunities (aka failures).
 
     Args:
-        error (Exception): The error to check.
+        error (Exception): The error that's pleading its case
 
     Returns:
-        bool: True if the error is non-retryable, False otherwise.
+        bool: True if the error gets another shot, False if it's game over
     """
+    # First, check if it's in the "permanently banned" list
     if isinstance(error, NON_RETRYABLE_ERROR_TYPES):
+        return False
+
+    # Check if it's in the "VIP retry club"
+    if isinstance(error, RETRYABLE_ERROR_TYPES):
         return True
 
-    # Check for specific HTTP errors (status code == 429)
+    # Special handling for HTTP errors (because they're special snowflakes)
+    if isinstance(error, fastapi.exceptions.HTTPException):
+        if error.status_code in RETRYABLE_HTTP_STATUS_CODES:
+            return True
+
     if isinstance(error, httpx.HTTPStatusError):
-        if error.response.status_code in (
-            408,
-            429,
-            503,
-            504,
-        ):  # pytype: disable=attribute-error
-            return False
+        if error.response.status_code in RETRYABLE_HTTP_STATUS_CODES:
+            return True
+
+    # If we don't know this error, we play it safe and don't retry
+    # (stranger danger!)
+    return False
+
+    # Check for specific HTTP errors that should be retried
+    if isinstance(error, fastapi.exceptions.HTTPException):
+        if error.status_code in RETRYABLE_HTTP_STATUS_CODES:
+            return True
+
+    if isinstance(error, httpx.HTTPStatusError):
+        if error.response.status_code in RETRYABLE_HTTP_STATUS_CODES:
+            return True
 
     # If we don't know about the error, we should not retry
-    return True
+    return False
