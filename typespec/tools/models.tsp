@@ -90,8 +90,8 @@ model BaseProviderCard {
     info: ProviderInfo;
 }
 
-model ProviderMethod</*MethodName extends valueof string,*/ Arguments, Output> {
-    method: string ; // (typeof MethodName) = MethodName;
+model ProviderMethod<Arguments, Output> {
+    method: string;
     description?: string;
     arguments?: Arguments;
     output?: Output;
@@ -111,6 +111,7 @@ alias IntegrationDef = (
     | SpiderIntegrationDef
     | WikipediaIntegrationDef
     | WeatherIntegrationDef
+    | BrowserbaseIntegrationDef
 );
 
 //

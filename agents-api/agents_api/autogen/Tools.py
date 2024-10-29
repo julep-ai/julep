@@ -344,6 +344,148 @@ class BraveSearchSetupUpdate(BaseModel):
     """
 
 
+class BrowserbaseCreateSessionArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    project_id: Annotated[str, Field(alias="projectId")]
+    """
+    The Project ID. Can be found in Settings.
+    """
+    extension_id: Annotated[str | None, Field(alias="extensionId")] = None
+    """
+    The uploaded Extension ID. See Upload Extension.
+    """
+    browser_settings: Annotated[
+        dict[str, Any] | None, Field(alias="browserSettings")
+    ] = None
+    """
+    Browser settings
+    """
+    timeout: int | None = None
+    """
+    Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
+    """
+    keep_alive: Annotated[StrictBool | None, Field(alias="keepAlive")] = None
+    """
+    Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
+    """
+    proxies: StrictBool | list[dict[str, Any]] | None = None
+    """
+    Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
+    """
+
+
+class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    project_id: Annotated[str | None, Field(alias="projectId")] = None
+    """
+    The Project ID. Can be found in Settings.
+    """
+    extension_id: Annotated[str | None, Field(alias="extensionId")] = None
+    """
+    The uploaded Extension ID. See Upload Extension.
+    """
+    browser_settings: Annotated[
+        dict[str, Any] | None, Field(alias="browserSettings")
+    ] = None
+    """
+    Browser settings
+    """
+    timeout: int | None = None
+    """
+    Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
+    """
+    keep_alive: Annotated[StrictBool | None, Field(alias="keepAlive")] = None
+    """
+    Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
+    """
+    proxies: StrictBool | list[dict[str, Any]] | None = None
+    """
+    Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
+    """
+
+
+class BrowserbaseGetSessionArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+
+
+class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str | None = None
+
+
+class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
+    pass
+
+
+class BrowserbaseGetSessionLiveUrlsArgumentsUpdate(
+    BrowserbaseGetSessionArgumentsUpdate
+):
+    pass
+
+
+class BrowserbaseListSessionsArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    status: Literal["RUNNING", "ERROR", "TIMED_OUT", "COMPLETED"] | None = None
+    """
+    The status of the sessions to list (Available options: RUNNING, ERROR, TIMED_OUT, COMPLETED)
+    """
+
+
+class BrowserbaseSetup(BaseModel):
+    """
+    The setup parameters for the browserbase integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api_key: str
+    """
+    API key for the browserbase integration
+    """
+
+
+class BrowserbaseSetupUpdate(BaseModel):
+    """
+    The setup parameters for the browserbase integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    api_key: str | None = None
+    """
+    API key for the browserbase integration
+    """
+
+
+class BrowserbaseUpdateSessionArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+    status: Literal["REQUEST_RELEASE"] = "REQUEST_RELEASE"
+
+
+class BrowserbaseUpdateSessionArgumentsUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str | None = None
+    status: Literal["REQUEST_RELEASE"] | None = None
+
+
 class ChosenBash20241022(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -488,6 +630,12 @@ class CreateToolRequest(BaseModel):
         | SpiderIntegrationDef
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
+        | BrowserbaseContextIntegrationDef
+        | BrowserbaseListSessionsIntegrationDef
+        | BrowserbaseCreateSessionIntegrationDef
+        | BrowserbaseGetSessionIntegrationDef
+        | BrowserbaseUpdateSessionIntegrationDef
+        | BrowserbaseGetSessionLiveUrlsIntegrationDef
         | None
     ) = None
     """
@@ -745,6 +893,12 @@ class PatchToolRequest(BaseModel):
         | SpiderIntegrationDefUpdate
         | WikipediaIntegrationDefUpdate
         | WeatherIntegrationDefUpdate
+        | BrowserbaseContextIntegrationDefUpdate
+        | BrowserbaseListSessionsIntegrationDefUpdate
+        | BrowserbaseCreateSessionIntegrationDefUpdate
+        | BrowserbaseGetSessionIntegrationDefUpdate
+        | BrowserbaseUpdateSessionIntegrationDefUpdate
+        | BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate
         | None
     ) = None
     """
@@ -1016,6 +1170,12 @@ class Tool(BaseModel):
         | SpiderIntegrationDef
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
+        | BrowserbaseContextIntegrationDef
+        | BrowserbaseListSessionsIntegrationDef
+        | BrowserbaseCreateSessionIntegrationDef
+        | BrowserbaseGetSessionIntegrationDef
+        | BrowserbaseUpdateSessionIntegrationDef
+        | BrowserbaseGetSessionLiveUrlsIntegrationDef
         | None
     ) = None
     """
@@ -1084,6 +1244,12 @@ class UpdateToolRequest(BaseModel):
         | SpiderIntegrationDef
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
+        | BrowserbaseContextIntegrationDef
+        | BrowserbaseListSessionsIntegrationDef
+        | BrowserbaseCreateSessionIntegrationDef
+        | BrowserbaseGetSessionIntegrationDef
+        | BrowserbaseUpdateSessionIntegrationDef
+        | BrowserbaseGetSessionLiveUrlsIntegrationDef
         | None
     ) = None
     """
@@ -1299,3 +1465,241 @@ class WikipediaSearchArgumentsUpdate(BaseModel):
     """
     Maximum number of documents to load
     """
+
+
+class BaseBrowserbaseIntegrationDef(BaseIntegrationDef):
+    """
+    The base definition for a browserbase integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["browserbase"] = "browserbase"
+    setup: BrowserbaseSetup | None = None
+    method: (
+        Literal[
+            "get_live_urls",
+            "list_sessions",
+            "create_session",
+            "get_session",
+            "update_session",
+            "create_context",
+            "upload_extension",
+            "get_extension",
+            "delete_extension",
+            "create_session_uploads",
+            "get_session_downloads",
+            "get_logs",
+            "get_recordings",
+        ]
+        | None
+    ) = None
+    arguments: Any | None = None
+
+
+class BaseBrowserbaseIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    The base definition for a browserbase integration
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["browserbase"] = "browserbase"
+    setup: BrowserbaseSetupUpdate | None = None
+    method: (
+        Literal[
+            "get_live_urls",
+            "list_sessions",
+            "create_session",
+            "get_session",
+            "update_session",
+            "create_context",
+            "upload_extension",
+            "get_extension",
+            "delete_extension",
+            "create_session_uploads",
+            "get_session_downloads",
+            "get_logs",
+            "get_recordings",
+        ]
+        | None
+    ) = None
+    arguments: Any | None = None
+
+
+class BrowserbaseContextIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase context provider
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["create_context"] = "create_context"
+    """
+    The specific method of the integration to call
+    """
+    arguments: Any | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseContextIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+    """
+    browserbase context provider
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["create_context"] = "create_context"
+    """
+    The specific method of the integration to call
+    """
+    arguments: Any | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseCreateSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase create session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["create_session"] = "create_session"
+    arguments: BrowserbaseCreateSessionArguments
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseCreateSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+    """
+    browserbase create session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["create_session"] = "create_session"
+    arguments: BrowserbaseCreateSessionArgumentsUpdate | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseGetSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase get session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["get_session"] = "get_session"
+    arguments: BrowserbaseGetSessionArguments
+
+
+class BrowserbaseGetSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+    """
+    browserbase get session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["get_session"] = "get_session"
+    arguments: BrowserbaseGetSessionArgumentsUpdate | None = None
+
+
+class BrowserbaseGetSessionLiveUrlsIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase get session live urls integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["get_live_urls"] = "get_live_urls"
+    arguments: BrowserbaseGetSessionLiveUrlsArguments
+
+
+class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
+    """
+    browserbase get session live urls integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["get_live_urls"] = "get_live_urls"
+    arguments: BrowserbaseGetSessionLiveUrlsArgumentsUpdate | None = None
+
+
+class BrowserbaseListSessionsIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase list sessions integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["list_sessions"] = "list_sessions"
+    """
+    The specific method of the integration to call
+    """
+    arguments: BrowserbaseListSessionsArguments | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseListSessionsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+    """
+    browserbase list sessions integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["list_sessions"] = "list_sessions"
+    """
+    The specific method of the integration to call
+    """
+    arguments: BrowserbaseListSessionsArguments | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseUpdateSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase update session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["update_session"] = "update_session"
+    arguments: BrowserbaseUpdateSessionArguments
+
+
+class BrowserbaseUpdateSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+    """
+    browserbase update session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["update_session"] = "update_session"
+    arguments: BrowserbaseUpdateSessionArgumentsUpdate | None = None
