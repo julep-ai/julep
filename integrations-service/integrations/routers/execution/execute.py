@@ -7,7 +7,7 @@ from .router import router
 
 
 @router.post("/execute/{provider}", tags=["execution"])
-async def execute(
+async def execute_default(
     provider: IdentifierName,
     data: ExecutionRequest,
 ) -> ExecutionResponse:

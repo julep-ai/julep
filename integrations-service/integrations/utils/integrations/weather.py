@@ -1,9 +1,12 @@
+from beartype import beartype
 from langchain_community.utilities import OpenWeatherMapAPIWrapper
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ...models import WeatherGetArguments, WeatherGetOutput, WeatherSetup
+from ...autogen.Tools import WeatherGetArguments, WeatherSetup
+from ...models import WeatherGetOutput
 
 
+@beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     reraise=True,

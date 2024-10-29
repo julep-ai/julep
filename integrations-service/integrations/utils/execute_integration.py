@@ -1,35 +1,53 @@
 import importlib
 
+from beartype import beartype
+from fastapi import HTTPException
+
+from .. import providers as available_providers
+from ..autogen.Tools import BaseIntegrationDef
 from ..models.base_models import BaseProvider, IdentifierName
 from ..models.execution import ExecutionArguments, ExecutionResponse, ExecutionSetup
-from ..providers import providers
 
 
+@beartype
 async def execute_integration(
+    *,
     provider: IdentifierName,
-    arguments: ExecutionArguments,
     method: IdentifierName | None = None,
     setup: ExecutionSetup | None = None,
+    arguments: ExecutionArguments,
 ) -> ExecutionResponse:
-    if provider not in providers:
-        raise ValueError(f"Unknown provider: {provider}")
-    provider: BaseProvider = providers[provider]
+    provider_obj: BaseProvider | None = getattr(available_providers, provider, None)
+
+    if not provider_obj:
+        raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
+
+    assert isinstance(provider_obj, BaseProvider)
+
     if method is None:
-        method = provider.methods[0].method
-    if method not in [method.method for method in provider.methods]:
-        raise ValueError(f"Unknown method: {method} for provider: {provider}")
+        method = provider_obj.methods[0].method
+
+    elif method not in [method.method for method in provider_obj.methods]:
+        raise HTTPException(
+            status_code=400, detail=f"Unknown method: {method} for provider: {provider}"
+        )
 
     provider_module = importlib.import_module(
-        f"integrations.utils.integrations.{provider.provider}", package="integrations"
+        f"integrations.utils.integrations.{provider_obj.provider}",
+        package="integrations",
     )
+
     execution_function = getattr(provider_module, method)
 
-    if setup:
-        setup_class = provider.setup
-        if setup_class and not isinstance(setup, setup_class):
-            setup = setup_class(**setup.model_dump())
+    if setup is not None:
+        setup_class = provider_obj.setup
 
-    arguments_class = next(m for m in provider.methods if m.method == method).arguments
+        if setup_class and not isinstance(setup, setup_class):
+            setup_obj = setup_class(**setup.model_dump())
+
+    arguments_class = next(
+        m for m in provider_obj.methods if m.method == method
+    ).arguments
 
     if not isinstance(arguments, arguments_class):
         parsed_arguments = arguments_class(**arguments.model_dump())
@@ -37,6 +55,6 @@ async def execute_integration(
         parsed_arguments = arguments
 
     if setup:
-        return await execution_function(setup=setup, arguments=parsed_arguments)
+        return await execution_function(setup=setup_obj, arguments=parsed_arguments)
     else:
         return execution_function(arguments=parsed_arguments)

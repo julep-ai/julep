@@ -2,11 +2,22 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-from .brave import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
-from .email import EmailArguments, EmailOutput, EmailSetup
-from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
-from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
-from .wikipedia import WikipediaSearchArguments, WikipediaSearchOutput
+from ..autogen.Tools import (
+    BraveSearchArguments,
+    BraveSearchSetup,
+    EmailArguments,
+    EmailSetup,
+    SpiderFetchArguments,
+    SpiderSetup,
+    WeatherGetArguments,
+    WeatherSetup,
+    WikipediaSearchArguments,
+)
+from .brave import BraveSearchOutput
+from .email import EmailOutput
+from .spider import SpiderFetchOutput
+from .weather import WeatherGetOutput
+from .wikipedia import WikipediaSearchOutput
 
 ExecutionSetup = Union[
     EmailSetup,

@@ -1,20 +1,23 @@
+from .autogen.Tools import (
+    BraveSearchArguments,
+    BraveSearchSetup,
+    EmailArguments,
+    EmailSetup,
+    SpiderFetchArguments,
+    SpiderSetup,
+    WeatherGetArguments,
+    WeatherSetup,
+    WikipediaSearchArguments,
+    # WikipediaSearchSetup,
+)
 from .models import (
     BaseProvider,
     BaseProviderMethod,
-    BraveSearchArguments,
     BraveSearchOutput,
-    BraveSearchSetup,
-    EmailArguments,
     EmailOutput,
-    EmailSetup,
     ProviderInfo,
-    SpiderFetchArguments,
     SpiderFetchOutput,
-    SpiderSetup,
-    WeatherGetArguments,
     WeatherGetOutput,
-    WeatherSetup,
-    WikipediaSearchArguments,
     WikipediaSearchOutput,
 )
 
@@ -110,7 +113,7 @@ email = BaseProvider(
     ),
 )
 
-providers = {
+available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
     "spider": spider,

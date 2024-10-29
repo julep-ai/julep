@@ -1,27 +1,6 @@
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic import BaseModel
-
-from .weather import WeatherExecutionArguments, WeatherExecutionSetup
-from .wikipedia import WikipediaExecutionArguments
-
-ExecuteIntegrationArguments = Union[
-    WikipediaExecutionArguments,
-    WeatherExecutionArguments,
-]
-
-ExecuteIntegrationSetup = Union[WeatherExecutionSetup,]
-
-
-class IntegrationExecutionRequest(BaseModel):
-    setup: ExecuteIntegrationSetup | None = None
-    """
-    The setup parameters the integration accepts (such as API keys)
-    """
-    arguments: ExecuteIntegrationArguments
-    """
-    The arguments to pass to the integration
-    """
 
 
 class IntegrationExecutionResponse(BaseModel):

@@ -15,3 +15,9 @@ cd agents-api && \
     poetry run poe codegen && \
     poetry run poe format
 cd -
+
+cd integrations-service && \
+    # poetry update && \
+    poetry run poe codegen && \
+    poetry run poe format
+cd -

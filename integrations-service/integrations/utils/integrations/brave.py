@@ -1,9 +1,12 @@
+from beartype import beartype
 from langchain_community.tools import BraveSearch
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ...models import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
+from ...autogen.Tools import BraveSearchArguments, BraveSearchSetup
+from ...models import BraveSearchOutput
 
 
+@beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     reraise=True,
