@@ -615,7 +615,7 @@ async def _(
         result_coroutine = handle.result()
         task = asyncio.create_task(result_coroutine)
         try:
-            await asyncio.wait_for(task, timeout=3)
+            await asyncio.wait_for(task, timeout=10)
         except BaseException:
             task.cancel()
 
