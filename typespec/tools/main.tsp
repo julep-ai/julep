@@ -6,6 +6,7 @@ import "./email.tsp";
 import "./spider.tsp";
 import "./weather.tsp";
 import "./wikipedia.tsp";
+import "./browserbase";
 
 namespace Tools;
 
