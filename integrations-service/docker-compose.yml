@@ -3,17 +3,18 @@ name: julep-integrations
 # Shared environment variables
 x--shared-environment: &shared-environment
   OPENAI_API_KEY: ${OPENAI_API_KEY}
+  INTEGRATIONS_SERVICE_PORT: ${INTEGRATIONS_SERVICE_PORT:-8000}
 
 services:
   integrations:
     image: julepai/integrations:${TAG:-dev}
     environment:
       <<: *shared-environment
-    
+
     build: .
     ports:
-      - "8000:8000"
-    
+      - "${INTEGRATIONS_SERVICE_PORT}:${INTEGRATIONS_SERVICE_PORT}"
+
     develop:
       watch:
         - action: sync+restart
