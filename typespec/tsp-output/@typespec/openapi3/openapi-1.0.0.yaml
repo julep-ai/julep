@@ -6606,9 +6606,9 @@ components:
           type: string
           description: The specific method of the integration to call
         setup:
-          allOf:
-            - $ref: '#/components/schemas/Tools.WikipediaSearchSetup'
+          nullable: true
           description: The setup parameters for Wikipedia
+          default: null
         arguments:
           allOf:
             - $ref: '#/components/schemas/Tools.WikipediaSearchArguments'
@@ -6629,9 +6629,9 @@ components:
           type: string
           description: The specific method of the integration to call
         setup:
-          allOf:
-            - $ref: '#/components/schemas/Tools.WikipediaSearchSetup'
+          nullable: true
           description: The setup parameters for Wikipedia
+          default: null
         arguments:
           allOf:
             - $ref: '#/components/schemas/Tools.WikipediaSearchArgumentsUpdate'
@@ -6670,9 +6670,6 @@ components:
           description: Maximum number of documents to load
           default: 2
       description: Arguments for Wikipedia Search
-    Tools.WikipediaSearchSetup:
-      type: object
-      description: Integration setup for Wikipedia
     Users.CreateOrUpdateUserRequest:
       type: object
       required:

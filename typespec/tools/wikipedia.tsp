@@ -4,11 +4,6 @@ using Common;
 
 namespace Tools;
 
-/** Integration setup for Wikipedia */
-model WikipediaSearchSetup {
-    // Wikipedia doesn't require any setup parameters
-}
-
 /** Arguments for Wikipedia Search */
 model WikipediaSearchArguments {
     /** The search query string */
@@ -29,7 +24,7 @@ model WikipediaIntegrationDef extends BaseIntegrationDef {
     method?: string;
     
     /** The setup parameters for Wikipedia */
-    setup?: WikipediaSearchSetup;
+    setup?: null = null;
     
     /** The arguments for Wikipedia Search */
     arguments?: WikipediaSearchArguments;
@@ -38,7 +33,7 @@ model WikipediaIntegrationDef extends BaseIntegrationDef {
 /** Wikipedia Provider Card */
 model WikipediaProviderCard extends BaseProviderCard {
     provider: "wikipedia" = "wikipedia";
-    setup: WikipediaSearchSetup;
+    setup: null = null;
     methods: ProviderMethod<WikipediaSearchArguments, WikipediaSearchOutput>[] = #[
         #{
             method: "search",

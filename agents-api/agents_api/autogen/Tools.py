@@ -1039,7 +1039,7 @@ class WikipediaIntegrationDef(BaseIntegrationDef):
     """
     The specific method of the integration to call
     """
-    setup: WikipediaSearchSetup | None = None
+    setup: Any | None = None
     """
     The setup parameters for Wikipedia
     """
@@ -1065,7 +1065,7 @@ class WikipediaIntegrationDefUpdate(BaseIntegrationDefUpdate):
     """
     The specific method of the integration to call
     """
-    setup: WikipediaSearchSetup | None = None
+    setup: Any | None = None
     """
     The setup parameters for Wikipedia
     """
@@ -1109,16 +1109,6 @@ class WikipediaSearchArgumentsUpdate(BaseModel):
     """
     Maximum number of documents to load
     """
-
-
-class WikipediaSearchSetup(BaseModel):
-    """
-    Integration setup for Wikipedia
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
 
 
 class ChosenFunctionCall(ChosenToolCall):
