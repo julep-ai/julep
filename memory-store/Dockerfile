@@ -12,7 +12,7 @@ FROM rust:1.80.1-bookworm AS builder
 RUN apt-get update && apt-get install -y liburing-dev
 
 # Clone the CozoDB repository with submodules (checkout the specified commit)
-ARG COZO_COMMIT=57b7b440fd93440d985f2259eeaaf2ba5cc7569e
+ARG COZO_COMMIT=695d0282fa9836bd93b4ff4313ec1cfb514c4f3b
 RUN \
     git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/cozodb/cozo.git /usr/src/cozo && \
     cd /usr/src/cozo && \
