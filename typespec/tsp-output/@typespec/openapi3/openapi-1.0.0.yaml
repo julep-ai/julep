@@ -5789,6 +5789,148 @@ components:
           format: uint8
           description: The timeout for the request
       description: API call definition
+    Tools.BaseIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - dummy
+            - weather
+            - wikipedia
+            - spider
+            - brave
+            - browserbase
+            - email
+          description: The provider of the integration
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          description: The setup parameters the integration accepts
+        arguments:
+          description: The arguments to pre-apply to the integration call
+      discriminator:
+        propertyName: provider
+        mapping:
+          brave: '#/components/schemas/Tools.BraveIntegrationDef'
+          email: '#/components/schemas/Tools.EmailIntegrationDef'
+          spider: '#/components/schemas/Tools.SpiderIntegrationDef'
+          wikipedia: '#/components/schemas/Tools.WikipediaIntegrationDef'
+          weather: '#/components/schemas/Tools.WeatherIntegrationDef'
+      description: Integration definition
+    Tools.BaseIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - dummy
+            - weather
+            - wikipedia
+            - spider
+            - brave
+            - browserbase
+            - email
+          description: The provider of the integration
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          description: The setup parameters the integration accepts
+        arguments:
+          description: The arguments to pre-apply to the integration call
+      discriminator:
+        propertyName: provider
+        mapping:
+          brave: '#/components/schemas/Tools.BraveIntegrationDefUpdate'
+          email: '#/components/schemas/Tools.EmailIntegrationDefUpdate'
+          spider: '#/components/schemas/Tools.SpiderIntegrationDefUpdate'
+          wikipedia: '#/components/schemas/Tools.WikipediaIntegrationDefUpdate'
+          weather: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
+      description: Integration definition
+    Tools.BraveIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - brave
+          description: The provider must be "brave"
+          default: brave
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BraveSearchSetup'
+          description: The setup parameters for Brave
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BraveSearchArguments'
+          description: The arguments for Brave Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Brave integration definition
+    Tools.BraveIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - brave
+          description: The provider must be "brave"
+          default: brave
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BraveSearchSetupUpdate'
+          description: The setup parameters for Brave
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BraveSearchArgumentsUpdate'
+          description: The arguments for Brave Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Brave integration definition
+    Tools.BraveSearchArguments:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The search query for searching with Brave
+      description: Arguments for Brave Search
+    Tools.BraveSearchArgumentsUpdate:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The search query for searching with Brave
+      description: Arguments for Brave Search
+    Tools.BraveSearchSetup:
+      type: object
+      required:
+        - api_key
+      properties:
+        api_key:
+          type: string
+          description: The api key for Brave Search
+      description: Integration definition for Brave Search
+    Tools.BraveSearchSetupUpdate:
+      type: object
+      properties:
+        api_key:
+          type: string
+          description: The api key for Brave Search
+      description: Integration definition for Brave Search
     Tools.ChosenFunctionCall:
       type: object
       required:
@@ -5843,8 +5985,13 @@ components:
             - $ref: '#/components/schemas/Tools.FunctionDef'
           description: The function to call
         integration:
-          allOf:
-            - $ref: '#/components/schemas/Tools.IntegrationDef'
+          anyOf:
+            - $ref: '#/components/schemas/Tools.DummyIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BraveIntegrationDef'
+            - $ref: '#/components/schemas/Tools.EmailIntegrationDef'
+            - $ref: '#/components/schemas/Tools.SpiderIntegrationDef'
+            - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -5855,6 +6002,152 @@ components:
             - $ref: '#/components/schemas/Tools.ApiCallDef'
           description: The API call to make
       description: Payload for creating a tool
+    Tools.DummyIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - dummy
+          default: dummy
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+    Tools.DummyIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - dummy
+          default: dummy
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+    Tools.EmailArguments:
+      type: object
+      required:
+        - to
+        - from
+        - subject
+        - body
+      properties:
+        to:
+          type: string
+          description: The email address to send the email to
+        from:
+          type: string
+          description: The email address to send the email from
+        subject:
+          type: string
+          description: The subject of the email
+        body:
+          type: string
+          description: The body of the email
+      description: Arguments for Email sending
+    Tools.EmailArgumentsUpdate:
+      type: object
+      properties:
+        to:
+          type: string
+          description: The email address to send the email to
+        from:
+          type: string
+          description: The email address to send the email from
+        subject:
+          type: string
+          description: The subject of the email
+        body:
+          type: string
+          description: The body of the email
+      description: Arguments for Email sending
+    Tools.EmailIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - email
+          description: The provider must be "email"
+          default: email
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.EmailSetup'
+          description: The setup parameters for Email
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.EmailArguments'
+          description: The arguments for Email sending
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Email integration definition
+    Tools.EmailIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - email
+          description: The provider must be "email"
+          default: email
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.EmailSetupUpdate'
+          description: The setup parameters for Email
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.EmailArgumentsUpdate'
+          description: The arguments for Email sending
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Email integration definition
+    Tools.EmailSetup:
+      type: object
+      required:
+        - host
+        - port
+        - user
+        - password
+      properties:
+        host:
+          type: string
+          description: The host of the email server
+        port:
+          type: integer
+          format: int32
+          description: The port of the email server
+        user:
+          type: string
+          description: The username of the email server
+        password:
+          type: string
+          description: The password of the email server
+      description: Setup parameters for Email integration
+    Tools.EmailSetupUpdate:
+      type: object
+      properties:
+        host:
+          type: string
+          description: The host of the email server
+        port:
+          type: integer
+          format: int32
+          description: The port of the email server
+        user:
+          type: string
+          description: The username of the email server
+        password:
+          type: string
+          description: The password of the email server
+      description: Setup parameters for Email integration
     Tools.FunctionCallOption:
       type: object
       required:
@@ -5879,66 +6172,6 @@ components:
           additionalProperties: {}
           description: The parameters the function accepts
       description: Function definition
-    Tools.IntegrationDef:
-      type: object
-      required:
-        - provider
-      properties:
-        provider:
-          anyOf:
-            - type: string
-              enum:
-                - dummy
-                - hacker_news
-                - weather
-                - wikipedia
-                - spider
-                - brave
-                - browserbase
-                - email
-            - type: string
-          description: The provider of the integration
-        method:
-          type: string
-          description: The specific method of the integration to call
-        setup:
-          type: object
-          additionalProperties: {}
-          description: The setup parameters the integration accepts
-        arguments:
-          type: object
-          additionalProperties: {}
-          description: The arguments to pre-apply to the integration call
-      description: Integration definition
-    Tools.IntegrationDefUpdate:
-      type: object
-      properties:
-        provider:
-          anyOf:
-            - type: string
-              enum:
-                - dummy
-                - hacker_news
-                - weather
-                - wikipedia
-                - spider
-                - brave
-                - browserbase
-                - email
-            - type: string
-          description: The provider of the integration
-        method:
-          type: string
-          description: The specific method of the integration to call
-        setup:
-          type: object
-          additionalProperties: {}
-          description: The setup parameters the integration accepts
-        arguments:
-          type: object
-          additionalProperties: {}
-          description: The arguments to pre-apply to the integration call
-      description: Integration definition
     Tools.NamedToolChoice:
       type: object
       properties:
@@ -5959,8 +6192,13 @@ components:
             - $ref: '#/components/schemas/Tools.FunctionDef'
           description: The function to call
         integration:
-          allOf:
-            - $ref: '#/components/schemas/Tools.IntegrationDefUpdate'
+          anyOf:
+            - $ref: '#/components/schemas/Tools.DummyIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.BraveIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.EmailIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.SpiderIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.WikipediaIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -5971,6 +6209,108 @@ components:
             - $ref: '#/components/schemas/Tools.ApiCallDefUpdate'
           description: The API call to make
       description: Payload for patching a tool
+    Tools.SpiderFetchArguments:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The URL to fetch data from
+        mode:
+          type: string
+          enum:
+            - scrape
+          description: The type of crawler to use
+          default: scrape
+        params:
+          type: object
+          additionalProperties: {}
+          description: Additional parameters for the Spider API
+      description: Arguments for Spider integration
+    Tools.SpiderFetchArgumentsUpdate:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The URL to fetch data from
+        mode:
+          type: string
+          enum:
+            - scrape
+          description: The type of crawler to use
+          default: scrape
+        params:
+          type: object
+          additionalProperties: {}
+          description: Additional parameters for the Spider API
+      description: Arguments for Spider integration
+    Tools.SpiderIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - spider
+          description: The provider must be "spider"
+          default: spider
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.SpiderSetup'
+          description: The setup parameters for Spider
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.SpiderFetchArguments'
+          description: The arguments for Spider
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Spider integration definition
+    Tools.SpiderIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - spider
+          description: The provider must be "spider"
+          default: spider
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.SpiderSetupUpdate'
+          description: The setup parameters for Spider
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.SpiderFetchArgumentsUpdate'
+          description: The arguments for Spider
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Spider integration definition
+    Tools.SpiderSetup:
+      type: object
+      required:
+        - spider_api_key
+      properties:
+        spider_api_key:
+          type: string
+          description: The API key for Spider
+      description: Setup parameters for Spider integration
+    Tools.SpiderSetupUpdate:
+      type: object
+      properties:
+        spider_api_key:
+          type: string
+          description: The API key for Spider
+      description: Setup parameters for Spider integration
     Tools.SystemDef:
       type: object
       required:
@@ -6088,8 +6428,13 @@ components:
             - $ref: '#/components/schemas/Tools.FunctionDef'
           description: The function to call
         integration:
-          allOf:
-            - $ref: '#/components/schemas/Tools.IntegrationDef'
+          anyOf:
+            - $ref: '#/components/schemas/Tools.DummyIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BraveIntegrationDef'
+            - $ref: '#/components/schemas/Tools.EmailIntegrationDef'
+            - $ref: '#/components/schemas/Tools.SpiderIntegrationDef'
+            - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -6149,8 +6494,13 @@ components:
             - $ref: '#/components/schemas/Tools.FunctionDef'
           description: The function to call
         integration:
-          allOf:
-            - $ref: '#/components/schemas/Tools.IntegrationDef'
+          anyOf:
+            - $ref: '#/components/schemas/Tools.DummyIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BraveIntegrationDef'
+            - $ref: '#/components/schemas/Tools.EmailIntegrationDef'
+            - $ref: '#/components/schemas/Tools.SpiderIntegrationDef'
+            - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
+            - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -6161,6 +6511,165 @@ components:
             - $ref: '#/components/schemas/Tools.ApiCallDef'
           description: The API call to make
       description: Payload for updating a tool
+    Tools.WeatherGetArguments:
+      type: object
+      required:
+        - location
+      properties:
+        location:
+          type: string
+          description: The location for which to fetch weather data
+      description: Arguments for Weather
+    Tools.WeatherGetArgumentsUpdate:
+      type: object
+      properties:
+        location:
+          type: string
+          description: The location for which to fetch weather data
+      description: Arguments for Weather
+    Tools.WeatherIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - weather
+          description: The provider must be "weather"
+          default: weather
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.WeatherSetup'
+          description: The setup parameters for Weather
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.WeatherGetArguments'
+          description: The arguments for Weather
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Weather integration definition
+    Tools.WeatherIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - weather
+          description: The provider must be "weather"
+          default: weather
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          allOf:
+            - $ref: '#/components/schemas/Tools.WeatherSetupUpdate'
+          description: The setup parameters for Weather
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.WeatherGetArgumentsUpdate'
+          description: The arguments for Weather
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Weather integration definition
+    Tools.WeatherSetup:
+      type: object
+      required:
+        - openweathermap_api_key
+      properties:
+        openweathermap_api_key:
+          type: string
+          description: The api key for OpenWeatherMap
+      description: Integration definition for Weather
+    Tools.WeatherSetupUpdate:
+      type: object
+      properties:
+        openweathermap_api_key:
+          type: string
+          description: The api key for OpenWeatherMap
+      description: Integration definition for Weather
+    Tools.WikipediaIntegrationDef:
+      type: object
+      required:
+        - provider
+      properties:
+        provider:
+          type: string
+          enum:
+            - wikipedia
+          description: The provider must be "wikipedia"
+          default: wikipedia
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Wikipedia
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.WikipediaSearchArguments'
+          description: The arguments for Wikipedia Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: Wikipedia integration definition
+    Tools.WikipediaIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - wikipedia
+          description: The provider must be "wikipedia"
+          default: wikipedia
+        method:
+          type: string
+          description: The specific method of the integration to call
+        setup:
+          nullable: true
+          description: The setup parameters for Wikipedia
+          default: null
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.WikipediaSearchArgumentsUpdate'
+          description: The arguments for Wikipedia Search
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: Wikipedia integration definition
+    Tools.WikipediaSearchArguments:
+      type: object
+      required:
+        - query
+        - load_max_docs
+      properties:
+        query:
+          type: string
+          description: The search query string
+        load_max_docs:
+          type: integer
+          format: uint8
+          minimum: 1
+          maximum: 10
+          description: Maximum number of documents to load
+          default: 2
+      description: Arguments for Wikipedia Search
+    Tools.WikipediaSearchArgumentsUpdate:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The search query string
+        load_max_docs:
+          type: integer
+          format: uint8
+          minimum: 1
+          maximum: 10
+          description: Maximum number of documents to load
+          default: 2
+      description: Arguments for Wikipedia Search
     Users.CreateOrUpdateUserRequest:
       type: object
       required:

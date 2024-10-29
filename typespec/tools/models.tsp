@@ -16,7 +16,6 @@ alias httpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIO
 /** Integration provider name */
 alias integrationProvider = (
     | "dummy"
-    | "hacker_news"
     | "weather"
     | "wikipedia"
     | "spider"
@@ -62,19 +61,54 @@ model FunctionDef {
 // TODO: Add granular definitions for each integration
 
 /** Integration definition */
-model IntegrationDef {
+@discriminator("provider")
+model BaseIntegrationDef {
     /** The provider of the integration */
-    provider: integrationProvider | string;
+    provider: integrationProvider;
 
     /** The specific method of the integration to call */
     method?: string;
 
     /** The setup parameters the integration accepts */
-    setup?: FunctionParameters;
+    setup?: unknown;
 
     /** The arguments to pre-apply to the integration call */
-    arguments?: FunctionParameters;
+    arguments?: unknown;
 }
+
+model DummyIntegrationDef extends BaseIntegrationDef {
+    provider: "dummy" = "dummy";
+}
+
+model BaseProviderCard {
+    provider: integrationProvider;
+    setup: unknown;
+    methods: ProviderMethod<unknown, unknown>[];
+    info: ProviderInfo;
+}
+
+model ProviderMethod</*MethodName extends valueof string,*/ Arguments, Output> {
+    method: string ; // (typeof MethodName) = MethodName;
+    description?: string;
+    arguments?: Arguments;
+    output?: Output;
+}
+
+model ProviderInfo {
+    url?: url;
+    docs?: url;
+    icon?: url;
+    friendly_name?: string;
+}
+
+alias IntegrationDef = (
+    | DummyIntegrationDef
+    | BraveIntegrationDef
+    | EmailIntegrationDef
+    | SpiderIntegrationDef
+    | WikipediaIntegrationDef
+    | WeatherIntegrationDef
+);
 
 //
 // SYSTEM TOOL MODELS

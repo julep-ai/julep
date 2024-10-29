@@ -2,44 +2,44 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-from .brave import BraveSearchArguments, BraveSearchOutput, BraveSearchSetup
-from .browserbase import (
-    BrowserBaseLoadArguments,
-    BrowserBaseLoadOutput,
-    BrowserBaseSetup,
+from ..autogen.Tools import (
+    BraveSearchArguments,
+    BraveSearchSetup,
+    EmailArguments,
+    EmailSetup,
+    SpiderFetchArguments,
+    SpiderSetup,
+    WeatherGetArguments,
+    WeatherSetup,
+    WikipediaSearchArguments,
 )
-from .email import EmailArguments, EmailOutput, EmailSetup
-from .hacker_news import HackerNewsFetchArguments, HackerNewsFetchOutput
-from .spider import SpiderFetchArguments, SpiderFetchOutput, SpiderSetup
-from .weather import WeatherGetArguments, WeatherGetOutput, WeatherSetup
-from .wikipedia import WikipediaSearchArguments, WikipediaSearchOutput
+from .brave import BraveSearchOutput
+from .email import EmailOutput
+from .spider import SpiderFetchOutput
+from .weather import WeatherGetOutput
+from .wikipedia import WikipediaSearchOutput
 
 ExecutionSetup = Union[
     EmailSetup,
     SpiderSetup,
     WeatherSetup,
     BraveSearchSetup,
-    BrowserBaseSetup,
 ]
 
 ExecutionArguments = Union[
     SpiderFetchArguments,
     WeatherGetArguments,
     EmailArguments,
-    HackerNewsFetchArguments,
     WikipediaSearchArguments,
     BraveSearchArguments,
-    BrowserBaseLoadArguments,
 ]
 
 ExecutionResponse = Union[
     SpiderFetchOutput,
     WeatherGetOutput,
     EmailOutput,
-    HackerNewsFetchOutput,
     WikipediaSearchOutput,
     BraveSearchOutput,
-    BrowserBaseLoadOutput,
 ]
 
 

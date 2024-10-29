@@ -1,11 +1,14 @@
 from email.message import EmailMessage
 from smtplib import SMTP
 
+from beartype import beartype
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ...models import EmailArguments, EmailOutput, EmailSetup
+from ...autogen.Tools import EmailArguments, EmailSetup
+from ...models import EmailOutput
 
 
+@beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     reraise=True,

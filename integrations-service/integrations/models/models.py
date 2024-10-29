@@ -1,39 +1,6 @@
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic import BaseModel
-
-from .dalle_image_generator import (
-    DalleImageGeneratorArguments,
-    DalleImageGeneratorSetup,
-)
-from .duckduckgo_search import DuckDuckGoSearchExecutionArguments
-from .hacker_news import HackerNewsExecutionArguments
-from .weather import WeatherExecutionArguments, WeatherExecutionSetup
-from .wikipedia import WikipediaExecutionArguments
-
-ExecuteIntegrationArguments = Union[
-    WikipediaExecutionArguments,
-    DuckDuckGoSearchExecutionArguments,
-    DalleImageGeneratorArguments,
-    WeatherExecutionArguments,
-    HackerNewsExecutionArguments,
-]
-
-ExecuteIntegrationSetup = Union[
-    DalleImageGeneratorSetup,
-    WeatherExecutionSetup,
-]
-
-
-class IntegrationExecutionRequest(BaseModel):
-    setup: ExecuteIntegrationSetup | None = None
-    """
-    The setup parameters the integration accepts (such as API keys)
-    """
-    arguments: ExecuteIntegrationArguments
-    """
-    The arguments to pass to the integration
-    """
 
 
 class IntegrationExecutionResponse(BaseModel):
@@ -47,9 +14,6 @@ class IntegrationDef(BaseModel):
     provider: (
         Literal[
             "dummy",
-            "dalle_image_generator",
-            "duckduckgo_search",
-            "hacker_news",
             "weather",
             "wikipedia",
             "twitter",

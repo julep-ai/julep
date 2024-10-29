@@ -1,9 +1,12 @@
+from beartype import beartype
 from langchain_community.document_loaders import WikipediaLoader
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ...models import WikipediaSearchArguments, WikipediaSearchOutput
+from ...autogen.Tools import WikipediaSearchArguments
+from ...models import WikipediaSearchOutput
 
 
+@beartype
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     reraise=True,

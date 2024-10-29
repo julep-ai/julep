@@ -1,23 +1,23 @@
+from .autogen.Tools import (
+    BraveSearchArguments,
+    BraveSearchSetup,
+    EmailArguments,
+    EmailSetup,
+    SpiderFetchArguments,
+    SpiderSetup,
+    WeatherGetArguments,
+    WeatherSetup,
+    WikipediaSearchArguments,
+    # WikipediaSearchSetup,
+)
 from .models import (
     BaseProvider,
     BaseProviderMethod,
-    BraveSearchArguments,
     BraveSearchOutput,
-    BraveSearchSetup,
-    BrowserBaseLoadArguments,
-    BrowserBaseLoadOutput,
-    BrowserBaseSetup,
-    EmailArguments,
     EmailOutput,
-    EmailSetup,
     ProviderInfo,
-    SpiderFetchArguments,
     SpiderFetchOutput,
-    SpiderSetup,
-    WeatherGetArguments,
     WeatherGetOutput,
-    WeatherSetup,
-    WikipediaSearchArguments,
     WikipediaSearchOutput,
 )
 
@@ -97,25 +97,6 @@ brave = BaseProvider(
     ),
 )
 
-browserbase = BaseProvider(
-    provider="browserbase",
-    setup=BrowserBaseSetup,
-    methods=[
-        BaseProviderMethod(
-            method="load",
-            description="Load documents from the provided urls",
-            arguments=BrowserBaseLoadArguments,
-            output=BrowserBaseLoadOutput,
-        ),
-    ],
-    info=ProviderInfo(
-        url="https://browserbase.com/",
-        docs="https://browserbase.com/docs/",
-        icon="https://browserbase.com/favicon.ico",
-        friendly_name="BrowserBase",
-    ),
-)
-
 email = BaseProvider(
     provider="email",
     setup=EmailSetup,
@@ -132,11 +113,10 @@ email = BaseProvider(
     ),
 )
 
-providers = {
+available_providers: dict[str, BaseProvider] = {
     "wikipedia": wikipedia,
     "weather": weather,
     "spider": spider,
     "brave": brave,
-    "browserbase": browserbase,
     "email": email,
 }
