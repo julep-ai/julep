@@ -34,6 +34,7 @@ with workflow.unsafe.imports_passed_through():
         SleepFor,
         SleepStep,
         SwitchStep,
+        TaskToolDef,
         ToolCallStep,
         TransitionTarget,
         WaitForInputStep,
@@ -462,10 +463,21 @@ class TaskExecutionWorkflow:
                 if integration_spec is None:
                     raise ApplicationError(f"Integration {tool_name} not found")
 
+                # FIXME: Refactor this
+                # Tools that are not defined in the task spec have a different format
+                if isinstance(integration_spec, TaskToolDef):
+                    provider = integration_spec.spec["provider"]
+                    setup = integration_spec.spec["setup"]
+                    method = integration_spec.spec["method"]
+                else:
+                    provider = integration_spec.integration.provider
+                    setup = integration_spec.integration.setup.model_dump()
+                    method = integration_spec.integration.method
+
                 integration = BaseIntegrationDef(
-                    provider=integration_spec.spec["provider"],
-                    setup=integration_spec.spec["setup"],
-                    method=integration_spec.spec["method"],
+                    provider=provider,
+                    setup=setup,
+                    method=method,
                     arguments=arguments,
                 )
 
