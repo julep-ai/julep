@@ -1,3 +1,6 @@
+# Ensure the anthropic package is installed:
+# pip install anthropic
+
 import os
 
 from anthropic import Anthropic  # Import Anthropic client
@@ -103,56 +106,64 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
     ]
 
-    # Check if the model is Anthropic
-    if "claude-3.5-sonnet-20241022" == agent_model.lower():
-        # Retrieve the API key from the environment variable
-        betas = [COMPUTER_USE_BETA_FLAG]
-        # Use Anthropic API directly
-        client = Anthropic(api_key=anthropic_api_key)
+    try:
+        # Check if the model is Anthropic
+        if "claude-3.5-sonnet-20241022" == agent_model.lower():
+            # Retrieve the API key from the environment variable
+            betas = [COMPUTER_USE_BETA_FLAG]
+            # Use Anthropic API directly
+            client = Anthropic(api_key=anthropic_api_key)
 
-        # Claude Response
-        response = await client.beta.messages.create(
-            model=agent_model,
-            messages=prompt,
-            tools=formatted_agent_tools,
-            max_tokens=1024,
-            betas=betas,
-        )
+            # Claude Response
+            response = await client.beta.messages.create(
+                model=agent_model,
+                messages=prompt,
+                tools=formatted_agent_tools,
+                max_tokens=1024,
+                betas=betas,
+            )
 
+            return StepOutcome(
+                output=response.model_dump()
+                if hasattr(response, "model_dump")
+                else response,
+                next=None,
+            )
+        else:
+            # Use litellm for other models
+            completion_data: dict = {
+                "model": agent_model,
+                "tools": formatted_agent_tools or None,
+                "messages": prompt,
+                **agent_default_settings,
+                **passed_settings,
+            }
+
+            extra_body = {
+                "cache": {"no-cache": debug},
+            }
+
+            response = await litellm.acompletion(
+                **completion_data,
+                extra_body=extra_body,
+            )
+
+            if context.current_step.unwrap:
+                if response.choices[0].finish_reason == "tool_calls":
+                    raise ApplicationError("Tool calls cannot be unwrapped")
+
+                response = response.choices[0].message.content
+
+            return StepOutcome(
+                output=response.model_dump()
+                if hasattr(response, "model_dump")
+                else response,
+                next=None,
+            )
+
+    except Exception as e:
+        # Handle exceptions gracefully
         return StepOutcome(
-            output=response.model_dump()
-            if hasattr(response, "model_dump")
-            else response,
-            next=None,
-        )
-    else:
-        # Use litellm for other models
-        completion_data: dict = {
-            "model": agent_model,
-            "tools": formatted_agent_tools or None,
-            "messages": prompt,
-            **agent_default_settings,
-            **passed_settings,
-        }
-
-        extra_body = {
-            "cache": {"no-cache": debug},
-        }
-
-        response = await litellm.acompletion(
-            **completion_data,
-            extra_body=extra_body,
-        )
-
-        if context.current_step.unwrap:
-            if response.choices[0].finish_reason == "tool_calls":
-                raise ApplicationError("Tool calls cannot be unwrapped")
-
-            response = response.choices[0].message.content
-
-        return StepOutcome(
-            output=response.model_dump()
-            if hasattr(response, "model_dump")
-            else response,
+            output={"error": str(e)},
             next=None,
         )
