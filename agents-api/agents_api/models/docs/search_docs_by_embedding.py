@@ -244,8 +244,6 @@ def search_docs_by_embedding(
             *_search_result{{ doc_id, index, title, content, distance, embedding, }},
             snippet_data = [index, content]
 
-        # Sort the results by distance to find the closest matches
-        :sort -mmr_score
         :limit {k}   # Get more candidates for diversity
 
         :create _interim {{
