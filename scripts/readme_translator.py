@@ -12,11 +12,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 HTML_TAGS_PATTERN = r"(<[^>]+>)"
 CODEBLOCK_PATTERN = r"(```[\s\S]*?```|\n)"
 
-def create_translator(target: str) -> GoogleTranslator:
+def create_translator(target: str, service: str = "google") -> GoogleTranslator:
     """
-    Create a translator for a given target language.
+    Create a translator for a given target language using the specified service.
     """
-    return GoogleTranslator(source="en", target=target)
+    if service == "google":
+        return GoogleTranslator(source="en", target=target)
+    else:
+        raise ValueError("Only Google Translator is currently supported")
 
 def is_html_tag(segment: str) -> bool:
     """Check if the segment is an HTML tag."""
@@ -24,7 +27,7 @@ def is_html_tag(segment: str) -> bool:
 
 def is_special_character(segment: str) -> bool:
     """Check if the segment consists of special characters only."""
-    return re.fullmatch(r'^[!"#$%&\'()*+,\-./:;<=>?@[\]^_`{|}~]+$', segment) is not None
+    return re.fullmatch(r'^[!"#$%&\'()*+,\-./:;<=>?@[$$^_`{|}~]+$', segment) is not None
 
 def translate_sub_segment(translator: GoogleTranslator, sub_segment: str) -> str:
     """Translate a single sub-segment."""
@@ -55,12 +58,12 @@ def translate_segment(translator: GoogleTranslator, segment: str) -> str:
 
     return "".join(translated_segments)
 
-def translate_readme(source: str, target: str) -> str:
+def translate_readme(source: str, target: str, service: str = "google") -> str:
     """
     Translate a README file from source to target language, preserving code blocks and newlines.
     """
     file_content = Path(source).read_text(encoding='utf-8')
-    translator = create_translator(target)
+    translator = create_translator(target, service)
     segments = re.split(CODEBLOCK_PATTERN, file_content)
     segment_translation = partial(translate_segment, translator)
     translated_segments = list(parmapper.parmap(segment_translation, segments))
@@ -80,12 +83,16 @@ def main() -> None:
     """
     source_file = "README.md"
     destination_langs = ["zh-CN", "ja", "fr"]
+    translation_service = "google"  # Can be set to other services if supported
 
     for lang in destination_langs:
-        logging.info(f"Translating to {lang}...")
-        translated_readme = translate_readme(source_file, lang)
-        save_translated_readme(translated_readme, lang)
-        logging.info(f"Saved translated README for {lang}.")
+        logging.info(f"Translating to {lang} using {translation_service}...")
+        try:
+            translated_readme = translate_readme(source_file, lang, translation_service)
+            save_translated_readme(translated_readme, lang)
+            logging.info(f"Saved translated README for {lang}.")
+        except Exception as e:
+            logging.error(f"Error translating README to {lang}: {e}")
 
 if __name__ == "__main__":
     main()
