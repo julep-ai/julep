@@ -1,18 +1,12 @@
 from typing import Any
 from uuid import UUID
 
-from ..models.developer.get_developer import get_developer
-
-from ..routers.sessions.chat import chat
-
-from ..autogen.Chat import ChatInput
-from ..common.protocol.developers import Developer
-
 from beartype import beartype
 from box import Box, BoxList
 from fastapi.background import BackgroundTasks
 from temporalio import activity
 
+from ..autogen.Chat import ChatInput
 from ..autogen.Docs import (
     CreateDocRequest,
     HybridDocSearchRequest,
@@ -20,6 +14,7 @@ from ..autogen.Docs import (
     VectorDocSearchRequest,
 )
 from ..autogen.Tools import SystemDef
+from ..common.protocol.developers import Developer
 from ..common.protocol.tasks import StepContext
 from ..common.storage_handler import auto_blob_store
 from ..env import testing
@@ -28,6 +23,7 @@ from ..models.agent.delete_agent import delete_agent as delete_agent_query
 from ..models.agent.get_agent import get_agent as get_agent_query
 from ..models.agent.list_agents import list_agents as list_agents_query
 from ..models.agent.update_agent import update_agent as update_agent_query
+from ..models.developer.get_developer import get_developer
 from ..models.docs.delete_doc import delete_doc as delete_doc_query
 from ..models.docs.list_docs import list_docs as list_docs_query
 from ..models.session.create_session import create_session as create_session_query
@@ -47,6 +43,7 @@ from ..models.user.list_users import list_users as list_users_query
 from ..models.user.update_user import update_user as update_user_query
 from ..routers.docs.create_doc import create_agent_doc, create_user_doc
 from ..routers.docs.search_docs import search_agent_docs, search_user_docs
+from ..routers.sessions.chat import chat
 
 # FIXME: This is a total mess. Should be refactored.
 

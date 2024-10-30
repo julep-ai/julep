@@ -36,7 +36,7 @@ def _recursive_evaluate(expr, evaluator):
     if isinstance(expr, str):
         return evaluator.eval(expr)
     elif isinstance(expr, list):
-        return [ _recursive_evaluate(e, evaluator) for e in expr ]
+        return [_recursive_evaluate(e, evaluator) for e in expr]
     elif isinstance(expr, dict):
         return {k: _recursive_evaluate(v, evaluator) for k, v in expr.items()}
     else:

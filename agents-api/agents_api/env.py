@@ -34,9 +34,9 @@ task_max_parallelism: int = env.int("AGENTS_API_TASK_MAX_PARALLELISM", default=1
 
 # Blob Store
 # ----------
-use_blob_store_for_temporal: bool = env.bool(
-    "USE_BLOB_STORE_FOR_TEMPORAL", default=False
-) if not testing else False
+use_blob_store_for_temporal: bool = (
+    env.bool("USE_BLOB_STORE_FOR_TEMPORAL", default=False) if not testing else False
+)
 
 blob_store_bucket: str = env.str("BLOB_STORE_BUCKET", default="agents-api")
 blob_store_cutoff_kb: int = env.int("BLOB_STORE_CUTOFF_KB", default=64)
