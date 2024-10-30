@@ -542,6 +542,18 @@ class BrowserbaseSetup(BaseModel):
     """
     API key for the browserbase integration
     """
+    project_id: str
+    """
+    The project ID. Can be found in Settings.
+    """
+    api_url: str | None = None
+    """
+    The API URL. Defaults to https://www.browserbase.com
+    """
+    connect_url: str | None = None
+    """
+    The connect URL. Defaults to wss://connect.browserbase.com
+    """
 
 
 class BrowserbaseSetupUpdate(BaseModel):
@@ -555,6 +567,18 @@ class BrowserbaseSetupUpdate(BaseModel):
     api_key: str | None = None
     """
     API key for the browserbase integration
+    """
+    project_id: str | None = None
+    """
+    The project ID. Can be found in Settings.
+    """
+    api_url: str | None = None
+    """
+    The API URL. Defaults to https://www.browserbase.com
+    """
+    connect_url: str | None = None
+    """
+    The connect URL. Defaults to wss://connect.browserbase.com
     """
 
 
@@ -1084,7 +1108,7 @@ class RemoteBrowserIntegrationDef(BaseIntegrationDef):
     provider: Literal["remote_browser"] = "remote_browser"
     setup: RemoteBrowserSetup
     method: Literal["perform_action"] = "perform_action"
-    arguments: RemoteBrowserArguments
+    arguments: RemoteBrowserArguments | None = None
 
 
 class RemoteBrowserIntegrationDefUpdate(BaseIntegrationDefUpdate):
@@ -1109,7 +1133,7 @@ class RemoteBrowserSetup(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    connect_url: AnyUrl
+    connect_url: str
     """
     The connection URL for the remote browser
     """
@@ -1131,7 +1155,7 @@ class RemoteBrowserSetupUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    connect_url: AnyUrl | None = None
+    connect_url: str | None = None
     """
     The connection URL for the remote browser
     """
@@ -1765,7 +1789,7 @@ class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
         populate_by_name=True,
     )
     method: Literal["complete_session"] = "complete_session"
-    arguments: BrowserbaseCompleteSessionArguments
+    arguments: BrowserbaseCompleteSessionArguments | None = None
 
 
 class BrowserbaseCompleteSessionIntegrationDefUpdate(
@@ -1827,7 +1851,7 @@ class BrowserbaseCreateSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
         populate_by_name=True,
     )
     method: Literal["create_session"] = "create_session"
-    arguments: BrowserbaseCreateSessionArguments
+    arguments: BrowserbaseCreateSessionArguments | None = None
     """
     The arguments for the method
     """
@@ -1893,7 +1917,7 @@ class BrowserbaseGetSessionConnectUrlIntegrationDef(BaseBrowserbaseIntegrationDe
         populate_by_name=True,
     )
     method: Literal["get_connect_url"] = "get_connect_url"
-    arguments: BrowserbaseGetSessionConnectUrlArguments
+    arguments: BrowserbaseGetSessionConnectUrlArguments | None = None
 
 
 class BrowserbaseGetSessionConnectUrlIntegrationDefUpdate(
@@ -1919,7 +1943,7 @@ class BrowserbaseGetSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
         populate_by_name=True,
     )
     method: Literal["get_session"] = "get_session"
-    arguments: BrowserbaseGetSessionArguments
+    arguments: BrowserbaseGetSessionArguments | None = None
 
 
 class BrowserbaseGetSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
@@ -1943,7 +1967,7 @@ class BrowserbaseGetSessionLiveUrlsIntegrationDef(BaseBrowserbaseIntegrationDef)
         populate_by_name=True,
     )
     method: Literal["get_live_urls"] = "get_live_urls"
-    arguments: BrowserbaseGetSessionLiveUrlsArguments
+    arguments: BrowserbaseGetSessionLiveUrlsArguments | None = None
 
 
 class BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate(

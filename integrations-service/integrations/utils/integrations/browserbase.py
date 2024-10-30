@@ -28,7 +28,12 @@ from ...models.browserbase import BrowserbaseExtensionOutput, SessionInfo
 
 
 def get_browserbase_client(setup: BrowserbaseSetup) -> Browserbase:
-    return Browserbase(api_key=setup.api_key)
+    return Browserbase(
+        api_key=setup.api_key,
+        project_id=setup.project_id,
+        api_url=setup.api_url,
+        connect_url=setup.connect_url,
+    )
 
 
 @beartype

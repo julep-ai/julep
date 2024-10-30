@@ -127,3 +127,15 @@ class BrowserbaseGetSessionLiveUrlsOutput(BaseOutput):
     pages: list[PageInfo] = Field(
         ..., description="List of pages associated with the session"
     )
+
+
+class BrowserbaseContextOutput(BaseOutput):
+    id: str = Field(..., description="Unique identifier for the context")
+    uploadUrl: str = Field(..., description="The upload URL for the context")
+    publicKey: str = Field(..., description="The public key for the context")
+    cipherAlgorithm: str = Field(
+        ..., description="The cipher algorithm for the context"
+    )
+    initializationVectorSize: int = Field(
+        ..., description="The size of the initialization vector"
+    )

@@ -100,7 +100,7 @@ model BrowserbaseCreateSessionIntegrationDef
     method: "create_session" = "create_session";
 
     /** The arguments for the method */
-    arguments: BrowserbaseCreateSessionArguments;
+    arguments?: BrowserbaseCreateSessionArguments;
 }
 
 model BrowserbaseCreateSessionArguments {
@@ -142,7 +142,7 @@ model BrowserbaseCreateSessionOutput {
 model BrowserbaseGetSessionIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "get_session" = "get_session";
-    arguments: BrowserbaseGetSessionArguments;
+    arguments?: BrowserbaseGetSessionArguments;
 }
 
 model BrowserbaseGetSessionArguments {
@@ -168,7 +168,7 @@ model BrowserbaseGetSessionOutput {
 model BrowserbaseCompleteSessionIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "complete_session" = "complete_session";
-    arguments: BrowserbaseCompleteSessionArguments;
+    arguments?: BrowserbaseCompleteSessionArguments;
 }
 
 model BrowserbaseCompleteSessionArguments {
@@ -184,7 +184,7 @@ model BrowserbaseCompleteSessionOutput {
 model BrowserbaseGetSessionLiveUrlsIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "get_live_urls" = "get_live_urls";
-    arguments: BrowserbaseGetSessionLiveUrlsArguments;
+    arguments?: BrowserbaseGetSessionLiveUrlsArguments;
 }
 
 model BrowserbaseGetSessionLiveUrlsArguments {
@@ -209,7 +209,7 @@ model BrowserbaseGetSessionLiveUrlsOutput {
 model BrowserbaseGetSessionConnectUrlIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
     method: "get_connect_url" = "get_connect_url";
-    arguments: BrowserbaseGetSessionConnectUrlArguments;
+    arguments?: BrowserbaseGetSessionConnectUrlArguments;
 }
 
 model BrowserbaseGetSessionConnectUrlArguments {

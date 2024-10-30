@@ -36,6 +36,12 @@ alias BrowserbaseMethod =
 model BrowserbaseSetup {
     /** API key for the browserbase integration */
     api_key: string;
+    /** The project ID. Can be found in Settings. */
+    project_id: string;
+    /** The API URL. Defaults to https://www.browserbase.com */
+    api_url?: string;
+    /** The connect URL. Defaults to wss://connect.browserbase.com */
+    connect_url?: string;
 }
 
 /** The base definition for a browserbase integration */

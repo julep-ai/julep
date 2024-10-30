@@ -6087,7 +6087,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6220,7 +6219,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6327,7 +6325,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6356,7 +6353,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6397,7 +6393,6 @@ components:
       type: object
       required:
         - method
-        - arguments
       properties:
         method:
           type: string
@@ -6471,10 +6466,20 @@ components:
       type: object
       required:
         - api_key
+        - project_id
       properties:
         api_key:
           type: string
           description: API key for the browserbase integration
+        project_id:
+          type: string
+          description: The project ID. Can be found in Settings.
+        api_url:
+          type: string
+          description: The API URL. Defaults to https://www.browserbase.com
+        connect_url:
+          type: string
+          description: The connect URL. Defaults to wss://connect.browserbase.com
       description: The setup parameters for the browserbase integration
     Tools.BrowserbaseSetupUpdate:
       type: object
@@ -6482,6 +6487,15 @@ components:
         api_key:
           type: string
           description: API key for the browserbase integration
+        project_id:
+          type: string
+          description: The project ID. Can be found in Settings.
+        api_url:
+          type: string
+          description: The API URL. Defaults to https://www.browserbase.com
+        connect_url:
+          type: string
+          description: The connect URL. Defaults to wss://connect.browserbase.com
       description: The setup parameters for the browserbase integration
     Tools.ChosenBash20241022:
       type: object
@@ -6980,7 +6994,6 @@ components:
         - provider
         - setup
         - method
-        - arguments
       properties:
         provider:
           type: string
@@ -7026,7 +7039,6 @@ components:
       properties:
         connect_url:
           type: string
-          format: uri
           description: The connection URL for the remote browser
         width:
           type: integer
@@ -7042,7 +7054,6 @@ components:
       properties:
         connect_url:
           type: string
-          format: uri
           description: The connection URL for the remote browser
         width:
           type: integer
