@@ -27,7 +27,10 @@ async def search(
 
     result = tool.run(arguments.query)
     
-    parsed_result = [SearchResult(**item) for item in json.loads(result)]
+    try:
+        parsed_result = [SearchResult(**item) for item in json.loads(result)]
+    except json.JSONDecodeError as e:
+        raise ValueError("Malformed JSON response from Brave Search") from e
     
 
     return BraveSearchOutput(result=parsed_result)
