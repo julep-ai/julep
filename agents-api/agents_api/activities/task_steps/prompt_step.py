@@ -12,7 +12,7 @@ from ...clients import (
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
-from ...env import debug
+from ...env import debug, anthropic_api_key
 from ...models.tools.list_tools import list_tools
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
@@ -107,12 +107,8 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     if "claude-3.5-sonnet-20241022" == agent_model.lower():
         # Retrieve the API key from the environment variable
         betas = [COMPUTER_USE_BETA_FLAG]
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("API key is not set.")
-
         # Use Anthropic API directly
-        client = Anthropic(api_key=api_key)
+        client = Anthropic(api_key=anthropic_api_key)
 
         # Claude Response
         response = await client.beta.messages.create(
