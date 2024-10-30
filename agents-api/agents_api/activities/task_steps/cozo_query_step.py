@@ -1,3 +1,6 @@
+# Ensure temporalio is installed in your environment
+# Run: pip install temporalio
+
 from typing import Any
 
 from beartype import beartype
@@ -16,8 +19,12 @@ async def cozo_query_step(
 ) -> Any:
     (module_name, name) = query_name.split(".")
 
-    module = getattr(models, module_name)
-    query = getattr(module, name)
+    try:
+        module = getattr(models, module_name)
+        query = getattr(module, name)
+    except AttributeError as e:
+        raise ValueError(f"Invalid query name '{query_name}': {e}")
+
     return query(**values)
 
 
