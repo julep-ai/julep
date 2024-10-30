@@ -27,7 +27,7 @@ def is_html_tag(segment: str) -> bool:
 
 def is_special_character(segment: str) -> bool:
     """Check if the segment consists of special characters only."""
-    return re.fullmatch(r'^[!"#$%&\'()*+,\-./:;<=>?@[$$^_`{|}~]+$', segment) is not None
+    return re.fullmatch(r'^[!"#$%&\'()*+,\-./:;<=>?@[\]^_`{|}~]+$', segment) is not None
 
 def translate_sub_segment(translator: GoogleTranslator, sub_segment: str) -> str:
     """Translate a single sub-segment."""
