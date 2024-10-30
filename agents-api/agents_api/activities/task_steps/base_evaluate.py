@@ -31,10 +31,22 @@ class EvaluateError(Exception):
         super().__init__(message)
 
 
+# Added recursive evaluation function
+def _recursive_evaluate(expr, evaluator):
+    if isinstance(expr, str):
+        return evaluator.eval(expr)
+    elif isinstance(expr, list):
+        return [ _recursive_evaluate(e, evaluator) for e in expr ]
+    elif isinstance(expr, dict):
+        return {k: _recursive_evaluate(v, evaluator) for k, v in expr.items()}
+    else:
+        raise ValueError(f"Invalid expression: {expr}")
+
+
 @auto_blob_store
 @beartype
 async def base_evaluate(
-    exprs: str | list[str] | dict[str, str] | dict[str, dict[str, str]],
+    exprs: Any,
     values: dict[str, Any] = {},
     extra_lambda_strs: dict[str, str] | None = None,
 ) -> Any | list[Any] | dict[str, Any]:
@@ -67,41 +79,15 @@ async def base_evaluate(
 
     evaluator = get_evaluator(names=values, extra_functions=extra_lambdas)
 
-    chosen_expression = ""
-
     try:
-        result = None
-        match exprs:
-            case str():
-                chosen_expression = exprs
-                result = evaluator.eval(exprs)
-            case list():
-                result = []
-                for expr in exprs:
-                    chosen_expression = expr
-                    result.append(evaluator.eval(expr))
-            case dict() as d if all(
-                isinstance(v, dict) or isinstance(v, str) for v in d.values()
-            ):
-                result = {}
-                for k, v in d.items():
-                    if isinstance(v, str):
-                        chosen_expression = v
-                        result[k] = evaluator.eval(v)
-                    else:
-                        result[k] = {}
-                        for k1, v1 in v.items():
-                            chosen_expression = v1
-                            result[k][k1] = evaluator.eval(v1)
-            case _:
-                raise ValueError(f"Invalid expression: {exprs}")
-
+        # Replaced match-case logic with recursive evaluation
+        result = _recursive_evaluate(exprs, evaluator)
         return result
 
     except BaseException as e:
         if activity.in_activity():
             activity.logger.error(f"Error in base_evaluate: {e}")
-        newException = EvaluateError(e, chosen_expression, values)
+        newException = EvaluateError(e, exprs, values)
         raise newException from e
 
 

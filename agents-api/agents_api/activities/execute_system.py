@@ -1,6 +1,13 @@
 from typing import Any
 from uuid import UUID
 
+from ..models.developer.get_developer import get_developer
+
+from ..routers.sessions.chat import chat
+
+from ..autogen.Chat import ChatInput
+from ..common.protocol.developers import Developer
+
 from beartype import beartype
 from box import Box, BoxList
 from fastapi.background import BackgroundTasks
@@ -107,25 +114,40 @@ async def execute_system(
                     # The `search_agent_docs` function requires `x_developer_id` instead of `developer_id`.
                     arguments["x_developer_id"] = arguments.pop("developer_id")
 
-                    if "text" in arguments and "vector" in arguments:
+                    # Pop the arguments
+                    text = arguments.pop("text", None)
+                    vector = arguments.pop("vector", None)
+                    alpha = arguments.pop("alpha", 0.75)
+                    confidence = arguments.pop("confidence", 0.5)
+                    metadata_filter = arguments.pop("metadata_filter", {})
+                    mmr_strength = arguments.pop("mmr_strength", 0)
+                    limit = arguments.get("limit", 10)
+
+                    if text and vector:
                         search_params = HybridDocSearchRequest(
-                            text=arguments.pop("text"),
-                            vector=arguments.pop("vector"),
-                            alpha=arguments.pop("alpha", 0.75),
-                            confidence=arguments.pop("confidence", 0.5),
-                            limit=arguments.get("limit", 10),
+                            text=text,
+                            vector=vector,
+                            alpha=alpha,
+                            confidence=confidence,
+                            limit=limit,
+                            metadata_filter=metadata_filter,
+                            mmr_strength=mmr_strength,
                         )
 
-                    elif "text" in arguments:
+                    elif text:
                         search_params = TextOnlyDocSearchRequest(
-                            text=arguments.pop("text"),
-                            limit=arguments.get("limit", 10),
+                            text=text,
+                            limit=limit,
+                            metadata_filter=metadata_filter,
+                            mmr_strength=mmr_strength,
                         )
-                    elif "vector" in arguments:
+                    elif vector:
                         search_params = VectorDocSearchRequest(
-                            vector=arguments.pop("vector"),
-                            confidence=arguments.pop("confidence", 0.7),
-                            limit=arguments.get("limit", 10),
+                            vector=vector,
+                            confidence=confidence,
+                            limit=limit,
+                            metadata_filter=metadata_filter,
+                            mmr_strength=mmr_strength,
                         )
 
                     return await search_agent_docs(
@@ -226,9 +248,21 @@ async def execute_system(
             elif system.operation == "update":
                 return update_session_query(**arguments)
             elif system.operation == "delete":
-                return update_session_query(**arguments)
-            elif system.operation == "delete":
                 return delete_session_query(**arguments)
+            elif system.operation == "chat":
+                developer: Developer = get_developer(
+                    developer_id=arguments.pop("developer_id")
+                )
+                session_id = arguments.pop("session_id")
+                chat_input = ChatInput(**arguments)
+                return await chat(
+                    developer=developer,
+                    session_id=session_id,
+                    chat_input=chat_input,
+                    background_tasks=BackgroundTasks(),
+                    x_custom_api_key=arguments.pop("x_custom_api_key", None),
+                )
+
         # TASKS
         elif system.resource == "task":
             if system.operation == "list":
@@ -237,8 +271,6 @@ async def execute_system(
                 return get_task_query(**arguments)
             elif system.operation == "create":
                 return create_task_query(**arguments)
-            elif system.operation == "update":
-                return update_task_query(**arguments)
             elif system.operation == "delete":
                 return delete_task_query(**arguments)
 
