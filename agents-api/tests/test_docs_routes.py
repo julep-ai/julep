@@ -178,7 +178,33 @@ async def _(make_request=make_request, user=test_user, doc=test_user_doc):
     assert isinstance(docs, list)
 
     # FIXME: This test is failing because the search is not returning the expected results
-    # assert len(docs) >= 1
+    assert len(docs) >= 1
+
+
+@test("route: search agent docs hybrid with mmr")
+async def _(make_request=make_request, agent=test_agent, doc=test_doc):
+    await asyncio.sleep(0.5)
+
+    EMBEDDING_SIZE = 1024
+    search_params = dict(
+        text=doc.content[0],
+        vector=[1.0] * EMBEDDING_SIZE,
+        mmr_strength=0.5,
+        limit=1,
+    )
+
+    response = make_request(
+        method="POST",
+        url=f"/agents/{agent.id}/search",
+        json=search_params,
+    )
+
+    assert response.status_code == 200
+    response = response.json()
+    docs = response["docs"]
+
+    assert isinstance(docs, list)
+    assert len(docs) >= 1
 
 
 @test("routes: embed route")

@@ -205,6 +205,8 @@ def test_user_doc(
         client=client,
     )
 
+    time.sleep(0.5)
+
     yield doc
 
     delete_doc(

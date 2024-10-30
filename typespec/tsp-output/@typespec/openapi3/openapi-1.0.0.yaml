@@ -2458,6 +2458,13 @@ components:
               - type: boolean
             nullable: true
           default: {}
+        mmr_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          exclusiveMaximum: true
+          description: MMR Strength (mmr_strength = 1 - mmr_lambda)
+          default: 0
     Docs.CreateDocRequest:
       type: object
       required:
@@ -2676,6 +2683,10 @@ components:
           format: uint16
         content:
           type: string
+        embedding:
+          type: array
+          items:
+            type: number
     Docs.TextOnlyDocSearchRequest:
       type: object
       required:
