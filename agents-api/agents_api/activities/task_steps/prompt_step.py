@@ -1,3 +1,6 @@
+import os
+
+from anthropic import Anthropic  # Import Anthropic client
 from beartype import beartype
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
@@ -9,8 +12,10 @@ from ...clients import (
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
-from ...env import debug
+from ...env import anthropic_api_key, debug
 from ...models.tools.list_tools import list_tools
+
+COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
 # FIXME: This shouldn't be here.
@@ -23,6 +28,24 @@ def format_agent_tool(tool: Tool) -> dict:
                 "description": tool.description,
                 "parameters": tool.function.parameters,
             },
+        }
+    elif tool.computer_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+            "display_width_px": tool.display_width_px,
+            "display_height_px": tool.display_height_px,
+            "display_number": tool.display_number,
+        }
+    elif tool.bash_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
+        }
+    elif tool.text_editor_20241022:
+        return {
+            "type": tool.type,
+            "name": tool.name,
         }
     # TODO: Add integration | system | api_call tool types
     else:
@@ -64,11 +87,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         direction="desc",
     )
 
-    # Format agent_tools for litellm
-    formatted_agent_tools = [
-        format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
-    ]
-
     if context.current_step.settings:
         passed_settings: dict = context.current_step.settings.model_dump(
             exclude_unset=True
@@ -80,30 +98,61 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     if isinstance(prompt, str):
         prompt = [{"role": "user", "content": prompt}]
 
-    completion_data: dict = {
-        "model": agent_model,
-        "tools": formatted_agent_tools or None,
-        "messages": prompt,
-        **agent_default_settings,
-        **passed_settings,
-    }
+    # Format agent_tools for litellm
+    formatted_agent_tools = [
+        format_agent_tool(tool) for tool in agent_tools if format_agent_tool(tool)
+    ]
 
-    extra_body = {  # OpenAI python accepts extra args in extra_body
-        "cache": {"no-cache": debug},  # will not return a cached response
-    }
+    # Check if the model is Anthropic
+    if "claude-3.5-sonnet-20241022" == agent_model.lower():
+        # Retrieve the API key from the environment variable
+        betas = [COMPUTER_USE_BETA_FLAG]
+        # Use Anthropic API directly
+        client = Anthropic(api_key=anthropic_api_key)
 
-    response = await litellm.acompletion(
-        **completion_data,
-        extra_body=extra_body,
-    )
+        # Claude Response
+        response = await client.beta.messages.create(
+            model=agent_model,
+            messages=prompt,
+            tools=formatted_agent_tools,
+            max_tokens=1024,
+            betas=betas,
+        )
 
-    if context.current_step.unwrap:
-        if response.choices[0].finish_reason == "tool_calls":
-            raise ApplicationError("Tool calls cannot be unwrapped")
+        return StepOutcome(
+            output=response.model_dump()
+            if hasattr(response, "model_dump")
+            else response,
+            next=None,
+        )
+    else:
+        # Use litellm for other models
+        completion_data: dict = {
+            "model": agent_model,
+            "tools": formatted_agent_tools or None,
+            "messages": prompt,
+            **agent_default_settings,
+            **passed_settings,
+        }
 
-        response = response.choices[0].message.content
+        extra_body = {
+            "cache": {"no-cache": debug},
+        }
 
-    return StepOutcome(
-        output=response.model_dump() if hasattr(response, "model_dump") else response,
-        next=None,
-    )
+        response = await litellm.acompletion(
+            **completion_data,
+            extra_body=extra_body,
+        )
+
+        if context.current_step.unwrap:
+            if response.choices[0].finish_reason == "tool_calls":
+                raise ApplicationError("Tool calls cannot be unwrapped")
+
+            response = response.choices[0].message.content
+
+        return StepOutcome(
+            output=response.model_dump()
+            if hasattr(response, "model_dump")
+            else response,
+            next=None,
+        )

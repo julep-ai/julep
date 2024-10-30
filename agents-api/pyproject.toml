@@ -48,6 +48,7 @@ msgpack = "^1.1.0"
 thefuzz = "^0.22.1"
 gunicorn = "^23.0.0"
 uvloop = "^0.21.0"
+anthropic = "^0.37.1"
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 ruff = "^0.5.5"
