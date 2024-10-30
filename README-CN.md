@@ -81,7 +81,7 @@
 - [用户定义的`函数`](#user-defined-functions)
 - [`系统` 工具](#system-tools)
 - [内置 `integrations`](#built-in-integrations)
--[直接`api_calls`]（#direct-api_calls）
+- [直接`api_calls`](#direct-api_calls)
 - [集成](#integrations)
 - [其他功能](#other-features)
 - [向代理添加工具](#adding-tools-to-agents)
