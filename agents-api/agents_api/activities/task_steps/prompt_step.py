@@ -12,7 +12,7 @@ from ...clients import (
 from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
-from ...env import debug, anthropic_api_key
+from ...env import anthropic_api_key, debug
 from ...models.tools.list_tools import list_tools
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
