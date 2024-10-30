@@ -11,5 +11,19 @@ model BrowserbaseContextIntegrationDef extends BaseBrowserbaseIntegrationDef {
     method?: "create_context" = "create_context";
 
     /** The arguments for the method */
-    arguments?: unknown;
+    arguments?: BrowserbaseContextArguments;
 }
+
+model BrowserbaseContextArguments {
+    /** The Project ID. Can be found in Settings. */
+    projectId: string;
+}
+
+model BrowserbaseContextOutput {
+    id: string;
+    uploadUrl: url;
+    publicKey: string;
+    cipherAlgorithm: string;
+    initializationVectorSize: uint16;
+}
+

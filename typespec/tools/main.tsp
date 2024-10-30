@@ -7,6 +7,7 @@ import "./spider.tsp";
 import "./weather.tsp";
 import "./wikipedia.tsp";
 import "./browserbase";
+import "./remote_browser.tsp";
 
 namespace Tools;
 

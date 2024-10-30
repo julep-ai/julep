@@ -5822,12 +5822,10 @@ components:
             - list_sessions
             - create_session
             - get_session
-            - update_session
+            - complete_session
+            - get_connect_url
+            - install_extension_from_github
             - create_context
-            - upload_extension
-            - get_extension
-            - delete_extension
-            - create_session_uploads
             - get_session_downloads
             - get_logs
             - get_recordings
@@ -5852,12 +5850,10 @@ components:
             - list_sessions
             - create_session
             - get_session
-            - update_session
+            - complete_session
+            - get_connect_url
+            - install_extension_from_github
             - create_context
-            - upload_extension
-            - get_extension
-            - delete_extension
-            - create_session_uploads
             - get_session_downloads
             - get_logs
             - get_recordings
@@ -5907,6 +5903,7 @@ components:
             - brave
             - browserbase
             - email
+            - remote_browser
           description: The provider of the integration
         method:
           type: string
@@ -5924,6 +5921,7 @@ components:
           wikipedia: '#/components/schemas/Tools.WikipediaIntegrationDef'
           weather: '#/components/schemas/Tools.WeatherIntegrationDef'
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
+          remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
       description: Integration definition
     Tools.BaseIntegrationDefUpdate:
       type: object
@@ -5938,6 +5936,7 @@ components:
             - brave
             - browserbase
             - email
+            - remote_browser
           description: The provider of the integration
         method:
           type: string
@@ -5955,6 +5954,7 @@ components:
           wikipedia: '#/components/schemas/Tools.WikipediaIntegrationDefUpdate'
           weather: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
           browserbase: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
+          remote_browser: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
       description: Integration definition
     Tools.Bash20241022Def:
       type: object
@@ -6060,6 +6060,72 @@ components:
           type: string
           description: The api key for Brave Search
       description: Integration definition for Brave Search
+    Tools.BrowserbaseCompleteSessionArguments:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - REQUEST_RELEASE
+          default: REQUEST_RELEASE
+    Tools.BrowserbaseCompleteSessionArgumentsUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - REQUEST_RELEASE
+          default: REQUEST_RELEASE
+    Tools.BrowserbaseCompleteSessionIntegrationDef:
+      type: object
+      required:
+        - method
+        - arguments
+      properties:
+        method:
+          type: string
+          enum:
+            - complete_session
+          default: complete_session
+        arguments:
+          $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionArguments'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
+      description: browserbase complete session integration definition
+    Tools.BrowserbaseCompleteSessionIntegrationDefUpdate:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - complete_session
+          default: complete_session
+        arguments:
+          $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionArgumentsUpdate'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
+      description: browserbase complete session integration definition
+    Tools.BrowserbaseContextArguments:
+      type: object
+      required:
+        - projectId
+      properties:
+        projectId:
+          type: string
+          description: The Project ID. Can be found in Settings.
+    Tools.BrowserbaseContextArgumentsUpdate:
+      type: object
+      properties:
+        projectId:
+          type: string
+          description: The Project ID. Can be found in Settings.
     Tools.BrowserbaseContextIntegrationDef:
       type: object
       properties:
@@ -6070,6 +6136,8 @@ components:
           description: The specific method of the integration to call
           default: create_context
         arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BrowserbaseContextArguments'
           description: The arguments for the method
       allOf:
         - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
@@ -6084,6 +6152,8 @@ components:
           description: The specific method of the integration to call
           default: create_context
         arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BrowserbaseContextArgumentsUpdate'
           description: The arguments for the method
       allOf:
         - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
@@ -6098,7 +6168,7 @@ components:
           description: The Project ID. Can be found in Settings.
         extensionId:
           type: string
-          description: The uploaded Extension ID. See Upload Extension.
+          description: The installed Extension ID. See Install Extension from GitHub.
         browserSettings:
           type: object
           additionalProperties: {}
@@ -6126,7 +6196,7 @@ components:
           description: The Project ID. Can be found in Settings.
         extensionId:
           type: string
-          description: The uploaded Extension ID. See Upload Extension.
+          description: The installed Extension ID. See Install Extension from GitHub.
         browserSettings:
           type: object
           additionalProperties: {}
@@ -6179,6 +6249,56 @@ components:
       allOf:
         - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
       description: browserbase create session integration definition
+    Tools.BrowserbaseExtensionArguments:
+      type: object
+      required:
+        - repositoryName
+      properties:
+        repositoryName:
+          type: string
+          description: The GitHub repository name.
+        ref:
+          type: string
+          description: Ref to install from a branch or tag.
+    Tools.BrowserbaseExtensionArgumentsUpdate:
+      type: object
+      properties:
+        repositoryName:
+          type: string
+          description: The GitHub repository name.
+        ref:
+          type: string
+          description: Ref to install from a branch or tag.
+    Tools.BrowserbaseExtensionIntegrationDef:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - install_extension_from_github
+          description: The specific method of the integration to call
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BrowserbaseExtensionArguments'
+          description: The arguments for the method
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
+      description: browserbase extension provider
+    Tools.BrowserbaseExtensionIntegrationDefUpdate:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - install_extension_from_github
+          description: The specific method of the integration to call
+        arguments:
+          allOf:
+            - $ref: '#/components/schemas/Tools.BrowserbaseExtensionArgumentsUpdate'
+          description: The arguments for the method
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
+      description: browserbase extension provider
     Tools.BrowserbaseGetSessionArguments:
       type: object
       required:
@@ -6191,6 +6311,47 @@ components:
       properties:
         id:
           type: string
+    Tools.BrowserbaseGetSessionConnectUrlArguments:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+    Tools.BrowserbaseGetSessionConnectUrlArgumentsUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+    Tools.BrowserbaseGetSessionConnectUrlIntegrationDef:
+      type: object
+      required:
+        - method
+        - arguments
+      properties:
+        method:
+          type: string
+          enum:
+            - get_connect_url
+          default: get_connect_url
+        arguments:
+          $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlArguments'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
+      description: browserbase get session connect url integration definition
+    Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+            - get_connect_url
+          default: get_connect_url
+        arguments:
+          $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlArgumentsUpdate'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
+      description: browserbase get session connect url integration definition
     Tools.BrowserbaseGetSessionIntegrationDef:
       type: object
       required:
@@ -6322,56 +6483,6 @@ components:
           type: string
           description: API key for the browserbase integration
       description: The setup parameters for the browserbase integration
-    Tools.BrowserbaseUpdateSessionArguments:
-      type: object
-      required:
-        - id
-        - status
-      properties:
-        id:
-          type: string
-        status:
-          type: string
-          enum:
-            - REQUEST_RELEASE
-    Tools.BrowserbaseUpdateSessionArgumentsUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-        status:
-          type: string
-          enum:
-            - REQUEST_RELEASE
-    Tools.BrowserbaseUpdateSessionIntegrationDef:
-      type: object
-      required:
-        - method
-        - arguments
-      properties:
-        method:
-          type: string
-          enum:
-            - update_session
-          default: update_session
-        arguments:
-          $ref: '#/components/schemas/Tools.BrowserbaseUpdateSessionArguments'
-      allOf:
-        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDef'
-      description: browserbase update session integration definition
-    Tools.BrowserbaseUpdateSessionIntegrationDefUpdate:
-      type: object
-      properties:
-        method:
-          type: string
-          enum:
-            - update_session
-          default: update_session
-        arguments:
-          $ref: '#/components/schemas/Tools.BrowserbaseUpdateSessionArgumentsUpdate'
-      allOf:
-        - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'
-      description: browserbase update session integration definition
     Tools.ChosenBash20241022:
       type: object
       properties:
@@ -6555,11 +6666,14 @@ components:
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDef'
-            - $ref: '#/components/schemas/Tools.BrowserbaseUpdateSessionIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
+            - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -6776,11 +6890,14 @@ components:
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDefUpdate'
-            - $ref: '#/components/schemas/Tools.BrowserbaseUpdateSessionIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDefUpdate'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDefUpdate'
+            - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDefUpdate'
           description: The integration to call
         system:
           allOf:
@@ -6799,6 +6916,143 @@ components:
         bash_20241022:
           $ref: '#/components/schemas/Tools.Bash20241022DefUpdate'
       description: Payload for patching a tool
+    Tools.RemoteBrowserArguments:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum:
+            - key
+            - type
+            - mouse_move
+            - left_click
+            - left_click_drag
+            - right_click
+            - middle_click
+            - double_click
+            - screenshot
+            - cursor_position
+            - navigate
+            - refresh
+            - wait_for_load
+          description: The action to perform
+        text:
+          type: string
+          description: The text
+        coordinate:
+          type: array
+          items: {}
+          description: The coordinate to move the mouse to
+      description: The arguments for the remote browser
+    Tools.RemoteBrowserArgumentsUpdate:
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+            - key
+            - type
+            - mouse_move
+            - left_click
+            - left_click_drag
+            - right_click
+            - middle_click
+            - double_click
+            - screenshot
+            - cursor_position
+            - navigate
+            - refresh
+            - wait_for_load
+          description: The action to perform
+        text:
+          type: string
+          description: The text
+        coordinate:
+          type: array
+          items: {}
+          description: The coordinate to move the mouse to
+      description: The arguments for the remote browser
+    Tools.RemoteBrowserIntegrationDef:
+      type: object
+      required:
+        - provider
+        - setup
+        - method
+        - arguments
+      properties:
+        provider:
+          type: string
+          enum:
+            - remote_browser
+          default: remote_browser
+        setup:
+          $ref: '#/components/schemas/Tools.RemoteBrowserSetup'
+        method:
+          type: string
+          enum:
+            - perform_action
+          default: perform_action
+        arguments:
+          $ref: '#/components/schemas/Tools.RemoteBrowserArguments'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDef'
+      description: The integration definition for the remote browser
+    Tools.RemoteBrowserIntegrationDefUpdate:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - remote_browser
+          default: remote_browser
+        setup:
+          $ref: '#/components/schemas/Tools.RemoteBrowserSetupUpdate'
+        method:
+          type: string
+          enum:
+            - perform_action
+          default: perform_action
+        arguments:
+          $ref: '#/components/schemas/Tools.RemoteBrowserArgumentsUpdate'
+      allOf:
+        - $ref: '#/components/schemas/Tools.BaseIntegrationDefUpdate'
+      description: The integration definition for the remote browser
+    Tools.RemoteBrowserSetup:
+      type: object
+      required:
+        - connect_url
+      properties:
+        connect_url:
+          type: string
+          format: uri
+          description: The connection URL for the remote browser
+        width:
+          type: integer
+          format: uint16
+          description: The width of the browser
+        height:
+          type: integer
+          format: uint16
+          description: The height of the browser
+      description: The setup parameters for the remote browser
+    Tools.RemoteBrowserSetupUpdate:
+      type: object
+      properties:
+        connect_url:
+          type: string
+          format: uri
+          description: The connection URL for the remote browser
+        width:
+          type: integer
+          format: uint16
+          description: The width of the browser
+        height:
+          type: integer
+          format: uint16
+          description: The height of the browser
+      description: The setup parameters for the remote browser
     Tools.SpiderFetchArguments:
       type: object
       required:
@@ -7050,11 +7304,14 @@ components:
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDef'
-            - $ref: '#/components/schemas/Tools.BrowserbaseUpdateSessionIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
+            - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           description: The integration to call
         system:
           allOf:
@@ -7133,11 +7390,14 @@ components:
             - $ref: '#/components/schemas/Tools.WikipediaIntegrationDef'
             - $ref: '#/components/schemas/Tools.WeatherIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseContextIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseExtensionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseListSessionsIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionIntegrationDef'
-            - $ref: '#/components/schemas/Tools.BrowserbaseUpdateSessionIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseCompleteSessionIntegrationDef'
             - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionLiveUrlsIntegrationDef'
+            - $ref: '#/components/schemas/Tools.BrowserbaseGetSessionConnectUrlIntegrationDef'
+            - $ref: '#/components/schemas/Tools.RemoteBrowserIntegrationDef'
           description: The integration to call
         system:
           allOf:

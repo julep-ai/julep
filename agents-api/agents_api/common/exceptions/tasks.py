@@ -10,6 +10,7 @@ Remember: To err is human, to retry divine... but only if it makes sense!
 """
 
 import asyncio
+from typing import cast
 
 import beartype
 import beartype.roar
@@ -163,10 +164,12 @@ def is_retryable_error(error: BaseException) -> bool:
 
     # Special handling for HTTP errors (because they're special snowflakes)
     if isinstance(error, fastapi.exceptions.HTTPException):
+        error = cast(fastapi.exceptions.HTTPException, error)
         if error.status_code in RETRYABLE_HTTP_STATUS_CODES:
             return True
 
     if isinstance(error, httpx.HTTPStatusError):
+        error = cast(httpx.HTTPStatusError, error)
         if error.response.status_code in RETRYABLE_HTTP_STATUS_CODES:
             return True
 
