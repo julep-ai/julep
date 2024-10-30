@@ -4,45 +4,33 @@ using Common;
 
 namespace Tools;
 
-alias BrowserbaseSessionMethod = (
-    /** Get live URLs from the browserbase context */
-    | "get_live_urls"
-
-    /** List the sessions in the browserbase context */
-    | "list_sessions"
-
-    /** Create a new session in the browserbase context */
-    | "create_session"
-
-    /** Get a session from the browserbase context */
-    | "get_session"
-
-    /** Update a session in the browserbase context */
-    | "update_session"
-
-    // TODO: Implement these
-    | "create_context"
-    | "upload_extension"
-    | "get_extension"
-    | "delete_extension"
-    | "create_session_uploads"
-    | "get_session_downloads"
+alias BrowserbaseSessionMethod =
+    | /** Get live URLs from the browserbase context */
+      "get_live_urls"
+    | /** List the sessions in the browserbase context */
+      "list_sessions"
+    | /** Create a new session in the browserbase context */
+      "create_session"
+    | /** Get a session from the browserbase context */
+      "get_session"
+    | /** Complete a session in the browserbase context */
+      "complete_session"
+    | /** Get the connection URL for a session */
+      "get_connect_url"
+    | // TODO: Implement these
+      "get_session_downloads"
     | "get_logs"
-    | "get_recordings"
-);
+    | "get_recordings";
 
 alias BrowserbaseSessionIntegrationDef =
     | BrowserbaseListSessionsIntegrationDef
     | BrowserbaseCreateSessionIntegrationDef
     | BrowserbaseGetSessionIntegrationDef
-    | BrowserbaseUpdateSessionIntegrationDef
-    | BrowserbaseGetSessionLiveUrlsIntegrationDef;
+    | BrowserbaseCompleteSessionIntegrationDef
+    | BrowserbaseGetSessionLiveUrlsIntegrationDef
+    | BrowserbaseGetSessionConnectUrlIntegrationDef;
 //
 // TODO: Implement these
-// | BrowserbaseCreateContextIntegrationDef
-// | BrowserbaseUploadExtensionIntegrationDef
-// | BrowserbaseGetExtensionIntegrationDef
-// | BrowserbaseDeleteExtensionIntegrationDef
 // | BrowserbaseCreateSessionUploadsIntegrationDef
 // | BrowserbaseGetSessionDownloadsIntegrationDef
 // | BrowserbaseGetLogsIntegrationDef
@@ -52,14 +40,11 @@ alias BrowserbaseSessionArguments =
     | BrowserbaseListSessionsArguments
     | BrowserbaseCreateSessionArguments
     | BrowserbaseGetSessionArguments
-    | BrowserbaseUpdateSessionArguments
-    | BrowserbaseGetSessionLiveUrlsArguments;
+    | BrowserbaseCompleteSessionArguments
+    | BrowserbaseGetSessionLiveUrlsArguments
+    | BrowserbaseGetSessionConnectUrlArguments;
 //
 // TODO: Implement these
-// | BrowserbaseCreateContextArguments
-// | BrowserbaseUploadExtensionArguments
-// | BrowserbaseGetExtensionArguments
-// | BrowserbaseDeleteExtensionArguments
 // | BrowserbaseCreateSessionUploadsArguments
 // | BrowserbaseGetSessionDownloadsArguments
 // | BrowserbaseGetLogsArguments
@@ -69,15 +54,11 @@ alias BrowserbaseSessionOutput =
     | BrowserbaseListSessionsOutput
     | BrowserbaseCreateSessionOutput
     | BrowserbaseGetSessionOutput
-    | BrowserbaseUpdateSessionOutput
-    | BrowserbaseGetSessionLiveUrlsOutput;
+    | BrowserbaseCompleteSessionOutput
+    | BrowserbaseGetSessionLiveUrlsOutput
+    | BrowserbaseGetSessionConnectUrlOutput;
 //
 // TODO: Implement these
-// | BrowserbaseCreateContextOutput
-// | BrowserbaseUploadExtensionOutput
-// | BrowserbaseGetExtensionOutput
-// | BrowserbaseDeleteExtensionOutput
-// | BrowserbaseCreateSessionUploadsOutput
 // | BrowserbaseGetSessionDownloadsOutput
 // | BrowserbaseGetLogsOutput
 // | BrowserbaseGetRecordingsOutput
@@ -126,7 +107,7 @@ model BrowserbaseCreateSessionArguments {
     /** The Project ID. Can be found in Settings. */
     projectId: string;
 
-    /** The uploaded Extension ID. See Upload Extension. */
+    /** The installed Extension ID. See Install Extension from GitHub. */
     extensionId?: string;
 
     /** Browser settings */
@@ -145,7 +126,6 @@ model BrowserbaseCreateSessionArguments {
 model BrowserbaseCreateSessionOutput {
     id: string;
     createdAt: string;
-    updatedAt: string;
     projectId: string;
     startedAt: string;
     endedAt: string;
@@ -172,7 +152,6 @@ model BrowserbaseGetSessionArguments {
 model BrowserbaseGetSessionOutput {
     id: string;
     createdAt: string;
-    updatedAt: string;
     projectId: string;
     startedAt: string;
     endedAt: string;
@@ -185,32 +164,20 @@ model BrowserbaseGetSessionOutput {
     contextId?: string;
 }
 
-/** browserbase update session integration definition */
-model BrowserbaseUpdateSessionIntegrationDef
+/** browserbase complete session integration definition */
+model BrowserbaseCompleteSessionIntegrationDef
     extends BaseBrowserbaseIntegrationDef {
-    method: "update_session" = "update_session";
-    arguments: BrowserbaseUpdateSessionArguments;
+    method: "complete_session" = "complete_session";
+    arguments: BrowserbaseCompleteSessionArguments;
 }
 
-model BrowserbaseUpdateSessionArguments {
+model BrowserbaseCompleteSessionArguments {
     id: string;
-    status: "REQUEST_RELEASE";
+    status: "REQUEST_RELEASE" = "REQUEST_RELEASE";
 }
 
-model BrowserbaseUpdateSessionOutput {
-    id: string;
-    createdAt: string;
-    updatedAt: string;
-    projectId: string;
-    startedAt: string;
-    endedAt: string;
-    expiresAt: string;
-    status: "RUNNING" | "ERROR" | "TIMED_OUT" | "COMPLETED";
-    proxyBytes: uint64;
-    avgCpuUsage: uint64;
-    memoryUsage: uint64;
-    keepAlive: boolean;
-    contextId?: string;
+model BrowserbaseCompleteSessionOutput {
+    success: boolean;
 }
 
 /** browserbase get session live urls integration definition */
@@ -236,4 +203,19 @@ model BrowserbaseGetSessionLiveUrlsOutput {
         debuggerUrl?: url;
         debuggerFullscreenUrl?: url;
     }[] = #[];
+}
+
+/** browserbase get session connect url integration definition */
+model BrowserbaseGetSessionConnectUrlIntegrationDef
+    extends BaseBrowserbaseIntegrationDef {
+    method: "get_connect_url" = "get_connect_url";
+    arguments: BrowserbaseGetSessionConnectUrlArguments;
+}
+
+model BrowserbaseGetSessionConnectUrlArguments {
+    id: string;
+}
+
+model BrowserbaseGetSessionConnectUrlOutput {
+    url: url;
 }

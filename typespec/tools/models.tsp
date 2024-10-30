@@ -22,6 +22,7 @@ alias integrationProvider = (
     | "brave"
     | "browserbase"
     | "email"
+    | "remote_browser"
 );
 
 enum ToolType {
@@ -112,6 +113,7 @@ alias IntegrationDef = (
     | WikipediaIntegrationDef
     | WeatherIntegrationDef
     | BrowserbaseIntegrationDef
+    | RemoteBrowserIntegrationDef
 );
 
 //

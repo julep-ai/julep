@@ -11,7 +11,29 @@ from .base_models import (
     ProviderInfo as ProviderInfo,
 )
 from .brave import BraveSearchOutput as BraveSearchOutput
+from .browserbase import (
+    BrowserbaseCompleteSessionOutput as BrowserbaseCompleteSessionOutput,
+)
+from .browserbase import (
+    BrowserbaseCreateSessionOutput as BrowserbaseCreateSessionOutput,
+)
+from .browserbase import (
+    BrowserbaseExtensionOutput as BrowserbaseExtensionOutput,
+)
+from .browserbase import (
+    BrowserbaseGetSessionConnectUrlOutput as BrowserbaseGetSessionConnectUrlOutput,
+)
+from .browserbase import (
+    BrowserbaseGetSessionLiveUrlsOutput as BrowserbaseGetSessionLiveUrlsOutput,
+)
+from .browserbase import (
+    BrowserbaseGetSessionOutput as BrowserbaseGetSessionOutput,
+)
+from .browserbase import (
+    BrowserbaseListSessionsOutput as BrowserbaseListSessionsOutput,
+)
 from .email import EmailOutput as EmailOutput
+from .remote_browser import RemoteBrowserOutput as RemoteBrowserOutput
 from .spider import SpiderFetchOutput as SpiderFetchOutput
 from .weather import WeatherGetOutput as WeatherGetOutput
 from .wikipedia import WikipediaSearchOutput as WikipediaSearchOutput
