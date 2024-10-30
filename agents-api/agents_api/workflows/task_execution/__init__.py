@@ -157,7 +157,7 @@ async def run_integration_call(tool_call: dict, context: StepContext):
 
     if integration_spec is None:
         raise ApplicationError(f"Integration {tool_name} not found")
-    
+
     # FIXME: Refactor this
     # Tools that are not defined in the task spec have a different format
     if isinstance(integration_spec, TaskToolDef):
