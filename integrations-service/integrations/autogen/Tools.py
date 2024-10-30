@@ -174,7 +174,14 @@ class BaseIntegrationDef(BaseModel):
         populate_by_name=True,
     )
     provider: Literal[
-        "dummy", "weather", "wikipedia", "spider", "brave", "browserbase", "email"
+        "dummy",
+        "weather",
+        "wikipedia",
+        "spider",
+        "brave",
+        "browserbase",
+        "email",
+        "remote_browser",
     ]
     """
     The provider of the integration
@@ -203,7 +210,14 @@ class BaseIntegrationDefUpdate(BaseModel):
     )
     provider: (
         Literal[
-            "dummy", "weather", "wikipedia", "spider", "brave", "browserbase", "email"
+            "dummy",
+            "weather",
+            "wikipedia",
+            "spider",
+            "brave",
+            "browserbase",
+            "email",
+            "remote_browser",
         ]
         | None
     ) = None
@@ -344,6 +358,42 @@ class BraveSearchSetupUpdate(BaseModel):
     """
 
 
+class BrowserbaseCompleteSessionArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str
+    status: Literal["REQUEST_RELEASE"] = "REQUEST_RELEASE"
+
+
+class BrowserbaseCompleteSessionArgumentsUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    id: str | None = None
+    status: Literal["REQUEST_RELEASE"] = "REQUEST_RELEASE"
+
+
+class BrowserbaseContextArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    project_id: Annotated[str, Field(alias="projectId")]
+    """
+    The Project ID. Can be found in Settings.
+    """
+
+
+class BrowserbaseContextArgumentsUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    project_id: Annotated[str | None, Field(alias="projectId")] = None
+    """
+    The Project ID. Can be found in Settings.
+    """
+
+
 class BrowserbaseCreateSessionArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -354,7 +404,7 @@ class BrowserbaseCreateSessionArguments(BaseModel):
     """
     extension_id: Annotated[str | None, Field(alias="extensionId")] = None
     """
-    The uploaded Extension ID. See Upload Extension.
+    The installed Extension ID. See Install Extension from GitHub.
     """
     browser_settings: Annotated[
         dict[str, Any] | None, Field(alias="browserSettings")
@@ -386,7 +436,7 @@ class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
     """
     extension_id: Annotated[str | None, Field(alias="extensionId")] = None
     """
-    The uploaded Extension ID. See Upload Extension.
+    The installed Extension ID. See Install Extension from GitHub.
     """
     browser_settings: Annotated[
         dict[str, Any] | None, Field(alias="browserSettings")
@@ -408,6 +458,34 @@ class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
     """
 
 
+class BrowserbaseExtensionArguments(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    repository_name: Annotated[str, Field(alias="repositoryName")]
+    """
+    The GitHub repository name.
+    """
+    ref: str | None = None
+    """
+    Ref to install from a branch or tag.
+    """
+
+
+class BrowserbaseExtensionArgumentsUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    repository_name: Annotated[str | None, Field(alias="repositoryName")] = None
+    """
+    The GitHub repository name.
+    """
+    ref: str | None = None
+    """
+    Ref to install from a branch or tag.
+    """
+
+
 class BrowserbaseGetSessionArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
@@ -420,6 +498,16 @@ class BrowserbaseGetSessionArgumentsUpdate(BaseModel):
         populate_by_name=True,
     )
     id: str | None = None
+
+
+class BrowserbaseGetSessionConnectUrlArguments(BrowserbaseGetSessionArguments):
+    pass
+
+
+class BrowserbaseGetSessionConnectUrlArgumentsUpdate(
+    BrowserbaseGetSessionArgumentsUpdate
+):
+    pass
 
 
 class BrowserbaseGetSessionLiveUrlsArguments(BrowserbaseGetSessionArguments):
@@ -468,22 +556,6 @@ class BrowserbaseSetupUpdate(BaseModel):
     """
     API key for the browserbase integration
     """
-
-
-class BrowserbaseUpdateSessionArguments(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: str
-    status: Literal["REQUEST_RELEASE"] = "REQUEST_RELEASE"
-
-
-class BrowserbaseUpdateSessionArgumentsUpdate(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    id: str | None = None
-    status: Literal["REQUEST_RELEASE"] | None = None
 
 
 class ChosenBash20241022(BaseModel):
@@ -631,11 +703,14 @@ class CreateToolRequest(BaseModel):
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
         | BrowserbaseContextIntegrationDef
+        | BrowserbaseExtensionIntegrationDef
         | BrowserbaseListSessionsIntegrationDef
         | BrowserbaseCreateSessionIntegrationDef
         | BrowserbaseGetSessionIntegrationDef
-        | BrowserbaseUpdateSessionIntegrationDef
+        | BrowserbaseCompleteSessionIntegrationDef
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
+        | BrowserbaseGetSessionConnectUrlIntegrationDef
+        | RemoteBrowserIntegrationDef
         | None
     ) = None
     """
@@ -894,11 +969,14 @@ class PatchToolRequest(BaseModel):
         | WikipediaIntegrationDefUpdate
         | WeatherIntegrationDefUpdate
         | BrowserbaseContextIntegrationDefUpdate
+        | BrowserbaseExtensionIntegrationDefUpdate
         | BrowserbaseListSessionsIntegrationDefUpdate
         | BrowserbaseCreateSessionIntegrationDefUpdate
         | BrowserbaseGetSessionIntegrationDefUpdate
-        | BrowserbaseUpdateSessionIntegrationDefUpdate
+        | BrowserbaseCompleteSessionIntegrationDefUpdate
         | BrowserbaseGetSessionLiveUrlsIntegrationDefUpdate
+        | BrowserbaseGetSessionConnectUrlIntegrationDefUpdate
+        | RemoteBrowserIntegrationDefUpdate
         | None
     ) = None
     """
@@ -918,6 +996,153 @@ class PatchToolRequest(BaseModel):
     """
     text_editor_20241022: TextEditor20241022DefUpdate | None = None
     bash_20241022: Bash20241022DefUpdate | None = None
+
+
+class RemoteBrowserArguments(BaseModel):
+    """
+    The arguments for the remote browser
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    action: Literal[
+        "key",
+        "type",
+        "mouse_move",
+        "left_click",
+        "left_click_drag",
+        "right_click",
+        "middle_click",
+        "double_click",
+        "screenshot",
+        "cursor_position",
+        "navigate",
+        "refresh",
+        "wait_for_load",
+    ]
+    """
+    The action to perform
+    """
+    text: str | None = None
+    """
+    The text
+    """
+    coordinate: list | None = None
+    """
+    The coordinate to move the mouse to
+    """
+
+
+class RemoteBrowserArgumentsUpdate(BaseModel):
+    """
+    The arguments for the remote browser
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    action: (
+        Literal[
+            "key",
+            "type",
+            "mouse_move",
+            "left_click",
+            "left_click_drag",
+            "right_click",
+            "middle_click",
+            "double_click",
+            "screenshot",
+            "cursor_position",
+            "navigate",
+            "refresh",
+            "wait_for_load",
+        ]
+        | None
+    ) = None
+    """
+    The action to perform
+    """
+    text: str | None = None
+    """
+    The text
+    """
+    coordinate: list | None = None
+    """
+    The coordinate to move the mouse to
+    """
+
+
+class RemoteBrowserIntegrationDef(BaseIntegrationDef):
+    """
+    The integration definition for the remote browser
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["remote_browser"] = "remote_browser"
+    setup: RemoteBrowserSetup
+    method: Literal["perform_action"] = "perform_action"
+    arguments: RemoteBrowserArguments
+
+
+class RemoteBrowserIntegrationDefUpdate(BaseIntegrationDefUpdate):
+    """
+    The integration definition for the remote browser
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    provider: Literal["remote_browser"] = "remote_browser"
+    setup: RemoteBrowserSetupUpdate | None = None
+    method: Literal["perform_action"] = "perform_action"
+    arguments: RemoteBrowserArgumentsUpdate | None = None
+
+
+class RemoteBrowserSetup(BaseModel):
+    """
+    The setup parameters for the remote browser
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    connect_url: AnyUrl
+    """
+    The connection URL for the remote browser
+    """
+    width: int | None = None
+    """
+    The width of the browser
+    """
+    height: int | None = None
+    """
+    The height of the browser
+    """
+
+
+class RemoteBrowserSetupUpdate(BaseModel):
+    """
+    The setup parameters for the remote browser
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    connect_url: AnyUrl | None = None
+    """
+    The connection URL for the remote browser
+    """
+    width: int | None = None
+    """
+    The width of the browser
+    """
+    height: int | None = None
+    """
+    The height of the browser
+    """
 
 
 class SpiderFetchArguments(BaseModel):
@@ -1171,11 +1396,14 @@ class Tool(BaseModel):
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
         | BrowserbaseContextIntegrationDef
+        | BrowserbaseExtensionIntegrationDef
         | BrowserbaseListSessionsIntegrationDef
         | BrowserbaseCreateSessionIntegrationDef
         | BrowserbaseGetSessionIntegrationDef
-        | BrowserbaseUpdateSessionIntegrationDef
+        | BrowserbaseCompleteSessionIntegrationDef
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
+        | BrowserbaseGetSessionConnectUrlIntegrationDef
+        | RemoteBrowserIntegrationDef
         | None
     ) = None
     """
@@ -1245,11 +1473,14 @@ class UpdateToolRequest(BaseModel):
         | WikipediaIntegrationDef
         | WeatherIntegrationDef
         | BrowserbaseContextIntegrationDef
+        | BrowserbaseExtensionIntegrationDef
         | BrowserbaseListSessionsIntegrationDef
         | BrowserbaseCreateSessionIntegrationDef
         | BrowserbaseGetSessionIntegrationDef
-        | BrowserbaseUpdateSessionIntegrationDef
+        | BrowserbaseCompleteSessionIntegrationDef
         | BrowserbaseGetSessionLiveUrlsIntegrationDef
+        | BrowserbaseGetSessionConnectUrlIntegrationDef
+        | RemoteBrowserIntegrationDef
         | None
     ) = None
     """
@@ -1483,12 +1714,10 @@ class BaseBrowserbaseIntegrationDef(BaseIntegrationDef):
             "list_sessions",
             "create_session",
             "get_session",
-            "update_session",
+            "complete_session",
+            "get_connect_url",
+            "install_extension_from_github",
             "create_context",
-            "upload_extension",
-            "get_extension",
-            "delete_extension",
-            "create_session_uploads",
             "get_session_downloads",
             "get_logs",
             "get_recordings",
@@ -1514,12 +1743,10 @@ class BaseBrowserbaseIntegrationDefUpdate(BaseIntegrationDefUpdate):
             "list_sessions",
             "create_session",
             "get_session",
-            "update_session",
+            "complete_session",
+            "get_connect_url",
+            "install_extension_from_github",
             "create_context",
-            "upload_extension",
-            "get_extension",
-            "delete_extension",
-            "create_session_uploads",
             "get_session_downloads",
             "get_logs",
             "get_recordings",
@@ -1527,6 +1754,32 @@ class BaseBrowserbaseIntegrationDefUpdate(BaseIntegrationDefUpdate):
         | None
     ) = None
     arguments: Any | None = None
+
+
+class BrowserbaseCompleteSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase complete session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["complete_session"] = "complete_session"
+    arguments: BrowserbaseCompleteSessionArguments
+
+
+class BrowserbaseCompleteSessionIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
+    """
+    browserbase complete session integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["complete_session"] = "complete_session"
+    arguments: BrowserbaseCompleteSessionArgumentsUpdate | None = None
 
 
 class BrowserbaseContextIntegrationDef(BaseBrowserbaseIntegrationDef):
@@ -1541,7 +1794,7 @@ class BrowserbaseContextIntegrationDef(BaseBrowserbaseIntegrationDef):
     """
     The specific method of the integration to call
     """
-    arguments: Any | None = None
+    arguments: BrowserbaseContextArguments | None = None
     """
     The arguments for the method
     """
@@ -1559,7 +1812,7 @@ class BrowserbaseContextIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate
     """
     The specific method of the integration to call
     """
-    arguments: Any | None = None
+    arguments: BrowserbaseContextArgumentsUpdate | None = None
     """
     The arguments for the method
     """
@@ -1593,6 +1846,68 @@ class BrowserbaseCreateSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDef
     """
     The arguments for the method
     """
+
+
+class BrowserbaseExtensionIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase extension provider
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["install_extension_from_github"] | None = None
+    """
+    The specific method of the integration to call
+    """
+    arguments: BrowserbaseExtensionArguments | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseExtensionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
+    """
+    browserbase extension provider
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["install_extension_from_github"] | None = None
+    """
+    The specific method of the integration to call
+    """
+    arguments: BrowserbaseExtensionArgumentsUpdate | None = None
+    """
+    The arguments for the method
+    """
+
+
+class BrowserbaseGetSessionConnectUrlIntegrationDef(BaseBrowserbaseIntegrationDef):
+    """
+    browserbase get session connect url integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["get_connect_url"] = "get_connect_url"
+    arguments: BrowserbaseGetSessionConnectUrlArguments
+
+
+class BrowserbaseGetSessionConnectUrlIntegrationDefUpdate(
+    BaseBrowserbaseIntegrationDefUpdate
+):
+    """
+    browserbase get session connect url integration definition
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
+    method: Literal["get_connect_url"] = "get_connect_url"
+    arguments: BrowserbaseGetSessionConnectUrlArgumentsUpdate | None = None
 
 
 class BrowserbaseGetSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
@@ -1679,27 +1994,3 @@ class BrowserbaseListSessionsIntegrationDefUpdate(BaseBrowserbaseIntegrationDefU
     """
     The arguments for the method
     """
-
-
-class BrowserbaseUpdateSessionIntegrationDef(BaseBrowserbaseIntegrationDef):
-    """
-    browserbase update session integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    method: Literal["update_session"] = "update_session"
-    arguments: BrowserbaseUpdateSessionArguments
-
-
-class BrowserbaseUpdateSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDefUpdate):
-    """
-    browserbase update session integration definition
-    """
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
-    method: Literal["update_session"] = "update_session"
-    arguments: BrowserbaseUpdateSessionArgumentsUpdate | None = None
