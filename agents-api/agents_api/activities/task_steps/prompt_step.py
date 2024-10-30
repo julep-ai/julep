@@ -68,7 +68,7 @@ def make_function_call(tool: Tool) -> dict | None:
                                 "description": "The parameters to send with the request",
                             },
                             "follow_redirects": {
-                                "type": "bool",
+                                "type": "boolean",
                                 "description": "Follow redirects",
                             },
                             "timeout": {
