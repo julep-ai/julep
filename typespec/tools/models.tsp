@@ -210,6 +210,9 @@ model Tool {
     /** Name of the tool (must be unique for this agent and a valid python identifier string )*/
     name: validPythonIdentifier;
 
+    /** Type of the tool */
+    type: ToolType;
+
     /** Description of the tool */
     description?: string;
 

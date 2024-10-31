@@ -6656,11 +6656,16 @@ components:
       type: object
       required:
         - name
+        - type
       properties:
         name:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
@@ -6885,6 +6890,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
@@ -7291,6 +7300,7 @@ components:
       type: object
       required:
         - name
+        - type
         - created_at
         - updated_at
         - id
@@ -7299,6 +7309,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
@@ -7380,11 +7394,16 @@ components:
       type: object
       required:
         - name
+        - type
       properties:
         name:
           allOf:
             - $ref: '#/components/schemas/Common.validPythonIdentifier'
           description: Name of the tool (must be unique for this agent and a valid python identifier string )
+        type:
+          allOf:
+            - $ref: '#/components/schemas/Tools.ToolType'
+          description: Type of the tool
         description:
           type: string
           description: Description of the tool
