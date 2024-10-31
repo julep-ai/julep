@@ -1,12 +1,12 @@
-import os
 from datetime import datetime
 
-from anthropic import Anthropic, AsyncAnthropic  # Import AsyncAnthropic client
+from anthropic import AsyncAnthropic  # Import AsyncAnthropic client
 from anthropic.types.beta.beta_message import BetaMessage
 from beartype import beartype
+from langchain_core.tools import BaseTool
+from langchain_core.tools.convert import tool as tool_decorator
 from litellm import ChatCompletionMessageToolCall, Function, Message
 from litellm.types.utils import Choices, ModelResponse
-from litellm.utils import CustomStreamWrapper, ModelResponse
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
@@ -18,42 +18,63 @@ from ...common.protocol.tasks import StepContext, StepOutcome
 from ...common.storage_handler import auto_blob_store
 from ...common.utils.template import render_template
 from ...env import anthropic_api_key, debug
-from ...models.tools.list_tools import list_tools
+from ..utils import get_handler
 
 COMPUTER_USE_BETA_FLAG = "computer-use-2024-10-22"
 
 
-def format_agent_tool(tool: Tool) -> dict:
+def format_tool(tool: Tool) -> dict:
+    if tool.type == "computer_20241022":
+        return {
+            "type": tool.type,
+            "name": tool.name,
+            "display_width_px": tool.computer_20241022
+            and tool.computer_20241022.display_width_px,
+            "display_height_px": tool.computer_20241022
+            and tool.computer_20241022.display_height_px,
+            "display_number": tool.computer_20241022
+            and tool.computer_20241022.display_number,
+        }
+
+    if tool.type in ["bash_20241022", "text_editor_20241022"]:
+        return tool.model_dump(include={"type", "name"})
+
     if tool.type == "function":
         return {
             "type": "function",
             "function": {
                 "name": tool.name,
                 "description": tool.description,
-                "parameters": tool.function.parameters,
+                "parameters": tool.function and tool.function.parameters,
             },
         }
-    elif tool.type == "computer_20241022":
-        return {
-            "type": tool.type,
-            "name": tool.name,
-            "display_width_px": tool.computer_20241022.display_width_px,
-            "display_height_px": tool.computer_20241022.display_height_px,
-            "display_number": tool.computer_20241022.display_number,
-        }
-    elif tool.type == "bash_20241022":
-        return {
-            "type": tool.type,
-            "name": tool.name,
-        }
-    elif tool.type == "text_editor_20241022":
-        return {
-            "type": tool.type,
-            "name": tool.name,
-        }
-    # TODO: Add integration | system | api_call tool types
-    else:
-        return {}
+
+    # For other tool types, we need to translate them to the OpenAI function tool format
+    formatted = {
+        "type": "function",
+        "function": {"name": tool.name, "description": tool.description},
+    }
+
+    if tool.type == "system":
+        handler = get_handler(tool.system)
+        lc_tool: BaseTool = tool_decorator(handler)
+        json_schema: dict = lc_tool.get_input_jsonschema()
+
+        formatted["function"]["description"] = formatted["function"][
+            "description"
+        ] or json_schema.get("description")
+
+        formatted["function"]["parameters"] = json_schema
+
+    # FIXME: Implement integration tools
+    elif tool.type == "integration":
+        raise NotImplementedError("Integration tools are not supported")
+
+    # FIXME: Implement API call tools
+    elif tool.type == "api_call":
+        raise NotImplementedError("API call tools are not supported")
+
+    return formatted
 
 
 @activity.defn
@@ -82,15 +103,6 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         else "gpt-4o"
     )
 
-    agent_tools = list_tools(
-        developer_id=context.execution_input.developer_id,
-        agent_id=context.execution_input.agent.id,
-        limit=128,  # Max number of supported functions in OpenAI. See https://platform.openai.com/docs/api-reference/chat/create
-        offset=0,
-        sort_by="created_at",
-        direction="desc",
-    )
-    # grab the tools from context.current_step.tools and then append it to the agent_tools
     if context.current_step.settings:
         passed_settings: dict = context.current_step.settings.model_dump(
             exclude_unset=True
@@ -102,22 +114,19 @@ async def prompt_step(context: StepContext) -> StepOutcome:
     if isinstance(prompt, str):
         prompt = [{"role": "user", "content": prompt}]
 
-    # Format agent_tools for litellm
-    # Initialize the formatted_agent_tools with context tools
-    task_tools = context.tools
-    formatted_agent_tools = [format_agent_tool(tool) for tool in task_tools]
-    # Add agent_tools if they are not already in formatted_agent_tools
-    for agent_tool in agent_tools:
-        if (
-            format_agent_tool(agent_tool)
-            and format_agent_tool(agent_tool) not in formatted_agent_tools
-        ):
-            formatted_agent_tools.append(format_agent_tool(agent_tool))
+    # Format tools for litellm
+    formatted_tools = [format_tool(tool) for tool in context.tools]
+
+    # Map tools to their original objects
+    tools_mapping: dict[str, Tool] = {
+        fmt_tool.get("name") or fmt_tool.get("function", {}).get("name"): orig_tool
+        for fmt_tool, orig_tool in zip(formatted_tools, context.tools)
+    }
 
     # Check if the model is Anthropic
     if agent_model.lower().startswith("claude-3.5") and any(
         tool["type"] in ["computer_20241022", "bash_20241022", "text_editor_20241022"]
-        for tool in formatted_agent_tools
+        for tool in formatted_tools
     ):
         # Retrieve the API key from the environment variable
         betas = [COMPUTER_USE_BETA_FLAG]
@@ -128,7 +137,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         claude_response: BetaMessage = await client.beta.messages.create(
             model="claude-3-5-sonnet-20241022",
             messages=new_prompt,
-            tools=formatted_agent_tools,
+            tools=formatted_tools,
             max_tokens=1024,
             betas=betas,
         )
@@ -194,7 +203,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         # Use litellm for other models
         completion_data: dict = {
             "model": agent_model,
-            "tools": formatted_agent_tools or None,
+            "tools": formatted_tools or None,
             "messages": prompt,
             **agent_default_settings,
             **passed_settings,
@@ -204,18 +213,50 @@ async def prompt_step(context: StepContext) -> StepOutcome:
             "cache": {"no-cache": debug},
         }
 
-        response = await litellm.acompletion(
+        response: ModelResponse = await litellm.acompletion(
             **completion_data,
             extra_body=extra_body,
         )
 
-        if context.current_step.unwrap:
-            if response.choices[0].finish_reason == "tool_calls":
-                raise ApplicationError("Tool calls cannot be unwrapped")
+    if context.current_step.unwrap:
+        if len(response.choices) != 1:
+            raise ApplicationError("Only one choice is supported")
 
-            response = response.choices[0].message.content
+        choice = response.choices[0]
+        if choice.finish_reason == "tool_calls":
+            raise ApplicationError("Tool calls cannot be unwrapped")
+
+        return StepOutcome(
+            output=choice.message.content,
+            next=None,
+        )
+
+    # Re-convert tool-calls to integration/system calls if needed
+    response_as_dict = response.model_dump()
+
+    for choice in response_as_dict["choices"]:
+        if choice["finish_reason"] == "tool_calls":
+            calls = choice["message"]["tool_calls"]
+
+            for call in calls:
+                call_name = call["function"]["name"]
+                call_args = call["function"]["arguments"]
+
+                original_tool = tools_mapping.get(call_name)
+                if not original_tool:
+                    raise ApplicationError(f"Tool {call_name} not found")
+
+                if original_tool.type == "function":
+                    continue
+
+                call.pop("function")
+                call["type"] = original_tool.type
+                call[original_tool.type] = {
+                    "name": call_name,
+                    "arguments": call_args,
+                }
 
     return StepOutcome(
-        output=response.model_dump() if hasattr(response, "model_dump") else response,
+        output=response_as_dict,
         next=None,
     )
