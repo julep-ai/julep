@@ -7148,6 +7148,9 @@ components:
       required:
         - action
       properties:
+        connect_url:
+          type: string
+          description: The connection URL for the remote browser
         action:
           type: string
           enum:
@@ -7176,6 +7179,9 @@ components:
     Tools.RemoteBrowserArgumentsUpdate:
       type: object
       properties:
+        connect_url:
+          type: string
+          description: The connection URL for the remote browser
         action:
           type: string
           enum:
@@ -7253,7 +7259,7 @@ components:
       properties:
         connect_url:
           type: string
-          format: uri
+          nullable: true
           description: The connection URL for the remote browser
         width:
           type: integer
@@ -7269,7 +7275,7 @@ components:
       properties:
         connect_url:
           type: string
-          format: uri
+          nullable: true
           description: The connection URL for the remote browser
         width:
           type: integer
