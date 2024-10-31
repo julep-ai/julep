@@ -26,11 +26,10 @@ async def search(
     tool = BraveSearch.from_api_key(api_key=setup.api_key, search_kwargs={"count": 3})
 
     result = tool.run(arguments.query)
-    
+
     try:
         parsed_result = [SearchResult(**item) for item in json.loads(result)]
     except json.JSONDecodeError as e:
         raise ValueError("Malformed JSON response from Brave Search") from e
-    
 
     return BraveSearchOutput(result=parsed_result)

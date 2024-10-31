@@ -43,12 +43,10 @@ class CreateSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = False
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: false for sessions, true for tasks)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -80,12 +78,10 @@ class PatchSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = False
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: false for sessions, true for tasks)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -117,12 +113,10 @@ class Session(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = False
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: false for sessions, true for tasks)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -190,12 +184,10 @@ class UpdateSessionRequest(BaseModel):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = False
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: false for sessions, true for tasks)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.
@@ -234,12 +226,10 @@ class CreateOrUpdateSessionRequest(CreateSessionRequest):
     """
     Action to start on context window overflow
     """
-    forward_tool_results: StrictBool | None = None
+    auto_run_tools: StrictBool = False
     """
-    Whether to forward the tool results to the model when available.
-    "true" => always forward
-    "false" => never forward
-    null => forward if applicable (default)
+    Whether to auto-run the tool and send the tool results to the model when available.
+    (default: false for sessions, true for tasks)
 
     If a tool call is made, the tool's output will be sent back to the model as the model's input.
     If a tool call is not made, the model's output will be returned as is.

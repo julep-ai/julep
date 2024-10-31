@@ -60,7 +60,7 @@ def create_session(
     session_id = session_id or uuid4()
 
     data.metadata = data.metadata or {}
-    session_data = data.model_dump()
+    session_data = data.model_dump(exclude={"auto_run_tools"})
 
     user = session_data.pop("user")
     agent = session_data.pop("agent")

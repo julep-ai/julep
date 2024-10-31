@@ -114,14 +114,12 @@ model PromptStepDef {
     /** Whether to unwrap the output of the prompt step, equivalent to `response.choices[0].message.content` */
     unwrap?: boolean = false;
 
-    /** Whether to forward the tool results to the model when available.
-     * "true" => always forward
-     * "false" => never forward
-     * null => forward if applicable (default)
-     * 
+    /** Whether to auto-run the tool and send the tool results to the model when available.
+     * (default: true for prompt steps, false for sessions)
+     *
      * If a tool call is made, the tool's output will be used as the model's input.
      * If a tool call is not made, the model's output will be used as the next step's input. */
-    forward_tool_results: boolean | null = null;
+    auto_run_tools: boolean = true;
 }
 
 model EvaluateStep extends BaseWorkflowStep<"evaluate"> {
