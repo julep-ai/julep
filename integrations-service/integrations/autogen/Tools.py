@@ -12,6 +12,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    RootModel,
     StrictBool,
 )
 
@@ -405,38 +406,6 @@ class BrowserbaseCreateSessionArguments(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    project_id: Annotated[str, Field(alias="projectId")]
-    """
-    The Project ID. Can be found in Settings.
-    """
-    extension_id: Annotated[str | None, Field(alias="extensionId")] = None
-    """
-    The installed Extension ID. See Install Extension from GitHub.
-    """
-    browser_settings: Annotated[
-        dict[str, Any] | None, Field(alias="browserSettings")
-    ] = None
-    """
-    Browser settings
-    """
-    timeout: int | None = None
-    """
-    Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
-    """
-    keep_alive: Annotated[StrictBool | None, Field(alias="keepAlive")] = None
-    """
-    Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
-    """
-    proxies: StrictBool | list[dict[str, Any]] | None = None
-    """
-    Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
-    """
-
-
-class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-    )
     project_id: Annotated[str | None, Field(alias="projectId")] = None
     """
     The Project ID. Can be found in Settings.
@@ -445,21 +414,19 @@ class BrowserbaseCreateSessionArgumentsUpdate(BaseModel):
     """
     The installed Extension ID. See Install Extension from GitHub.
     """
-    browser_settings: Annotated[
-        dict[str, Any] | None, Field(alias="browserSettings")
-    ] = None
+    browser_settings: Annotated[dict[str, Any], Field(alias="browserSettings")] = {}
     """
     Browser settings
     """
-    timeout: int | None = None
+    timeout: int = 3600
     """
     Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
     """
-    keep_alive: Annotated[StrictBool | None, Field(alias="keepAlive")] = None
+    keep_alive: Annotated[StrictBool, Field(alias="keepAlive")] = False
     """
     Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
     """
-    proxies: StrictBool | list[dict[str, Any]] | None = None
+    proxies: StrictBool | list[dict[str, Any]] = False
     """
     Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
     """
@@ -1932,7 +1899,7 @@ class BrowserbaseCreateSessionIntegrationDefUpdate(BaseBrowserbaseIntegrationDef
         populate_by_name=True,
     )
     method: Literal["create_session"] = "create_session"
-    arguments: BrowserbaseCreateSessionArgumentsUpdate | None = None
+    arguments: BrowserbaseCreateSessionArguments | None = None
     """
     The arguments for the method
     """

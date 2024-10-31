@@ -105,22 +105,22 @@ model BrowserbaseCreateSessionIntegrationDef
 
 model BrowserbaseCreateSessionArguments {
     /** The Project ID. Can be found in Settings. */
-    projectId: string;
+    projectId?: string;
 
     /** The installed Extension ID. See Install Extension from GitHub. */
     extensionId?: string;
 
     /** Browser settings */
-    browserSettings?: Record<unknown>;
+    browserSettings?: Record<unknown> = #{};
 
     /** Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout. */
-    timeout?: uint16;
+    timeout?: uint16 = 3600;
 
     /** Set to true to keep the session alive even after disconnections. This is available on the Startup plan only. */
-    keepAlive?: boolean;
+    keepAlive?: boolean = false;
 
     /** Proxy configuration. Can be true for default proxy, or an array of proxy configurations. */
-    proxies?: boolean | Record<unknown>[];
+    proxies?: boolean | Record<unknown>[] = false;
 }
 
 model BrowserbaseCreateSessionOutput {

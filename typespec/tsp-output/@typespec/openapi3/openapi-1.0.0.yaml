@@ -6376,8 +6376,6 @@ components:
       description: browserbase context provider
     Tools.BrowserbaseCreateSessionArguments:
       type: object
-      required:
-        - projectId
       properties:
         projectId:
           type: string
@@ -6389,13 +6387,16 @@ components:
           type: object
           additionalProperties: {}
           description: Browser settings
+          default: {}
         timeout:
           type: integer
           format: uint16
           description: Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
+          default: 3600
         keepAlive:
           type: boolean
           description: Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
+          default: false
         proxies:
           anyOf:
             - type: boolean
@@ -6404,34 +6405,7 @@ components:
                 type: object
                 additionalProperties: {}
           description: Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
-    Tools.BrowserbaseCreateSessionArgumentsUpdate:
-      type: object
-      properties:
-        projectId:
-          type: string
-          description: The Project ID. Can be found in Settings.
-        extensionId:
-          type: string
-          description: The installed Extension ID. See Install Extension from GitHub.
-        browserSettings:
-          type: object
-          additionalProperties: {}
-          description: Browser settings
-        timeout:
-          type: integer
-          format: uint16
-          description: Duration in seconds after which the session will automatically end. Defaults to the Project's defaultTimeout.
-        keepAlive:
-          type: boolean
-          description: Set to true to keep the session alive even after disconnections. This is available on the Startup plan only.
-        proxies:
-          anyOf:
-            - type: boolean
-            - type: array
-              items:
-                type: object
-                additionalProperties: {}
-          description: Proxy configuration. Can be true for default proxy, or an array of proxy configurations.
+          default: false
     Tools.BrowserbaseCreateSessionIntegrationDef:
       type: object
       required:
@@ -6459,7 +6433,7 @@ components:
           default: create_session
         arguments:
           allOf:
-            - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionArgumentsUpdate'
+            - $ref: '#/components/schemas/Tools.BrowserbaseCreateSessionArguments'
           description: The arguments for the method
       allOf:
         - $ref: '#/components/schemas/Tools.BaseBrowserbaseIntegrationDefUpdate'

@@ -69,7 +69,7 @@ async def create_session(
     client = get_browserbase_client(setup)
 
     options = CreateSessionOptions(
-        projectId=arguments.project_id,
+        projectId=arguments.project_id or setup.project_id,
         extensionId=arguments.extension_id,
         browserSettings=BrowserSettings(**arguments.browser_settings),
     )
