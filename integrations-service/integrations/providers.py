@@ -172,7 +172,7 @@ browserbase = BaseProvider(
             output=BrowserbaseExtensionOutput,
         ),
         BaseProviderMethod(
-            method="get_connect_url",
+            method="get_sesion_connect_url",
             description="Get the connection URL for a session",
             arguments=BrowserbaseGetSessionConnectUrlArguments,
             output=BrowserbaseGetSessionConnectUrlOutput,
