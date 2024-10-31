@@ -3,7 +3,7 @@ from typing import Literal, Optional
 from pydantic import AnyUrl, Field
 
 from .base_models import BaseOutput
-from browserbase import Session
+from browserbase import DebugConnectionURLs, Session
 
 
 
@@ -99,18 +99,7 @@ class PageInfo(BaseOutput):
 
 
 class BrowserbaseGetSessionLiveUrlsOutput(BaseOutput):
-    debuggerFullscreenUrl: Optional[AnyUrl] = Field(
-        None, description="Fullscreen debugger URL for the session"
-    )
-    debuggerUrl: Optional[AnyUrl] = Field(
-        None, description="Debugger URL for the session"
-    )
-    wsUrl: Optional[AnyUrl] = Field(
-        None, description="WebSocket URL for live interaction with the session"
-    )
-    pages: list[PageInfo] = Field(
-        ..., description="List of pages associated with the session"
-    )
+    urls: DebugConnectionURLs = Field(..., description="The live URLs for the session")
 
 
 class BrowserbaseContextOutput(BaseOutput):

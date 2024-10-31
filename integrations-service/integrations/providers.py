@@ -160,7 +160,7 @@ browserbase = BaseProvider(
             output=BrowserbaseCompleteSessionOutput,
         ),
         BaseProviderMethod(
-            method="get_live_urls",
+            method="get_session_live_urls",
             description="Get sessions' live urls in Browserbase",
             arguments=BrowserbaseGetSessionLiveUrlsArguments,
             output=BrowserbaseGetSessionLiveUrlsOutput,
