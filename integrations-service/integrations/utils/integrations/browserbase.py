@@ -155,7 +155,8 @@ async def install_extension_from_github(
 ) -> BrowserbaseExtensionOutput:
     """Download and install an extension from GitHub to the user's Browserbase account."""
     github_url = (
-        f"https://github.com/{arguments.repo}/archive/refs/heads/{arguments.ref}.zip"
+        f"https://github.com/{arguments.repository_name}/archive/refs/tags/{
+            arguments.ref}.zip"
     )
 
     async with httpx.AsyncClient() as client:
