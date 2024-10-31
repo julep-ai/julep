@@ -400,7 +400,7 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0])[
+            ) if (message := response["choices"][0]["message"])[
                 "finish_reason"
             ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
                 "type"
@@ -430,7 +430,7 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0])[
+            ) if (message := response["choices"][0]["message"])[
                 "finish_reason"
             ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
                 "type"
@@ -445,7 +445,7 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0])[
+            ) if (message := response["choices"][0]["message"])[
                 "finish_reason"
             ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
                 "type"
@@ -460,7 +460,7 @@ class TaskExecutionWorkflow:
 
             case PromptStep(auto_run_tools=True, unwrap=False), StepOutcome(
                 output=response
-            ) if (message := response["choices"][0])[
+            ) if (message := response["choices"][0]["message"])[
                 "finish_reason"
             ] == "tool_calls" and (tool_calls_input := message["tool_calls"])[0][
                 "type"
@@ -474,7 +474,7 @@ class TaskExecutionWorkflow:
                 # TODO: Feed the tool call results back to the model (see above)
 
             case PromptStep(unwrap=False), StepOutcome(output=response) if (
-                message := response["choices"][0]
+                message := response["choices"][0]["message"]
             )["finish_reason"] == "tool_calls" and (
                 tool_calls_input := message["tool_calls"]
             )[0]["type"] not in ["function", "integration", "api_call", "system"]:

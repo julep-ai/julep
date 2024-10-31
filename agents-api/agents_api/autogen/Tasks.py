@@ -710,6 +710,10 @@ class PromptStep(BaseModel):
     If a tool call is made, the tool's output will be used as the model's input.
     If a tool call is not made, the model's output will be used as the next step's input.
     """
+    disable_cache: StrictBool = False
+    """
+    Whether to disable caching for the prompt step
+    """
 
 
 class PromptStepUpdateItem(BaseModel):
@@ -751,6 +755,10 @@ class PromptStepUpdateItem(BaseModel):
 
     If a tool call is made, the tool's output will be used as the model's input.
     If a tool call is not made, the model's output will be used as the next step's input.
+    """
+    disable_cache: StrictBool = False
+    """
+    Whether to disable caching for the prompt step
     """
 
 

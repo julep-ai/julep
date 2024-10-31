@@ -4757,6 +4757,7 @@ components:
         - prompt
         - tools
         - auto_run_tools
+        - disable_cache
       properties:
         kind_:
           type: string
@@ -4871,6 +4872,10 @@ components:
             If a tool call is made, the tool's output will be used as the model's input.
             If a tool call is not made, the model's output will be used as the next step's input.
           default: true
+        disable_cache:
+          type: boolean
+          description: Whether to disable caching for the prompt step
+          default: false
       allOf:
         - type: object
           required:
@@ -4894,6 +4899,7 @@ components:
         - prompt
         - tools
         - auto_run_tools
+        - disable_cache
       properties:
         prompt:
           anyOf:
@@ -5002,6 +5008,10 @@ components:
             If a tool call is made, the tool's output will be used as the model's input.
             If a tool call is not made, the model's output will be used as the next step's input.
           default: true
+        disable_cache:
+          type: boolean
+          description: Whether to disable caching for the prompt step
+          default: false
       allOf:
         - type: object
           properties:

@@ -157,11 +157,15 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         betas = [COMPUTER_USE_BETA_FLAG]
         # Use Anthropic API directly
         client = AsyncAnthropic(api_key=anthropic_api_key)
-        new_prompt = [{"role": "user", "content": prompt[0]["content"]}]
+
+        # Reformat the prompt for Anthropic
+        # Anthropic expects a list of messages with role and content (and no name etc)
+        prompt = [{"role": "user", "content": message["content"]} for message in prompt]
+
         # Claude Response
         claude_response: BetaMessage = await client.beta.messages.create(
             model="claude-3-5-sonnet-20241022",
-            messages=new_prompt,
+            messages=prompt,
             tools=formatted_tools,
             max_tokens=1024,
             betas=betas,
@@ -235,7 +239,7 @@ async def prompt_step(context: StepContext) -> StepOutcome:
         }
 
         extra_body = {
-            "cache": {"no-cache": debug},
+            "cache": {"no-cache": debug or context.current_step.disable_cache},
         }
 
         response: ModelResponse = await litellm.acompletion(
