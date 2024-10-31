@@ -3,7 +3,6 @@ import json
 from beartype import beartype
 from langchain_community.tools import BraveSearch
 from tenacity import retry, stop_after_attempt, wait_exponential
-import json
 
 from ...autogen.Tools import BraveSearchArguments, BraveSearchSetup
 from ...models import BraveSearchOutput, SearchResult
@@ -33,5 +32,5 @@ async def search(
         parsed_result = [SearchResult(**item) for item in json.loads(result)]
     except json.JSONDecodeError as e:
         raise ValueError("Malformed JSON response from Brave Search") from e
-        
+
     return BraveSearchOutput(result=parsed_result)

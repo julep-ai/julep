@@ -10,5 +10,6 @@ class SearchResult(BaseModel):
     link: str
     snippet: str
 
+
 class BraveSearchOutput(BaseOutput):
     result: List[SearchResult] = Field(..., description="A list of search results")
