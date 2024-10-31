@@ -142,9 +142,9 @@ class CreateTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: StrictBool = True
+    inherit_tools: StrictBool = False
     """
-    Whether to inherit tools from the parent agent or not. Defaults to true.
+    Whether to inherit tools from the parent agent or not. Defaults to false.
     """
     metadata: dict[str, Any] | None = None
 
@@ -158,6 +158,10 @@ class ErrorWorkflowStep(BaseModel):
     )
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     error: str
     """
@@ -174,6 +178,10 @@ class EvaluateStep(BaseModel):
     ] = "evaluate"
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     evaluate: dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str]
     """
@@ -239,6 +247,10 @@ class ForeachStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     foreach: ForeachDo
     """
     The steps to run for each iteration
@@ -249,6 +261,10 @@ class ForeachStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
@@ -269,6 +285,10 @@ class GetStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     get: str
     """
     The key to get
@@ -284,6 +304,10 @@ class IfElseWorkflowStep(BaseModel):
     ] = "if_else"
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     if_: Annotated[str, Field(alias="if")]
     """
@@ -329,6 +353,10 @@ class IfElseWorkflowStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
@@ -401,6 +429,10 @@ class LogStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     log: str
     """
     The value to log
@@ -416,6 +448,10 @@ class Main(BaseModel):
     ] = "map_reduce"
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     over: str
     """
@@ -453,6 +489,10 @@ class MainModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
@@ -499,6 +539,10 @@ class ParallelStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     parallel: Annotated[
         list[
             EvaluateStep
@@ -520,6 +564,10 @@ class ParallelStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
@@ -583,9 +631,9 @@ class PatchTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: StrictBool = True
+    inherit_tools: StrictBool = False
     """
-    Whether to inherit tools from the parent agent or not. Defaults to true.
+    Whether to inherit tools from the parent agent or not. Defaults to false.
     """
     metadata: dict[str, Any] | None = None
 
@@ -630,6 +678,10 @@ class PromptStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     prompt: list[PromptItem] | str
     """
     The prompt to run
@@ -666,6 +718,10 @@ class PromptStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
@@ -712,6 +768,10 @@ class ReturnStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     return_: Annotated[
         dict[str, list[str] | dict[str, str] | list[dict[str, str]] | str],
         Field(alias="return"),
@@ -730,6 +790,10 @@ class SetStep(BaseModel):
     )
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     set: dict[str, str]
     """
@@ -769,6 +833,10 @@ class SleepStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     sleep: SleepFor
     """
     The duration to sleep for (max 31 days)
@@ -785,6 +853,10 @@ class SwitchStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     switch: Annotated[list[CaseThen], Field(min_length=1)]
     """
     The cond tree
@@ -795,6 +867,10 @@ class SwitchStepUpdateItem(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     kind_: str | None = None
     """
     Discriminator property for BaseWorkflowStep.
@@ -847,9 +923,9 @@ class Task(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: StrictBool = True
+    inherit_tools: StrictBool = False
     """
-    Whether to inherit tools from the parent agent or not. Defaults to true.
+    Whether to inherit tools from the parent agent or not. Defaults to false.
     """
     id: Annotated[UUID, Field(json_schema_extra={"readOnly": True})]
     created_at: Annotated[AwareDatetime, Field(json_schema_extra={"readOnly": True})]
@@ -884,6 +960,10 @@ class ToolCallStep(BaseModel):
     ] = "tool_call"
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     tool: Annotated[str, Field(max_length=40, pattern="^[^\\W0-9]\\w*$")]
     """
@@ -932,7 +1012,7 @@ class ToolRefById(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
     )
-    id: UUID | None = None
+    id: str | None = None
 
 
 class ToolRefByName(BaseModel):
@@ -1000,9 +1080,9 @@ class UpdateTaskRequest(BaseModel):
     """
     Tools defined specifically for this task not included in the Agent itself.
     """
-    inherit_tools: StrictBool = True
+    inherit_tools: StrictBool = False
     """
-    Whether to inherit tools from the parent agent or not. Defaults to true.
+    Whether to inherit tools from the parent agent or not. Defaults to false.
     """
     metadata: dict[str, Any] | None = None
 
@@ -1027,6 +1107,10 @@ class WaitForInputStep(BaseModel):
     """
     The kind of step
     """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
+    """
     wait_for_input: WaitForInputInfo
     """
     Any additional info or data
@@ -1042,6 +1126,10 @@ class YieldStep(BaseModel):
     )
     """
     The kind of step
+    """
+    label: str | None = None
+    """
+    The label of this step for referencing it from other steps
     """
     workflow: str
     """

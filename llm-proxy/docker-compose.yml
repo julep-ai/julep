@@ -1,9 +1,11 @@
 name: julep-llm-proxy
 
 x--litellm-base: &litellm-base
-  image: ghcr.io/berriai/litellm-database:main-v1.46.6
+  image: ghcr.io/berriai/litellm-database:main-v1.51.2
   restart: unless-stopped
   hostname: litellm
+  ports:
+    - 4000:4000
   volumes:
     - ./litellm-config.yaml:/app/config.yaml
     - .keys:/app/.keys:ro
@@ -68,11 +70,11 @@ services:
       - POSTGRES_PASSWORD=${LITELLM_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d ${LITELLM_POSTGRES_DB:-litellm} -U ${LITELLM_POSTGRES_USER:-llmproxy}" ]
- 
+
       interval: 1s
       timeout: 5s
       retries: 10
- 
+
   litellm-redis:
     image: redis/redis-stack-server
     restart: unless-stopped
