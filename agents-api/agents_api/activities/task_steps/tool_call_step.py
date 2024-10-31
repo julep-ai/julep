@@ -35,10 +35,10 @@ def construct_tool_call(
         }
         if tool.type != "system"
         else {
-            "resource": tool.system.resource,
-            "operation": tool.system.operation,
-            "resource_id": tool.system.resource_id,
-            "subresource": tool.system.subresource,
+            "resource": tool.system and tool.system.resource,
+            "operation": tool.system and tool.system.operation,
+            "resource_id": tool.system and tool.system.resource_id,
+            "subresource": tool.system and tool.system.subresource,
             "arguments": arguments,
         },
         "id": call_id,
